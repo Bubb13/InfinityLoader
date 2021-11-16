@@ -1,0 +1,3 @@
+LIBRARY LuaBindings-v2.6.6.0
+EXPORTS
+	Init @1

@@ -1,0 +1,66 @@
+
+#include "Baldur-v2.6.6.0_generated.h"
+
+type_CObList_RemoveHead p_CObList_RemoveHead;
+type_CObList_Destruct p_CObList_Destruct;
+type_CGameObjectArray_GetShare p_CGameObjectArray_GetShare;
+type_findMenu p_findMenu;
+type_saveMenuStack p_saveMenuStack;
+type_uiLoadMenu p_uiLoadMenu;
+type_bsearch p_bsearch;
+type_restoreMenuStack p_restoreMenuStack;
+type_CompareCResByTypeThenName p_CompareCResByTypeThenName;
+type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
+int* p_numMenus;
+Array<uiMenu,256>* p_menus;
+Array<uiMenu*,256>* p_menuStack;
+int* p_nextStackMenuIdx;
+CResText** p_menuSrc;
+int* p_menuLength;
+CTypedPtrArray<CPtrArray,CRes*>* p_resources;
+_9B9540D9920A90D57A3D80DDD1A70514* p_capture;
+type_CRes_Construct p_CRes_Construct;
+type_CRes_Destruct p_CRes_Destruct;
+type_CRes_Demand p_CRes_Demand;
+type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
+type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
+type_CInfGame_SetState p_CInfGame_SetState;
+type_CInfGame_SetIconIndex p_CInfGame_SetIconIndex;
+type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
+type_CGameSprite_GetQuickButtons p_CGameSprite_GetQuickButtons;
+type_CGameSprite_ReadySpell p_CGameSprite_ReadySpell;
+type_CGameSprite_ReadyOffInternalList p_CGameSprite_ReadyOffInternalList;
+type_CGameSprite_GetInternalButtonList p_CGameSprite_GetInternalButtonList;
+
+std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
+	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&p_CObList_RemoveHead)},
+	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&p_CObList_Destruct)},
+	std::pair{TEXT("CGameObjectArray::GetShare"), reinterpret_cast<void**>(&p_CGameObjectArray_GetShare)},
+	std::pair{TEXT("findMenu"), reinterpret_cast<void**>(&p_findMenu)},
+	std::pair{TEXT("saveMenuStack"), reinterpret_cast<void**>(&p_saveMenuStack)},
+	std::pair{TEXT("uiLoadMenu"), reinterpret_cast<void**>(&p_uiLoadMenu)},
+	std::pair{TEXT("bsearch"), reinterpret_cast<void**>(&p_bsearch)},
+	std::pair{TEXT("restoreMenuStack"), reinterpret_cast<void**>(&p_restoreMenuStack)},
+	std::pair{TEXT("CompareCResByTypeThenName"), reinterpret_cast<void**>(&p_CompareCResByTypeThenName)},
+	std::pair{TEXT("SDL_GetKeyFromName"), reinterpret_cast<void**>(&p_SDL_GetKeyFromName)},
+	std::pair{TEXT("numMenus"), reinterpret_cast<void**>(&p_numMenus)},
+	std::pair{TEXT("menus"), reinterpret_cast<void**>(&p_menus)},
+	std::pair{TEXT("menuStack"), reinterpret_cast<void**>(&p_menuStack)},
+	std::pair{TEXT("nextStackMenuIdx"), reinterpret_cast<void**>(&p_nextStackMenuIdx)},
+	std::pair{TEXT("menuSrc"), reinterpret_cast<void**>(&p_menuSrc)},
+	std::pair{TEXT("menuLength"), reinterpret_cast<void**>(&p_menuLength)},
+	std::pair{TEXT("resources"), reinterpret_cast<void**>(&p_resources)},
+	std::pair{TEXT("capture"), reinterpret_cast<void**>(&p_capture)},
+	std::pair{TEXT("CRes::Construct"), reinterpret_cast<void**>(&p_CRes_Construct)},
+	std::pair{TEXT("CRes::Destruct"), reinterpret_cast<void**>(&p_CRes_Destruct)},
+	std::pair{TEXT("CRes::Demand"), reinterpret_cast<void**>(&p_CRes_Demand)},
+	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&p_CInfButtonArray_SetState)},
+	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&p_CInfButtonArray_SetQuickSlot)},
+	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&p_CInfGame_SetState)},
+	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&p_CInfGame_SetIconIndex)},
+	std::pair{TEXT("CGameSprite::GetKitMask"), reinterpret_cast<void**>(&p_CGameSprite_GetKitMask)},
+	std::pair{TEXT("CGameSprite::GetQuickButtons"), reinterpret_cast<void**>(&p_CGameSprite_GetQuickButtons)},
+	std::pair{TEXT("CGameSprite::ReadySpell"), reinterpret_cast<void**>(&p_CGameSprite_ReadySpell)},
+	std::pair{TEXT("CGameSprite::ReadyOffInternalList"), reinterpret_cast<void**>(&p_CGameSprite_ReadyOffInternalList)},
+	std::pair{TEXT("CGameSprite::GetInternalButtonList"), reinterpret_cast<void**>(&p_CGameSprite_GetInternalButtonList)},
+};

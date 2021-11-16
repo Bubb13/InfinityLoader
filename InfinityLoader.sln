@@ -1,0 +1,54 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InfinityLoader", "InfinityLoader\InfinityLoader.vcxproj", "{8AD6ECF6-7320-4DC3-83B5-D0D54664D3A1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1B74771C-B80B-4AD1-93FB-B98EAC266372} = {1B74771C-B80B-4AD1-93FB-B98EAC266372}
+		{3A3E4DE5-2B23-43FE-BEBE-F7333D531B6C} = {3A3E4DE5-2B23-43FE-BEBE-F7333D531B6C}
+		{CB4ABBED-DC69-4BB4-B62E-E92085D3C529} = {CB4ABBED-DC69-4BB4-B62E-E92085D3C529}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InfinityLoaderDLL", "InfinityLoaderDLL\InfinityLoaderDLL.vcxproj", "{3A3E4DE5-2B23-43FE-BEBE-F7333D531B6C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1B74771C-B80B-4AD1-93FB-B98EAC266372} = {1B74771C-B80B-4AD1-93FB-B98EAC266372}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InfinityLoaderCommon", "InfinityLoaderCommon\InfinityLoaderCommon.vcxproj", "{1B74771C-B80B-4AD1-93FB-B98EAC266372}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LuaBindings-v2.6.6.0", "LuaBindings-v2.6.6.0\LuaBindings-v2.6.6.0.vcxproj", "{CB4ABBED-DC69-4BB4-B62E-E92085D3C529}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1B74771C-B80B-4AD1-93FB-B98EAC266372} = {1B74771C-B80B-4AD1-93FB-B98EAC266372}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8AD6ECF6-7320-4DC3-83B5-D0D54664D3A1}.Release|x64.ActiveCfg = Release|x64
+		{8AD6ECF6-7320-4DC3-83B5-D0D54664D3A1}.Release|x64.Build.0 = Release|x64
+		{8AD6ECF6-7320-4DC3-83B5-D0D54664D3A1}.Release|x86.ActiveCfg = Release|Win32
+		{8AD6ECF6-7320-4DC3-83B5-D0D54664D3A1}.Release|x86.Build.0 = Release|Win32
+		{3A3E4DE5-2B23-43FE-BEBE-F7333D531B6C}.Release|x64.ActiveCfg = Release|x64
+		{3A3E4DE5-2B23-43FE-BEBE-F7333D531B6C}.Release|x64.Build.0 = Release|x64
+		{3A3E4DE5-2B23-43FE-BEBE-F7333D531B6C}.Release|x86.ActiveCfg = Release|Win32
+		{3A3E4DE5-2B23-43FE-BEBE-F7333D531B6C}.Release|x86.Build.0 = Release|Win32
+		{1B74771C-B80B-4AD1-93FB-B98EAC266372}.Release|x64.ActiveCfg = Release|x64
+		{1B74771C-B80B-4AD1-93FB-B98EAC266372}.Release|x64.Build.0 = Release|x64
+		{1B74771C-B80B-4AD1-93FB-B98EAC266372}.Release|x86.ActiveCfg = Release|Win32
+		{1B74771C-B80B-4AD1-93FB-B98EAC266372}.Release|x86.Build.0 = Release|Win32
+		{CB4ABBED-DC69-4BB4-B62E-E92085D3C529}.Release|x64.ActiveCfg = Release|x64
+		{CB4ABBED-DC69-4BB4-B62E-E92085D3C529}.Release|x64.Build.0 = Release|x64
+		{CB4ABBED-DC69-4BB4-B62E-E92085D3C529}.Release|x86.ActiveCfg = Release|Win32
+		{CB4ABBED-DC69-4BB4-B62E-E92085D3C529}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5FEB5469-306D-4358-8522-65D14BBEFB7D}
+	EndGlobalSection
+EndGlobal
