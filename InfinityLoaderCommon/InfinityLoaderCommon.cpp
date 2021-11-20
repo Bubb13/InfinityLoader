@@ -9,6 +9,19 @@ String dbPath;
 String iniPath;
 String workingFolder;
 
+const std::pair<const TCHAR, const unsigned char> aDecimalDigitToByte[] = {
+	std::pair{TCHAR{'0'}, 0},
+	std::pair{TCHAR{'1'}, 1},
+	std::pair{TCHAR{'2'}, 2},
+	std::pair{TCHAR{'3'}, 3},
+	std::pair{TCHAR{'4'}, 4},
+	std::pair{TCHAR{'5'}, 5},
+	std::pair{TCHAR{'6'}, 6},
+	std::pair{TCHAR{'7'}, 7},
+	std::pair{TCHAR{'8'}, 8},
+	std::pair{TCHAR{'9'}, 9},
+};
+
 /////////////
 // Utility //
 /////////////
@@ -45,6 +58,76 @@ DWORD GetINIString(String iniPath, const TCHAR* section, const TCHAR* key, const
 	}
 
 	outStr = buffer;
+	return 0;
+}
+
+// TODO: Suboptimal
+bool decimalStrToNumber(const String decimalStr, intptr_t& accumulator) {
+
+	size_t strLen = decimalStr.length();
+	if (strLen == 0) {
+		return false;
+	}
+
+	const TCHAR* characters = decimalStr.c_str();
+	size_t minimumI = 0;
+	bool negative = false;
+
+	if (characters[0] == TCHAR{ '-' }) {
+		if (strLen == 1) {
+			return false;
+		}
+		minimumI = 1;
+		negative = true;
+	}
+
+	accumulator = 0;
+	size_t curPow = 1;
+	size_t i = strLen - 1;
+	do {
+		for (auto& entry : aDecimalDigitToByte) {
+			if (characters[i] == entry.first) {
+				accumulator += entry.second * curPow;
+				curPow *= 10;
+				goto loop_continue;
+			}
+		}
+
+		return false;
+	loop_continue:;
+
+	} while (i-- != minimumI);
+
+	if (negative) {
+		accumulator = -accumulator;
+	}
+
+	return true;
+}
+
+DWORD GetININumber(String iniPath, const TCHAR* section, const TCHAR* key, intptr_t def, intptr_t& outNumber) {
+
+	TCHAR buffer[1024];
+	const std::size_t bufferSize = sizeof(buffer) / sizeof(buffer[0]);
+
+	DWORD numRead = GetPrivateProfileString(section, key, nullptr,
+		(TCHAR*)&buffer, bufferSize, iniPath.c_str());
+
+	if (DWORD lastError = GetLastError(); lastError != ERROR_SUCCESS && lastError != ERROR_FILE_NOT_FOUND) {
+		printf("[!] GetPrivateProfileString failed (%d).\n", lastError);
+		return lastError;
+	}
+
+	if (numRead > 0) {
+		if (!decimalStrToNumber(buffer, outNumber)) {
+			printfT(TEXT("[!] Invalid decimal for [%s].%s: \"%s\".\n"), section, key, buffer);
+			return -1;
+		}
+	}
+	else {
+		outNumber = def;
+	}
+
 	return 0;
 }
 

@@ -209,8 +209,17 @@ DWORD startGame() {
 
 	if (!CreateProcess(exePath.c_str(), NULL, NULL, NULL, true, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
 		lastError = GetLastError();
-		printf("[!] CreateProcess failed (%d).\n", lastError);
+		printfT(TEXT("[!] CreateProcess failed attempting to start \"%s\" (%d).\n"), exePath.c_str(), lastError);
 		return lastError;
+	}
+
+	intptr_t bPause;
+	if (lastError = GetININumber(iniPath, TEXT("General"), TEXT("Pause"), 0, bPause)) {
+		goto errorFinally;
+	}
+
+	if (bPause) {
+		MessageBox(NULL, TEXT("Pause"), TEXT("Infinity Loader"), MB_ICONINFORMATION);
 	}
 
 	if (lastError = patchMainThread(processInfo.hProcess, processInfo.hThread)) {

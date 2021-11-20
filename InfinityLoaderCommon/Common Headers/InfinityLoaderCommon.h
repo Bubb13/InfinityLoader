@@ -73,6 +73,8 @@ void forEveryCharSplit(const String& buffer, const TCHAR splitChar, const Func a
 }
 
 extern DWORD GetINIString(String iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr);
+extern bool decimalStrToNumber(const String decimalStr, intptr_t& accumulator);
+extern DWORD GetININumber(String iniPath, const TCHAR* section, const TCHAR* key, intptr_t def, intptr_t& outNumber);
 
 ///////////
 // Paths //
