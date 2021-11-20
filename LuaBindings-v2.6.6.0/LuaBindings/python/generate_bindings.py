@@ -221,6 +221,7 @@ class HeaderType(Enum):
 class Group: pass
 globalGroup: Group
 class TypeReference: pass
+class Field: pass
 
 
 class MainState:
@@ -305,8 +306,8 @@ class TemplateMappingTracker:
 					print(f"\t\t[{j}]=\"{tup[j].toString()}\"")
 
 
-primitives = {"intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "wchar_t", "long double"}
-primitiveNumbers = {"intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "float", "long double"}
+primitives = {"intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "wchar_t", "double", "long double"}
+primitiveNumbers = {"intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "float", "double", "long double"}
 
 class TypeReference:
 
@@ -820,7 +821,7 @@ def checkFunctionImplementation(mainState: MainState, state: CheckLinesState, li
 		variableField.variableType.bitFieldPart = variableMatch.group(5)
 
 		variableField.variableName = variableMatch.group(3)
-		group.fields[variableField.variableName] = variableField
+		group.addField(variableField)
 
 
 
@@ -862,7 +863,9 @@ class Group:
 		self.isDirectlyWanted: bool = False # True if the group was listed in -wantedFile.
 		self.isWanted: bool = False         # True if the group is wanted for output, either manually in -wantedFile, or automatically from some dependency.
 		
-		self.fields: dict[str, Field] = {}                              # List of fields the group immediately contains.
+		self.fieldsMap: dict[str, Field] = {}                           # Map of fields the group immediately contains.
+		self.fields: list[Field] = []                                   # List of fields the group immediately contains.
+
 		self.extends: list[TypeReference] = []                          # List of TypeReferences the group extends.
 		self.enumTuples: list[tuple[str,int]] = []                      # List of enum values, (in the case of groupType="enum").
 		self.functionImplementations: list[FunctionImplementation] = [] # List of function implementations the group immediately contains.
@@ -892,7 +895,7 @@ class Group:
 
 	def retypeField(self, mainState: MainState, fieldName: str, newTypeStr: str):
 
-		field = self.fields[fieldName]
+		field = self.fieldsMap[fieldName]
 		if field.type == FieldType.VARIABLE:
 
 			varField: VariableField = field
@@ -904,6 +907,45 @@ class Group:
 			varField.variableType = defineTypeRef(mainState, self, newTypeStr)
 		else:
 			raise ValueError()
+
+
+	# TODO: Remove references
+	def removeField(self, fieldName: str):
+		field = self.fieldsMap[fieldName]
+		del self.fieldsMap[fieldName]
+		del self.fields[field.listI]
+		for i in range(field.listI, len(self.fields)):
+			self.fields[i].listI -= 1
+
+
+	def addField(self, field: Field, insertI: int=None):
+
+		name: str = None
+
+		if field.type == FieldType.VARIABLE:
+			name = field.variableName
+		elif field.type == FieldType.FUNCTION:
+			name = field.functionName
+		else:
+			raise ValueError()
+
+		self.fieldsMap[name] = field
+
+		if insertI != None:
+			field.listI = insertI
+			self.fields.insert(insertI, field)
+			for i in range(insertI + 1, len(self.fields)):
+				self.fields[i].listI += 1 
+		else:
+			field.listI = len(self.fields)
+			self.fields.append(field)
+
+
+	def addVariableField(self, mainState: MainState, fieldName: str, typeStr: str, insertI: int=None):
+		field = VariableField()
+		field.variableName = fieldName
+		field.variableType = defineTypeRef(mainState, self, typeStr)
+		self.addField(field, insertI=insertI)
 
 
 	def processLinesFillTypes(self, mainState: MainState):
@@ -960,7 +1002,7 @@ class Group:
 					for paramType in splitKeepBrackets(parameterStr, [","]):
 						functionField.parameterTypes.append(defineTypeRef(mainState, self, paramType))
 
-				self.fields[functionField.functionName] = functionField
+				self.addField(functionField)
 
 
 			checkFunctionImplementation(mainState, state, line, self)
@@ -1062,7 +1104,7 @@ class Group:
 			for ref in getExtendsRefs(extendRef):
 				parts.append(ref)
 
-		for field in self.fields.values():
+		for field in self.fields:
 			for ref in field.getAllTypeReferences():
 				parts.append(ref)
 
@@ -1185,7 +1227,7 @@ class Group:
 					wroteSomething = True
 
 			if not isNormal:
-				for field in group.fields.values():
+				for field in group.fields:
 					if field.type == FieldType.VARIABLE:
 						varField: VariableField = field
 						varStr = f"{varField.variableType.toString(pointerLevelAdjust=1)} p_{varField.variableName};"
@@ -1287,7 +1329,7 @@ class Group:
 				parts.append(",\n")
 				wroteSomethingBeforeFuncImps = True
 
-			for field in self.fields.values():
+			for field in self.fields:
 				parts.append(field.toString(nextIndent))
 				parts.append("\n")
 				wroteSomethingBeforeFuncImps = True
@@ -1360,7 +1402,7 @@ def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, s
 		newSuperField = VariableField()
 		newSuperField.variableType = defineTypeRef(mainState, superGroup, myFullName)
 		newSuperField.variableName = myName
-		superGroup.fields[newSuperField.variableName] = newSuperField
+		superGroup.addField(newSuperField)
 
 		state.preBracketLevel = None
 		state.lines = []
@@ -1379,7 +1421,8 @@ class FieldType(Enum):
 
 class Field:
 	def __init__(self):
-		self.type = None
+		self.type: FieldType = None
+		self.listI: int = None
 
 	def toString(indent="") -> str:
 		pass
@@ -2310,7 +2353,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper)
 
 
 
-		for field in group.fields.values():
+		for field in group.fields:
 			handleField(field)
 
 		for functionImplementation in group.functionImplementations:
@@ -2383,7 +2426,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper)
 		out.write(f"\ttolua_cclass(L, \"{openData.appliedNameUsertype}\", \"{openData.appliedNameUsertype}\", \"")
 
 		if len(openData.group.extends) > 0:
-			out.write(openData.group.extends[0].toString())
+			out.write(openData.group.extends[0].toString(useUsertypeOverride=True))
 
 		out.write("\", NULL);\n")
 		out.write(f"\ttolua_beginmodule(L, \"{openData.appliedNameUsertype}\");\n")
@@ -2728,7 +2771,7 @@ def main():
 		# have the same name in a struct.
 		for group in mainState.filteredGroups:
 			seenFuncNames: dict[str,int] = {}
-			for field in group.fields.values():
+			for field in group.fields:
 				if field.type == FieldType.FUNCTION:
 					functionField: FunctionField = field
 					seenCount = seenFuncNames.get(functionField.functionName, 0) + 1

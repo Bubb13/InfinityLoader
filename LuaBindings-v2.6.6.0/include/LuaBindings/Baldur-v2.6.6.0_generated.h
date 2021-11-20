@@ -2670,7 +2670,8 @@ struct CCallResult : CCallbackBase
 
 struct CCallbackBase_vtbl
 {
-	void (__fastcall *Run)(CCallbackBase*, void*);
+	void (__fastcall *Run)(CCallbackBase*, void*, bool, unsigned __int64);
+	void (__fastcall *Run_2)(CCallbackBase*, void*);
 	int (__fastcall *GetCallbackSizeBytes)(CCallbackBase*);
 };
 
@@ -2820,28 +2821,6 @@ struct SteamUGCRequestUGCDetailsResult_t
 {
 	SteamUGCDetails_t m_details;
 	bool m_bCachedData;
-};
-
-struct Spell_ability_st
-{
-	unsigned __int16 type;
-	unsigned __int16 quickSlotType;
-	Array<unsigned __int8,8> quickSlotIcon;
-	unsigned __int8 actionType;
-	unsigned __int8 actionCount;
-	unsigned __int16 range;
-	unsigned __int16 minCasterLevel;
-	unsigned __int16 speedFactor;
-	unsigned __int16 timesPerDay;
-	unsigned __int16 damageDice;
-	unsigned __int16 damageDiceCount;
-	unsigned __int16 damageDiceBonus;
-	unsigned __int16 damageType;
-	unsigned __int16 effectCount;
-	unsigned __int16 startingEffect;
-	unsigned __int16 maxUsageCount;
-	unsigned __int16 usageFlags;
-	unsigned __int16 missileType;
 };
 
 #pragma pack(push, 1)
@@ -3389,6 +3368,28 @@ struct CGameStatsRes : CObject
 {
 	CResRef m_cResRef;
 	__int16 m_nTimesUsed;
+};
+
+struct Spell_ability_st
+{
+	unsigned __int16 type;
+	unsigned __int16 quickSlotType;
+	CResRef quickSlotIcon;
+	unsigned __int8 actionType;
+	unsigned __int8 actionCount;
+	unsigned __int16 range;
+	unsigned __int16 minCasterLevel;
+	unsigned __int16 speedFactor;
+	unsigned __int16 timesPerDay;
+	unsigned __int16 damageDice;
+	unsigned __int16 damageDiceCount;
+	unsigned __int16 damageDiceBonus;
+	unsigned __int16 damageType;
+	unsigned __int16 effectCount;
+	unsigned __int16 startingEffect;
+	unsigned __int16 maxUsageCount;
+	unsigned __int16 usageFlags;
+	unsigned __int16 missileType;
 };
 
 struct CWorldMap
@@ -4467,8 +4468,10 @@ union SDL_Event
 struct ISteamUserStats_vtbl
 {
 	bool (__fastcall *RequestCurrentStats)(ISteamUserStats*);
-	bool (__fastcall *GetStat)(ISteamUserStats*, const char*, int*);
-	bool (__fastcall *SetStat)(ISteamUserStats*, const char*, int);
+	bool (__fastcall *GetStat)(ISteamUserStats*, const char*, float*);
+	bool (__fastcall *GetStat_2)(ISteamUserStats*, const char*, int*);
+	bool (__fastcall *SetStat)(ISteamUserStats*, const char*, float);
+	bool (__fastcall *SetStat_2)(ISteamUserStats*, const char*, int);
 	bool (__fastcall *UpdateAvgRateStat)(ISteamUserStats*, const char*, float, long double);
 	bool (__fastcall *GetAchievement)(ISteamUserStats*, const char*, bool*);
 	bool (__fastcall *SetAchievement)(ISteamUserStats*, const char*);
@@ -4481,7 +4484,8 @@ struct ISteamUserStats_vtbl
 	unsigned int (__fastcall *GetNumAchievements)(ISteamUserStats*);
 	const char* (__fastcall *GetAchievementName)(ISteamUserStats*, unsigned int);
 	unsigned __int64 (__fastcall *RequestUserStats)(ISteamUserStats*, CSteamID);
-	bool (__fastcall *GetUserStat)(ISteamUserStats*, CSteamID, const char*, int*);
+	bool (__fastcall *GetUserStat)(ISteamUserStats*, CSteamID, const char*, float*);
+	bool (__fastcall *GetUserStat_2)(ISteamUserStats*, CSteamID, const char*, int*);
 	bool (__fastcall *GetUserAchievement)(ISteamUserStats*, CSteamID, const char*, bool*);
 	bool (__fastcall *GetUserAchievementAndUnlockTime)(ISteamUserStats*, CSteamID, const char*, bool*, unsigned int*);
 	bool (__fastcall *ResetAllStats)(ISteamUserStats*, bool);
@@ -4502,15 +4506,19 @@ struct ISteamUserStats_vtbl
 	int (__fastcall *GetNextMostAchievedAchievementInfo)(ISteamUserStats*, int, char*, unsigned int, float*, bool*);
 	bool (__fastcall *GetAchievementAchievedPercent)(ISteamUserStats*, const char*, float*);
 	unsigned __int64 (__fastcall *RequestGlobalStats)(ISteamUserStats*, int);
-	bool (__fastcall *GetGlobalStat)(ISteamUserStats*, const char*, __int64*);
-	int (__fastcall *GetGlobalStatHistory)(ISteamUserStats*, const char*, __int64*, unsigned int);
-	bool (__fastcall *GetAchievementProgressLimits)(ISteamUserStats*, const char*, int*, int*);
+	bool (__fastcall *GetGlobalStat)(ISteamUserStats*, const char*, long double*);
+	bool (__fastcall *GetGlobalStat_2)(ISteamUserStats*, const char*, __int64*);
+	int (__fastcall *GetGlobalStatHistory)(ISteamUserStats*, const char*, long double*, unsigned int);
+	int (__fastcall *GetGlobalStatHistory_2)(ISteamUserStats*, const char*, __int64*, unsigned int);
+	bool (__fastcall *GetAchievementProgressLimits)(ISteamUserStats*, const char*, float*, float*);
+	bool (__fastcall *GetAchievementProgressLimits_2)(ISteamUserStats*, const char*, int*, int*);
 };
 
 struct ISteamUGC_vtbl
 {
 	unsigned __int64 (__fastcall *CreateQueryUserUGCRequest)(ISteamUGC*, unsigned int, EUserUGCList, EUGCMatchingUGCType, EUserUGCListSortOrder, unsigned int, unsigned int, unsigned int);
-	unsigned __int64 (__fastcall *CreateQueryAllUGCRequest)(ISteamUGC*, EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, unsigned int);
+	unsigned __int64 (__fastcall *CreateQueryAllUGCRequest)(ISteamUGC*, EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, const char*);
+	unsigned __int64 (__fastcall *CreateQueryAllUGCRequest_2)(ISteamUGC*, EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, unsigned int);
 	unsigned __int64 (__fastcall *CreateQueryUGCDetailsRequest)(ISteamUGC*, unsigned __int64*, unsigned int);
 	unsigned __int64 (__fastcall *SendQueryUGCRequest)(ISteamUGC*, unsigned __int64);
 	bool (__fastcall *GetQueryUGCResult)(ISteamUGC*, unsigned __int64, unsigned int, SteamUGCDetails_t*);
@@ -4521,7 +4529,8 @@ struct ISteamUGC_vtbl
 	unsigned int (__fastcall *GetQueryUGCNumAdditionalPreviews)(ISteamUGC*, unsigned __int64, unsigned int);
 	bool (__fastcall *GetQueryUGCAdditionalPreview)(ISteamUGC*, unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int, EItemPreviewType*);
 	unsigned int (__fastcall *GetQueryUGCNumKeyValueTags)(ISteamUGC*, unsigned __int64, unsigned int);
-	bool (__fastcall *GetQueryUGCKeyValueTag)(ISteamUGC*, unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int);
+	bool (__fastcall *GetQueryUGCKeyValueTag)(ISteamUGC*, unsigned __int64, unsigned int, const char*, char*, unsigned int);
+	bool (__fastcall *GetQueryUGCKeyValueTag_2)(ISteamUGC*, unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int);
 	bool (__fastcall *ReleaseQueryUGCRequest)(ISteamUGC*, unsigned __int64);
 	bool (__fastcall *AddRequiredTag)(ISteamUGC*, unsigned __int64, const char*);
 	bool (__fastcall *AddRequiredTagGroup)(ISteamUGC*, unsigned __int64, const SteamParamStringArray_t*);
@@ -5124,6 +5133,7 @@ struct CGameAreaNotes
 
 struct CGameEffectBase
 {
+	CGameEffect_vtbl* __vftable;
 	CResRef m_version;
 	unsigned int m_effectId;
 	unsigned int m_targetType;
@@ -6221,7 +6231,6 @@ struct CGameAIBase : CGameObject
 
 struct CGameEffect : CGameEffectBase
 {
-	CGameEffect_vtbl* __vftable;
 	int m_sourceId;
 	int m_done;
 	int m_forceRepass;
@@ -7522,7 +7531,8 @@ struct CPortraitIcon
 struct CVidCell_vtbl
 {
 	int (__fastcall *FrameAdvance)(CVidCell*);
-	int (__fastcall *Render)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
+	int (__fastcall *Render)(CVidCell*, unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*);
+	int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
 	void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
 	int (__fastcall *GetFrame)(CVidCell*);
 };
