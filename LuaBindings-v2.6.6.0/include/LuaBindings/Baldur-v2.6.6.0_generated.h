@@ -4047,6 +4047,45 @@ struct CAreaSoundsAndMusic
 	Array<unsigned int,16> m_notUsed;
 };
 
+struct CAreaFileStaticObject
+{
+	Array<char,32> m_scriptName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned int m_timeOfDayVisible;
+	Array<unsigned __int8,8> m_resref;
+	unsigned int m_nSequence;
+	unsigned int m_dwFlags;
+	__int16 m_height;
+	unsigned __int16 m_translucency;
+	unsigned __int16 m_startFrameRange;
+	unsigned __int8 m_probability;
+	unsigned __int8 m_period;
+	Array<unsigned __int8,8> m_paletteResref;
+	unsigned __int16 m_sizeX;
+	unsigned __int16 m_sizeY;
+};
+
+struct CAreaFileSoundObject
+{
+	Array<char,32> m_scriptName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned __int16 m_range;
+	Array<unsigned __int8,2> structureAlignment1;
+	unsigned int m_pitchVariance;
+	unsigned __int16 m_volumeVariance;
+	unsigned __int16 m_volume;
+	Array<Array<unsigned __int8,8>,10> m_soundObject;
+	unsigned __int16 m_soundObjectNum;
+	Array<unsigned __int8,2> structureAlignment2;
+	unsigned int m_period;
+	unsigned int m_periodVariance;
+	unsigned int m_timeOfDayActive;
+	unsigned int m_dwFlags;
+	Array<unsigned int,16> m_notUsed;
+};
+
 struct CAreaFileRestEncounter
 {
 	Array<char,32> m_scriptName;
@@ -4064,6 +4103,30 @@ struct CAreaFileRestEncounter
 	unsigned __int16 m_wFlags;
 	Array<unsigned __int8,10> m_weights;
 	Array<unsigned int,11> m_notUsed;
+};
+
+struct CAreaFileRandomMonsterSpawningPoint
+{
+	Array<char,32> m_scriptName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	Array<Array<unsigned __int8,8>,10> m_randomCreature;
+	unsigned __int16 m_randomCreatureNum;
+	unsigned __int16 m_difficulty;
+	unsigned __int16 m_spawningRate;
+	unsigned __int16 m_wFlags;
+	unsigned int m_lifeSpan;
+	unsigned __int16 m_huntingRange;
+	unsigned __int16 m_followRange;
+	unsigned __int16 m_maxTypeNum;
+	unsigned __int16 m_activated;
+	unsigned int m_timeOfDayVisible;
+	unsigned __int16 m_probDay;
+	unsigned __int16 m_probNight;
+	unsigned int m_frequency;
+	unsigned int m_countdown;
+	Array<unsigned __int8,10> m_weights;
+	Array<unsigned __int16,19> m_notUsed;
 };
 
 struct CAreaFileHeader
@@ -5114,6 +5177,15 @@ struct CObjectMarker : CGameObject
 {
 	CList<long,long> m_lstObjectIds;
 	bool m_bHealthBarMarker;
+};
+
+struct CGameSpawning : CGameObject
+{
+	CAreaFileRandomMonsterSpawningPoint m_spawningObject;
+	Array<unsigned __int8,16> m_terrainTable;
+	Array<unsigned __int8,16> m_visibleTerrainTable;
+	int m_nTrackingCounter;
+	unsigned int m_weightSum;
 };
 
 struct CGameAreaNotes
@@ -6227,6 +6299,121 @@ struct CGameAIBase : CGameObject
 	CSound m_forcePauseSound;
 	int m_nServerLastObjectSynchDelay;
 	CAITrigger triggerOverride;
+};
+
+struct CGameAIArea : CGameAIBase
+{
+};
+
+struct CGameAIGame : CGameAIBase
+{
+};
+
+struct CGameDoor : CGameAIBase
+{
+	CResRef m_resID;
+	CRect m_rOpenBounding;
+	CRect m_rClosedBounding;
+	unsigned int m_cursorType;
+	unsigned int m_dwFlags;
+	CPoint* m_pOpenPolygon;
+	unsigned __int16 m_nOpenPolygon;
+	CPoint* m_pClosedPolygon;
+	unsigned __int16 m_nClosedPolygon;
+	CPoint* m_pOpenSearch;
+	unsigned __int16 m_nOpenSearch;
+	CPoint* m_pClosedSearch;
+	unsigned __int16 m_nClosedSearch;
+	CPoint m_ptDest1;
+	CPoint m_ptDest2;
+	Array<unsigned __int8,8> m_scriptRes;
+	CTiledObject m_tiledObject;
+	Array<char,32> m_scriptName;
+	Array<char,32> m_triggerName;
+	__int16 m_hitPoints;
+	__int16 m_armourClass;
+	CResRef m_openSound;
+	CResRef m_closeSound;
+	unsigned __int16 m_trapDetectionDifficulty;
+	unsigned __int16 m_trapDisarmingDifficulty;
+	unsigned __int16 m_trapActivated;
+	unsigned __int16 m_trapDetected;
+	unsigned __int16 m_posXTrapOrigin;
+	unsigned __int16 m_posYTrapOrigin;
+	CResRef m_keyType;
+	unsigned int m_detectionDifficulty;
+	unsigned int m_lockDifficulty;
+	__int16 m_drawPoly;
+	CPoint m_ptOpenDest;
+	CPoint m_ptClosedDest;
+	CSound m_sndDoor;
+	unsigned int m_strNotPickable;
+	int m_usedDelay;
+	unsigned __int8 m_probabilityRoll;
+};
+
+struct CGameTiledObject : CGameAIBase
+{
+	CResRef m_resID;
+	unsigned int m_dwFlags;
+	CPoint* m_pPrimarySearch;
+	unsigned __int16 m_nPrimarySearch;
+	CPoint* m_pSecondarySearch;
+	unsigned __int16 m_nSecondarySearch;
+	CTiledObject m_tiledObject;
+	Array<char,32> m_scriptName;
+};
+
+struct CGameTrigger : CGameAIBase
+{
+	unsigned __int16 m_triggerType;
+	CRect m_rBounding;
+	unsigned int m_cursorType;
+	Array<unsigned __int8,8> m_newArea;
+	Array<char,32> m_newEntryPoint;
+	unsigned int m_dwFlags;
+	unsigned int m_description;
+	CPoint* m_pPolygon;
+	unsigned __int16 m_nPolygon;
+	unsigned __int16 m_boundingRange;
+	Array<unsigned __int8,8> m_scriptRes;
+	Array<char,32> m_scriptName;
+	unsigned __int16 m_trapDetectionDifficulty;
+	unsigned __int16 m_trapDisarmingDifficulty;
+	unsigned __int16 m_trapActivated;
+	unsigned __int16 m_trapDetected;
+	CPoint m_posTrapOrigin;
+	CResRef m_keyType;
+	__int16 m_drawPoly;
+	unsigned int m_iGameText;
+	CPoint m_ptWalkTo;
+};
+
+struct CGameSound : CGameObject
+{
+	CAreaFileSoundObject m_soundObject;
+	CSound m_looping;
+	int m_bLoopPlaying;
+	int m_period;
+	int m_periodCount;
+	unsigned __int8 m_currentSound;
+	unsigned int m_timeOfDayActive;
+};
+
+struct CGameTemporal : CGameObject
+{
+	Array<unsigned __int8,16> m_visibleTerrainTable;
+	CGameAnimation m_animation;
+	int m_animationRunning;
+	CPoint m_posExact;
+	CPoint m_posDelta;
+	__int16 m_duration;
+	unsigned __int8 m_durationFade;
+	unsigned __int8 m_collision;
+	CSound m_sound;
+	int m_bPermanent;
+	int m_bAllowSave;
+	unsigned __int16 m_projectileType;
 };
 
 struct CGameEffect : CGameEffectBase
@@ -7371,6 +7558,36 @@ struct CScreenWorldMap : CBaldurEngine
 	int m_bFontDropShadow;
 };
 
+struct CGameContainer : CGameAIBase
+{
+	CRect m_rBounding;
+	CPoint* m_pPolygon;
+	unsigned __int16 m_nPolygon;
+	CTypedPtrList<CPtrList,CItem*> m_lstItems;
+	unsigned __int16 m_containerType;
+	CPoint m_ptWalkToUse;
+	Array<CVidCell,3> m_pileVidCell;
+	unsigned __int8 m_nPileVidCell;
+	unsigned __int8 m_bDeleteMe;
+	Array<unsigned __int8,8> m_scriptRes;
+	unsigned __int16 m_lockDifficulty;
+	unsigned int m_dwFlags;
+	unsigned __int16 m_trapDetectionDifficulty;
+	unsigned __int16 m_trapRemovalDifficulty;
+	unsigned __int16 m_trapActivated;
+	unsigned __int16 m_trapDetected;
+	CPoint m_posTrapOrigin;
+	unsigned __int16 m_triggerRange;
+	Array<char,32> m_ownedBy;
+	CResRef m_keyType;
+	unsigned int m_breakDifficulty;
+	__int16 m_drawPoly;
+	unsigned int m_strNotPickable;
+	int m_bJustCreated;
+	int m_bNeedUpdate;
+	unsigned __int8 m_probabilityRoll;
+};
+
 struct CCacheStatus
 {
 	int m_nDrawnBars;
@@ -8193,6 +8410,19 @@ struct CGameSprite : CGameAIBase
 	}
 };
 
+struct CGameStatic : CGameObject
+{
+	CAreaFileStaticObject m_header;
+	CVidCell m_vidCell;
+	CResWebm* m_pMovie;
+	CResPVR* m_pImage;
+	int m_bRender;
+	CSize m_size;
+	CTypedPtrList<CPtrList,CVidCell*> m_secondaryVidCellList;
+	int m_bNewPalette;
+	CVidBitmap m_newPalette;
+};
+
 struct CGameAnimationType
 {
 	CGameAnimationType_vtbl* __vftable;
@@ -8285,6 +8515,48 @@ struct CGameAnimationType_vtbl
 	void (__fastcall *OverrideAnimation)(CGameAnimationType*, CResRef, int);
 	void (__fastcall *Marshal)(CGameAnimationType*, unsigned __int8**, unsigned int*);
 	bool (__fastcall *Unmarshal)(CGameAnimationType*, CResRef);
+};
+
+struct CGameFireball3d : CGameObject
+{
+	Array<unsigned __int8,16> m_terrainTable;
+	Array<unsigned __int8,16> m_visibleTerrainTable;
+	unsigned __int16 m_animationID;
+	unsigned __int16 m_animationIDStatic;
+	Array<unsigned __int8,7> m_colorRangeValues;
+	unsigned __int16 m_ringGranularity;
+	CVidCell m_spriteSplashVidCell;
+	CVidPalette m_spriteSplashPalette;
+	__int16 m_holdDuration;
+	int m_radius;
+	int m_speed;
+	unsigned __int8 m_duration;
+	unsigned __int8 m_collision;
+	CSize m_ellipseSize;
+	unsigned __int8* m_pPlacementGrid;
+	CPoint m_nEllipse;
+	CRect* m_pEllipse;
+	unsigned __int8* m_flagEllipse;
+	CSound m_sndExplosion;
+	CString m_sSoundTemporal;
+	int m_bCenterSoundLooping;
+	int m_bSplashGlow;
+	int m_bBrightest;
+	int m_bRingTemporals;
+	int m_bInteriorTemporals;
+	int m_bRandomSpeed;
+	int m_bPalettedRing;
+	int m_bPalettedArea;
+	int m_bCone;
+	unsigned __int16 m_coneSize;
+	CPoint m_posEdge;
+	int m_bNewPalette;
+	CVidBitmap m_newPalette;
+	CResRef m_fireBallArea;
+	CResRef m_fireBallRing;
+	unsigned __int16 m_projectileType;
+	int m_bPermanent;
+	int m_bCanSave;
 };
 
 struct CScreenAI : CBaldurEngine

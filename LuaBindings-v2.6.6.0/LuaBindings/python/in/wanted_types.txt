@@ -1,3 +1,14 @@
-CBaldurChitin
-CGameSprite
 $9B9540D9920A90D57A3D80DDD1A70514
+CBaldurChitin
+CGameAIArea
+CGameAIGame
+CGameContainer
+CGameDoor
+CGameFireball3d
+CGameSound
+CGameSpawning
+CGameSprite
+CGameStatic
+CGameTemporal
+CGameTiledObject
+CGameTrigger
