@@ -135,7 +135,7 @@ DWORD GetININumber(String iniPath, const TCHAR* section, const TCHAR* key, intpt
 // Paths //
 ///////////
 
-DWORD getExePath(String& exePathOut) {
+DWORD getExePath(String* exeNameOut, String& exePathOut) {
 
 	String exeNames;
 	if (DWORD lastError = GetINIString(iniPath, TEXT("General"), TEXT("ExeNames"), TEXT(""), exeNames)) {
@@ -143,8 +143,14 @@ DWORD getExePath(String& exePathOut) {
 	}
 
 	forEveryCharSplit(exeNames, TCHAR{ ',' }, [&](const String str) {
+
 		String checkingFor = String{ workingFolder }.append(str);
 		if (std::filesystem::exists(checkingFor)) {
+
+			if (exeNameOut) {
+				*exeNameOut = str;
+			}
+
 			exePathOut = checkingFor;
 			return true;
 		}

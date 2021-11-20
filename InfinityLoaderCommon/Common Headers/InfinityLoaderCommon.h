@@ -80,7 +80,7 @@ extern DWORD GetININumber(String iniPath, const TCHAR* section, const TCHAR* key
 // Paths //
 ///////////
 
-extern DWORD getExePath(String& exePathOut);
+extern DWORD getExePath(String* exeNameOut, String& exePathOut);
 extern String getMyFolder();
 extern String getMyPath();
 extern String getWorkingFolder();

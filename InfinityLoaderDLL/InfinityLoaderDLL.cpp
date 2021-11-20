@@ -121,6 +121,7 @@ struct PatternByteEntry {
 // Globals //
 /////////////
 
+String exeName;
 LuaMode luaMode;
 ImageSectionInfo textInfo;
 std::map<String, PatternEntry> patternEntries;
@@ -723,6 +724,15 @@ void forEveryINISectionName(const String iniPath, const Func action) {
 
 DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, String iniCategoryName, intptr_t& addressOut) {
 
+	intptr_t bExeSwitch;
+	if (DWORD lastError = GetININumber(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
+		return lastError;
+	}
+
+	if (bExeSwitch) {
+		iniCategoryName.insert(0, String{ TEXT("!ExeSwitch-") }.append(exeName).append(TEXT("-")));
+	}
+
 	String hardcodedPatchPattern;
 	if (DWORD lastError = GetINIString(iniPath, iniCategoryName.c_str(), TEXT("Pattern"), TEXT(""), hardcodedPatchPattern)) {
 		return lastError;
@@ -753,15 +763,22 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 }
 
 DWORD findPatterns(ImageSectionInfo& sectionInfo) {
+
 	DWORD returnVal = 0;
 	forEveryINISectionName(dbPath, [&](const String section) {
+
+		if (section.rfind(TEXT("!"), 0) != std::string::npos)
+			return false;
+
 		intptr_t address;
 		if (returnVal = findINICategoryPattern(sectionInfo, dbPath, section.c_str(), address)) {
 			return true;
 		}
+
 		patternEntries.emplace(section, PatternEntry{ section, address });
 		return false;
 	});
+
 	return returnVal;
 }
 
@@ -1322,7 +1339,7 @@ DWORD writeInternalLuaHook(ImageSectionInfo& textInfo) {
 DWORD patchExe() {
 
 	String exePath;
-	if (getExePath(exePath)) {
+	if (getExePath(&exeName, exePath)) {
 		return -1;
 	}
 
