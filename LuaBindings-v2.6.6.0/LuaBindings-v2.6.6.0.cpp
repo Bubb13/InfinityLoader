@@ -265,6 +265,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     // tolua's module_newindex_event() is broken and needs to be overridden
     // (this is done in the Lua environment, add override address to patterns)
     addPattern(patterns, "override_module_newindex_event", reinterpret_cast<intptr_t>(module_newindex_event));
+    addPattern(patterns, "Hardcoded_tolua_pushusertype", reinterpret_cast<intptr_t>(p_tolua_pushusertype_nocast));
 
     // The Lua environment needs to grab the pattern map and execute any
     // patches relating to tolua before the Lua bindings are exported
