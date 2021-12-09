@@ -19,8 +19,8 @@ extern type_free* p_free;
 typedef void type_tolua_beginmodule(lua_State* L, const char* name);
 extern type_tolua_beginmodule* p_tolua_beginmodule;
 
-typedef void type_tolua_cclass(lua_State* L, const char* lname, const char* name, const char* base, lua_CFunction col);
-extern type_tolua_cclass* p_tolua_cclass;
+//typedef void type_tolua_cclass(lua_State* L, const char* lname, const char* name, const char* base, lua_CFunction col);
+//extern type_tolua_cclass* p_tolua_cclass;
 
 typedef void type_tolua_constant(lua_State* L, const char* name, double value);
 extern type_tolua_constant* p_tolua_constant;
@@ -52,8 +52,8 @@ extern type_tolua_isusertype* p_tolua_isusertype;
 typedef void type_tolua_module(lua_State* L, const char* name, int hasvar);
 extern type_tolua_module* p_tolua_module;
 
-typedef void type_tolua_open(lua_State* L);
-extern type_tolua_open* p_tolua_open;
+//typedef void type_tolua_open(lua_State* L);
+//extern type_tolua_open* p_tolua_open;
 
 typedef void type_tolua_pushboolean(lua_State* L, int value);
 extern type_tolua_pushboolean* p_tolua_pushboolean;
@@ -79,6 +79,24 @@ extern type_tolua_usertype* p_tolua_usertype;
 typedef void type_tolua_variable(lua_State* L, const char* name, lua_CFunction get, lua_CFunction set);
 extern type_tolua_variable* p_tolua_variable;
 
+typedef void type_tolua_newmetatable(lua_State* L, const char* name);
+extern type_tolua_newmetatable* p_tolua_newmetatable;
+
+typedef int type_tolua_bnd_type(lua_State* L);
+extern type_tolua_bnd_type* p_tolua_bnd_type;
+
+typedef int type_tolua_bnd_takeownership(lua_State* L);
+extern type_tolua_bnd_takeownership* p_tolua_bnd_takeownership;
+
+typedef int type_tolua_bnd_releaseownership(lua_State* L);
+extern type_tolua_bnd_releaseownership* p_tolua_bnd_releaseownership;
+
+typedef int type_tolua_bnd_cast(lua_State* L);
+extern type_tolua_bnd_cast* p_tolua_bnd_cast;
+
+typedef int type_tolua_bnd_release(lua_State* L);
+extern type_tolua_bnd_release* p_tolua_bnd_release;
+
 //////////////////////////////////////////////////////
 // Reimplementations (engine doesn't include these) //
 //////////////////////////////////////////////////////
@@ -96,8 +114,18 @@ void tolua_pushusertypestring(lua_State* L, int lo);
 // Overrides (engine needs these to be replaced) //
 ///////////////////////////////////////////////////
 
+void p_tolua_open(lua_State* L);
+
 int p_tolua_toboolean(lua_State* L, int narg, int def);
-int module_newindex_event(lua_State* L);
+
+int p_class_newindex_event(lua_State* L);
+int p_module_newindex_event(lua_State* L);
+
+int p_module_index_event(lua_State* L);
+int p_class_index_event(lua_State* L);
+
+void p_tolua_cclass(lua_State* L, const char* lname, const char* name, std::initializer_list<const char*>&& bases, lua_CFunction col);
+void p_tolua_cclass_translate(lua_State* L, const char* lname, const char* name, const char* base, lua_CFunction col);
 
 /////////////////////////////////////////////
 // Redefine certain functions so that they //

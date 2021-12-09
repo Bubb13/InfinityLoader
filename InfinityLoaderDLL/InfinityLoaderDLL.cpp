@@ -1023,6 +1023,11 @@ int mallocLua(lua_State* L) {
 	return 1;
 }
 
+int memcpyLua(lua_State* L) {
+	memcpy(reinterpret_cast<void*>(p_lua_tointeger(L, 1)), reinterpret_cast<void*>(p_lua_tointeger(L, 2)), p_lua_tointeger(L, 3));
+	return 0;
+}
+
 int memsetLua(lua_State* L) {
 	memset(reinterpret_cast<void*>(p_lua_tointeger(L, 1)), p_lua_tointeger(L, 2), p_lua_tointeger(L, 3));
 	return 0;

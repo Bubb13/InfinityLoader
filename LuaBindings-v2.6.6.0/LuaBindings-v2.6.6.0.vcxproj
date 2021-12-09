@@ -100,15 +100,35 @@
   <ItemGroup>
     <ClCompile Include="Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
     <ClCompile Include="EEexLua_generated.cpp" />
+    <ClCompile Include="EEexLua_generated_baseclass_offsets.cpp" />
     <ClCompile Include="LuaBindings-v2.6.6.0.cpp" />
     <ClCompile Include="lua_pointers.cpp" />
+    <ClCompile Include="tolua_reference\tolua_event.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_is.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_map.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_push.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_to.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="to_lua_pointers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_generated.h" />
     <ClInclude Include="include\LuaBindings\EEexLua_generated.h" />
+    <ClInclude Include="include\LuaBindings\EEexLua_generated_baseclass_offsets.h" />
     <ClInclude Include="include\LuaBindings\lua_pointers.h" />
     <ClInclude Include="include\LuaBindings\to_lua_pointers.h" />
+    <ClInclude Include="tolua_reference\tolua_event.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />

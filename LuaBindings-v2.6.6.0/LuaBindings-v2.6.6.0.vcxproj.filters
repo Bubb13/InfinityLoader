@@ -19,6 +19,9 @@
     <Filter Include="Build Tasks">
       <UniqueIdentifier>{fb352c1f-1edc-4298-a4ca-4318a65b789e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tolua_reference">
+      <UniqueIdentifier>{faab61e7-a377-4b36-aa4a-cf2784167eae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LuaBindings-v2.6.6.0.cpp">
@@ -36,6 +39,24 @@
     <ClCompile Include="Baldur-v2.6.6.0_generated_internal_pointers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_map.c">
+      <Filter>tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_push.c">
+      <Filter>tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_to.c">
+      <Filter>tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_event.c">
+      <Filter>tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_is.c">
+      <Filter>tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="EEexLua_generated_baseclass_offsets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\LuaBindings\EEexLua_generated.h">
@@ -48,6 +69,12 @@
       <Filter>Header Files\LuaBindings</Filter>
     </ClInclude>
     <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_generated.h">
+      <Filter>Header Files\LuaBindings</Filter>
+    </ClInclude>
+    <ClInclude Include="tolua_reference\tolua_event.h">
+      <Filter>tolua_reference</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LuaBindings\EEexLua_generated_baseclass_offsets.h">
       <Filter>Header Files\LuaBindings</Filter>
     </ClInclude>
   </ItemGroup>

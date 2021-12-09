@@ -73,8 +73,14 @@ extern type_lua_pushvalue* p_lua_pushvalue;
 typedef void type_lua_rawget(lua_State* L, int index);
 extern type_lua_rawget* p_lua_rawget;
 
+typedef void type_lua_rawgeti(lua_State* L, int index, int n);
+extern type_lua_rawgeti* p_lua_rawgeti;
+
 typedef void type_lua_rawset(lua_State* L, int index);
 extern type_lua_rawset* p_lua_rawset;
+
+typedef void type_lua_rawseti(lua_State* L, int index, int n);
+extern type_lua_rawseti* p_lua_rawseti;
 
 typedef void type_lua_remove(lua_State* L, int index);
 extern type_lua_remove* p_lua_remove;
@@ -115,6 +121,9 @@ extern type_lua_type* p_lua_type;
 typedef int type_luaL_loadfilex(lua_State* L, const char* fileName, const char* mode);
 extern type_luaL_loadfilex* p_luaL_loadfilex;
 
+typedef void type_lua_gettable(lua_State* L, int index);
+extern type_lua_gettable* p_lua_gettable;
+
 /////////////
 // Defines //
 /////////////
@@ -122,10 +131,12 @@ extern type_luaL_loadfilex* p_luaL_loadfilex;
 #define p_lua_call(L, n, r) p_lua_callk(L, (n), (r), 0, NULL)
 #define p_lua_isfunction(L, n) (p_lua_type(L, (n)) == LUA_TFUNCTION)
 #define p_lua_isnil(L, n) (p_lua_type(L, (n)) == LUA_TNIL)
+#define p_lua_isboolean(L, n) (p_lua_type(L, (n)) == LUA_TBOOLEAN)
 #define p_lua_istable(L, n) (p_lua_type(L, (n)) == LUA_TTABLE)
 #define p_lua_newtable(L) p_lua_createtable(L, 0, 0)
-#define p_lua_pop(L,n) p_lua_settop(L, -(n)-1)
+#define p_lua_pop(L, n) p_lua_settop(L, -(n) - 1)
 #define p_lua_pushcfunction(L, f) p_lua_pushcclosure(L, (f), 0)
 #define p_lua_tointeger(L, i) p_lua_tointegerx(L, (i), NULL)
+#define p_lua_tonumber(L,i) p_lua_tonumberx(L, i, NULL)
 #define p_lua_tostring(L, i) p_lua_tolstring(L, (i), NULL)
 #define p_luaL_getmetatable(L,n) (p_lua_getfield(L, LUA_REGISTRYINDEX, (n)))

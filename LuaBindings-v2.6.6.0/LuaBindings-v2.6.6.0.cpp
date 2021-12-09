@@ -197,7 +197,9 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_lua_pushstring", lua_pushstring);
     setLuaPointer("Hardcoded_lua_pushvalue", lua_pushvalue);
     setLuaPointer("Hardcoded_lua_rawget", lua_rawget);
+    setLuaPointer("Hardcoded_lua_rawgeti", lua_rawgeti);
     setLuaPointer("Hardcoded_lua_rawset", lua_rawset);
+    setLuaPointer("Hardcoded_lua_rawseti", lua_rawseti);
     setLuaPointer("Hardcoded_lua_remove", lua_remove);
     setLuaPointer("Hardcoded_lua_setglobal", lua_setglobal);
     setLuaPointer("Hardcoded_lua_setmetatable", lua_setmetatable);
@@ -213,7 +215,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_luaL_loadfilex", luaL_loadfilex);
     setLuaPointer("Hardcoded_malloc", malloc);
     setLuaPointer("Hardcoded_tolua_beginmodule", tolua_beginmodule);
-    setLuaPointer("Hardcoded_tolua_cclass", tolua_cclass);
+    //setLuaPointer("Hardcoded_tolua_cclass", tolua_cclass);
     setLuaPointer("Hardcoded_tolua_constant", tolua_constant);
     setLuaPointer("Hardcoded_tolua_endmodule", tolua_endmodule);
     setLuaPointer("Hardcoded_tolua_error", tolua_error);
@@ -224,7 +226,15 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_tolua_isstring", tolua_isstring);
     setLuaPointer("Hardcoded_tolua_isusertype", tolua_isusertype);
     setLuaPointer("Hardcoded_tolua_module", tolua_module);
-    setLuaPointer("Hardcoded_tolua_open", tolua_open);
+
+    setLuaPointer("Hardcoded_tolua_newmetatable", tolua_newmetatable);
+    setLuaPointer("Hardcoded_tolua_bnd_type", tolua_bnd_type);
+    setLuaPointer("Hardcoded_tolua_bnd_takeownership", tolua_bnd_takeownership);
+    setLuaPointer("Hardcoded_tolua_bnd_releaseownership", tolua_bnd_releaseownership);
+    setLuaPointer("Hardcoded_tolua_bnd_cast", tolua_bnd_cast);
+    setLuaPointer("Hardcoded_tolua_bnd_release", tolua_bnd_release);
+
+    //setLuaPointer("Hardcoded_tolua_open", tolua_open);
     setLuaPointer("Hardcoded_tolua_pushboolean", tolua_pushboolean);
     setLuaPointer("Hardcoded_tolua_pushnumber", tolua_pushnumber);
     setLuaPointer("Hardcoded_tolua_pushstring", tolua_pushstring);
@@ -233,7 +243,8 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
     setLuaPointer("Hardcoded_tolua_usertype", tolua_usertype);
     setLuaPointer("Hardcoded_tolua_variable", tolua_variable);
-    
+    setLuaPointer("Hardcoded_lua_gettable", lua_gettable);
+
     // Export Lua functions that deal with user data / user types
     exposeToLua(L, "EEex_CastUD", castUserDataLua);
     exposeToLua(L, "EEex_CastUserData", castUserDataLua);
@@ -262,11 +273,18 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
         }
     }
 
-    // tolua's module_newindex_event() is broken and needs to be overridden
-    // (this is done in the Lua environment, add override address to patterns)
-    addPattern(patterns, "override_module_newindex_event", reinterpret_cast<intptr_t>(module_newindex_event));
-    addPattern(patterns, "Hardcoded_tolua_pushusertype", reinterpret_cast<intptr_t>(p_tolua_pushusertype_nocast));
+    // Export tolua overrides (the versions in-engine aren't sufficient)
+    addPattern(patterns, "override_tolua_open", reinterpret_cast<intptr_t>(p_tolua_open));
+    addPattern(patterns, "override_tolua_cclass", reinterpret_cast<intptr_t>(p_tolua_cclass_translate));
+    
+    addPattern(patterns, "override_module_newindex_event", reinterpret_cast<intptr_t>(p_module_newindex_event));
+    addPattern(patterns, "override_class_newindex_event", reinterpret_cast<intptr_t>(p_class_newindex_event));
 
+    addPattern(patterns, "override_module_index_event", reinterpret_cast<intptr_t>(p_module_index_event));
+    addPattern(patterns, "override_class_index_event", reinterpret_cast<intptr_t>(p_class_index_event));
+
+    addPattern(patterns, "Hardcoded_tolua_pushusertype", reinterpret_cast<intptr_t>(p_tolua_pushusertype_nocast));
+    
     // The Lua environment needs to grab the pattern map and execute any
     // patches relating to tolua before the Lua bindings are exported
     runCallback(L);
