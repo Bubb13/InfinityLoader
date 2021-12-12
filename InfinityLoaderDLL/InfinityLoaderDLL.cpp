@@ -1061,11 +1061,7 @@ int read8Lua(lua_State* L) {
 }
 
 int readPointerLua(lua_State* L) {
-#if defined(_WIN64)
-	p_lua_pushinteger(L, *reinterpret_cast<__int64*>(p_lua_tointeger(L, 1)));
-#else
-	p_lua_pushinteger(L, *reinterpret_cast<__int32*>(p_lua_tointeger(L, 1)));
-#endif
+	p_lua_pushinteger(L, *reinterpret_cast<uintptr_t*>(p_lua_tointeger(L, 1)));
 	return 1;
 }
 
@@ -1126,24 +1122,29 @@ int setLuaRegistryIndexLua(lua_State* L) {
 
 int write16Lua(lua_State* L) {
 	*reinterpret_cast<__int16*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
-	return 1;
+	return 0;
 }
 
 int write32Lua(lua_State* L) {
 	*reinterpret_cast<__int32*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
-	return 1;
+	return 0;
 }
 
 #if defined(_WIN64)
 int write64Lua(lua_State* L) {
 	*reinterpret_cast<__int64*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
-	return 1;
+	return 0;
 }
 #endif
 
 int write8Lua(lua_State* L) {
 	*reinterpret_cast<__int8*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
-	return 1;
+	return 0;
+}
+
+int writePointerLua(lua_State* L) {
+	*reinterpret_cast<uintptr_t*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
+	return 0;
 }
 
 int writeLStringLua(lua_State* L) {
@@ -1232,6 +1233,9 @@ void internalLuaHook() {
 	p_lua_pushinteger(L, sizeof(void*));
 	p_lua_setglobal(L, "EEex_PointerSize");
 
+	p_lua_pushinteger(L, sizeof(void*));
+	p_lua_setglobal(L, "EEex_PtrSize");
+
 	//////////////////////////
 	// Export Lua Functions //
 	//////////////////////////
@@ -1254,6 +1258,7 @@ void internalLuaHook() {
 	exposeToLua(L, "EEex_LoadLuaBindings", loadLuaBindingsLua);
 	exposeToLua(L, "EEex_LShift", lshiftLua);
 	exposeToLua(L, "EEex_Malloc", mallocLua);
+	exposeToLua(L, "EEex_Memcpy", memcpyLua);
 	exposeToLua(L, "EEex_Memset", memsetLua);
 	exposeToLua(L, "EEex_MessageBoxInternal", messageBoxInternalLua);
 	exposeToLua(L, "EEex_Read16", read16Lua);
@@ -1263,6 +1268,7 @@ void internalLuaHook() {
 #endif
 	exposeToLua(L, "EEex_Read8", read8Lua);
 	exposeToLua(L, "EEex_ReadPointer", readPointerLua);
+	exposeToLua(L, "EEex_ReadPtr", readPointerLua);
 	exposeToLua(L, "EEex_ReadU16", readU16Lua);
 	exposeToLua(L, "EEex_ReadU32", readU32Lua);
 #if defined(_WIN64)
@@ -1278,6 +1284,8 @@ void internalLuaHook() {
 	exposeToLua(L, "EEex_Write64", write64Lua);
 #endif
 	exposeToLua(L, "EEex_Write8", write8Lua);
+	exposeToLua(L, "EEex_WritePointer", writePointerLua);
+	exposeToLua(L, "EEex_WritePtr", writePointerLua);
 	exposeToLua(L, "EEex_WriteLString", writeLStringLua);
 	exposeToLua(L, "EEex_WriteStringAuto", writeStringAutoLua);
 

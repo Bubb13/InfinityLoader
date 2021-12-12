@@ -12273,6 +12273,21 @@ struct CGameEffectUsability : CGameEffect
 	}
 };
 
+struct CGameEffect_vtbl
+{
+	void (__fastcall *CGameEffect_Destructor)(CGameEffect*);
+	CGameEffect* (__fastcall *Copy)(CGameEffect*);
+	int (__fastcall *ApplyEffect)(CGameEffect*, CGameSprite*);
+	int (__fastcall *ResolveEffect)(CGameEffect*, CGameSprite*);
+	void (__fastcall *OnAdd)(CGameEffect*, CGameSprite*);
+	void (__fastcall *OnAddSpecific)(CGameEffect*, CGameSprite*);
+	void (__fastcall *OnLoad)(CGameEffect*, CGameSprite*);
+	int (__fastcall *CheckSave)(CGameEffect*, CGameSprite*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*);
+	int (__fastcall *UsesDice)(CGameEffect*);
+	void (__fastcall *DisplayString)(CGameEffect*, CGameSprite*);
+	void (__fastcall *OnRemove)(CGameEffect*, CGameSprite*);
+};
+
 struct STR_RES
 {
 	CString szText;

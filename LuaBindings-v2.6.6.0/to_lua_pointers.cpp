@@ -360,10 +360,10 @@ enum class KeyKeyReturn : int {
 	KEYKEY = 2,
 };
 
-// Expects   [ ..., mt, key ]
+// Expects           [ ..., mt, key ]
 // End Stack:
-//     0 =>  [ ... ]
-//     1 =>  [ mtVal ]
+//     NONE       => [ ... ]
+//     KEY/KEYKEY => [ ..., mtVal ]
 template<typename SingleAction>
 KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, uintptr_t& offsetAccumulator, SingleAction action) {
 
@@ -436,10 +436,10 @@ KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, uintptr_t& offse
 	return KeyKeyReturn::NONE;
 }
 
-// Expects   [ ..., table, key ]
+// Expects           [ ..., table, key ]
 // End Stack:
-//     0 =>  [ ... ]
-//     1 =>  [ ..., mtVal ]
+//     NONE       => [ ... ]
+//     KEY/KEYKEY => [ ..., mtVal ]
 template<typename SingleAction>
 KeyKeyReturn findKeyKey(lua_State* L, const char* keykey, uintptr_t& offsetAccumulator, SingleAction action) {
 
