@@ -424,6 +424,10 @@ KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, uintptr_t& offse
 						p_lua_pop(L, 6);               // 1  [ ..., mtVal ]
 						return retVal;
 					}
+					else {
+						                               // 6  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v ]
+						p_lua_pop(L, 1);               // 5  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i ]
+					}
 				}
 			}
 			else {
