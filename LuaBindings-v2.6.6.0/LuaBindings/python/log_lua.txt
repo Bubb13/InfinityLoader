@@ -1,0 +1,8 @@
+vtblStruct cricket::PortInterface_vtbl has non-function field: Type* Type;, breaking!
+vtblStruct cricket::PortProxy_vtbl has non-function field: Type* Type;, breaking!
+vtblStruct cricket::Port_vtbl has non-function field: Type* Type;, breaking!
+vtblStruct cricket::RelayPort_vtbl has non-function field: Type* Type;, breaking!
+vtblStruct cricket::TurnPort_vtbl has non-function field: Type* Type;, breaking!
+vtblStruct cricket::UDPPort_vtbl has non-function field: Type* Type;, breaking!
+vtblStruct cricket::StunPort_vtbl has non-function field: Type* Type;, breaking!
+vtblStruct cricket::TCPPort_vtbl has non-function field: Type* Type;, breaking!

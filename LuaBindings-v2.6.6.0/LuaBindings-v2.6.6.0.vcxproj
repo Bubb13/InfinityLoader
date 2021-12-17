@@ -81,7 +81,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)common/include;$(SolutionDir)common/include/lua;$(ProjectDir)include/LuaBindings;$(ProjectDir)include/tolua</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)common/include;$(ProjectDir)include/LuaBindings;$(ProjectDir)include/lua;$(ProjectDir)include/tolua</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -122,10 +122,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_generated.h" />
+    <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_lua_generated.h" />
     <ClInclude Include="include\LuaBindings\EEexLua_generated.h" />
     <ClInclude Include="include\LuaBindings\EEexLua_generated_baseclass_offsets.h" />
     <ClInclude Include="include\LuaBindings\lua_pointers.h" />
     <ClInclude Include="include\LuaBindings\to_lua_pointers.h" />
+    <ClInclude Include="include\lua\lauxlib.h" />
+    <ClInclude Include="include\lua\lua.h" />
+    <ClInclude Include="include\lua\luaconf.h" />
     <ClInclude Include="tolua_reference\tolua_event.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>

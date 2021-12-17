@@ -44,3 +44,13 @@ type_lua_touserdata* p_lua_touserdata;
 type_lua_type* p_lua_type;
 type_luaL_loadfilex* p_luaL_loadfilex;
 type_lua_gettable* p_lua_gettable;
+
+///////////////////////
+// Reimplementations //
+///////////////////////
+
+int p_lua_absindex(lua_State* L, int idx) {
+	return (idx > 0 || p_lua_ispseudo(idx))
+		? idx
+		: p_lua_cast_int(L->top - L->ci->func + idx);
+}

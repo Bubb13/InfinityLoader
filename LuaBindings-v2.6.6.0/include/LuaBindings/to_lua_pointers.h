@@ -109,6 +109,7 @@ void* p_tolua_touserdata(lua_State* L, int narg, void* def);
 std::string tolua_getusertype(lua_State* L, int lo);
 void tolua_pushusertypepointer(lua_State* L, void* value, const char* type);
 void tolua_pushusertypestring(lua_State* L, int lo);
+void* tolua_tousertype_dynamic(lua_State* L, int narg, void* def, const char* targetUsertype);
 
 ///////////////////////////////////////////////////
 // Overrides (engine needs these to be replaced) //
@@ -132,10 +133,12 @@ void p_tolua_cclass_translate(lua_State* L, const char* lname, const char* name,
 // point to the in-exe versions.           //
 /////////////////////////////////////////////
 
-#define lua_tointegerx p_lua_tointegerx
-#define lua_tonumberx p_lua_tonumberx
 #define lua_pushlstring p_lua_pushlstring
 #define lua_toboolean p_lua_toboolean
+#define lua_tointeger p_lua_tointeger
+#define lua_tointegerx p_lua_tointegerx
+#define lua_tonumber p_lua_tonumber
+#define lua_tonumberx p_lua_tonumberx
 #define lua_touserdata p_lua_touserdata
 #define tolua_beginmodule p_tolua_beginmodule
 #define tolua_cclass p_tolua_cclass

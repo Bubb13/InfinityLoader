@@ -22,6 +22,9 @@
     <Filter Include="tolua_reference">
       <UniqueIdentifier>{faab61e7-a377-4b36-aa4a-cf2784167eae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\lua">
+      <UniqueIdentifier>{3946674d-33b4-4350-8239-edf4104daa8c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LuaBindings-v2.6.6.0.cpp">
@@ -76,6 +79,18 @@
     </ClInclude>
     <ClInclude Include="include\LuaBindings\EEexLua_generated_baseclass_offsets.h">
       <Filter>Header Files\LuaBindings</Filter>
+    </ClInclude>
+    <ClInclude Include="include\lua\lua.h">
+      <Filter>Header Files\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="include\lua\luaconf.h">
+      <Filter>Header Files\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_lua_generated.h">
+      <Filter>Header Files\LuaBindings</Filter>
+    </ClInclude>
+    <ClInclude Include="include\lua\lauxlib.h">
+      <Filter>Header Files\lua</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

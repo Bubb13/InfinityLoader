@@ -124,9 +124,19 @@ extern type_luaL_loadfilex* p_luaL_loadfilex;
 typedef void type_lua_gettable(lua_State* L, int index);
 extern type_lua_gettable* p_lua_gettable;
 
+///////////////////////
+// Reimplementations //
+///////////////////////
+
+extern int p_lua_absindex(lua_State* L, int idx);
+
 /////////////
 // Defines //
 /////////////
+
+#define p_lua_cast(t, exp) ((t)(exp))
+#define p_lua_cast_int(i) p_lua_cast(int, (i))
+#define p_lua_ispseudo(i) ((i) <= LUA_REGISTRYINDEX)
 
 #define p_lua_call(L, n, r) p_lua_callk(L, (n), (r), 0, NULL)
 #define p_lua_isfunction(L, n) (p_lua_type(L, (n)) == LUA_TFUNCTION)

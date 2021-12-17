@@ -20,5 +20,15 @@ copy /Y .\out\EEexLua_generated_baseclass_offsets.h ..\..\include\LuaBindings\
 copy /Y .\out\Baldur-v2.6.6.0_generated_internal_pointers.cpp ..\..\
 copy /Y .\out\EEexLua_generated_baseclass_offsets.cpp ..\..\
 copy /Y .\out\EEexLua_generated.cpp ..\..\
- 
+
+python generate_bindings.py^
+ -inFile=./in/Baldur-v2.6.6.0.h^
+ -noCustomTypes^
+ -wantedFile=./in_lua/wanted_types.txt^
+ -preludeFile=./in_lua/prelude.txt^
+ -outFile=./out/Baldur-v2.6.6.0_lua_generated.h^
+ > log_lua.txt
+
+copy /Y .\out\Baldur-v2.6.6.0_lua_generated.h ..\..\include\LuaBindings\
+
 pause
