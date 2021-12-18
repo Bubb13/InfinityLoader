@@ -577,10 +577,6 @@ struct CResRef
 	}
 };
 
-$pack_1 struct Spell_Header_st
-{
-};
-
 /////////////////////////////
 // Local Function Bindings //
 /////////////////////////////

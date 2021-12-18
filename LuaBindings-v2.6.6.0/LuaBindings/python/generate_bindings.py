@@ -2716,7 +2716,7 @@ def outputFile(filePath, out: TextIOWrapper):
 				out.write(line)
 
 
-def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str):
+def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, packingFile: str):
 	
 	"""
 	Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
@@ -2764,6 +2764,13 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str):
 			for line in fileIn:
 				if group := mainState.tryGetGroup(line.strip()):
 					group.ignoreHeader = True
+
+	if packingFile:
+		with open(packingFile) as fileIn:
+			for line in fileIn:
+				split = line.strip().split(" ")
+				if group := mainState.tryGetGroup(split[0]):
+					group.pack = int(split[1])
 
 
 def checkRename(mainState, alreadyDefinedUsertypesFile: str):
@@ -3025,6 +3032,7 @@ def main():
 	wantedFile: str = None
 	manualTypesFile: str = None
 	alreadyDefinedUsertypesFile: str = None
+	packingFile: str = None
 
 	for k in islice(sys.argv, 1, None):
 		if   k == "-normal":  raise ValueError()
@@ -3040,6 +3048,7 @@ def main():
 		elif (v := re.search("-wantedFile=(.+)",                  k)) != None: wantedFile                  = v.group(1)
 		elif (v := re.search("-manualTypesFile=(.+)",             k)) != None: manualTypesFile             = v.group(1)
 		elif (v := re.search("-alreadyDefinedUsertypesFile=(.+)", k)) != None: alreadyDefinedUsertypesFile = v.group(1)
+		elif (v := re.search("-packingFile=(.+)",                 k)) != None: packingFile                 = v.group(1)
 
 
 	builtins.globalGroup = Group()
@@ -3087,7 +3096,7 @@ struct Pointer
 			group.mapDependsOn()            # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
 
 		# Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
-		filterGroups(mainState, wantedFile, ignoreHeaderFile)
+		filterGroups(mainState, wantedFile, ignoreHeaderFile, packingFile)
 
 		# Fill templateUses and uniqueUseRepresentations
 		for group in mainState.filteredGroups:

@@ -139,7 +139,6 @@ void tolua_pushusertypestring(lua_State* L, int index) {
 // Overrides (engine needs these to be replaced) //
 ///////////////////////////////////////////////////
 
-// Expects [ ... ]
 void dumpStackIndex(lua_State* L, const char* label, int index) {
 
 	p_lua_getglobal(L, "debug");        // [ debug ]
@@ -170,43 +169,43 @@ void dumpStack(lua_State* L) {
 
 void p_tolua_open(lua_State* L) {
 	int top = p_lua_gettop(L);
-	p_lua_pushstring(L, "tolua_opened");     // [ "tolua_opened" ]
-	p_lua_rawget(L, LUA_REGISTRYINDEX);      // [ registry["tolua_opened"] ]
+	p_lua_pushstring(L, "tolua_opened");       // [ "tolua_opened" ]
+	p_lua_rawget(L, LUA_REGISTRYINDEX);        // [ registry["tolua_opened"] ]
 	if (!p_lua_isboolean(L, -1)) {
 
-		p_lua_pushstring(L, "tolua_opened"); // [ registry["tolua_opened"], "tolua_opened" ]
-		p_lua_pushboolean(L, 1);             // [ registry["tolua_opened"], "tolua_opened", true ]
-		p_lua_rawset(L, LUA_REGISTRYINDEX);  // [ registry["tolua_opened"] ]
+		p_lua_pushstring(L, "tolua_opened");   // [ registry["tolua_opened"], "tolua_opened" ]
+		p_lua_pushboolean(L, 1);               // [ registry["tolua_opened"], "tolua_opened", true ]
+		p_lua_rawset(L, LUA_REGISTRYINDEX);    // [ registry["tolua_opened"] ]
 
-		p_lua_pushstring(L, "tolua_ubox");   // [ registry["tolua_opened"], "tolua_ubox" ]
-		p_lua_newtable(L);                   // [ registry["tolua_opened"], "tolua_ubox", newT ]
-		p_lua_pushvalue(L, -1);              // [ registry["tolua_opened"], "tolua_ubox", newT, newT ]
-		p_lua_pushstring(L, "__mode");       // [ registry["tolua_opened"], "tolua_ubox", newT, newT, "__mode" ]
-		p_lua_pushstring(L, "v");            // [ registry["tolua_opened"], "tolua_ubox", newT, newT, "__mode", "v" ]
-		p_lua_rawset(L, -3);                 // [ registry["tolua_opened"], "tolua_ubox", newT, newT ]
-		p_lua_setmetatable(L, -2);           // [ registry["tolua_opened"], "tolua_ubox", newT ]
-		p_lua_rawset(L, LUA_REGISTRYINDEX);  // [ registry["tolua_opened"] ]
+		p_lua_pushstring(L, "tolua_ubox");     // [ registry["tolua_opened"], "tolua_ubox" ]
+		p_lua_newtable(L);                     // [ registry["tolua_opened"], "tolua_ubox", newT ]
+		p_lua_pushvalue(L, -1);                // [ registry["tolua_opened"], "tolua_ubox", newT, newT ]
+		p_lua_pushstring(L, "__mode");         // [ registry["tolua_opened"], "tolua_ubox", newT, newT, "__mode" ]
+		p_lua_pushstring(L, "v");              // [ registry["tolua_opened"], "tolua_ubox", newT, newT, "__mode", "v" ]
+		p_lua_rawset(L, -3);                   // [ registry["tolua_opened"], "tolua_ubox", newT, newT ]
+		p_lua_setmetatable(L, -2);             // [ registry["tolua_opened"], "tolua_ubox", newT ]
+		p_lua_rawset(L, LUA_REGISTRYINDEX);    // [ registry["tolua_opened"] ]
 
-		p_lua_pushstring(L, "tolua_peer");   // [ registry["tolua_opened"], "tolua_peer" ]
-		p_lua_newtable(L);                   // [ registry["tolua_opened"], "tolua_peer", newT ]
-		p_lua_pushvalue(L, -1);              // [ registry["tolua_opened"], "tolua_peer", newT, newT ]
-		p_lua_pushstring(L, "__mode");       // [ registry["tolua_opened"], "tolua_peer", newT, newT, "__mode" ]
-		p_lua_pushstring(L, "k");            // [ registry["tolua_opened"], "tolua_peer", newT, newT, "__mode", "k" ]
-		p_lua_rawset(L, -3);                 // [ registry["tolua_opened"], "tolua_peer", newT, newT ]
-		p_lua_setmetatable(L, -2);           // [ registry["tolua_opened"], "tolua_peer", newT ]
-		p_lua_rawset(L, LUA_REGISTRYINDEX);  // [ registry["tolua_opened"] ]
+		p_lua_pushstring(L, "tolua_peer");     // [ registry["tolua_opened"], "tolua_peer" ]
+		p_lua_newtable(L);                     // [ registry["tolua_opened"], "tolua_peer", newT ]
+		p_lua_pushvalue(L, -1);                // [ registry["tolua_opened"], "tolua_peer", newT, newT ]
+		p_lua_pushstring(L, "__mode");         // [ registry["tolua_opened"], "tolua_peer", newT, newT, "__mode" ]
+		p_lua_pushstring(L, "k");              // [ registry["tolua_opened"], "tolua_peer", newT, newT, "__mode", "k" ]
+		p_lua_rawset(L, -3);                   // [ registry["tolua_opened"], "tolua_peer", newT, newT ]
+		p_lua_setmetatable(L, -2);             // [ registry["tolua_opened"], "tolua_peer", newT ]
+		p_lua_rawset(L, LUA_REGISTRYINDEX);    // [ registry["tolua_opened"] ]
 
-		p_lua_pushstring(L, "tolua_super");  // [ registry["tolua_opened"], "tolua_super" ]
-		p_lua_newtable(L);                   // [ registry["tolua_opened"], "tolua_super", newT ]
-		p_lua_rawset(L, LUA_REGISTRYINDEX);  // [ registry["tolua_opened"] ]
+		p_lua_pushstring(L, "tolua_super");    // [ registry["tolua_opened"], "tolua_super" ]
+		p_lua_newtable(L);                     // [ registry["tolua_opened"], "tolua_super", newT ]
+		p_lua_rawset(L, LUA_REGISTRYINDEX);    // [ registry["tolua_opened"] ]
 
-		p_lua_pushstring(L, "tolua_gc");     // [ registry["tolua_opened"], "tolua_gc" ]
-		p_lua_newtable(L);                   // [ registry["tolua_opened"], "tolua_gc", newT ]
-		p_lua_rawset(L, LUA_REGISTRYINDEX);  // [ registry["tolua_opened"] ]
+		p_lua_pushstring(L, "tolua_gc");       // [ registry["tolua_opened"], "tolua_gc" ]
+		p_lua_newtable(L);                     // [ registry["tolua_opened"], "tolua_gc", newT ]
+		p_lua_rawset(L, LUA_REGISTRYINDEX);    // [ registry["tolua_opened"] ]
 
-		p_lua_pushstring(L, "tolua_base");   // [ registry["tolua_opened"], "tolua_base" ]
-		p_lua_newtable(L);                   // [ registry["tolua_opened"], "tolua_base", newT ]
-		p_lua_rawset(L, LUA_REGISTRYINDEX);  // [ registry["tolua_opened"] ]
+		p_lua_pushstring(L, "tolua_base");     // [ registry["tolua_opened"], "tolua_base" ]
+		p_lua_newtable(L);                     // [ registry["tolua_opened"], "tolua_base", newT ]
+		p_lua_rawset(L, LUA_REGISTRYINDEX);    // [ registry["tolua_opened"] ]
 
 		p_lua_pushstring(L, "tolua_base_map"); // [ registry["tolua_opened"], "tolua_base_map" ]
 		p_lua_newtable(L);                     // [ registry["tolua_opened"], "tolua_base_map", newT ]
@@ -369,7 +368,7 @@ enum class KeyKeyReturn : int {
 //     NONE       => [ ... ]
 //     KEY/KEYKEY => [ ..., mtVal ]
 template<typename SingleAction>
-KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, uintptr_t& offsetAccumulator, SingleAction action) {
+KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, SingleAction action) {
 
 	p_lua_pushstring(L, "tolua_base");                 // 3  [ ..., mt, key, "tolua_base" ]
 	p_lua_rawget(L, LUA_REGISTRYINDEX);                // 3  [ ..., mt, key, registry["tolua_base"] ]
@@ -386,11 +385,6 @@ KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, uintptr_t& offse
 
 			if (action(-6)) {
 				                                       // 8  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, retVal ]
-				p_lua_pushstring(L, "offset");         // 9  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, retVal, "offset" ]
-				p_lua_rawget(L, -4);                   // 9  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, retVal, registry["tolua_base"][mt]["offset"] ]
-				offsetAccumulator += p_lua_tointeger(L, -1);
-				p_lua_pop(L, 1);                       // 8  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, retVal ]
-
 				p_lua_insert(L, -8);                   // 8  [ ..., retVal, mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT ]
 				p_lua_pop(L, 7);                       // 1  [ ..., retVal ]
 				return KeyKeyReturn::KEY;
@@ -404,12 +398,6 @@ KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, uintptr_t& offse
 				p_lua_rawget(L, -2);                   // 9  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, baseMT[keykey], baseMT[keykey][key] ]
 
 				if (!p_lua_isnil(L, -1)) {
-
-					p_lua_pushstring(L, "offset");     // 10 [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, baseMT[keykey], baseMT[keykey][key], "offset" ]
-					p_lua_rawget(L, -5);               // 10 [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, baseMT[keykey], baseMT[keykey][key], registry["tolua_base"][mt]["offset"] ]
-					offsetAccumulator += p_lua_tointeger(L, -1);
-					p_lua_pop(L, 1);                   // 9  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, baseMT[keykey], baseMT[keykey][key] ]
-
 					p_lua_insert(L, -9);               // 9  [ ..., baseMT[keykey][key], mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, baseMT[keykey] ]
 					p_lua_pop(L, 8);                   // 1  [ ..., baseMT[keykey][key] ]
 					return KeyKeyReturn::KEYKEY;
@@ -417,13 +405,8 @@ KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, uintptr_t& offse
 				else {
 					p_lua_pop(L, 2);                   // 7  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT ]
 					p_lua_pushvalue(L, -6);            // 8  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, baseMT, key ]
-					if (KeyKeyReturn retVal = findKeyKeyOnBase(L, keykey, offsetAccumulator, action); retVal != KeyKeyReturn::NONE) {
+					if (KeyKeyReturn retVal = findKeyKeyOnBase(L, keykey, action); retVal != KeyKeyReturn::NONE) {
 						                               // 7  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, mtVal ]
-						p_lua_pushstring(L, "offset"); // 8  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, mtVal, "offset" ]
-						p_lua_rawget(L, -3);           // 8  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, mtVal, registry["tolua_base"]["offset"] ]
-						offsetAccumulator += p_lua_tointeger(L, -1);
-						p_lua_pop(L, 1);               // 7  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v, mtVal ]
-
 						p_lua_insert(L, -7);           // 7  [ ..., mtVal, mt, key, registry["tolua_base"], registry["tolua_base"][mt], i, v ]
 						p_lua_pop(L, 6);               // 1  [ ..., mtVal ]
 						return retVal;
@@ -449,7 +432,7 @@ KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, uintptr_t& offse
 //     NONE       => [ ... ]
 //     KEY/KEYKEY => [ ..., mtVal ]
 template<typename SingleAction>
-KeyKeyReturn findKeyKey(lua_State* L, const char* keykey, uintptr_t& offsetAccumulator, SingleAction action) {
+KeyKeyReturn findKeyKey(lua_State* L, const char* keykey, SingleAction action) {
 
 	p_lua_getmetatable(L, -2);                                  // 3 [ ..., table, key, mt(table) ]
 	if (action(-2)) {
@@ -477,7 +460,7 @@ KeyKeyReturn findKeyKey(lua_State* L, const char* keykey, uintptr_t& offsetAccum
 		p_lua_pop(L, 1);                                        // 3 [ ..., table, key, mt(table) ]
 	}
 	p_lua_pushvalue(L, -2);                                     // 4 [ ..., table, key, mt(table), key ]
-	if (KeyKeyReturn retVal = findKeyKeyOnBase(L, keykey, offsetAccumulator, action); retVal != KeyKeyReturn::NONE) {
+	if (KeyKeyReturn retVal = findKeyKeyOnBase(L, keykey, action); retVal != KeyKeyReturn::NONE) {
 		                                                        // 3 [ ..., table, key, mtVal ]
 		p_lua_insert(L, -3);                                    // 3 [ ..., mtVal, table, key ]
 		p_lua_pop(L, 2);                                        // 1 [ ..., mtVal ]
@@ -493,25 +476,11 @@ int callSetDynamic(lua_State* L) {
 	p_lua_pushvalue(L, -3);             // 4 [ ..., table, key, value, table ]
 	p_lua_pushvalue(L, -3);             // 5 [ ..., table, key, value, table, key ]
 
-	uintptr_t offsetAccumulator{ 0 };
-	if (findKeyKey(L, ".set", offsetAccumulator, [&](size_t keyIndex){
+	if (findKeyKey(L, ".set", [&](size_t keyIndex){
 		return 0;
 	}) == KeyKeyReturn::KEYKEY) {
                                         // 4 [ ..., table, key, value, mtVal ]
 		if (p_lua_iscfunction(L, -1)) {
-			/*if (offsetAccumulator > 0) {
-				uintptr_t* block = reinterpret_cast<uintptr_t*>(p_lua_touserdata(L, -4));
-				*block += offsetAccumulator;
-				p_lua_pushvalue(L, -4); // 5 [ ..., table, key, value, mtVal, table ]
-				p_lua_pushvalue(L, -3); // 6 [ ..., table, key, value, mtVal, table, value]
-				p_lua_call(L, 2, 0);    // 3 [ ..., table, key, value ]
-				*block -= offsetAccumulator;
-			}
-			else {
-				p_lua_pushvalue(L, -4); // 5 [ ..., table, key, value, mtVal, table ]
-				p_lua_pushvalue(L, -3); // 6 [ ..., table, key, value, mtVal, table, value ]
-				p_lua_call(L, 2, 0);    // 3 [ ..., table, key, value ]
-			}*/
 			p_lua_pushvalue(L, -4);     // 5 [ ..., table, key, value, mtVal, table ]
 			p_lua_pushvalue(L, -3);     // 6 [ ..., table, key, value, mtVal, table, value ]
 			p_lua_call(L, 2, 0);        // 3 [ ..., table, key, value ]
@@ -532,9 +501,8 @@ int callGetDynamic(lua_State* L) {
 
 	p_lua_pushvalue(L, -2);             // 3 [ ..., table, key, table ]
 	p_lua_pushvalue(L, -2);             // 4 [ ..., table, key, table, key ]
-	uintptr_t offsetAccumulator{ 0 };
 
-	KeyKeyReturn retVal = findKeyKey(L, ".get", offsetAccumulator, [&](int keyIndex) {
+	KeyKeyReturn retVal = findKeyKey(L, ".get", [&](int keyIndex) {
 		                                // 1 [ ..., mt ]
 		p_lua_pushvalue(L, keyIndex);   // 2 [ ..., mt, key ]
 		p_lua_rawget(L, -2);            // 2 [ ..., mt, mt[key] ]
@@ -554,19 +522,6 @@ int callGetDynamic(lua_State* L) {
 	else if (retVal == KeyKeyReturn::KEYKEY) {
 			                            // 3 [ ..., table, key, mtVal ]
 		if (p_lua_iscfunction(L, -1)) {
-			/*if (offsetAccumulator > 0) {
-				uintptr_t* block = reinterpret_cast<uintptr_t*>(p_lua_touserdata(L, -3));
-				*block += offsetAccumulator;
-				p_lua_pushvalue(L, -3); // 4 [ ..., table, key, mtVal, table ]
-				p_lua_pushvalue(L, -3); // 5 [ ..., table, key, mtVal, table, key]
-				p_lua_call(L, 2, 1);    // 3 [ ..., table, key, retVal ]
-				*block -= offsetAccumulator;
-			}
-			else {
-				p_lua_pushvalue(L, -3); // 4 [ ..., table, key, mtVal, table ]
-				p_lua_pushvalue(L, -3); // 5 [ ..., table, key, mtVal, table, key ]
-				p_lua_call(L, 2, 1);    // 3 [ ..., table, key, retVal ]
-			}*/
 			p_lua_pushvalue(L, -3);     // 4 [ ..., table, key, mtVal, table ]
 			p_lua_pushvalue(L, -3);     // 5 [ ..., table, key, mtVal, table, key ]
 			p_lua_call(L, 2, 1);        // 3 [ ..., table, key, retVal ]
@@ -960,10 +915,6 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 		p_tolua_getmetatable(L, base);       // 5 [ ..., registry["tolua_base"], baseT, baseT[i], "mt", mt(base) ]
 		p_lua_rawset(L, -3);                 // 3 [ ..., registry["tolua_base"], baseT, baseT[i] ]
 
-		p_lua_pushstring(L, "offset");       // 4 [ ..., registry["tolua_base"], baseT, baseT[i], "offset" ]
-		p_lua_pushinteger(L, offsets[base]); // 5 [ ..., registry["tolua_base"], baseT, baseT[i], "offset", offset ]
-		p_lua_rawset(L, -3);                 // 3 [ ..., registry["tolua_base"], baseT, baseT[i] ]
-
 		p_lua_pop(L, 1);                     // 2 [ ..., registry["tolua_base"], baseT ]
 	}
 
@@ -971,7 +922,7 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 	p_lua_rawget(L, LUA_REGISTRYINDEX);      // 3 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"] ]
 
 	p_tolua_getmetatable(L, name);           // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], mt(name) ]
-	getOrCreateTable(L, -2);                 // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], registry["tolua_base_map"][mt(name)] -> baseflatT ]
+	getOrCreateTable(L, -2);                 // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], registry["tolua_base_map"][mt(name)] -> baseMapT ]
 
 	// base, offset
 	std::vector<std::pair<const char*, uintptr_t>> toProcess{};
@@ -984,9 +935,9 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 		uintptr_t offset = pair.second;
 		toProcess.pop_back();
 
-		p_lua_pushstring(L, base);           // 5 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseflatT, base ]
-		p_lua_pushinteger(L, offset);        // 6 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseflatT, base, offset ]
-		p_lua_rawset(L, -3);                 // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseflatT ]
+		p_lua_pushstring(L, base);           // 5 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseMapT, base ]
+		p_lua_pushinteger(L, offset);        // 6 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseMapT, base, offset ]
+		p_lua_rawset(L, -3);                 // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseMapT ]
 
 		if (baseclassOffsets.contains(base)) {
 			for (std::pair<const char*, uintptr_t>&& basePair : baseclassOffsets[base]) {
@@ -998,7 +949,8 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 	p_lua_pop(L, 4);                         // 0 [ ... ]
 }
 
-// Expects [ module ]
+// Expects   [ ..., module ]
+// End Stack [ ..., module ]
 void p_tolua_cclass(lua_State* L, const char* lname, const char* name, std::initializer_list<const char*>&& bases, lua_CFunction col) {
 	
 	const char* base = bases.size() > 0 ? *bases.begin() : "";
@@ -1020,43 +972,46 @@ void p_tolua_cclass(lua_State* L, const char* lname, const char* name, std::init
 	// module[lname] = getmetatable(name)        //
 	///////////////////////////////////////////////
 
-	p_lua_pushstring(L, lname);        // [ module, lname ]
-	p_tolua_getmetatable(L, name);     // [ module, lname, getmetatable(name) ]
-	p_lua_pushstring(L, ".collector"); // [ module, lname, getmetatable(name), ".collector" ]
-	p_lua_pushcfunction(L, col);       // [ module, lname, getmetatable(name), ".collector", col ]
-	p_lua_rawset(L, -3);               // [ module, lname, getmetatable(name) ]
-	p_lua_rawset(L, -3);               // [ module ]
+	p_lua_pushstring(L, lname);        // [ ..., module, lname ]
+	p_tolua_getmetatable(L, name);     // [ ..., module, lname, getmetatable(name) ]
+	p_lua_pushstring(L, ".collector"); // [ ..., module, lname, getmetatable(name), ".collector" ]
+	p_lua_pushcfunction(L, col);       // [ ..., module, lname, getmetatable(name), ".collector", col ]
+	p_lua_rawset(L, -3);               // [ ..., module, lname, getmetatable(name) ]
+	p_lua_rawset(L, -3);               // [ ..., module ]
 }
 
 void p_tolua_cclass_translate(lua_State* L, const char* lname, const char* name, const char* base, lua_CFunction col) {
 	p_tolua_cclass(L, lname, name, { base }, col);
 }
 
-// [ ... ]
 void* tolua_tousertype_dynamic(lua_State* L, int index, void* def, const char* targetUsertype) {
 	if (p_lua_gettop(L) < abs(index)) {
 		return def;
 	}
 	else {
 
-		int indexAbs = p_lua_absindex(L, index);
+		index = p_lua_absindex(L, index);
 
-		void* u = p_lua_touserdata(L, indexAbs);
+		void** u = reinterpret_cast<void**>(p_lua_touserdata(L, index));
 		if (u == nullptr) {
 			return u;
 		}
 
-		uintptr_t ptr = *(reinterpret_cast<uintptr_t*>(u));
+		void* ptr = *u;
 
 		p_lua_pushstring(L, "tolua_base_map"); // 1 [ ...,"tolua_base_map" ]
 		p_lua_rawget(L, LUA_REGISTRYINDEX);    // 1 [ ..., registry["tolua_base_map"] ]
 
-		p_lua_getmetatable(L, indexAbs);       // 2 [ ..., registry["tolua_base_map"], mt ]
+		if (!p_lua_getmetatable(L, index)) {
+			p_lua_pop(L, 1);                   // 0 [ ... ]
+			return ptr;
+		}
+		                                       // 2 [ ..., registry["tolua_base_map"], mt ]
 		p_lua_rawget(L, -2);                   // 2 [ ..., registry["tolua_base_map"], registry["tolua_base_map"][mt] ]
 
 		if (p_lua_isnil(L, -1)) {
 			p_lua_pop(L, 2);                   // 0 [ ... ]
-			return reinterpret_cast<void*>(ptr);
+			return ptr;
 		}
 
 		p_lua_pushstring(L, targetUsertype);   // 3 [ ..., registry["tolua_base_map"], registry["tolua_base_map"][mt], targetUsertype ]
@@ -1068,6 +1023,6 @@ void* tolua_tousertype_dynamic(lua_State* L, int index, void* def, const char* t
 		}
 		
 		p_lua_pop(L, 3);                       // 0 [ ... ]
-		return reinterpret_cast<void*>(ptr + offset);
+		return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + offset);
 	}
 }

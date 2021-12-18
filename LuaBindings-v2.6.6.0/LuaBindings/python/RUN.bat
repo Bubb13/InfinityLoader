@@ -10,6 +10,7 @@ python generate_bindings.py^
  -manualTypesFile=./in/manual_types.txt^
  -preludeFile=./in/prelude.txt^
  -wantedFile=./in/wanted_types.txt^
+ -packingFile=./in/packing.txt^
  -bindingsOutFile=./out/EEexLua_generated.cpp^
  -outFile=./out/Baldur-v2.6.6.0_generated.h^
  > log.txt
@@ -26,6 +27,7 @@ python generate_bindings.py^
  -noCustomTypes^
  -wantedFile=./in_lua/wanted_types.txt^
  -preludeFile=./in_lua/prelude.txt^
+ -packingFile=./in/packing.txt^
  -outFile=./out/Baldur-v2.6.6.0_lua_generated.h^
  > log_lua.txt
 

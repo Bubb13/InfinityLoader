@@ -1402,6 +1402,7 @@ struct WED_WedHeader_st
 	unsigned int dwFlags;
 };
 
+#pragma pack(push, 1)
 struct WED_PolyList_st
 {
 	unsigned int nStartingPoint;
@@ -1413,6 +1414,7 @@ struct WED_PolyList_st
 	unsigned __int16 nTop;
 	unsigned __int16 nBottom;
 };
+#pragma pack(pop)
 
 struct WED_PolyHeader_st
 {
@@ -1423,6 +1425,7 @@ struct WED_PolyHeader_st
 	unsigned int nOffsetToScreenPolyList;
 };
 
+#pragma pack(push, 1)
 struct WAV_Header
 {
 	unsigned __int16 wFormatTag;
@@ -1433,6 +1436,7 @@ struct WAV_Header
 	unsigned __int16 wBitsPerSample;
 	unsigned __int16 cbSize;
 };
+#pragma pack(pop)
 
 struct SteamParamStringArray_t
 {
@@ -2990,6 +2994,7 @@ struct SDL_PixelFormat
 	SDL_PixelFormat* next;
 };
 
+#pragma pack(push, 1)
 struct Item_effect_st
 {
 	unsigned __int16 effectID;
@@ -3008,7 +3013,9 @@ struct Item_effect_st
 	int saveMod;
 	unsigned int special;
 };
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 struct Item_ability_st
 {
 	unsigned __int16 type;
@@ -3037,7 +3044,9 @@ struct Item_ability_st
 	unsigned __int16 missileType;
 	Array<unsigned __int16,6> attackProbability;
 };
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 struct Item_Header_st
 {
 	unsigned int nFileType;
@@ -3078,6 +3087,7 @@ struct Item_Header_st
 	unsigned __int16 equipedStartingEffect;
 	unsigned __int16 equipedEffectCount;
 };
+#pragma pack(pop)
 
 struct DP_Player
 {
@@ -4013,6 +4023,7 @@ struct CCreatureFileHeader
 	Array<unsigned __int8,8> m_scriptDefault;
 };
 
+#pragma pack(push, 1)
 struct CAreaVariable
 {
 	Array<char,32> m_name;
@@ -4023,6 +4034,7 @@ struct CAreaVariable
 	long double m_floatValue;
 	Array<char,32> m_stringValue;
 };
+#pragma pack(pop)
 
 struct CVariable : CAreaVariable
 {
