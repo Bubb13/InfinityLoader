@@ -4,6 +4,8 @@
 type_CObList_RemoveHead p_CObList_RemoveHead;
 type_CObList_Destruct p_CObList_Destruct;
 type_CGameObjectArray_GetShare p_CGameObjectArray_GetShare;
+type_CAIObjectType_Set p_CAIObjectType_Set;
+CAIObjectType* CAIObjectType::p_NOONE;
 type_findMenu p_findMenu;
 type_saveMenuStack p_saveMenuStack;
 type_uiLoadMenu p_uiLoadMenu;
@@ -36,6 +38,8 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&p_CObList_RemoveHead)},
 	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&p_CObList_Destruct)},
 	std::pair{TEXT("CGameObjectArray::GetShare"), reinterpret_cast<void**>(&p_CGameObjectArray_GetShare)},
+	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&p_CAIObjectType_Set)},
+	std::pair{TEXT("CAIObjectType::NOONE"), reinterpret_cast<void**>(&CAIObjectType::p_NOONE)},
 	std::pair{TEXT("findMenu"), reinterpret_cast<void**>(&p_findMenu)},
 	std::pair{TEXT("saveMenuStack"), reinterpret_cast<void**>(&p_saveMenuStack)},
 	std::pair{TEXT("uiLoadMenu"), reinterpret_cast<void**>(&p_uiLoadMenu)},

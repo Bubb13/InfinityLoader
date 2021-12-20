@@ -581,6 +581,12 @@ struct CResRef
 // Local Function Bindings //
 /////////////////////////////
 
+struct CAIObjectType
+{
+	static CAIObjectType NOONE;
+	void Set(CAIObjectType* that);
+};
+
 struct CObList : CObject
 {
 	CObject* RemoveHead();

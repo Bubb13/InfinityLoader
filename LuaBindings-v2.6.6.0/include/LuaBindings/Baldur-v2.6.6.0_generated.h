@@ -5494,8 +5494,12 @@ struct CString
 	char* m_pchData;
 };
 
+typedef void (*type_CAIObjectType_Set)(CAIObjectType* pThis, CAIObjectType* that);
+extern type_CAIObjectType_Set p_CAIObjectType_Set;
+
 struct CAIObjectType
 {
+	static CAIObjectType* p_NOONE;
 	CString m_name;
 	unsigned __int8 m_EnemyAlly;
 	unsigned __int8 m_General;
@@ -5506,6 +5510,11 @@ struct CAIObjectType
 	unsigned __int8 m_Specifics;
 	unsigned __int8 m_Gender;
 	unsigned __int8 m_Alignment;
+
+	void Set(CAIObjectType* that)
+	{
+		p_CAIObjectType_Set(this, that);
+	}
 };
 
 struct CAITrigger

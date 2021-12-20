@@ -745,8 +745,8 @@ class CheckUnnamedStructsState:
 		self.lines: list[str] = []
 
 
-variablePatternGlobal = "^(nobinding\s+){0,1}(?!class|enum|struct|typedef|union)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
-variablePatternLocal = "^\t(nobinding\s+){0,1}(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"	
+variablePatternGlobal = "^((?:(?:nobinding|static)\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
+variablePatternLocal = "^\t((?:(?:nobinding|static)\s+)*)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"	
 
 def checkFunctionImplementation(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
@@ -830,7 +830,15 @@ def checkFunctionImplementation(mainState: MainState, state: CheckLinesState, li
 	if variableMatch != None:
 
 		variableField = VariableField()
-		variableField.private = variableMatch.group(1) != None
+
+		if keywordMatch := variableMatch.group(1):
+			for keyword in keywordMatch.strip().split(" "):
+				if keyword == "nobinding":
+					if variableField.nobinding: raise ValueError()
+					variableField.nobinding = True
+				elif keyword == "static":
+					if variableField.static: raise ValueError()
+					variableField.static = True
 
 		variableField.variableType = defineTypeRef(mainState, group, variableMatch.group(2), variableMatch.group(4))
 		variableField.variableType.bitFieldPart = variableMatch.group(5)
@@ -1297,7 +1305,15 @@ class Group:
 					parts.append("\n\n")
 					wroteSomething = True
 
-			if not isNormal:
+			if isNormal:
+				for field in group.fields:
+					if field.type == FieldType.VARIABLE:
+						varField: VariableField = field
+						if varField.static:
+							varNameP = f"{self.name}::p_{varField.variableName}"
+							internalPointersOut.write(f"{varField.variableType.getHeaderName()}* {varNameP};\n")
+							internalPointersListOut.append((f"{self.name}::{varField.variableName}", varNameP))
+			else:
 				for field in group.fields:
 					if field.type == FieldType.VARIABLE:
 						varField: VariableField = field
@@ -1608,7 +1624,8 @@ class VariableField(Field):
 		self.type = FieldType.VARIABLE
 		self.variableType: TypeReference = None
 		self.variableName: str = None
-		self.private: bool = False
+		self.nobinding: bool = False
+		self.static: bool = False
 
 
 	def getName(self):
@@ -1619,12 +1636,16 @@ class VariableField(Field):
 
 		parts = [indent]
 
+		if self.static:
+			parts.append("static ")
+
 		#TODO: Handle nested Arrays
 		if (not mainState.noCustomTypes) or self.variableType.getName() != "Array":
-			parts.append(self.variableType.getHeaderName())
+			parts.append(f"{self.variableType.getHeaderName()}{'*' if self.static else ''}")
 			parts.append(" ")
-			parts.append(self.variableName)
+			parts.append(f"{'p_' if self.static else ''}{self.variableName}")
 		else:
+			#TODO: Staticify
 			parts.append(self.variableType.templateTypes[0].getHeaderName())
 			parts.append(" ")
 			parts.append(self.variableName)
@@ -2094,7 +2115,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 			if field.type == FieldType.VARIABLE:
 				variableField: VariableField = field
-				if variableField.private: return
+				if variableField.nobinding: return
 				if len(variableField.variableType.arrayParts) > 0: return # These use GenericArray functions
 				fieldNameStr = variableField.variableName
 			elif field.type == FieldType.FUNCTION:
@@ -2129,11 +2150,19 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 				variableField: VariableField = field
 				varType: TypeReference = variableField.variableType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 
-				if isNormal:
+				if isNormal and not variableField.static:
 					out.write(f"\t{groupOpenData.appliedName}* self = ({groupOpenData.appliedName}*)tolua_tousertype_dynamic(L, 1, 0, \"{groupOpenData.appliedNameUsertype}\");\n")
 					out.write(f"\tif (!self) tolua_error(L, \"invalid 'self' in accessing variable '{variableField.variableName}'\", NULL);\n")
 
-				varNameHeader = variableField.variableName if isNormal else f"p_{variableField.variableName}"
+				varNameHeader = variableField.variableName if (isNormal and not variableField.static) else f"p_{variableField.variableName}"
+				selfStr: str = None
+				if isNormal:
+					if variableField.static:
+						selfStr = f"{groupOpenData.appliedHeaderName}::"
+					else:
+						selfStr = "self->"
+				else:
+					selfStr = ""
 
 				def checkPrimitiveHandling(varType: TypeReference):
 
@@ -2142,9 +2171,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 					#if varType.isPrimitive() and varType.pointerLevel > 0:
 					#	print(f"Pointer primitive somehow exists: {varType.toString()} for {groupOpenData.appliedName}::{variableField.variableName}")
 
-					selfStr = "self->" if isNormal else ""
-					effectivePtrLevel = varType.pointerLevel if isNormal else varType.pointerLevel + 1
-
+					effectivePtrLevel = varType.pointerLevel if (isNormal and not variableField.static) else varType.pointerLevel + 1
 					checkType = varType
 
 					# Enums are fancy primitives!
@@ -2172,7 +2199,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 				if not checkPrimitiveHandling(varType):
 
-					effectivePtrLevel = varType.pointerLevel if isNormal else varType.pointerLevel + 1
+					effectivePtrLevel = varType.pointerLevel if (isNormal and not variableField.static) else varType.pointerLevel + 1
 
 					if isPointerCast:
 						out.write("\ttolua_pushusertypepointer(L, (void*)&")
@@ -2182,7 +2209,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 							out.write("&")
 
 					if isNormal:
-						out.write(f"self->{varNameHeader}")
+						out.write(f"{selfStr}{varNameHeader}")
 					else:
 						out.write(f"{'*'*varType.pointerLevel}{varNameHeader}")
 
@@ -2242,17 +2269,24 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 					variableField: VariableField = field
 					varType: TypeReference = variableField.variableType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 
-					if isNormal:
+					if isNormal and not variableField.static:
 						out.write(f"\t{groupOpenData.appliedName}* self = ({groupOpenData.appliedName}*)tolua_tousertype_dynamic(L, 1, 0, \"{groupOpenData.appliedNameUsertype}\");\n")
 						out.write(f"\tif (!self) tolua_error(L, \"invalid 'self' in accessing variable '{variableField.variableName}'\", NULL);\n")
 
-					varNameHeader = variableField.variableName if isNormal else f"p_{variableField.variableName}"
+					varNameHeader = variableField.variableName if (isNormal and not variableField.static) else f"p_{variableField.variableName}"
+					selfStr: str = None
+					if isNormal:
+						if variableField.static:
+							selfStr = f"{groupOpenData.appliedHeaderName}::"
+						else:
+							selfStr = "self->"
+					else:
+						selfStr = "*"*(varType.pointerLevel + 1)
 
 					def checkPrimitiveHandling(varType: TypeReference):
 
 						varTypeName = varType.getName()
 						if isNormal and ((varTypeName != "char" and varType.pointerLevel > 0) or (varTypeName == "char" and varType.pointerLevel > 1)): return False
-						selfStr = "self->" if isNormal else "*"*(varType.pointerLevel + 1)
 
 						enumCastStr = ""
 						checkType = varType
