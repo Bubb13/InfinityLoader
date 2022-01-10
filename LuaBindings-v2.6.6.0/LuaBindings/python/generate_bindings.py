@@ -1661,25 +1661,38 @@ class Group:
 		"""
 
 		vtblStruct = mainState.tryGetGroup(f"{self.name}_vtbl")
-		if vtblStruct == None: return
+		if vtblStruct == None:
+			return
 
 		self.vGroup = vtblStruct
-		vtblStruct.relocate(mainState, f"{self.name}::{vtblStruct.name}")
+		vtblStruct.relocate(mainState, f"{self.name}::vtbl")
 
 		if self.hasField("__vftable"):
 			self.removeField(mainState, "__vftable")
 
+		seenFuncNames: dict[str,int] = {}
 		for field in vtblStruct.fields:
+
 			if field.type != FieldType.FUNCTION:
 				#print(f"vtblStruct {vtblStruct.name} has non-function field: {field.toString(mainState)}, breaking!")
 				break
 
 			functionField: FunctionField = field
+
+			# Rename clashing function names in vftables
+			# These are overloaded functions, but they can't
+			# have the same name in a struct.
+			seenCount = seenFuncNames.get(functionField.functionName, 0) + 1
+			seenFuncNames[functionField.functionName] = seenCount
+			if seenCount > 1:
+				functionField.functionName += f"_{seenCount}"
+
 			thisType = functionField.thisType
 			if thisType and thisType.getGroup() != self:
 				continue
 
-			impl: FunctionImplementation = field.toImplementation(self)
+			impl: FunctionImplementation = functionField.toImplementation(self)
+			impl.name = f"virtual_{functionField.functionName}"
 
 			impl.body = ["\t{"]
 			
@@ -1688,7 +1701,6 @@ class Group:
 
 			impl.body.append("\t}")
 
-			impl.noBinding = True
 			impl.virtual = True
 			self.functionImplementations.append(impl)
 
@@ -2318,7 +2330,7 @@ def tryResolveDependencyOrder(groups: list[Group]):
 						maxDependIndex = max(maxDependIndex, i)
 					i += 1
 
-			print(f"{group.name} at [{curCheckI}] needs to go after {groups[maxDependIndex].name} at [{maxDependIndex}]")
+			#print(f"{group.name} at [{curCheckI}] needs to go after {groups[maxDependIndex].name} at [{maxDependIndex}]")
 			if curCheckI < maxDependIndex:
 				moveElementAfter(groups, curCheckI, maxDependIndex)
 				assert group != groups[curCheckI], "Duplicate group in list"
@@ -3150,9 +3162,9 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 				if group := mainState.tryGetGroup(split[0]):
 					group.pack = int(split[1])
 
-	print("Filtered groups include:")
-	for group in mainState.filteredGroups:
-		print(f"    {group.name}")
+	#print("Filtered groups include:")
+	#for group in mainState.filteredGroups:
+	#	print(f"    {group.name}")
 
 
 
@@ -3190,21 +3202,6 @@ def checkRename(mainState, alreadyDefinedUsertypesFile: str):
 
 			for subGroup in group.subGroups:
 				toProcess.append(subGroup)
-
-
-	# Rename clashing function names in vftables
-	# These are overloaded functions, but they can't
-	# have the same name in a struct.
-	for group in mainState.filteredGroups:
-		seenFuncNames: dict[str,int] = {}
-		for field in group.fields:
-			if field.type == FieldType.FUNCTION:
-				functionField: FunctionField = field
-				seenCount = seenFuncNames.get(functionField.functionName, 0) + 1
-				seenFuncNames[functionField.functionName] = seenCount
-				if seenCount > 1:
-					functionField.functionName += f"_{seenCount}"
-
 
 	# The engine already defines some usertypes
 	# add prefix to prevent clashing with binding names
