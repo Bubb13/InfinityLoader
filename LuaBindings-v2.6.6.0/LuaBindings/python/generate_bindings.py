@@ -8,12 +8,72 @@
 from enum import Enum
 from io import TextIOWrapper
 from itertools import islice
-from typing import Match, Tuple
+from typing import Callable, Match, Tuple, TypeVar
 import builtins
-import copy
 import importlib
 import re
 import sys
+
+
+T = TypeVar("T")
+
+class UniqueWrapper:
+
+	def __init__(self, object: T, pHash: Callable[[T], int], pEq: Callable[[T, T], bool]) -> None:
+		self.object: T = object
+		self.pHash: Callable[[T], int] = pHash
+		self.pEq: Callable[[T, T], bool] = pEq
+
+	def __hash__(self) -> int:
+		return self.pHash(self.object)
+
+	def __eq__(self, other: object) -> bool:
+		return isinstance(other, UniqueWrapper) and self.pEq(self.object, other.object)
+
+
+class UniqueList(list[T]):
+
+	def defaultHash(object: T):
+		return id(object)
+
+
+	def defaultEq(a: T, b: T):
+		return a is b
+
+
+	def __init__(self, pHash: Callable[[T], int]=None, pEq: Callable[[T, T], bool]=None) -> None:
+		super().__init__()
+		self.pHash: Callable[[T], int] = pHash or UniqueList.defaultHash
+		self.pEq: Callable[[T, T], bool] = pEq or UniqueList.defaultEq
+		self.listIndexMapping: dict[UniqueWrapper[T], int] = {}
+
+
+	def containsUnique(self, v: T):
+		return UniqueWrapper(v, self.pHash, self.pEq) in self.listIndexMapping
+
+
+	def addUnique(self, v: T):
+		if (wrapper := UniqueWrapper(v, self.pHash, self.pEq)) not in self.listIndexMapping:
+			self.listIndexMapping[wrapper] = len(self)
+			self.append(v)
+
+
+	def removeUnique(self, v: T):
+		if index := self.listIndexMapping.get(wrapper := UniqueWrapper(v, self.pHash, self.pEq)):
+			del self.listIndexMapping[wrapper]
+			del self[index]
+			for i in range(index, len(self)):
+				self.listIndexMapping[UniqueWrapper(self[i], self.pHash, self.pEq)] = i
+
+
+	def rebuildIndexMapping(self):
+		newMapping: dict[UniqueWrapper[T], int] = {}
+		for i, v in enumerate(self):
+			if (wrapper := UniqueWrapper(v, self.pHash, self.pEq)) in self.listIndexMapping:
+				newMapping[wrapper] = i
+		self.listIndexMapping = newMapping
+
+
 
 ##################
 # String Utility #
@@ -77,7 +137,7 @@ def separateTemplateTypeParts(str, startI=0):
 			name = str[0:i]
 			break
 
-	if bracketLevel == 0: raise ValueError()
+	assert bracketLevel != 0
 
 	for i in range(startI, len(str)):
 		char = str[i]
@@ -228,30 +288,32 @@ class MainState:
 
 	groupsDict: dict[str,Group] = {}
 	groups: list[Group] = []
-	filteredGroups: list[Group] = []
+	filteredGroups: UniqueList[Group] = UniqueList()
 	noCustomTypes: bool = None
 
 	def addGroup(self, group: Group):
 
 		if existingGroup := self.groupsDict.get(group.name):
 
-			# Note: This merge can be a source of errors if Group is updated to include new variables
+			if not existingGroup is group: 
 
-			group.listIndex = existingGroup.listIndex
-			self.groups[group.listIndex] = group
+				# Note: This merge can be a source of errors if Group is updated to include new variables
 
-			if superGroup := existingGroup.superGroup:
-				superGroup.subGroups.remove(existingGroup)
+				group.listIndex = existingGroup.listIndex
+				self.groups[group.listIndex] = group
 
-			group.isDirectlyWanted = group.isDirectlyWanted or existingGroup.isDirectlyWanted
-			group.isWanted = group.isWanted or existingGroup.isWanted
-			
-			for inRef in existingGroup.inwardTypeRefs:
-				inRef.group = group
-				group.inwardTypeRefs.append(inRef)
+				if superGroup := existingGroup.superGroup:
+					superGroup.subGroups.removeUnique(existingGroup)
 
-			for k, v in existingGroup.uniqueUseRepresentations.items():
-				group.uniqueUseRepresentations[k] = v
+				group.isDirectlyWanted = group.isDirectlyWanted or existingGroup.isDirectlyWanted
+				group.isSoftWanted = group.isSoftWanted or existingGroup.isSoftWanted
+				
+				for inRef in existingGroup.inwardTypeRefs:
+					inRef.group = group
+					group.inwardTypeRefs.addUnique(inRef)
+
+				for k, v in existingGroup.uniqueUseRepresentations.items():
+					group.uniqueUseRepresentations[k] = v
 		else:
 			group.listIndex = len(self.groups)
 			self.groups.append(group)
@@ -262,12 +324,19 @@ class MainState:
 	def getGroup(self, name: str):
 		return self.groupsDict[name]
 
+
 	def tryGetGroup(self, name: str):
 		return self.groupsDict.get(name)
 
-	def renameGroup(self, group: Group, oldName: str):
-		del self.groupsDict[oldName]
-		self.addGroup(group)
+
+	def updateGroupNameMapping(self, group: Group, newName: str):
+		oldName = group.name
+		group.name = newName
+		if group.listIndex:
+			del self.groupsDict[oldName]
+			# Handles merging of two identically-named structs
+			self.addGroup(group)
+
 
 
 class TemplateMappingTracker:
@@ -307,6 +376,13 @@ class TemplateMappingTracker:
 					print(f"\t\t[{j}]=\"{tup[j].toString()}\"")
 
 
+
+class TemplateTypeMode(Enum):
+	USER_TYPE = 1
+	HEADER = 2
+
+
+
 primitives = {"intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "wchar_t", "double", "long double"}
 primitiveNumbers = {"intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "float", "double", "long double"}
 
@@ -323,7 +399,7 @@ class TypeReference:
 		self.bitFieldPart: str = None
 		self.templateTypes: list[TypeReference] = []
 
-		self.noreplace: bool = False
+		self.primitive: bool = False
 		self.noconst: bool = False
 
 		self.unsigned: bool = False
@@ -335,13 +411,72 @@ class TypeReference:
 		self.subRef: TypeReference = None
 
 
+	def copyTrivialFields(self, other):
+		self.const = other.const
+		self.long = other.long
+		self.noconst = other.noconst
+		self.primitive = other.primitive
+		self.sourceGroup = other.sourceGroup
+		self.sourceString = other.sourceString
+		self.unsigned = other.unsigned
+		self.volatile = other.volatile
+
+
+	def getModifierStr(self):
+		parts: list[str] = []
+		if self.const:    parts.append("const ")
+		if self.unsigned: parts.append("unsigned ")
+		if self.volatile: parts.append("volatile ")
+		if self.long:     parts.append("long ")
+		return "".join(parts)
+
+
 	def removeFromGroupRefs(self):
-		if self.group != None:
-			self.group.inwardTypeRefs.remove(self)
+		if self.group:
+			self.group.inwardTypeRefs.removeUnique(self)
 
 
-	def shallowCopy(self):
-		return copy.copy(self)
+	def changeReferencedGroup(self, newGroup: Group):
+		if not (self.group is newGroup):
+			self.removeFromGroupRefs()
+			self.group = newGroup
+			if newGroup != None:
+				self.group.inwardTypeRefs.addUnique(self)
+
+
+	def shallowCopy(self, copyObj: TypeReference=None) -> TypeReference:
+
+		copyObj = copyObj or TypeReference()
+		copyObj.copyTrivialFields(self)
+		copyObj.arrayParts = self.arrayParts
+		copyObj.bitFieldPart = self.bitFieldPart
+		copyObj.group = self.group
+		copyObj.pointerLevel = self.pointerLevel
+		copyObj.subRef = self.subRef
+		copyObj.superRef = self.superRef
+
+		copyTemplateTypes: list[TypeReference] = []
+		for templateRef in self.templateTypes:
+			copyTemplateTypes.append(templateRef.shallowCopy())
+
+		copyObj.templateTypes = copyTemplateTypes
+		return copyObj
+
+
+	def isGroupUsed(self, mainState: MainState):
+		return not self.group or self.group.isUsed(mainState)
+
+
+	def getSuperRef(self):
+		return self.superRef
+
+
+	def getGroup(self):
+		return self.group
+
+
+	def getArrayParts(self):
+		return self.arrayParts
 
 
 	def getName(self):
@@ -352,32 +487,36 @@ class TypeReference:
 		return self.group and self.group.singleName or self.sourceString
 
 
+	def getTemplates(self, mainState: MainState, askingGroup: Group=None):
+		return self.templateTypes
+
+
 	def isVoid(self):
-		return self.pointerLevel == 0 and self.getName() == "void"
+		return self.getUserTypePointerLevel() == 0 and self.getName() == "void"
 
 
-	def getFullNameFromTypeRefChain(self):
+	def getAllTypeReferences(self, mainState: MainState):
 
-		parts: list[str] = []
-
-		if self.superRef:
-			parts.append(self.superRef.getFullName())
-			parts.append("::")
-
-		parts.append(self.group and self.group.singleName or self.sourceString)
-		return "".join(parts)
-
-
-	def getAllTypeReferences(self):
 		parts = [self]
+
+		superRef = self.superRef
+		while superRef:
+			parts.append(superRef)
+			superRef = superRef.superRef
+
 		for templateType in self.templateTypes:
-			for v in templateType.getAllTypeReferences():
+			for v in templateType.getAllTypeReferences(mainState):
 				parts.append(v)
+
 		return parts
 
 
 	def isGenericTemplate(self):
 		return self.sourceGroup != None and self.sourceGroup.templateTypeNameMapping.get(self.getName()) != None
+
+
+	def isUnparameterized(self):
+		return self.group and ((len(self.group.templateTypeNames) > 0 and len(self.templateTypes) == 0) or (self.superRef and self.superRef.isUnparameterized()))
 
 
 	def isPrimitive(self):
@@ -388,34 +527,49 @@ class TypeReference:
 		return self.getName() in primitiveNumbers
 
 
-	def checkReplaceTemplateType(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker):
+	def setUserTypePointerLevel(self, mainState: MainState, newVal: int) -> None:
+		assert newVal >= 0, "self.pointerLevel cannot be negative"
+		self.pointerLevel = newVal
+
+
+	def getUserTypePointerLevel(self):
+		return self.pointerLevel
+
+
+	def adjustUserTypePointerLevel(self, mainState: MainState, adjustAmount: int) -> None:
+		self.setUserTypePointerLevel(mainState, self.getUserTypePointerLevel() + adjustAmount)
+
+
+	def checkReplaceTemplateType(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker) -> TypeReference:
 		
 		toReturn = self
 		toReturnName = toReturn.getName()
 
 		if sourceGroup and (v := sourceGroup.templateTypeNameMapping.get(toReturnName)) != None:
+
 			index = v.templateTypeNames.index(toReturnName)
-			toReturn = templateMappingTracker.getMapping(v.name)[index].shallowCopy()
+			toReturn: TypeReference = templateMappingTracker.getMapping(v.name)[index]
 
-			if toReturnName == "Pointer":
-				toReturn.templateTypes[0].pointerLevel += self.pointerLevel
+			# HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+			# HACK PointerReferences store their internal TypeReference as their template     HACK
+			# HACK parameter. These still need to be exposed as a PointerReference so they    HACK
+			# HACK properly handle their pointer level being changed. Getting the header      HACK
+			# HACK name of the internal reference and defining it again to transform it into  HACK
+			# HACK a PointerReference.                                                        HACK
+			# HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+			if sourceGroup.name == "Pointer":
+				toReturn = defineTypeRef(mainState, sourceGroup, toReturn.getHeaderName(pointerLevelAdjust=self.getUserTypePointerLevel()), TypeRefSourceType.VARIABLE)
 			else:
-				toReturn.pointerLevel += self.pointerLevel
+				toReturn = toReturn.shallowCopy()
+				toReturn.adjustUserTypePointerLevel(mainState, self.getUserTypePointerLevel())
 
-			if not toReturn.noreplace:
-				if toReturnName == "char" and toReturn.pointerLevel == 1:
-					if toReturn.const:
-						toReturn = ConstStringReference(mainState, sourceGroup)
-					else:
-						toReturn = StringReference(mainState, sourceGroup)
+			toReturn.primitive = toReturn.primitive or self.primitive
+			toReturn.noconst = toReturn.noconst or self.noconst
 
-			toReturn.noreplace = self.noreplace
-			toReturn.noconst = self.noconst
-		
 		return toReturn
 
 
-	def getAppliedName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False):
+	def _getAppliedNameInternal(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False, noModifiers=False, templateTypeMode: TemplateTypeMode=None):
 
 		"""
 		Given a TypeRef in which the caller wants to express an arbritary series of template uses, returns a
@@ -425,89 +579,72 @@ class TypeReference:
 		If the current TypeRef does not have an attached Group, simply returns the TypeRef's name.
 		"""
 
+		assert templateTypeMode, "templateTypeMode must be defined!"
+
 		parts: list[str] = []
 
-		if self.const:
-			parts.append("const ")
-		
-		if self.unsigned:
-			parts.append("unsigned ")
+		if not noModifiers:
+			parts.append(self.getModifierStr())
 
-		if self.volatile:
-			parts.append("volatile ")
-
-		if self.long:
-			parts.append("long ")
-
-		if self.superRef:
-			parts.append(self.superRef.getAppliedName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName))
+		if superRef := self.getSuperRef():
+			parts.append(superRef._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, templateTypeMode=templateTypeMode))
 			parts.append("::")
 
 		if len(self.templateTypes) > 0:
 
 			parts.append(self.getSingleName())
+			assert parts[-1] != None, "Using bad self.getSingleName()"
+
 			parts.append("<")
 
-			if templatesUseHeaderName:
+			if templateTypeMode == TemplateTypeMode.USER_TYPE:
 				for templateType in self.templateTypes:
-					parts.append(templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker).getHeaderName())
+					replaced = templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
+					parts.append(replaced.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
+					assert parts[-1] != None, f"Using bad templateType.getAppliedUserTypeName() for (original: {type(templateType).__name__}, replaced: {type(replaced).__name__}) [TemplateTypeMode.USER_TYPE]"
 					parts.append(",")
-			else:
+			elif templateTypeMode == TemplateTypeMode.HEADER:
 				for templateType in self.templateTypes:
-					parts.append(templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker).toString())
+					replaced = templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
+					parts.append(replaced.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
+					assert parts[-1] != None, f"Using bad templateType.getAppliedUserTypeName() for (original: {type(templateType).__name__}, replaced: {type(replaced).__name__}) [TemplateTypeMode.HEADER]"
 					parts.append(",")
 
 			parts.pop()
 			parts.append(">")
 
+		elif self.group:
+			parts.append(self.group.getAppliedName(mainState, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, templateTypeMode=templateTypeMode, singleName=True))
+			assert parts[-1] != None, "Using bad group.getAppliedName()"
 		else:
-			parts.append(self.group.getAppliedName(mainState, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName, singleName=True))
+			parts.append(self.sourceString)
+			assert parts[-1] != None, "Using bad self.sourceString"
 
-
-		for _ in range(self.pointerLevel + pointerLevelAdjust):
+		for _ in range(self.getUserTypePointerLevel() + pointerLevelAdjust):
 			parts.append("*")
 
 		return "".join(parts)
 
 
-	def getHeaderName(self):
-		return self.toString()
+	def getHeaderName(self, pointerLevelAdjust=0):
+		return self.toString(pointerLevelAdjust=pointerLevelAdjust, templatesUseHeaderName=True, iKnowWhatIAmDoing=True)
 
 
 	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
-		return self.getAppliedName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust, useUsertypeOverride=useUsertypeOverride)
+		return self._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust, useUsertypeOverride=useUsertypeOverride, templateTypeMode=TemplateTypeMode.HEADER)
 
 
 	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False):
-		
-		if self.pointerLevel > 1:
-			innerStr = self.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=-1, useUsertypeOverride=useUsertypeOverride)
-			return f"Pointer<{innerStr}>"
-
-		pointerAdj = 0 if self.isPrimitive() else -1
-		if self.pointerLevel - pointerAdj == 0:
-			if self.isPrimitive():
-				return self.getName()
-			else:
-				raise ValueError("Can't adjust non-primitive pointer level to 0")
-		elif self.pointerLevel - pointerAdj < 0:
-			raise ValueError("Adjusting pointer level would result in negative value")
-
-		return self.getAppliedName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerAdj, useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=True)
+		return self._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, noModifiers=True, templateTypeMode=TemplateTypeMode.HEADER)
 
 
-	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False) -> str:
+	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False) -> str:
 
-		parts: list[str] = []
-		
-		if self.superRef:
-			parts.append(self.superRef.toString(useUsertypeOverride=useUsertypeOverride))
+		parts: list[str] = [self.getModifierStr()]
+
+		if superRef := self.getSuperRef():
+			parts.append(superRef.toString(useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName, iKnowWhatIAmDoing=iKnowWhatIAmDoing))
 			parts.append("::")
-
-		if self.const: parts.append("const ")
-		if self.unsigned: parts.append("unsigned ")
-		if self.volatile: parts.append("volatile ")
-		if self.long: parts.append("long ")
 
 		if useUsertypeOverride and self.group != None and self.group.overrideUsertypeSingleName != None:
 			parts.append(self.group.overrideUsertypeSingleName)
@@ -518,14 +655,19 @@ class TypeReference:
 
 			parts.append("<")
 
-			for templateType in self.templateTypes:
-				parts.append(templateType.toString())
-				parts.append(",")
+			if templatesUseHeaderName:
+				for templateType in self.templateTypes:
+					parts.append(templateType.getHeaderName())
+					parts.append(",")
+			else:
+				for templateType in self.templateTypes:
+					parts.append(templateType.toString(iKnowWhatIAmDoing=iKnowWhatIAmDoing))
+					parts.append(",")
 
 			parts.pop()
 			parts.append(">")
 
-		for _ in range(self.pointerLevel + pointerLevelAdjust):
+		for _ in range(self.getUserTypePointerLevel() + pointerLevelAdjust):
 			parts.append("*")
 
 		return "".join(parts)
@@ -533,85 +675,262 @@ class TypeReference:
 
 	# TODO: This is a really bad way of doing this
 	def sameTypeAs(self, other: TypeReference):
-		return self.toString() == other.toString()
+		return self.getHeaderName() == other.getHeaderName()
 
 
 
 class PointerReference(TypeReference):
 
-	def __init__(self, mainState: MainState, sourceGroup: Group, pointingToType: TypeReference):
+	def __init__(self):
 		super().__init__()
-		self.group = mainState.getGroup("Pointer")
-		self.sourceGroup = sourceGroup
-		self.templateTypes.append(pointingToType)
+		self.originalRef: TypeReference = None
 
 
-	def getHeaderName(self):
-		if not self.noreplace:
-			return f"{self.templateTypes[0].toString()}*"
+	@staticmethod
+	def create(mainState: MainState, originalRef: TypeReference):
 
-		return self.toString()
+		assert not isinstance(originalRef, PointerReference), "Wrapception: PointerReference"
+		obj = PointerReference()
+		obj.copyTrivialFields(originalRef)
+
+		obj.originalRef = originalRef
+		obj.changeReferencedGroup(mainState.getGroup("Pointer"))
+		obj.setUserTypePointerLevel(mainState, originalRef.getUserTypePointerLevel())
+
+		if originalRef.group:
+			originalRef.group.inwardTypeRefs.addUnique(originalRef)
+
+		return obj
+
+
+	def shallowCopy(self, copyObj=None):
+		copyObj = copyObj or PointerReference()
+		super().shallowCopy(copyObj)
+		copyObj.originalRef = len(copyObj.templateTypes) > 0 and copyObj.templateTypes[0] or self.originalRef.shallowCopy()
+		return copyObj
+
+
+	def getSuperRef(self):
+		return self.originalRef.superRef
+
+
+	def isGroupUsed(self, mainState: MainState):
+		return self.originalRef.isGroupUsed(mainState)
+
+
+	def isUnparameterized(self):
+		return self.originalRef.isUnparameterized()
+
+
+	def getGroup(self):
+		return self.originalRef.group
+
+
+	def getArrayParts(self):
+		return self.originalRef.getArrayParts()
+
+
+	def getName(self):
+		return self.originalRef.getName()
+
+
+	def setUserTypePointerLevel(self, mainState: MainState, newVal: int) -> None:
+		super().setUserTypePointerLevel(mainState, newVal)
+		if newVal == 0:
+			self.originalRef.setUserTypePointerLevel(mainState, 0)
+			if len(self.templateTypes) > 0:
+				self.templateTypes.pop()
+			if originalGroup := self.originalRef.group:
+				self.changeReferencedGroup(originalGroup)
+		else:
+			self.originalRef.setUserTypePointerLevel(mainState, newVal - 1)
+			if len(self.templateTypes) == 0:
+				self.templateTypes.append(self.originalRef)
+			self.changeReferencedGroup(mainState.getGroup("Pointer"))
+
+
+	def getHeaderName(self, pointerLevelAdjust=0):
+		if self.getUserTypePointerLevel() == 0:
+			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)}"
+		else:
+			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust + 1)}"
 
 
 	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
-		if not self.noreplace:
-			innerType = self.templateTypes[0].checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
-			return f"{innerType.toString()}*"
-
-		return self.getAppliedName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust, useUsertypeOverride=useUsertypeOverride)
+		if self.getUserTypePointerLevel() == 0:
+			return self.originalRef.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust, useUsertypeOverride=useUsertypeOverride)
+		else:
+			innerType = self.originalRef.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
+			return f"{innerType.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust + 1, useUsertypeOverride=useUsertypeOverride)}"
 
 
 	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False):
-		innerType = self.templateTypes[0].checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
-		innerStr = innerType.getAppliedName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=useUsertypeOverride)
-		return f"Pointer<{innerStr}>"
+		if self.getUserTypePointerLevel() == 0:
+			return self.originalRef.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride)
+		else:
+			innerType = self.originalRef.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
+			innerStr: str = None
+			if innerType.getUserTypePointerLevel() == 0 and not innerType.isPrimitive():
+				innerStr = innerType.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride)
+			else:
+				innerStr = f"Pointer<{innerType.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride)}>"
+			return innerStr
 
 
-class StringReference(TypeReference):
+	def getTemplates(self, mainState: MainState, askingGroup: Group=None):
+		if askingGroup.name == "Pointer":
+			return self.templateTypes
+		elif self.getUserTypePointerLevel() == 0:
+			return self.originalRef.getTemplates(mainState)
+		else:
+			realRef = self.originalRef.shallowCopy()
+			realRef.adjustUserTypePointerLevel(mainState, 1)
+			return realRef.getTemplates(mainState)
 
-	def __init__(self, mainState: MainState, sourceGroup: Group):
+
+	def getAllTypeReferences(self, mainState: MainState):
+		parts = [self]
+		if self.getUserTypePointerLevel() == 0:
+			for v in self.originalRef.getAllTypeReferences(mainState):
+				parts.append(v)
+		else:
+			realRef = self.originalRef.shallowCopy()
+			realRef.adjustUserTypePointerLevel(mainState, 1)
+			for v in realRef.getAllTypeReferences(mainState):
+				parts.append(v)
+
+		return parts
+
+
+	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False) -> str:
+		assert iKnowWhatIAmDoing, "You don't know what you're doing!"
+		effectivePointerAdj = pointerLevelAdjust if self.getUserTypePointerLevel() == 0 else pointerLevelAdjust + 1
+		return self.originalRef.toString(pointerLevelAdjust=effectivePointerAdj, useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName, iKnowWhatIAmDoing=iKnowWhatIAmDoing)
+
+
+
+class CharReferenceMode(Enum):
+	PRIMITIVE_ONLY = 1
+	USER_TYPE_ONLY = 2
+	MORPHING       = 3
+
+
+class CharReference(TypeReference):
+
+	def __init__(self):
 		super().__init__()
-		self.group = mainState.getGroup("CharString")
-		self.sourceGroup = sourceGroup
+		self.mode: CharReferenceMode = None
+		self.charPointerLevel: int = None
 
 
-	def getHeaderName(self):
-		if not self.noreplace:
-			return "char*"
+	@staticmethod
+	def create(mainState: MainState, originalRef: TypeReference, mode: CharReferenceMode):
 
-		return self.toString()
+		obj = CharReference()
+		obj.copyTrivialFields(originalRef)
+
+		obj.mode = mode
+		obj.charPointerLevel = 0
+		if obj.mode in (CharReferenceMode.PRIMITIVE_ONLY, CharReferenceMode.USER_TYPE_ONLY):
+			obj.changeReferencedGroup(originalRef.group)
+
+		obj.setUserTypePointerLevel(mainState, originalRef.getUserTypePointerLevel())
+		return obj
+
+
+	def shallowCopy(self, copyObj=None):
+		copyObj = copyObj or CharReference()
+		super().shallowCopy(copyObj)
+		copyObj.mode = self.mode
+		copyObj.charPointerLevel = self.charPointerLevel
+		return copyObj
+
+
+	def setUserTypePointerLevel(self, mainState: MainState, newVal: int) -> None:
+		if self.mode == CharReferenceMode.PRIMITIVE_ONLY:
+			super().setUserTypePointerLevel(mainState, newVal)
+			self.charPointerLevel = newVal
+		elif self.mode == CharReferenceMode.USER_TYPE_ONLY:
+			super().setUserTypePointerLevel(mainState, newVal)
+			self.charPointerLevel = newVal + 1
+		elif self.mode == CharReferenceMode.MORPHING:
+			newVal = newVal if self.charPointerLevel != 1 else newVal + 1 
+			self.charPointerLevel = newVal
+			if newVal == 1:
+				super().setUserTypePointerLevel(mainState, 0)
+				self.changeReferencedGroup(mainState.getGroup(f"{'Const' if self.const else ''}CharString"))
+			else:
+				super().setUserTypePointerLevel(mainState, newVal)
+				self.changeReferencedGroup(mainState.getGroup("char"))
+
+
+	def getHeaderName(self, pointerLevelAdjust=0):
+		if self.mode == CharReferenceMode.MORPHING:
+			return f"{self.getModifierStr()}char{'*'*(self.charPointerLevel + pointerLevelAdjust)}"
+		else:
+			return f"{self.getModifierStr()}{self.group.name}{'*'*(self.getUserTypePointerLevel() + pointerLevelAdjust)}"
 
 
 	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
-		return self.getHeaderName()
+		return self.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)
 
 
-	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
-		return "CharString"
+	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False):
+		charLevel = self.charPointerLevel
+		if charLevel == 0:
+			return f"char"
+		elif charLevel == 1:
+			return f"{'Const' if self.const else ''}CharString"
+		elif self.mode == CharReferenceMode.USER_TYPE_ONLY and charLevel == 2:
+			return self.group.name
+		else:
+			return f"Pointer<char{'*'*(charLevel - 1)}>"
 
 
-class ConstStringReference(TypeReference):
 
-	def __init__(self, mainState: MainState, sourceGroup: Group):
-		super().__init__()
-		self.group = mainState.getGroup("ConstCharString")
-		self.sourceGroup = sourceGroup
+class VoidPointerReference(TypeReference):
+
+	@staticmethod
+	def create(mainState: MainState, originalRef: TypeReference):
+
+		obj = VoidPointerReference()
+		obj.copyTrivialFields(originalRef)
+
+		obj.setUserTypePointerLevel(mainState, originalRef.getUserTypePointerLevel())
+		return obj
 
 
-	def getHeaderName(self):
-		if not self.noreplace:
-			return "const char*"
+	def shallowCopy(self, copyObj=None):
+		copyObj = copyObj or VoidPointerReference()
+		super().shallowCopy(copyObj)
+		return copyObj
 
-		return self.toString()
+
+	def setUserTypePointerLevel(self, mainState: MainState, newVal: int) -> None:
+		super().setUserTypePointerLevel(mainState, newVal)
+		if newVal > 1:
+			self.changeReferencedGroup(mainState.getGroup("void"))
+		elif newVal == 1:
+			self.changeReferencedGroup(mainState.getGroup("VoidPointer"))
+
+
+	def getHeaderName(self, pointerLevelAdjust=0):
+		return f"void{'*'*(self.getUserTypePointerLevel() + pointerLevelAdjust)}"
 
 
 	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
-		return self.getHeaderName()
+		return self.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)
 
 
-	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
-		return "ConstCharString"
+	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False):
+		if (pointerLevel := self.getUserTypePointerLevel()) == 1:
+			return "VoidPointer"
+		else:
+			return f"Pointer<void{'*'*(pointerLevel - 1)}>"
 
+
+	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False) -> str:
+		return self.getHeaderName(pointerLevelAdjust)
 
 
 def templateUseHasGeneric(currentTemplate: tuple[TypeReference]):
@@ -646,7 +965,7 @@ class FunctionImplementation:
 		self.virtual: bool = False
 
 
-	def getAllTypeReferences(self):
+	def getAllTypeReferences(self, mainState: MainState):
 		
 		refs = []
 
@@ -654,7 +973,7 @@ class FunctionImplementation:
 			refs.append(self.returnType)
 
 		for param in self.parameters:
-			for paramRef in param.type.getAllTypeReferences():
+			for paramRef in param.type.getAllTypeReferences(mainState):
 				refs.append(paramRef)
 
 		return refs
@@ -748,7 +1067,7 @@ class CheckUnnamedStructsState:
 variablePatternGlobal = "^((?:(?:nobinding|static)\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
 variablePatternLocal = "^\t((?:(?:nobinding|static)\s+)*)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"	
 
-def checkFunctionImplementation(mainState: MainState, state: CheckLinesState, line: str, group: Group):
+def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
 	functionImplementationMatch: Match = re.match("^\s*(?!typedef)(\$nobinding\s+){0,1}(?:(static)\s+){0,1}([, _a-zA-Z0-9*:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)(?:(;)){0,1}$", line)
 	if functionImplementationMatch:
@@ -767,12 +1086,12 @@ def checkFunctionImplementation(mainState: MainState, state: CheckLinesState, li
 			state.currentFunctionImplementation.isConstructor = True
 			if retTypeStr == "$constructor_copy":
 				group.copyConstructor = state.currentFunctionImplementation
-			elif retTypeStr != "$constructor":
-				raise ValueError("Bad bindings directive")
+			else:
+				assert retTypeStr == "$constructor", "Bad bindings directive"
 
 			retTypeStr = "void"
 
-		state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr)
+		state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION)
 		state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(4)
 
 		state.currentFunctionImplementation.name = functionImplementationMatch.group(5)
@@ -793,7 +1112,7 @@ def checkFunctionImplementation(mainState: MainState, state: CheckLinesState, li
 
 				typeStr = "".join(parts)
 				funcParameter = FunctionImplementationParameter()
-				funcParameter.type = defineTypeRef(mainState, group, typeStr)
+				funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION)
 				funcParameter.name = spaceSplit[-1]
 
 				state.currentFunctionImplementation.parameters.append(funcParameter)
@@ -834,17 +1153,39 @@ def checkFunctionImplementation(mainState: MainState, state: CheckLinesState, li
 		if keywordMatch := variableMatch.group(1):
 			for keyword in keywordMatch.strip().split(" "):
 				if keyword == "nobinding":
-					if variableField.nobinding: raise ValueError()
+					assert not variableField.nobinding, "nobinding already defined"
 					variableField.nobinding = True
 				elif keyword == "static":
-					if variableField.static: raise ValueError()
+					assert not variableField.static, "static already defined"
 					variableField.static = True
 
-		variableField.variableType = defineTypeRef(mainState, group, variableMatch.group(2), variableMatch.group(4))
+		variableField.variableType = defineTypeRef(mainState, group, variableMatch.group(2), TypeRefSourceType.VARIABLE, variableMatch.group(4))
 		variableField.variableType.bitFieldPart = variableMatch.group(5)
 
 		variableField.variableName = variableMatch.group(3)
+
 		group.addField(variableField)
+
+
+
+class UniqueTemplateUsesByHeaderName(UniqueList[tuple[TypeReference]]):
+
+	def pHash(use: tuple[TypeReference]):
+		toReturn = 0
+		for ref in use:
+			toReturn += 3 * hash(ref.getHeaderName())
+		return toReturn
+
+	def pEq(a: tuple[TypeReference], b: tuple[TypeReference]):
+		if len(a) != len(b):
+			return False
+		for i in range(len(a)):
+			if a[i].getHeaderName() != b[i].getHeaderName():
+				return False
+		return True
+
+	def __init__(self) -> None:
+		super().__init__(pHash=UniqueTemplateUsesByHeaderName.pHash, pEq=UniqueTemplateUsesByHeaderName.pEq)
 
 
 
@@ -854,7 +1195,6 @@ class Group:
 
 		self.template: str = None  # String filled with the template definition as found in the input file. Example: template<class T, int size>
 		self.groupType: str = None # "struct" / "class" / "enum" / "union" / (possibly "undefined").
-		self.defined: bool = False # True if the group was defined in a header file
 
 		self.name: str = None # String filled with the name of the group, as defined in the input file. Examples:
 							  # "CPtrList" / "CPtrList::CNode"
@@ -862,6 +1202,7 @@ class Group:
 		self.singleName: str = None # String filled with the name of the group. If group is a sub-group, contains only the last group name. Example:
 									# self.name = "CPtrList::CNode" => self.singleName = "CNode"
 
+		self.defined: bool = False  # True if the group was defined in a header file
 		self.lines: list[str] = []  # List of all lines in the group's definition.
 		self.linesProcessed = False # True if the group's lines have already been processed.
 
@@ -877,14 +1218,13 @@ class Group:
 
 		self.templateTypeNames: list[str] = []               # List of template names that appear in the group's definition.
 		self.templateTypeNameMapping: dict[str,Group] = {}   # Map of <template name => Group> for the group (or any super group) template names.
-		self.templateUses: list[tuple[TypeReference]] = None # List of all TypeReferences to the group which use templates.
+		self.templateUses = UniqueTemplateUsesByHeaderName() # List of all TypeReferences to the group which use templates.
 
-		self.superGroup: Group = None    # Group that this group immediately resides in.
-		self.subGroups: list[Group] = [] # Groups that this group immediately contains.
-		self.superSubInitialized = False # Internal state for moving groups to properly nest.
+		self.superGroup: Group = None                    # Group that this group immediately resides in.
+		self.subGroups: UniqueList[Group] = UniqueList() # Groups that this group immediately contains.
 
 		self.isDirectlyWanted: bool = False # True if the group was listed in -wantedFile.
-		self.isWanted: bool = False         # True if the group is wanted for output, either manually in -wantedFile, or automatically from some dependency.
+		self.isSoftWanted: bool = False
 		
 		self.fieldsMap: dict[str, Field] = {}                           # Map of fields the group immediately contains.
 		self.fields: list[Field] = []                                   # List of fields the group immediately contains.
@@ -893,8 +1233,8 @@ class Group:
 		self.enumTuples: list[tuple[str,int]] = []                      # List of enum values, (in the case of groupType="enum").
 		self.functionImplementations: list[FunctionImplementation] = [] # List of function implementations the group immediately contains.
 
-		self.inwardTypeRefs: list[TypeReference] = []                # List of all TypeReferences to the group.
-		self.uniqueUseRepresentations: dict[str, TypeReference] = {} # List of TypeReferences that each represent a unique use of the group.
+		self.inwardTypeRefs: UniqueList[TypeReference] = UniqueList() # List of all TypeReferences to the group.
+		self.uniqueUseRepresentations: dict[str, TypeReference] = {}  # List of TypeReferences that each represent a unique use of the group.
 
 		self.copyConstructor: FunctionImplementation = None # Specially-defined copy constructor implementation
 		self.pack: int = None                               # Specially-defined struct packing
@@ -913,8 +1253,25 @@ class Group:
 		return self.superGroup != None
 
 
+	def isSubgroupOf(self, group: Group):
+		superGroup = self.superGroup
+		while superGroup:
+			if superGroup is group:
+				return True
+			superGroup = superGroup.superGroup
+		return False
+
+
 	def isPrimitive(self):
 		return self.name in primitives
+
+
+	def hasDefinedTop(self):
+		topGroup = self
+		while temp := topGroup.superGroup:
+			topGroup = temp
+
+		return topGroup.groupType != "undefined"
 
 
 	def hasField(self, fieldName):
@@ -924,23 +1281,21 @@ class Group:
 	def retypeField(self, mainState: MainState, fieldName: str, newTypeStr: str):
 
 		field = self.fieldsMap[fieldName]
-		if field.type == FieldType.VARIABLE:
+		assert field.type == FieldType.VARIABLE, "Unhandled field.type in Group.retypeField()"
 
-			varField: VariableField = field
+		varField: VariableField = field
 
-			for ref in varField.variableType.getAllTypeReferences():
-				ref.removeFromGroupRefs()
+		for ref in varField.variableType.getAllTypeReferences(mainState):
+			ref.removeFromGroupRefs()
 
-			varField.variableType = defineTypeRef(mainState, self, newTypeStr)
-		else:
-			raise ValueError()
+		varField.variableType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE)
 
 
-	def removeField(self, fieldName: str):
+	def removeField(self, mainState: MainState, fieldName: str):
 
 		field = self.fieldsMap[fieldName]
 
-		for ref in field.getAllTypeReferences():
+		for ref in field.getAllTypeReferences(mainState):
 			ref.removeFromGroupRefs()
 
 		del self.fieldsMap[fieldName]
@@ -953,12 +1308,11 @@ class Group:
 
 		name: str = None
 
+		assert field.type in (FieldType.VARIABLE, FieldType.FUNCTION), "Unhandled field.type in Group.addField()"
 		if field.type == FieldType.VARIABLE:
 			name = field.variableName
 		elif field.type == FieldType.FUNCTION:
 			name = field.functionName
-		else:
-			raise ValueError()
 
 		self.fieldsMap[name] = field
 
@@ -975,7 +1329,7 @@ class Group:
 	def addVariableField(self, mainState: MainState, fieldName: str, typeStr: str, insertI: int=None):
 		field = VariableField()
 		field.variableName = fieldName
-		field.variableType = defineTypeRef(mainState, self, typeStr)
+		field.variableType = defineTypeRef(mainState, self, typeStr, TypeRefSourceType.VARIABLE)
 		self.addField(field, insertI=insertI)
 
 
@@ -994,7 +1348,6 @@ class Group:
 				templateTypeSplit = splitMulti(templateType, [" "])
 				self.templateTypeNames.append(templateTypeSplit[1])
 
-
 		state: CheckLinesState = CheckLinesState()
 		unnamedStructsState = CheckUnnamedStructsState()
 
@@ -1010,36 +1363,36 @@ class Group:
 				extendsStr = declMatch.group(2)
 				if extendsStr != None:
 					for extendsType in splitKeepBrackets(extendsStr, [","]):
-						self.extends.append(defineTypeRef(mainState, self, extendsType))
-
+						self.extends.append(defineTypeRef(mainState, self, extendsType, TypeRefSourceType.VARIABLE))
 
 			# Define function fields
 			functionVariableMatch: Match = re.match("^\t([, _a-zA-Z0-9*:<>]+?)\s*\(\s*(?:([_a-zA-Z]+?)\s*){0,1}\*\s*([_a-zA-Z0-9~]+)\s*\)\s*\((?:\s*([, _a-zA-Z0-9*:<>]+?)\s+\*\s*this(?:\s*,\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\s+\*\s*result(?:\s*,\s+){0,1}){0,1}\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\.\.\.(?=\s*\))){0,1}){0,1}\s*\)\;$", line)
 			if functionVariableMatch != None:
 
 				functionField = FunctionField()
-				functionField.returnType = defineTypeRef(mainState, self, functionVariableMatch.group(1))
+				functionField.returnType = defineTypeRef(mainState, self, functionVariableMatch.group(1), TypeRefSourceType.FUNCTION)
 				functionField.callConvention = functionVariableMatch.group(2)
 				functionField.functionName = functionVariableMatch.group(3)
 
 				if functionField.functionName.startswith("~"):
 					functionField.functionName = functionField.functionName[1:] + "_Destructor"
 
-				functionField.thisTypeNoPtr = defineTypeRef(mainState, self, functionVariableMatch.group(4))
-				functionField.resultTypeNoPtr = defineTypeRef(mainState, self, functionVariableMatch.group(5))
+				if thisTypeNoPtrMatch := functionVariableMatch.group(4):
+					functionField.thisType = defineTypeRef(mainState, self, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION)
+
+				if resultTypeNoPtrMatch := functionVariableMatch.group(5):
+					functionField.resultType = defineTypeRef(mainState, self, f"{resultTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION)
 
 				parameterStr = functionVariableMatch.group(6)
 				if parameterStr != None and parameterStr != "":
 					for paramType in splitKeepBrackets(parameterStr, [","]):
-						functionField.parameterTypes.append(defineTypeRef(mainState, self, paramType))
+						functionField.parameterTypes.append(defineTypeRef(mainState, self, paramType, TypeRefSourceType.FUNCTION))
 
 				self.addField(functionField)
 
+			processCommonGroupLines(mainState, state, line, self)
 
-			checkFunctionImplementation(mainState, state, line, self)
-
-
-			# Define certain enum values in group.enumTuples, else print error to console
+			# Define certain enum values in group.enumTuples, else print to console
 			if self.groupType == "enum":
 				enumLineMatch: Match = re.match("^\t([_a-zA-Z0-9]+)\s*=\s*(.+?)\s*,\s*$", line)
 				if enumLineMatch:
@@ -1078,23 +1431,10 @@ class Group:
 
 
 	def addTemplateUse(self, useEntry: tuple[TypeReference]):
-		# TODO: This is a really bad way to prevent duplicate entries in templateUses
-		shouldAdd = True
-		for existingEntry in self.templateUses:
-			same = True
-			for useEntryI in range(len(useEntry)):
-				if not useEntry[useEntryI].sameTypeAs(existingEntry[useEntryI]):
-					same = False
-					break
-			if same:
-				shouldAdd = False
-				break
-
-		if shouldAdd:
-			self.templateUses.append(useEntry)
+		self.templateUses.addUnique(useEntry)
 
 
-	def scanInwardTypeRefs(self):
+	def scanInwardTypeRefs(self, mainState: MainState):
 
 		"""
 		Fills:
@@ -1106,53 +1446,60 @@ class Group:
 		Also fills uniqueUseRepresentations, which is a series of TypeRefs representing every unique way this group has been used.
 		"""
 
-		self.templateUses: list[tuple[TypeReference]] = []
-
 		for typeRef in self.inwardTypeRefs:
 
-			if typeRef.sourceGroup != None and not typeRef.sourceGroup.isWanted: continue
-			self.uniqueUseRepresentations[typeRef.toString()] = typeRef
+			# The Group that generated this TypeReference must be in view
+			if not typeRef.getGroup() or not typeRef.sourceGroup or not typeRef.sourceGroup.isUsed(mainState) or typeRef.isUnparameterized():
+				continue
 
-			if len(typeRef.templateTypes) == 0: continue
-			useEntry = tuple(typeRef.templateTypes)
-			self.addTemplateUse(useEntry)
+			templates = typeRef.getTemplates(mainState, askingGroup=self)
+
+			if len(templates) > 0:
+
+				# All Groups used as templateTypes must be in view and parameterized
+				needContinue = False
+				for templateRef in templates:
+					if not templateRef.isGroupUsed(mainState) or templateRef.isUnparameterized():
+						needContinue = True
+						break
+
+				if needContinue:
+					continue
+
+				self.addTemplateUse(tuple(templates))
+
+			self.uniqueUseRepresentations[typeRef.getHeaderName()] = typeRef
 
 
-	def getAllTypeReferences(self):
+	def getAllTypeReferences(self, mainState: MainState):
 
-		def getExtendsRefs(typeRef: TypeReference):
-			parts = [typeRef]
-			for templateRef in typeRef.templateTypes:
-				for ref in getExtendsRefs(templateRef):
-					parts.append(ref)
-			return parts
+		parts: list[TypeReference] = []
 
 		myself = TypeReference()
 		myself.name = self.name
 		myself.group = self
-
-		parts: list[TypeReference] = [myself]
+		parts.append(myself)
 
 		for subgroup in self.subGroups:
-			for ref in subgroup.getAllTypeReferences():
+			for ref in subgroup.getAllTypeReferences(mainState):
 				parts.append(ref)
 
 		for extendRef in self.extends:
-			for ref in getExtendsRefs(extendRef):
+			for ref in extendRef.getAllTypeReferences(mainState):
 				parts.append(ref)
 
 		for field in self.fields:
-			for ref in field.getAllTypeReferences():
+			for ref in field.getAllTypeReferences(mainState):
 				parts.append(ref)
 
 		for funcImp in self.functionImplementations:
-			for ref in funcImp.getAllTypeReferences():
+			for ref in funcImp.getAllTypeReferences(mainState):
 				parts.append(ref)
 
 		return parts
 
 
-	def mapDependsOn(self):
+	def mapDependsOn(self, mainState: MainState):
 
 		"""
 		Fills:
@@ -1162,41 +1509,112 @@ class Group:
 		Attempts to derive type dependencies and light dependencies (those that need forward declarations).
 		"""
 
-		for typeRef in self.getAllTypeReferences():
-			if typeRef.getName() == "void" or typeRef.isGenericTemplate(): continue
+		for typeRef in self.getAllTypeReferences(mainState):
+
+			if typeRef.isGenericTemplate() or (typeRef.group and typeRef.group.isSubgroupOf(self)):
+				continue
+
+			assert (pointerLevel := typeRef.getUserTypePointerLevel()) >= 0, "Invalid typeRef.getUserTypePointerLevel() in Group.mapDependsOn()"
+
 			typeName = typeRef.getName()
-			if typeRef.pointerLevel == 0:
+			if pointerLevel == 0:
 				self.dependsOn[typeName] = True
-			elif typeRef.pointerLevel > 0:
+			elif pointerLevel > 0:
 				self.lightDependsOn[typeName] = True
-			else:
-				raise ValueError("Invalid typeRef.pointerLevel")
 
 
-	def setSingleName(self, newSingleName: str):
+	def broadcastName(self: Group, mainState: MainState):
+		for subGroup in self.subGroups:
+			subGroup.updateName(mainState)
 
+
+	def updateName(self, mainState: MainState):
+		newName = f"{self.superGroup.name}::{self.singleName}" if self.superGroup else self.singleName
+		mainState.updateGroupNameMapping(self, newName)
+		self.broadcastName(mainState)
+
+
+	def updateSingleName(self, mainState: MainState, newSingleName: str):
 		self.singleName = newSingleName
-
-		parts = []
-		def processSuperGroups(group: Group):
-			if group.superGroup:
-				processSuperGroups(group.superGroup)
-				parts.append(group.superGroup.singleName)
-				parts.append("::")
+		self.updateName(mainState)
 
 
-		processSuperGroups(self)
-		parts.append(self.singleName)
-		self.name = "".join(parts)
+	def updateNesting(self: Group, mainState: MainState):
+
+		# Not using updateSingleName() as I'm in the middle of building the hierarchy.
+
+		# broadcastName() needs to be called manually after this function
+		# if the hierarchy was changed after it was already built.
+
+		# If changing a group's location, the change MUST be registered
+		# with updateGroupNameMapping() before calling this function.
+
+		def getOrCreateGroup(newSuperGroup: Group, name: str, singleName: str):
+
+			toReturn: Group = None
+			if existingGroup := mainState.tryGetGroup(name):
+
+				if existingSuperGroup := existingGroup.superGroup:
+					existingSuperGroup.subGroups.removeUnique(existingGroup)
+
+				existingGroup.singleName = singleName
+				toReturn = existingGroup
+
+			else:
+				newGroup = Group()
+				newGroup.groupType = "undefined"
+				newGroup.name = name
+				newGroup.singleName = singleName
+				mainState.addGroup(newGroup)
+				toReturn = newGroup
+
+			toReturn.superGroup = newSuperGroup
+			return toReturn
 
 
-	def changeSingleName(self, mainState: MainState, newSingleName: str):
-		oldName = self.name
-		self.setSingleName(newSingleName)
-		mainState.renameGroup(self, oldName)
+		split = splitKeepBrackets(self.name, ["::"])
+		if len(split) <= 1:
+			# Not a nested struct
+			return
+
+		lastGroup = getOrCreateGroup(None, split[0], split[0])
+		for namePartI in range(1, len(split)):
+			subGroup = getOrCreateGroup(lastGroup, f"{lastGroup.name}::{split[namePartI]}", split[namePartI])
+			lastGroup.subGroups.addUnique(subGroup)
+			lastGroup = subGroup
 
 
-	def getAppliedName(self, mainState: MainState, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False, noTemplate=False, templatesUseHeaderName=False, singleName=False):
+	def rebuildInwardTypeRefs(self, mainState: MainState):
+		# Rebuild reference chains
+		# TODO: Handle templates?
+		parts = splitKeepBrackets(stripUnnecessaryTypeSpaces(self.name), ["::"])
+		partsLen = len(parts)
+
+		if partsLen > 1:
+
+			for inRef in list(self.inwardTypeRefs):
+
+				topRef = inRef
+				while topRef.superRef:
+					topRef = topRef.superRef
+
+				lastRef: TypeReference = defineTypeRefPart(mainState, None, topRef.sourceGroup, parts[0], TypeRefSourceType.VARIABLE)
+				for i in range(1, partsLen - 1):
+					lastRef = defineTypeRefPart(mainState, lastRef, lastRef.group, parts[i], TypeRefSourceType.VARIABLE)
+
+				inRef.sourceGroup = lastRef.group
+				lastRef.subRef = inRef
+				inRef.superRef = lastRef
+
+
+	def relocate(self: Group, mainState: MainState, newStructPath):
+		mainState.updateGroupNameMapping(self, newStructPath)
+		self.updateNesting(mainState)
+		self.broadcastName(mainState)
+		self.rebuildInwardTypeRefs(mainState)
+
+
+	def getAppliedName(self, mainState: MainState, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False, noTemplate=False, singleName=False, templateTypeMode: TemplateTypeMode=None):
 
 		"""
 		Given a Group in which the caller wants to express an arbritary series of template uses, returns a
@@ -1204,10 +1622,12 @@ class Group:
 		held by templateMappingTracker.
 		"""
 
+		assert templateTypeMode, "templateTypeMode must be defined in Group.getAppliedName()!"
+
 		groupNameParts = []
 
 		if not singleName and self.superGroup:
-			groupNameParts.append(self.superGroup.getAppliedName(mainState, templateMappingTracker))
+			groupNameParts.append(self.superGroup.getAppliedName(mainState, templateMappingTracker, templateTypeMode=templateTypeMode))
 			groupNameParts.append("::")
 
 		groupNameParts.append(self.overrideUsertypeSingleName if useUsertypeOverride and self.overrideUsertypeSingleName != None else self.singleName)
@@ -1216,14 +1636,14 @@ class Group:
 
 			groupNameParts.append("<")
 
-			for typeRef in v:
-
-				if templatesUseHeaderName:
-					groupNameParts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).getHeaderName())
-				else:
-					groupNameParts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).toString())
-				
-				groupNameParts.append(",")
+			if templateTypeMode == TemplateTypeMode.USER_TYPE:
+				for typeRef in v:
+					groupNameParts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).getAppliedUserTypeName(mainState, self, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
+					groupNameParts.append(",")
+			elif templateTypeMode == TemplateTypeMode.HEADER:
+				for typeRef in v:
+					groupNameParts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).getAppliedHeaderName(mainState, self, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
+					groupNameParts.append(",")
 
 			groupNameParts.pop()
 			groupNameParts.append(">")
@@ -1244,14 +1664,20 @@ class Group:
 		if vtblStruct == None: return
 
 		self.vGroup = vtblStruct
+		vtblStruct.relocate(mainState, f"{self.name}::{vtblStruct.name}")
 
 		if self.hasField("__vftable"):
-			self.removeField("__vftable")
+			self.removeField(mainState, "__vftable")
 
 		for field in vtblStruct.fields:
 			if field.type != FieldType.FUNCTION:
-				print(f"vtblStruct {vtblStruct.name} has non-function field: {field.toString(mainState)}, breaking!")
+				#print(f"vtblStruct {vtblStruct.name} has non-function field: {field.toString(mainState)}, breaking!")
 				break
+
+			functionField: FunctionField = field
+			thisType = functionField.thisType
+			if thisType and thisType.getGroup() != self:
+				continue
 
 			impl: FunctionImplementation = field.toImplementation(self)
 
@@ -1317,7 +1743,7 @@ class Group:
 				for field in group.fields:
 					if field.type == FieldType.VARIABLE:
 						varField: VariableField = field
-						varStr = f"{varField.variableType.toString(pointerLevelAdjust=1)} p_{varField.variableName};"
+						varStr = f"{varField.variableType.getHeaderName(pointerLevelAdjust=1)} p_{varField.variableName};"
 						internalPointersOut.write(f"{varStr}\n")
 						internalPointersListOut.append((varField.variableName, f"p_{varField.variableName}"))
 						parts.append(f"extern {varStr}")
@@ -1328,7 +1754,8 @@ class Group:
 
 
 			for subGroup in group.subGroups:
-				if writeGroupInternalFunctionPointers(subGroup): wroteSomething = True
+				if writeGroupInternalFunctionPointers(subGroup):
+					wroteSomething = True
 
 			return wroteSomething
 
@@ -1365,7 +1792,7 @@ class Group:
 				parts.append(" : ")
 
 				for extendsType in self.extends:
-					parts.append(extendsType.toString())
+					parts.append(extendsType.getHeaderName())
 					parts.append(", ")
 
 				parts.pop()
@@ -1376,7 +1803,7 @@ class Group:
 
 			nextIndent = indent + "\t"
 
-			if headerType == HeaderType.CLEANED and self.templateUses != None:
+			if headerType == HeaderType.CLEANED and self.template != None:
 				parts.append(nextIndent)
 				parts.append("TOLUA_TEMPLATE_BIND(")
 
@@ -1403,7 +1830,7 @@ class Group:
 			wroteSomethingBeforeFuncImps = False
 
 			for subgroup in self.subGroups:
-				if not subgroup.isUsed(): continue
+				if not subgroup.isUsed(mainState): continue
 				parts.append(subgroup.writeHeader(mainState, internalPointersOut, internalPointersListOut, headerType, nextIndent))
 				parts.append("\n\n")
 				wroteSomethingBeforeFuncImps = True
@@ -1442,11 +1869,39 @@ class Group:
 		return "".join(parts)
 
 
-	def isUsed(self):
-		for subGroup in self.subGroups:
-			if subGroup.isUsed(): return True
+	def isUsed(self, mainState: MainState, dontCheckSuper=False, processed: set[Group]=None):
 
-		return self.isDirectlyWanted or len(self.inwardTypeRefs) > 0
+		processed = processed or set()
+
+		if self in processed:
+			return False
+
+		processed.add(self)
+
+		# If I'm not in the filtered list or my top-level group wasn't in a header file
+		# then I'm definitely not going to be outputted.
+		if (not mainState.filteredGroups.containsUnique(self)
+			or (self.name != "void" and not self.isPrimitive() and not self.hasDefinedTop())
+		):
+			return False
+
+		# If I was directly requested in wanted_types.txt I'll be outputted (top level structs).
+		if self.isDirectlyWanted:
+			return True
+
+		# Check all inward type refs to see if there's a reference to me that's in-view.
+		for inRef in self.inwardTypeRefs:
+			if inRef.sourceGroup and inRef.sourceGroup.isUsed(mainState, processed=processed):
+				return True
+
+		# If one of my subgroups is used I have to be present for output.
+		for subGroup in self.subGroups:
+			if subGroup.isUsed(mainState, dontCheckSuper=True, processed=processed):
+				return True
+
+		# Check if I am requested when my supergroup is being used, (isSoftWanted).
+		return not dontCheckSuper and self.isSoftWanted and self.superGroup and self.superGroup.isUsed(mainState, dontCheckSuper=True, processed=processed)
+
 
 
 def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, superGroup: Group, line: str):
@@ -1470,23 +1925,17 @@ def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, s
 		subGroup = Group()
 		subGroup.groupType = state.groupType
 		subGroup.defined = True
-
-		# Needs to be before setSingleName() to include super group in full name
-		subGroup.superGroup = superGroup
-		superGroup.subGroups.append(subGroup)
-		subGroup.superSubInitialized = True
-
-		subGroup.setSingleName(myTypeName)
-		#print(f"checkUnnamedStructs() connecting {superGroup.name} (super) to {subGroup.name} (sub)")
-
 		subGroup.lines = state.lines
+		subGroup.superGroup = superGroup
 		
-		#print(f"unnamed struct {superGroup.name} adding {subGroup.name}")
+		subGroup.updateSingleName(mainState, myTypeName)
+		superGroup.subGroups.addUnique(subGroup)
+
 		mainState.addGroup(subGroup)
 		subGroup.processLinesFillTypes(mainState)
 
 		newSuperField = VariableField()
-		newSuperField.variableType = defineTypeRef(mainState, superGroup, myFullName)
+		newSuperField.variableType = defineTypeRef(mainState, superGroup, myFullName, TypeRefSourceType.VARIABLE)
 		newSuperField.variableName = myName
 		superGroup.addField(newSuperField)
 
@@ -1511,13 +1960,13 @@ class Field:
 		self.listI: int = None
 
 	def getName(self) -> str:
-		raise ValueError()
+		assert False, "Field.getName() intentionally unimplemented"
 
 	def toString(self, indent="") -> str:
-		raise ValueError()
+		assert False, "Field.toString() intentionally unimplemented"
 
-	def getAllTypeReferences(self) -> list[TypeReference]:
-		raise ValueError()
+	def getAllTypeReferences(self, mainState: MainState) -> list[TypeReference]:
+		assert False, "Field.getAllTypeReferences() intentionally unimplemented"
 
 
 class FunctionField(Field):
@@ -1528,8 +1977,8 @@ class FunctionField(Field):
 		self.returnType: TypeReference = None
 		self.callConvention: str = None
 		self.functionName: str = None
-		self.thisTypeNoPtr: TypeReference = None
-		self.resultTypeNoPtr: TypeReference = None
+		self.thisType: TypeReference = None
+		self.resultType: TypeReference = None
 		self.parameterTypes: list[TypeReference] = []
 
 
@@ -1571,15 +2020,13 @@ class FunctionField(Field):
 
 		hadParam = False
 
-		if self.thisTypeNoPtr:
-			parts.append(self.thisTypeNoPtr.getHeaderName())
-			parts.append("*")
+		if self.thisType:
+			parts.append(self.thisType.getHeaderName())
 			parts.append(", ")
 			hadParam = True
 
-		if self.resultTypeNoPtr:
-			parts.append(self.resultTypeNoPtr.getHeaderName())
-			parts.append("*")
+		if self.resultType:
+			parts.append(self.resultType.getHeaderName())
 			parts.append(", ")
 			hadParam = True
 
@@ -1595,23 +2042,23 @@ class FunctionField(Field):
 		return "".join(parts)
 
 
-	def getAllTypeReferences(self):
+	def getAllTypeReferences(self, mainState: MainState):
 
 		parts = []
 
-		for v in self.returnType.getAllTypeReferences():
+		for v in self.returnType.getAllTypeReferences(mainState):
 			parts.append(v)
 
-		if self.thisTypeNoPtr != None:
-			for v in self.thisTypeNoPtr.getAllTypeReferences():
+		if self.thisType != None:
+			for v in self.thisType.getAllTypeReferences(mainState):
 				parts.append(v)
 
-		if self.resultTypeNoPtr != None:
-			for v in self.resultTypeNoPtr.getAllTypeReferences():
+		if self.resultType != None:
+			for v in self.resultType.getAllTypeReferences(mainState):
 				parts.append(v)
 
 		for typeReference in self.parameterTypes:
-			for v in typeReference.getAllTypeReferences():
+			for v in typeReference.getAllTypeReferences(mainState):
 				parts.append(v)
 
 		return parts
@@ -1646,12 +2093,14 @@ class VariableField(Field):
 			parts.append(f"{'p_' if self.static else ''}{self.variableName}")
 		else:
 			#TODO: Staticify
-			parts.append(self.variableType.templateTypes[0].getHeaderName())
+			assert isinstance(self.variableType, PointerReference), f"Array not wrapped in PointerReference ({type(self.variableType).__name__})"
+			arrayRef: TypeReference = self.variableType.originalRef
+			parts.append(arrayRef.templateTypes[0].getHeaderName())
 			parts.append(" ")
 			parts.append(self.variableName)
-			parts.append(f"[{self.variableType.templateTypes[1].getHeaderName()}]")
+			parts.append(f"[{arrayRef.templateTypes[1].getHeaderName()}]")
 
-		for arrayPart in self.variableType.arrayParts:
+		for arrayPart in self.variableType.getArrayParts():
 			parts.append("[")
 			parts.append(arrayPart)
 			parts.append("]")
@@ -1664,48 +2113,32 @@ class VariableField(Field):
 		return "".join(parts)
 
 
-	def getAllTypeReferences(self):
-		return self.variableType.getAllTypeReferences()
+	def getAllTypeReferences(self, mainState: MainState):
+		return self.variableType.getAllTypeReferences(mainState)
 
 
-def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup: Group, inStr: str, arrayStr: str=None):
 
-	if inStr == None: return
+class TypeRefSourceType(Enum):
+	VARIABLE = 1
+	FUNCTION = 2
+
+
+def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup: Group, inStr: str, src: TypeRefSourceType, arrayStr: str=None):
+
+	assert inStr != None
 	str = inStr
 
-	noreplace = False
+	primitive = False
 	noconst = False
 	while True:
-		if noreplaceMatch := re.match("^noreplace\s+(.*)", str):
-			noreplace = True
-			str = noreplaceMatch.group(1)
-		elif noconstMatch := re.match("^noconst\s+(.*)", str):
+		if primitiveMatch := re.fullmatch("primitive\s+(.*)", str):
+			primitive = True
+			str = primitiveMatch.group(1)
+		elif noconstMatch := re.fullmatch("noconst\s+(.*)", str):
 			noconst = True
 			str = noconstMatch.group(1)
 		else:
 			break
-
-	if not noreplace and not mainState.noCustomTypes:
-
-		originalPointerLevel, oneLessPtrStr = getPointerLevel(str, removeAmount=1)
-
-		# Transform char* into CharString types
-		if str == "CharString" or (oneLessPtrStr == "char" and originalPointerLevel == 1):
-			strRef = StringReference(mainState, sourceGroup)
-			strRef.sourceString = inStr
-			strRef.noreplace = noreplace
-			strRef.noconst = noconst
-			strRef.group.inwardTypeRefs.append(strRef)
-			return strRef
-
-		# Transform const char* into ConstCharString types
-		if str == "ConstCharString" or (oneLessPtrStr == "const char" and originalPointerLevel == 1):
-			constStrRef = ConstStringReference(mainState, sourceGroup)
-			constStrRef.sourceString = inStr
-			constStrRef.noreplace = noreplace
-			constStrRef.noconst = noconst
-			constStrRef.group.inwardTypeRefs.append(constStrRef)
-			return constStrRef
 
 	needArrayPart = False
 	# Transform arrays into Array types
@@ -1714,7 +2147,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 			allMatches = [x for x in re.finditer("\[(\d+)\]", arrayStr)]
 			all = [x.group(0) for x in allMatches]
 			nextArrayStr = "".join(all[:-1]) if len(all) > 1 else None
-			return defineTypeRef(mainState, sourceGroup, f"Array<{str},{allMatches[-1].group(1)}>", nextArrayStr)
+			return defineTypeRef(mainState, sourceGroup, f"Array<{str},{allMatches[-1].group(1)}>", src, nextArrayStr)
 		else:
 			needArrayPart = True
 
@@ -1732,8 +2165,8 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 		name, unsignedCount = removeRegexCount(name, "unsigned\s+")
 		if unsignedCount == 1:
 			typeRef.unsigned = True
-		elif unsignedCount != 0:
-			raise ValueError("Invalid number of 'unsigned' keywords")
+		else:
+			assert unsignedCount == 0, "Invalid number of 'unsigned' keywords"
 
 		if hitName:
 			name, constCount = removeRegexCount(name, "const")
@@ -1750,8 +2183,8 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 		if constCount == 1:
 			typeRef.const = True
-		elif constCount != 0:
-			raise ValueError("Invalid number of 'const' keywords")
+		else:
+			assert constCount == 0, "Invalid number of 'const' keywords"
 
 		if hitName: return
 		name = name.strip()
@@ -1764,38 +2197,20 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 			struct = True
 			name = structMatch.group(1)
 
-		#typeRef.name = name
-
-		# These should never show up in their non-replaced form if replacing
-		# if not noreplace and typeRef.name in ("Pointer", "CharString", "ConstCharString"):
-		#	errorStr = f"Attempting to define {typeRef.name} from {str}"
-		#	raise ValueError(errorStr)
-
 		# Create a Group for the type if it hasn't been found already
 		# (varargs type and completely numeric types obviously aren't real, so exclude them)
 		if typeRef.sourceString != "..." and not typeRef.sourceString.isnumeric():
 
-			groupNameParts: list[str] = []
-
-			if superRef:
-				groupNameParts.append(superRef.group.name)
-				groupNameParts.append("::")
-
-			groupNameParts.append(name)
-			groupName = "".join(groupNameParts)
-
+			groupName = f"{superRef.group.name}::{name}" if superRef else name
 			typeGroup = mainState.tryGetGroup(groupName)
 
 			if not typeGroup:
 				typeGroup = Group()
 				typeGroup.groupType = "struct" if struct else "undefined"
-				typeGroup.setSingleName(groupName)
+				typeGroup.updateSingleName(mainState, groupName)
 				mainState.addGroup(typeGroup)
 
 			typeRef.group = typeGroup
-
-			if typeRef.group != None:
-				typeRef.group.inwardTypeRefs.append(typeRef)
 
 
 	for split in splits:
@@ -1807,175 +2222,75 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 				name, parts = separateTemplateTypeParts(split, typeStartI)
 				doBaseProcess(name)
 				for templateType in splitKeepBrackets(parts, [","]):
-					typeRef.templateTypes.append(defineTypeRef(mainState, sourceGroup, templateType))
+					typeRef.templateTypes.append(defineTypeRef(mainState, sourceGroup, templateType, TypeRefSourceType.VARIABLE))
 
 		elif split == "*" or split == "&":
 			typeRef.pointerLevel += 1
 		else:
 			doBaseProcess(split)
 
-	#if typeRef.name == "":
-	#	print(f"Failed to get name for \"{str}\"")
-
 	if needArrayPart:
 		for arrayPartMatch in re.finditer("\[([a-zA-Z0-9_]+)\]", arrayStr):
 			typeRef.arrayParts.append(arrayPartMatch.group(1))
 
-	typeRef.noreplace = noreplace
+	typeRef.primitive = primitive
 	typeRef.noconst = noconst
 
 	if superRef:
 		superRef.subRef = typeRef
 		typeRef.superRef = superRef
 
-	# Transform double pointers into Pointer types
-	if typeRef.pointerLevel > 1 and not mainState.noCustomTypes:
-		typeRef.pointerLevel -= 1
-		ptrRef = PointerReference(mainState, sourceGroup, typeRef)
-		ptrRef.sourceString = inStr
-		ptrRef.noreplace = noreplace
-		ptrRef.noconst = noconst
-		ptrRef.group.inwardTypeRefs.append(ptrRef)
-		return ptrRef
+	groupName = typeRef.group and typeRef.group.name or ""
 
-	return typeRef
+	if groupName in ("CharString", "ConstCharString"):
+		return CharReference.create(mainState, typeRef, CharReferenceMode.USER_TYPE_ONLY)
+
+	# Transform char into CharReference
+	elif groupName == "char":
+		mode = CharReferenceMode.PRIMITIVE_ONLY if primitive else CharReferenceMode.MORPHING
+		charRef = CharReference.create(mainState, typeRef, mode)
+		return charRef
+
+	# Transform void pointers into VoidPointerReference
+	elif groupName == "void" and typeRef.pointerLevel > 0:
+		return VoidPointerReference.create(mainState, typeRef)
+
+	# Transform pointers into PointerReference
+	else:
+		assert groupName != "Array" or len(typeRef.templateTypes) == 2, "defineTypeRefPart() created invalid Array"
+		return PointerReference.create(mainState, typeRef)
 
 
 
-def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, arrayStr: str=None):
+def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeRefSourceType, arrayStr: str=None):
 
-	if str == None: return
+	if str == None:
+		return
 
 	splits = splitKeepBrackets(stripUnnecessaryTypeSpaces(str), ["::"])
 	numSplits = len(splits)
-	if numSplits == 0: return
 
-	lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], arrayStr)
+	if numSplits == 0:
+		return
+
+	lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], src, arrayStr)
 	for i in range(1, numSplits):
-		lastRef = defineTypeRefPart(mainState, lastRef, lastRef.group, splits[i], None)
+		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], src, None)
 
 	return lastRef
 
 
 
-def findLastBaseGroup(mainState: MainState, name: str):
-	split = splitKeepBrackets(name, ["::"])
-	splitLen = len(split)
-	firstSubGroupI = 0
-	baseName = split[0]
-	baseGroup: Group = None
-	while True:
+def relocateGroup(mainState: MainState, existingPath: str, newPath: str):
+	mainState.getGroup(existingPath).relocate(mainState, newPath)
 
-		if (v := mainState.tryGetGroup(baseName)) == None:
-			break
-		
-		baseGroup = v
-		baseName += "::" + split[firstSubGroupI]
-
-		firstSubGroupI += 1
-		if firstSubGroupI >= splitLen: break
-
-	if baseGroup == None or firstSubGroupI == splitLen: return
-	return baseGroup, split, firstSubGroupI
-
-
-def doMove(mainState: MainState, dependsOnName: str):
-
-	#print(f"Checking move for: \"{dependsOnName}\"")
-
-	def tryGetGroup(fullGroupName, finalGroupNamePart):
-
-		existingGroup = mainState.tryGetGroup(fullGroupName)
-		if existingGroup != None:
-			# print(f"Move found {fullGroupName}, set singleName to {finalGroupNamePart}")
-			existingGroup.singleName = finalGroupNamePart
-			return existingGroup
-
-		#print(f"Move made {fullGroupName}")
-		newGroup = Group()
-		newGroup.groupType = "struct"
-		newGroup.name = fullGroupName
-		newGroup.singleName = finalGroupNamePart
-
-		mainState.addGroup(newGroup)
-		return newGroup
-
-
-	dependGroup = mainState.tryGetGroup(dependsOnName)
-	if dependGroup == None: return False
-	if dependGroup.isSubgroup(): return False
-
-	split = splitKeepBrackets(dependsOnName, ["::"])
-	splitLen = len(split)
-	if splitLen <= 1: return False
-
-	lastFullName = split[0]
-	firstSubGroup = tryGetGroup(lastFullName, lastFullName)
-	firstSubGroup.superSubInitialized = True
-	lastSubGroup = firstSubGroup
-
-	for basePartI in range(1, len(split)):
-
-		lastFullName = lastFullName + "::" + split[basePartI]
-		newSubSubGroup = tryGetGroup(lastFullName, split[basePartI])
-
-		if not newSubSubGroup.superSubInitialized:
-			#print(f"Move connecting {lastSubGroup.name} (super) to {newSubSubGroup.name} (sub)")
-			newSubSubGroup.superGroup = lastSubGroup
-			lastSubGroup.subGroups.append(newSubSubGroup)
-			newSubSubGroup.superSubInitialized = True
-
-		lastSubGroup = newSubSubGroup
-
-	return True
-
-
-def relocateGroup(mainState: MainState, existingStructPath, newStructPath):
-
-	existingGroup = mainState.getGroup(existingStructPath)
-
-	if superGroup := existingGroup.superGroup:
-		superGroup.subGroups.remove(existingGroup)
-		existingGroup.superGroup = None
-		existingGroup.superSubInitialized = False
-
-	oldName = existingGroup.name
-	existingGroup.name = newStructPath
-	mainState.renameGroup(existingGroup, oldName)
-	doMove(mainState, existingGroup.name)
-
-	# Rebuild reference chains
-	# TODO: Handle templates?
-	parts = splitKeepBrackets(stripUnnecessaryTypeSpaces(existingGroup.name), ["::"])
-	partsLen = len(parts)
-
-	if partsLen > 1:
-
-		for inRef in list(existingGroup.inwardTypeRefs):
-
-			topRef = inRef
-			while topRef.superRef: topRef = topRef.superRef
-
-			lastRef: TypeReference = defineTypeRefPart(mainState, None, topRef.sourceGroup, parts[0])
-			for i in range(1, partsLen - 1):
-				lastRef = defineTypeRefPart(mainState, lastRef, lastRef.group, parts[i])
-
-			inRef.sourceGroup = lastRef.group
-			lastRef.subRef = inRef
-			inRef.superRef = lastRef
-
-
-def moveSubstructs(mainState: MainState, group: Group):
-	toProcess = group.getAllTypeReferences()
-	while len(toProcess) > 0:
-		typeRef = toProcess.pop()
-		doMove(mainState, typeRef.getName())
 
 
 def moveElementAfter(list: list, originalIndex, afterIndex):
 	temp = list[originalIndex]
 	del list[originalIndex]
 	list.insert(afterIndex if originalIndex <= afterIndex else afterIndex + 1, temp)
+
 
 
 def tryResolveDependencyOrder(groups: list[Group]):
@@ -1985,25 +2300,36 @@ def tryResolveDependencyOrder(groups: list[Group]):
 	OH the time complexity!
 	"""
 
+	# Sort groups alphabetically based on name
+	groups.sort(key=lambda x: x.name)
+
 	curCheckI = 0
 	while curCheckI < len(groups):
 
 		group = groups[curCheckI]
+
 		if len(group.dependsOn) > 0:
 
 			maxDependIndex = 0
 			for dependName in group.dependsOn:
 				i = 0
-				for group in groups:
-					if group.name == dependName:
+				for checkGroup in groups:
+					if checkGroup.name == dependName:
 						maxDependIndex = max(maxDependIndex, i)
 					i += 1
 
+			print(f"{group.name} at [{curCheckI}] needs to go after {groups[maxDependIndex].name} at [{maxDependIndex}]")
 			if curCheckI < maxDependIndex:
 				moveElementAfter(groups, curCheckI, maxDependIndex)
+				assert group != groups[curCheckI], "Duplicate group in list"
 				continue
 
 		curCheckI += 1
+
+	for group in groups:
+		tryResolveDependencyOrder(group.subGroups)
+		group.subGroups.rebuildIndexMapping()
+
 
 
 def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper, baseclassHeaderOut: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
@@ -2041,8 +2367,9 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 	class OpenGroupData:
 
 		def __init__(self) -> None:
-			self.appliedName: str = None
+			self.appliedNameUsertypeNoOverride: str = None
 			self.appliedNameUsertype: str = None
+			self.appliedNameUsertypeFunc: str = None
 			self.appliedHeaderName: str = None
 			self.group: Group = None
 			self.fieldBindings: list[OpenFieldData] = []
@@ -2069,10 +2396,11 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 		if currentTemplate != None:
 			templateMappingTracker.registerMapping(group.name, currentTemplate)
 
-		groupOpenData.appliedName = group.getAppliedName(mainState, templateMappingTracker)
-		groupOpenData.appliedNameUsertype = group.getAppliedName(mainState, templateMappingTracker, useUsertypeOverride=True, templatesUseHeaderName=False)
-		groupOpenData.appliedHeaderName = group.getAppliedName(mainState, templateMappingTracker, templatesUseHeaderName=True)
-		groupNameStrIden, _ = re.subn("[^a-zA-Z0-9_]", "_", groupOpenData.appliedName)
+		groupOpenData.appliedNameUsertypeNoOverride = group.getAppliedName(mainState, templateMappingTracker, templateTypeMode=TemplateTypeMode.HEADER)
+		groupOpenData.appliedNameUsertype = group.getAppliedName(mainState, templateMappingTracker, useUsertypeOverride=True, templateTypeMode=TemplateTypeMode.HEADER)
+		groupOpenData.appliedNameUsertypeFunc = group.getAppliedName(mainState, templateMappingTracker, templateTypeMode=TemplateTypeMode.HEADER)
+		groupOpenData.appliedHeaderName = group.getAppliedName(mainState, templateMappingTracker, templateTypeMode=TemplateTypeMode.HEADER)
+		groupNameStrIden, _ = re.subn("[^a-zA-Z0-9_]", "_", groupOpenData.appliedNameUsertypeNoOverride)
 
 		# Writing getReference() function which returns the userdata's internal pointer
 		if group != globalGroup and group.groupType != "enum" and group.name not in ("Pointer", "Array"):
@@ -2084,7 +2412,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 			out.write(f"static int {getTypeFunc.functionBindingName}(lua_State* L)\n")
 			out.write("{\n")
 			out.write(f"\tvoid** ptr = (void**)lua_touserdata(L, 1);\n")
-			out.write(f"\ttolua_pushusertype(L, ptr, \"Pointer<{groupOpenData.appliedNameUsertype}>\");\n")
+			out.write(f"\ttolua_pushusertype(L, ptr, \"Pointer<{groupOpenData.appliedHeaderName}>\");\n")
 			out.write("\treturn 1;\n")
 			out.write("}\n\n")
 
@@ -2096,7 +2424,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 			sizeofConstant = OpenConstantData()
 			sizeofConstant.name = "sizeof"
 			sizeofConstant.valueType = OpenConstantType.STRING
-			sizeofConstant.value = f"sizeof({group.getAppliedName(mainState, templateMappingTracker)})"
+			sizeofConstant.value = f"sizeof({groupOpenData.appliedHeaderName})"
 			groupOpenData.constantBindings.append(sizeofConstant)
 
 
@@ -2113,6 +2441,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 			fieldNameStr = None
 
+			assert field.type in (FieldType.VARIABLE, FieldType.FUNCTION), "field.type unhandled in writeGroupWithTemplateUse()"
 			if field.type == FieldType.VARIABLE:
 				variableField: VariableField = field
 				if variableField.nobinding: return
@@ -2121,9 +2450,6 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 			elif field.type == FieldType.FUNCTION:
 				functionField: FunctionField = field
 				fieldNameStr = functionField.functionName
-			else:
-				raise ValueError("Unhandled field.type")
-
 
 			fieldOpenData = OpenFieldData()
 			isNormal: bool = group != globalGroup
@@ -2151,7 +2477,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 				varType: TypeReference = variableField.variableType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 
 				if isNormal and not variableField.static:
-					out.write(f"\t{groupOpenData.appliedName}* self = ({groupOpenData.appliedName}*)tolua_tousertype_dynamic(L, 1, 0, \"{groupOpenData.appliedNameUsertype}\");\n")
+					out.write(f"\t{groupOpenData.appliedNameUsertypeFunc}* self = ({groupOpenData.appliedNameUsertypeFunc}*)tolua_tousertype_dynamic(L, 1, 0, \"{groupOpenData.appliedNameUsertype}\");\n")
 					out.write(f"\tif (!self) tolua_error(L, \"invalid 'self' in accessing variable '{variableField.variableName}'\", NULL);\n")
 
 				varNameHeader = variableField.variableName if (isNormal and not variableField.static) else f"p_{variableField.variableName}"
@@ -2166,12 +2492,10 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 				def checkPrimitiveHandling(varType: TypeReference):
 
-					if isPointerCast: return False
+					if isPointerCast:
+						return False
 
-					#if varType.isPrimitive() and varType.pointerLevel > 0:
-					#	print(f"Pointer primitive somehow exists: {varType.toString()} for {groupOpenData.appliedName}::{variableField.variableName}")
-
-					effectivePtrLevel = varType.pointerLevel if (isNormal and not variableField.static) else varType.pointerLevel + 1
+					effectivePtrLevel = varType.getUserTypePointerLevel() if (isNormal and not variableField.static) else varType.getUserTypePointerLevel() + 1
 					checkType = varType
 
 					# Enums are fancy primitives!
@@ -2187,10 +2511,10 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 						out.write(f"\ttolua_pushboolean(L, (bool){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
 						return True
 					elif checkTypeName == "char":
-						if checkType.pointerLevel == 1:
+						if checkType.getUserTypePointerLevel() == 1:
 							out.write(f"\ttolua_pushstring(L, (const char*){'*'*(effectivePtrLevel - 1)}{selfStr}{varNameHeader});\n")
 							return True
-						elif checkType.pointerLevel == 0:
+						elif checkType.getUserTypePointerLevel() == 0:
 							out.write(f"\tlua_pushlstring(L, (const char*){'*'*(effectivePtrLevel - 1)}{selfStr}{varNameHeader}, 1);\n")
 							return True
 
@@ -2199,7 +2523,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 				if not checkPrimitiveHandling(varType):
 
-					effectivePtrLevel = varType.pointerLevel if (isNormal and not variableField.static) else varType.pointerLevel + 1
+					effectivePtrLevel = varType.getUserTypePointerLevel() if (isNormal and not variableField.static) else varType.getUserTypePointerLevel() + 1
 
 					if isPointerCast:
 						out.write("\ttolua_pushusertypepointer(L, (void*)&")
@@ -2211,13 +2535,15 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 					if isNormal:
 						out.write(f"{selfStr}{varNameHeader}")
 					else:
-						out.write(f"{'*'*varType.pointerLevel}{varNameHeader}")
+						out.write(f"{'*'*varType.getUserTypePointerLevel()}{varNameHeader}")
 
 					if isPointerCast:
-						insideTypeName = varType.getAppliedName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
-						out.write(f", \"Pointer<{insideTypeName}>\"")
+						pointerRef = varType.shallowCopy()
+						pointerRef.adjustUserTypePointerLevel(mainState, 1)
+						pointerTypeName = pointerRef.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
+						out.write(f", \"{pointerTypeName}\"")
 					else:
-						primitiveReturned = varType.pointerLevel > 0
+						primitiveReturned = varType.getUserTypePointerLevel() > 0
 						typeStr = varType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
 						out.write(f", \"{typeStr}\"")
 
@@ -2252,7 +2578,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 				if varType.group and varType.group.groupType == "enum":
 					varType = varType.group.extends[0]
 
-				allowSetter = varType.isPrimitive() or varType.pointerLevel > 0
+				allowSetter = varType.isPrimitive() or varType.getUserTypePointerLevel() > 0
 
 			if allowSetter:
 
@@ -2270,7 +2596,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 					varType: TypeReference = variableField.variableType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 
 					if isNormal and not variableField.static:
-						out.write(f"\t{groupOpenData.appliedName}* self = ({groupOpenData.appliedName}*)tolua_tousertype_dynamic(L, 1, 0, \"{groupOpenData.appliedNameUsertype}\");\n")
+						out.write(f"\t{groupOpenData.appliedNameUsertypeFunc}* self = ({groupOpenData.appliedNameUsertypeFunc}*)tolua_tousertype_dynamic(L, 1, 0, \"{groupOpenData.appliedNameUsertype}\");\n")
 						out.write(f"\tif (!self) tolua_error(L, \"invalid 'self' in accessing variable '{variableField.variableName}'\", NULL);\n")
 
 					varNameHeader = variableField.variableName if (isNormal and not variableField.static) else f"p_{variableField.variableName}"
@@ -2281,12 +2607,12 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 						else:
 							selfStr = "self->"
 					else:
-						selfStr = "*"*(varType.pointerLevel + 1)
+						selfStr = "*"*(varType.getUserTypePointerLevel() + 1)
 
 					def checkPrimitiveHandling(varType: TypeReference):
 
 						varTypeName = varType.getName()
-						if isNormal and ((varTypeName != "char" and varType.pointerLevel > 0) or (varTypeName == "char" and varType.pointerLevel > 1)): return False
+						if isNormal and ((varTypeName != "char" and varType.getUserTypePointerLevel() > 0) or (varTypeName == "char" and varType.getUserTypePointerLevel() > 1)): return False
 
 						enumCastStr = ""
 						checkType = varType
@@ -2318,7 +2644,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 					if not checkPrimitiveHandling(varType):
 						selfStr = "self->" if isNormal else "*"
-						out.write(f"\t{selfStr}{varNameHeader} = ({varType.getAppliedName(mainState, group, templateMappingTracker)})tolua_tousertype_dynamic(L, 2, 0, \"{varType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)}\");\n")
+						out.write(f"\t{selfStr}{varNameHeader} = ({varType.getAppliedHeaderName(mainState, group, templateMappingTracker)})tolua_tousertype_dynamic(L, 2, 0, \"{varType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)}\");\n")
 
 					out.write("\treturn 0;\n")
 
@@ -2341,22 +2667,21 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 			# TODO: I can't return / pass non-pointer, non-primitives to functions yet
 
 			returnType: TypeReference = functionImplementation.returnType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
-			returnTypeName = returnType.getName()
 
 			# Must be void, primitive, or pointer
-			if not returnType.isVoid() and (not returnType.isPrimitive() and (returnTypeName not in ("Pointer", "CharString", "ConstCharString") or returnType.noreplace)) and returnType.pointerLevel == 0:
+			if not returnType.isVoid() and not returnType.isPrimitive() and returnType.getUserTypePointerLevel() == 0:
 				return
 
 			for param in functionImplementation.parameters:
 
 				paramType = param.type.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 
-				# Can't have conflicting const requirements (the noconst directive prevents the function from generating for const types)
+				# Can't have conflicting const requirements (the noconst directive prevents the function binding from generating for const types)
 				if paramType.const and paramType.noconst:
 					return
 
 				# Must be primitive or pointer
-				if (not paramType.isPrimitive() and (paramType.getName() not in ("Pointer", "CharString", "ConstCharString") or paramType.noreplace)) and paramType.pointerLevel == 0:
+				if not paramType.isPrimitive() and paramType.getUserTypePointerLevel() == 0:
 					return
 
 
@@ -2366,6 +2691,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 			functionOpenData.functionName = functionImplementation.name
 			groupIden = f"{groupNameStrIden}_" if isNormal else ""
 			functionOpenData.functionBindingName = f"tolua_function_{groupIden}{functionImplementation.name}"
+
 			groupOpenData.functionBindings.append(functionOpenData)
 
 			out.write(f"static int {functionOpenData.functionBindingName}(lua_State* L)\n")
@@ -2379,21 +2705,21 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 				paramTypeName = paramType.getName()
 
-				if paramType.isPrimitiveNumber() and paramType.pointerLevel == 0:
+				if paramType.isPrimitiveNumber() and paramType.getUserTypePointerLevel() == 0:
 					callArgParts.append(f"tolua_tonumber(L, {luaVarIndex}, NULL)")
 					callArgParts.append(", ")
 					return True
-				elif paramTypeName == "bool" and paramType.pointerLevel == 0:
+				elif paramTypeName == "bool" and paramType.getUserTypePointerLevel() == 0:
 					callArgParts.append(f"tolua_toboolean(L, {luaVarIndex}, NULL)")
 					callArgParts.append(", ")
 					return True
 				elif paramTypeName == "char" and not paramType.unsigned:
-					if paramType.pointerLevel == 1:
+					if paramType.getUserTypePointerLevel() == 1:
 						nonConstCast = "(char*)" if not paramType.const else ""
 						callArgParts.append(f"{nonConstCast}tolua_tostring(L, {luaVarIndex}, NULL)")
 						callArgParts.append(", ")
 						return True
-					elif paramType.pointerLevel == 0:
+					elif paramType.getUserTypePointerLevel() == 0:
 						callArgParts.append(f"*tolua_tostring(L, {luaVarIndex}, NULL)")
 						callArgParts.append(", ")
 						return True
@@ -2415,12 +2741,11 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 				out.write(f"{returnTypeStr} returnVal = ")
 
 			if functionImplementation.isConstructor:
-				classStr = functionImplementation.group.getAppliedName(mainState, templateMappingTracker)
-				out.write(f"new (self) {classStr}(")
+				out.write(f"new (self) {groupOpenData.appliedHeaderName}(")
 			elif isNormal and not functionImplementation.isStatic:
 				out.write(f"self->{functionNameHeader}(")
 			else:
-				classStr = f"{functionImplementation.group.getAppliedName(mainState, templateMappingTracker)}::" if isNormal else ""
+				classStr = f"{groupOpenData.appliedHeaderName}::" if isNormal else ""
 				out.write(f"{classStr}{functionNameHeader}(")
 
 			if functionImplementation.customReturnCount:
@@ -2451,17 +2776,17 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 					varTypeName = varType.getName()
 
-					if varType.isPrimitiveNumber() and varType.pointerLevel == 0:
+					if varType.isPrimitiveNumber() and varType.getUserTypePointerLevel() == 0:
 						out.write("tolua_pushnumber(L, (lua_Number)returnVal);\n")
 						return True
-					elif varTypeName == "bool" and varType.pointerLevel == 0:
+					elif varTypeName == "bool" and varType.getUserTypePointerLevel() == 0:
 						out.write("tolua_pushboolean(L, (bool)returnVal);\n")
 						return True
 					elif varTypeName == "char":
-						if varType.pointerLevel == 1:
+						if varType.getUserTypePointerLevel() == 1:
 							out.write("tolua_pushstring(L, (const char*)returnVal);\n")
 							return True
-						elif varType.pointerLevel == 0:
+						elif varType.getUserTypePointerLevel() == 0:
 							out.write("lua_pushlstring(L, (const char*)&returnVal, 1);\n")
 							return True
 
@@ -2470,7 +2795,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 				if not checkPrimitiveHandling(returnType):
 					out.write("tolua_pushusertype(L, (void*)returnVal, \"")
-					if mainState.tryGetGroup(returnTypeName) != None:
+					if mainState.tryGetGroup(returnType.getName()) != None:
 						returnUserTypeStr = returnType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
 						out.write(returnUserTypeStr)
 					else:
@@ -2497,7 +2822,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 				out.write(f"static int {addressVar.getBindingName}(lua_State* L)\n")
 				out.write("{\n")
-				out.write(f"\ttolua_pushusertype(L, {f'{groupOpenData.appliedName}::{functionNameHeader}' if isNormal else f'*{functionNameHeader}'}, \"UnmappedUserType\");\n")	
+				out.write(f"\ttolua_pushusertype(L, {f'{groupOpenData.appliedNameUsertypeFunc}::{functionNameHeader}' if isNormal else f'*{functionNameHeader}'}, \"UnmappedUserType\");\n")	
 				out.write("\treturn 1;\n")
 				out.write("}\n\n")
 
@@ -2533,11 +2858,14 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 	def writeGroup(group: Group, templateMappingTracker: TemplateMappingTracker):
 
-		if not group.isUsed(): return
+		if not group.isUsed(mainState):
+			return
 
 		if group.template != None:
 			for templateUse in group.templateUses:
-				if templateUseHasGeneric(templateUse): continue # Don't treat a use of a generic template as an actual use 
+				if templateUseHasGeneric(templateUse):
+					# Don't treat a use of a generic template as an actual use 
+					continue
 				writeGroupWithTemplateUse(group, templateMappingTracker, templateUse)
 		else:
 			writeGroupWithTemplateUse(group, templateMappingTracker)
@@ -2603,16 +2931,17 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 			for extendRef in openData.group.extends:
 
-				extendRefUT = extendRef.toString(useUsertypeOverride=True)
+				extendRefUT = extendRef.toString(useUsertypeOverride=True, iKnowWhatIAmDoing=True)
 
 				parts.append(f"\"{extendRefUT}\"")
 				parts.append(",")
 
-				if extendRef.isPrimitive(): continue
+				if extendRef.isPrimitive():
+					continue
 
 				if hasNonPrimitiveBase:
 					baseclassOut.write(f"\t\t{{\"{extendRefUT}\", ")
-					baseclassOut.write(f"offsetofbase<{openData.appliedHeaderName}, {extendRef.toString()}>()")
+					baseclassOut.write(f"offsetofbase<{openData.appliedHeaderName}, {extendRef.toString(iKnowWhatIAmDoing=True)}>()")
 					baseclassOut.write("},\n")
 
 			parts.pop()
@@ -2706,14 +3035,19 @@ def registerPointerTypes(mainState: MainState):
 
 	array = mainState.getGroup("Array")
 	pointer = mainState.getGroup("Pointer")
-	
+
 	def registerPointerType(group: Group, tracker: TemplateMappingTracker):
-		for v in group.uniqueUseRepresentations.values():
-			appliedName = v.getAppliedName(mainState, v.group.superGroup, tracker)
-			pointerRef = defineTypeRef(mainState, group, appliedName)
-			pointer.addTemplateUse( (pointerRef,) )
+		for uniqueRepresentation in group.uniqueUseRepresentations.values():
+			specialRef = uniqueRepresentation.shallowCopy()
+			specialRef.adjustUserTypePointerLevel(mainState, 1)
+			pointer.addTemplateUse( (specialRef,) )
 
 	def registerPointerTypesForGroup(group: Group, tracker: TemplateMappingTracker):
+
+		if not group.isUsed(mainState):
+			#print(f"Excluding {group.name}: Not used")
+			return
+
 		if group.template:
 			for templateUse in group.templateUses:
 
@@ -2729,8 +3063,8 @@ def registerPointerTypes(mainState: MainState):
 				registerPointerTypesForGroup(subGroup, tracker)
 
 	for group in mainState.filteredGroups:
-		if group == globalGroup or group == pointer or group == array: continue
-		if group.isSubgroup(): continue
+		if group.isSubgroup() or group in (globalGroup, array, pointer):
+			continue
 		registerPointerTypesForGroup(group, TemplateMappingTracker())
 
 
@@ -2758,12 +3092,15 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 
 	wantedNames = fileAsSet(wantedFile)
 	wantedNames.add("EngineGlobals")
+	wantedNames.add("Pointer") # WORKAROUND
 	wantedNames.add("UnmappedUserType")
 
 	if mainState.noCustomTypes:
-		wantedNames.add("Pointer")
 		mainState.getGroup("Pointer").ignoreHeader = True
 		mainState.getGroup("Array").ignoreHeader = True
+		mainState.getGroup("CharString").ignoreHeader = True
+		mainState.getGroup("ConstCharString").ignoreHeader = True
+		mainState.getGroup("VoidPointer").ignoreHeader = True
 
 	pendingProcessed: list[str] = []
 	for wantedName in wantedNames:
@@ -2777,8 +3114,10 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 		wantedGroup = mainState.tryGetGroup(pendingProcessed.pop())
 		if wantedGroup == None: continue
 
-		wantedGroup.isWanted = True
-		mainState.filteredGroups.append(wantedGroup)
+		if vGroup := wantedGroup.vGroup:
+			vGroup.isSoftWanted = True
+
+		mainState.filteredGroups.addUnique(wantedGroup)
 
 		for dependsOnName in wantedGroup.dependsOn:
 			if dependsOnName in wantedNames: continue
@@ -2797,7 +3136,12 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 		with open(ignoreHeaderFile) as fileIn:
 			for line in fileIn:
 				if group := mainState.tryGetGroup(line.strip()):
-					group.ignoreHeader = True
+					toProcess: list[Group] = [group]
+					while len(toProcess) > 0:
+						curGroup = toProcess.pop()
+						curGroup.ignoreHeader = True
+						for subGroup in curGroup.subGroups:
+							toProcess.append(subGroup)
 
 	if packingFile:
 		with open(packingFile) as fileIn:
@@ -2805,6 +3149,11 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 				split = line.strip().split(" ")
 				if group := mainState.tryGetGroup(split[0]):
 					group.pack = int(split[1])
+
+	print("Filtered groups include:")
+	for group in mainState.filteredGroups:
+		print(f"    {group.name}")
+
 
 
 def checkRename(mainState, alreadyDefinedUsertypesFile: str):
@@ -2837,7 +3186,7 @@ def checkRename(mainState, alreadyDefinedUsertypesFile: str):
 			if numReplacements > 0: needRecalc = True
 
 			if needRecalc:
-				group.changeSingleName(mainState, newName)
+				group.updateSingleName(mainState, newName)
 
 			for subGroup in group.subGroups:
 				toProcess.append(subGroup)
@@ -2880,11 +3229,20 @@ def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
 	# Attempt to derive needed forward declarations
 	for group in mainState.filteredGroups:
 
+		if group.isSubgroup() or group.ignoreHeader or not group.isUsed(mainState): continue
+
 		for lightDependency in group.lightDependsOn:
+
 			lightDepend = mainState.tryGetGroup(lightDependency)
-			if not lightDepend or lightDepend == globalGroup or lightDepend.isPrimitive() or lightDepend.name == "void": continue
-			if not lightDepend.defined or lightDepend.sortedPosition > group.sortedPosition:
-				forwardDeclarations.add(lightDependency)
+			
+			if (not lightDepend or lightDepend == globalGroup
+				or lightDepend.isPrimitive() or lightDepend.name == "void"
+				or lightDepend.isSubgroup() or lightDepend.ignoreHeader or not lightDepend.isUsed(mainState)
+				or (lightDepend.defined and lightDepend.sortedPosition <= group.sortedPosition)
+			):
+				continue
+
+			forwardDeclarations.add(lightDependency)
 
 		# Non-static internal member functions need a forward def for the 'this' pointer.
 		if group != globalGroup:
@@ -2896,7 +3254,6 @@ def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
 	# Output forward declarations
 	for forwardDeclaration in sorted(forwardDeclarations):
 		group = mainState.getGroup(forwardDeclaration)
-		if group.isSubgroup() or group.ignoreHeader: continue
 		if group.template != None: out.write(group.template + "\n")
 		out.write(group.groupType + " " + group.name + ";\n")
 
@@ -2917,7 +3274,7 @@ def outputHeader(mainState: MainState, outputFileName: str, out: TextIOWrapper):
 		# Output groups
 		for group in mainState.filteredGroups:
 			if group.isSubgroup() or group.ignoreHeader: continue
-			if not group.isUsed() or group.groupType == "undefined": continue
+			if not group.isUsed(mainState) or group.groupType == "undefined": continue
 			out.write(newline)
 			groupStr = group.writeHeader(mainState, internalPointersOut, internalPointersList, HeaderType.NORMAL)
 			if groupStr != "":
@@ -3004,8 +3361,7 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 				currentGroup.template = previousTemplate
 				currentGroup.groupType = declMatch.group(1)
 				currentGroup.defined = True
-				currentGroup.name = nameStr
-				currentGroup.singleName = nameStr
+				currentGroup.updateSingleName(mainState, nameStr)
 		
 		# Track template lines, (previousTemplate is only set if the previous line was a template declaration outside of a Group)
 		if currentGroup == None and len(split) >= 1 and stripTypeBrackets(split[0]) == "template":
@@ -3036,7 +3392,7 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 				alreadyExisted = False
 
 		else:
-			checkFunctionImplementation(mainState, state, line, globalGroup)
+			processCommonGroupLines(mainState, state, line, globalGroup)
 
 	if filePath:
 		with open(filePath) as file:
@@ -3069,8 +3425,8 @@ def main():
 	packingFile: str = None
 
 	for k in islice(sys.argv, 1, None):
-		if   k == "-normal":  raise ValueError()
-		elif k == "-cleaned": raise ValueError()
+		if   k == "-normal":  assert False, "-normal removed"
+		elif k == "-cleaned": assert False, "-cleaned removed"
 		elif k == "-noCustomTypes": mainState.noCustomTypes = True
 		elif (v := re.search("-inFile=(.+)",                      k)) != None: inputFileName               = v.group(1)
 		elif (v := re.search("-outFile=(.+)",                     k)) != None: outputFileName              = v.group(1)
@@ -3086,7 +3442,7 @@ def main():
 
 
 	builtins.globalGroup = Group()
-	globalGroup.setSingleName("EngineGlobals")
+	globalGroup.updateSingleName(mainState, "EngineGlobals")
 	globalGroup.defined = True
 	mainState.addGroup(globalGroup)
 
@@ -3099,6 +3455,18 @@ struct Array
 
 template<class POINTED_TO_TYPE>
 struct Pointer
+{
+};
+
+struct VoidPointer
+{
+};
+
+struct CharString
+{
+};
+
+struct ConstCharString
 {
 };
 		""")
@@ -3117,7 +3485,7 @@ struct Pointer
 
 		# Move multi-layer structs so that they nest properly
 		for group in mainState.groups:
-			moveSubstructs(mainState, group)
+			group.updateNesting(mainState)
 
 		# Run fixup file to make some necessary changes
 		if fixupFileName != None:
@@ -3127,23 +3495,14 @@ struct Pointer
 		for group in mainState.groups:
 			group.checkForVGroup(mainState) # Fills vGroup and removes __vftable field if present.
 			group.mapTemplateTypeNames()    # Maps the template names that appear in this Group's inheritance hierarchy to their originating Group.
-			group.mapDependsOn()            # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
+			group.mapDependsOn(mainState)   # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
 
 		# Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
 		filterGroups(mainState, wantedFile, ignoreHeaderFile, packingFile)
 
 		# Fill templateUses and uniqueUseRepresentations
 		for group in mainState.filteredGroups:
-			group.scanInwardTypeRefs()
-
-		pointer = mainState.getGroup("Pointer")
-
-		# Define primitive pointer types (for reference_ bindings)
-		for primitive in primitives:
-			pointer.addTemplateUse( (defineTypeRef(mainState, None, primitive),) )
-
-		# Sort groups alphabetically based on name
-		mainState.filteredGroups.sort(key=lambda x: x.name)
+			group.scanInwardTypeRefs(mainState)
 
 		# Try to fix dependency order (SLOW)
 		tryResolveDependencyOrder(mainState.filteredGroups)

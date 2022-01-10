@@ -1,8 +1,138 @@
-vtblStruct cricket::PortInterface_vtbl has non-function field: Type* Type;, breaking!
-vtblStruct cricket::PortProxy_vtbl has non-function field: Type* Type;, breaking!
-vtblStruct cricket::Port_vtbl has non-function field: Type* Type;, breaking!
-vtblStruct cricket::RelayPort_vtbl has non-function field: Type* Type;, breaking!
-vtblStruct cricket::TurnPort_vtbl has non-function field: Type* Type;, breaking!
-vtblStruct cricket::UDPPort_vtbl has non-function field: Type* Type;, breaking!
-vtblStruct cricket::StunPort_vtbl has non-function field: Type* Type;, breaking!
-vtblStruct cricket::TCPPort_vtbl has non-function field: Type* Type;, breaking!
+Filtered groups include:
+    lua_State
+    lua_longjmp
+    _SETJMP_FLOAT128
+    Array
+    Array::<unnamed_type_ScopeRecord>
+    Array::scoped_ptr
+    lua_Debug
+    char
+    ConstCharString
+    global_State
+    Table
+    Node
+    TKey
+    TKey::<unnamed_type_nk>
+    Value
+    TString
+    TString::<unnamed_type_tsv>
+    L_Umaxalign
+    double
+    VoidPointer
+    Mbuffer
+    CharString
+    UpVal
+    UpVal::<unnamed_type_u>
+    UpVal::<unnamed_type_u>::<unnamed_type_l>
+    stringtable
+    lua_TValue
+    GCObject
+    Proto
+    Upvaldesc
+    LocVar
+    Closure
+    LClosure
+    CClosure
+    Udata
+    Udata::<unnamed_type_uv>
+    GCheader
+    CallInfo
+    CallInfo::<unnamed_type_u>
+    CallInfo::<unnamed_type_u>::<unnamed_type_c>
+    CallInfo::<unnamed_type_u>::<unnamed_type_l>
+    __int64
+    void
+    __int16
+    int
+    __int8
+    Pointer
+    EngineGlobals
+Array at [0] needs to go after Array at [0]
+Array::<unnamed_type_ScopeRecord> at [1] needs to go after Array::<unnamed_type_ScopeRecord> at [1]
+Array::scoped_ptr at [2] needs to go after Array::scoped_ptr at [2]
+CClosure at [3] needs to go after lua_TValue at [44]
+CallInfo at [3] needs to go after int at [40]
+CallInfo::<unnamed_type_u> at [3] needs to go after int at [39]
+CallInfo::<unnamed_type_u>::<unnamed_type_c> at [3] needs to go after int at [38]
+CallInfo::<unnamed_type_u>::<unnamed_type_l> at [3] needs to go after CallInfo::<unnamed_type_u>::<unnamed_type_l> at [3]
+CharString at [4] needs to go after CharString at [4]
+Closure at [5] needs to go after CClosure at [44]
+ConstCharString at [5] needs to go after ConstCharString at [5]
+EngineGlobals at [6] needs to go after EngineGlobals at [6]
+GCObject at [7] needs to go after Closure at [44]
+GCheader at [7] needs to go after __int8 at [31]
+LClosure at [7] needs to go after __int8 at [30]
+L_Umaxalign at [7] needs to go after int at [35]
+LocVar at [7] needs to go after int at [34]
+Mbuffer at [7] needs to go after __int64 at [26]
+Node at [7] needs to go after lua_TValue at [41]
+Pointer at [7] needs to go after Pointer at [7]
+Proto at [8] needs to go after int at [32]
+TKey at [8] needs to go after lua_TValue at [40]
+TKey::<unnamed_type_nk> at [8] needs to go after int at [30]
+TString at [8] needs to go after L_Umaxalign at [33]
+TString::<unnamed_type_tsv> at [8] needs to go after int at [28]
+Table at [8] needs to go after int at [27]
+Udata at [8] needs to go after L_Umaxalign at [32]
+Udata::<unnamed_type_uv> at [8] needs to go after __int8 at [19]
+UpVal at [8] needs to go after lua_TValue at [39]
+UpVal::<unnamed_type_u> at [8] needs to go after lua_TValue at [38]
+UpVal::<unnamed_type_u>::<unnamed_type_l> at [8] needs to go after UpVal::<unnamed_type_u>::<unnamed_type_l> at [8]
+Upvaldesc at [9] needs to go after __int8 at [16]
+Value at [9] needs to go after int at [23]
+VoidPointer at [9] needs to go after VoidPointer at [9]
+_SETJMP_FLOAT128 at [10] needs to go after __int64 at [12]
+__int16 at [10] needs to go after __int16 at [10]
+__int64 at [11] needs to go after __int64 at [11]
+_SETJMP_FLOAT128 at [12] needs to go after _SETJMP_FLOAT128 at [12]
+Mbuffer at [13] needs to go after Mbuffer at [13]
+__int8 at [14] needs to go after __int8 at [14]
+Upvaldesc at [15] needs to go after Upvaldesc at [15]
+Udata::<unnamed_type_uv> at [16] needs to go after Udata::<unnamed_type_uv> at [16]
+LClosure at [17] needs to go after LClosure at [17]
+GCheader at [18] needs to go after GCheader at [18]
+char at [19] needs to go after char at [19]
+double at [20] needs to go after double at [20]
+global_State at [21] needs to go after stringtable at [46]
+int at [21] needs to go after int at [21]
+Value at [22] needs to go after Value at [22]
+Table at [23] needs to go after Table at [23]
+TString::<unnamed_type_tsv> at [24] needs to go after TString::<unnamed_type_tsv> at [24]
+TKey::<unnamed_type_nk> at [25] needs to go after TKey::<unnamed_type_nk> at [25]
+Proto at [26] needs to go after Proto at [26]
+LocVar at [27] needs to go after LocVar at [27]
+L_Umaxalign at [28] needs to go after L_Umaxalign at [28]
+Udata at [29] needs to go after Udata at [29]
+TString at [30] needs to go after TString at [30]
+CallInfo::<unnamed_type_u>::<unnamed_type_c> at [31] needs to go after CallInfo::<unnamed_type_u>::<unnamed_type_c> at [31]
+CallInfo::<unnamed_type_u> at [32] needs to go after CallInfo::<unnamed_type_u> at [32]
+CallInfo at [33] needs to go after CallInfo at [33]
+lua_Debug at [34] needs to go after lua_Debug at [34]
+lua_State at [35] needs to go after void at [47]
+lua_TValue at [35] needs to go after lua_TValue at [35]
+UpVal::<unnamed_type_u> at [36] needs to go after UpVal::<unnamed_type_u> at [36]
+UpVal at [37] needs to go after UpVal at [37]
+TKey at [38] needs to go after TKey at [38]
+Node at [39] needs to go after Node at [39]
+CClosure at [40] needs to go after CClosure at [40]
+Closure at [41] needs to go after Closure at [41]
+GCObject at [42] needs to go after lua_State at [47]
+lua_longjmp at [42] needs to go after lua_longjmp at [42]
+stringtable at [43] needs to go after stringtable at [43]
+global_State at [44] needs to go after global_State at [44]
+void at [45] needs to go after void at [45]
+lua_State at [46] needs to go after lua_State at [46]
+GCObject at [47] needs to go after GCObject at [47]
+Array::<unnamed_type_ScopeRecord> at [0] needs to go after Array::<unnamed_type_ScopeRecord> at [0]
+Array::scoped_ptr at [1] needs to go after Array::scoped_ptr at [1]
+Udata::<unnamed_type_uv> at [0] needs to go after Udata::<unnamed_type_uv> at [0]
+TString::<unnamed_type_tsv> at [0] needs to go after TString::<unnamed_type_tsv> at [0]
+CallInfo::<unnamed_type_u>::<unnamed_type_c> at [0] needs to go after CallInfo::<unnamed_type_u>::<unnamed_type_c> at [0]
+CallInfo::<unnamed_type_u>::<unnamed_type_l> at [1] needs to go after CallInfo::<unnamed_type_u>::<unnamed_type_l> at [1]
+CallInfo::<unnamed_type_u> at [0] needs to go after CallInfo::<unnamed_type_u> at [0]
+CallInfo::<unnamed_type_u>::<unnamed_type_c> at [0] needs to go after CallInfo::<unnamed_type_u>::<unnamed_type_c> at [0]
+CallInfo::<unnamed_type_u>::<unnamed_type_l> at [1] needs to go after CallInfo::<unnamed_type_u>::<unnamed_type_l> at [1]
+UpVal::<unnamed_type_u>::<unnamed_type_l> at [0] needs to go after UpVal::<unnamed_type_u>::<unnamed_type_l> at [0]
+UpVal::<unnamed_type_u> at [0] needs to go after UpVal::<unnamed_type_u> at [0]
+UpVal::<unnamed_type_u>::<unnamed_type_l> at [0] needs to go after UpVal::<unnamed_type_u>::<unnamed_type_l> at [0]
+TKey::<unnamed_type_nk> at [0] needs to go after TKey::<unnamed_type_nk> at [0]

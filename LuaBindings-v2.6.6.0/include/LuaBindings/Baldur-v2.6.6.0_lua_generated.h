@@ -7,12 +7,9 @@ struct LocVar;
 struct Node;
 struct Proto;
 union TString;
-struct Table;
 struct UpVal;
-struct global_State;
 struct lua_State;
 struct lua_TValue;
-struct lua_longjmp;
 
 struct _SETJMP_FLOAT128
 {
@@ -152,12 +149,6 @@ struct CallInfo
 {
 	union u_t
 	{
-		struct l_t
-		{
-			lua_TValue* base;
-			const unsigned int* savedpc;
-		};
-
 		struct c_t
 		{
 			int ctx;
@@ -165,6 +156,12 @@ struct CallInfo
 			__int64 old_errfunc;
 			unsigned __int8 old_allowhook;
 			unsigned __int8 status;
+		};
+
+		struct l_t
+		{
+			lua_TValue* base;
+			const unsigned int* savedpc;
 		};
 
 		CallInfo::u_t::l_t l;
@@ -197,33 +194,6 @@ struct lua_Debug
 	char istailcall;
 	char short_src[60];
 	CallInfo* i_ci;
-};
-
-struct lua_State
-{
-	GCObject* next;
-	unsigned __int8 tt;
-	unsigned __int8 marked;
-	unsigned __int8 status;
-	lua_TValue* top;
-	global_State* l_G;
-	CallInfo* ci;
-	const unsigned int* oldpc;
-	lua_TValue* stack_last;
-	lua_TValue* stack;
-	int stacksize;
-	unsigned __int16 nny;
-	unsigned __int16 nCcalls;
-	unsigned __int8 hookmask;
-	unsigned __int8 allowhook;
-	int basehookcount;
-	int hookcount;
-	void (__fastcall *hook)(lua_State*, lua_Debug*);
-	GCObject* openupval;
-	GCObject* gclist;
-	lua_longjmp* errorJmp;
-	__int64 errfunc;
-	CallInfo base_ci;
 };
 
 struct lua_TValue
@@ -289,18 +259,6 @@ union Closure
 	LClosure l;
 };
 
-union GCObject
-{
-	GCheader gch;
-	TString ts;
-	Udata u;
-	Closure cl;
-	Table h;
-	Proto p;
-	UpVal uv;
-	lua_State th;
-};
-
 struct lua_longjmp
 {
 	lua_longjmp* previous;
@@ -352,4 +310,43 @@ struct global_State
 	TString* memerrmsg;
 	TString* tmname[17];
 	Table* mt[9];
+};
+
+struct lua_State
+{
+	GCObject* next;
+	unsigned __int8 tt;
+	unsigned __int8 marked;
+	unsigned __int8 status;
+	lua_TValue* top;
+	global_State* l_G;
+	CallInfo* ci;
+	const unsigned int* oldpc;
+	lua_TValue* stack_last;
+	lua_TValue* stack;
+	int stacksize;
+	unsigned __int16 nny;
+	unsigned __int16 nCcalls;
+	unsigned __int8 hookmask;
+	unsigned __int8 allowhook;
+	int basehookcount;
+	int hookcount;
+	void (__fastcall *hook)(lua_State*, lua_Debug*);
+	GCObject* openupval;
+	GCObject* gclist;
+	lua_longjmp* errorJmp;
+	__int64 errfunc;
+	CallInfo base_ci;
+};
+
+union GCObject
+{
+	GCheader gch;
+	TString ts;
+	Udata u;
+	Closure cl;
+	Table h;
+	Proto p;
+	UpVal uv;
+	lua_State th;
 };

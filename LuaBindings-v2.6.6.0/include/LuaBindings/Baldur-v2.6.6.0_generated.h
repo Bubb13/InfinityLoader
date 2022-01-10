@@ -11,19 +11,20 @@ struct ALCcontext_struct;
 struct ALCdevice_struct;
 struct CAIAction;
 struct CAIObjectType;
+struct CAIResponse;
 struct CAIScript;
 struct CAITrigger;
 struct CAbilityData;
 struct CAreaFileContainer;
 struct CAreaFileProjectileObject;
 struct CAreaPoint;
-struct CBounceEntry;
 struct CButtonData;
-struct CColorEffect;
 struct CContingency;
+struct CCreatureFileHeader;
 struct CCreatureFileItem;
 struct CCriticalEntry;
-struct CFileView;
+struct CDerivedStats;
+struct CFileException;
 struct CGameAnimationType;
 struct CGameArea;
 struct CGameDialogReply;
@@ -33,31 +34,23 @@ struct CGameFile;
 struct CGameObject;
 struct CGameSprite;
 struct CImmunitiesItemEquip;
-struct CImmunitiesItemTypeEquip;
 struct CImmunitySpell;
 struct CInfButtonArray;
-struct CInfCursor;
 struct CInfGame;
+struct CInfTileSet;
+struct CInfinity;
 struct CItem;
-struct CMemINIValue;
 struct CMessage;
 struct CMoveListEntry;
 struct CObList;
-struct CObject;
 struct CPathNode;
-struct CPersistantEffect;
 struct CPlex;
-struct CPoint;
 struct CProjectile;
-struct CRect;
 struct CRes;
 struct CResPVR;
-struct CResText;
+struct CResRef;
 struct CResTileSet;
-struct CResWED;
-struct CSaveGameSlot;
 struct CSavedGamePartyCreature;
-struct CScreenAI;
 struct CSearchBitmap;
 struct CSelectiveBonus;
 struct CSelectiveWeaponType;
@@ -65,21 +58,24 @@ struct CSequenceSound;
 struct CSound;
 struct CSoundMixerImp;
 struct CSpawn;
-struct CSpawnList;
-struct CSpawnPoint;
-struct CSpawnVar;
-struct CString;
 struct CUIControlTextDisplay;
 struct CVVCHashEntry;
 struct CVariable;
 struct CVidCellFont;
 struct CVidMode;
-struct CVisibilityMapTreeNode;
 struct IDPPeer;
+struct Item_Header_st;
+struct Item_ability_st;
+struct Item_effect_st;
 struct SDL_BlitMap;
 union SDL_Event;
 struct SDL_PixelFormat;
 struct SDL_Window;
+struct Spell_Header_st;
+struct Spell_ability_st;
+struct SteamUGCDetails_t;
+struct VoidPointer;
+struct WED_LayerHeader_st;
 struct st_tiledef;
 struct uiItem;
 struct uiMenu;
@@ -93,13 +89,6 @@ struct ALCdevice_struct
 {
 };
 
-struct CObject
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
 struct CUIControlTextDisplay
 {
 };
@@ -107,22 +96,6 @@ struct CUIControlTextDisplay
 struct CVideo
 {
 	CVidMode* pCurrentMode;
-};
-
-template<class POINTED_TO_TYPE>
-struct Pointer
-{
-	POINTED_TO_TYPE* reference;
-
-	POINTED_TO_TYPE getValue()
-	{
-		return *reference;
-	}
-
-	void setValue(POINTED_TO_TYPE val)
-	{
-		*reference = val;
-	}
 };
 
 struct SAreaFileWrapper
@@ -1861,15 +1834,6 @@ struct CWeaponIdentification
 	unsigned int m_attributes;
 };
 
-struct CVidPoly
-{
-	CVIDPOLY_VERTEX* m_pVertices;
-	int m_nVertices;
-	_EdgeDescription* m_pET;
-	_EdgeDescription* m_pAET;
-	void (__fastcall *m_pDrawHLineFunction)(CVidPoly*, void*, int, int, unsigned int, const CRect*, const CPoint*);
-};
-
 struct CVariableHash
 {
 	CVariable* m_hashEntries;
@@ -1886,43 +1850,6 @@ struct CVRamPool
 {
 	int nVTiles;
 	st_tiledef* pTileDef;
-};
-
-template<class BASE_CLASS, class T>
-struct CTypedPtrList : CObject
-{
-	struct CNode
-	{
-		CTypedPtrList::CNode* pNext;
-		CTypedPtrList::CNode* pPrev;
-		T data;
-	};
-
-	CTypedPtrList::CNode* m_pNodeHead;
-	CTypedPtrList::CNode* m_pNodeTail;
-	int m_nCount;
-	CTypedPtrList::CNode* m_pNodeFree;
-	CPlex* m_pBlocks;
-	int m_nBlockSize;
-
-	void RemoveHead()
-	{
-		((CObList*)this)->RemoveHead();
-	}
-
-	void Destruct()
-	{
-		((CObList*)this)->Destruct();
-	}
-};
-
-template<class BASE_CLASS, class T>
-struct CTypedPtrArray : CObject
-{
-	T* m_pData;
-	int m_nSize;
-	int m_nMaxSize;
-	int m_nGrowBy;
 };
 
 struct CTlkFileOverride
@@ -1969,271 +1896,6 @@ struct CResInfTile : CResTile
 	TILE_CODE renderCode;
 	CResTile* pDualTileRes;
 	VRAM_FLAGS flags;
-};
-
-struct CPtrList : CObject
-{
-	struct CNode
-	{
-		CPtrList::CNode* pNext;
-		CPtrList::CNode* pPrev;
-		void* data;
-	};
-
-	CPtrList::CNode* m_pNodeHead;
-	CPtrList::CNode* m_pNodeTail;
-	int m_nCount;
-	CPtrList::CNode* m_pNodeFree;
-	CPlex* m_pBlocks;
-	int m_nBlockSize;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CMessageHandler
-{
-	CTypedPtrList<CPtrList,CMessage*> m_messageList;
-	unsigned __int8 m_bLastArbitrationLockStatus;
-};
-
-struct CAIResponse
-{
-	__int16 m_weight;
-	__int16 m_responseNum;
-	__int16 m_responseSetNum;
-	__int16 m_scriptNum;
-	CTypedPtrList<CPtrList,CAIAction*> m_actionList;
-};
-
-struct CAICondition
-{
-	CTypedPtrList<CPtrList,CAITrigger*> m_triggerList;
-};
-
-struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CSpawnFile : CTypedPtrList<CPtrList,void*>
-{
-	CSpawnList* mpExitList;
-	CSpawnList* mpEnterList;
-	int m_bInSpawn;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
-{
-	__POSITION* m_currentSound;
-	int m_soundPlaying;
-	int m_channel;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CPtrArray : CObject
-{
-	void** m_pData;
-	int m_nSize;
-	int m_nMaxSize;
-	int m_nGrowBy;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
-{
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CSpawnPointArray : CTypedPtrArray<CPtrArray,CSpawnPoint*>
-{
-	int mDefaultFacing;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffect*>
-{
-	unsigned int m_nCounter;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CPersistantEffect
-{
-	int m_done;
-	int m_deleted;
-	__int16 m_numDamage;
-	__int16 m_persistantType;
-	int m_sourceID;
-	__int16 m_period;
-	__int16 m_periodCounter;
-	int m_counter;
-
-	virtual void CPersistantEffect_Destructor()
-	{
-	}
-
-	virtual void AIUpdate(CGameSprite* _0, int _1)
-	{
-	}
-
-	virtual CPersistantEffect* Copy()
-	{
-		return *(CPersistantEffect**)nullptr;
-	}
 };
 
 struct CPathSearch
@@ -2290,55 +1952,6 @@ struct CRainDrop : CParticle
 {
 };
 
-typedef CObject* (*type_CObList_RemoveHead)(CObList* pThis);
-extern type_CObList_RemoveHead p_CObList_RemoveHead;
-
-typedef void (*type_CObList_Destruct)(CObList* pThis);
-extern type_CObList_Destruct p_CObList_Destruct;
-
-struct CObList : CObject
-{
-	struct CNode
-	{
-		CObList::CNode* pNext;
-		CObList::CNode* pPrev;
-		CObject* data;
-	};
-
-	CObList::CNode* m_pNodeHead;
-	CObList::CNode* m_pNodeTail;
-	int m_nCount;
-	CObList::CNode* m_pNodeFree;
-	CPlex* m_pBlocks;
-	int m_nBlockSize;
-
-	CObject* RemoveHead()
-	{
-		return p_CObList_RemoveHead(this);
-	}
-
-	void Destruct()
-	{
-		p_CObList_Destruct(this);
-	}
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CObArray : CObject
-{
-	CObject** m_pData;
-	int m_nSize;
-	int m_nMaxSize;
-	int m_nGrowBy;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
 struct CMusicPosition
 {
 	int m_nSong;
@@ -2346,65 +1959,9 @@ struct CMusicPosition
 	int m_nPosition;
 };
 
-struct CMessage
-{
-	int m_targetId;
-	int m_sourceId;
-
-	virtual void CMessage_Destructor()
-	{
-	}
-
-	virtual __int16 GetCommType()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual unsigned __int8 GetMsgType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 GetMsgSubType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void MarshalMessage(unsigned __int8** _0, unsigned int* _1)
-	{
-	}
-
-	virtual int UnmarshalMessage(unsigned __int8* _0, unsigned int _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void Run()
-	{
-	}
-};
-
 struct CMachineState
 {
 	unsigned int m_inputState;
-};
-
-template<class TYPE, class ARG_TYPE>
-struct CList : CObject
-{
-	struct CNode
-	{
-		CList::CNode* pNext;
-		CList::CNode* pPrev;
-		TYPE data;
-	};
-
-	CList::CNode* m_pNodeHead;
-	CList::CNode* m_pNodeTail;
-	int m_nCount;
-	CList::CNode* m_pNodeFree;
-	CPlex* m_pBlocks;
-	int m_nBlockSize;
 };
 
 struct CKeyInfo
@@ -2413,21 +1970,6 @@ struct CKeyInfo
 	int m_keyCode;
 	unsigned __int8 m_repeatDelay;
 	unsigned __int8 m_repeatRate;
-};
-
-struct CImportGame
-{
-	unsigned __int8 m_bDrizztDead;
-	CGameFile* m_pGame;
-	unsigned __int8 m_nVersion;
-	CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*> m_aPartyCreatures;
-	CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*> m_aNonPartyCreatures;
-	CTypedPtrArray<CPtrArray,unsigned char*> m_aCreatureData;
-	CTypedPtrArray<CPtrArray,unsigned char*> m_aNPCData;
-	int m_nGlobalVariables;
-	unsigned __int8* m_pGlobalVariables;
-	unsigned int m_nPartyGold;
-	unsigned int m_nReputation;
 };
 
 struct CImmunitiesItemTypeEquip
@@ -2646,47 +2188,6 @@ struct CGameJournalEntry
 	unsigned __int8 m_nCharacterHasNotRead;
 };
 
-struct CGameJournal
-{
-	int IWD_TimeCheat;
-	CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*> m_aChapters;
-};
-
-struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
-{
-	__POSITION* m_posNext;
-	__POSITION* m_posCurrent;
-	int m_newEffect;
-	int m_retry;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
-{
-	unsigned int m_dialogText;
-	CAICondition m_startCondition;
-	int m_picked;
-	unsigned int m_conditionPriority;
-	unsigned int m_dialogIndex;
-	unsigned __int8 m_bDisplayButton;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CGameButtonList : CTypedPtrList<CPtrList,CButtonData*>
-{
-	int m_nFirstMageSpellIndex;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
 struct CGameAnimation
 {
 	CGameAnimationType* m_animation;
@@ -2704,18 +2205,6 @@ struct CDeathSound
 	__int16 m_soundNum;
 	int m_started;
 	CAITrigger* m_pTrigger;
-};
-
-struct CDWordArray : CObject
-{
-	unsigned int* m_pData;
-	int m_nSize;
-	int m_nMaxSize;
-	int m_nGrowBy;
-
-	virtual void CObject_Destructor()
-	{
-	}
 };
 
 struct CCreatureFileMemorizedSpellLevel
@@ -2736,41 +2225,6 @@ struct CColorEffect
 	unsigned __int8 m_periodLength;
 };
 
-struct CChatBuffer
-{
-	CTypedPtrList<CPtrList,CString*> m_lLabels;
-	CTypedPtrList<CPtrList,CString*> m_lMessages;
-	int m_nMessageCount;
-	int m_nDisplayCount;
-};
-
-struct CCallbackBase
-{
-	unsigned __int8 m_nCallbackFlags;
-	int m_iCallback;
-
-	virtual void Run(void* _0, bool _1, unsigned __int64 _2)
-	{
-	}
-
-	virtual void Run(void* _0)
-	{
-	}
-
-	virtual int GetCallbackSizeBytes()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-template<class BASE_CLASS, class RESULT_CLASS>
-struct CCallResult : CCallbackBase
-{
-	unsigned __int64 m_hAPICall;
-	BASE_CLASS* m_pObj;
-	void (__thiscall *m_Func)(BASE_CLASS*, RESULT_CLASS*, bool);
-};
-
 struct CBounceEntry
 {
 	int m_levelDecrement;
@@ -2780,18 +2234,6 @@ struct CBounceEntry
 	unsigned int m_string;
 	int m_stringOnly;
 	int m_recoverSpellLevels;
-};
-
-struct CAIResponseSet
-{
-	CTypedPtrList<CPtrList,CAIResponse*> m_responseList;
-	int m_weightTotal;
-};
-
-struct CAIConditionResponse
-{
-	CAICondition m_condition;
-	CAIResponseSet m_responseSet;
 };
 
 struct BAMHEADERV2
@@ -2804,1430 +2246,6 @@ struct BAMHEADERV2
 	unsigned int nFramesOffset;
 	unsigned int nSequencesOffset;
 	unsigned int nQuadsOffset;
-};
-
-template<class T, int size>
-struct Array
-{
-	struct scoped_ptr
-	{
-	};
-
-	struct ScopeRecord_t
-	{
-	};
-
-	T data[size];
-
-	T get(int index)
-	{
-		if (index < 0 || index >= size)
-		{
-			return NULL;
-		}
-		return data[index];
-	}
-
-	T* getReference(int index)
-	{
-		if (index < 0 || index >= size)
-		{
-			return NULL;
-		}
-		return &data[index];
-	}
-
-	void set(int index, T value)
-	{
-		if (index < 0 || index >= size)
-		{
-			return;
-		}
-		data[index] = value;
-	}
-
-	T operator[](int index)
-	{
-		return data[index];
-	}
-};
-
-struct WED_LayerHeader_st
-{
-	unsigned __int16 nTilesAcross;
-	unsigned __int16 nTilesDown;
-	Array<unsigned __int8,8> rrTileSet;
-	unsigned __int16 nNumUniqueTiles;
-	unsigned __int16 nLayerFlags;
-	unsigned int nOffsetToTileData;
-	unsigned int nOffsetToTileList;
-};
-
-struct SteamUGCQueryCompleted_t
-{
-	unsigned __int64 m_handle;
-	EResult m_eResult;
-	unsigned int m_unNumResultsReturned;
-	unsigned int m_unTotalMatchingResults;
-	bool m_bCachedData;
-	Array<char,256> m_rgchNextCursor;
-};
-
-struct SteamUGCDetails_t
-{
-	unsigned __int64 m_nPublishedFileId;
-	EResult m_eResult;
-	EWorkshopFileType m_eFileType;
-	unsigned int m_nCreatorAppID;
-	unsigned int m_nConsumerAppID;
-	Array<char,129> m_rgchTitle;
-	Array<char,8000> m_rgchDescription;
-	unsigned __int64 m_ulSteamIDOwner;
-	unsigned int m_rtimeCreated;
-	unsigned int m_rtimeUpdated;
-	unsigned int m_rtimeAddedToUserList;
-	ERemoteStoragePublishedFileVisibility m_eVisibility;
-	bool m_bBanned;
-	bool m_bAcceptedForUse;
-	bool m_bTagsTruncated;
-	Array<char,1025> m_rgchTags;
-	unsigned __int64 m_hFile;
-	unsigned __int64 m_hPreviewFile;
-	Array<char,260> m_pchFileName;
-	int m_nFileSize;
-	int m_nPreviewFileSize;
-	Array<char,256> m_rgchURL;
-	unsigned int m_unVotesUp;
-	unsigned int m_unVotesDown;
-	float m_flScore;
-	unsigned int m_unNumChildren;
-};
-
-struct SteamUGCRequestUGCDetailsResult_t
-{
-	SteamUGCDetails_t m_details;
-	bool m_bCachedData;
-};
-
-#pragma pack(push, 1)
-struct Spell_Header_st
-{
-	unsigned int nFileType;
-	unsigned int nFileVersion;
-	unsigned int genericName;
-	unsigned int identifiedName;
-	Array<unsigned __int8,8> usedUpItemID;
-	unsigned int itemFlags;
-	unsigned __int16 itemType;
-	unsigned int notUsableBy;
-	unsigned __int16 castingAnimationType;
-	unsigned __int8 minLevelRequired;
-	unsigned __int8 school;
-	unsigned __int8 minSTRRequired;
-	unsigned __int8 secondaryType;
-	unsigned __int8 minSTRBonusRequired;
-	unsigned __int8 notUsableBy2a;
-	unsigned __int8 minINTRequired;
-	unsigned __int8 notUsableBy2b;
-	unsigned __int8 minDEXRequired;
-	unsigned __int8 notUsableBy2c;
-	unsigned __int8 minWISRequired;
-	unsigned __int8 notUsableBy2d;
-	unsigned __int16 minCONRequired;
-	unsigned __int16 minCHRRequired;
-	unsigned int spellLevel;
-	unsigned __int16 maxStackable;
-	Array<unsigned __int8,8> itemIcon;
-	unsigned __int16 loreValue;
-	Array<unsigned __int8,8> groundIcon;
-	unsigned int baseWeight;
-	unsigned int genericDescription;
-	unsigned int identifiedDescription;
-	Array<unsigned __int8,8> descriptionPicture;
-	unsigned int attributes;
-	unsigned int abilityOffset;
-	unsigned __int16 abilityCount;
-	unsigned int effectsOffset;
-	unsigned __int16 castingStartingEffect;
-	unsigned __int16 castingEffectCount;
-};
-#pragma pack(pop)
-
-struct SDL_TextInputEvent
-{
-	unsigned int type;
-	unsigned int timestamp;
-	unsigned int windowID;
-	Array<char,32> text;
-};
-
-struct SDL_TextEditingEvent
-{
-	unsigned int type;
-	unsigned int timestamp;
-	unsigned int windowID;
-	Array<char,32> text;
-	int start;
-	int length;
-};
-
-struct SDL_PixelFormat
-{
-	unsigned int format;
-	SDL_Palette* palette;
-	unsigned __int8 BitsPerPixel;
-	unsigned __int8 BytesPerPixel;
-	Array<unsigned __int8,2> padding;
-	unsigned int Rmask;
-	unsigned int Gmask;
-	unsigned int Bmask;
-	unsigned int Amask;
-	unsigned __int8 Rloss;
-	unsigned __int8 Gloss;
-	unsigned __int8 Bloss;
-	unsigned __int8 Aloss;
-	unsigned __int8 Rshift;
-	unsigned __int8 Gshift;
-	unsigned __int8 Bshift;
-	unsigned __int8 Ashift;
-	int refcount;
-	SDL_PixelFormat* next;
-};
-
-#pragma pack(push, 1)
-struct Item_effect_st
-{
-	unsigned __int16 effectID;
-	unsigned __int8 targetType;
-	unsigned __int8 spellLevel;
-	int effectAmount;
-	unsigned int dwFlags;
-	unsigned __int16 durationType;
-	unsigned int duration;
-	unsigned __int8 probabilityUpper;
-	unsigned __int8 probabilityLower;
-	Array<unsigned __int8,8> res;
-	unsigned int numDice;
-	unsigned int diceSize;
-	unsigned int savingThrow;
-	int saveMod;
-	unsigned int special;
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-struct Item_ability_st
-{
-	unsigned __int16 type;
-	unsigned __int8 quickSlotType;
-	unsigned __int8 largeDamageDice;
-	Array<unsigned __int8,8> quickSlotIcon;
-	unsigned __int8 actionType;
-	unsigned __int8 actionCount;
-	unsigned __int16 range;
-	unsigned __int8 launcherType;
-	unsigned __int8 largeDamageDiceCount;
-	unsigned __int8 speedFactor;
-	unsigned __int8 largeDamageDiceBonus;
-	__int16 thac0Bonus;
-	unsigned __int8 damageDice;
-	unsigned __int8 school;
-	unsigned __int8 damageDiceCount;
-	unsigned __int8 secondaryType;
-	__int16 damageDiceBonus;
-	unsigned __int16 damageType;
-	unsigned __int16 effectCount;
-	unsigned __int16 startingEffect;
-	unsigned __int16 maxUsageCount;
-	unsigned __int16 usageFlags;
-	unsigned int abilityFlags;
-	unsigned __int16 missileType;
-	Array<unsigned __int16,6> attackProbability;
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-struct Item_Header_st
-{
-	unsigned int nFileType;
-	unsigned int nFileVersion;
-	unsigned int genericName;
-	unsigned int identifiedName;
-	Array<unsigned __int8,8> usedUpItemID;
-	unsigned int itemFlags;
-	unsigned __int16 itemType;
-	unsigned int notUsableBy;
-	Array<unsigned __int8,2> animationType;
-	unsigned __int16 minLevelRequired;
-	unsigned __int16 minSTRRequired;
-	unsigned __int8 minSTRBonusRequired;
-	unsigned __int8 notUsableBy2a;
-	unsigned __int8 minINTRequired;
-	unsigned __int8 notUsableBy2b;
-	unsigned __int8 minDEXRequired;
-	unsigned __int8 notUsableBy2c;
-	unsigned __int8 minWISRequired;
-	unsigned __int8 notUsableBy2d;
-	unsigned __int8 minCONRequired;
-	unsigned __int8 proficiencyType;
-	unsigned __int16 minCHRRequired;
-	unsigned int baseValue;
-	unsigned __int16 maxStackable;
-	Array<unsigned __int8,8> itemIcon;
-	unsigned __int16 loreValue;
-	Array<unsigned __int8,8> groundIcon;
-	unsigned int baseWeight;
-	unsigned int genericDescription;
-	unsigned int identifiedDescription;
-	Array<unsigned __int8,8> descriptionPicture;
-	unsigned int attributes;
-	unsigned int abilityOffset;
-	unsigned __int16 abilityCount;
-	unsigned int effectsOffset;
-	unsigned __int16 equipedStartingEffect;
-	unsigned __int16 equipedEffectCount;
-};
-#pragma pack(pop)
-
-struct DP_Player
-{
-	unsigned int id;
-	Array<char,32> name;
-	Array<char,32> remoteAddr;
-	int sessionId;
-	unsigned int flags;
-	void* batton;
-	IDPPeer* peer;
-	bool in_game;
-};
-
-struct CWorldMapLinks
-{
-	unsigned int m_nArea;
-	Array<char,32> m_entryPoint;
-	unsigned int m_nDistanceScale;
-	unsigned int m_dwLinkFlags;
-	Array<unsigned __int8,8> m_resRandomEncounterArea0;
-	Array<unsigned __int8,8> m_resRandomEncounterArea1;
-	Array<unsigned __int8,8> m_resRandomEncounterArea2;
-	Array<unsigned __int8,8> m_resRandomEncounterArea3;
-	Array<unsigned __int8,8> m_resRandomEncounterArea4;
-	unsigned int m_nEncounterProbability;
-	Array<unsigned int,32> nUnused;
-};
-
-struct CWorldMapData
-{
-	Array<unsigned __int8,8> m_resMosaic;
-	unsigned int m_nWidth;
-	unsigned int m_nHeight;
-	unsigned int m_nMapID;
-	unsigned int m_strTitle;
-	unsigned int m_nStartCenteredOnX;
-	unsigned int m_nStartCenteredOnY;
-	unsigned int m_nAreas;
-	unsigned int m_nAreasOffset;
-	unsigned int m_nOffsetToLinks;
-	unsigned int m_nLinks;
-	Array<unsigned __int8,8> m_resAreaIcons;
-	unsigned int m_dwFlags;
-	Array<unsigned int,31> nUnused;
-};
-
-struct CWorldMapArea
-{
-	Array<unsigned __int8,8> m_resCurrentArea;
-	Array<unsigned __int8,8> m_resOriginalArea;
-	Array<char,32> m_strName;
-	unsigned int m_dwFlags;
-	unsigned int m_sequence;
-	unsigned int m_mapLocationX;
-	unsigned int m_mapLocationY;
-	unsigned int m_strLabel;
-	unsigned int m_strAreaName;
-	Array<unsigned __int8,8> m_resAreaLoadMosaic;
-	unsigned int m_nNorthEdgeStartingLink;
-	unsigned int m_nNorthEdgeCount;
-	unsigned int m_nWestEdgeStartingLink;
-	unsigned int m_nWestEdgeCount;
-	unsigned int m_nSouthEdgeStartingLink;
-	unsigned int m_nSouthEdgeCount;
-	unsigned int m_nEastEdgeStartingLink;
-	unsigned int m_nEastEdgeCount;
-	Array<unsigned int,32> nUnused;
-};
-
-struct CVisibilityMap
-{
-	unsigned __int16* m_pMap;
-	int m_nMapSize;
-	__int16 m_nWidth;
-	__int16 m_nHeight;
-	unsigned __int8 m_bOutDoor;
-	CSearchBitmap* m_pSearchMap;
-	Array<int,15> m_aCharacterIds;
-	CVisibilityMapTreeNode** m_pVisMapTrees;
-	CVisibilityMapEllipse* m_pVisMapEllipses;
-};
-
-struct CVidPalette
-{
-	unsigned __int64 m_nAUCounter;
-	unsigned __int64 m_nAUCounterBase;
-	tagRGBQUAD* m_pPalette;
-	int m_nEntries;
-	unsigned int rgbGlobalTint;
-	unsigned __int16 m_nType;
-	unsigned __int8 m_bPaletteOwner;
-	int m_bSubRangesCalculated;
-	Array<unsigned __int8,7> m_rangeColors;
-};
-
-struct CVIDIMG_PALETTEAFFECT
-{
-	unsigned int rgbTintColor;
-	unsigned int rgbAddColor;
-	unsigned int rgbLightColor;
-	Array<unsigned int*,7> pRangeTints;
-	Array<unsigned __int8,8> aRangeTintPeriods;
-	Array<unsigned int*,7> pRangeAdds;
-	Array<unsigned __int8,8> aRangeAddPeriods;
-	Array<unsigned int*,7> pRangeLights;
-	Array<unsigned __int8,7> aRangeLightPeriods;
-	unsigned __int8 suppressTints;
-};
-
-struct CVidImage
-{
-	CVidPalette m_cPalette;
-	CVIDIMG_PALETTEAFFECT mPaletteAffects;
-};
-
-struct CVidTile : CVidImage
-{
-	CResTile* pRes;
-	unsigned int m_dwFlags;
-};
-
-struct CStoreFileSpell
-{
-	Array<unsigned __int8,8> m_spell;
-	unsigned int m_cost;
-};
-
-struct CStoreFileItem
-{
-	Array<unsigned __int8,8> m_itemId;
-	unsigned __int16 m_wear;
-	Array<unsigned __int16,3> m_usageCount;
-	unsigned int m_dynamicFlags;
-	unsigned int m_nInStock;
-	unsigned int m_nStoreFlags;
-};
-
-struct CStoreFileHeader
-{
-	unsigned int m_nStoreType;
-	unsigned int m_strName;
-	unsigned int m_nStoreFlags;
-	unsigned int m_nBuyMarkUp;
-	unsigned int m_nSellMarkDown;
-	unsigned int m_nAdditionalMarkDown;
-	unsigned __int16 m_nStealDifficulty;
-	unsigned __int16 m_nMaxItems;
-	Array<unsigned __int8,8> m_script;
-	unsigned int m_nbuyTypesOffset;
-	unsigned int m_nbuyTypesCount;
-	unsigned int m_nInventoryOffset;
-	unsigned int m_nInventoryCount;
-	unsigned int m_nLore;
-	unsigned int m_nIdentifyCost;
-	Array<unsigned __int8,8> m_resRumor;
-	unsigned int m_drinkOffset;
-	unsigned int m_drinkCount;
-	Array<unsigned __int8,8> m_resDonation;
-	unsigned int m_nInnFlags;
-	unsigned int m_nRoomCostPeasant;
-	unsigned int m_nRoomCostMerchant;
-	unsigned int m_nRoomCostNoble;
-	unsigned int m_nRoomCostRoyal;
-	unsigned int m_spellOffset;
-	unsigned int m_spellCount;
-	unsigned int m_rouletMaxBet;
-	unsigned int m_crapsMaxBet;
-	unsigned int m_wheelMaxBet;
-	unsigned int m_rouletWinChance;
-	unsigned int m_crapsWinChance;
-	unsigned int m_wheelWinChance;
-	unsigned int m_rouletWinAmount;
-	unsigned int m_crapsWinAmount;
-	unsigned int m_wheelWinAmount;
-};
-
-struct CStoreFileDrinks
-{
-	Array<unsigned __int8,8> m_icon;
-	unsigned int m_strName;
-	unsigned int m_nCost;
-	unsigned int m_nRumorChance;
-};
-
-struct CSoundMixerImp
-{
-	ALCcontext_struct* alContext;
-	ALCdevice_struct* alDevice;
-	Array<float,3> pos;
-	int bMixerInitialized;
-	int bStreamPlaying;
-	int m_bMusicInitialized;
-	int bInPositionUpdate;
-	int bInSoundUpdate;
-	int bInQueueUpdate;
-	int bInLoopingUpdate;
-	unsigned int m_dwEAXProperties;
-	CSoundProperties m_soundProperties;
-	int m_nNumSongs;
-	int m_nLastSong;
-	int m_nCurrentSong;
-	int m_nQuietMusicVolume;
-	unsigned __int64 m_nActiveArea;
-	int m_nDuckingOn;
-	CDWordArray m_aMusicSlots;
-	Array<unsigned __int8,10001> m_tSqrtTable;
-	int nMaxVoices;
-	CObList lVoices;
-	CObList lWaiting;
-	CObList lLooping;
-	CObArray aChannels;
-	int nMaxChannels;
-	int nGlobalVolume;
-	int nPanRange;
-	int nXCoordinate;
-	int nYCoordinate;
-	int nZCoordinate;
-	CTypedPtrList<CPtrList,CMusicPosition*> m_lMusicPositions;
-};
-
-struct CSavedGameStoredLocation
-{
-	Array<unsigned __int8,8> m_areaName;
-	unsigned __int16 m_xPos;
-	unsigned __int16 m_yPos;
-};
-
-struct CSavedGamePartyCreature
-{
-	unsigned __int16 m_wFlags;
-	unsigned __int16 m_portraitId;
-	unsigned int m_creatureOffset;
-	unsigned int m_creatureSize;
-	Array<unsigned __int8,8> m_creatureResRef;
-	unsigned int m_creatureFacing;
-	Array<unsigned __int8,8> m_areaName;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	unsigned __int16 m_posViewX;
-	unsigned __int16 m_posViewY;
-	unsigned __int16 m_nModalState;
-	__int16 m_nHappiness;
-	Array<int,24> m_nNumberOfTimesInteractedWith;
-	Array<__int16,4> m_quickWeaponsItemNum;
-	Array<__int16,4> m_quickWeaponsAbilityNum;
-	Array<Array<unsigned __int8,8>,3> m_quickSpellsSpellId;
-	Array<__int16,3> m_quickItemsItemNum;
-	Array<__int16,3> m_quickItemsAbilityNum;
-	Array<char,32> m_name;
-	unsigned int m_numberTimesTalkedTo;
-	unsigned int m_strStrongestKillName;
-	unsigned int m_nStrongestKillXPValue;
-	unsigned int m_nPreviousTimeWithParty;
-	unsigned int m_nJoinPartyTime;
-	unsigned __int8 m_bWithParty;
-	Array<char,2> m_pad1;
-	char m_cFirstResSlot;
-	unsigned int m_nChapterKillsXPValue;
-	unsigned int m_nChapterKillsNumber;
-	unsigned int m_nGameKillsXPValue;
-	unsigned int m_nGameKillsNumber;
-	Array<Array<unsigned __int8,8>,4> m_lSpellStatsName;
-	Array<__int16,4> m_lSpellStatsCount;
-	Array<Array<unsigned __int8,8>,4> m_lWeaponStatsName;
-	Array<__int16,4> m_lWeaponStatsCount;
-	Array<unsigned __int8,8> m_secondarySounds;
-};
-
-struct CResRef
-{
-	Array<unsigned __int8,8> m_resRef;
-
-	void get(lua_State* L)
-	{
-		char* localCopy = (char*)alloca(sizeof(m_resRef) + 1);
-		int i = 0;
-		for (; i < sizeof(m_resRef); ++i) {
-			char readVal = m_resRef[i];
-			if (readVal == '\0') break;
-			localCopy[i] = readVal;
-		}
-		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
-	}
-};
-
-struct CAbilityId
-{
-	__int16 m_itemType;
-	__int16 m_itemNum;
-	__int16 m_abilityNum;
-	CResRef m_res;
-	unsigned __int8 m_targetType;
-	unsigned __int8 m_targetCount;
-	unsigned int m_toolTip;
-};
-
-struct CButtonData
-{
-	CResRef m_icon;
-	unsigned int m_name;
-	CResRef m_launcherIcon;
-	unsigned int m_launcherName;
-	__int16 m_count;
-	CAbilityId m_abilityId;
-	unsigned __int8 m_bDisabled;
-	unsigned __int8 m_bDisplayCount;
-};
-
-struct CCriticalEntry
-{
-	CResRef m_res;
-	int m_hitOrMiss;
-	int m_slot;
-	int m_attackType;
-	int m_itemType;
-	int m_bonus;
-};
-
-struct CImmunitiesItemEquip
-{
-	CResRef m_res;
-	unsigned int m_error;
-	CGameEffect* m_pEffect;
-};
-
-struct CImmunitySpell
-{
-	CResRef m_res;
-	unsigned int m_error;
-	int m_item;
-};
-
-struct CGameStatsRes : CObject
-{
-	CResRef m_cResRef;
-	__int16 m_nTimesUsed;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct Spell_ability_st
-{
-	unsigned __int16 type;
-	unsigned __int16 quickSlotType;
-	CResRef quickSlotIcon;
-	unsigned __int8 actionType;
-	unsigned __int8 actionCount;
-	unsigned __int16 range;
-	unsigned __int16 minCasterLevel;
-	unsigned __int16 speedFactor;
-	unsigned __int16 timesPerDay;
-	unsigned __int16 damageDice;
-	unsigned __int16 damageDiceCount;
-	unsigned __int16 damageDiceBonus;
-	unsigned __int16 damageType;
-	unsigned __int16 effectCount;
-	unsigned __int16 startingEffect;
-	unsigned __int16 maxUsageCount;
-	unsigned __int16 usageFlags;
-	unsigned __int16 missileType;
-};
-
-struct CWorldMap
-{
-	CResRef m_cResRef;
-	CWorldMapHeader m_cHeader;
-	CWorldMapData* m_pData;
-	CWorldMapArea** m_ppAreas;
-	CWorldMapLinks** m_ppLinks;
-};
-
-struct CVVCHashEntry
-{
-	CResRef m_name;
-	unsigned __int16 m_priority;
-	unsigned int m_renderType;
-	unsigned int m_renderMask;
-};
-
-struct CAIScript
-{
-	CResRef cResRef;
-	CTypedPtrList<CPtrList,CAIConditionResponse*> m_caList;
-};
-
-struct CTiledObject
-{
-	int m_nWedIndex;
-	CResWED* m_pResWed;
-	unsigned __int16 m_wAIState;
-	unsigned __int16 m_wRenderState;
-	__POSITION* m_posAreaList;
-	CResRef m_resId;
-};
-
-struct CStore
-{
-	CResRef m_resRef;
-	CStoreFileHeader m_header;
-	CTypedPtrList<CPtrList,CStoreFileItem*> m_lInventory;
-	unsigned int* m_pBuyTypes;
-	unsigned int m_nBuyTypes;
-	CStoreFileDrinks* m_pDrinks;
-	unsigned int m_nDrinks;
-	CStoreFileSpell* m_pSpells;
-	unsigned int m_nSpells;
-	Array<unsigned __int8,8> m_pVersion;
-	int m_bLocalCopy;
-};
-
-struct CSequenceSound
-{
-	CResRef m_sound;
-	int m_offset;
-};
-
-template<class RES_CLASS, int RES_ID>
-struct CResHelper
-{
-	RES_CLASS* pRes;
-	CResRef cResRef;
-};
-
-struct CProgressBar
-{
-	unsigned int m_nSecondsToTimeout;
-	int m_nProgressBarCaption;
-	int m_nParchmentCaption;
-	int m_nActionProgress;
-	int m_nActionTarget;
-	unsigned __int8 m_bTravelActive;
-	unsigned __int8 m_bWaiting;
-	int m_nWaitingReason;
-	unsigned __int8 m_bDisableMinibars;
-	unsigned __int8 m_bTimeoutVisible;
-	unsigned __int8 m_bProgressBarActivated;
-	Array<unsigned __int8,6> m_bRemoteWaiting;
-	Array<int,6> m_nRemoteActionProgress;
-	Array<int,6> m_nRemoteActionTarget;
-	Array<int,6> m_nRemoteWaitingReason;
-};
-
-struct CPlex
-{
-	CPlex* pNext;
-	Array<unsigned int,1> dwReserved;
-};
-
-struct CNetworkWindow
-{
-	unsigned __int8 m_bInitialized;
-	unsigned __int8 m_bVSSent;
-	unsigned __int8 m_bVSReceived;
-	unsigned __int8 m_nPlayerNumber;
-	unsigned __int16 m_nAckExpected;
-	unsigned __int16 m_nNextFrameToSend;
-	unsigned __int16 m_nFrameExpected;
-	unsigned __int16 m_nTooFar;
-	unsigned __int16 m_nOldestFrame;
-	Array<cnetworkwindow_queueentry_st,1> m_pOutgoingBuffers;
-	Array<cnetworkwindow_queueentry_st,1> m_pIncomingBuffers;
-	CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*> m_lQueueIncomingMessages;
-	CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*> m_lQueueOutgoingMessages;
-	Array<unsigned __int8,1> m_pbTimeOutSet;
-	Array<unsigned int,1> m_pnTimeOut;
-	Array<unsigned __int8,1> m_pbArrived;
-	unsigned __int16 m_nNumBuffered;
-	unsigned __int8 m_bNoNak;
-	unsigned __int8 padding;
-	unsigned int m_nPacketTimeout;
-	unsigned int m_nAckTimer;
-	unsigned __int8 m_bAckTimerSet;
-	unsigned __int8 m_bSomethingHappened;
-	unsigned int m_nNextEvent;
-	unsigned int m_nPlayerTimeout;
-	unsigned int m_nNoMessageTimeout;
-};
-
-struct CMachineStates
-{
-	Array<CMachineState,6> m_machineStates;
-};
-
-struct CInfTileSet
-{
-	Array<CResTileSet*,2> tis;
-	CVidTile cVidTile;
-	CVRamPool* pVRPool;
-	CResInfTile** pResTiles;
-	unsigned int nTiles;
-	unsigned int nTileSize;
-};
-
-struct CImmunitiesSpellLevelDecrementing
-{
-	Array<CSpellLevelDecrementing,10> m_levels;
-};
-
-struct CImmunitiesSpellLevel
-{
-	Array<int,10> m_levels;
-};
-
-struct CGameStatsSprite
-{
-	unsigned int m_strStrongestKillName;
-	unsigned int m_nStrongestKillXPValue;
-	unsigned int m_nPreviousTimeWithParty;
-	unsigned int m_nJoinPartyTime;
-	int m_bWithParty;
-	unsigned int m_nChapterKillsXPValue;
-	unsigned int m_nChapterKillsNumber;
-	unsigned int m_nGameKillsXPValue;
-	unsigned int m_nGameKillsNumber;
-	Array<CGameStatsRes,4> m_pSpellStats;
-	Array<CGameStatsRes,4> m_pWeaponStats;
-};
-
-struct CGameSpriteEquipment
-{
-	Array<CItem*,39> m_items;
-	unsigned __int8 m_selectedWeapon;
-	unsigned __int16 m_selectedWeaponAbility;
-	CItem* m_pTempItem;
-	CGameSprite* m_pSprite;
-};
-
-struct CGameSaveCharacter
-{
-	unsigned int m_actionMode;
-	Array<CButtonData,4> m_quickWeapons;
-	Array<CButtonData,3> m_quickSpells;
-	Array<CButtonData,3> m_quickItems;
-};
-
-struct CGameSave
-{
-	unsigned int m_inputMode;
-	CResRef m_cResCurrentWorldArea;
-	unsigned int m_nCurrentWorldLink;
-	unsigned int m_nPartyGold;
-	__int16 m_curFormation;
-	Array<__int16,5> m_quickFormations;
-	Array<CItem*,100> m_groupInventory;
-	int m_bArenaMode;
-	__int16 m_groupInventoryNumber;
-	unsigned int m_mode;
-	int m_cutScene;
-	int m_nCutSceneStatusOverride;
-};
-
-struct CGameRemoteObjectArray
-{
-	CGameRemoteObjectListEntry** m_pArray;
-	__int16 m_nArraySize;
-	__int16 m_nControlsChanged;
-	CGameRemoteObjectControlChange* m_pControlsChanged;
-	CGameRemoteObjectControlChange* m_pControlsChangedTail;
-	__int16 m_nDeletions;
-	CGameRemoteObjectDeletion* m_pDeletions;
-	CGameRemoteObjectDeletion* m_pDeletionsTail;
-	__int16 m_nControlsAreaChanged;
-	Array<CResRef,6> m_psControlsAreaChangedName;
-	Array<unsigned int,6> m_pnControlsAreaChangedPlayerNum;
-	Array<__int16,6> m_pnControlsAreaChangedFirstObject;
-};
-
-struct CGamePermission
-{
-	Array<unsigned __int8,8> m_permission;
-};
-
-struct CDerivedStatsTemplate
-{
-	unsigned int m_generalState;
-	__int16 m_nMaxHitPoints;
-	__int16 m_nArmorClass;
-	__int16 m_nACCrushingMod;
-	__int16 m_nACMissileMod;
-	__int16 m_nACPiercingMod;
-	__int16 m_nACSlashingMod;
-	__int16 m_nTHAC0;
-	__int16 m_nNumberOfAttacks;
-	__int16 m_nSaveVSDeath;
-	__int16 m_nSaveVSWands;
-	__int16 m_nSaveVSPoly;
-	__int16 m_nSaveVSBreath;
-	__int16 m_nSaveVSSpell;
-	__int16 m_nResistFire;
-	__int16 m_nResistCold;
-	__int16 m_nResistElectricity;
-	__int16 m_nResistAcid;
-	__int16 m_nResistMagic;
-	__int16 m_nResistMagicFire;
-	__int16 m_nResistMagicCold;
-	__int16 m_nResistSlashing;
-	__int16 m_nResistCrushing;
-	__int16 m_nResistPiercing;
-	__int16 m_nResistMissile;
-	__int16 m_nLore;
-	__int16 m_nLockPicking;
-	__int16 m_nMoveSilently;
-	__int16 m_nTraps;
-	__int16 m_nPickPocket;
-	__int16 m_nFatigue;
-	__int16 m_nIntoxication;
-	__int16 m_nLuck;
-	__int16 m_nTracking;
-	unsigned __int16 m_nLevel1;
-	unsigned __int16 m_nLevel2;
-	unsigned __int16 m_nLevel3;
-	__int16 m_nSex;
-	__int16 m_nSTR;
-	__int16 m_nSTRExtra;
-	__int16 m_nINT;
-	__int16 m_nWIS;
-	__int16 m_nDEX;
-	__int16 m_nCON;
-	__int16 m_nCHR;
-	unsigned int m_nXPValue;
-	unsigned int m_nXP;
-	unsigned int m_nGold;
-	unsigned int m_nMoraleBreak;
-	unsigned int m_nMoraleRecoveryTime;
-	__int16 m_nReputation;
-	__int16 m_nHatedRace;
-	int m_nHideInShadows;
-	int m_nDetectIllusion;
-	int m_nSetTraps;
-	__int16 m_nDamageBonus;
-	__int16 m_nSpellFailureMage;
-	__int16 m_nSpellFailurePriest;
-	__int16 m_nSpellDurationModMage;
-	__int16 m_nSpellDurationModPriest;
-	__int16 m_nTurnUndeadLevel;
-	__int16 m_nBackstabDamageMultiplier;
-	__int16 m_nLayOnHandsAmount;
-	int m_bHeld;
-	int m_bPolymorphed;
-	int m_bIdentifyMode;
-	int m_bEntangle;
-	int m_bSanctuary;
-	int m_bMinorGlobe;
-	int m_bShieldGlobe;
-	int m_bGrease;
-	int m_bWeb;
-	int m_bCasterHold;
-	__int16 m_nTranslucent;
-	__int16 m_nEncumberance;
-	__int16 m_nMissileTHAC0Bonus;
-	__int16 m_nMagicDamageResistance;
-	__int16 m_nResistPoison;
-	__int16 m_nSpellDurationModBard;
-	int m_bDoNotJump;
-	int m_bAuraCleansing;
-	unsigned int m_nCastingType;
-	__int16 m_nMentalSpeed;
-	__int16 m_nPhysicalSpeed;
-	__int16 m_nCastingLevelBonusMage;
-	__int16 m_nCastingLevelBonusCleric;
-	int m_bSeeInvisible;
-	int m_bIgnoreDialogPause;
-	int m_nMinHitPoints;
-	int m_THAC0BonusRight;
-	int m_THAC0BonusLeft;
-	int m_DamageBonusRight;
-	int m_DamageBonusLeft;
-	int m_nStoneSkins;
-	int m_nProficiencyBastardSword;
-	int m_nProficiencyLongSword;
-	int m_nProficiencyShortSword;
-	int m_nProficiencyAxe;
-	int m_nProficiencyTwoHandedSword;
-	int m_nProficiencyKatana;
-	int m_nProficiencyScimitarWakisashiNinjaTo;
-	int m_nProficiencyDagger;
-	int m_nProficiencyWarhammer;
-	int m_nProficiencySpear;
-	int m_nProficiencyHalberd;
-	int m_nProficiencyFlailMorningStar;
-	int m_nProficiencyMace;
-	int m_nProficiencyQuarterStaff;
-	int m_nProficiencyCrossbow;
-	int m_nProficiencyLongBow;
-	int m_nProficiencyShortBow;
-	int m_nProficiencyDart;
-	int m_nProficiencySling;
-	int m_nProficiencyBlackjack;
-	int m_nProficiencyGun;
-	int m_nProficiencyMartialArts;
-	int m_nProficiency2Handed;
-	int m_nProficiencySwordAndShield;
-	int m_nProficiencySingleWeapon;
-	int m_nProficiency2Weapon;
-	int m_nProficiencyClub;
-	int m_nExtraProficiency2;
-	int m_nExtraProficiency3;
-	int m_nExtraProficiency4;
-	int m_nExtraProficiency5;
-	int m_nExtraProficiency6;
-	int m_nExtraProficiency7;
-	int m_nExtraProficiency8;
-	int m_nExtraProficiency9;
-	int m_nExtraProficiency10;
-	int m_nExtraProficiency11;
-	int m_nExtraProficiency12;
-	int m_nExtraProficiency13;
-	int m_nExtraProficiency14;
-	int m_nExtraProficiency15;
-	int m_nExtraProficiency16;
-	int m_nExtraProficiency17;
-	int m_nExtraProficiency18;
-	int m_nExtraProficiency19;
-	int m_nExtraProficiency20;
-	int m_nPuppetMasterId;
-	int m_nPuppetMasterType;
-	int m_nPuppetType;
-	int m_nPuppetId;
-	int m_bCheckForBerserk;
-	int m_bBerserkStage1;
-	int m_bBerserkStage2;
-	int m_nDamageLuck;
-	CResRef m_cBardSong;
-	CResRef m_cBackStab;
-	int m_nVisualRange;
-	int m_bExplore;
-	int m_bThrullCharm;
-	int m_bSummonDisable;
-	int m_bSummonDisableAction;
-	__int16 m_nHitBonus;
-	Array<__int16,11> m_nSpecificDamageBonus;
-	Array<__int16,12> m_nSchoolSaveBonus;
-	unsigned int m_nKit;
-	int m_bForceSurge;
-	int m_nSurgeMod;
-	int m_bImprovedHaste;
-	Array<unsigned int,10> m_nScriptingStates;
-	int m_nMeleeTHAC0Bonus;
-	int m_nMeleeDamageBonus;
-	int m_nMissileDamageBonus;
-	int m_bDisableCircle;
-	int m_nFistTHAC0Bonus;
-	int m_nFistDamageBonus;
-	unsigned int m_sClassStringOverrideMixed;
-	unsigned int m_sClassStringOverrideLower;
-	__int16 m_nClassTypeOverrideMixed;
-	__int16 m_nClassTypeOverrideLower;
-	int m_bPreventSpellProtectionEffects;
-	int m_bImmunityToBackStab;
-	int m_nLockPickingMTPBonus;
-	int m_nMoveSilentlyMTPBonus;
-	int m_nTrapsMTPBonus;
-	int m_nPickPocketMTPBonus;
-	int m_nHideInShadowsMTPBonus;
-	int m_nDetectIllusionMTPBonus;
-	int m_nSetTrapsMTPBonus;
-	int m_bPreventAISlowDown;
-	int m_nExistanceDelayOverride;
-	int m_bAnimationOnlyHaste;
-	int m_bNoPermanentDeath;
-	int m_bImmuneToTurnUndead;
-	int m_nChaosShield;
-	int m_bNPCBump;
-	int m_bUseAnyItem;
-	int m_nAssassinate;
-	int m_bSexChanged;
-	int m_nSpellFailureInnate;
-	int m_bImmuneToTracking;
-	int m_bDeadMagic;
-	int m_bImmuneToTimeStop;
-	int m_bImmuneToSequester;
-	int m_nStoneSkinsGolem;
-	int m_nLevelDrain;
-	int m_bDoNotDraw;
-	int m_bIgnoreDrainDeath;
-};
-
-struct CDerivedStats : CDerivedStatsTemplate
-{
-	CImmunitiesProjectile m_cImmunitiesProjectile;
-	CImmunitiesEffect m_cImmunitiesEffect;
-	CImmunitiesAIType m_cImmunitiesAIType;
-	CImmunitiesSpellLevel m_cImmunitiesSpellLevel;
-	CImmunitiesWeapon m_cImmunitiesWeapon;
-	CSelectiveBonusList m_cToHitBonusList;
-	CSelectiveBonusList m_cDamageBonusList;
-	CImmunitiesItemEquipList m_cImmunitiesItemEquip;
-	CImmunitiesItemTypeEquipList m_cImmunitiesItemTypeEquip;
-	CImmunitiesProjectile m_cBounceProjectile;
-	CImmunitiesEffect m_cBounceEffect;
-	CImmunitiesSpellLevel m_cBounceSpellLevel;
-	CImmunitiesSpellLevelDecrementing m_cBounceProjectileLevelDec;
-	CImmunitiesSpellLevelDecrementing m_cImmunitiesProjectileLevelDec;
-	CImmunitiesSchoolAndSecondary m_cImmunitiesSchool;
-	CImmunitiesSchoolAndSecondary m_cImmunitiesSecondaryType;
-	CImmunitiesSchoolAndSecondary m_cBounceSchool;
-	CImmunitiesSchoolAndSecondary m_cBounceSecondaryType;
-	CImmunitiesItemEquipList m_cImmunitiesItemUse;
-	CImmunitiesItemTypeEquipList m_cImmunitiesItemTypeUse;
-	CImmunitiesSpellList m_cImmunitiesSpell;
-	CImmunitiesSpellList m_cBounceSpell;
-	CImmunitiesSchoolAndSecondaryDecrementing m_cImmunitiesSchoolLevelDec;
-	CImmunitiesSchoolAndSecondaryDecrementing m_cImmunitiesSecondaryTypeLevelDec;
-	CImmunitiesSchoolAndSecondaryDecrementing m_cBounceSchoolLevelDec;
-	CImmunitiesSchoolAndSecondaryDecrementing m_cBounceSecondaryTypeLevelDec;
-	CContingencyList m_cContingencyList;
-	CPersistantEffectListRegenerated m_cRegeneratedPersistantEffectList;
-	CImmunitiesSpellLevelDecrementing m_cSpellTrapLevelDec;
-	CContingencyList m_cSequencerList;
-	CColorRanges m_appliedColorRanges;
-	CColorEffects m_appliedColorEffects;
-	Array<CCreatureFileMemorizedSpellLevel,9> m_memorizedSpellsLevelMage;
-	Array<CCreatureFileMemorizedSpellLevel,7> m_memorizedSpellsLevelPriest;
-	Array<int,16> m_disabledButtons;
-	Array<int,3> m_disabledSpellTypes;
-	int m_disableSpells;
-	CApplyEffectList m_cExtraMeleeEffects;
-	CApplyEffectList m_cExtraRangedEffects;
-	CSelectiveBonusList m_cProtectionList;
-	CSelectiveWeaponTypeList m_cSelectiveWeaponTypeList;
-	CCriticalEntryList m_cCriticalEntryList;
-	Array<unsigned int,8> m_spellStates;
-};
-
-struct CCreatureFileMemorizedSpell
-{
-	Array<unsigned __int8,8> m_spellId;
-	unsigned __int16 m_flags;
-	Array<unsigned __int8,2> structureAlignment1;
-};
-
-struct CCreatureFileKnownSpell
-{
-	Array<unsigned __int8,8> m_knownSpellId;
-	unsigned __int16 m_spellLevel;
-	unsigned __int16 m_magicType;
-};
-
-struct CCreatureFileItem
-{
-	Array<unsigned __int8,8> m_itemId;
-	unsigned __int16 m_wear;
-	Array<unsigned __int16,3> m_usageCount;
-	unsigned int m_dynamicFlags;
-};
-
-struct CCreatureFileHeader
-{
-	unsigned int m_name;
-	unsigned int m_apparentName;
-	unsigned int m_flags;
-	unsigned int m_xpValue;
-	unsigned int m_xp;
-	unsigned int m_gold;
-	unsigned int m_generalState;
-	__int16 m_hitPoints;
-	unsigned __int16 m_maxHitPointsBase;
-	unsigned int m_animationType;
-	Array<unsigned __int8,7> m_colors;
-	unsigned __int8 m_effectVersion;
-	Array<unsigned __int8,8> m_portraitSmall;
-	Array<unsigned __int8,8> m_portraitLarge;
-	unsigned __int8 m_reputation;
-	unsigned __int8 m_hideInShadowsBase;
-	__int16 m_armorClass;
-	__int16 m_armorClassBase;
-	__int16 m_armorClassCrushingAdjustment;
-	__int16 m_armorClassMissileAdjustment;
-	__int16 m_armorClassPiercingAdjustment;
-	__int16 m_armorClassSlashingAdjustment;
-	char m_toHitArmorClass0Base;
-	unsigned __int8 m_numberOfAttacksBase;
-	unsigned __int8 m_saveVSDeathBase;
-	unsigned __int8 m_saveVSWandsBase;
-	unsigned __int8 m_saveVSPolyBase;
-	unsigned __int8 m_saveVSBreathBase;
-	unsigned __int8 m_saveVSSpellBase;
-	char m_resistFireBase;
-	char m_resistColdBase;
-	char m_resistElectricityBase;
-	char m_resistAcidBase;
-	char m_resistMagicBase;
-	char m_resistMagicFireBase;
-	char m_resistMagicColdBase;
-	char m_resistSlashingBase;
-	char m_resistCrushingBase;
-	char m_resistPiercingBase;
-	char m_resistMissileBase;
-	unsigned __int8 m_detectIllusionBase;
-	unsigned __int8 m_setTrapsBase;
-	unsigned __int8 m_loreBase;
-	unsigned __int8 m_lockPickingBase;
-	unsigned __int8 m_moveSilentlyBase;
-	unsigned __int8 m_trapsBase;
-	unsigned __int8 m_pickPocketBase;
-	unsigned __int8 m_fatigue;
-	unsigned __int8 m_intoxication;
-	char m_luckBase;
-	Array<char,15> m_proficiencies;
-	unsigned __int8 m_bNightmare;
-	unsigned __int8 m_nTranslucent;
-	char m_repChangeKilled;
-	char m_repChangeJoined;
-	char m_repChangeKicked;
-	unsigned __int8 m_undeadLevel;
-	unsigned __int8 m_trackingBase;
-	Array<char,32> m_trackingTarget;
-	Array<unsigned int,100> m_speech;
-	unsigned __int8 m_level1;
-	unsigned __int8 m_level2;
-	unsigned __int8 m_level3;
-	unsigned __int8 m_sex;
-	unsigned __int8 m_STRBase;
-	unsigned __int8 m_STRExtraBase;
-	unsigned __int8 m_INTBase;
-	unsigned __int8 m_WISBase;
-	unsigned __int8 m_DEXBase;
-	unsigned __int8 m_CONBase;
-	unsigned __int8 m_CHRBase;
-	unsigned __int8 m_morale;
-	unsigned __int8 m_moraleBreak;
-	unsigned __int8 m_hatedRace;
-	unsigned __int16 m_moraleRecoveryTime;
-	unsigned __int16 m_mageSpecUpperWord;
-	unsigned __int16 m_mageSpecialization;
-	Array<unsigned __int8,8> m_scriptOverRide;
-	Array<unsigned __int8,8> m_scriptClass;
-	Array<unsigned __int8,8> m_scriptRace;
-	Array<unsigned __int8,8> m_scriptGeneral;
-	Array<unsigned __int8,8> m_scriptDefault;
-};
-
-#pragma pack(push, 1)
-struct CAreaVariable
-{
-	Array<char,32> m_name;
-	unsigned __int16 m_type;
-	unsigned __int16 m_resRefType;
-	unsigned int m_dWValue;
-	int m_intValue;
-	long double m_floatValue;
-	Array<char,32> m_stringValue;
-};
-#pragma pack(pop)
-
-struct CVariable : CAreaVariable
-{
-};
-
-struct CAreaUserNote
-{
-	unsigned __int16 m_startX;
-	unsigned __int16 m_startY;
-	unsigned int m_note;
-	unsigned int m_dwflags;
-	unsigned int m_id;
-	Array<unsigned int,9> m_notUsed;
-};
-
-struct CAreaSoundsAndMusic
-{
-	unsigned int m_dayMusic;
-	unsigned int m_nightMusic;
-	unsigned int m_battleWinningMusic;
-	unsigned int m_battleStandOffMusic;
-	unsigned int m_battleLosingMusic;
-	unsigned int m_alt1Music0;
-	unsigned int m_alt1Music1;
-	unsigned int m_alt1Music2;
-	unsigned int m_alt1Music3;
-	unsigned int m_alt1Music4;
-	Array<unsigned __int8,8> m_dayAmbient;
-	Array<unsigned __int8,8> m_dayAmbientExtended;
-	unsigned int m_dayAmbientVolume;
-	Array<unsigned __int8,8> m_nightAmbient;
-	Array<unsigned __int8,8> m_nightAmbientExtended;
-	unsigned int m_nightAmbientVolume;
-	Array<unsigned int,16> m_notUsed;
-};
-
-struct CAreaFileStaticObject
-{
-	Array<char,32> m_scriptName;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	unsigned int m_timeOfDayVisible;
-	Array<unsigned __int8,8> m_resref;
-	unsigned int m_nSequence;
-	unsigned int m_dwFlags;
-	__int16 m_height;
-	unsigned __int16 m_translucency;
-	unsigned __int16 m_startFrameRange;
-	unsigned __int8 m_probability;
-	unsigned __int8 m_period;
-	Array<unsigned __int8,8> m_paletteResref;
-	unsigned __int16 m_sizeX;
-	unsigned __int16 m_sizeY;
-};
-
-struct CAreaFileSoundObject
-{
-	Array<char,32> m_scriptName;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	unsigned __int16 m_range;
-	Array<unsigned __int8,2> structureAlignment1;
-	unsigned int m_pitchVariance;
-	unsigned __int16 m_volumeVariance;
-	unsigned __int16 m_volume;
-	Array<Array<unsigned __int8,8>,10> m_soundObject;
-	unsigned __int16 m_soundObjectNum;
-	Array<unsigned __int8,2> structureAlignment2;
-	unsigned int m_period;
-	unsigned int m_periodVariance;
-	unsigned int m_timeOfDayActive;
-	unsigned int m_dwFlags;
-	Array<unsigned int,16> m_notUsed;
-};
-
-struct CAreaFileRestEncounter
-{
-	Array<char,32> m_scriptName;
-	Array<unsigned int,10> m_randomCreatureString;
-	Array<Array<unsigned __int8,8>,10> m_randomCreature;
-	unsigned __int16 m_randomCreatureNum;
-	unsigned __int16 m_difficulty;
-	unsigned int m_lifeSpan;
-	unsigned __int16 m_huntingRange;
-	unsigned __int16 m_followRange;
-	unsigned __int16 m_maxTypeNum;
-	unsigned __int16 m_activated;
-	unsigned __int16 m_probDay;
-	unsigned __int16 m_probNight;
-	unsigned __int16 m_wFlags;
-	Array<unsigned __int8,10> m_weights;
-	Array<unsigned int,11> m_notUsed;
-};
-
-struct CAreaFileRandomMonsterSpawningPoint
-{
-	Array<char,32> m_scriptName;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	Array<Array<unsigned __int8,8>,10> m_randomCreature;
-	unsigned __int16 m_randomCreatureNum;
-	unsigned __int16 m_difficulty;
-	unsigned __int16 m_spawningRate;
-	unsigned __int16 m_wFlags;
-	unsigned int m_lifeSpan;
-	unsigned __int16 m_huntingRange;
-	unsigned __int16 m_followRange;
-	unsigned __int16 m_maxTypeNum;
-	unsigned __int16 m_activated;
-	unsigned int m_timeOfDayVisible;
-	unsigned __int16 m_probDay;
-	unsigned __int16 m_probNight;
-	unsigned int m_frequency;
-	unsigned int m_countdown;
-	Array<unsigned __int8,10> m_weights;
-	Array<unsigned __int16,19> m_notUsed;
-};
-
-struct CAreaFileProjectileObject
-{
-	Array<unsigned __int8,8> m_resref;
-	unsigned int m_effectListOffset;
-	unsigned __int16 m_effectListCount;
-	unsigned __int16 m_projectileID;
-	__int16 m_nDelayCount;
-	__int16 m_nRepetitionCount;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	unsigned __int16 m_posZ;
-	unsigned __int8 m_targetType;
-	char m_portraitNum;
-};
-
-struct CAreaFileHeader
-{
-	Array<unsigned __int8,8> m_areaName;
-	unsigned int m_lastSaved;
-	unsigned int m_flags;
-	Array<unsigned __int8,8> m_areaEdgeNorth;
-	unsigned int m_flagsEdgeNorth;
-	Array<unsigned __int8,8> m_areaEdgeEast;
-	unsigned int m_flagsEdgeEast;
-	Array<unsigned __int8,8> m_areaEdgeSouth;
-	unsigned int m_flagsEdgeSouth;
-	Array<unsigned __int8,8> m_areaEdgeWest;
-	unsigned int m_flagsEdgeWest;
-	unsigned __int16 m_areaType;
-	unsigned __int16 m_rainProbability;
-	unsigned __int16 m_snowProbability;
-	unsigned __int16 m_fogProbability;
-	unsigned __int16 m_lightningProbability;
-	unsigned __int8 m_waterAlpha;
-	unsigned __int8 m_unused;
-};
-
-struct CAreaFileContainer
-{
-	Array<char,32> m_scriptName;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	unsigned __int16 m_containerType;
-	unsigned __int16 m_lockDifficulty;
-	unsigned int m_dwFlags;
-	unsigned __int16 m_trapDetectionDifficulty;
-	unsigned __int16 m_trapRemovalDifficulty;
-	unsigned __int16 m_trapActivated;
-	unsigned __int16 m_trapDetected;
-	unsigned __int16 m_posXTrapOrigin;
-	unsigned __int16 m_posYTrapOrigin;
-	unsigned __int16 m_boundingRectLeft;
-	unsigned __int16 m_boundingRectTop;
-	unsigned __int16 m_boundingRectRight;
-	unsigned __int16 m_boundingRectBottom;
-	unsigned int m_startingItem;
-	unsigned int m_itemCount;
-	Array<unsigned __int8,8> m_script;
-	unsigned int m_pickPointStart;
-	unsigned __int16 m_pickPointCount;
-	unsigned __int16 m_triggerRange;
-	Array<char,32> m_ownedBy;
-	Array<unsigned __int8,8> m_keyType;
-	unsigned int m_breakDifficulty;
-	unsigned int m_strNotPickable;
-	Array<unsigned int,14> m_notUsed;
-};
-
-struct CAreaFileCharacterEntryPoint
-{
-	Array<char,32> m_entryName;
-	unsigned __int16 m_startX;
-	unsigned __int16 m_startY;
-	unsigned int m_facing;
-	Array<unsigned int,16> m_notUsed;
 };
 
 union _9CC80BF4F2F1300360474CD60BF15E00
@@ -4259,13 +2277,6 @@ struct UnmappedUserType
 	}
 };
 
-struct CAIGroup
-{
-	__int16 m_groupId;
-	int m_groupChanged;
-	CTypedPtrList<CPtrList,long> m_memberList;
-};
-
 struct mosHeader_st
 {
 	unsigned int nFileType;
@@ -4284,6 +2295,213 @@ struct sequenceTableEntry_st
 {
 	__int16 nFrames;
 	unsigned __int16 nStartingFrame;
+};
+
+struct st_tiledef
+{
+	int nTile;
+	int nUsageCount;
+	int texture;
+	CInfTileSet* pTileSet;
+};
+
+struct CPoint : tagPOINT
+{
+};
+
+struct CAOEEntry
+{
+	enum class AOEType : __int32
+	{
+		AOE_CIRCLE = 0,
+		AOE_CONE = 1,
+		AOE_RECTANGLE = 2,
+		AOE_LINE = 3,
+	};
+
+	CAOEEntry::AOEType m_type;
+	CPoint m_center;
+	CPoint m_radius;
+	unsigned int m_color;
+};
+
+struct CFog
+{
+	float* densityLast;
+	float* densityCurrent;
+	float* densityNext;
+	int N;
+	float dt;
+	float diff;
+	float visc;
+	float force;
+	float source;
+	int dvel;
+	float* u;
+	float* v;
+	float* u_prev;
+	float* v_prev;
+	float* dens;
+	float* dens_prev;
+	bool pointEnabled;
+	int pointAmount;
+	int pointDuration;
+	CPoint pointPos;
+	float pointUForce;
+	float pointVForce;
+	CPoint explosionPos;
+	int updateCounter;
+	bool fading;
+	bool initialized;
+	float alpha;
+	int contrast;
+	unsigned int innerColor;
+	unsigned int outerColor;
+};
+
+struct CGameAreaClairvoyanceEntry
+{
+	CPoint m_position;
+	int m_id;
+	int m_timeKill;
+	unsigned __int8* m_pVisibleTerrainTable;
+	int m_charId;
+	__int16 m_visRange;
+	int* m_pVisMapExploredArea;
+};
+
+struct MAP_CHAR_POSITIONS
+{
+	CPoint ptPos;
+	int id;
+};
+
+struct CVIDMODE_RETICLE_DESCRIPTION
+{
+	CPoint ptCenter;
+	__int16 xAxis;
+	__int16 yAxis;
+	__int16 piePiecePtXOffset;
+	__int16 piePiecePtYOffset;
+	__int16 piePieceXOffset;
+	__int16 piePieceYOffset;
+	__int16 xGap;
+	__int16 yGap;
+	__int16 cursor;
+};
+
+struct CMarker
+{
+	unsigned __int8 m_type;
+	__int16 m_nReticleCounter;
+	unsigned __int8 m_nReticleForceRender;
+	unsigned __int8 m_nReticleForceRenderTarget;
+	unsigned int m_rgbColor;
+	CVIDMODE_RETICLE_DESCRIPTION m_reticleDesc;
+	unsigned __int8 m_bTalking;
+	unsigned __int8 m_bDoubleSize;
+};
+
+struct CRect : tagRECT
+{
+};
+
+struct CRainStorm
+{
+	CRainDrop* m_pRainDrops;
+	unsigned __int16 m_nCurrentDensity;
+	CRect m_rOldWorldViewPort;
+	__int16 m_nWindGustCounter;
+	int m_nRainDrops;
+};
+
+struct CSnowStorm
+{
+	CSnowFlake* m_pSnowFlakes;
+	unsigned __int16 m_nCurrentDensity;
+	CRect m_rOldWorldViewPort;
+};
+
+struct CSize : tagSIZE
+{
+};
+
+struct uiColumn
+{
+	uiVariant* width;
+	uiItem* items;
+	uiColumn* next;
+};
+
+enum class uiItemType : __int32
+{
+	ITEM_NONE = 0,
+	ITEM_TEXT = 1,
+	ITEM_BUTTON = 2,
+	ITEM_LIST = 3,
+	ITEM_EDIT = 4,
+	ITEM_MOVIE = 5,
+	ITEM_SLIDER = 6,
+	ITEM_HANDLE = 7,
+	ITEM_DRAGGABLE = 8,
+	ITEM_SLOT = 9,
+	ITEM_MAP = 10,
+	ITEM_TEMPLATE = 11,
+};
+
+enum class uiVariantType : __int32
+{
+	UIVAR_INT = 0,
+	UIVAR_FUNCTION = 1,
+	UIVAR_STRING = 2,
+	UIVAR_FLOAT = 3,
+};
+
+struct view_t
+{
+	void* viewOfFile;
+	unsigned int viewBase;
+	unsigned int viewSize;
+	int size;
+};
+
+struct CFileView
+{
+	file_t f;
+	view_t v;
+	int fileSize;
+	int filePos;
+};
+
+struct VoidPointer
+{
+	void* reference;
+
+	void pointTo(void* ptr)
+	{
+		reference = ptr;
+	}
+
+	intptr_t toPointer()
+	{
+		return (intptr_t)reference;
+	}
+};
+
+template<class POINTED_TO_TYPE>
+struct Pointer
+{
+	POINTED_TO_TYPE* reference;
+
+	POINTED_TO_TYPE getValue()
+	{
+		return *reference;
+	}
+
+	void setValue(POINTED_TO_TYPE val)
+	{
+		*reference = val;
+	}
 };
 
 struct ConstCharString
@@ -4336,6 +2554,20 @@ struct ConstCharString
 	}
 };
 
+struct uiVariant
+{
+	union value_t
+	{
+		int intVal;
+		const char* strVal;
+		float floatVal;
+		int luaFunc;
+	};
+
+	uiVariantType type;
+	uiVariant::value_t value;
+};
+
 struct Marker
 {
 	const char* src;
@@ -4344,9 +2576,90 @@ struct Marker
 	int line;
 };
 
+struct uiMenu
+{
+	Marker menuSrc;
+	const char* name;
+	int panel;
+	int state;
+	uiItem* items;
+	uiVariant* modal;
+	uiVariant* opacity;
+	uiVariant* greyscale;
+	int onOpen;
+	int onClose;
+	SDL_Point offset;
+	int ha;
+	int va;
+	int width;
+	int height;
+	int enabled;
+	int ignoreEsc;
+};
+
 struct ISteamRemoteStorage
 {
-	virtual bool FileWrite(const char* _0, const void* _1, int _2)
+	struct ISteamRemoteStorage_vtbl
+	{
+		bool (__fastcall *FileWrite)(ISteamRemoteStorage*, const char*, void*, int);
+		int (__fastcall *FileRead)(ISteamRemoteStorage*, const char*, void*, int);
+		unsigned __int64 (__fastcall *FileWriteAsync)(ISteamRemoteStorage*, const char*, void*, unsigned int);
+		unsigned __int64 (__fastcall *FileReadAsync)(ISteamRemoteStorage*, const char*, unsigned int, unsigned int);
+		bool (__fastcall *FileReadAsyncComplete)(ISteamRemoteStorage*, unsigned __int64, void*, unsigned int);
+		bool (__fastcall *FileForget)(ISteamRemoteStorage*, const char*);
+		bool (__fastcall *FileDelete)(ISteamRemoteStorage*, const char*);
+		unsigned __int64 (__fastcall *FileShare)(ISteamRemoteStorage*, const char*);
+		bool (__fastcall *SetSyncPlatforms)(ISteamRemoteStorage*, const char*, ERemoteStoragePlatform);
+		unsigned __int64 (__fastcall *FileWriteStreamOpen)(ISteamRemoteStorage*, const char*);
+		bool (__fastcall *FileWriteStreamWriteChunk)(ISteamRemoteStorage*, unsigned __int64, void*, int);
+		bool (__fastcall *FileWriteStreamClose)(ISteamRemoteStorage*, unsigned __int64);
+		bool (__fastcall *FileWriteStreamCancel)(ISteamRemoteStorage*, unsigned __int64);
+		bool (__fastcall *FileExists)(ISteamRemoteStorage*, const char*);
+		bool (__fastcall *FilePersisted)(ISteamRemoteStorage*, const char*);
+		int (__fastcall *GetFileSize)(ISteamRemoteStorage*, const char*);
+		__int64 (__fastcall *GetFileTimestamp)(ISteamRemoteStorage*, const char*);
+		ERemoteStoragePlatform (__fastcall *GetSyncPlatforms)(ISteamRemoteStorage*, const char*);
+		int (__fastcall *GetFileCount)(ISteamRemoteStorage*);
+		const char* (__fastcall *GetFileNameAndSize)(ISteamRemoteStorage*, int, int*);
+		bool (__fastcall *GetQuota)(ISteamRemoteStorage*, unsigned __int64*, unsigned __int64*);
+		bool (__fastcall *IsCloudEnabledForAccount)(ISteamRemoteStorage*);
+		bool (__fastcall *IsCloudEnabledForApp)(ISteamRemoteStorage*);
+		void (__fastcall *SetCloudEnabledForApp)(ISteamRemoteStorage*, bool);
+		unsigned __int64 (__fastcall *UGCDownload)(ISteamRemoteStorage*, unsigned __int64, unsigned int);
+		bool (__fastcall *GetUGCDownloadProgress)(ISteamRemoteStorage*, unsigned __int64, int*, int*);
+		bool (__fastcall *GetUGCDetails)(ISteamRemoteStorage*, unsigned __int64, unsigned int*, char**, int*, CSteamID*);
+		int (__fastcall *UGCRead)(ISteamRemoteStorage*, unsigned __int64, void*, int, unsigned int, EUGCReadAction);
+		int (__fastcall *GetCachedUGCCount)(ISteamRemoteStorage*);
+		unsigned __int64 (__fastcall *GetCachedUGCHandle)(ISteamRemoteStorage*, int);
+		unsigned __int64 (__fastcall *PublishWorkshopFile)(ISteamRemoteStorage*, const char*, const char*, unsigned int, const char*, const char*, ERemoteStoragePublishedFileVisibility, SteamParamStringArray_t*, EWorkshopFileType);
+		unsigned __int64 (__fastcall *CreatePublishedFileUpdateRequest)(ISteamRemoteStorage*, unsigned __int64);
+		bool (__fastcall *UpdatePublishedFileFile)(ISteamRemoteStorage*, unsigned __int64, const char*);
+		bool (__fastcall *UpdatePublishedFilePreviewFile)(ISteamRemoteStorage*, unsigned __int64, const char*);
+		bool (__fastcall *UpdatePublishedFileTitle)(ISteamRemoteStorage*, unsigned __int64, const char*);
+		bool (__fastcall *UpdatePublishedFileDescription)(ISteamRemoteStorage*, unsigned __int64, const char*);
+		bool (__fastcall *UpdatePublishedFileVisibility)(ISteamRemoteStorage*, unsigned __int64, ERemoteStoragePublishedFileVisibility);
+		bool (__fastcall *UpdatePublishedFileTags)(ISteamRemoteStorage*, unsigned __int64, SteamParamStringArray_t*);
+		unsigned __int64 (__fastcall *CommitPublishedFileUpdate)(ISteamRemoteStorage*, unsigned __int64);
+		unsigned __int64 (__fastcall *GetPublishedFileDetails)(ISteamRemoteStorage*, unsigned __int64, unsigned int);
+		unsigned __int64 (__fastcall *DeletePublishedFile)(ISteamRemoteStorage*, unsigned __int64);
+		unsigned __int64 (__fastcall *EnumerateUserPublishedFiles)(ISteamRemoteStorage*, unsigned int);
+		unsigned __int64 (__fastcall *SubscribePublishedFile)(ISteamRemoteStorage*, unsigned __int64);
+		unsigned __int64 (__fastcall *EnumerateUserSubscribedFiles)(ISteamRemoteStorage*, unsigned int);
+		unsigned __int64 (__fastcall *UnsubscribePublishedFile)(ISteamRemoteStorage*, unsigned __int64);
+		bool (__fastcall *UpdatePublishedFileSetChangeDescription)(ISteamRemoteStorage*, unsigned __int64, const char*);
+		unsigned __int64 (__fastcall *GetPublishedItemVoteDetails)(ISteamRemoteStorage*, unsigned __int64);
+		unsigned __int64 (__fastcall *UpdateUserPublishedItemVote)(ISteamRemoteStorage*, unsigned __int64, bool);
+		unsigned __int64 (__fastcall *GetUserPublishedItemVoteDetails)(ISteamRemoteStorage*, unsigned __int64);
+		unsigned __int64 (__fastcall *EnumerateUserSharedWorkshopFiles)(ISteamRemoteStorage*, CSteamID, unsigned int, SteamParamStringArray_t*, SteamParamStringArray_t*);
+		unsigned __int64 (__fastcall *PublishVideo)(ISteamRemoteStorage*, EWorkshopVideoProvider, const char*, const char*, const char*, unsigned int, const char*, const char*, ERemoteStoragePublishedFileVisibility, SteamParamStringArray_t*);
+		unsigned __int64 (__fastcall *SetUserPublishedFileAction)(ISteamRemoteStorage*, unsigned __int64, EWorkshopFileAction);
+		unsigned __int64 (__fastcall *EnumeratePublishedFilesByUserAction)(ISteamRemoteStorage*, EWorkshopFileAction, unsigned int);
+		unsigned __int64 (__fastcall *EnumeratePublishedWorkshopFiles)(ISteamRemoteStorage*, EWorkshopEnumerationType, unsigned int, unsigned int, unsigned int, SteamParamStringArray_t*, SteamParamStringArray_t*);
+		unsigned __int64 (__fastcall *UGCDownloadToLocation)(ISteamRemoteStorage*, unsigned __int64, const char*, unsigned int);
+	};
+
+
+	virtual bool FileWrite(const char* _0, void* _1, int _2)
 	{
 		return *(bool*)nullptr;
 	}
@@ -4356,7 +2669,7 @@ struct ISteamRemoteStorage
 		return *(int*)nullptr;
 	}
 
-	virtual unsigned __int64 FileWriteAsync(const char* _0, const void* _1, unsigned int _2)
+	virtual unsigned __int64 FileWriteAsync(const char* _0, void* _1, unsigned int _2)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
@@ -4396,7 +2709,7 @@ struct ISteamRemoteStorage
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual bool FileWriteStreamWriteChunk(unsigned __int64 _0, const void* _1, int _2)
+	virtual bool FileWriteStreamWriteChunk(unsigned __int64 _0, void* _1, int _2)
 	{
 		return *(bool*)nullptr;
 	}
@@ -4623,6 +2936,21 @@ struct ISteamRemoteStorage
 
 struct IDPProvider
 {
+	struct IDPProvider_vtbl
+	{
+		void (__fastcall *Connect)(IDPProvider*, int, const char*);
+		bool (__fastcall *IsConnected)(IDPProvider*);
+		void (__fastcall *Listen)(IDPProvider*, int, const char*);
+		bool (__fastcall *Pump)(IDPProvider*, DP_Event*);
+		void (__fastcall *Close)(IDPProvider*);
+		void (__fastcall *RequestSessionDetails)(IDPProvider*, int);
+		void (__fastcall *AllowJoin)(IDPProvider*, bool);
+		void (__fastcall *SetVersion)(IDPProvider*, const char*);
+		bool (__fastcall *IsBackendConnected)(IDPProvider*);
+		void (__fastcall *IDPProvider_Destructor)(IDPProvider*);
+	};
+
+
 	virtual void Connect(int _0, const char* _1)
 	{
 	}
@@ -4739,21 +3067,6 @@ struct CharString
 	}
 };
 
-struct CException : CObject
-{
-	int m_bAutoDelete;
-	int m_bReadyForDelete;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual int GetErrorMessage(char* _0, unsigned int _1, unsigned int* _2)
-	{
-		return *(int*)nullptr;
-	}
-};
-
 struct SDL_WindowUserData
 {
 	char* name;
@@ -4763,7 +3076,7 @@ struct SDL_WindowUserData
 
 struct SDL_Window
 {
-	const void* magic;
+	void* magic;
 	unsigned int id;
 	char* title;
 	SDL_Surface* icon;
@@ -4802,38 +3115,58 @@ struct SDL_DropEvent
 	char* file;
 };
 
-union SDL_Event
-{
-	SDL_EventType type;
-	SDL_CommonEvent common;
-	SDL_WindowEvent window;
-	SDL_KeyboardEvent key;
-	SDL_TextEditingEvent edit;
-	SDL_TextInputEvent text;
-	SDL_MouseMotionEvent motion;
-	SDL_MouseButtonEvent button;
-	SDL_MouseWheelEvent wheel;
-	SDL_JoyAxisEvent jaxis;
-	SDL_JoyBallEvent jball;
-	SDL_JoyHatEvent jhat;
-	SDL_JoyButtonEvent jbutton;
-	SDL_JoyDeviceEvent jdevice;
-	SDL_ControllerAxisEvent caxis;
-	SDL_ControllerButtonEvent cbutton;
-	SDL_ControllerDeviceEvent cdevice;
-	SDL_AudioDeviceEvent adevice;
-	SDL_QuitEvent quit;
-	SDL_UserEvent user;
-	SDL_SysWMEvent syswm;
-	SDL_TouchFingerEvent tfinger;
-	SDL_MultiGestureEvent mgesture;
-	SDL_DollarGestureEvent dgesture;
-	SDL_DropEvent drop;
-	Array<unsigned __int8,56> padding;
-};
-
 struct ISteamUserStats
 {
+	struct ISteamUserStats_vtbl
+	{
+		bool (__fastcall *RequestCurrentStats)(ISteamUserStats*);
+		bool (__fastcall *GetStat)(ISteamUserStats*, const char*, float*);
+		bool (__fastcall *GetStat_2)(ISteamUserStats*, const char*, int*);
+		bool (__fastcall *SetStat)(ISteamUserStats*, const char*, float);
+		bool (__fastcall *SetStat_2)(ISteamUserStats*, const char*, int);
+		bool (__fastcall *UpdateAvgRateStat)(ISteamUserStats*, const char*, float, long double);
+		bool (__fastcall *GetAchievement)(ISteamUserStats*, const char*, bool*);
+		bool (__fastcall *SetAchievement)(ISteamUserStats*, const char*);
+		bool (__fastcall *ClearAchievement)(ISteamUserStats*, const char*);
+		bool (__fastcall *GetAchievementAndUnlockTime)(ISteamUserStats*, const char*, bool*, unsigned int*);
+		bool (__fastcall *StoreStats)(ISteamUserStats*);
+		int (__fastcall *GetAchievementIcon)(ISteamUserStats*, const char*);
+		const char* (__fastcall *GetAchievementDisplayAttribute)(ISteamUserStats*, const char*, const char*);
+		bool (__fastcall *IndicateAchievementProgress)(ISteamUserStats*, const char*, unsigned int, unsigned int);
+		unsigned int (__fastcall *GetNumAchievements)(ISteamUserStats*);
+		const char* (__fastcall *GetAchievementName)(ISteamUserStats*, unsigned int);
+		unsigned __int64 (__fastcall *RequestUserStats)(ISteamUserStats*, CSteamID);
+		bool (__fastcall *GetUserStat)(ISteamUserStats*, CSteamID, const char*, float*);
+		bool (__fastcall *GetUserStat_2)(ISteamUserStats*, CSteamID, const char*, int*);
+		bool (__fastcall *GetUserAchievement)(ISteamUserStats*, CSteamID, const char*, bool*);
+		bool (__fastcall *GetUserAchievementAndUnlockTime)(ISteamUserStats*, CSteamID, const char*, bool*, unsigned int*);
+		bool (__fastcall *ResetAllStats)(ISteamUserStats*, bool);
+		unsigned __int64 (__fastcall *FindOrCreateLeaderboard)(ISteamUserStats*, const char*, ELeaderboardSortMethod, ELeaderboardDisplayType);
+		unsigned __int64 (__fastcall *FindLeaderboard)(ISteamUserStats*, const char*);
+		const char* (__fastcall *GetLeaderboardName)(ISteamUserStats*, unsigned __int64);
+		int (__fastcall *GetLeaderboardEntryCount)(ISteamUserStats*, unsigned __int64);
+		ELeaderboardSortMethod (__fastcall *GetLeaderboardSortMethod)(ISteamUserStats*, unsigned __int64);
+		ELeaderboardDisplayType (__fastcall *GetLeaderboardDisplayType)(ISteamUserStats*, unsigned __int64);
+		unsigned __int64 (__fastcall *DownloadLeaderboardEntries)(ISteamUserStats*, unsigned __int64, ELeaderboardDataRequest, int, int);
+		unsigned __int64 (__fastcall *DownloadLeaderboardEntriesForUsers)(ISteamUserStats*, unsigned __int64, CSteamID*, int);
+		bool (__fastcall *GetDownloadedLeaderboardEntry)(ISteamUserStats*, unsigned __int64, int, LeaderboardEntry_t*, int*, int);
+		unsigned __int64 (__fastcall *UploadLeaderboardScore)(ISteamUserStats*, unsigned __int64, ELeaderboardUploadScoreMethod, int, const int*, int);
+		unsigned __int64 (__fastcall *AttachLeaderboardUGC)(ISteamUserStats*, unsigned __int64, unsigned __int64);
+		unsigned __int64 (__fastcall *GetNumberOfCurrentPlayers)(ISteamUserStats*);
+		unsigned __int64 (__fastcall *RequestGlobalAchievementPercentages)(ISteamUserStats*);
+		int (__fastcall *GetMostAchievedAchievementInfo)(ISteamUserStats*, char*, unsigned int, float*, bool*);
+		int (__fastcall *GetNextMostAchievedAchievementInfo)(ISteamUserStats*, int, char*, unsigned int, float*, bool*);
+		bool (__fastcall *GetAchievementAchievedPercent)(ISteamUserStats*, const char*, float*);
+		unsigned __int64 (__fastcall *RequestGlobalStats)(ISteamUserStats*, int);
+		bool (__fastcall *GetGlobalStat)(ISteamUserStats*, const char*, long double*);
+		bool (__fastcall *GetGlobalStat_2)(ISteamUserStats*, const char*, __int64*);
+		int (__fastcall *GetGlobalStatHistory)(ISteamUserStats*, const char*, long double*, unsigned int);
+		int (__fastcall *GetGlobalStatHistory_2)(ISteamUserStats*, const char*, __int64*, unsigned int);
+		bool (__fastcall *GetAchievementProgressLimits)(ISteamUserStats*, const char*, float*, float*);
+		bool (__fastcall *GetAchievementProgressLimits_2)(ISteamUserStats*, const char*, int*, int*);
+	};
+
+
 	virtual bool RequestCurrentStats()
 	{
 		return *(bool*)nullptr;
@@ -5062,6 +3395,90 @@ struct ISteamUserStats
 
 struct ISteamUGC
 {
+	struct ISteamUGC_vtbl
+	{
+		unsigned __int64 (__fastcall *CreateQueryUserUGCRequest)(ISteamUGC*, unsigned int, EUserUGCList, EUGCMatchingUGCType, EUserUGCListSortOrder, unsigned int, unsigned int, unsigned int);
+		unsigned __int64 (__fastcall *CreateQueryAllUGCRequest)(ISteamUGC*, EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, const char*);
+		unsigned __int64 (__fastcall *CreateQueryAllUGCRequest_2)(ISteamUGC*, EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, unsigned int);
+		unsigned __int64 (__fastcall *CreateQueryUGCDetailsRequest)(ISteamUGC*, unsigned __int64*, unsigned int);
+		unsigned __int64 (__fastcall *SendQueryUGCRequest)(ISteamUGC*, unsigned __int64);
+		bool (__fastcall *GetQueryUGCResult)(ISteamUGC*, unsigned __int64, unsigned int, SteamUGCDetails_t*);
+		bool (__fastcall *GetQueryUGCPreviewURL)(ISteamUGC*, unsigned __int64, unsigned int, char*, unsigned int);
+		bool (__fastcall *GetQueryUGCMetadata)(ISteamUGC*, unsigned __int64, unsigned int, char*, unsigned int);
+		bool (__fastcall *GetQueryUGCChildren)(ISteamUGC*, unsigned __int64, unsigned int, unsigned __int64*, unsigned int);
+		bool (__fastcall *GetQueryUGCStatistic)(ISteamUGC*, unsigned __int64, unsigned int, EItemStatistic, unsigned __int64*);
+		unsigned int (__fastcall *GetQueryUGCNumAdditionalPreviews)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *GetQueryUGCAdditionalPreview)(ISteamUGC*, unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int, EItemPreviewType*);
+		unsigned int (__fastcall *GetQueryUGCNumKeyValueTags)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *GetQueryUGCKeyValueTag)(ISteamUGC*, unsigned __int64, unsigned int, const char*, char*, unsigned int);
+		bool (__fastcall *GetQueryUGCKeyValueTag_2)(ISteamUGC*, unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int);
+		bool (__fastcall *ReleaseQueryUGCRequest)(ISteamUGC*, unsigned __int64);
+		bool (__fastcall *AddRequiredTag)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *AddRequiredTagGroup)(ISteamUGC*, unsigned __int64, const SteamParamStringArray_t*);
+		bool (__fastcall *AddExcludedTag)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetReturnOnlyIDs)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnKeyValueTags)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnLongDescription)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnMetadata)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnChildren)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnAdditionalPreviews)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnTotalOnly)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnPlaytimeStats)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *SetLanguage)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetAllowCachedResponse)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *SetCloudFileNameFilter)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetMatchAnyTag)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetSearchText)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetRankedByTrendDays)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *AddRequiredKeyValueTag)(ISteamUGC*, unsigned __int64, const char*, const char*);
+		unsigned __int64 (__fastcall *RequestUGCDetails)(ISteamUGC*, unsigned __int64, unsigned int);
+		unsigned __int64 (__fastcall *CreateItem)(ISteamUGC*, unsigned int, EWorkshopFileType);
+		unsigned __int64 (__fastcall *StartItemUpdate)(ISteamUGC*, unsigned int, unsigned __int64);
+		bool (__fastcall *SetItemTitle)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemDescription)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemUpdateLanguage)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemMetadata)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemVisibility)(ISteamUGC*, unsigned __int64, ERemoteStoragePublishedFileVisibility);
+		bool (__fastcall *SetItemTags)(ISteamUGC*, unsigned __int64, const SteamParamStringArray_t*);
+		bool (__fastcall *SetItemContent)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemPreview)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetAllowLegacyUpload)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *RemoveAllItemKeyValueTags)(ISteamUGC*, unsigned __int64);
+		bool (__fastcall *RemoveItemKeyValueTags)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *AddItemKeyValueTag)(ISteamUGC*, unsigned __int64, const char*, const char*);
+		bool (__fastcall *AddItemPreviewFile)(ISteamUGC*, unsigned __int64, const char*, EItemPreviewType);
+		bool (__fastcall *AddItemPreviewVideo)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *UpdateItemPreviewFile)(ISteamUGC*, unsigned __int64, unsigned int, const char*);
+		bool (__fastcall *UpdateItemPreviewVideo)(ISteamUGC*, unsigned __int64, unsigned int, const char*);
+		bool (__fastcall *RemoveItemPreview)(ISteamUGC*, unsigned __int64, unsigned int);
+		unsigned __int64 (__fastcall *SubmitItemUpdate)(ISteamUGC*, unsigned __int64, const char*);
+		EItemUpdateStatus (__fastcall *GetItemUpdateProgress)(ISteamUGC*, unsigned __int64, unsigned __int64*, unsigned __int64*);
+		unsigned __int64 (__fastcall *SetUserItemVote)(ISteamUGC*, unsigned __int64, bool);
+		unsigned __int64 (__fastcall *GetUserItemVote)(ISteamUGC*, unsigned __int64);
+		unsigned __int64 (__fastcall *AddItemToFavorites)(ISteamUGC*, unsigned int, unsigned __int64);
+		unsigned __int64 (__fastcall *RemoveItemFromFavorites)(ISteamUGC*, unsigned int, unsigned __int64);
+		unsigned __int64 (__fastcall *SubscribeItem)(ISteamUGC*, unsigned __int64);
+		unsigned __int64 (__fastcall *UnsubscribeItem)(ISteamUGC*, unsigned __int64);
+		unsigned int (__fastcall *GetNumSubscribedItems)(ISteamUGC*);
+		unsigned int (__fastcall *GetSubscribedItems)(ISteamUGC*, unsigned __int64*, unsigned int);
+		unsigned int (__fastcall *GetItemState)(ISteamUGC*, unsigned __int64);
+		bool (__fastcall *GetItemInstallInfo)(ISteamUGC*, unsigned __int64, unsigned __int64*, char*, unsigned int, unsigned int*);
+		bool (__fastcall *GetItemDownloadInfo)(ISteamUGC*, unsigned __int64, unsigned __int64*, unsigned __int64*);
+		bool (__fastcall *DownloadItem)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *BInitWorkshopForGameServer)(ISteamUGC*, unsigned int, const char*);
+		void (__fastcall *SuspendDownloads)(ISteamUGC*, bool);
+		unsigned __int64 (__fastcall *StartPlaytimeTracking)(ISteamUGC*, unsigned __int64*, unsigned int);
+		unsigned __int64 (__fastcall *StopPlaytimeTracking)(ISteamUGC*, unsigned __int64*, unsigned int);
+		unsigned __int64 (__fastcall *StopPlaytimeTrackingForAllItems)(ISteamUGC*);
+		unsigned __int64 (__fastcall *AddDependency)(ISteamUGC*, unsigned __int64, unsigned __int64);
+		unsigned __int64 (__fastcall *RemoveDependency)(ISteamUGC*, unsigned __int64, unsigned __int64);
+		unsigned __int64 (__fastcall *AddAppDependency)(ISteamUGC*, unsigned __int64, unsigned int);
+		unsigned __int64 (__fastcall *RemoveAppDependency)(ISteamUGC*, unsigned __int64, unsigned int);
+		unsigned __int64 (__fastcall *GetAppDependencies)(ISteamUGC*, unsigned __int64);
+		unsigned __int64 (__fastcall *DeleteItem)(ISteamUGC*, unsigned __int64);
+	};
+
+
 	virtual unsigned __int64 CreateQueryUserUGCRequest(unsigned int _0, EUserUGCList _1, EUGCMatchingUGCType _2, EUserUGCListSortOrder _3, unsigned int _4, unsigned int _5, unsigned int _6)
 	{
 		return *(unsigned __int64*)nullptr;
@@ -5459,6 +3876,16 @@ struct ISteamUGC
 
 struct IDPPeer
 {
+	struct IDPPeer_vtbl
+	{
+		void (__fastcall *Send)(IDPPeer*, DP_Packet*, int);
+		DP_Packet* (__fastcall *GetFrontPacket)(IDPPeer*);
+		int (__fastcall *HasData)(IDPPeer*);
+		void (__fastcall *Disconnect)(IDPPeer*);
+		void (__fastcall *GetAddress)(IDPPeer*, char*, unsigned __int64);
+		void (__fastcall *IDPPeer_Destructor)(IDPPeer*);
+	};
+
 	int m_packetSentCount;
 	int m_packetReceivedCount;
 
@@ -5494,169 +3921,11 @@ struct CString
 	char* m_pchData;
 };
 
-typedef void (*type_CAIObjectType_Set)(CAIObjectType* pThis, CAIObjectType* that);
-extern type_CAIObjectType_Set p_CAIObjectType_Set;
-
-struct CAIObjectType
-{
-	static CAIObjectType* p_NOONE;
-	CString m_name;
-	unsigned __int8 m_EnemyAlly;
-	unsigned __int8 m_General;
-	unsigned __int8 m_Race;
-	unsigned __int8 m_Class;
-	int m_Instance;
-	Array<unsigned __int8,5> m_SpecialCase;
-	unsigned __int8 m_Specifics;
-	unsigned __int8 m_Gender;
-	unsigned __int8 m_Alignment;
-
-	void Set(CAIObjectType* that)
-	{
-		p_CAIObjectType_Set(this, that);
-	}
-};
-
-struct CAITrigger
-{
-	__int16 m_triggerID;
-	int m_specificID;
-	CAIObjectType m_triggerCause;
-	int m_flags;
-	int m_specific2;
-	int m_specific3;
-	CString m_string1;
-	CString m_string2;
-};
-
-struct CSelectiveBonus
-{
-	CAIObjectType m_type;
-	int m_bonus;
-};
-
-struct CSelectiveWeaponType
-{
-	int m_slot;
-	CAIObjectType m_type;
-	CWeaponIdentification m_weapon;
-};
-
-struct CBaldurMessage
-{
-	unsigned __int8 m_bInOnObjectAdd;
-	unsigned __int8 m_bInOnObjectDelete;
-	unsigned __int8 m_bInOnRestAnnounce;
-	unsigned __int8 m_bInOnJournalAnnounce;
-	unsigned __int8 m_bInOnAreaMapNoteAnnounce;
-	unsigned __int8 m_bInOnAnnounceBiography;
-	unsigned __int8 m_bInHandleBlockingMessages;
-	unsigned __int8 m_bPlayerShutdown;
-	CChatBuffer m_cChatBuffer;
-	unsigned __int8 m_nSignalQueueSize;
-	unsigned __int8 m_nSignalQueueStart;
-	unsigned __int8 m_nSignalQueueEnd;
-	Array<unsigned __int8,24> m_pnSignalFrom;
-	Array<unsigned __int8,24> m_pnSignalType;
-	Array<unsigned __int8,24> m_pnSignalData;
-	unsigned __int8 m_bDeleteAreaPolling;
-	CString m_sDeleteAreaString;
-	unsigned int m_dwDeleteAreaTimeout;
-	Array<unsigned __int8,6> m_pnDeleteAreaVotes;
-	Array<int,6> m_pnDeleteAreaVoters;
-	unsigned __int8 m_bCloseSessionPolling;
-	unsigned int m_dwCloseSessionTimeout;
-	Array<unsigned __int8,6> m_pnCloseSessionVotes;
-	Array<int,6> m_pnCloseSessionVoters;
-	Array<int,6> m_pRemovedPlayerID;
-	unsigned __int8 m_bRemovedPlayerID;
-	unsigned __int8 m_bDialogRequestPending;
-	unsigned __int8 m_bDialogReplyReturned;
-	unsigned __int8 m_bDialogReplyValue;
-	int m_nDialogReplyUpdates;
-	unsigned __int8 m_bLeaveAreaLuaRequestPending;
-	unsigned __int8 m_bLeaveAreaLuaReplyReturned;
-	unsigned __int8 m_nLeaveAreaLuaReplyValue;
-	unsigned __int8 m_bLeaveAreaNameRequestPending;
-	unsigned __int8 m_bLeaveAreaNameReplyReturned;
-	unsigned __int8 m_nLeaveAreaNameReplyValue;
-	unsigned __int8 m_bMultiplayerSynchClientPending;
-	unsigned __int8 m_bMultiplayerSynchClientFinished;
-	unsigned __int8 m_bMultiplayerSynchServerPending;
-	unsigned __int8 m_bMultiplayerSynchServerFinished;
-	unsigned __int8 m_nMultiplayerSynchClientLocation;
-	unsigned __int8 m_bVersionControlShutdown;
-	CString m_sVersionControlShutdownClientString;
-	CString m_sVersionControlShutdownServerString;
-	unsigned __int8 m_nVersionControlShutdownReason;
-	unsigned int m_dwSignalSecondsToTimeout;
-	unsigned __int8 m_bMultiplayerSessionShutdown;
-	unsigned __int8 m_bInReputationChange;
-	unsigned __int8 m_bInMessageSetDrawPoly;
-};
-
-struct CSteam
-{
-	struct SubscribedItems
-	{
-		Array<unsigned __int64,16> vecPublished;
-		int curSubscribed;
-		int numSubscribed;
-	};
-
-	bool m_isSteamConnected;
-	CSteamID m_SteamID;
-	CCallResult<CSteam,CreateItemResult_t> m_CreateItemCompleted;
-	CCallResult<CSteam,SteamUGCQueryCompleted_t> m_PublishedQueryCompleted;
-	CCallResult<CSteam,SubmitItemUpdateResult_t> m_SubmitItemUpdateCompleted;
-	int m_RemainingPublished;
-	int m_CurPagePublished;
-	CString m_PublishingName;
-	CString m_PublishingDir;
-	int m_CloudState;
-	CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t> m_RequestUGCDetailsCompleted;
-	CSteam::SubscribedItems m_Subscribed;
-	unsigned __int64 m_nUploadId;
-	ISteamRemoteStorage* m_RemoteStorage;
-	ISteamUGC* m_UGC;
-	ISteamUserStats* m_UserStats;
-	void (*logger)(const char*, ...);
-};
-
 struct CAIId
 {
 	int m_id;
 	CString m_line;
 	CString m_start;
-};
-
-struct CAbilityData
-{
-	CResRef m_icon;
-	unsigned int m_name;
-	CString m_effect;
-	int m_nMinLevel;
-	int m_nMaxLevel;
-	int m_nNumAllowed;
-	CString m_sPrereq;
-	CString m_sExcludedBy;
-	CString m_sAlignmentRestriction;
-};
-
-struct CFileException : CException
-{
-	int m_cause;
-	int m_lOsError;
-	CString m_strFileName;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual int GetErrorMessage(char* _0, unsigned int _1, unsigned int* _2)
-	{
-		return *(int*)nullptr;
-	}
 };
 
 struct CFeedbackEntry
@@ -5670,15 +3939,1264 @@ struct CFeedbackEntry
 	CString stringIn;
 };
 
-struct CFile : CObject
+struct CNetworkConnectionSettings
 {
-	unsigned int m_hFile;
-	int m_bCloseOnDelete;
-	CString m_strFileName;
+	unsigned int dwFlags;
+	unsigned int dwMaxPlayers;
+	CString sPlayerName;
+};
+
+struct CSpawnVar
+{
+	CString mScope;
+	CString mLabel;
+};
+
+struct CSpawnPointVar : CSpawnVar
+{
+};
+
+struct CVidPoly
+{
+	CVIDPOLY_VERTEX* m_pVertices;
+	int m_nVertices;
+	_EdgeDescription* m_pET;
+	_EdgeDescription* m_pAET;
+	void (__fastcall *m_pDrawHLineFunction)(CVidPoly*, void*, int, int, unsigned int, const CRect*, const CPoint*);
+};
+
+struct CSpawnPoint
+{
+	struct CSpawnPoint_vtbl
+	{
+		void (__fastcall *CSpawnPoint_Destructor)(CSpawnPoint*);
+	};
+
+	CPoint mLocation;
+	int mFacing;
+
+	virtual void CSpawnPoint_Destructor()
+	{
+	}
+};
+
+typedef void (*type_CRes_Construct)(CRes* pThis);
+extern type_CRes_Construct p_CRes_Construct;
+
+typedef void (*type_CRes_Destruct)(CRes* pThis);
+extern type_CRes_Destruct p_CRes_Destruct;
+
+typedef void* (*type_CRes_Demand)(CRes* pThis);
+extern type_CRes_Demand p_CRes_Demand;
+
+struct CRes
+{
+	struct CRes_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	const char* resref;
+	int type;
+	view_t view;
+	unsigned int nID;
+	int zip_id;
+	int override_id;
+	void* pData;
+	unsigned int nSize;
+	unsigned int nCount;
+	bool bWasMalloced;
+	bool bLoaded;
+
+	CRes()
+	{
+		p_CRes_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_CRes_Destruct(this);
+	}
+
+	void* Demand()
+	{
+		return p_CRes_Demand(this);
+	}
+
+	virtual bool Parse(void* _0)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual void Dump()
+	{
+	}
+
+	virtual CResRef* GetResRef()
+	{
+		return *(CResRef**)nullptr;
+	}
+};
+
+struct CResWebm : CRes
+{
+	struct CResWebm_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	void* m_pCodec;
+	unsigned int m_nFirstFrameTime;
+	unsigned int m_nFrameWaitTime;
+	bool m_bComplete;
+	bool m_bLooping;
+	CRect m_rRender;
+	int m_texture;
+	bool m_bGreyscale;
+	bool m_bTiled;
+	int m_nTransparent;
+	bool m_bUseTone;
+	float m_nDeltaX;
+	float m_nDeltaY;
+	float m_nOffsetX;
+	float m_nOffsetY;
+};
+
+struct CResWave : CRes
+{
+	struct CResWave_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	int m_bCompressed;
+	int m_bIsOgg;
+	unsigned int m_nWaveNormalSize;
+	unsigned int m_nWaveCompressedSize;
+	unsigned __int8* m_pWaveData;
+	WAV_Header* m_pWaveFormatEx;
+};
+
+struct CResWED : CRes
+{
+	struct CResWED_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	WED_WedHeader_st* pWEDHeader;
+	WED_LayerHeader_st* pLayers;
+	WED_PolyHeader_st* pPolyHeader;
+	WED_ScreenSectionList* pScreenSectionList;
+	WED_PolyList_st* pPolyList;
+	WED_PolyPoint_st* pPolyPoints;
+};
+
+struct CResTileSet : CRes
+{
+	struct CResTileSet_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	ResFixedHeader_st* h;
+};
+
+struct CResText : CRes
+{
+	struct CResText_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	CString m_string;
+};
+
+struct CResSpell : CRes
+{
+	struct CResSpell_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	Spell_ability_st* pAbilities;
+	Item_effect_st* pEffects;
+	Spell_Header_st* pHeader;
+};
+
+struct CResPVR : CRes
+{
+	struct CResPVR_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	int texture;
+	int format;
+	int filtering;
+	CSize size;
+};
+
+struct CResMosaic : CRes
+{
+	struct CResMosaic_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	void* pUncompressedData;
+	unsigned int nUncompressedSize;
+	int texture;
+	MOSAICHEADERV2* pMosaicHeaderV2;
+	MOSAICQUAD* quads;
+	mosHeader_st* pMosaicHeader;
+	tagRGBQUAD* pPalettes;
+	unsigned __int8* m_pData;
+	unsigned int* pOffsets;
+};
+
+struct CResItem : CRes
+{
+	struct CResItem_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	Item_ability_st* pAbilities;
+	Item_effect_st* pEffects;
+	Item_Header_st* pHeader;
+};
+
+struct CResGame : CRes
+{
+	struct CResGame_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+};
+
+struct CResFont : CRes
+{
+	struct CResFont_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	void* font;
+};
+
+struct CResCell : CRes
+{
+	struct CResCell_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	void* pUncompressedData;
+	unsigned int nUncompressedSize;
+	bamHeader_st* m_pBamHeader;
+	BAMHEADERV2* m_pBamHeaderV2;
+	MOSAICQUAD* m_pQuads;
+	frameTableEntry_st* m_pFrames;
+	sequenceTableEntry_st* m_pSequences;
+	unsigned __int16* m_pFrameList;
+	unsigned __int16 m_nFrameList;
+	tagRGBQUAD* m_pPalette;
+	int m_bParsing;
+};
+
+struct CResBitmap : CRes
+{
+	struct CResBitmap_vtbl
+	{
+		bool (__fastcall *Parse)(CRes*, void*);
+		void (__fastcall *Dump)(CRes*);
+		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+	};
+
+	unsigned __int8* m_pDataDecompressed;
+	int texture;
+	int nColors;
+	int nXWords;
+	unsigned __int8* m_pData;
+	tagBITMAPFILEHEADER* pBitmapFileHeader;
+	tagBITMAPINFOHEADER* pBitmapInfoHeader;
+	tagRGBQUAD* pColorTable;
+};
+
+struct CPersistantEffect
+{
+	struct CPersistantEffect_vtbl
+	{
+		void (__fastcall *CPersistantEffect_Destructor)(CPersistantEffect*);
+		void (__fastcall *AIUpdate)(CPersistantEffect*, CGameSprite*, int);
+		CPersistantEffect* (__fastcall *Copy)(CPersistantEffect*);
+	};
+
+	int m_done;
+	int m_deleted;
+	__int16 m_numDamage;
+	__int16 m_persistantType;
+	int m_sourceID;
+	__int16 m_period;
+	__int16 m_periodCounter;
+	int m_counter;
+
+	virtual void CPersistantEffect_Destructor()
+	{
+	}
+
+	virtual void AIUpdate(CGameSprite* _0, int _1)
+	{
+	}
+
+	virtual CPersistantEffect* Copy()
+	{
+		return *(CPersistantEffect**)nullptr;
+	}
+};
+
+struct CObject
+{
+	struct CObject_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
 
 	virtual void CObject_Destructor()
 	{
 	}
+};
+
+template<class TYPE, class ARG_TYPE>
+struct CList : CObject
+{
+	struct CNode
+	{
+		CList::CNode* pNext;
+		CList::CNode* pPrev;
+		TYPE data;
+	};
+
+	CList::CNode* m_pNodeHead;
+	CList::CNode* m_pNodeTail;
+	int m_nCount;
+	CList::CNode* m_pNodeFree;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+};
+
+template<class BASE_CLASS, class T>
+struct CTypedPtrList : CObject
+{
+	struct CNode
+	{
+		CTypedPtrList::CNode* pNext;
+		CTypedPtrList::CNode* pPrev;
+		T data;
+	};
+
+	CTypedPtrList::CNode* m_pNodeHead;
+	CTypedPtrList::CNode* m_pNodeTail;
+	int m_nCount;
+	CTypedPtrList::CNode* m_pNodeFree;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+
+	void RemoveHead()
+	{
+		((CObList*)this)->RemoveHead();
+	}
+
+	void Destruct()
+	{
+		((CObList*)this)->Destruct();
+	}
+};
+
+template<class BASE_CLASS, class T>
+struct CTypedPtrArray : CObject
+{
+	T* m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
+};
+
+struct CStringList : CObject
+{
+	struct CNode
+	{
+		CStringList::CNode* pNext;
+		CStringList::CNode* pPrev;
+		CString data;
+	};
+
+	struct CStringList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CStringList::CNode* m_pNodeHead;
+	CStringList::CNode* m_pNodeTail;
+	int m_nCount;
+	CStringList::CNode* m_pNodeFree;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+};
+
+struct CPtrList : CObject
+{
+	struct CNode
+	{
+		CPtrList::CNode* pNext;
+		CPtrList::CNode* pPrev;
+		void* data;
+	};
+
+	struct CPtrList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CPtrList::CNode* m_pNodeHead;
+	CPtrList::CNode* m_pNodeTail;
+	int m_nCount;
+	CPtrList::CNode* m_pNodeFree;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+};
+
+struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
+{
+	struct CPersistantEffectList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffect*>
+{
+	struct CPersistantEffectListRegenerated_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	unsigned int m_nCounter;
+};
+
+struct CAIGroup
+{
+	__int16 m_groupId;
+	int m_groupChanged;
+	CTypedPtrList<CPtrList,long> m_memberList;
+};
+
+struct CAIResponseSet
+{
+	CTypedPtrList<CPtrList,CAIResponse*> m_responseList;
+	int m_weightTotal;
+};
+
+struct CChatBuffer
+{
+	CTypedPtrList<CPtrList,CString*> m_lLabels;
+	CTypedPtrList<CPtrList,CString*> m_lMessages;
+	int m_nMessageCount;
+	int m_nDisplayCount;
+};
+
+struct CMessageHandler
+{
+	CTypedPtrList<CPtrList,CMessage*> m_messageList;
+	unsigned __int8 m_bLastArbitrationLockStatus;
+};
+
+struct CAIResponse
+{
+	__int16 m_weight;
+	__int16 m_responseNum;
+	__int16 m_responseSetNum;
+	__int16 m_scriptNum;
+	CTypedPtrList<CPtrList,CAIAction*> m_actionList;
+};
+
+struct CAICondition
+{
+	CTypedPtrList<CPtrList,CAITrigger*> m_triggerList;
+};
+
+struct CAIConditionResponse
+{
+	CAICondition m_condition;
+	CAIResponseSet m_responseSet;
+};
+
+struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
+{
+	struct CSpawnList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CString mSectionAlias;
+	int ReceivedFirstSpawnCall;
+	unsigned int LastSpawnTime;
+	int CheckSpawnTimes;
+	unsigned int SpawnTimeOfDay;
+	unsigned int mInterval;
+	CSpawnVar* pControlVar;
+};
+
+struct CSpawnFile : CTypedPtrList<CPtrList,void*>
+{
+	struct CSpawnFile_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CSpawnList* mpExitList;
+	CSpawnList* mpEnterList;
+	int m_bInSpawn;
+};
+
+struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
+{
+	struct CSequenceSoundList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	__POSITION* m_currentSound;
+	int m_soundPlaying;
+	int m_channel;
+};
+
+struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
+{
+	struct CSelectiveWeaponTypeList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
+{
+	struct CSelectiveBonusList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CPtrArray : CObject
+{
+	struct CPtrArray_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	void** m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
+};
+
+struct CGameJournal
+{
+	int IWD_TimeCheat;
+	CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*> m_aChapters;
+};
+
+struct CImportGame
+{
+	unsigned __int8 m_bDrizztDead;
+	CGameFile* m_pGame;
+	unsigned __int8 m_nVersion;
+	CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*> m_aPartyCreatures;
+	CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*> m_aNonPartyCreatures;
+	CTypedPtrArray<CPtrArray,unsigned char*> m_aCreatureData;
+	CTypedPtrArray<CPtrArray,unsigned char*> m_aNPCData;
+	int m_nGlobalVariables;
+	unsigned __int8* m_pGlobalVariables;
+	unsigned int m_nPartyGold;
+	unsigned int m_nReputation;
+};
+
+struct CSpawnPointArray : CTypedPtrArray<CPtrArray,CSpawnPoint*>
+{
+	struct CSpawnPointArray_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	int mDefaultFacing;
+};
+
+typedef CObject* (*type_CObList_RemoveHead)(CObList* pThis);
+extern type_CObList_RemoveHead p_CObList_RemoveHead;
+
+typedef void (*type_CObList_Destruct)(CObList* pThis);
+extern type_CObList_Destruct p_CObList_Destruct;
+
+struct CObList : CObject
+{
+	struct CNode
+	{
+		CObList::CNode* pNext;
+		CObList::CNode* pPrev;
+		CObject* data;
+	};
+
+	struct CObList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CObList::CNode* m_pNodeHead;
+	CObList::CNode* m_pNodeTail;
+	int m_nCount;
+	CObList::CNode* m_pNodeFree;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+
+	CObject* RemoveHead()
+	{
+		return p_CObList_RemoveHead(this);
+	}
+
+	void Destruct()
+	{
+		p_CObList_Destruct(this);
+	}
+};
+
+struct CWarp : CObject
+{
+	struct CWarp_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+	};
+
+	CWarp* pLastEngine;
+	CObList lTimers;
+
+	virtual void InvalidateCursorRect(const CRect* _0)
+	{
+	}
+
+	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
+	{
+	}
+
+	virtual void RequestPause()
+	{
+	}
+
+	virtual void EngineActivated()
+	{
+	}
+
+	virtual void EngineDeactivated()
+	{
+	}
+
+	virtual void EngineDestroyed()
+	{
+	}
+
+	virtual void EngineInitialized()
+	{
+	}
+
+	virtual void EngineGameInit()
+	{
+	}
+
+	virtual void EngineGameUninit()
+	{
+	}
+
+	virtual void SelectEngine(CWarp* _0)
+	{
+	}
+
+	virtual bool OnEvent(SDL_Event* _0)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual int GetEngineState()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int CheckSystemKeyCtrl()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
+	{
+	}
+
+	virtual int GetCtrlKey()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int CheckSystemKeyShift()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void SetSystemKeyShift(int _0)
+	{
+	}
+
+	virtual int GetShiftKey()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int CheckSystemKeyMenu()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void SetSystemKeyMenu(int _0)
+	{
+	}
+
+	virtual int CheckSystemKeyCapsLock()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void SetSystemKeyCapsLock(int _0)
+	{
+	}
+
+	virtual int GetCapsLockKey()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int GetMenuKey()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int CheckMouseMove()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void OnMouseMove(CPoint _0)
+	{
+	}
+
+	virtual int CheckMouseLButton()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void OnLButtonDblClk(CPoint _0)
+	{
+	}
+
+	virtual void OnLButtonDown(CPoint _0)
+	{
+	}
+
+	virtual void OnLButtonUp(CPoint _0)
+	{
+	}
+
+	virtual int CheckMouseMButton()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void OnMButtonDblClk(CPoint _0)
+	{
+	}
+
+	virtual void OnMButtonDown(CPoint _0)
+	{
+	}
+
+	virtual void OnMButtonUp(CPoint _0)
+	{
+	}
+
+	virtual int CheckMouseRButton()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void OnRButtonDblClk(CPoint _0)
+	{
+	}
+
+	virtual void OnRButtonDown(CPoint _0)
+	{
+	}
+
+	virtual void OnRButtonUp(CPoint _0)
+	{
+	}
+
+	virtual int CheckMouseWheel()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
+	{
+	}
+
+	virtual __int16 GetNumVirtualKeys()
+	{
+		return *(__int16*)nullptr;
+	}
+
+	virtual CKeyInfo* GetVirtualKeys()
+	{
+		return *(CKeyInfo**)nullptr;
+	}
+
+	virtual int* GetVirtualKeysFlags()
+	{
+		return *(int**)nullptr;
+	}
+
+	virtual void OnKeyDown(int _0)
+	{
+	}
+
+	virtual void OnKeyUp(int _0)
+	{
+	}
+
+	virtual void OnTextInput(const char* _0)
+	{
+	}
+
+	virtual void WindowResized(int _0, int _1)
+	{
+	}
+
+	virtual void OnLowMemory()
+	{
+	}
+
+	virtual void EnableEditKeys(__int16 _0)
+	{
+	}
+
+	virtual void DisableEditKeys()
+	{
+	}
+
+	virtual void ResetControls()
+	{
+	}
+
+	virtual void TimerAsynchronousUpdate()
+	{
+	}
+
+	virtual void TimerSynchronousUpdate()
+	{
+	}
+
+	virtual void TimerUpdate()
+	{
+	}
+
+	virtual void RenderUI()
+	{
+	}
+};
+
+struct CObArray : CObject
+{
+	struct CObArray_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CObject** m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
+};
+
+struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
+{
+	struct CMoveList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CMessage
+{
+	struct CMessage_vtbl
+	{
+		void (__fastcall *CMessage_Destructor)(CMessage*);
+		__int16 (__fastcall *GetCommType)(CMessage*);
+		unsigned __int8 (__fastcall *GetMsgType)(CMessage*);
+		unsigned __int8 (__fastcall *GetMsgSubType)(CMessage*);
+		void (__fastcall *MarshalMessage)(CMessage*, unsigned __int8**, unsigned int*);
+		int (__fastcall *UnmarshalMessage)(CMessage*, unsigned __int8*, unsigned int);
+		void (__fastcall *Run)(CMessage*);
+	};
+
+	int m_targetId;
+	int m_sourceId;
+
+	virtual void CMessage_Destructor()
+	{
+	}
+
+	virtual __int16 GetCommType()
+	{
+		return *(__int16*)nullptr;
+	}
+
+	virtual unsigned __int8 GetMsgType()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual unsigned __int8 GetMsgSubType()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void MarshalMessage(unsigned __int8** _0, unsigned int* _1)
+	{
+	}
+
+	virtual int UnmarshalMessage(unsigned __int8* _0, unsigned int _1)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void Run()
+	{
+	}
+};
+
+struct CMemINIValue
+{
+	struct CMemINIValue_vtbl
+	{
+		void (__fastcall *CMemINIValue_Destructor)(CMemINIValue*);
+	};
+
+	CString mName;
+	CString mValue;
+
+	virtual void CMemINIValue_Destructor()
+	{
+	}
+};
+
+struct CMemINISection : CTypedPtrList<CPtrList,CMemINIValue*>
+{
+	struct CMemINISection_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CString mSectionName;
+};
+
+struct CMemINI : CTypedPtrList<CPtrList,void*>
+{
+	struct CMemINI_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CString mFileName;
+	CMemINISection* mpLastSection;
+};
+
+struct CMapStringToString : CObject
+{
+	struct CAssoc
+	{
+		CMapStringToString::CAssoc* pNext;
+		unsigned int nHashValue;
+		CString key;
+		CString value;
+	};
+
+	struct CMapStringToString_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CMapStringToString::CAssoc** m_pHashTable;
+	unsigned int m_nHashTableSize;
+	int m_nCount;
+	CMapStringToString::CAssoc* m_pFreeList;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+};
+
+struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
+{
+	struct CImmunitiesWeapon_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
+{
+	struct CImmunitiesSpellList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>
+{
+	struct CImmunitiesSchoolAndSecondaryDecrementing_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
+{
+	struct CImmunitiesSchoolAndSecondary_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
+{
+	struct CImmunitiesProjectile_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>
+{
+	struct CImmunitiesItemTypeEquipList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
+{
+	struct CImmunitiesItemEquipList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	struct CImmunitiesEffect_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
+{
+	struct CImmunitiesAIType_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
+{
+	struct CGameEffectUsabilityList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	struct CGameEffectList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	__POSITION* m_posNext;
+	__POSITION* m_posCurrent;
+	int m_newEffect;
+	int m_retry;
+};
+
+struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
+{
+	struct CGameDialogEntry_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	unsigned int m_dialogText;
+	CAICondition m_startCondition;
+	int m_picked;
+	unsigned int m_conditionPriority;
+	unsigned int m_dialogIndex;
+	unsigned __int8 m_bDisplayButton;
+};
+
+struct CGameButtonList : CTypedPtrList<CPtrList,CButtonData*>
+{
+	struct CGameButtonList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	int m_nFirstMageSpellIndex;
+};
+
+struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
+{
+	struct CGameAbilityList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+};
+
+struct CFile : CObject
+{
+	struct CFile_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		unsigned int (__fastcall *GetPosition)(CFile*);
+		CString* (__fastcall *GetFileName)(CFile*, CString*);
+		CString* (__fastcall *GetFileTitle)(CFile*, CString*);
+		CString* (__fastcall *GetFilePath)(CFile*, CString*);
+		void (__fastcall *SetFilePath)(CFile*, const char*);
+		int (__fastcall *Open)(CFile*, const char*, unsigned int, CFileException*);
+		int (__fastcall *Seek)(CFile*, int, unsigned int);
+		void (__fastcall *SetLength)(CFile*, unsigned int);
+		unsigned int (__fastcall *GetLength)(CFile*);
+		unsigned int (__fastcall *Read)(CFile*, void*, unsigned int);
+		unsigned int (__fastcall *Write)(CFile*, void*, unsigned int);
+		void (__fastcall *Abort)(CFile*);
+		void (__fastcall *Flush)(CFile*);
+		void (__fastcall *Close)(CFile*);
+		unsigned int (__fastcall *GetBufferPtr)(CFile*, unsigned int, unsigned int, void**, void**);
+	};
+
+	unsigned int m_hFile;
+	int m_bCloseOnDelete;
+	CString m_strFileName;
 
 	virtual unsigned int GetPosition()
 	{
@@ -5728,7 +5246,7 @@ struct CFile : CObject
 		return *(unsigned int*)nullptr;
 	}
 
-	virtual unsigned int Write(const void* _0, unsigned int _1)
+	virtual unsigned int Write(void* _0, unsigned int _1)
 	{
 		return *(unsigned int*)nullptr;
 	}
@@ -5751,1002 +5269,212 @@ struct CFile : CObject
 	}
 };
 
-struct CGameDialogReply
+struct CException : CObject
 {
-	unsigned int m_flags;
-	unsigned int m_replyText;
-	unsigned int m_journalEntry;
-	CAICondition m_condition;
-	CAIResponse m_response;
-	CResRef m_nextDialog;
-	unsigned int m_nextEntryIndex;
-	__POSITION* m_displayPosition;
-	int m_removeIfPicked;
-	unsigned __int8 m_displayListId;
-	CString m_conditionString;
-	int m_needToParseCondition;
-	CString m_responseString;
-	int m_needToParseResponse;
-	int m_bracketedActions;
-};
-
-struct CGameDialogSprite
-{
-	CResRef m_file;
-	CTypedPtrArray<CPtrArray,CGameDialogEntry*> m_dialogEntries;
-	CTypedPtrArray<CPtrArray,CGameDialogEntry*> m_dialogEntriesOrdered;
-	int m_characterIndex;
-	int m_talkerIndex;
-	unsigned int m_currentEntryIndex;
-	int m_waitingForResponse;
-	int m_responseMarker;
-	unsigned int m_playerColor;
-	CString m_playerName;
-	int m_dialogFreezeCounter;
-	int m_dialogFreezeMultiplayer;
-	unsigned int m_dWFlags;
-	int m_bPlayedStartSound;
-	int m_bItemDialog;
-	int m_bSuppressName;
-	int m_UpdateTime;
-};
-
-struct CMapStringToString : CObject
-{
-	struct CAssoc
+	struct CException_vtbl
 	{
-		CMapStringToString::CAssoc* pNext;
-		unsigned int nHashValue;
-		CString key;
-		CString value;
+		void (__fastcall *CObject_Destructor)(CObject*);
+		int (__fastcall *GetErrorMessage)(CException*, char*, unsigned int, unsigned int*);
 	};
 
-	CMapStringToString::CAssoc** m_pHashTable;
-	unsigned int m_nHashTableSize;
-	int m_nCount;
-	CMapStringToString::CAssoc* m_pFreeList;
-	CPlex* m_pBlocks;
-	int m_nBlockSize;
+	int m_bAutoDelete;
+	int m_bReadyForDelete;
 
-	virtual void CObject_Destructor()
+	virtual int GetErrorMessage(char* _0, unsigned int _1, unsigned int* _2)
 	{
+		return *(int*)nullptr;
 	}
 };
 
-struct CTlkTable
+struct CFileException : CException
 {
-	CMapStringToString m_mapTokens;
-	unsigned __int8 m_currentGender;
-	CTlkFileOverride m_override;
-	Array<CFileView*,2> m_tlkFiles;
-	unsigned int* m_engineStrings;
-	unsigned int m_nEngineStrings;
-	unsigned int m_nEngineStringBase;
-};
-
-struct CNetworkConnectionSettings
-{
-	unsigned int dwFlags;
-	unsigned int dwMaxPlayers;
-	CString sPlayerName;
-};
-
-struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
-{
-	CString mSectionAlias;
-	int ReceivedFirstSpawnCall;
-	unsigned int LastSpawnTime;
-	int CheckSpawnTimes;
-	unsigned int SpawnTimeOfDay;
-	unsigned int mInterval;
-	CSpawnVar* pControlVar;
-
-	virtual void CObject_Destructor()
+	struct CFileException_vtbl
 	{
-	}
-};
-
-struct CMemINISection : CTypedPtrList<CPtrList,CMemINIValue*>
-{
-	CString mSectionName;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CMemINI : CTypedPtrList<CPtrList,void*>
-{
-	CString mFileName;
-	CMemINISection* mpLastSection;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CSpawnVar
-{
-	CString mScope;
-	CString mLabel;
-};
-
-struct CSpawnPointVar : CSpawnVar
-{
-};
-
-struct CMemINIValue
-{
-	CString mName;
-	CString mValue;
-
-	virtual void CMemINIValue_Destructor()
-	{
-	}
-};
-
-struct CStringList : CObject
-{
-	struct CNode
-	{
-		CStringList::CNode* pNext;
-		CStringList::CNode* pPrev;
-		CString data;
+		void (__fastcall *CObject_Destructor)(CObject*);
+		int (__fastcall *GetErrorMessage)(CException*, char*, unsigned int, unsigned int*);
 	};
 
-	CStringList::CNode* m_pNodeHead;
-	CStringList::CNode* m_pNodeTail;
-	int m_nCount;
-	CStringList::CNode* m_pNodeFree;
-	CPlex* m_pBlocks;
-	int m_nBlockSize;
-
-	virtual void CObject_Destructor()
-	{
-	}
+	int m_cause;
+	int m_lOsError;
+	CString m_strFileName;
 };
 
-struct st_tiledef
+struct CDWordArray : CObject
 {
-	int nTile;
-	int nUsageCount;
-	int texture;
-	CInfTileSet* pTileSet;
-};
-
-struct DPWrapper
-{
-	enum class PEER_STATE_t : __int32
+	struct CDWordArray_vtbl
 	{
-		PEER_INITIAL = 0,
-		PEER_DISCONNECTED = 1,
-		PEER_NEGOTIATING = 2,
-		PEER_CONNECTING = 3,
-		PEER_CONNECTED = 4,
-		PEER_INVALID_PASSWORD = 5,
-		PEER_JOIN_ROOM_FULL = 6,
-		PEER_JOIN_ERROR = 7,
+		void (__fastcall *CObject_Destructor)(CObject*);
 	};
 
-	std::vector<DP_Player*,std::allocator<DP_Player*>> m_players;
-	std::queue<DP_Packet*,std::deque<DP_Packet*,std::allocator<DP_Packet*>>> m_packetQueue;
-	int m_currentSessionId;
-	IDPProvider* m_provider;
-	IDPPeer* m_connection;
-	int m_peerState;
-	bool m_server;
-	int m_ReplyFlags;
-	int m_playerCreateID;
-	DP_ProviderID m_nProvider;
-	int m_nMyID;
-	DPWrapper::PEER_STATE_t PEER_STATE;
+	unsigned int* m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
 };
 
-struct CNetwork
+struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
 {
-	_GUID m_nApplicationGuid;
-	unsigned __int8 m_bApplicationGuidDefined;
-	unsigned __int8 m_bAutoConnectCheck;
-	unsigned __int8 m_bServiceProviderEnumerated;
-	unsigned __int8 m_bServiceProviderSelected;
-	int m_nServiceProvider;
-	int m_nTotalServiceProviders;
-	Array<CString,4> m_ppszServiceProviderNames;
-	Array<DP_ProviderID,4> m_pnServiceProviderIDS;
-	unsigned __int8 m_bConnectionInitialized;
-	unsigned __int8 m_bSocketConnecting;
-	unsigned __int8 m_bSocketConnected;
-	CString m_sIPAddress;
-	unsigned __int8 padding2;
-	void* m_lpDPAddress;
-	unsigned int m_dwDPAddressSize;
-	CString m_version;
-	unsigned __int8 m_bSessionSelected;
-	int m_nSession;
-	unsigned __int8 m_bSessionNameToMake;
-	unsigned __int8 padding3;
-	CString m_sSessionNameToMake;
-	CString m_sSessionDescriptionToMake;
-	unsigned __int8 m_bSessionPasswordEnabled;
-	unsigned __int8 padding4;
-	CString m_sSessionPassword;
-	unsigned __int8 m_bAllowNewConnections;
-	unsigned __int8 m_bConnectionEstablished;
-	unsigned __int8 m_bIsHost;
-	DPWrapper m_directPlay;
-	int m_nMaxPlayers;
-	unsigned int m_dwSessionFlags;
-	unsigned __int8 m_bMaxPlayersDefined;
-	unsigned __int8 m_bSessionOptionsDefined;
-	CString m_sJoinedGame;
-	CString m_sLeftGame;
-	CString m_sDroppedGame;
-	unsigned __int8 m_bPlayerNameToMake;
-	unsigned __int8 m_bPlayerCreated;
-	int m_idLocalPlayer;
-	CString m_sLocalPlayerName;
-	int m_nTotalPlayers;
-	Array<CString,6> m_psPlayerName;
-	Array<int,6> m_pPlayerID;
-	Array<unsigned __int8,6> m_pbPlayerVisible;
-	Array<unsigned __int8,6> m_pbPlayerEnumerateFlag;
-	int m_nLocalPlayer;
-	int m_nHostPlayer;
-	CString m_sHostIPAddress;
-	int m_bAnnounceNewPlayers;
-	Array<CNetworkWindow,6> m_pSlidingWindow;
-	CNetworkWindow m_SystemWindow;
-	Array<unsigned int,256> m_dwCRC32;
-	CNetworkConnectionSettings m_connectionSettings;
-	unsigned int m_lastMessageSentTime;
-	Array<unsigned int,6> m_lastMessageReceivedTime;
-};
-
-struct CSearchRequest
-{
-	unsigned __int8 m_serviceState;
-	unsigned __int8 m_collisionDelay;
-	int m_collisionSearch;
-	unsigned __int8 m_sourceSide;
-	unsigned __int8 m_nPartyIds;
-	unsigned __int8 m_nTargetIds;
-	unsigned __int8 m_nTargetPoints;
-	int m_removeSelf;
-	unsigned __int8 m_frontList;
-	CSearchBitmap* m_searchBitmap;
-	Array<unsigned __int8,16> m_terrainTable;
-	int m_pathSmooth;
-	int m_exclusiveTargetPoints;
-	int m_sourceId;
-	tagPOINT m_sourcePt;
-	int* m_partyIds;
-	int* m_targetIds;
-	tagPOINT* m_targetPoints;
-	int m_minNodes;
-	int m_maxNodes;
-	int m_minNodesBack;
-	int m_maxNodesBack;
-	int m_bBump;
-	__int16 m_searchRc;
-	__int16 m_nPath;
-	int* m_pPath;
-};
-
-struct CPoint : tagPOINT
-{
-};
-
-struct CGameAreaNotes
-{
-	int m_bInitialized;
-	CPoint m_ptCellSize;
-	CPoint m_ptButtonSize;
-	CTypedPtrList<CPtrList,CAreaUserNote*> m_areaNoteList;
-	CAreaUserNote m_cAreaNote;
-	int m_bAddingNote;
-	unsigned int m_nNoteButtonClicked;
-	CResRef m_rArea;
-	CString m_szBuffer;
-	unsigned __int8 m_bNetworkDelete;
-	unsigned __int8 m_nCurrentIcon;
-};
-
-struct CGameEffectBase
-{
-	CResRef m_version;
-	unsigned int m_effectId;
-	unsigned int m_targetType;
-	unsigned int m_spellLevel;
-	int m_effectAmount;
-	unsigned int m_dWFlags;
-	unsigned int m_durationType;
-	unsigned int m_duration;
-	unsigned __int16 m_probabilityUpper;
-	unsigned __int16 m_probabilityLower;
-	CResRef m_res;
-	unsigned int m_numDice;
-	unsigned int m_diceSize;
-	unsigned int m_savingThrow;
-	int m_saveMod;
-	unsigned int m_special;
-	unsigned int m_school;
-	unsigned int m_JeremyIsAnIdiot;
-	unsigned int m_minLevel;
-	unsigned int m_maxLevel;
-	unsigned int m_flags;
-	int m_effectAmount2;
-	int m_effectAmount3;
-	int m_effectAmount4;
-	int m_effectAmount5;
-	CResRef m_res2;
-	CResRef m_res3;
-	CPoint m_source;
-	CPoint m_target;
-	unsigned int m_sourceType;
-	CResRef m_sourceRes;
-	unsigned int m_sourceFlags;
-	unsigned int m_projectileType;
-	int m_slotNum;
-	Array<char,32> m_scriptName;
-	unsigned int m_casterLevel;
-	unsigned int m_firstCall;
-	unsigned int m_secondaryType;
-	Array<unsigned int,15> m_pad;
-};
-
-struct CMultiplayerSettings
-{
-	Array<CGamePermission,6> m_pcPermissions;
-	CGamePermission m_cDefaultPermissions;
-	Array<int,6> m_pnPlayerReady;
-	Array<int,6> m_pnCharacterControlledByPlayer;
-	Array<unsigned __int8,6> m_pbCharacterReady;
-	Array<unsigned __int8,6> m_pnCharacterStatus;
-	Array<int,6> m_pnLoadGameControlledByPlayer;
-	unsigned __int8 m_bRefreshCharacters;
-	unsigned __int8 m_nImportingBitField;
-	unsigned __int8 m_bRestrictStoreOption;
-	unsigned __int8 m_bJoinRequests;
-	unsigned __int8 m_bAllowReformParty;
-	unsigned __int8 m_bArbitrationLockStatus;
-	unsigned __int8 m_bArbitrationLockAllowInput;
-	CPoint m_ptAreaStart;
-	CString m_sAreaName;
-	CString m_sSaveName;
-	int m_idHostPermittedDialog;
-	int m_nHostPermittedDialogDelay;
-	unsigned __int8 m_bHostPermittedDialog;
-	unsigned __int8 m_bHostPermittedStore;
-	int m_idHostPermittedStore;
-	unsigned __int8 m_bFirstConnected;
-	CString m_sCampaignType;
-};
-
-struct CGameSpriteLastUpdate
-{
-	int* m_pPath;
-	__int16 m_nPath;
-	__int16 m_currPath;
-	CPoint m_ptDest;
-	unsigned __int8 m_nMoveScale;
-	__int16 m_nSequence;
-	CPoint m_ptPosition;
-	__int16 m_nFacing;
-	unsigned int m_dwState;
-	__int16 m_nHitPoints;
-	__int16 m_nMaxHitPoints;
-	__int16 m_nArmorClass;
-	__int16 m_nACCrushingMod;
-	__int16 m_nACMissileMod;
-	__int16 m_nACPiercingMod;
-	__int16 m_nACSlashingMod;
-	__int16 m_nPortraitIcons;
-	int* m_pPortraitIcons;
-	unsigned __int8 m_nEnemyAlly;
-	unsigned __int8 m_nEnemyAllyLive;
-	unsigned __int8 m_bMoraleFailure;
-	unsigned __int8 m_nGeneral;
-	unsigned __int8 m_nGeneralLive;
-	CString m_sAreaString;
-	unsigned __int8 m_bLevelUp;
-	int m_nHPCONBonusTotalOld;
-	unsigned __int8 m_bSummonDisable;
-	unsigned __int8 m_bDoNotJump;
-	unsigned __int8 m_bSanctuary;
-	unsigned __int8 m_bDisableCircle;
-	unsigned __int8 m_bHeld;
-	unsigned __int8 m_bActiveImprisonment;
-	Array<unsigned int,8> m_spellState;
-	int m_bFullUpdateRequired;
-};
-
-struct CAIAction
-{
-	__int16 m_actionID;
-	CAIObjectType m_actorID;
-	CAIObjectType m_acteeID;
-	CAIObjectType m_acteeID2;
-	int m_specificID;
-	int m_specificID2;
-	int m_specificID3;
-	CString m_string1;
-	CString m_string2;
-	CPoint m_dest;
-	unsigned int m_internalFlags;
-	CString m_source;
-};
-
-struct CAOEEntry
-{
-	enum class AOEType : __int32
+	struct CCriticalEntryList_vtbl
 	{
-		AOE_CIRCLE = 0,
-		AOE_CONE = 1,
-		AOE_RECTANGLE = 2,
-		AOE_LINE = 3,
+		void (__fastcall *CObject_Destructor)(CObject*);
 	};
 
-	CAOEEntry::AOEType m_type;
-	CPoint m_center;
-	CPoint m_radius;
-	unsigned int m_color;
 };
 
-struct CFog
+struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
 {
-	float* densityLast;
-	float* densityCurrent;
-	float* densityNext;
-	int N;
-	float dt;
-	float diff;
-	float visc;
-	float force;
-	float source;
-	int dvel;
-	float* u;
-	float* v;
-	float* u_prev;
-	float* v_prev;
-	float* dens;
-	float* dens_prev;
-	bool pointEnabled;
-	int pointAmount;
-	int pointDuration;
-	CPoint pointPos;
-	float pointUForce;
-	float pointVForce;
-	CPoint explosionPos;
-	int updateCounter;
-	bool fading;
-	bool initialized;
-	float alpha;
-	int contrast;
-	unsigned int innerColor;
-	unsigned int outerColor;
+	struct CContingencyList_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
 };
 
-struct CGameAreaClairvoyanceEntry
+struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
 {
-	CPoint m_position;
-	int m_id;
-	int m_timeKill;
-	unsigned __int8* m_pVisibleTerrainTable;
-	int m_charId;
-	__int16 m_visRange;
-	int* m_pVisMapExploredArea;
+	struct CColorRanges_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
 };
 
-struct CMoveListEntry
+struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
 {
-	int m_nSpiteIndex;
-	CResRef m_rAreaRes;
-	CPoint m_ptDest;
-	CPoint m_ptSource;
-	unsigned __int8 m_nFacing;
-	int m_nDelay;
+	struct CColorEffects_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
 };
 
-struct MAP_CHAR_POSITIONS
+struct CCallbackBase
 {
-	CPoint ptPos;
-	int id;
+	struct CCallbackBase_vtbl
+	{
+		void (__fastcall *Run)(CCallbackBase*, void*, bool, unsigned __int64);
+		void (__fastcall *Run_2)(CCallbackBase*, void*);
+		int (__fastcall *GetCallbackSizeBytes)(CCallbackBase*);
+	};
+
+	unsigned __int8 m_nCallbackFlags;
+	int m_iCallback;
+
+	virtual void Run(void* _0, bool _1, unsigned __int64 _2)
+	{
+	}
+
+	virtual void Run(void* _0)
+	{
+	}
+
+	virtual int GetCallbackSizeBytes()
+	{
+		return *(int*)nullptr;
+	}
 };
 
-struct CWarp : CObject
+template<class BASE_CLASS, class RESULT_CLASS>
+struct CCallResult : CCallbackBase
 {
-	CWarp* pLastEngine;
-	CObList lTimers;
+	unsigned __int64 m_hAPICall;
+	BASE_CLASS* m_pObj;
+	void (__thiscall *m_Func)(BASE_CLASS*, RESULT_CLASS*, bool);
+};
 
-	virtual void CObject_Destructor()
+struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
+{
+	struct CBounceList_vtbl
 	{
-	}
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
 
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
 };
 
 struct CBaldurEngine : CWarp
 {
+	struct CBaldurEngine_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
 	int m_nSelectedCharacter;
 	int m_nPickedCharacter;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
 
 	virtual int GetSelectedCharacter(int _0)
 	{
@@ -6834,2998 +5562,137 @@ struct CBaldurEngine : CWarp
 
 struct CDungeonMaster : CBaldurEngine
 {
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CVisibilityMapTreeNode
-{
-	CPoint m_relativePos;
-	unsigned __int16 m_nRange;
-	Array<__int16,3> m_aChildren;
-	__int16 m_parent;
-};
-
-struct CVIDMODE_RETICLE_DESCRIPTION
-{
-	CPoint ptCenter;
-	__int16 xAxis;
-	__int16 yAxis;
-	__int16 piePiecePtXOffset;
-	__int16 piePiecePtYOffset;
-	__int16 piePieceXOffset;
-	__int16 piePieceYOffset;
-	__int16 xGap;
-	__int16 yGap;
-	__int16 cursor;
-};
-
-struct CMarker
-{
-	unsigned __int8 m_type;
-	__int16 m_nReticleCounter;
-	unsigned __int8 m_nReticleForceRender;
-	unsigned __int8 m_nReticleForceRenderTarget;
-	unsigned int m_rgbColor;
-	CVIDMODE_RETICLE_DESCRIPTION m_reticleDesc;
-	unsigned __int8 m_bTalking;
-	unsigned __int8 m_bDoubleSize;
-};
-
-struct CSpawnPoint
-{
-	CPoint mLocation;
-	int mFacing;
-
-	virtual void CSpawnPoint_Destructor()
-	{
-	}
-};
-
-struct CSpawn
-{
-	enum class ePMode : __int32
-	{
-		POINT_SELECT_RANDOM_SEQUENTIAL = 0,
-		POINT_SELECT_SEQUENTIAL = 1,
-		POINT_SELECT_INDEXED_SEQUENTIAL = 2,
-		POINT_SELECT_EXPLICIT = 3,
+	struct CDungeonMaster_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
 	};
 
-	unsigned int Interval;
-	CString SectionAlias;
-	unsigned int SpawnFlags;
-	int DataIsValid;
-	CAIObjectType mSearchAI;
-	int mSearchQty;
-	Array<int,4> mSearchRegion;
-	CSpawnVar* mpSearchKeyVar;
-	CSpawnVar* mpSearchQtyVar;
-	CStringList mCREFiles;
-	int mCreateQty;
-	CString* mpCreateQtyScope;
-	CString* mpCreateQtyLabel;
-	CString* mpScriptName;
-	unsigned __int8 mEA;
-	unsigned __int8 mGeneral;
-	unsigned __int8 mRace;
-	unsigned __int8 mClass;
-	unsigned __int8 mGender;
-	unsigned __int8 mSpecifics;
-	unsigned __int8 mFaction;
-	unsigned __int8 mTeam;
-	unsigned __int8 mAlignment;
-	CString* mpOverrideScript;
-	CString* mpClassScript;
-	CString* mpRaceScript;
-	CString* mpGeneralScript;
-	CString* mpDefaultScript;
-	CString* mpAreaScript;
-	CString* mpSpecificsScript;
-	CStringList mDialogFiles;
-	int mDeathGoodModifier;
-	int mDeathLawModifier;
-	int mDeathLadyModifier;
-	int mDeathMurderModifier;
-	int Facing;
-	CSpawnPointArray mSpawnPointArray;
-	CSpawnPoint mSpelectedPoint;
-	CSpawn::ePMode mPointSelectMode;
-	CString* pPointIndexScope;
-	CString* pPointIndexLabel;
-	CSpawnPointVar* mpExplicitSpawnPoint;
-	CString* pExplicitSpawnFacingScope;
-	CString* pExplicitSpawnFacingLabel;
-	CSpawnPointVar* mpSpawnPointStorage;
-	CString* pSpawnFacingStorageScope;
-	CString* pSpawnFacingStorageLabel;
-	int mSequentialStartValue;
-	unsigned int mTimeOfDay;
-
-	virtual void CSpawn_Destructor()
-	{
-	}
 };
 
-struct CScreenWizSpell : CBaldurEngine
+struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 {
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_nSpellLevel;
-	int m_bMultiPlayerViewable;
-	int m_nMemorizedSpellIndex;
-	unsigned __int8 m_bCtrlKeyDown;
-	int m_bMagePage;
-	unsigned __int8 m_nContingencyMaxLevel;
-	unsigned __int8 m_nContingencyMaxSpells;
-	__int16 m_bContingencyRestrictTarget;
-	CBaldurEngine* m_pOldEngine;
-	CResRef m_refContingencyResRef;
-	int m_bControlled;
-	int m_bPauseState;
-	int m_bContingency;
-	CResRef m_resEraseSpell;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
+	struct CApplyEffectList_vtbl
 	{
-	}
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
 
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
 };
 
-struct CScreenPriestSpell : CBaldurEngine
+template<class T, int size>
+struct Array
 {
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_nSpellLevel;
-	CResRef m_cResCurrentSpell;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	int m_bMultiPlayerViewable;
-	int m_nMemorizedSpellIndex;
-	unsigned __int8 m_bCtrlKeyDown;
-	int m_nEngineState;
-	int m_bPriestPage;
-	int m_bPauseState;
-	int m_bControlled;
+	T data[size];
 
-	virtual void CObject_Destructor()
+	T get(int index)
 	{
+		if (index < 0 || index >= size)
+		{
+			return NULL;
+		}
+		return data[index];
 	}
 
-	virtual void InvalidateCursorRect(const CRect* _0)
+	T* getReference(int index)
 	{
+		if (index < 0 || index >= size)
+		{
+			return NULL;
+		}
+		return &data[index];
 	}
 
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
+	void set(int index, T value)
 	{
+		if (index < 0 || index >= size)
+		{
+			return;
+		}
+		data[index] = value;
 	}
 
-	virtual void RequestPause()
+	T operator[](int index)
 	{
+		return data[index];
 	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenMovies : CBaldurEngine
-{
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_nEngineState;
-	CStringList* m_pMovies;
-	int m_nMovieIndex;
-	CString m_sSelectedMovie;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenConnection : CBaldurEngine
-{
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bCtrlKeyDown;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	int m_nProtocol;
-	int m_nSessionIndex;
-	_GUID m_guidSession;
-	unsigned int m_dwLastSessionRefresh;
-	int m_nEnumServiceProvidersCountDown;
-	int m_bStartedCountDown;
-	unsigned __int8 m_bFirstRender;
-	unsigned __int8 m_bEliminateInitialize;
-	unsigned __int8 m_bEMSwapped;
-	unsigned __int8 m_bEMValue;
-	unsigned __int8 m_bEMWaiting;
-	unsigned __int8 m_nEMEvent;
-	unsigned __int8 m_nEMEventStage;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	int m_bAllowInput;
-	unsigned __int8 m_bEnumeratingAsynchronous;
-	unsigned __int8 m_bJoinWaiting;
-	unsigned __int8 m_bJoinComplete;
-	unsigned __int8 m_nJoinEvent;
-	int m_nJoinErrorCode;
-	unsigned __int8 m_bJoinReturnValue;
-	int m_nWaitingForProviderNumber;
-	int m_nWaitingForProviderCount;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenCharacter : CBaldurEngine
-{
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	CPtrList m_lPopupStack;
-	unsigned __int8 m_nDualClass;
-	CStringList* m_pScripts;
-	int m_nScriptIndex;
-	int m_nErrorState;
-	int m_nCharacterIndex;
-	CStringList* m_pCharacters;
-	int m_bMultiPlayerViewable;
-	int m_bMultiPlayerModifyable;
-	__POSITION* m_nCurrentPortrait;
-	CStringList* m_pAppearancePortraits;
-	CStringList* m_pPortraits;
-	int m_nCustomSoundSetIndex;
-	int m_nCustomSoundIndex;
-	CResRef m_cResPortraitSmall;
-	CResRef m_cResPortraitLarge;
-	Array<unsigned __int8,7> m_aColor;
-	CString m_sScript;
-	Array<int,11> m_bSmartScriptFlags;
-	CString m_sNewScript;
-	CResRef m_cResPortraitSmallTemp;
-	CResRef m_cResPortraitMediumTemp;
-	unsigned int m_nSpecialization;
-	CStringList* m_pSounds;
-	CResRef m_cResSoundSet;
-	CCreatureFileHeader* m_pTempBaseStats;
-	CDerivedStats* m_pTempDerivedStats;
-	CTypedPtrList<CPtrList,CResRef*> m_lstMageSpells;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	unsigned __int8 m_bCtrlKeyDown;
-	CString m_sExportName;
-	int m_bAddInactiveAbilities;
-	Array<int,9> m_OldMageSpells;
-	Array<int,7> m_OldPriestSpells;
-	int m_bPauseState;
-	int m_bIsLevelingUp;
-	int m_bIsCharGenMenu;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CRect : tagRECT
-{
-};
-
-struct CGameObject
-{
-	CGameObjectType m_objectType;
-	CPoint m_pos;
-	int m_posZ;
-	CGameArea* m_pArea;
-	__POSITION* m_posVertList;
-	unsigned __int8 m_listType;
-	CAIObjectType m_typeAI;
-	int m_id;
-	__int16 m_canBeSeen;
-	int m_remotePlayerID;
-	int m_remoteObjectID;
-	unsigned __int8 m_AISpeed;
-	unsigned __int8 m_bLocalControl;
-	unsigned __int8 m_AIInhibitor;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CObjectMarker : CGameObject
-{
-	CList<long,long> m_lstObjectIds;
-	bool m_bHealthBarMarker;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CGameSpawning : CGameObject
-{
-	CAreaFileRandomMonsterSpawningPoint m_spawningObject;
-	Array<unsigned __int8,16> m_terrainTable;
-	Array<unsigned __int8,16> m_visibleTerrainTable;
-	int m_nTrackingCounter;
-	unsigned int m_weightSum;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CBlood
-{
-	CGameArea* m_pArea;
-	CTypedPtrList<CPtrList,CParticle*> m_particleList;
-	CTypedPtrList<CPtrList,CParticle*> m_lstSplashParticles;
-	CPoint m_refPoint;
-	CPoint m_pos;
-	int m_posZ;
-	__int16 m_nTimeStamp;
-	Array<unsigned int,3> m_aColors;
-	CRect m_rBounding;
-	__int16 m_nDirection;
-	unsigned __int16 m_particleType;
-	unsigned __int16 m_bloodType;
-	int m_nCharHeight;
-	unsigned __int8 m_bLeavePool;
-};
-
-struct CRainStorm
-{
-	CRainDrop* m_pRainDrops;
-	unsigned __int16 m_nCurrentDensity;
-	CRect m_rOldWorldViewPort;
-	__int16 m_nWindGustCounter;
-	int m_nRainDrops;
-};
-
-struct CSnowStorm
-{
-	CSnowFlake* m_pSnowFlakes;
-	unsigned __int16 m_nCurrentDensity;
-	CRect m_rOldWorldViewPort;
-};
-
-struct CSize : tagSIZE
-{
-};
-
-struct CChitin
-{
-	int m_mouseLButton;
-	int m_mouseRButton;
-	int m_bMouseLButtonDown;
-	tagPOINT m_mouseLDblClickPoint;
-	unsigned int m_mouseLDblClickCount;
-	int m_bMouseRButtonDown;
-	tagPOINT m_mouseRDblClickPoint;
-	unsigned int m_mouseRDblClickCount;
-	int m_bMouseMButtonDown;
-	tagPOINT m_mouseMDblClickPoint;
-	unsigned int m_mouseMDblClickCount;
-	unsigned int m_mouseDblClickTime;
-	tagSIZE m_mouseDblClickSize;
-	int bEngineActive;
-	int bServicingEnabled;
-	int bMessagesEnabled;
-	CObList lEngines;
-	unsigned int nIterations;
-	CWarp* pStartingEngine;
-	unsigned int nTimer;
-	unsigned int nTimerRes;
-	CString m_sCommandLine;
-	CRect m_rClient;
-	unsigned __int8 m_bReInitializing;
-	unsigned __int8 m_bScreenEdgeScroll;
-	unsigned int m_opSystemPlatformId;
-	__int16 m_capsLockState;
-	CPoint m_ptScreen;
-	int m_bStartUpHost;
-	int m_bStartUpConnect;
-	CString m_sStartUpAddress;
-	CString m_sStartUpPort;
-	CString m_sStartUpPlayer;
-	CString m_sStartUpPassword;
-	int m_bStartUpNewGame;
-	int m_bStartUpLoadGame;
-	CString m_sStartUpSession;
-	unsigned __int8 m_bStartUpDirectPlayLobby;
-	unsigned __int8 m_bStartUpGameSpyLocation;
-	CString m_sStartUpGameSpyLocation;
-	unsigned __int8 m_bStartUpThroneOfBhaal;
-	CSoundMixer* cSoundMixer;
-	int m_nMaxPlayers;
-	int m_nCurrentSong;
-	_EAXPRESET m_nSoundEnvironment;
-	int m_bSoundInitialized;
-	unsigned __int8 padding;
-	int m_bInMouseWheelQueue;
-	CTypedPtrList<CPtrList,long*> m_lstMouseWheel;
-	unsigned int m_wheelScrollLines;
-	int m_bIsMouseInWindow;
-	int m_bFrameOutline;
-	int m_bUseMirrorFX;
-	unsigned int m_msgAutoPlay;
-	void* m_hEvent;
-	unsigned __int8 m_bUsePlanescapeSoundReductionCurve;
-	unsigned int m_nSoundReductionCurveRadius;
-	unsigned int m_nTickCount;
-	int m_nAIPerSec;
-	int m_nAIElasped;
-	unsigned int m_nRenderTickCount;
-	int m_nRenderPerSec;
-	int m_nRenderElasped;
-	int m_nAISleeper;
-	int m_bIsTouchUI;
-	int m_bUseBGRA;
-	int m_bRenderTilesLinear;
-	CString m_sFontName;
-	int m_nFullFrameTimer;
-	int m_nGameTimer;
-	int m_nRenderTimer;
-	int m_nSearchTimer;
-	_iobuf* m_fFrameTimeLog;
-	int m_bLogFrames;
-	CWarp* pActiveEngine;
-	CVideo cVideo;
-	CNetwork cNetwork;
-	CSteam cSteam;
-	unsigned __int8 padding2;
-	int bPointerUpdated;
-	CPoint cMousePosition;
-	int nAUCounter;
-	int bInTimer;
-	int m_AIStale;
-	int m_displayStale;
-	int m_bInSyncUpdate;
-	unsigned int m_keyRepeatDelay;
-	unsigned int m_keyRepeatRate;
-	CProgressBar cProgressBar;
-	unsigned __int16 m_nAICounter;
-	int m_bManualFrameControl;
-	int m_displayDebug;
-	int m_displaySerialize;
-	int m_bExitOnError;
-	int m_bEnableCucumber;
-	CResRef* pCurRes;
-	CString m_sFontNameNormal;
-	CString m_sFontNameRealms;
-	CString m_sFontNameStoneBig;
-	CString m_sFontNameStoneSml;
-	CString m_sFontNameToolFont;
-	CString m_sFontNameFloatTxt;
-	int m_bDisplaySubtitles;
-	int m_bReverseMouseWheelZoom;
-
-	virtual void SynchronousUpdate()
-	{
-	}
-
-	virtual void SetupPanels()
-	{
-	}
-
-	virtual unsigned int GetIDSInvalidVideoMode()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSOpenGLDll()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSExclusiveMode()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSChoosePixelFormat()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSSetPixelFormat()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSSetGameResolution()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSSetGameBitDepth()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSBadDeskTopBitDepth()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSWindowsFonts()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual CRes* AllocResObject(int _0)
-	{
-		return *(CRes**)nullptr;
-	}
-
-	virtual const CString* GetIconRes()
-	{
-		return *(const CString**)nullptr;
-	}
-
-	virtual void GetScreenShotFilePrefix(CString* _0)
-	{
-	}
-
-	virtual int FontRectOutline()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int InitializeServices()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetProgressBar(unsigned __int8 _0, int _1, int _2, int _3, unsigned __int8 _4, int _5, unsigned __int8 _6, int _7, unsigned __int8 _8, unsigned __int8 _9, unsigned int _10)
-	{
-	}
-
-	virtual void SetProgressBarActivateEngine(int _0)
-	{
-	}
-
-	virtual void BroadcastMultiplayerProgressBarInfo()
-	{
-	}
-
-	virtual void SetCDSwitchStatus(unsigned __int8 _0, unsigned __int8 _1, unsigned __int8 _2, const CString* _3, unsigned __int8 _4, unsigned __int8 _5, unsigned __int8 _6)
-	{
-	}
-
-	virtual void SetCDSwitchActivateEngine(int _0)
-	{
-	}
-
-	virtual void OnMultiplayerSessionOpen(CString* _0, CString* _1, CString* _2)
-	{
-	}
-
-	virtual void OnMultiplayerSessionToClose()
-	{
-	}
-
-	virtual void OnMultiplayerSessionClose()
-	{
-	}
-
-	virtual void OnMultiplayerPlayerJoin(int _0, const CString* _1)
-	{
-	}
-
-	virtual void OnMultiplayerPlayerVisible(int _0)
-	{
-	}
-
-	virtual void OnMultiplayerPlayerLeave(int _0, const CString* _1)
-	{
-	}
-
-	virtual int MessageCallback(unsigned __int8* _0, unsigned int _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual unsigned __int8 GetGamespyResponse(unsigned __int8 _0, unsigned __int8** _1, unsigned int* _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AsynchronousUpdate(unsigned int _0, unsigned int _1, unsigned int _2, unsigned int _3, unsigned int _4)
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual void ShutDown(int _0, const char* _1, const char* _2)
-	{
-	}
-
-	virtual const char* GetKeyFileName()
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual unsigned __int8 GetNumberSoundChannels()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual int GetMovieVolume()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void LoadOptions()
-	{
-	}
-
-	virtual void PreLoadFonts()
-	{
-	}
-
-	virtual void SetSoundVolumes()
-	{
-	}
-
-	virtual unsigned __int16 GetMultiplayerGameSpyPort()
-	{
-		return *(unsigned __int16*)nullptr;
-	}
-
-	virtual unsigned __int16 GetMultiplayerDirectPlayPort()
-	{
-		return *(unsigned __int16*)nullptr;
-	}
-
-	virtual void SetRenderCount(unsigned __int8 _0)
-	{
-	}
-
-	virtual int ConfirmQuit()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetGameSpyGameName(CString* _0)
-	{
-	}
-
-	virtual void GetGameSpyCode(CString* _0)
-	{
-	}
-
-	virtual void GetPanicCDStrings(CString* _0, CString* _1, CString* _2)
-	{
-	}
-
-	virtual void OnMixerInitialize()
-	{
-	}
-
-	virtual int Is3DSound(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetEAXActive()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void RedrawScreen()
-	{
-	}
-
-	virtual unsigned __int8 GetSoundEnvironment(CString _0, unsigned int* _1, float* _2, float* _3, float* _4, float* _5)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CutsceneModeActive()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-};
-
-struct uiColumn
-{
-	uiVariant* width;
-	uiItem* items;
-	uiColumn* next;
-};
-
-enum class uiItemType : __int32
-{
-	ITEM_NONE = 0,
-	ITEM_TEXT = 1,
-	ITEM_BUTTON = 2,
-	ITEM_LIST = 3,
-	ITEM_EDIT = 4,
-	ITEM_MOVIE = 5,
-	ITEM_SLIDER = 6,
-	ITEM_HANDLE = 7,
-	ITEM_DRAGGABLE = 8,
-	ITEM_SLOT = 9,
-	ITEM_MAP = 10,
-	ITEM_TEMPLATE = 11,
 };
 
 struct uiItem
 {
-	struct text_t
-	{
-		const char* originalText;
-		uiVariant* text;
-		const char* font;
-		int point;
-		int useFontZoom;
-		uiVariant* color;
-		int upper;
-		int lower;
-		uiVariant* shadow;
-		uiVariant* showhighlight;
-	};
-
-	struct uiTemplate_t
-	{
-		uiItem* item;
-	};
-
 	struct bam_t
 	{
 		uiVariant* resref;
@@ -9844,6 +5711,32 @@ struct uiItem
 		SDL_Rect area;
 	};
 
+	struct button_t
+	{
+		uiVariant* portrait;
+		uiVariant* paperdoll;
+		int encumbrance;
+		int colorDisplay;
+		int frameTimes;
+		const char* toggle;
+		const char* on;
+		const char* highlightGroup;
+		uiVariant* clickable;
+		uiVariant* actionBar;
+		const char* sound;
+	};
+
+	struct edit_t
+	{
+		const char* var;
+		int maxlines;
+		int maxchars;
+		uiVariant* placeholder;
+		int cursor;
+		int selectStart;
+		int selectEnd;
+	};
+
 	struct list_t
 	{
 		int table;
@@ -9860,6 +5753,40 @@ struct uiItem
 		int height;
 		uiVariant* color;
 		int currentRow;
+	};
+
+	struct map_t
+	{
+		int type;
+	};
+
+	struct mosaic_t
+	{
+		uiVariant* resref;
+		int respectClipping;
+	};
+
+	struct movie_t
+	{
+		void* res;
+		SDL_Rect subtitle;
+		int transparent;
+		unsigned int background;
+		int loop;
+		uiVariant* queuedMovie;
+	};
+
+	struct progressBar_t
+	{
+		uiVariant* percent;
+		uiVariant* color;
+		uiVariant* fullColor;
+	};
+
+	struct rectangle_t
+	{
+		int number;
+		uiVariant* opacity;
 	};
 
 	struct scrollbar_t
@@ -9885,60 +5812,6 @@ struct uiItem
 		int right;
 	};
 
-	struct edit_t
-	{
-		const char* var;
-		int maxlines;
-		int maxchars;
-		uiVariant* placeholder;
-		int cursor;
-		int selectStart;
-		int selectEnd;
-	};
-
-	struct mosaic_t
-	{
-		uiVariant* resref;
-		int respectClipping;
-	};
-
-	struct movie_t
-	{
-		void* res;
-		SDL_Rect subtitle;
-		int transparent;
-		unsigned int background;
-		int loop;
-		uiVariant* queuedMovie;
-	};
-
-	struct button_t
-	{
-		uiVariant* portrait;
-		uiVariant* paperdoll;
-		int encumbrance;
-		int colorDisplay;
-		int frameTimes;
-		const char* toggle;
-		const char* on;
-		const char* highlightGroup;
-		uiVariant* clickable;
-		uiVariant* actionBar;
-		const char* sound;
-	};
-
-	struct map_t
-	{
-		int type;
-	};
-
-	struct progressBar_t
-	{
-		uiVariant* percent;
-		uiVariant* color;
-		uiVariant* fullColor;
-	};
-
 	struct slot_t
 	{
 		uiVariant* icon;
@@ -9948,10 +5821,18 @@ struct uiItem
 		uiVariant* tint;
 	};
 
-	struct rectangle_t
+	struct text_t
 	{
-		int number;
-		uiVariant* opacity;
+		const char* originalText;
+		uiVariant* text;
+		const char* font;
+		int point;
+		int useFontZoom;
+		uiVariant* color;
+		int upper;
+		int lower;
+		uiVariant* shadow;
+		uiVariant* showhighlight;
 	};
 
 	struct tooltip_t
@@ -9961,6 +5842,11 @@ struct uiItem
 		uiVariant* force;
 		int position;
 		int forceTop;
+	};
+
+	struct uiTemplate_t
+	{
+		uiItem* item;
 	};
 
 	uiItemType type;
@@ -10012,26 +5898,272 @@ struct uiItem
 	uiItem* next;
 };
 
-struct uiMenu
+struct WED_LayerHeader_st
 {
-	Marker menuSrc;
-	const char* name;
-	int panel;
-	int state;
-	uiItem* items;
-	uiVariant* modal;
-	uiVariant* opacity;
-	uiVariant* greyscale;
-	int onOpen;
-	int onClose;
-	SDL_Point offset;
-	int ha;
-	int va;
-	int width;
-	int height;
-	int enabled;
-	int ignoreEsc;
+	unsigned __int16 nTilesAcross;
+	unsigned __int16 nTilesDown;
+	Array<unsigned __int8,8> rrTileSet;
+	unsigned __int16 nNumUniqueTiles;
+	unsigned __int16 nLayerFlags;
+	unsigned int nOffsetToTileData;
+	unsigned int nOffsetToTileList;
 };
+
+struct SteamUGCQueryCompleted_t
+{
+	unsigned __int64 m_handle;
+	EResult m_eResult;
+	unsigned int m_unNumResultsReturned;
+	unsigned int m_unTotalMatchingResults;
+	bool m_bCachedData;
+	Array<char,256> m_rgchNextCursor;
+};
+
+struct SteamUGCDetails_t
+{
+	unsigned __int64 m_nPublishedFileId;
+	EResult m_eResult;
+	EWorkshopFileType m_eFileType;
+	unsigned int m_nCreatorAppID;
+	unsigned int m_nConsumerAppID;
+	Array<char,129> m_rgchTitle;
+	Array<char,8000> m_rgchDescription;
+	unsigned __int64 m_ulSteamIDOwner;
+	unsigned int m_rtimeCreated;
+	unsigned int m_rtimeUpdated;
+	unsigned int m_rtimeAddedToUserList;
+	ERemoteStoragePublishedFileVisibility m_eVisibility;
+	bool m_bBanned;
+	bool m_bAcceptedForUse;
+	bool m_bTagsTruncated;
+	Array<char,1025> m_rgchTags;
+	unsigned __int64 m_hFile;
+	unsigned __int64 m_hPreviewFile;
+	Array<char,260> m_pchFileName;
+	int m_nFileSize;
+	int m_nPreviewFileSize;
+	Array<char,256> m_rgchURL;
+	unsigned int m_unVotesUp;
+	unsigned int m_unVotesDown;
+	float m_flScore;
+	unsigned int m_unNumChildren;
+};
+
+struct SteamUGCRequestUGCDetailsResult_t
+{
+	SteamUGCDetails_t m_details;
+	bool m_bCachedData;
+};
+
+#pragma pack(push, 1)
+struct Spell_Header_st
+{
+	unsigned int nFileType;
+	unsigned int nFileVersion;
+	unsigned int genericName;
+	unsigned int identifiedName;
+	Array<unsigned __int8,8> usedUpItemID;
+	unsigned int itemFlags;
+	unsigned __int16 itemType;
+	unsigned int notUsableBy;
+	unsigned __int16 castingAnimationType;
+	unsigned __int8 minLevelRequired;
+	unsigned __int8 school;
+	unsigned __int8 minSTRRequired;
+	unsigned __int8 secondaryType;
+	unsigned __int8 minSTRBonusRequired;
+	unsigned __int8 notUsableBy2a;
+	unsigned __int8 minINTRequired;
+	unsigned __int8 notUsableBy2b;
+	unsigned __int8 minDEXRequired;
+	unsigned __int8 notUsableBy2c;
+	unsigned __int8 minWISRequired;
+	unsigned __int8 notUsableBy2d;
+	unsigned __int16 minCONRequired;
+	unsigned __int16 minCHRRequired;
+	unsigned int spellLevel;
+	unsigned __int16 maxStackable;
+	Array<unsigned __int8,8> itemIcon;
+	unsigned __int16 loreValue;
+	Array<unsigned __int8,8> groundIcon;
+	unsigned int baseWeight;
+	unsigned int genericDescription;
+	unsigned int identifiedDescription;
+	Array<unsigned __int8,8> descriptionPicture;
+	unsigned int attributes;
+	unsigned int abilityOffset;
+	unsigned __int16 abilityCount;
+	unsigned int effectsOffset;
+	unsigned __int16 castingStartingEffect;
+	unsigned __int16 castingEffectCount;
+};
+#pragma pack(pop)
+
+struct SDL_TextInputEvent
+{
+	unsigned int type;
+	unsigned int timestamp;
+	unsigned int windowID;
+	Array<char,32> text;
+};
+
+struct SDL_TextEditingEvent
+{
+	unsigned int type;
+	unsigned int timestamp;
+	unsigned int windowID;
+	Array<char,32> text;
+	int start;
+	int length;
+};
+
+struct SDL_PixelFormat
+{
+	unsigned int format;
+	SDL_Palette* palette;
+	unsigned __int8 BitsPerPixel;
+	unsigned __int8 BytesPerPixel;
+	Array<unsigned __int8,2> padding;
+	unsigned int Rmask;
+	unsigned int Gmask;
+	unsigned int Bmask;
+	unsigned int Amask;
+	unsigned __int8 Rloss;
+	unsigned __int8 Gloss;
+	unsigned __int8 Bloss;
+	unsigned __int8 Aloss;
+	unsigned __int8 Rshift;
+	unsigned __int8 Gshift;
+	unsigned __int8 Bshift;
+	unsigned __int8 Ashift;
+	int refcount;
+	SDL_PixelFormat* next;
+};
+
+union SDL_Event
+{
+	SDL_EventType type;
+	SDL_CommonEvent common;
+	SDL_WindowEvent window;
+	SDL_KeyboardEvent key;
+	SDL_TextEditingEvent edit;
+	SDL_TextInputEvent text;
+	SDL_MouseMotionEvent motion;
+	SDL_MouseButtonEvent button;
+	SDL_MouseWheelEvent wheel;
+	SDL_JoyAxisEvent jaxis;
+	SDL_JoyBallEvent jball;
+	SDL_JoyHatEvent jhat;
+	SDL_JoyButtonEvent jbutton;
+	SDL_JoyDeviceEvent jdevice;
+	SDL_ControllerAxisEvent caxis;
+	SDL_ControllerButtonEvent cbutton;
+	SDL_ControllerDeviceEvent cdevice;
+	SDL_AudioDeviceEvent adevice;
+	SDL_QuitEvent quit;
+	SDL_UserEvent user;
+	SDL_SysWMEvent syswm;
+	SDL_TouchFingerEvent tfinger;
+	SDL_MultiGestureEvent mgesture;
+	SDL_DollarGestureEvent dgesture;
+	SDL_DropEvent drop;
+	Array<unsigned __int8,56> padding;
+};
+
+#pragma pack(push, 1)
+struct Item_effect_st
+{
+	unsigned __int16 effectID;
+	unsigned __int8 targetType;
+	unsigned __int8 spellLevel;
+	int effectAmount;
+	unsigned int dwFlags;
+	unsigned __int16 durationType;
+	unsigned int duration;
+	unsigned __int8 probabilityUpper;
+	unsigned __int8 probabilityLower;
+	Array<unsigned __int8,8> res;
+	unsigned int numDice;
+	unsigned int diceSize;
+	unsigned int savingThrow;
+	int saveMod;
+	unsigned int special;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct Item_ability_st
+{
+	unsigned __int16 type;
+	unsigned __int8 quickSlotType;
+	unsigned __int8 largeDamageDice;
+	Array<unsigned __int8,8> quickSlotIcon;
+	unsigned __int8 actionType;
+	unsigned __int8 actionCount;
+	unsigned __int16 range;
+	unsigned __int8 launcherType;
+	unsigned __int8 largeDamageDiceCount;
+	unsigned __int8 speedFactor;
+	unsigned __int8 largeDamageDiceBonus;
+	__int16 thac0Bonus;
+	unsigned __int8 damageDice;
+	unsigned __int8 school;
+	unsigned __int8 damageDiceCount;
+	unsigned __int8 secondaryType;
+	__int16 damageDiceBonus;
+	unsigned __int16 damageType;
+	unsigned __int16 effectCount;
+	unsigned __int16 startingEffect;
+	unsigned __int16 maxUsageCount;
+	unsigned __int16 usageFlags;
+	unsigned int abilityFlags;
+	unsigned __int16 missileType;
+	Array<unsigned __int16,6> attackProbability;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct Item_Header_st
+{
+	unsigned int nFileType;
+	unsigned int nFileVersion;
+	unsigned int genericName;
+	unsigned int identifiedName;
+	Array<unsigned __int8,8> usedUpItemID;
+	unsigned int itemFlags;
+	unsigned __int16 itemType;
+	unsigned int notUsableBy;
+	Array<unsigned __int8,2> animationType;
+	unsigned __int16 minLevelRequired;
+	unsigned __int16 minSTRRequired;
+	unsigned __int8 minSTRBonusRequired;
+	unsigned __int8 notUsableBy2a;
+	unsigned __int8 minINTRequired;
+	unsigned __int8 notUsableBy2b;
+	unsigned __int8 minDEXRequired;
+	unsigned __int8 notUsableBy2c;
+	unsigned __int8 minWISRequired;
+	unsigned __int8 notUsableBy2d;
+	unsigned __int8 minCONRequired;
+	unsigned __int8 proficiencyType;
+	unsigned __int16 minCHRRequired;
+	unsigned int baseValue;
+	unsigned __int16 maxStackable;
+	Array<unsigned __int8,8> itemIcon;
+	unsigned __int16 loreValue;
+	Array<unsigned __int8,8> groundIcon;
+	unsigned int baseWeight;
+	unsigned int genericDescription;
+	unsigned int identifiedDescription;
+	Array<unsigned __int8,8> descriptionPicture;
+	unsigned int attributes;
+	unsigned int abilityOffset;
+	unsigned __int16 abilityCount;
+	unsigned int effectsOffset;
+	unsigned __int16 equipedStartingEffect;
+	unsigned __int16 equipedEffectCount;
+};
+#pragma pack(pop)
 
 typedef uiMenu* (*type_findMenu)(const char* name, int panel, int state);
 extern type_findMenu p_findMenu;
@@ -10063,2348 +6195,1125 @@ extern int* p_menuLength;
 extern CTypedPtrArray<CPtrArray,CRes*>* p_resources;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 
-enum class uiVariantType : __int32
+struct DP_Player
 {
-	UIVAR_INT = 0,
-	UIVAR_FUNCTION = 1,
-	UIVAR_STRING = 2,
-	UIVAR_FLOAT = 3,
+	unsigned int id;
+	Array<char,32> name;
+	Array<char,32> remoteAddr;
+	int sessionId;
+	unsigned int flags;
+	void* batton;
+	IDPPeer* peer;
+	bool in_game;
 };
 
-struct uiVariant
+struct CWorldMapLinks
 {
-	union value_t
+	unsigned int m_nArea;
+	Array<char,32> m_entryPoint;
+	unsigned int m_nDistanceScale;
+	unsigned int m_dwLinkFlags;
+	Array<unsigned __int8,8> m_resRandomEncounterArea0;
+	Array<unsigned __int8,8> m_resRandomEncounterArea1;
+	Array<unsigned __int8,8> m_resRandomEncounterArea2;
+	Array<unsigned __int8,8> m_resRandomEncounterArea3;
+	Array<unsigned __int8,8> m_resRandomEncounterArea4;
+	unsigned int m_nEncounterProbability;
+	Array<unsigned int,32> nUnused;
+};
+
+struct CWorldMapData
+{
+	Array<unsigned __int8,8> m_resMosaic;
+	unsigned int m_nWidth;
+	unsigned int m_nHeight;
+	unsigned int m_nMapID;
+	unsigned int m_strTitle;
+	unsigned int m_nStartCenteredOnX;
+	unsigned int m_nStartCenteredOnY;
+	unsigned int m_nAreas;
+	unsigned int m_nAreasOffset;
+	unsigned int m_nOffsetToLinks;
+	unsigned int m_nLinks;
+	Array<unsigned __int8,8> m_resAreaIcons;
+	unsigned int m_dwFlags;
+	Array<unsigned int,31> nUnused;
+};
+
+struct CWorldMapArea
+{
+	Array<unsigned __int8,8> m_resCurrentArea;
+	Array<unsigned __int8,8> m_resOriginalArea;
+	Array<char,32> m_strName;
+	unsigned int m_dwFlags;
+	unsigned int m_sequence;
+	unsigned int m_mapLocationX;
+	unsigned int m_mapLocationY;
+	unsigned int m_strLabel;
+	unsigned int m_strAreaName;
+	Array<unsigned __int8,8> m_resAreaLoadMosaic;
+	unsigned int m_nNorthEdgeStartingLink;
+	unsigned int m_nNorthEdgeCount;
+	unsigned int m_nWestEdgeStartingLink;
+	unsigned int m_nWestEdgeCount;
+	unsigned int m_nSouthEdgeStartingLink;
+	unsigned int m_nSouthEdgeCount;
+	unsigned int m_nEastEdgeStartingLink;
+	unsigned int m_nEastEdgeCount;
+	Array<unsigned int,32> nUnused;
+};
+
+struct CVisibilityMapTreeNode
+{
+	CPoint m_relativePos;
+	unsigned __int16 m_nRange;
+	Array<__int16,3> m_aChildren;
+	__int16 m_parent;
+};
+
+struct CVisibilityMap
+{
+	unsigned __int16* m_pMap;
+	int m_nMapSize;
+	__int16 m_nWidth;
+	__int16 m_nHeight;
+	unsigned __int8 m_bOutDoor;
+	CSearchBitmap* m_pSearchMap;
+	Array<int,15> m_aCharacterIds;
+	CVisibilityMapTreeNode** m_pVisMapTrees;
+	CVisibilityMapEllipse* m_pVisMapEllipses;
+};
+
+struct CVidPalette
+{
+	unsigned __int64 m_nAUCounter;
+	unsigned __int64 m_nAUCounterBase;
+	tagRGBQUAD* m_pPalette;
+	int m_nEntries;
+	unsigned int rgbGlobalTint;
+	unsigned __int16 m_nType;
+	unsigned __int8 m_bPaletteOwner;
+	int m_bSubRangesCalculated;
+	Array<unsigned __int8,7> m_rangeColors;
+};
+
+struct CVIDIMG_PALETTEAFFECT
+{
+	unsigned int rgbTintColor;
+	unsigned int rgbAddColor;
+	unsigned int rgbLightColor;
+	Array<unsigned int*,7> pRangeTints;
+	Array<unsigned __int8,8> aRangeTintPeriods;
+	Array<unsigned int*,7> pRangeAdds;
+	Array<unsigned __int8,8> aRangeAddPeriods;
+	Array<unsigned int*,7> pRangeLights;
+	Array<unsigned __int8,7> aRangeLightPeriods;
+	unsigned __int8 suppressTints;
+};
+
+struct CVidImage
+{
+	CVidPalette m_cPalette;
+	CVIDIMG_PALETTEAFFECT mPaletteAffects;
+};
+
+struct CVidTile : CVidImage
+{
+	CResTile* pRes;
+	unsigned int m_dwFlags;
+};
+
+struct CTlkTable
+{
+	CMapStringToString m_mapTokens;
+	unsigned __int8 m_currentGender;
+	CTlkFileOverride m_override;
+	Array<CFileView*,2> m_tlkFiles;
+	unsigned int* m_engineStrings;
+	unsigned int m_nEngineStrings;
+	unsigned int m_nEngineStringBase;
+};
+
+struct CStoreFileSpell
+{
+	Array<unsigned __int8,8> m_spell;
+	unsigned int m_cost;
+};
+
+struct CStoreFileItem
+{
+	Array<unsigned __int8,8> m_itemId;
+	unsigned __int16 m_wear;
+	Array<unsigned __int16,3> m_usageCount;
+	unsigned int m_dynamicFlags;
+	unsigned int m_nInStock;
+	unsigned int m_nStoreFlags;
+};
+
+struct CStoreFileHeader
+{
+	unsigned int m_nStoreType;
+	unsigned int m_strName;
+	unsigned int m_nStoreFlags;
+	unsigned int m_nBuyMarkUp;
+	unsigned int m_nSellMarkDown;
+	unsigned int m_nAdditionalMarkDown;
+	unsigned __int16 m_nStealDifficulty;
+	unsigned __int16 m_nMaxItems;
+	Array<unsigned __int8,8> m_script;
+	unsigned int m_nbuyTypesOffset;
+	unsigned int m_nbuyTypesCount;
+	unsigned int m_nInventoryOffset;
+	unsigned int m_nInventoryCount;
+	unsigned int m_nLore;
+	unsigned int m_nIdentifyCost;
+	Array<unsigned __int8,8> m_resRumor;
+	unsigned int m_drinkOffset;
+	unsigned int m_drinkCount;
+	Array<unsigned __int8,8> m_resDonation;
+	unsigned int m_nInnFlags;
+	unsigned int m_nRoomCostPeasant;
+	unsigned int m_nRoomCostMerchant;
+	unsigned int m_nRoomCostNoble;
+	unsigned int m_nRoomCostRoyal;
+	unsigned int m_spellOffset;
+	unsigned int m_spellCount;
+	unsigned int m_rouletMaxBet;
+	unsigned int m_crapsMaxBet;
+	unsigned int m_wheelMaxBet;
+	unsigned int m_rouletWinChance;
+	unsigned int m_crapsWinChance;
+	unsigned int m_wheelWinChance;
+	unsigned int m_rouletWinAmount;
+	unsigned int m_crapsWinAmount;
+	unsigned int m_wheelWinAmount;
+};
+
+struct CStoreFileDrinks
+{
+	Array<unsigned __int8,8> m_icon;
+	unsigned int m_strName;
+	unsigned int m_nCost;
+	unsigned int m_nRumorChance;
+};
+
+struct CSteam
+{
+	struct SubscribedItems
 	{
-		int intVal;
-		const char* strVal;
-		float floatVal;
-		int luaFunc;
+		Array<unsigned __int64,16> vecPublished;
+		int curSubscribed;
+		int numSubscribed;
 	};
 
-	uiVariantType type;
-	uiVariant::value_t value;
+	bool m_isSteamConnected;
+	CSteamID m_SteamID;
+	CCallResult<CSteam,CreateItemResult_t> m_CreateItemCompleted;
+	CCallResult<CSteam,SteamUGCQueryCompleted_t> m_PublishedQueryCompleted;
+	CCallResult<CSteam,SubmitItemUpdateResult_t> m_SubmitItemUpdateCompleted;
+	int m_RemainingPublished;
+	int m_CurPagePublished;
+	CString m_PublishingName;
+	CString m_PublishingDir;
+	int m_CloudState;
+	CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t> m_RequestUGCDetailsCompleted;
+	CSteam::SubscribedItems m_Subscribed;
+	unsigned __int64 m_nUploadId;
+	ISteamRemoteStorage* m_RemoteStorage;
+	ISteamUGC* m_UGC;
+	ISteamUserStats* m_UserStats;
+	void (*logger)(const char*, ...);
 };
 
-struct view_t
+struct CSoundMixerImp
 {
-	void* viewOfFile;
-	unsigned int viewBase;
-	unsigned int viewSize;
-	int size;
+	ALCcontext_struct* alContext;
+	ALCdevice_struct* alDevice;
+	Array<float,3> pos;
+	int bMixerInitialized;
+	int bStreamPlaying;
+	int m_bMusicInitialized;
+	int bInPositionUpdate;
+	int bInSoundUpdate;
+	int bInQueueUpdate;
+	int bInLoopingUpdate;
+	unsigned int m_dwEAXProperties;
+	CSoundProperties m_soundProperties;
+	int m_nNumSongs;
+	int m_nLastSong;
+	int m_nCurrentSong;
+	int m_nQuietMusicVolume;
+	unsigned __int64 m_nActiveArea;
+	int m_nDuckingOn;
+	CDWordArray m_aMusicSlots;
+	Array<unsigned __int8,10001> m_tSqrtTable;
+	int nMaxVoices;
+	CObList lVoices;
+	CObList lWaiting;
+	CObList lLooping;
+	CObArray aChannels;
+	int nMaxChannels;
+	int nGlobalVolume;
+	int nPanRange;
+	int nXCoordinate;
+	int nYCoordinate;
+	int nZCoordinate;
+	CTypedPtrList<CPtrList,CMusicPosition*> m_lMusicPositions;
 };
 
-typedef void (*type_CRes_Construct)(CRes* pThis);
-extern type_CRes_Construct p_CRes_Construct;
-
-typedef void (*type_CRes_Destruct)(CRes* pThis);
-extern type_CRes_Destruct p_CRes_Destruct;
-
-typedef void* (*type_CRes_Demand)(CRes* pThis);
-extern type_CRes_Demand p_CRes_Demand;
-
-struct CRes
+struct CSearchRequest
 {
-	const char* resref;
-	int type;
-	view_t view;
-	unsigned int nID;
-	int zip_id;
-	int override_id;
-	void* pData;
-	unsigned int nSize;
-	unsigned int nCount;
-	bool bWasMalloced;
-	bool bLoaded;
-
-	CRes()
-	{
-		p_CRes_Construct(this);
-	}
-
-	void Destruct()
-	{
-		p_CRes_Destruct(this);
-	}
-
-	void* Demand()
-	{
-		return p_CRes_Demand(this);
-	}
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
-};
-
-struct CResWebm : CRes
-{
-	void* m_pCodec;
-	unsigned int m_nFirstFrameTime;
-	unsigned int m_nFrameWaitTime;
-	bool m_bComplete;
-	bool m_bLooping;
-	CRect m_rRender;
-	int m_texture;
-	bool m_bGreyscale;
-	bool m_bTiled;
-	int m_nTransparent;
-	bool m_bUseTone;
-	float m_nDeltaX;
-	float m_nDeltaY;
-	float m_nOffsetX;
-	float m_nOffsetY;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
-};
-
-struct CResWave : CRes
-{
-	int m_bCompressed;
-	int m_bIsOgg;
-	unsigned int m_nWaveNormalSize;
-	unsigned int m_nWaveCompressedSize;
-	unsigned __int8* m_pWaveData;
-	WAV_Header* m_pWaveFormatEx;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
-};
-
-struct CSoundImp : CObject, CResHelper<CResWave,4>
-{
-	CSound* m_pParent;
-	int m_bPositionedSound;
-	int m_dwBufferSize;
-	int m_dwFrequency;
-	int m_nBufferFormat;
-	int m_nRange;
-	int m_nRangeVolume;
-	int m_nXCoordinate;
-	int m_nYCoordinate;
-	int m_nZCoordinate;
-	int m_nPan;
-	int m_nVolume;
-	bool m_bSoundInitialized;
-	int m_nChannel;
-	int m_nPriority;
-	int m_nLooping;
-	int m_nPitchVariance;
-	int m_nVolumeVariance;
-	bool m_b3DPositionning;
-	unsigned int m_nSource;
-	unsigned int m_nBuffer;
-	bool m_bFireForget;
-	unsigned __int64 m_nArea;
-	int m_dwOverrideFlags;
-	bool m_bSoundIsntDucked;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CSound : CObject, CResHelper<CResWave,4>
-{
-	CSoundImp* pimpl;
-
-	virtual void CObject_Destructor()
-	{
-	}
-};
-
-struct CProjectile : CGameObject
-{
-	unsigned __int16 m_projectileType;
-	unsigned __int8 m_addToListType;
-	__int16 m_speed;
-	int m_sourceId;
-	int m_targetId;
-	int m_callBackProjectile;
-	CGameEffectList m_effectList;
-	__int16 m_nType;
-	__int16 m_nFileType;
-	CPoint m_posExact;
-	CPoint m_posDelta;
-	CPoint m_startDelta;
-	CPoint m_minRandomSpeed;
-	CPoint m_maxRandomSpeed;
-	int m_startSpeed;
-	CPoint m_posDest;
+	unsigned __int8 m_serviceState;
+	unsigned __int8 m_collisionDelay;
+	int m_collisionSearch;
+	unsigned __int8 m_sourceSide;
+	unsigned __int8 m_nPartyIds;
+	unsigned __int8 m_nTargetIds;
+	unsigned __int8 m_nTargetPoints;
+	int m_removeSelf;
+	unsigned __int8 m_frontList;
+	CSearchBitmap* m_searchBitmap;
 	Array<unsigned __int8,16> m_terrainTable;
-	unsigned __int16 m_decAmmount;
-	int m_bSparkleTrail;
-	unsigned int m_defaultRenderFlags;
-	int m_bIgnoreTarget;
-	CSound m_sound;
-	CResRef m_fireSoundRef;
-	int m_loopFireSound;
-	CResRef m_arrivalSoundRef;
-	int m_loopArrivalSound;
-	unsigned __int8 m_bHasHeight;
-	__int16 m_nDeltaZ;
-	__int16 m_nDeltaZLast;
-	int m_nOrigDistance;
-	CPoint m_ptBamSize;
-	int m_dwFlags;
-	int m_maxBounces;
-	CString m_visualEffectRef;
-	int m_visualEffect;
-	__int16 m_maxDuration;
-	__int16 m_lanceWidth;
-	unsigned int m_extFlags;
-	unsigned int m_strRef;
-	unsigned int m_color;
-	unsigned __int16 m_colorSpeed;
-	unsigned __int16 m_shake;
-	unsigned __int16 m_IDSValue1;
-	unsigned __int16 m_IDSType1;
-	unsigned __int16 m_IDSValue2;
-	unsigned __int16 m_IDSType2;
-	CResRef m_failureSpell;
-	CResRef m_successSpell;
-	int m_ignoreDamage;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void Fire(CGameArea* _0, int _1, int _2, CPoint _3, int _4, __int16 _5)
-	{
-	}
-
-	virtual void OnArrival()
-	{
-	}
-
-	virtual void RemoveSelf()
-	{
-	}
-
-	virtual void DeliverEffects()
-	{
-	}
-
-	virtual void CallBack()
-	{
-	}
-
-	virtual unsigned int GetDefaultRenderFlags()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual void SetDefaultRenderFlags(unsigned int _0)
-	{
-	}
-
-	virtual int SaveProjectile()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void Marshal(SProjectileWrapper* _0)
-	{
-	}
-
-	virtual CAIObjectType* GetTargetType()
-	{
-		return *(CAIObjectType**)nullptr;
-	}
-
-	virtual void SetTargetType(const CAIObjectType* _0)
-	{
-	}
-
-	virtual void GetPreview(CGameArea* _0)
-	{
-	}
-};
-
-struct CGameAIBase : CGameObject
-{
-	CAIObjectType m_lAttacker;
-	int m_lAttackStyle;
-	CAIObjectType m_lOrderedBy;
-	CAIObjectType m_protecting;
-	CAIObjectType m_protector;
-	CAIObjectType m_lTargeted;
-	CAIObjectType m_lHitter;
-	CAIObjectType m_lHelp;
-	CAIObjectType m_lTrigger;
-	CAIObjectType m_lSeen;
-	CAIObjectType m_lTalkedTo;
-	CAIObjectType m_lHeard;
-	CAIObjectType m_lSummonedBy;
-	CAIObjectType m_lKilled;
-	CAIObjectType m_lEnteredBy;
-	CAIObjectType m_lAttackerSent;
-	CAIObjectType m_lOrderedBySent;
-	CAIObjectType m_protectingSent;
-	CAIObjectType m_protectorSent;
-	CAIObjectType m_lTargetedSent;
-	CAIObjectType m_lHitterSent;
-	CAIObjectType m_lHelpSent;
-	CAIObjectType m_lTriggerSent;
-	CAIObjectType m_lSeenSent;
-	CAIObjectType m_lTalkedToSent;
-	CAIObjectType m_lHeardSent;
-	CAIObjectType m_lSummonedBySent;
-	CAIObjectType m_lKilledSent;
-	CAIScript* m_overrideScript;
-	CAIScript* m_areaScript;
-	CAIScript* m_specificsScript;
-	CAIScript* m_classScript;
-	CAIScript* m_raceScript;
-	CAIScript* m_generalScript;
-	CAIScript* m_defaultScript;
-	CAIScript* m_achievementScript;
-	CTypedPtrList<CPtrList,CAIAction*> m_queuedActions;
-	CTypedPtrList<CPtrList,CAITrigger*> m_pendingTriggers;
-	unsigned int m_PAICallCounter;
-	unsigned int m_PAICallCounterNoMod;
-	CTypedPtrList<CPtrList,CGameTimer*> m_timers;
-	__int16 m_curResponseNum;
-	__int16 m_curResponseSetNum;
-	__int16 m_curScriptNum;
-	int m_interrupt;
-	__int16 m_actionCount;
-	int m_bJustAttacked;
-	CAIAction m_curAction;
-	int m_nExpectedProcessPendingTriggersCalls;
-	__int16 m_nMissedProcessPendingTriggerCalls;
-	__int16 m_nAlertnessPeriod;
-	Array<char,32> m_scriptName;
-	int m_inCutScene;
-	int m_firstCall;
-	int m_forceActionPick;
-	int m_randValue;
-	unsigned __int8 m_reactionRoll;
-	__int16 m_nLastActionReturn;
-	unsigned __int8 m_nVisualRange;
-	unsigned int m_iGameText;
-	int m_bInActionExecution;
-	int m_bNewTrigger;
-	int m_triggerSwitch;
-	int m_bNoInterrupt;
-	int m_bDisableAI;
-	CSound m_forcePauseSound;
-	int m_nServerLastObjectSynchDelay;
-	CAITrigger triggerOverride;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void ClearActions(int _0)
-	{
-	}
-
-	virtual void UpdateTarget(CGameObject* _0)
-	{
-	}
-
-	virtual void AddAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
-	{
-	}
-
-	virtual void ClearAI(unsigned __int8 _0)
-	{
-	}
-
-	virtual void DoAction()
-	{
-	}
-
-	virtual __int16 ExecuteAction()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void InsertAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void ProcessAI()
-	{
-	}
-
-	virtual void SetCurrAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void SetScript(__int16 _0, CAIScript* _1)
-	{
-	}
-
-	virtual __int16 GetVisualRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual __int16 GetAttackRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual const unsigned __int8* GetVisibleTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual const unsigned __int8* GetTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual int QuickDecode(CAITrigger* _0, CGameSprite** _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual __int16 GetHelpRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void ApplyTriggers()
-	{
-	}
-
-	virtual void AutoPause(unsigned int _0)
-	{
-	}
-
-	virtual int GetCanSeeInvisible()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionRemoval(CAIAction* _0)
-	{
-	}
-
-	virtual CRect* GetBounding()
-	{
-		return *(CRect**)nullptr;
-	}
-};
-
-struct CGameAIArea : CGameAIBase
-{
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void ClearActions(int _0)
-	{
-	}
-
-	virtual void UpdateTarget(CGameObject* _0)
-	{
-	}
-
-	virtual void AddAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
-	{
-	}
-
-	virtual void ClearAI(unsigned __int8 _0)
-	{
-	}
-
-	virtual void DoAction()
-	{
-	}
-
-	virtual __int16 ExecuteAction()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void InsertAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void ProcessAI()
-	{
-	}
-
-	virtual void SetCurrAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void SetScript(__int16 _0, CAIScript* _1)
-	{
-	}
-
-	virtual __int16 GetVisualRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual __int16 GetAttackRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual const unsigned __int8* GetVisibleTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual const unsigned __int8* GetTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual int QuickDecode(CAITrigger* _0, CGameSprite** _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual __int16 GetHelpRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void ApplyTriggers()
-	{
-	}
-
-	virtual void AutoPause(unsigned int _0)
-	{
-	}
-
-	virtual int GetCanSeeInvisible()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionRemoval(CAIAction* _0)
-	{
-	}
-
-	virtual CRect* GetBounding()
-	{
-		return *(CRect**)nullptr;
-	}
-};
-
-struct CGameAIGame : CGameAIBase
-{
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void ClearActions(int _0)
-	{
-	}
-
-	virtual void UpdateTarget(CGameObject* _0)
-	{
-	}
-
-	virtual void AddAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
-	{
-	}
-
-	virtual void ClearAI(unsigned __int8 _0)
-	{
-	}
-
-	virtual void DoAction()
-	{
-	}
-
-	virtual __int16 ExecuteAction()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void InsertAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void ProcessAI()
-	{
-	}
-
-	virtual void SetCurrAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void SetScript(__int16 _0, CAIScript* _1)
-	{
-	}
-
-	virtual __int16 GetVisualRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual __int16 GetAttackRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual const unsigned __int8* GetVisibleTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual const unsigned __int8* GetTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual int QuickDecode(CAITrigger* _0, CGameSprite** _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual __int16 GetHelpRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void ApplyTriggers()
-	{
-	}
-
-	virtual void AutoPause(unsigned int _0)
-	{
-	}
-
-	virtual int GetCanSeeInvisible()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionRemoval(CAIAction* _0)
-	{
-	}
-
-	virtual CRect* GetBounding()
-	{
-		return *(CRect**)nullptr;
-	}
-};
-
-struct CGameDoor : CGameAIBase
-{
-	CResRef m_resID;
-	CRect m_rOpenBounding;
-	CRect m_rClosedBounding;
-	unsigned int m_cursorType;
-	unsigned int m_dwFlags;
-	CPoint* m_pOpenPolygon;
-	unsigned __int16 m_nOpenPolygon;
-	CPoint* m_pClosedPolygon;
-	unsigned __int16 m_nClosedPolygon;
-	CPoint* m_pOpenSearch;
-	unsigned __int16 m_nOpenSearch;
-	CPoint* m_pClosedSearch;
-	unsigned __int16 m_nClosedSearch;
-	CPoint m_ptDest1;
-	CPoint m_ptDest2;
-	Array<unsigned __int8,8> m_scriptRes;
-	CTiledObject m_tiledObject;
-	Array<char,32> m_scriptName;
-	Array<char,32> m_triggerName;
-	__int16 m_hitPoints;
-	__int16 m_armourClass;
-	CResRef m_openSound;
-	CResRef m_closeSound;
-	unsigned __int16 m_trapDetectionDifficulty;
-	unsigned __int16 m_trapDisarmingDifficulty;
-	unsigned __int16 m_trapActivated;
-	unsigned __int16 m_trapDetected;
-	unsigned __int16 m_posXTrapOrigin;
-	unsigned __int16 m_posYTrapOrigin;
-	CResRef m_keyType;
-	unsigned int m_detectionDifficulty;
-	unsigned int m_lockDifficulty;
-	__int16 m_drawPoly;
-	CPoint m_ptOpenDest;
-	CPoint m_ptClosedDest;
-	CSound m_sndDoor;
-	unsigned int m_strNotPickable;
-	int m_usedDelay;
-	unsigned __int8 m_probabilityRoll;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void ClearActions(int _0)
-	{
-	}
-
-	virtual void UpdateTarget(CGameObject* _0)
-	{
-	}
-
-	virtual void AddAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
-	{
-	}
-
-	virtual void ClearAI(unsigned __int8 _0)
-	{
-	}
-
-	virtual void DoAction()
-	{
-	}
-
-	virtual __int16 ExecuteAction()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void InsertAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void ProcessAI()
-	{
-	}
-
-	virtual void SetCurrAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void SetScript(__int16 _0, CAIScript* _1)
-	{
-	}
-
-	virtual __int16 GetVisualRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual __int16 GetAttackRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual const unsigned __int8* GetVisibleTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual const unsigned __int8* GetTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual int QuickDecode(CAITrigger* _0, CGameSprite** _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual __int16 GetHelpRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void ApplyTriggers()
-	{
-	}
-
-	virtual void AutoPause(unsigned int _0)
-	{
-	}
-
-	virtual int GetCanSeeInvisible()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionRemoval(CAIAction* _0)
-	{
-	}
-
-	virtual CRect* GetBounding()
-	{
-		return *(CRect**)nullptr;
-	}
-};
-
-struct CGameTiledObject : CGameAIBase
-{
-	CResRef m_resID;
-	unsigned int m_dwFlags;
-	CPoint* m_pPrimarySearch;
-	unsigned __int16 m_nPrimarySearch;
-	CPoint* m_pSecondarySearch;
-	unsigned __int16 m_nSecondarySearch;
-	CTiledObject m_tiledObject;
-	Array<char,32> m_scriptName;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void ClearActions(int _0)
-	{
-	}
-
-	virtual void UpdateTarget(CGameObject* _0)
-	{
-	}
-
-	virtual void AddAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
-	{
-	}
-
-	virtual void ClearAI(unsigned __int8 _0)
-	{
-	}
-
-	virtual void DoAction()
-	{
-	}
-
-	virtual __int16 ExecuteAction()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void InsertAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void ProcessAI()
-	{
-	}
-
-	virtual void SetCurrAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void SetScript(__int16 _0, CAIScript* _1)
-	{
-	}
-
-	virtual __int16 GetVisualRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual __int16 GetAttackRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual const unsigned __int8* GetVisibleTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual const unsigned __int8* GetTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual int QuickDecode(CAITrigger* _0, CGameSprite** _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual __int16 GetHelpRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void ApplyTriggers()
-	{
-	}
-
-	virtual void AutoPause(unsigned int _0)
-	{
-	}
-
-	virtual int GetCanSeeInvisible()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionRemoval(CAIAction* _0)
-	{
-	}
-
-	virtual CRect* GetBounding()
-	{
-		return *(CRect**)nullptr;
-	}
-};
-
-struct CGameTrigger : CGameAIBase
-{
-	unsigned __int16 m_triggerType;
-	CRect m_rBounding;
-	unsigned int m_cursorType;
-	Array<unsigned __int8,8> m_newArea;
-	Array<char,32> m_newEntryPoint;
-	unsigned int m_dwFlags;
-	unsigned int m_description;
-	CPoint* m_pPolygon;
-	unsigned __int16 m_nPolygon;
-	unsigned __int16 m_boundingRange;
-	Array<unsigned __int8,8> m_scriptRes;
-	Array<char,32> m_scriptName;
-	unsigned __int16 m_trapDetectionDifficulty;
-	unsigned __int16 m_trapDisarmingDifficulty;
-	unsigned __int16 m_trapActivated;
-	unsigned __int16 m_trapDetected;
-	CPoint m_posTrapOrigin;
-	CResRef m_keyType;
-	__int16 m_drawPoly;
-	unsigned int m_iGameText;
-	CPoint m_ptWalkTo;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void ClearActions(int _0)
-	{
-	}
-
-	virtual void UpdateTarget(CGameObject* _0)
-	{
-	}
-
-	virtual void AddAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
-	{
-	}
-
-	virtual void ClearAI(unsigned __int8 _0)
-	{
-	}
-
-	virtual void DoAction()
-	{
-	}
-
-	virtual __int16 ExecuteAction()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void InsertAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void ProcessAI()
-	{
-	}
-
-	virtual void SetCurrAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void SetScript(__int16 _0, CAIScript* _1)
-	{
-	}
-
-	virtual __int16 GetVisualRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual __int16 GetAttackRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual const unsigned __int8* GetVisibleTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual const unsigned __int8* GetTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual int QuickDecode(CAITrigger* _0, CGameSprite** _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual __int16 GetHelpRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void ApplyTriggers()
-	{
-	}
-
-	virtual void AutoPause(unsigned int _0)
-	{
-	}
-
-	virtual int GetCanSeeInvisible()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionRemoval(CAIAction* _0)
-	{
-	}
-
-	virtual CRect* GetBounding()
-	{
-		return *(CRect**)nullptr;
-	}
-
-	virtual int IsOverActivate(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CGameSound : CGameObject
-{
-	CAreaFileSoundObject m_soundObject;
-	CSound m_looping;
-	int m_bLoopPlaying;
-	int m_period;
-	int m_periodCount;
-	unsigned __int8 m_currentSound;
-	unsigned int m_timeOfDayActive;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CGameTemporal : CGameObject
-{
-	Array<unsigned __int8,16> m_visibleTerrainTable;
-	CGameAnimation m_animation;
-	int m_animationRunning;
-	CPoint m_posExact;
-	CPoint m_posDelta;
-	__int16 m_duration;
-	unsigned __int8 m_durationFade;
-	unsigned __int8 m_collision;
-	CSound m_sound;
-	int m_bPermanent;
-	int m_bAllowSave;
-	unsigned __int16 m_projectileType;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CGameEffect : CGameEffectBase
-{
+	int m_pathSmooth;
+	int m_exclusiveTargetPoints;
 	int m_sourceId;
-	int m_done;
-	int m_forceRepass;
-	unsigned int m_durationTemp;
-	int m_compareIdOnly;
-	int m_compareIdAndFlagsOnly;
-	int m_compareIdAndEffectAmountOnly;
-	int m_compareIdAndResrefOnly;
-	CSound m_sound;
-	int m_sourceTarget;
+	tagPOINT m_sourcePt;
+	int* m_partyIds;
+	int* m_targetIds;
+	tagPOINT* m_targetPoints;
+	int m_minNodes;
+	int m_maxNodes;
+	int m_minNodesBack;
+	int m_maxNodesBack;
+	int m_bBump;
+	__int16 m_searchRc;
+	__int16 m_nPath;
+	int* m_pPath;
+};
 
-	virtual void CGameEffect_Destructor()
+struct CScreenMovies : CBaldurEngine
+{
+	struct CScreenMovies_vtbl
 	{
-	}
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
 
-	virtual CGameEffect* Copy()
-	{
-		return *(CGameEffect**)nullptr;
-	}
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_nEngineState;
+	CStringList* m_pMovies;
+	int m_nMovieIndex;
+	CString m_sSelectedMovie;
+};
 
-	virtual int ApplyEffect(CGameSprite* _0)
+struct CScreenConnection : CBaldurEngine
+{
+	struct CScreenConnection_vtbl
 	{
-		return *(int*)nullptr;
-	}
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
 
-	virtual int ResolveEffect(CGameSprite* _0)
-	{
-		return *(int*)nullptr;
-	}
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bCtrlKeyDown;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	int m_nProtocol;
+	int m_nSessionIndex;
+	_GUID m_guidSession;
+	unsigned int m_dwLastSessionRefresh;
+	int m_nEnumServiceProvidersCountDown;
+	int m_bStartedCountDown;
+	unsigned __int8 m_bFirstRender;
+	unsigned __int8 m_bEliminateInitialize;
+	unsigned __int8 m_bEMSwapped;
+	unsigned __int8 m_bEMValue;
+	unsigned __int8 m_bEMWaiting;
+	unsigned __int8 m_nEMEvent;
+	unsigned __int8 m_nEMEventStage;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	int m_bAllowInput;
+	unsigned __int8 m_bEnumeratingAsynchronous;
+	unsigned __int8 m_bJoinWaiting;
+	unsigned __int8 m_bJoinComplete;
+	unsigned __int8 m_nJoinEvent;
+	int m_nJoinErrorCode;
+	unsigned __int8 m_bJoinReturnValue;
+	int m_nWaitingForProviderNumber;
+	int m_nWaitingForProviderCount;
+};
 
-	virtual void OnAdd(CGameSprite* _0)
-	{
-	}
+struct CSavedGameStoredLocation
+{
+	Array<unsigned __int8,8> m_areaName;
+	unsigned __int16 m_xPos;
+	unsigned __int16 m_yPos;
+};
 
-	virtual void OnAddSpecific(CGameSprite* _0)
-	{
-	}
+struct CSavedGamePartyCreature
+{
+	unsigned __int16 m_wFlags;
+	unsigned __int16 m_portraitId;
+	unsigned int m_creatureOffset;
+	unsigned int m_creatureSize;
+	Array<unsigned __int8,8> m_creatureResRef;
+	unsigned int m_creatureFacing;
+	Array<unsigned __int8,8> m_areaName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned __int16 m_posViewX;
+	unsigned __int16 m_posViewY;
+	unsigned __int16 m_nModalState;
+	__int16 m_nHappiness;
+	Array<int,24> m_nNumberOfTimesInteractedWith;
+	Array<__int16,4> m_quickWeaponsItemNum;
+	Array<__int16,4> m_quickWeaponsAbilityNum;
+	Array<Array<unsigned __int8,8>,3> m_quickSpellsSpellId;
+	Array<__int16,3> m_quickItemsItemNum;
+	Array<__int16,3> m_quickItemsAbilityNum;
+	Array<char,32> m_name;
+	unsigned int m_numberTimesTalkedTo;
+	unsigned int m_strStrongestKillName;
+	unsigned int m_nStrongestKillXPValue;
+	unsigned int m_nPreviousTimeWithParty;
+	unsigned int m_nJoinPartyTime;
+	unsigned __int8 m_bWithParty;
+	Array<char,2> m_pad1;
+	char m_cFirstResSlot;
+	unsigned int m_nChapterKillsXPValue;
+	unsigned int m_nChapterKillsNumber;
+	unsigned int m_nGameKillsXPValue;
+	unsigned int m_nGameKillsNumber;
+	Array<Array<unsigned __int8,8>,4> m_lSpellStatsName;
+	Array<__int16,4> m_lSpellStatsCount;
+	Array<Array<unsigned __int8,8>,4> m_lWeaponStatsName;
+	Array<__int16,4> m_lWeaponStatsCount;
+	Array<unsigned __int8,8> m_secondarySounds;
+};
 
-	virtual void OnLoad(CGameSprite* _0)
-	{
-	}
+struct CResRef
+{
+	Array<unsigned __int8,8> m_resRef;
 
-	virtual int CheckSave(CGameSprite* _0, unsigned __int8* _1, unsigned __int8* _2, unsigned __int8* _3, unsigned __int8* _4, unsigned __int8* _5, unsigned __int8* _6)
+	void get(lua_State* L)
 	{
-		return *(int*)nullptr;
-	}
-
-	virtual int UsesDice()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void DisplayString(CGameSprite* _0)
-	{
-	}
-
-	virtual void OnRemove(CGameSprite* _0)
-	{
+		char* localCopy = (char*)alloca(sizeof(m_resRef) + 1);
+		int i = 0;
+		for (; i < sizeof(m_resRef); ++i) {
+			char readVal = m_resRef[i];
+			if (readVal == '\0') break;
+			localCopy[i] = readVal;
+		}
+		localCopy[i] = '\0';
+		p_lua_pushstring(L, localCopy);
 	}
 };
 
-struct CContingency
+struct CGameStatsRes : CObject
 {
-	CAITrigger m_cTrigger;
-	CResRef m_cSpellRes;
-	CResRef m_cSpellRes2;
-	CResRef m_cSpellRes3;
-	CAIObjectType m_cTarget;
-	unsigned int m_dwFlags;
-	CGameEffect m_parentEffect;
-	unsigned int m_dwTarget;
-	unsigned int m_dwCondition;
-	unsigned int m_nLastCheck;
+	struct CGameStatsRes_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CResRef m_cResRef;
+	__int16 m_nTimesUsed;
 };
 
-struct CGameEffectUsability : CGameEffect
+struct CAbilityData
 {
-	virtual void CGameEffect_Destructor()
-	{
-	}
-
-	virtual CGameEffect* Copy()
-	{
-		return *(CGameEffect**)nullptr;
-	}
-
-	virtual int ApplyEffect(CGameSprite* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int ResolveEffect(CGameSprite* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnAdd(CGameSprite* _0)
-	{
-	}
-
-	virtual void OnAddSpecific(CGameSprite* _0)
-	{
-	}
-
-	virtual void OnLoad(CGameSprite* _0)
-	{
-	}
-
-	virtual int CheckSave(CGameSprite* _0, unsigned __int8* _1, unsigned __int8* _2, unsigned __int8* _3, unsigned __int8* _4, unsigned __int8* _5, unsigned __int8* _6)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int UsesDice()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void DisplayString(CGameSprite* _0)
-	{
-	}
-
-	virtual void OnRemove(CGameSprite* _0)
-	{
-	}
+	CResRef m_icon;
+	unsigned int m_name;
+	CString m_effect;
+	int m_nMinLevel;
+	int m_nMaxLevel;
+	int m_nNumAllowed;
+	CString m_sPrereq;
+	CString m_sExcludedBy;
+	CString m_sAlignmentRestriction;
 };
 
-struct CGameEffect_vtbl
+struct CAbilityId
 {
-	void (__fastcall *CGameEffect_Destructor)(CGameEffect*);
-	CGameEffect* (__fastcall *Copy)(CGameEffect*);
-	int (__fastcall *ApplyEffect)(CGameEffect*, CGameSprite*);
-	int (__fastcall *ResolveEffect)(CGameEffect*, CGameSprite*);
-	void (__fastcall *OnAdd)(CGameEffect*, CGameSprite*);
-	void (__fastcall *OnAddSpecific)(CGameEffect*, CGameSprite*);
-	void (__fastcall *OnLoad)(CGameEffect*, CGameSprite*);
-	int (__fastcall *CheckSave)(CGameEffect*, CGameSprite*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*);
-	int (__fastcall *UsesDice)(CGameEffect*);
-	void (__fastcall *DisplayString)(CGameEffect*, CGameSprite*);
-	void (__fastcall *OnRemove)(CGameEffect*, CGameSprite*);
+	__int16 m_itemType;
+	__int16 m_itemNum;
+	__int16 m_abilityNum;
+	CResRef m_res;
+	unsigned __int8 m_targetType;
+	unsigned __int8 m_targetCount;
+	unsigned int m_toolTip;
 };
 
-struct STR_RES
+struct CButtonData
 {
-	CString szText;
-	CSound cSound;
+	CResRef m_icon;
+	unsigned int m_name;
+	CResRef m_launcherIcon;
+	unsigned int m_launcherName;
+	__int16 m_count;
+	CAbilityId m_abilityId;
+	unsigned __int8 m_bDisabled;
+	unsigned __int8 m_bDisplayCount;
 };
 
-struct CWeather
+struct CCriticalEntry
 {
-	unsigned __int8 m_bOverCast;
-	unsigned __int16 m_nLightningFreq;
-	unsigned __int16 m_nCurrentWeather;
-	unsigned __int16 m_nWeatherLevel;
-	unsigned int m_nWeatherEndTime;
-	unsigned int m_nWeatherStageEndTime;
-	unsigned int m_nWeatherDuration;
-	unsigned int m_nLastTimeChecked;
-	unsigned __int16 m_nWindLevel;
-	unsigned int m_rgbCurrentOverCastColor;
-	unsigned int m_nDurationCounter;
-	CSnowStorm m_snowStorm;
-	CRainStorm m_rainStorm;
-	CFog m_fog;
-	CSound m_sndRain;
-	CSound m_sndWind;
-	unsigned __int8 m_bWindOn;
-	unsigned __int8 m_bUpgrading;
-	unsigned int m_nNextTimeToStartChecking;
-	unsigned int m_nWindVolumeLevel;
-	unsigned int m_nRainVolumeLevel;
-	unsigned __int8 m_bReInitialize;
+	CResRef m_res;
+	int m_hitOrMiss;
+	int m_slot;
+	int m_attackType;
+	int m_itemType;
+	int m_bonus;
 };
 
-struct CResWED : CRes
+struct CGameDialogReply
 {
-	WED_WedHeader_st* pWEDHeader;
-	WED_LayerHeader_st* pLayers;
-	WED_PolyHeader_st* pPolyHeader;
-	WED_ScreenSectionList* pScreenSectionList;
-	WED_PolyList_st* pPolyList;
-	WED_PolyPoint_st* pPolyPoints;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
+	unsigned int m_flags;
+	unsigned int m_replyText;
+	unsigned int m_journalEntry;
+	CAICondition m_condition;
+	CAIResponse m_response;
+	CResRef m_nextDialog;
+	unsigned int m_nextEntryIndex;
+	__POSITION* m_displayPosition;
+	int m_removeIfPicked;
+	unsigned __int8 m_displayListId;
+	CString m_conditionString;
+	int m_needToParseCondition;
+	CString m_responseString;
+	int m_needToParseResponse;
+	int m_bracketedActions;
 };
 
-struct CResTileSet : CRes
+struct CGameDialogSprite
 {
-	ResFixedHeader_st* h;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
+	CResRef m_file;
+	CTypedPtrArray<CPtrArray,CGameDialogEntry*> m_dialogEntries;
+	CTypedPtrArray<CPtrArray,CGameDialogEntry*> m_dialogEntriesOrdered;
+	int m_characterIndex;
+	int m_talkerIndex;
+	unsigned int m_currentEntryIndex;
+	int m_waitingForResponse;
+	int m_responseMarker;
+	unsigned int m_playerColor;
+	CString m_playerName;
+	int m_dialogFreezeCounter;
+	int m_dialogFreezeMultiplayer;
+	unsigned int m_dWFlags;
+	int m_bPlayedStartSound;
+	int m_bItemDialog;
+	int m_bSuppressName;
+	int m_UpdateTime;
 };
 
-struct CResText : CRes
+struct CImmunitiesItemEquip
 {
-	CString m_string;
+	CResRef m_res;
+	unsigned int m_error;
+	CGameEffect* m_pEffect;
+};
 
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
+struct CImmunitySpell
+{
+	CResRef m_res;
+	unsigned int m_error;
+	int m_item;
+};
 
-	virtual void Dump()
-	{
-	}
+struct CMoveListEntry
+{
+	int m_nSpiteIndex;
+	CResRef m_rAreaRes;
+	CPoint m_ptDest;
+	CPoint m_ptSource;
+	unsigned __int8 m_nFacing;
+	int m_nDelay;
+};
 
-	virtual CResRef* GetResRef()
+struct Spell_ability_st
+{
+	unsigned __int16 type;
+	unsigned __int16 quickSlotType;
+	CResRef quickSlotIcon;
+	unsigned __int8 actionType;
+	unsigned __int8 actionCount;
+	unsigned __int16 range;
+	unsigned __int16 minCasterLevel;
+	unsigned __int16 speedFactor;
+	unsigned __int16 timesPerDay;
+	unsigned __int16 damageDice;
+	unsigned __int16 damageDiceCount;
+	unsigned __int16 damageDiceBonus;
+	unsigned __int16 damageType;
+	unsigned __int16 effectCount;
+	unsigned __int16 startingEffect;
+	unsigned __int16 maxUsageCount;
+	unsigned __int16 usageFlags;
+	unsigned __int16 missileType;
+};
+
+struct CWorldMap
+{
+	CResRef m_cResRef;
+	CWorldMapHeader m_cHeader;
+	CWorldMapData* m_pData;
+	CWorldMapArea** m_ppAreas;
+	CWorldMapLinks** m_ppLinks;
+};
+
+struct CVVCHashEntry
+{
+	CResRef m_name;
+	unsigned __int16 m_priority;
+	unsigned int m_renderType;
+	unsigned int m_renderMask;
+};
+
+struct CAIScript
+{
+	CResRef cResRef;
+	CTypedPtrList<CPtrList,CAIConditionResponse*> m_caList;
+};
+
+struct CTiledObject
+{
+	int m_nWedIndex;
+	CResWED* m_pResWed;
+	unsigned __int16 m_wAIState;
+	unsigned __int16 m_wRenderState;
+	__POSITION* m_posAreaList;
+	CResRef m_resId;
+};
+
+struct CStore
+{
+	CResRef m_resRef;
+	CStoreFileHeader m_header;
+	CTypedPtrList<CPtrList,CStoreFileItem*> m_lInventory;
+	unsigned int* m_pBuyTypes;
+	unsigned int m_nBuyTypes;
+	CStoreFileDrinks* m_pDrinks;
+	unsigned int m_nDrinks;
+	CStoreFileSpell* m_pSpells;
+	unsigned int m_nSpells;
+	Array<unsigned __int8,8> m_pVersion;
+	int m_bLocalCopy;
+};
+
+struct CSequenceSound
+{
+	CResRef m_sound;
+	int m_offset;
+};
+
+struct CScreenWizSpell : CBaldurEngine
+{
+	struct CScreenWizSpell_vtbl
 	{
-		return *(CResRef**)nullptr;
-	}
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_nSpellLevel;
+	int m_bMultiPlayerViewable;
+	int m_nMemorizedSpellIndex;
+	unsigned __int8 m_bCtrlKeyDown;
+	int m_bMagePage;
+	unsigned __int8 m_nContingencyMaxLevel;
+	unsigned __int8 m_nContingencyMaxSpells;
+	__int16 m_bContingencyRestrictTarget;
+	CBaldurEngine* m_pOldEngine;
+	CResRef m_refContingencyResRef;
+	int m_bControlled;
+	int m_bPauseState;
+	int m_bContingency;
+	CResRef m_resEraseSpell;
+};
+
+struct CScreenPriestSpell : CBaldurEngine
+{
+	struct CScreenPriestSpell_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_nSpellLevel;
+	CResRef m_cResCurrentSpell;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	int m_bMultiPlayerViewable;
+	int m_nMemorizedSpellIndex;
+	unsigned __int8 m_bCtrlKeyDown;
+	int m_nEngineState;
+	int m_bPriestPage;
+	int m_bPauseState;
+	int m_bControlled;
+};
+
+struct CScreenCharacter : CBaldurEngine
+{
+	struct CScreenCharacter_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	CPtrList m_lPopupStack;
+	unsigned __int8 m_nDualClass;
+	CStringList* m_pScripts;
+	int m_nScriptIndex;
+	int m_nErrorState;
+	int m_nCharacterIndex;
+	CStringList* m_pCharacters;
+	int m_bMultiPlayerViewable;
+	int m_bMultiPlayerModifyable;
+	__POSITION* m_nCurrentPortrait;
+	CStringList* m_pAppearancePortraits;
+	CStringList* m_pPortraits;
+	int m_nCustomSoundSetIndex;
+	int m_nCustomSoundIndex;
+	CResRef m_cResPortraitSmall;
+	CResRef m_cResPortraitLarge;
+	Array<unsigned __int8,7> m_aColor;
+	CString m_sScript;
+	Array<int,11> m_bSmartScriptFlags;
+	CString m_sNewScript;
+	CResRef m_cResPortraitSmallTemp;
+	CResRef m_cResPortraitMediumTemp;
+	unsigned int m_nSpecialization;
+	CStringList* m_pSounds;
+	CResRef m_cResSoundSet;
+	CCreatureFileHeader* m_pTempBaseStats;
+	CDerivedStats* m_pTempDerivedStats;
+	CTypedPtrList<CPtrList,CResRef*> m_lstMageSpells;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	unsigned __int8 m_bCtrlKeyDown;
+	CString m_sExportName;
+	int m_bAddInactiveAbilities;
+	Array<int,9> m_OldMageSpells;
+	Array<int,7> m_OldPriestSpells;
+	int m_bPauseState;
+	int m_bIsLevelingUp;
+	int m_bIsCharGenMenu;
+};
+
+struct CSaveGameSlot
+{
+	CString m_sFileName;
+	CString m_sSlotName;
+	CResBitmap m_cResScreenShot;
+	CResBitmap m_cBmpResPortrait0;
+	CResBitmap m_cBmpResPortrait1;
+	CResBitmap m_cBmpResPortrait2;
+	CResBitmap m_cBmpResPortrait3;
+	CResBitmap m_cBmpResPortrait4;
+	CResBitmap m_cBmpResPortrait5;
+	CResRef m_cResPortrait;
+	CString m_sCharacterName;
+	unsigned int m_nTime;
+	int m_nChapter;
+	CString m_sChapter;
+};
+
+template<class RES_CLASS, int RES_ID>
+struct CResHelper
+{
+	RES_CLASS* pRes;
+	CResRef cResRef;
 };
 
 struct CAIIdList : CResHelper<CResText,1008>
 {
+	struct CAIIdList_vtbl
+	{
+		void (__fastcall *CAIIdList_Destructor)(CAIIdList*);
+	};
+
 	CString m_fileName;
 	CTypedPtrList<CPtrList,CAIId*> m_idList;
 	int m_faster;
@@ -12431,6 +7340,10 @@ struct CAIScriptFile
 	CAIIdList m_actions;
 	CAIIdList m_triggers;
 	CAIIdList m_objects;
+};
+
+struct CGameFile : CResHelper<CResGame,1013>
+{
 };
 
 struct C2DArray : CResHelper<CResText,1012>
@@ -12690,160 +7603,8 @@ struct CRuleTables
 	Array<int,56> m_speechNums;
 };
 
-struct CResSpell : CRes
-{
-	Spell_ability_st* pAbilities;
-	Item_effect_st* pEffects;
-	Spell_Header_st* pHeader;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
-};
-
-struct CSpell : CResHelper<CResSpell,1006>
-{
-};
-
-struct CResPVR : CRes
-{
-	int texture;
-	int format;
-	int filtering;
-	CSize size;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
-};
-
-struct CResMosaic : CRes
-{
-	void* pUncompressedData;
-	unsigned int nUncompressedSize;
-	int texture;
-	MOSAICHEADERV2* pMosaicHeaderV2;
-	MOSAICQUAD* quads;
-	mosHeader_st* pMosaicHeader;
-	tagRGBQUAD* pPalettes;
-	unsigned __int8* m_pData;
-	unsigned int* pOffsets;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
-};
-
 struct CVidMosaic : CVidImage, CResHelper<CResMosaic,1004>
 {
-};
-
-struct CResItem : CRes
-{
-	Item_ability_st* pAbilities;
-	Item_effect_st* pEffects;
-	Item_Header_st* pHeader;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
-};
-
-struct CItem : CResHelper<CResItem,1005>
-{
-	int m_nAbilities;
-	unsigned __int16 m_useCount1;
-	unsigned __int16 m_useCount2;
-	unsigned __int16 m_useCount3;
-	unsigned __int16 m_wear;
-	unsigned int m_flags;
-	Array<CSound,2> m_useSound;
-	__int16 m_numSounds;
-	CGameEffectUsabilityList m_Usability;
-
-	virtual void CItem_Destructor()
-	{
-	}
-};
-
-struct CResGame : CRes
-{
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
-};
-
-struct CGameFile : CResHelper<CResGame,1013>
-{
-};
-
-struct CResFont : CRes
-{
-	void* font;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
 };
 
 struct CVidFont : CResHelper<CResFont,1034>
@@ -12855,8 +7616,779 @@ struct CVidFont : CResHelper<CResFont,1034>
 	int zoom;
 };
 
+struct CScreenInventory : CBaldurEngine
+{
+	struct CScreenInventory_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	CItem* m_pTempItem;
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+	CPoint m_cLastMousePosition;
+	int m_nTopGroundItem;
+	Array<int,6> m_nGroundPile;
+	Array<int,6> m_bGroundPileQueried;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	int m_nLastSwapPortrait;
+	unsigned int m_dwLastSwapButton;
+	int m_bMultiPlayerViewable;
+	CResRef m_cCheckLearnSpellRes;
+	int m_nCheckLearnSpellCountDown;
+	int m_bDroppedItemInHand;
+	unsigned __int8 m_bPauseWarningDisplayed;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	CVidFont m_preLoadFontTool;
+	unsigned int m_stSpellsDisabled;
+	int m_bLearnSpellFailed;
+	unsigned int m_strLearnSpellFailedReason;
+	int m_bPauseState;
+};
+
+struct CScreenJournal : CBaldurEngine
+{
+	struct CScreenJournal_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	unsigned __int8 m_bCtrlKeyDown;
+	CResRef m_oldMosaic;
+	CResRef m_oldFont;
+	unsigned int m_rgbOldText;
+	unsigned int m_rgbOldBackground;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontTool;
+	int m_bPauseState;
+};
+
+struct CScreenCreateChar : CBaldurEngine
+{
+	struct CScreenCreateChar_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	C2DArray m_kitList;
+	CImportGame m_importGame;
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bCtrlKeyDown;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	CScreenCreateCharStep m_nFirstStep;
+	CScreenCreateCharStep m_nCurrentStep;
+	CScreenCreateCharStep m_nNextStep;
+	int m_nGameSprite;
+	int m_nExtraProficiencySlots;
+	int m_nExtraAbilityPoints;
+	int m_nExtraSpells;
+	int m_nExtraSkillPoints;
+	int m_nBasePickPockets;
+	int m_nBaseOpenLocks;
+	int m_nBaseDetectTraps;
+	int m_nBaseMoveSilently;
+	int m_nBaseHideInShadows;
+	int m_nBaseDetectIllusion;
+	int m_nBaseSetTraps;
+	unsigned __int8 m_nMinSTR;
+	unsigned __int8 m_nMinDEX;
+	unsigned __int8 m_nMinCON;
+	unsigned __int8 m_nMinINT;
+	unsigned __int8 m_nMinWIS;
+	unsigned __int8 m_nMinCHR;
+	unsigned __int8 m_nMaxSTR;
+	unsigned __int8 m_nMaxDEX;
+	unsigned __int8 m_nMaxCON;
+	unsigned __int8 m_nMaxINT;
+	unsigned __int8 m_nMaxWIS;
+	unsigned __int8 m_nMaxCHR;
+	unsigned __int8 m_nPreviousMin;
+	unsigned __int8 m_nPreviousMax;
+	int m_nMaxProficiencySlots;
+	__POSITION* m_nCurrentPortrait;
+	CStringList* m_pAppearancePortraits;
+	CPtrList m_lPopupStack;
+	int m_nEngineState;
+	int m_nCharacterSlot;
+	int m_nTopHatedRace;
+	unsigned __int8 m_nPickRange;
+	unsigned __int8 m_nMemorySTR;
+	unsigned __int8 m_nMemorySTRExtra;
+	unsigned __int8 m_nMemoryDEX;
+	unsigned __int8 m_nMemoryCON;
+	unsigned __int8 m_nMemoryINT;
+	unsigned __int8 m_nMemoryWIS;
+	unsigned __int8 m_nMemoryCHR;
+	int m_nMemoryExtra;
+	int m_nPortraitSmallIndex;
+	int m_nPortraitMediumIndex;
+	CStringList* m_pPortraits;
+	int m_nCustomSoundSetIndex;
+	int m_nCustomSoundIndex;
+	int m_nCharacterIndex;
+	int m_nPrerollTopIndex;
+	CStringList* m_pCharacters;
+	int m_bImported;
+	CStringList* m_pSounds;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	CVidFont m_preLoadFontTool;
+	unsigned __int8 m_nCurrentSpellLevel;
+	int m_nExtraMageSpells;
+	CCreatureFileHeader* m_pOldBaseStats;
+	CDerivedStats* m_pOldDerivedStats;
+	int m_nOldConHPBonus;
+	unsigned __int8 m_nCurrentSpellLevelChoice;
+	unsigned __int8 m_nCurrentSpellLevelChoiceMax;
+	unsigned __int16 m_nImportedCharHPs;
+	unsigned __int16 m_nImportedCharConBonus;
+	unsigned __int8 m_nImportedDualClass;
+	unsigned int m_nImportedDualKit;
+	int m_nImportedDualReactivated;
+	unsigned __int8 m_byImportedCharVersion;
+	__int16 m_nSelectedSpecialistSpells;
+	__int16 m_nMemorizedSpecialistSpells;
+	int m_nTotalKits;
+	unsigned __int16 m_nHatedRaces;
+	importStateType m_importState;
+	unsigned int m_strDefaultHelpString;
+	unsigned __int8 m_bUpdatedHelp;
+	unsigned int m_strCurrentHelpString;
+	int m_bGaveExtraXP;
+	int m_nExtraXP;
+	CString m_sImportCharName;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	Array<int,9> m_OldMageSpells;
+	Array<int,7> m_OldPriestSpells;
+	CTypedPtrArray<CPtrArray,char> m_aBaseProficiencySlots;
+	CCreatureFileHeader* m_pTempBaseStats;
+	CDerivedStats* m_pTempDerivedStats;
+	Array<int,7> m_storedSkillPoints;
+	int m_bAddInactiveAbilities;
+	CStringList* m_szCharInfoStorage;
+	int m_nSpellcasterLevel;
+	int m_nNumLevelUpAbilities;
+	unsigned __int8 m_nCurrentAbilityLevelChoice;
+	int m_bFinishedAbilitySelection;
+	CGameAbilityList* m_lstLevelUpAbilitiesList;
+	Array<unsigned __int8,24> m_lstSelectedAbility;
+	unsigned __int8 m_nSelectedAbilityInd;
+	int m_nDualClass;
+	int m_nSpecialization;
+};
+
+struct CScreenCreateParty : CBaldurEngine
+{
+	struct CScreenCreateParty_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	int m_bCtrlKeyDown;
+	Array<int,5> m_pVirtualKeysFlags;
+	int m_nEngineState;
+	int m_firstCall;
+	CVidFont m_preloadFontStnSml;
+	int m_nCharacterSlot;
+};
+
+struct CScreenDLC : CBaldurEngine
+{
+	struct CScreenDLC_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bExitProgram;
+	CPtrList m_lPopupStack;
+	unsigned int m_dwErrorTextId;
+	unsigned int m_dwErrorState;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	CTypedPtrList<CPtrList,CGameOptions*> m_lOptionsStack;
+	int m_bSpriteMirror;
+	unsigned __int8 m_bCtrlKeyDown;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	int m_nNumDLC;
+	int m_nCurrentDLC;
+	int m_nDlcState;
+};
+
+struct CScreenLoad : CBaldurEngine
+{
+	struct CScreenLoad_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	Array<int,5> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+	int m_nTopGameSlot;
+	int m_nNumGameSlots;
+	int m_nEngineState;
+	CTypedPtrArray<CPtrArray,CSaveGameSlot*> m_aGameSlots;
+	int m_nCurrentGameSlot;
+	unsigned int m_strErrorText;
+	Array<unsigned int,3> m_strErrorButtonText;
+	int m_nNumErrorButtons;
+	CPtrList m_lPopupStack;
+	int m_nMaxSlotNumber;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	int m_bHideSoA;
+	int m_bHideToB;
+};
+
 struct CScreenMap : CBaldurEngine
 {
+	struct CScreenMap_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
 	Array<CKeyInfo,98> m_pVirtualKeys;
 	Array<int,98> m_pVirtualKeysFlags;
 	CPtrList m_lPopupStack;
@@ -12889,335 +8421,1115 @@ struct CScreenMap : CBaldurEngine
 	int m_nCharactersChanged;
 	unsigned int m_nUserNoteId;
 	CRect m_rMap;
+};
 
-	virtual void CObject_Destructor()
+struct CScreenMultiPlayer : CBaldurEngine
+{
+	struct CScreenMultiPlayer_vtbl
 	{
-	}
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
 
-	virtual void InvalidateCursorRect(const CRect* _0)
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bCtrlKeyDown;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	CPtrList m_lPopupStack;
+	int m_nModifiedCharacterSlot;
+	int m_nEngineState;
+	int m_nChatMessageCount;
+	int m_nPermissionsChatMessageCount;
+	int m_nKickPlayerSlot;
+	int m_nCharacterSlot;
+	unsigned __int8 m_bMultiplayerStartup;
+	int m_bLastLockAllowInput;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	CVidFont m_preLoadFontTool;
+	unsigned __int8 m_bSentGameDemand;
+	Array<CString,6> m_playerNames;
+	Array<CString,6> m_characterNames;
+	Array<CString,6> m_characterPortrait;
+};
+
+struct CScreenOptions : CBaldurEngine
+{
+	struct CScreenOptions_vtbl
 	{
-	}
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
 
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bExitProgram;
+	CPtrList m_lPopupStack;
+	unsigned int m_dwErrorTextId;
+	unsigned int m_dwErrorState;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	CTypedPtrList<CPtrList,CGameOptions*> m_lOptionsStack;
+	int m_bSpriteMirror;
+	unsigned __int8 m_bCtrlKeyDown;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	unsigned __int8 m_bFullScreenOptions;
+	unsigned __int8 m_bReQuietSound;
+	int m_nTopKeymap;
+	int m_nSelectedKeymap;
+	int m_nNumKeymapEntries;
+	int m_nKeymapEditIndex;
+	char* m_cKeymapEditSection;
+	char* m_cKeymapEditConflictSection;
+	char* m_cKeymapEditConflictKey;
+	int m_nKeymapEditConflictIndex;
+	char m_cKeymapEditConflictValue;
+	int m_bPauseState;
+	int m_nEngineState;
+};
+
+struct CScreenSave : CBaldurEngine
+{
+	struct CScreenSave_vtbl
 	{
-	}
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
 
-	virtual void RequestPause()
+	int m_bQuitGameSave;
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	int m_nTopGameSlot;
+	int m_nNumGameSlots;
+	int m_nEngineState;
+	CTypedPtrArray<CPtrArray,CSaveGameSlot*> m_aGameSlots;
+	CPtrList m_lPopupStack;
+	unsigned int m_strErrorText;
+	Array<unsigned int,3> m_strErrorButtonText;
+	int m_nNumErrorButtons;
+	int m_nCurrentGameSlot;
+	int m_nMaxSlotNumber;
+	unsigned __int8 m_bCtrlKeyDown;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	int m_bPauseState;
+};
+
+struct CScreenStart : CBaldurEngine
+{
+	struct CScreenStart_vtbl
 	{
-	}
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
 
-	virtual void EngineActivated()
+	int m_bStartMusic;
+	int m_bExitProgram;
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	int m_bCtrlKeyDown;
+	Array<int,5> m_pVirtualKeysFlags;
+	unsigned __int8 m_bMovieOn;
+	int m_nEngineState;
+	int m_firstCall;
+	CPtrList m_lPopupStack;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	Array<unsigned int,4> m_strErrorButtonText;
+	int m_bPlayEndCredits;
+	int m_bSplashScreens;
+	int m_bNeedCDCheck;
+	int m_nCurrentDLC;
+	int m_nNumDLC;
+	int m_nLastImageUpdate;
+	int m_nDlcState;
+	CVidFont m_preloadFontStnSml;
+};
+
+struct CVidCell : CVidImage, CResHelper<CResCell,1000>
+{
+	struct CVidCell_vtbl
 	{
-	}
+		int (__fastcall *FrameAdvance)(CVidCell*);
+		int (__fastcall *Render)(CVidCell*, unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*);
+		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
+		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
+		int (__fastcall *GetFrame)(CVidCell*);
+	};
 
-	virtual void EngineDeactivated()
-	{
-	}
+	__int16 m_nCurrentFrame;
+	unsigned __int16 m_nCurrentSequence;
+	int m_nAnimType;
+	int m_bPaletteChanged;
+	frameTableEntry_st* m_pFrame;
+	unsigned __int8 m_bShadowOn;
 
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
+	virtual int FrameAdvance()
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual int CheckSystemKeyCtrl()
+	virtual int Render(unsigned int* _0, int _1, int _2, int _3, const CRect* _4, unsigned int _5, const CPoint* _6)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
+	virtual int Render(int _0, int _1, const CRect* _2, CVidPoly* _3, int _4, unsigned int _5, int _6)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
+	virtual void StoreBackground(int _0, int _1, const CRect* _2, CRect* _3, unsigned __int8 _4)
 	{
 	}
 
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
+	virtual int GetFrame()
 	{
 		return *(int*)nullptr;
 	}
 };
 
+struct CScreenWorldMap : CBaldurEngine
+{
+	struct CScreenWorldMap_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+	unsigned __int8 m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	CPtrList m_lPopupStack;
+	CSize m_mapSize;
+	int m_nEngineState;
+	CPoint m_ptMapView;
+	CVidMosaic m_vmMap;
+	CVidCell m_vcAreas;
+	CVidCell m_vcMarker;
+	CVidFont m_vfLabel;
+	Array<tagRGBQUAD,256> m_aPalette;
+	unsigned int m_wAreaForeground;
+	unsigned int m_nHighlightArea;
+	unsigned int m_nSelectedArea;
+	int m_bSelectedReachable;
+	int m_bOverSelectedArea;
+	CPoint m_ptMapStartMousePos;
+	CPoint m_ptMapStartView;
+	int m_bMapDragging;
+	CGameArea* m_pCurrentArea;
+	int m_nLeaderSprite;
+	int m_nLeavingEdge;
+	unsigned int m_nCurrentLink;
+	CResRef m_cResCurrentArea;
+	CUIControlTextDisplay* m_pChatDisplay;
+	int m_nChatMessageCount;
+	unsigned __int8 m_bInControl;
+	unsigned __int8 m_bClickedArea;
+	int m_nCurrentSong;
+	unsigned int m_nToolTip;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontTool;
+	unsigned __int8 m_nScrollState;
+	CResRef m_rForceRandomEncounter;
+	CString m_sForcedEncounterEntry;
+	int m_bFontDropShadow;
+};
+
+struct CCacheStatus
+{
+	int m_nDrawnBars;
+	int m_nScreensDrawn;
+	int m_bDemandedResources;
+	int m_bTravelScreen;
+	int m_nProgressBarCaption;
+	int m_nParchmentCaption;
+	unsigned int m_dwLastUpdateTickCount;
+	int m_nTimeToNewHint;
+	int m_nCurrentHint;
+	int m_nCurrentHintRef;
+	int m_bWaiting;
+	CVidFont m_vidFont;
+	CVidFont m_initialsFont;
+	CVidFont m_parchmentFont;
+	CVidMosaic m_titleBar;
+	CVidCell m_skullAnimating;
+	CVidCell m_progressBar;
+	int m_nAnimationFrame;
+	int m_nAnimationDirection;
+	int m_bActivateEngine;
+};
+
+struct CInfButtonSettings
+{
+	int m_bEnabled;
+	int m_bShowIcon;
+	int m_bOverrideRender;
+	int m_nButtonFrame;
+	int m_nButtonSelectedFrame;
+	CVidCell m_vcIcon;
+	CVidCell m_vcLauncherIcon;
+	int m_bSelectable;
+	int m_bSelected;
+	int m_bHighlighted;
+	int m_itemCount;
+	int m_itemCharge;
+	int m_bGreyOut;
+};
+
+struct CPortraitIcon
+{
+	int icon;
+	int frame;
+	CVidCell bam;
+};
+
+struct CVidCellFont : CVidCell
+{
+	struct CVidCellFont_vtbl
+	{
+		int (__fastcall *FrameAdvance)(CVidCell*);
+		int (__fastcall *Render)(CVidCell*, unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*);
+		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
+		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
+		int (__fastcall *GetFrame)(CVidCell*);
+	};
+
+};
+
+struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
+{
+	__int16 m_nBitCount;
+	CString m_szResFileName;
+};
+
+struct CScreenAI : CBaldurEngine
+{
+	struct CScreenAI_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	CVidBitmap m_bmpScreen;
+	C2DArray m_tSplashScreens;
+	__int16 m_nSplashScreen;
+	int m_nSplashTimer;
+	int m_bInteractiveDemoQuit;
+	unsigned __int8 m_nBmpDraw;
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	Array<int,5> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+};
+
+struct CSearchBitmap
+{
+	CVidBitmap m_resSearch;
+	unsigned __int8* m_pDynamicCost;
+	unsigned __int8* m_snapshotDynamicCost;
+	const unsigned __int8* m_snapshotTerrainTable;
+	CSize m_GridSquareDimensions;
+	CGameArea* m_pArea;
+	unsigned __int8 m_sourceSide;
+	unsigned __int8 m_snapshotPersonalSpace;
+};
+
+struct CVidMode
+{
+	int m_nPrintFile;
+	int m_nPointerNumber;
+	unsigned int m_dwCursorRenderFlags;
+	unsigned int m_dwRedMask;
+	unsigned int m_dwGreenMask;
+	unsigned int m_dwBlueMask;
+	unsigned __int8 m_bFadeTo;
+	unsigned __int8 m_nFade;
+	SDL_Window* m_pWindow;
+	void* m_glContext;
+	CVidBitmap m_circle;
+	int nWidth;
+	int nHeight;
+	bool bRedrawEntireScreen;
+	bool bHardwareMouseCursor;
+	CVidCell* pPointerVidCell;
+	CVidCell* pTooltipVidCell;
+	unsigned __int8 m_bPrintScreen;
+	unsigned int nTickCount;
+	float m_fInputScale;
+	unsigned int rgbGlobalTint;
+	unsigned __int8 m_nGammaCorrection;
+	unsigned __int8 m_nBrightnessCorrection;
+	int m_nScreenScrollY;
+	int m_nScreenScrollX;
+	int nRShift;
+	int nGShift;
+	int nBShift;
+	tagRGBQUAD rgbTint;
+	int bPointerEnabled;
+	CRect rPointerStorage;
+	CRect m_rLockedRect;
+	CVidCell* m_lastCursor;
+	int m_lastCursorFrame;
+	int m_lastCursorSequence;
+	int m_lastCursorNumber;
+	unsigned int m_lastCursorFlags;
+	unsigned int m_lastCursorResId;
+	SDL_Cursor* m_hwCursor;
+	SDL_Surface* m_hwCursorSurface;
+	int nVRamSurfaces;
+	CVidBitmap m_rgbMasterBitmap;
+};
+
+struct CSpell : CResHelper<CResSpell,1006>
+{
+};
+
+struct CSoundImp : CObject, CResHelper<CResWave,4>
+{
+	struct CSoundImp_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CSound* m_pParent;
+	int m_bPositionedSound;
+	int m_dwBufferSize;
+	int m_dwFrequency;
+	int m_nBufferFormat;
+	int m_nRange;
+	int m_nRangeVolume;
+	int m_nXCoordinate;
+	int m_nYCoordinate;
+	int m_nZCoordinate;
+	int m_nPan;
+	int m_nVolume;
+	bool m_bSoundInitialized;
+	int m_nChannel;
+	int m_nPriority;
+	int m_nLooping;
+	int m_nPitchVariance;
+	int m_nVolumeVariance;
+	bool m_b3DPositionning;
+	unsigned int m_nSource;
+	unsigned int m_nBuffer;
+	bool m_bFireForget;
+	unsigned __int64 m_nArea;
+	int m_dwOverrideFlags;
+	bool m_bSoundIsntDucked;
+};
+
+struct CSound : CObject, CResHelper<CResWave,4>
+{
+	struct CSound_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+	};
+
+	CSoundImp* pimpl;
+};
+
+struct CScreenChapter : CBaldurEngine
+{
+	struct CScreenChapter_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	Array<int,5> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+	int m_nChapter;
+	int m_nDream;
+	CResRef m_cResText;
+	CTypedPtrList<CPtrList,CResRef*> m_bmpList;
+	int m_nBmpFlip;
+	int m_nCurrBmp;
+	int m_nParagraph;
+	int m_nLine;
+	CSound m_cVoiceSound;
+	int m_bStartSound;
+	int m_nEngineState;
+	CResRef m_cResPower;
+	int m_nSongCountDown;
+	CVidFont m_preLoadFontRealms;
+	int m_bMPRemoveTextScreen;
+	int m_nCustomSong;
+	int m_waitingForNetwork;
+	CWarp* m_destinationEngine;
+};
+
+struct CInfToolTip : CVidCell
+{
+	struct CInfToolTip_vtbl
+	{
+		int (__fastcall *FrameAdvance)(CVidCell*);
+		int (__fastcall *Render)(CVidCell*, unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*);
+		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
+		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
+		int (__fastcall *GetFrame)(CVidCell*);
+	};
+
+	CString m_sText;
+	CRect m_rSource;
+	int m_bUseSourceRect;
+	CVidFont m_textFont;
+	CSound m_openSnd;
+};
+
+struct CInfCursor
+{
+	int bVisible;
+	CVidCell vcCursors;
+	CVidCell vcArrow;
+	CVidCell vcCustom;
+	CInfToolTip vcToolTip;
+	unsigned int nAnimationCounter;
+	int nAnimationSpeed;
+	int nCurrentCursor;
+	int nDirection;
+	int nState;
+	unsigned __int8 bAnimatingCustom;
+};
+
+struct STR_RES
+{
+	CString szText;
+	CSound cSound;
+};
+
+struct CWeather
+{
+	unsigned __int8 m_bOverCast;
+	unsigned __int16 m_nLightningFreq;
+	unsigned __int16 m_nCurrentWeather;
+	unsigned __int16 m_nWeatherLevel;
+	unsigned int m_nWeatherEndTime;
+	unsigned int m_nWeatherStageEndTime;
+	unsigned int m_nWeatherDuration;
+	unsigned int m_nLastTimeChecked;
+	unsigned __int16 m_nWindLevel;
+	unsigned int m_rgbCurrentOverCastColor;
+	unsigned int m_nDurationCounter;
+	CSnowStorm m_snowStorm;
+	CRainStorm m_rainStorm;
+	CFog m_fog;
+	CSound m_sndRain;
+	CSound m_sndWind;
+	unsigned __int8 m_bWindOn;
+	unsigned __int8 m_bUpgrading;
+	unsigned int m_nNextTimeToStartChecking;
+	unsigned int m_nWindVolumeLevel;
+	unsigned int m_nRainVolumeLevel;
+	unsigned __int8 m_bReInitialize;
+};
+
 struct CScreenWorld : CBaldurEngine
 {
+	struct CScreenWorld_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
 	int m_nStupidMovieWait;
 	int m_bProtagonistInStartArea;
 	int m_nProtagonistMoveMax;
@@ -13369,5979 +9681,98 @@ struct CScreenWorld : CBaldurEngine
 	float m_fOriginalZoom;
 	int* m_storedGroup;
 	int m_nStoredGroupMembers;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
 };
 
-struct CScreenChapter : CBaldurEngine
+struct CProgressBar
 {
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	Array<int,5> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-	int m_nChapter;
-	int m_nDream;
-	CResRef m_cResText;
-	CTypedPtrList<CPtrList,CResRef*> m_bmpList;
-	int m_nBmpFlip;
-	int m_nCurrBmp;
-	int m_nParagraph;
-	int m_nLine;
-	CSound m_cVoiceSound;
-	int m_bStartSound;
-	int m_nEngineState;
-	CResRef m_cResPower;
-	int m_nSongCountDown;
-	CVidFont m_preLoadFontRealms;
-	int m_bMPRemoveTextScreen;
-	int m_nCustomSong;
-	int m_waitingForNetwork;
-	CWarp* m_destinationEngine;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenCreateChar : CBaldurEngine
-{
-	C2DArray m_kitList;
-	CImportGame m_importGame;
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bCtrlKeyDown;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	CScreenCreateCharStep m_nFirstStep;
-	CScreenCreateCharStep m_nCurrentStep;
-	CScreenCreateCharStep m_nNextStep;
-	int m_nGameSprite;
-	int m_nExtraProficiencySlots;
-	int m_nExtraAbilityPoints;
-	int m_nExtraSpells;
-	int m_nExtraSkillPoints;
-	int m_nBasePickPockets;
-	int m_nBaseOpenLocks;
-	int m_nBaseDetectTraps;
-	int m_nBaseMoveSilently;
-	int m_nBaseHideInShadows;
-	int m_nBaseDetectIllusion;
-	int m_nBaseSetTraps;
-	unsigned __int8 m_nMinSTR;
-	unsigned __int8 m_nMinDEX;
-	unsigned __int8 m_nMinCON;
-	unsigned __int8 m_nMinINT;
-	unsigned __int8 m_nMinWIS;
-	unsigned __int8 m_nMinCHR;
-	unsigned __int8 m_nMaxSTR;
-	unsigned __int8 m_nMaxDEX;
-	unsigned __int8 m_nMaxCON;
-	unsigned __int8 m_nMaxINT;
-	unsigned __int8 m_nMaxWIS;
-	unsigned __int8 m_nMaxCHR;
-	unsigned __int8 m_nPreviousMin;
-	unsigned __int8 m_nPreviousMax;
-	int m_nMaxProficiencySlots;
-	__POSITION* m_nCurrentPortrait;
-	CStringList* m_pAppearancePortraits;
-	CPtrList m_lPopupStack;
-	int m_nEngineState;
-	int m_nCharacterSlot;
-	int m_nTopHatedRace;
-	unsigned __int8 m_nPickRange;
-	unsigned __int8 m_nMemorySTR;
-	unsigned __int8 m_nMemorySTRExtra;
-	unsigned __int8 m_nMemoryDEX;
-	unsigned __int8 m_nMemoryCON;
-	unsigned __int8 m_nMemoryINT;
-	unsigned __int8 m_nMemoryWIS;
-	unsigned __int8 m_nMemoryCHR;
-	int m_nMemoryExtra;
-	int m_nPortraitSmallIndex;
-	int m_nPortraitMediumIndex;
-	CStringList* m_pPortraits;
-	int m_nCustomSoundSetIndex;
-	int m_nCustomSoundIndex;
-	int m_nCharacterIndex;
-	int m_nPrerollTopIndex;
-	CStringList* m_pCharacters;
-	int m_bImported;
-	CStringList* m_pSounds;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	CVidFont m_preLoadFontTool;
-	unsigned __int8 m_nCurrentSpellLevel;
-	int m_nExtraMageSpells;
-	CCreatureFileHeader* m_pOldBaseStats;
-	CDerivedStats* m_pOldDerivedStats;
-	int m_nOldConHPBonus;
-	unsigned __int8 m_nCurrentSpellLevelChoice;
-	unsigned __int8 m_nCurrentSpellLevelChoiceMax;
-	unsigned __int16 m_nImportedCharHPs;
-	unsigned __int16 m_nImportedCharConBonus;
-	unsigned __int8 m_nImportedDualClass;
-	unsigned int m_nImportedDualKit;
-	int m_nImportedDualReactivated;
-	unsigned __int8 m_byImportedCharVersion;
-	__int16 m_nSelectedSpecialistSpells;
-	__int16 m_nMemorizedSpecialistSpells;
-	int m_nTotalKits;
-	unsigned __int16 m_nHatedRaces;
-	importStateType m_importState;
-	unsigned int m_strDefaultHelpString;
-	unsigned __int8 m_bUpdatedHelp;
-	unsigned int m_strCurrentHelpString;
-	int m_bGaveExtraXP;
-	int m_nExtraXP;
-	CString m_sImportCharName;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	Array<int,9> m_OldMageSpells;
-	Array<int,7> m_OldPriestSpells;
-	CTypedPtrArray<CPtrArray,char> m_aBaseProficiencySlots;
-	CCreatureFileHeader* m_pTempBaseStats;
-	CDerivedStats* m_pTempDerivedStats;
-	Array<int,7> m_storedSkillPoints;
-	int m_bAddInactiveAbilities;
-	CStringList* m_szCharInfoStorage;
-	int m_nSpellcasterLevel;
-	int m_nNumLevelUpAbilities;
-	unsigned __int8 m_nCurrentAbilityLevelChoice;
-	int m_bFinishedAbilitySelection;
-	CGameAbilityList* m_lstLevelUpAbilitiesList;
-	Array<unsigned __int8,24> m_lstSelectedAbility;
-	unsigned __int8 m_nSelectedAbilityInd;
-	int m_nDualClass;
-	int m_nSpecialization;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenCreateParty : CBaldurEngine
-{
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	int m_bCtrlKeyDown;
-	Array<int,5> m_pVirtualKeysFlags;
-	int m_nEngineState;
-	int m_firstCall;
-	CVidFont m_preloadFontStnSml;
-	int m_nCharacterSlot;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenDLC : CBaldurEngine
-{
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bExitProgram;
-	CPtrList m_lPopupStack;
-	unsigned int m_dwErrorTextId;
-	unsigned int m_dwErrorState;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	CTypedPtrList<CPtrList,CGameOptions*> m_lOptionsStack;
-	int m_bSpriteMirror;
-	unsigned __int8 m_bCtrlKeyDown;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	int m_nNumDLC;
-	int m_nCurrentDLC;
-	int m_nDlcState;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenInventory : CBaldurEngine
-{
-	CItem* m_pTempItem;
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-	CPoint m_cLastMousePosition;
-	int m_nTopGroundItem;
-	Array<int,6> m_nGroundPile;
-	Array<int,6> m_bGroundPileQueried;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	int m_nLastSwapPortrait;
-	unsigned int m_dwLastSwapButton;
-	int m_bMultiPlayerViewable;
-	CResRef m_cCheckLearnSpellRes;
-	int m_nCheckLearnSpellCountDown;
-	int m_bDroppedItemInHand;
-	unsigned __int8 m_bPauseWarningDisplayed;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	CVidFont m_preLoadFontTool;
-	unsigned int m_stSpellsDisabled;
-	int m_bLearnSpellFailed;
-	unsigned int m_strLearnSpellFailedReason;
-	int m_bPauseState;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenJournal : CBaldurEngine
-{
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	unsigned __int8 m_bCtrlKeyDown;
-	CResRef m_oldMosaic;
-	CResRef m_oldFont;
-	unsigned int m_rgbOldText;
-	unsigned int m_rgbOldBackground;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontTool;
-	int m_bPauseState;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenLoad : CBaldurEngine
-{
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	Array<int,5> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-	int m_nTopGameSlot;
-	int m_nNumGameSlots;
-	int m_nEngineState;
-	CTypedPtrArray<CPtrArray,CSaveGameSlot*> m_aGameSlots;
-	int m_nCurrentGameSlot;
-	unsigned int m_strErrorText;
-	Array<unsigned int,3> m_strErrorButtonText;
-	int m_nNumErrorButtons;
-	CPtrList m_lPopupStack;
-	int m_nMaxSlotNumber;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	int m_bHideSoA;
-	int m_bHideToB;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenMultiPlayer : CBaldurEngine
-{
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bCtrlKeyDown;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	CPtrList m_lPopupStack;
-	int m_nModifiedCharacterSlot;
-	int m_nEngineState;
-	int m_nChatMessageCount;
-	int m_nPermissionsChatMessageCount;
-	int m_nKickPlayerSlot;
-	int m_nCharacterSlot;
-	unsigned __int8 m_bMultiplayerStartup;
-	int m_bLastLockAllowInput;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	CVidFont m_preLoadFontTool;
-	unsigned __int8 m_bSentGameDemand;
-	Array<CString,6> m_playerNames;
-	Array<CString,6> m_characterNames;
-	Array<CString,6> m_characterPortrait;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenOptions : CBaldurEngine
-{
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bExitProgram;
-	CPtrList m_lPopupStack;
-	unsigned int m_dwErrorTextId;
-	unsigned int m_dwErrorState;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	CTypedPtrList<CPtrList,CGameOptions*> m_lOptionsStack;
-	int m_bSpriteMirror;
-	unsigned __int8 m_bCtrlKeyDown;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	unsigned __int8 m_bFullScreenOptions;
-	unsigned __int8 m_bReQuietSound;
-	int m_nTopKeymap;
-	int m_nSelectedKeymap;
-	int m_nNumKeymapEntries;
-	int m_nKeymapEditIndex;
-	char* m_cKeymapEditSection;
-	char* m_cKeymapEditConflictSection;
-	char* m_cKeymapEditConflictKey;
-	int m_nKeymapEditConflictIndex;
-	char m_cKeymapEditConflictValue;
-	int m_bPauseState;
-	int m_nEngineState;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenSave : CBaldurEngine
-{
-	int m_bQuitGameSave;
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	int m_nTopGameSlot;
-	int m_nNumGameSlots;
-	int m_nEngineState;
-	CTypedPtrArray<CPtrArray,CSaveGameSlot*> m_aGameSlots;
-	CPtrList m_lPopupStack;
-	unsigned int m_strErrorText;
-	Array<unsigned int,3> m_strErrorButtonText;
-	int m_nNumErrorButtons;
-	int m_nCurrentGameSlot;
-	int m_nMaxSlotNumber;
-	unsigned __int8 m_bCtrlKeyDown;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	int m_bPauseState;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenStart : CBaldurEngine
-{
-	int m_bStartMusic;
-	int m_bExitProgram;
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	int m_bCtrlKeyDown;
-	Array<int,5> m_pVirtualKeysFlags;
-	unsigned __int8 m_bMovieOn;
-	int m_nEngineState;
-	int m_firstCall;
-	CPtrList m_lPopupStack;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	Array<unsigned int,4> m_strErrorButtonText;
-	int m_bPlayEndCredits;
-	int m_bSplashScreens;
-	int m_bNeedCDCheck;
-	int m_nCurrentDLC;
-	int m_nNumDLC;
-	int m_nLastImageUpdate;
-	int m_nDlcState;
-	CVidFont m_preloadFontStnSml;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenStore : CBaldurEngine
-{
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-	unsigned __int8 m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	int m_nTopGroupItem;
-	CPtrList m_lGroupItems;
-	int m_nTopStoreItem;
-	CPtrList m_lStoreItems;
-	int m_nTopSpellItem;
-	CPtrList m_lSpellItems;
-	int m_nTopIdentifyItem;
-	CPtrList m_lIdentifyItems;
-	int m_nTopDrinkItem;
-	CResRef m_cResStore;
-	CResRef m_cResBag;
-	Array<unsigned int,4> m_adwButtonPanelId;
-	CStore* m_pStore;
-	CStore* m_pBag;
-	int m_nStoreCost;
-	int m_nGroupCost;
-	unsigned int m_dwSpellCost;
-	unsigned int m_dwIdentifyCost;
-	unsigned int m_dwRoomType;
-	CAIObjectType m_cAIProprietor;
-	CAIObjectType m_cAICustomer;
-	unsigned int m_dwDonationAmount;
-	int m_nDrinkRumorIndex;
-	int m_nDonateRumorIndex;
-	CPtrList m_lPopupStack;
-	CItem* m_pHistoryItem;
-	int m_bHistoryUseEnabled;
-	CResRef m_cResInfoSpell;
-	int m_nChatMessageCount;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	unsigned __int8 m_nCharisma;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	CVidFont m_preLoadFontTool;
-	unsigned int m_nRequesterAmount;
-	int m_nRequesterButtonId;
-	int m_bStoreIndex;
-	int m_bStoreStarted;
-	int m_nBagCount;
-	float m_fPanStorage;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CBaldurProjector : CBaldurEngine
-{
-	CResWebm* m_pMovie;
-	int bStretchToScreen;
-	CFile* mve_file;
-	int m_deactivateEngine;
-	Array<CKeyInfo,2> m_pVirtualKeys;
-	Array<int,2> m_pVirtualKeysFlags;
-	CTypedPtrList<CPtrList,CResRef*> m_movieResRef;
-	unsigned __int8 m_bSelectEngine;
-	unsigned __int8 m_bFirstRender;
-	void* m_pCodec;
-	int m_nFirstFrameTime;
-	CSound m_cSoundOverride;
-	CResRef m_cSubtitles;
-	CVidFont m_vidFont;
-	int m_bDisplayTOBMovie;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CResCell : CRes
-{
-	void* pUncompressedData;
-	unsigned int nUncompressedSize;
-	bamHeader_st* m_pBamHeader;
-	BAMHEADERV2* m_pBamHeaderV2;
-	MOSAICQUAD* m_pQuads;
-	frameTableEntry_st* m_pFrames;
-	sequenceTableEntry_st* m_pSequences;
-	unsigned __int16* m_pFrameList;
-	unsigned __int16 m_nFrameList;
-	tagRGBQUAD* m_pPalette;
-	int m_bParsing;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
-};
-
-struct CVidCell : CVidImage, CResHelper<CResCell,1000>
-{
-	__int16 m_nCurrentFrame;
-	unsigned __int16 m_nCurrentSequence;
-	int m_nAnimType;
-	int m_bPaletteChanged;
-	frameTableEntry_st* m_pFrame;
-	unsigned __int8 m_bShadowOn;
-
-	virtual int FrameAdvance()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int Render(unsigned int* _0, int _1, int _2, int _3, const CRect* _4, unsigned int _5, const CPoint* _6)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int Render(int _0, int _1, const CRect* _2, CVidPoly* _3, int _4, unsigned int _5, int _6)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void StoreBackground(int _0, int _1, const CRect* _2, CRect* _3, unsigned __int8 _4)
-	{
-	}
-
-	virtual int GetFrame()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenWorldMap : CBaldurEngine
-{
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-	unsigned __int8 m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	CPtrList m_lPopupStack;
-	CSize m_mapSize;
-	int m_nEngineState;
-	CPoint m_ptMapView;
-	CVidMosaic m_vmMap;
-	CVidCell m_vcAreas;
-	CVidCell m_vcMarker;
-	CVidFont m_vfLabel;
-	Array<tagRGBQUAD,256> m_aPalette;
-	unsigned int m_wAreaForeground;
-	unsigned int m_nHighlightArea;
-	unsigned int m_nSelectedArea;
-	int m_bSelectedReachable;
-	int m_bOverSelectedArea;
-	CPoint m_ptMapStartMousePos;
-	CPoint m_ptMapStartView;
-	int m_bMapDragging;
-	CGameArea* m_pCurrentArea;
-	int m_nLeaderSprite;
-	int m_nLeavingEdge;
-	unsigned int m_nCurrentLink;
-	CResRef m_cResCurrentArea;
-	CUIControlTextDisplay* m_pChatDisplay;
-	int m_nChatMessageCount;
-	unsigned __int8 m_bInControl;
-	unsigned __int8 m_bClickedArea;
-	int m_nCurrentSong;
-	unsigned int m_nToolTip;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontTool;
-	unsigned __int8 m_nScrollState;
-	CResRef m_rForceRandomEncounter;
-	CString m_sForcedEncounterEntry;
-	int m_bFontDropShadow;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CGameContainer : CGameAIBase
-{
-	CRect m_rBounding;
-	CPoint* m_pPolygon;
-	unsigned __int16 m_nPolygon;
-	CTypedPtrList<CPtrList,CItem*> m_lstItems;
-	unsigned __int16 m_containerType;
-	CPoint m_ptWalkToUse;
-	Array<CVidCell,3> m_pileVidCell;
-	unsigned __int8 m_nPileVidCell;
-	unsigned __int8 m_bDeleteMe;
-	Array<unsigned __int8,8> m_scriptRes;
-	unsigned __int16 m_lockDifficulty;
-	unsigned int m_dwFlags;
-	unsigned __int16 m_trapDetectionDifficulty;
-	unsigned __int16 m_trapRemovalDifficulty;
-	unsigned __int16 m_trapActivated;
-	unsigned __int16 m_trapDetected;
-	CPoint m_posTrapOrigin;
-	unsigned __int16 m_triggerRange;
-	Array<char,32> m_ownedBy;
-	CResRef m_keyType;
-	unsigned int m_breakDifficulty;
-	__int16 m_drawPoly;
-	unsigned int m_strNotPickable;
-	int m_bJustCreated;
-	int m_bNeedUpdate;
-	unsigned __int8 m_probabilityRoll;
-
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void ClearActions(int _0)
-	{
-	}
-
-	virtual void UpdateTarget(CGameObject* _0)
-	{
-	}
-
-	virtual void AddAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
-	{
-	}
-
-	virtual void ClearAI(unsigned __int8 _0)
-	{
-	}
-
-	virtual void DoAction()
-	{
-	}
-
-	virtual __int16 ExecuteAction()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void InsertAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void ProcessAI()
-	{
-	}
-
-	virtual void SetCurrAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void SetScript(__int16 _0, CAIScript* _1)
-	{
-	}
-
-	virtual __int16 GetVisualRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual __int16 GetAttackRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual const unsigned __int8* GetVisibleTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual const unsigned __int8* GetTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual int QuickDecode(CAITrigger* _0, CGameSprite** _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual __int16 GetHelpRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void ApplyTriggers()
-	{
-	}
-
-	virtual void AutoPause(unsigned int _0)
-	{
-	}
-
-	virtual int GetCanSeeInvisible()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionRemoval(CAIAction* _0)
-	{
-	}
-
-	virtual CRect* GetBounding()
-	{
-		return *(CRect**)nullptr;
-	}
-
-	virtual CPoint* GetPoly()
-	{
-		return *(CPoint**)nullptr;
-	}
-
-	virtual __int16 GetNPoly()
-	{
-		return *(__int16*)nullptr;
-	}
-};
-
-struct CCacheStatus
-{
-	int m_nDrawnBars;
-	int m_nScreensDrawn;
-	int m_bDemandedResources;
-	int m_bTravelScreen;
+	unsigned int m_nSecondsToTimeout;
 	int m_nProgressBarCaption;
 	int m_nParchmentCaption;
-	unsigned int m_dwLastUpdateTickCount;
-	int m_nTimeToNewHint;
-	int m_nCurrentHint;
-	int m_nCurrentHintRef;
-	int m_bWaiting;
-	CVidFont m_vidFont;
-	CVidFont m_initialsFont;
-	CVidFont m_parchmentFont;
-	CVidMosaic m_titleBar;
-	CVidCell m_skullAnimating;
-	CVidCell m_progressBar;
-	int m_nAnimationFrame;
-	int m_nAnimationDirection;
-	int m_bActivateEngine;
+	int m_nActionProgress;
+	int m_nActionTarget;
+	unsigned __int8 m_bTravelActive;
+	unsigned __int8 m_bWaiting;
+	int m_nWaitingReason;
+	unsigned __int8 m_bDisableMinibars;
+	unsigned __int8 m_bTimeoutVisible;
+	unsigned __int8 m_bProgressBarActivated;
+	Array<unsigned __int8,6> m_bRemoteWaiting;
+	Array<int,6> m_nRemoteActionProgress;
+	Array<int,6> m_nRemoteActionTarget;
+	Array<int,6> m_nRemoteWaitingReason;
 };
 
-struct CBaldurChitin : CChitin
+struct CPlex
 {
-	CInfCursor* m_pObjectCursor;
-	CInfGame* m_pObjectGame;
-	CDungeonMaster* m_pEngineDM;
-	CBaldurProjector* m_pEngineProjector;
-	CScreenAI* m_pEngineAI;
-	CScreenCharacter* m_pEngineCharacter;
-	CScreenCreateChar* m_pEngineCreateChar;
-	CScreenCreateParty* m_pEngineCreateParty;
-	CScreenInventory* m_pEngineInventory;
-	CScreenJournal* m_pEngineJournal;
-	CScreenLoad* m_pEngineLoad;
-	CScreenMap* m_pEngineMap;
-	CScreenOptions* m_pEngineOptions;
-	CScreenPriestSpell* m_pEnginePriestSpell;
-	CScreenSave* m_pEngineSave;
-	CScreenStart* m_pEngineStart;
-	CScreenWizSpell* m_pEngineWizSpell;
-	CScreenWorld* m_pEngineWorld;
-	CScreenStore* m_pEngineStore;
-	CScreenMultiPlayer* m_pEngineMultiPlayer;
-	CScreenConnection* m_pEngineConnection;
-	CScreenWorldMap* m_pEngineWorldMap;
-	CScreenChapter* m_pEngineChapter;
-	CScreenMovies* m_pEngineMovies;
-	CScreenDLC* m_pEngineDLC;
-	CTlkTable m_cTlkTable;
-	CCacheStatus m_cCachingStatus;
-	CScriptCache m_scriptCache;
-	CBaldurMessage m_cBaldurMessage;
-	CMessageHandler m_cMessageHandler;
-	int m_bFontRectOutline;
-	unsigned __int8 m_bCDScanDone;
-	unsigned __int8 m_bCDFoundDrive;
-	CString m_sCDDriveName;
-	unsigned __int8 m_bCDMediaInDrive;
-	unsigned __int8 m_bCDFoundBaldurCD;
-	unsigned __int8 m_bIsAutoStarting;
-	int m_bDropPanels;
-	int m_bDropCaps;
-	int m_bDisableMovies;
-	int m_bStartConfig;
-	int m_bSuperSpeedAI;
-	int m_bFirstRun;
-	int m_nInstallType;
-	int m_bUseNewGui;
-	CVidFont m_preLoadedFont;
-	CVidMosaic m_tiledBackground;
+	CPlex* pNext;
+	Array<unsigned int,1> dwReserved;
+};
 
-	virtual void SynchronousUpdate()
+struct CNetworkWindow
+{
+	unsigned __int8 m_bInitialized;
+	unsigned __int8 m_bVSSent;
+	unsigned __int8 m_bVSReceived;
+	unsigned __int8 m_nPlayerNumber;
+	unsigned __int16 m_nAckExpected;
+	unsigned __int16 m_nNextFrameToSend;
+	unsigned __int16 m_nFrameExpected;
+	unsigned __int16 m_nTooFar;
+	unsigned __int16 m_nOldestFrame;
+	Array<cnetworkwindow_queueentry_st,1> m_pOutgoingBuffers;
+	Array<cnetworkwindow_queueentry_st,1> m_pIncomingBuffers;
+	CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*> m_lQueueIncomingMessages;
+	CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*> m_lQueueOutgoingMessages;
+	Array<unsigned __int8,1> m_pbTimeOutSet;
+	Array<unsigned int,1> m_pnTimeOut;
+	Array<unsigned __int8,1> m_pbArrived;
+	unsigned __int16 m_nNumBuffered;
+	unsigned __int8 m_bNoNak;
+	unsigned __int8 padding;
+	unsigned int m_nPacketTimeout;
+	unsigned int m_nAckTimer;
+	unsigned __int8 m_bAckTimerSet;
+	unsigned __int8 m_bSomethingHappened;
+	unsigned int m_nNextEvent;
+	unsigned int m_nPlayerTimeout;
+	unsigned int m_nNoMessageTimeout;
+};
+
+struct CMachineStates
+{
+	Array<CMachineState,6> m_machineStates;
+};
+
+struct CItem : CResHelper<CResItem,1005>
+{
+	struct CItem_vtbl
 	{
-	}
+		void (__fastcall *CItem_Destructor)(CItem*);
+	};
 
-	virtual void SetupPanels()
-	{
-	}
+	int m_nAbilities;
+	unsigned __int16 m_useCount1;
+	unsigned __int16 m_useCount2;
+	unsigned __int16 m_useCount3;
+	unsigned __int16 m_wear;
+	unsigned int m_flags;
+	Array<CSound,2> m_useSound;
+	__int16 m_numSounds;
+	CGameEffectUsabilityList m_Usability;
 
-	virtual unsigned int GetIDSInvalidVideoMode()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSOpenGLDll()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSExclusiveMode()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSChoosePixelFormat()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSSetPixelFormat()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSSetGameResolution()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSSetGameBitDepth()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSBadDeskTopBitDepth()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int GetIDSWindowsFonts()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual CRes* AllocResObject(int _0)
-	{
-		return *(CRes**)nullptr;
-	}
-
-	virtual const CString* GetIconRes()
-	{
-		return *(const CString**)nullptr;
-	}
-
-	virtual void GetScreenShotFilePrefix(CString* _0)
-	{
-	}
-
-	virtual int FontRectOutline()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int InitializeServices()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetProgressBar(unsigned __int8 _0, int _1, int _2, int _3, unsigned __int8 _4, int _5, unsigned __int8 _6, int _7, unsigned __int8 _8, unsigned __int8 _9, unsigned int _10)
-	{
-	}
-
-	virtual void SetProgressBarActivateEngine(int _0)
-	{
-	}
-
-	virtual void BroadcastMultiplayerProgressBarInfo()
-	{
-	}
-
-	virtual void SetCDSwitchStatus(unsigned __int8 _0, unsigned __int8 _1, unsigned __int8 _2, const CString* _3, unsigned __int8 _4, unsigned __int8 _5, unsigned __int8 _6)
-	{
-	}
-
-	virtual void SetCDSwitchActivateEngine(int _0)
-	{
-	}
-
-	virtual void OnMultiplayerSessionOpen(CString* _0, CString* _1, CString* _2)
-	{
-	}
-
-	virtual void OnMultiplayerSessionToClose()
-	{
-	}
-
-	virtual void OnMultiplayerSessionClose()
-	{
-	}
-
-	virtual void OnMultiplayerPlayerJoin(int _0, const CString* _1)
-	{
-	}
-
-	virtual void OnMultiplayerPlayerVisible(int _0)
-	{
-	}
-
-	virtual void OnMultiplayerPlayerLeave(int _0, const CString* _1)
-	{
-	}
-
-	virtual int MessageCallback(unsigned __int8* _0, unsigned int _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual unsigned __int8 GetGamespyResponse(unsigned __int8 _0, unsigned __int8** _1, unsigned int* _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AsynchronousUpdate(unsigned int _0, unsigned int _1, unsigned int _2, unsigned int _3, unsigned int _4)
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual void ShutDown(int _0, const char* _1, const char* _2)
-	{
-	}
-
-	virtual const char* GetKeyFileName()
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual unsigned __int8 GetNumberSoundChannels()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual int GetMovieVolume()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void LoadOptions()
-	{
-	}
-
-	virtual void PreLoadFonts()
-	{
-	}
-
-	virtual void SetSoundVolumes()
-	{
-	}
-
-	virtual unsigned __int16 GetMultiplayerGameSpyPort()
-	{
-		return *(unsigned __int16*)nullptr;
-	}
-
-	virtual unsigned __int16 GetMultiplayerDirectPlayPort()
-	{
-		return *(unsigned __int16*)nullptr;
-	}
-
-	virtual void SetRenderCount(unsigned __int8 _0)
-	{
-	}
-
-	virtual int ConfirmQuit()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetGameSpyGameName(CString* _0)
-	{
-	}
-
-	virtual void GetGameSpyCode(CString* _0)
-	{
-	}
-
-	virtual void GetPanicCDStrings(CString* _0, CString* _1, CString* _2)
-	{
-	}
-
-	virtual void OnMixerInitialize()
-	{
-	}
-
-	virtual int Is3DSound(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetEAXActive()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void RedrawScreen()
-	{
-	}
-
-	virtual unsigned __int8 GetSoundEnvironment(CString _0, unsigned int* _1, float* _2, float* _3, float* _4, float* _5)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CutsceneModeActive()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void ShutDown(int _0, char* _1, const char* _2)
-	{
-	}
-
-	virtual void UnloadFonts()
+	virtual void CItem_Destructor()
 	{
 	}
 };
 
-struct CInfButtonSettings
+struct CInfTileSet
 {
-	int m_bEnabled;
-	int m_bShowIcon;
-	int m_bOverrideRender;
-	int m_nButtonFrame;
-	int m_nButtonSelectedFrame;
-	CVidCell m_vcIcon;
-	CVidCell m_vcLauncherIcon;
-	int m_bSelectable;
-	int m_bSelected;
-	int m_bHighlighted;
-	int m_itemCount;
-	int m_itemCharge;
-	int m_bGreyOut;
+	Array<CResTileSet*,2> tis;
+	CVidTile cVidTile;
+	CVRamPool* pVRPool;
+	CResInfTile** pResTiles;
+	unsigned int nTiles;
+	unsigned int nTileSize;
 };
 
 typedef int (*type_CInfButtonArray_SetState)(CInfButtonArray* pThis, int nState);
@@ -19378,550 +9809,149 @@ struct CInfButtonArray
 	}
 };
 
-struct CInfToolTip : CVidCell
+struct CImmunitiesSpellLevelDecrementing
 {
-	CString m_sText;
-	CRect m_rSource;
-	int m_bUseSourceRect;
-	CVidFont m_textFont;
-	CSound m_openSnd;
-
-	virtual int FrameAdvance()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int Render(unsigned int* _0, int _1, int _2, int _3, const CRect* _4, unsigned int _5, const CPoint* _6)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int Render(int _0, int _1, const CRect* _2, CVidPoly* _3, int _4, unsigned int _5, int _6)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void StoreBackground(int _0, int _1, const CRect* _2, CRect* _3, unsigned __int8 _4)
-	{
-	}
-
-	virtual int GetFrame()
-	{
-		return *(int*)nullptr;
-	}
+	Array<CSpellLevelDecrementing,10> m_levels;
 };
 
-struct CInfCursor
+struct CImmunitiesSpellLevel
 {
-	int bVisible;
-	CVidCell vcCursors;
-	CVidCell vcArrow;
-	CVidCell vcCustom;
-	CInfToolTip vcToolTip;
-	unsigned int nAnimationCounter;
-	int nAnimationSpeed;
-	int nCurrentCursor;
-	int nDirection;
-	int nState;
-	unsigned __int8 bAnimatingCustom;
+	Array<int,10> m_levels;
 };
 
-struct CPortraitIcon
+struct CGameStatsSprite
 {
-	int icon;
-	int frame;
-	CVidCell bam;
+	unsigned int m_strStrongestKillName;
+	unsigned int m_nStrongestKillXPValue;
+	unsigned int m_nPreviousTimeWithParty;
+	unsigned int m_nJoinPartyTime;
+	int m_bWithParty;
+	unsigned int m_nChapterKillsXPValue;
+	unsigned int m_nChapterKillsNumber;
+	unsigned int m_nGameKillsXPValue;
+	unsigned int m_nGameKillsNumber;
+	Array<CGameStatsRes,4> m_pSpellStats;
+	Array<CGameStatsRes,4> m_pWeaponStats;
 };
 
-struct CVidCellFont : CVidCell
+struct CGameSpriteLastUpdate
 {
-	virtual int FrameAdvance()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int Render(unsigned int* _0, int _1, int _2, int _3, const CRect* _4, unsigned int _5, const CPoint* _6)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int Render(int _0, int _1, const CRect* _2, CVidPoly* _3, int _4, unsigned int _5, int _6)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void StoreBackground(int _0, int _1, const CRect* _2, CRect* _3, unsigned __int8 _4)
-	{
-	}
-
-	virtual int GetFrame()
-	{
-		return *(int*)nullptr;
-	}
+	int* m_pPath;
+	__int16 m_nPath;
+	__int16 m_currPath;
+	CPoint m_ptDest;
+	unsigned __int8 m_nMoveScale;
+	__int16 m_nSequence;
+	CPoint m_ptPosition;
+	__int16 m_nFacing;
+	unsigned int m_dwState;
+	__int16 m_nHitPoints;
+	__int16 m_nMaxHitPoints;
+	__int16 m_nArmorClass;
+	__int16 m_nACCrushingMod;
+	__int16 m_nACMissileMod;
+	__int16 m_nACPiercingMod;
+	__int16 m_nACSlashingMod;
+	__int16 m_nPortraitIcons;
+	int* m_pPortraitIcons;
+	unsigned __int8 m_nEnemyAlly;
+	unsigned __int8 m_nEnemyAllyLive;
+	unsigned __int8 m_bMoraleFailure;
+	unsigned __int8 m_nGeneral;
+	unsigned __int8 m_nGeneralLive;
+	CString m_sAreaString;
+	unsigned __int8 m_bLevelUp;
+	int m_nHPCONBonusTotalOld;
+	unsigned __int8 m_bSummonDisable;
+	unsigned __int8 m_bDoNotJump;
+	unsigned __int8 m_bSanctuary;
+	unsigned __int8 m_bDisableCircle;
+	unsigned __int8 m_bHeld;
+	unsigned __int8 m_bActiveImprisonment;
+	Array<unsigned int,8> m_spellState;
+	int m_bFullUpdateRequired;
 };
 
-struct CResBitmap : CRes
+struct CGameSpriteEquipment
 {
-	unsigned __int8* m_pDataDecompressed;
-	int texture;
-	int nColors;
-	int nXWords;
-	unsigned __int8* m_pData;
-	tagBITMAPFILEHEADER* pBitmapFileHeader;
-	tagBITMAPINFOHEADER* pBitmapInfoHeader;
-	tagRGBQUAD* pColorTable;
-
-	virtual bool Parse(void* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void Dump()
-	{
-	}
-
-	virtual CResRef* GetResRef()
-	{
-		return *(CResRef**)nullptr;
-	}
+	Array<CItem*,39> m_items;
+	unsigned __int8 m_selectedWeapon;
+	unsigned __int16 m_selectedWeaponAbility;
+	CItem* m_pTempItem;
+	CGameSprite* m_pSprite;
 };
 
-struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
+struct CGameSaveCharacter
 {
-	__int16 m_nBitCount;
-	CString m_szResFileName;
+	unsigned int m_actionMode;
+	Array<CButtonData,4> m_quickWeapons;
+	Array<CButtonData,3> m_quickSpells;
+	Array<CButtonData,3> m_quickItems;
 };
 
-struct CScreenAI : CBaldurEngine
+struct CGameSave
 {
-	CVidBitmap m_bmpScreen;
-	C2DArray m_tSplashScreens;
-	__int16 m_nSplashScreen;
-	int m_nSplashTimer;
-	int m_bInteractiveDemoQuit;
-	unsigned __int8 m_nBmpDraw;
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	Array<int,5> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-
-	virtual void CObject_Destructor()
-	{
-	}
-
-	virtual void InvalidateCursorRect(const CRect* _0)
-	{
-	}
-
-	virtual void NormalizePanelRect(unsigned int _0, CRect* _1)
-	{
-	}
-
-	virtual void RequestPause()
-	{
-	}
-
-	virtual void EngineActivated()
-	{
-	}
-
-	virtual void EngineDeactivated()
-	{
-	}
-
-	virtual void EngineDestroyed()
-	{
-	}
-
-	virtual void EngineInitialized()
-	{
-	}
-
-	virtual void EngineGameInit()
-	{
-	}
-
-	virtual void EngineGameUninit()
-	{
-	}
-
-	virtual void SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual bool OnEvent(SDL_Event* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int GetEngineState()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyCtrl()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCtrl(unsigned __int8 _0)
-	{
-	}
-
-	virtual int GetCtrlKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyShift()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyShift(int _0)
-	{
-	}
-
-	virtual int GetShiftKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckSystemKeyMenu()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyMenu(int _0)
-	{
-	}
-
-	virtual int CheckSystemKeyCapsLock()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSystemKeyCapsLock(int _0)
-	{
-	}
-
-	virtual int GetCapsLockKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetMenuKey()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int CheckMouseMove()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseMove(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseLButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnLButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnLButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseMButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnMButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseRButton()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnRButtonDblClk(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonDown(CPoint _0)
-	{
-	}
-
-	virtual void OnRButtonUp(CPoint _0)
-	{
-	}
-
-	virtual int CheckMouseWheel()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
-	{
-	}
-
-	virtual __int16 GetNumVirtualKeys()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual CKeyInfo* GetVirtualKeys()
-	{
-		return *(CKeyInfo**)nullptr;
-	}
-
-	virtual int* GetVirtualKeysFlags()
-	{
-		return *(int**)nullptr;
-	}
-
-	virtual void OnKeyDown(int _0)
-	{
-	}
-
-	virtual void OnKeyUp(int _0)
-	{
-	}
-
-	virtual void OnTextInput(const char* _0)
-	{
-	}
-
-	virtual void WindowResized(int _0, int _1)
-	{
-	}
-
-	virtual void OnLowMemory()
-	{
-	}
-
-	virtual void EnableEditKeys(__int16 _0)
-	{
-	}
-
-	virtual void DisableEditKeys()
-	{
-	}
-
-	virtual void ResetControls()
-	{
-	}
-
-	virtual void TimerAsynchronousUpdate()
-	{
-	}
-
-	virtual void TimerSynchronousUpdate()
-	{
-	}
-
-	virtual void TimerUpdate()
-	{
-	}
-
-	virtual void RenderUI()
-	{
-	}
-
-	virtual int GetSelectedCharacter(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int GetPickedCharacter()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void SetSelectedCharacter(int _0)
-	{
-	}
-
-	virtual void SetPickedCharacter(int _0)
-	{
-	}
-
-	virtual void OnPortraitLClick(unsigned int _0)
-	{
-	}
-
-	virtual void OnPortraitLDblClick(unsigned int _0)
-	{
-	}
-
-	virtual void UpdateContainerStatus(int _0, __int16 _1)
-	{
-	}
-
-	virtual void UpdatePersonalItemStatus(int _0)
-	{
-	}
-
-	virtual void OnRestButtonClick()
-	{
-	}
-
-	virtual void UpdateGroundItems()
-	{
-	}
-
-	virtual void UpdateCursorShape(unsigned __int8 _0)
-	{
-	}
-
-	virtual void CheckEnablePortraits(unsigned int _0)
-	{
-	}
-
-	virtual void CheckEnableLeftPanel()
-	{
-	}
-
-	virtual void EnablePortrait(unsigned int _0, unsigned int _1, int _2)
-	{
-	}
-
-	virtual void CancelEngine()
-	{
-	}
-
-	virtual void UpdateCharacterStatus(int _0)
-	{
-	}
-
-	virtual void UpdatePartyGoldStatus()
-	{
-	}
-
-	virtual void GetChatEditBoxStatus(CString* _0, int* _1)
-	{
-	}
-
-	virtual void SetChatEditBoxStatus(const CString* _0, int _1)
-	{
-	}
-
-	virtual int StopMusic()
-	{
-		return *(int*)nullptr;
-	}
+	unsigned int m_inputMode;
+	CResRef m_cResCurrentWorldArea;
+	unsigned int m_nCurrentWorldLink;
+	unsigned int m_nPartyGold;
+	__int16 m_curFormation;
+	Array<__int16,5> m_quickFormations;
+	Array<CItem*,100> m_groupInventory;
+	int m_bArenaMode;
+	__int16 m_groupInventoryNumber;
+	unsigned int m_mode;
+	int m_cutScene;
+	int m_nCutSceneStatusOverride;
 };
 
-struct CInfinity
+struct CGameRemoteObjectArray
 {
-	Array<CInfTileSet*,5> pTileSets;
-	CResWED* pResWED;
-	CVRamPool* pVRPool;
-	CVidMode* pVidMode;
-	int bUseDestSrc;
-	int bRefreshVRamRect;
-	int bInitialized;
-	int bWEDDemanded;
-	int nOffsetX;
-	int nOffsetY;
-	int nTilesX;
-	int nTilesY;
-	int nNewX;
-	int nNewY;
-	CRect rViewPortNotZoomed;
-	CRect rViewPort;
-	CRect rVRamRect;
-	CRect rRequestRect;
-	int nVisibleTilesX;
-	int nVisibleTilesY;
-	int nAreaX;
-	int nAreaY;
-	int nCurrentTileX;
-	int nCurrentTileY;
-	int nCurrentX;
-	int nCurrentY;
-	int nSub1XOffset;
-	int nSub1YOffset;
-	int nSub2XOffset;
-	int nSub2YOffset;
-	int nSub3XOffset;
-	int nSub3YOffset;
-	int nSub4XOffset;
-	int nSub4YOffset;
-	CSound sndThunder;
-	int nCurrentLightningFrequency;
-	int nNextLightningFrequency;
-	int nNewLightningFrequency;
-	int nCurrentRainLevel;
-	int nNextRainLevel;
-	int nCurrentSnowLevel;
-	int nCurrentWindLevel;
-	int nCurrentFogLevel;
-	int nNextWindLevel;
-	int nCurrentTimeOfDay;
-	int nTimeToNextThunder;
-	int nThunderLength;
-	int bRenderCallLightning;
-	int nRenderLightningTimer;
-	CPoint cLightningPoint;
-	CVidCell m_glowVidCell;
-	CTypedPtrList<CPtrList,CAOEEntry*> m_lAOE;
-	std::vector<unsigned char*,std::allocator<unsigned char*>> m_RasterizedPolys;
-	std::vector<std::vector<WED_PolyPoint_st,std::allocator<WED_PolyPoint_st>>,std::allocator<std::vector<WED_PolyPoint_st,std::allocator<WED_PolyPoint_st>>>> m_DownsampledPolys;
-	unsigned __int16 m_areaType;
-	unsigned __int8 m_renderDayNightCode;
-	unsigned __int8 m_oldRenderDayNightCode;
-	unsigned __int8 m_dayLightIntensity;
-	unsigned __int8 m_requestDayNightCode;
-	unsigned __int8 m_oldRequestDualTileCode;
-	unsigned __int8 m_bResizedViewPort;
-	unsigned int m_nLastTickCount;
-	CPoint m_ptCurrentPosExact;
-	__int16 m_autoScrollSpeed;
-	CPoint m_ptScrollDest;
-	int m_nScrollAttempts;
-	int m_nOldScrollState;
-	unsigned __int8 m_nScrollDelay;
-	unsigned __int8 m_bMovieBroadcast;
-	int m_bStartLightning;
-	int m_bStopLightning;
-	unsigned __int8 m_lightningStrikeProb;
-	unsigned int m_rgbRainColor;
-	unsigned int m_rgbLightningGlobalLighting;
-	unsigned int m_rgbOverCastGlobalLighting;
-	unsigned int m_rgbGlobalLighting;
-	unsigned int m_rgbTimeOfDayGlobalLighting;
-	unsigned int m_rgbTimeOfDayRainColor;
-	int m_updateListenPosition;
-	CGameArea* m_pArea;
-	CVidBitmap m_vbMessageScreen;
-	unsigned int m_strrefMessage;
-	int m_bScreenShake;
-	CPoint m_screenShakeDelta;
-	CPoint m_screenShakeDecrease;
-	float m_fZoomSaved;
-	float m_fZoom;
-	float m_fStoredZoom;
-	int m_bZoomEnabled;
-	int m_bZooming;
+	CGameRemoteObjectListEntry** m_pArray;
+	__int16 m_nArraySize;
+	__int16 m_nControlsChanged;
+	CGameRemoteObjectControlChange* m_pControlsChanged;
+	CGameRemoteObjectControlChange* m_pControlsChangedTail;
+	__int16 m_nDeletions;
+	CGameRemoteObjectDeletion* m_pDeletions;
+	CGameRemoteObjectDeletion* m_pDeletionsTail;
+	__int16 m_nControlsAreaChanged;
+	Array<CResRef,6> m_psControlsAreaChangedName;
+	Array<unsigned int,6> m_pnControlsAreaChangedPlayerNum;
+	Array<__int16,6> m_pnControlsAreaChangedFirstObject;
+};
+
+struct CGamePermission
+{
+	Array<unsigned __int8,8> m_permission;
+};
+
+struct CMultiplayerSettings
+{
+	Array<CGamePermission,6> m_pcPermissions;
+	CGamePermission m_cDefaultPermissions;
+	Array<int,6> m_pnPlayerReady;
+	Array<int,6> m_pnCharacterControlledByPlayer;
+	Array<unsigned __int8,6> m_pbCharacterReady;
+	Array<unsigned __int8,6> m_pnCharacterStatus;
+	Array<int,6> m_pnLoadGameControlledByPlayer;
+	unsigned __int8 m_bRefreshCharacters;
+	unsigned __int8 m_nImportingBitField;
+	unsigned __int8 m_bRestrictStoreOption;
+	unsigned __int8 m_bJoinRequests;
+	unsigned __int8 m_bAllowReformParty;
+	unsigned __int8 m_bArbitrationLockStatus;
+	unsigned __int8 m_bArbitrationLockAllowInput;
+	CPoint m_ptAreaStart;
+	CString m_sAreaName;
+	CString m_sSaveName;
+	int m_idHostPermittedDialog;
+	int m_nHostPermittedDialogDelay;
+	unsigned __int8 m_bHostPermittedDialog;
+	unsigned __int8 m_bHostPermittedStore;
+	int m_idHostPermittedStore;
+	unsigned __int8 m_bFirstConnected;
+	CString m_sCampaignType;
 };
 
 typedef void (*type_CInfGame_SetState)(CInfGame* pThis, __int16 state, bool allowDead);
@@ -20072,6 +10102,2549 @@ struct CInfGame
 	}
 };
 
+struct CGameEffectBase
+{
+	CResRef m_version;
+	unsigned int m_effectId;
+	unsigned int m_targetType;
+	unsigned int m_spellLevel;
+	int m_effectAmount;
+	unsigned int m_dWFlags;
+	unsigned int m_durationType;
+	unsigned int m_duration;
+	unsigned __int16 m_probabilityUpper;
+	unsigned __int16 m_probabilityLower;
+	CResRef m_res;
+	unsigned int m_numDice;
+	unsigned int m_diceSize;
+	unsigned int m_savingThrow;
+	int m_saveMod;
+	unsigned int m_special;
+	unsigned int m_school;
+	unsigned int m_JeremyIsAnIdiot;
+	unsigned int m_minLevel;
+	unsigned int m_maxLevel;
+	unsigned int m_flags;
+	int m_effectAmount2;
+	int m_effectAmount3;
+	int m_effectAmount4;
+	int m_effectAmount5;
+	CResRef m_res2;
+	CResRef m_res3;
+	CPoint m_source;
+	CPoint m_target;
+	unsigned int m_sourceType;
+	CResRef m_sourceRes;
+	unsigned int m_sourceFlags;
+	unsigned int m_projectileType;
+	int m_slotNum;
+	Array<char,32> m_scriptName;
+	unsigned int m_casterLevel;
+	unsigned int m_firstCall;
+	unsigned int m_secondaryType;
+	Array<unsigned int,15> m_pad;
+};
+
+struct CGameEffect : CGameEffectBase
+{
+	struct CGameEffect_vtbl
+	{
+		void (__fastcall *CGameEffect_Destructor)(CGameEffect*);
+		CGameEffect* (__fastcall *Copy)(CGameEffect*);
+		int (__fastcall *ApplyEffect)(CGameEffect*, CGameSprite*);
+		int (__fastcall *ResolveEffect)(CGameEffect*, CGameSprite*);
+		void (__fastcall *OnAdd)(CGameEffect*, CGameSprite*);
+		void (__fastcall *OnAddSpecific)(CGameEffect*, CGameSprite*);
+		void (__fastcall *OnLoad)(CGameEffect*, CGameSprite*);
+		int (__fastcall *CheckSave)(CGameEffect*, CGameSprite*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*);
+		int (__fastcall *UsesDice)(CGameEffect*);
+		void (__fastcall *DisplayString)(CGameEffect*, CGameSprite*);
+		void (__fastcall *OnRemove)(CGameEffect*, CGameSprite*);
+	};
+
+	int m_sourceId;
+	int m_done;
+	int m_forceRepass;
+	unsigned int m_durationTemp;
+	int m_compareIdOnly;
+	int m_compareIdAndFlagsOnly;
+	int m_compareIdAndEffectAmountOnly;
+	int m_compareIdAndResrefOnly;
+	CSound m_sound;
+	int m_sourceTarget;
+
+	virtual void CGameEffect_Destructor()
+	{
+	}
+
+	virtual CGameEffect* Copy()
+	{
+		return *(CGameEffect**)nullptr;
+	}
+
+	virtual int ApplyEffect(CGameSprite* _0)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int ResolveEffect(CGameSprite* _0)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void OnAdd(CGameSprite* _0)
+	{
+	}
+
+	virtual void OnAddSpecific(CGameSprite* _0)
+	{
+	}
+
+	virtual void OnLoad(CGameSprite* _0)
+	{
+	}
+
+	virtual int CheckSave(CGameSprite* _0, unsigned __int8* _1, unsigned __int8* _2, unsigned __int8* _3, unsigned __int8* _4, unsigned __int8* _5, unsigned __int8* _6)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int UsesDice()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void DisplayString(CGameSprite* _0)
+	{
+	}
+
+	virtual void OnRemove(CGameSprite* _0)
+	{
+	}
+};
+
+struct CGameEffectUsability : CGameEffect
+{
+	struct CGameEffectUsability_vtbl
+	{
+		void (__fastcall *CGameEffect_Destructor)(CGameEffect*);
+		CGameEffect* (__fastcall *Copy)(CGameEffect*);
+		int (__fastcall *ApplyEffect)(CGameEffect*, CGameSprite*);
+		int (__fastcall *ResolveEffect)(CGameEffect*, CGameSprite*);
+		void (__fastcall *OnAdd)(CGameEffect*, CGameSprite*);
+		void (__fastcall *OnAddSpecific)(CGameEffect*, CGameSprite*);
+		void (__fastcall *OnLoad)(CGameEffect*, CGameSprite*);
+		int (__fastcall *CheckSave)(CGameEffect*, CGameSprite*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*);
+		int (__fastcall *UsesDice)(CGameEffect*);
+		void (__fastcall *DisplayString)(CGameEffect*, CGameSprite*);
+		void (__fastcall *OnRemove)(CGameEffect*, CGameSprite*);
+	};
+
+};
+
+struct CGameAnimationType
+{
+	struct CGameAnimationType_vtbl
+	{
+		void (__fastcall *CGameAnimationType_Destructor)(CGameAnimationType*);
+		void (__fastcall *CalculateFxRect)(CGameAnimationType*, CRect*, CPoint*, int);
+		void (__fastcall *CalculateGCBoundsRect)(CGameAnimationType*, CRect*, const CPoint*, const CPoint*, int, int, int);
+		void (__fastcall *ChangeDirection)(CGameAnimationType*, __int16);
+		void (__fastcall *EquipArmor)(CGameAnimationType*, char, unsigned __int8*);
+		void (__fastcall *EquipHelmet)(CGameAnimationType*, const CString*, unsigned __int8*);
+		void (__fastcall *EquipShield)(CGameAnimationType*, const CString*, unsigned __int8*);
+		void (__fastcall *EquipWeapon)(CGameAnimationType*, const CString*, unsigned __int8*, unsigned int, const unsigned __int16*);
+		CVidPalette* (__fastcall *GetAnimationPalette)(CGameAnimationType*, unsigned __int8);
+		void (__fastcall *GetAnimationResRef)(CGameAnimationType*, CString*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanLieDown)(CGameAnimationType*);
+		unsigned __int8 (__fastcall *DetectedByInfravision)(CGameAnimationType*);
+		unsigned __int16 (__fastcall *GetCastFrame)(CGameAnimationType*);
+		unsigned __int8 (__fastcall *GetColorBlood)(CGameAnimationType*);
+		unsigned __int8 (__fastcall *GetColorChunks)(CGameAnimationType*);
+		unsigned __int8 (__fastcall *GetListType)(CGameAnimationType*);
+		void (__fastcall *SetListType)(CGameAnimationType*, unsigned __int8);
+		unsigned __int8 (__fastcall *GetMoveScale)(CGameAnimationType*);
+		void (__fastcall *SetMoveScale)(CGameAnimationType*, unsigned __int8);
+		void (__fastcall *ResetMoveScale)(CGameAnimationType*);
+		unsigned __int8 (__fastcall *GetMoveScaleDefault)(CGameAnimationType*);
+		NECK_POINTS (__fastcall *GetNeckOffsets)(CGameAnimationType*, __int16);
+		const CRect* (__fastcall *GetEllipseRect)(CGameAnimationType*);
+		int (__fastcall *GetPathSmooth)(CGameAnimationType*);
+		unsigned __int8 (__fastcall *GetPersonalSpace)(CGameAnimationType*);
+		const char* (__fastcall *GetSndArmor)(CGameAnimationType*, char*);
+		const char* (__fastcall *GetSndDeath)(CGameAnimationType*, char*);
+		const char* (__fastcall *GetSndReady)(CGameAnimationType*, char*);
+		const char* (__fastcall *GetSndWalk)(CGameAnimationType*, char*, __int16);
+		unsigned int (__fastcall *GetSndWalkFreq)(CGameAnimationType*);
+		int (__fastcall *IsFalseColor)(CGameAnimationType*);
+		int (__fastcall *IsInvulnerable)(CGameAnimationType*);
+		int (__fastcall *IsMirroring)(CGameAnimationType*);
+		int (__fastcall *IsBeginningOfSequence)(CGameAnimationType*);
+		int (__fastcall *IsEndOfSequence)(CGameAnimationType*);
+		int (__fastcall *IsEndOfTwitchSequence)(CGameAnimationType*);
+		void (__fastcall *IncrementFrame)(CGameAnimationType*);
+		void (__fastcall *DecrementFrame)(CGameAnimationType*);
+		void (__fastcall *Render)(CGameAnimationType*, CInfinity*, CVidMode*, const CRect*, const CPoint*, const CPoint*, unsigned int, unsigned int, const CRect*, int, int, int, unsigned __int8, CGameSprite*);
+		void (__fastcall *ClearColorEffects)(CGameAnimationType*, unsigned __int8);
+		void (__fastcall *ClearColorEffectsAll)(CGameAnimationType*);
+		void (__fastcall *SetColorEffect)(CGameAnimationType*, unsigned __int8, unsigned __int8, unsigned int, unsigned __int8);
+		void (__fastcall *SetColorEffectAll)(CGameAnimationType*, unsigned __int8, unsigned int, unsigned __int8);
+		void (__fastcall *SetColorRange)(CGameAnimationType*, unsigned __int8, unsigned __int8);
+		void (__fastcall *SetColorRangeAll)(CGameAnimationType*, unsigned __int8);
+		__int16 (__fastcall *SetSequence)(CGameAnimationType*, __int16);
+		int (__fastcall *GetHeightOffset)(CGameAnimationType*);
+		void (__fastcall *CalculateFxRectMax)(CGameAnimationType*, CRect*, CPoint*, int);
+		void (__fastcall *CalculateEllipseRect)(CGameAnimationType*);
+		void (__fastcall *SetNeckOffsets)(CGameAnimationType*, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16);
+		unsigned __int8 (__fastcall *GetAttackFrameType)(CGameAnimationType*, unsigned __int8, unsigned __int8, unsigned __int8);
+		int (__fastcall *GetAboveGround)(CGameAnimationType*);
+		__int16 (__fastcall *GetAwakePlayInReverse)(CGameAnimationType*);
+		void (__fastcall *SetBrightest)(CGameAnimationType*, unsigned __int8);
+		void (__fastcall *SetBrightestDesired)(CGameAnimationType*, unsigned __int8);
+		__int16 (__fastcall *GetCastHeight)(CGameAnimationType*);
+		void (__fastcall *GetCastingOffset)(CGameAnimationType*, CPoint*);
+		unsigned __int8 (__fastcall *GetCurrentSequenceAndFrame)(CGameAnimationType*, __int16*, __int16*);
+		unsigned __int8 (__fastcall *GetCurrentResRef)(CGameAnimationType*, CString*, CString*, CString*, CString*);
+		void (__fastcall *OverrideAnimation)(CGameAnimationType*, CResRef, int);
+		void (__fastcall *Marshal)(CGameAnimationType*, unsigned __int8**, unsigned int*);
+		bool (__fastcall *Unmarshal)(CGameAnimationType*, CResRef);
+	};
+
+	unsigned __int16 m_animationID;
+	unsigned __int8 m_moveScale;
+	unsigned __int8 m_moveScaleCurrent;
+	CRect m_rEllipse;
+	int m_nHeightOffset;
+	bool m_bUseSpriteShader;
+	unsigned __int8 m_colorBlood;
+	unsigned __int8 m_colorChunks;
+	unsigned int m_nSndFreq;
+	const char* m_pSndDeath;
+	Array<NECK_POINTS,8> m_neckOffsets;
+	Array<CVidBitmap,5> m_combatRounds;
+	unsigned __int8 m_personalSpace;
+	unsigned __int8 m_walkCount;
+	unsigned __int16 m_castFrame;
+	unsigned __int8 m_bBrightest;
+	unsigned __int8 m_bBrightestDesired;
+	unsigned __int8 m_bLightSource;
+	CResRef m_soundRef;
+	CString m_walkRef;
+	Array<CSequenceSoundList,20> m_sequenceRefs;
+	int m_bNewPalette;
+	CVidBitmap m_newPalette;
+
+	virtual void CGameAnimationType_Destructor()
+	{
+	}
+
+	virtual void CalculateFxRect(CRect* _0, CPoint* _1, int _2)
+	{
+	}
+
+	virtual void CalculateGCBoundsRect(CRect* _0, const CPoint* _1, const CPoint* _2, int _3, int _4, int _5)
+	{
+	}
+
+	virtual void ChangeDirection(__int16 _0)
+	{
+	}
+
+	virtual void EquipArmor(char _0, unsigned __int8* _1)
+	{
+	}
+
+	virtual void EquipHelmet(const CString* _0, unsigned __int8* _1)
+	{
+	}
+
+	virtual void EquipShield(const CString* _0, unsigned __int8* _1)
+	{
+	}
+
+	virtual void EquipWeapon(const CString* _0, unsigned __int8* _1, unsigned int _2, const unsigned __int16* _3)
+	{
+	}
+
+	virtual CVidPalette* GetAnimationPalette(unsigned __int8 _0)
+	{
+		return *(CVidPalette**)nullptr;
+	}
+
+	virtual void GetAnimationResRef(CString* _0, unsigned __int8 _1)
+	{
+	}
+
+	virtual unsigned __int8 CanLieDown()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual unsigned __int8 DetectedByInfravision()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual unsigned __int16 GetCastFrame()
+	{
+		return *(unsigned __int16*)nullptr;
+	}
+
+	virtual unsigned __int8 GetColorBlood()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual unsigned __int8 GetColorChunks()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual unsigned __int8 GetListType()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void SetListType(unsigned __int8 _0)
+	{
+	}
+
+	virtual unsigned __int8 GetMoveScale()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void SetMoveScale(unsigned __int8 _0)
+	{
+	}
+
+	virtual void ResetMoveScale()
+	{
+	}
+
+	virtual unsigned __int8 GetMoveScaleDefault()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual NECK_POINTS GetNeckOffsets(__int16 _0)
+	{
+		return *(NECK_POINTS*)nullptr;
+	}
+
+	virtual const CRect* GetEllipseRect()
+	{
+		return *(const CRect**)nullptr;
+	}
+
+	virtual int GetPathSmooth()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual unsigned __int8 GetPersonalSpace()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual const char* GetSndArmor(char* _0)
+	{
+		return *(const char**)nullptr;
+	}
+
+	virtual const char* GetSndDeath(char* _0)
+	{
+		return *(const char**)nullptr;
+	}
+
+	virtual const char* GetSndReady(char* _0)
+	{
+		return *(const char**)nullptr;
+	}
+
+	virtual const char* GetSndWalk(char* _0, __int16 _1)
+	{
+		return *(const char**)nullptr;
+	}
+
+	virtual unsigned int GetSndWalkFreq()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual int IsFalseColor()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int IsInvulnerable()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int IsMirroring()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int IsBeginningOfSequence()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int IsEndOfSequence()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int IsEndOfTwitchSequence()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void IncrementFrame()
+	{
+	}
+
+	virtual void DecrementFrame()
+	{
+	}
+
+	virtual void Render(CInfinity* _0, CVidMode* _1, const CRect* _2, const CPoint* _3, const CPoint* _4, unsigned int _5, unsigned int _6, const CRect* _7, int _8, int _9, int _10, unsigned __int8 _11, CGameSprite* _12)
+	{
+	}
+
+	virtual void ClearColorEffects(unsigned __int8 _0)
+	{
+	}
+
+	virtual void ClearColorEffectsAll()
+	{
+	}
+
+	virtual void SetColorEffect(unsigned __int8 _0, unsigned __int8 _1, unsigned int _2, unsigned __int8 _3)
+	{
+	}
+
+	virtual void SetColorEffectAll(unsigned __int8 _0, unsigned int _1, unsigned __int8 _2)
+	{
+	}
+
+	virtual void SetColorRange(unsigned __int8 _0, unsigned __int8 _1)
+	{
+	}
+
+	virtual void SetColorRangeAll(unsigned __int8 _0)
+	{
+	}
+
+	virtual __int16 SetSequence(__int16 _0)
+	{
+		return *(__int16*)nullptr;
+	}
+
+	virtual int GetHeightOffset()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void CalculateFxRectMax(CRect* _0, CPoint* _1, int _2)
+	{
+	}
+
+	virtual void CalculateEllipseRect()
+	{
+	}
+
+	virtual void SetNeckOffsets(__int16 _0, __int16 _1, __int16 _2, __int16 _3, __int16 _4, __int16 _5, __int16 _6, __int16 _7, __int16 _8, __int16 _9, __int16 _10, __int16 _11, __int16 _12, __int16 _13, __int16 _14, __int16 _15)
+	{
+	}
+
+	virtual unsigned __int8 GetAttackFrameType(unsigned __int8 _0, unsigned __int8 _1, unsigned __int8 _2)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual int GetAboveGround()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual __int16 GetAwakePlayInReverse()
+	{
+		return *(__int16*)nullptr;
+	}
+
+	virtual void SetBrightest(unsigned __int8 _0)
+	{
+	}
+
+	virtual void SetBrightestDesired(unsigned __int8 _0)
+	{
+	}
+
+	virtual __int16 GetCastHeight()
+	{
+		return *(__int16*)nullptr;
+	}
+
+	virtual void GetCastingOffset(CPoint* _0)
+	{
+	}
+
+	virtual unsigned __int8 GetCurrentSequenceAndFrame(__int16* _0, __int16* _1)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual unsigned __int8 GetCurrentResRef(CString* _0, CString* _1, CString* _2, CString* _3)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void OverrideAnimation(CResRef _0, int _1)
+	{
+	}
+
+	virtual void Marshal(unsigned __int8** _0, unsigned int* _1)
+	{
+	}
+
+	virtual bool Unmarshal(CResRef _0)
+	{
+		return *(bool*)nullptr;
+	}
+};
+
+struct CDerivedStatsTemplate
+{
+	unsigned int m_generalState;
+	__int16 m_nMaxHitPoints;
+	__int16 m_nArmorClass;
+	__int16 m_nACCrushingMod;
+	__int16 m_nACMissileMod;
+	__int16 m_nACPiercingMod;
+	__int16 m_nACSlashingMod;
+	__int16 m_nTHAC0;
+	__int16 m_nNumberOfAttacks;
+	__int16 m_nSaveVSDeath;
+	__int16 m_nSaveVSWands;
+	__int16 m_nSaveVSPoly;
+	__int16 m_nSaveVSBreath;
+	__int16 m_nSaveVSSpell;
+	__int16 m_nResistFire;
+	__int16 m_nResistCold;
+	__int16 m_nResistElectricity;
+	__int16 m_nResistAcid;
+	__int16 m_nResistMagic;
+	__int16 m_nResistMagicFire;
+	__int16 m_nResistMagicCold;
+	__int16 m_nResistSlashing;
+	__int16 m_nResistCrushing;
+	__int16 m_nResistPiercing;
+	__int16 m_nResistMissile;
+	__int16 m_nLore;
+	__int16 m_nLockPicking;
+	__int16 m_nMoveSilently;
+	__int16 m_nTraps;
+	__int16 m_nPickPocket;
+	__int16 m_nFatigue;
+	__int16 m_nIntoxication;
+	__int16 m_nLuck;
+	__int16 m_nTracking;
+	unsigned __int16 m_nLevel1;
+	unsigned __int16 m_nLevel2;
+	unsigned __int16 m_nLevel3;
+	__int16 m_nSex;
+	__int16 m_nSTR;
+	__int16 m_nSTRExtra;
+	__int16 m_nINT;
+	__int16 m_nWIS;
+	__int16 m_nDEX;
+	__int16 m_nCON;
+	__int16 m_nCHR;
+	unsigned int m_nXPValue;
+	unsigned int m_nXP;
+	unsigned int m_nGold;
+	unsigned int m_nMoraleBreak;
+	unsigned int m_nMoraleRecoveryTime;
+	__int16 m_nReputation;
+	__int16 m_nHatedRace;
+	int m_nHideInShadows;
+	int m_nDetectIllusion;
+	int m_nSetTraps;
+	__int16 m_nDamageBonus;
+	__int16 m_nSpellFailureMage;
+	__int16 m_nSpellFailurePriest;
+	__int16 m_nSpellDurationModMage;
+	__int16 m_nSpellDurationModPriest;
+	__int16 m_nTurnUndeadLevel;
+	__int16 m_nBackstabDamageMultiplier;
+	__int16 m_nLayOnHandsAmount;
+	int m_bHeld;
+	int m_bPolymorphed;
+	int m_bIdentifyMode;
+	int m_bEntangle;
+	int m_bSanctuary;
+	int m_bMinorGlobe;
+	int m_bShieldGlobe;
+	int m_bGrease;
+	int m_bWeb;
+	int m_bCasterHold;
+	__int16 m_nTranslucent;
+	__int16 m_nEncumberance;
+	__int16 m_nMissileTHAC0Bonus;
+	__int16 m_nMagicDamageResistance;
+	__int16 m_nResistPoison;
+	__int16 m_nSpellDurationModBard;
+	int m_bDoNotJump;
+	int m_bAuraCleansing;
+	unsigned int m_nCastingType;
+	__int16 m_nMentalSpeed;
+	__int16 m_nPhysicalSpeed;
+	__int16 m_nCastingLevelBonusMage;
+	__int16 m_nCastingLevelBonusCleric;
+	int m_bSeeInvisible;
+	int m_bIgnoreDialogPause;
+	int m_nMinHitPoints;
+	int m_THAC0BonusRight;
+	int m_THAC0BonusLeft;
+	int m_DamageBonusRight;
+	int m_DamageBonusLeft;
+	int m_nStoneSkins;
+	int m_nProficiencyBastardSword;
+	int m_nProficiencyLongSword;
+	int m_nProficiencyShortSword;
+	int m_nProficiencyAxe;
+	int m_nProficiencyTwoHandedSword;
+	int m_nProficiencyKatana;
+	int m_nProficiencyScimitarWakisashiNinjaTo;
+	int m_nProficiencyDagger;
+	int m_nProficiencyWarhammer;
+	int m_nProficiencySpear;
+	int m_nProficiencyHalberd;
+	int m_nProficiencyFlailMorningStar;
+	int m_nProficiencyMace;
+	int m_nProficiencyQuarterStaff;
+	int m_nProficiencyCrossbow;
+	int m_nProficiencyLongBow;
+	int m_nProficiencyShortBow;
+	int m_nProficiencyDart;
+	int m_nProficiencySling;
+	int m_nProficiencyBlackjack;
+	int m_nProficiencyGun;
+	int m_nProficiencyMartialArts;
+	int m_nProficiency2Handed;
+	int m_nProficiencySwordAndShield;
+	int m_nProficiencySingleWeapon;
+	int m_nProficiency2Weapon;
+	int m_nProficiencyClub;
+	int m_nExtraProficiency2;
+	int m_nExtraProficiency3;
+	int m_nExtraProficiency4;
+	int m_nExtraProficiency5;
+	int m_nExtraProficiency6;
+	int m_nExtraProficiency7;
+	int m_nExtraProficiency8;
+	int m_nExtraProficiency9;
+	int m_nExtraProficiency10;
+	int m_nExtraProficiency11;
+	int m_nExtraProficiency12;
+	int m_nExtraProficiency13;
+	int m_nExtraProficiency14;
+	int m_nExtraProficiency15;
+	int m_nExtraProficiency16;
+	int m_nExtraProficiency17;
+	int m_nExtraProficiency18;
+	int m_nExtraProficiency19;
+	int m_nExtraProficiency20;
+	int m_nPuppetMasterId;
+	int m_nPuppetMasterType;
+	int m_nPuppetType;
+	int m_nPuppetId;
+	int m_bCheckForBerserk;
+	int m_bBerserkStage1;
+	int m_bBerserkStage2;
+	int m_nDamageLuck;
+	CResRef m_cBardSong;
+	CResRef m_cBackStab;
+	int m_nVisualRange;
+	int m_bExplore;
+	int m_bThrullCharm;
+	int m_bSummonDisable;
+	int m_bSummonDisableAction;
+	__int16 m_nHitBonus;
+	Array<__int16,11> m_nSpecificDamageBonus;
+	Array<__int16,12> m_nSchoolSaveBonus;
+	unsigned int m_nKit;
+	int m_bForceSurge;
+	int m_nSurgeMod;
+	int m_bImprovedHaste;
+	Array<unsigned int,10> m_nScriptingStates;
+	int m_nMeleeTHAC0Bonus;
+	int m_nMeleeDamageBonus;
+	int m_nMissileDamageBonus;
+	int m_bDisableCircle;
+	int m_nFistTHAC0Bonus;
+	int m_nFistDamageBonus;
+	unsigned int m_sClassStringOverrideMixed;
+	unsigned int m_sClassStringOverrideLower;
+	__int16 m_nClassTypeOverrideMixed;
+	__int16 m_nClassTypeOverrideLower;
+	int m_bPreventSpellProtectionEffects;
+	int m_bImmunityToBackStab;
+	int m_nLockPickingMTPBonus;
+	int m_nMoveSilentlyMTPBonus;
+	int m_nTrapsMTPBonus;
+	int m_nPickPocketMTPBonus;
+	int m_nHideInShadowsMTPBonus;
+	int m_nDetectIllusionMTPBonus;
+	int m_nSetTrapsMTPBonus;
+	int m_bPreventAISlowDown;
+	int m_nExistanceDelayOverride;
+	int m_bAnimationOnlyHaste;
+	int m_bNoPermanentDeath;
+	int m_bImmuneToTurnUndead;
+	int m_nChaosShield;
+	int m_bNPCBump;
+	int m_bUseAnyItem;
+	int m_nAssassinate;
+	int m_bSexChanged;
+	int m_nSpellFailureInnate;
+	int m_bImmuneToTracking;
+	int m_bDeadMagic;
+	int m_bImmuneToTimeStop;
+	int m_bImmuneToSequester;
+	int m_nStoneSkinsGolem;
+	int m_nLevelDrain;
+	int m_bDoNotDraw;
+	int m_bIgnoreDrainDeath;
+};
+
+struct CDerivedStats : CDerivedStatsTemplate
+{
+	CImmunitiesProjectile m_cImmunitiesProjectile;
+	CImmunitiesEffect m_cImmunitiesEffect;
+	CImmunitiesAIType m_cImmunitiesAIType;
+	CImmunitiesSpellLevel m_cImmunitiesSpellLevel;
+	CImmunitiesWeapon m_cImmunitiesWeapon;
+	CSelectiveBonusList m_cToHitBonusList;
+	CSelectiveBonusList m_cDamageBonusList;
+	CImmunitiesItemEquipList m_cImmunitiesItemEquip;
+	CImmunitiesItemTypeEquipList m_cImmunitiesItemTypeEquip;
+	CImmunitiesProjectile m_cBounceProjectile;
+	CImmunitiesEffect m_cBounceEffect;
+	CImmunitiesSpellLevel m_cBounceSpellLevel;
+	CImmunitiesSpellLevelDecrementing m_cBounceProjectileLevelDec;
+	CImmunitiesSpellLevelDecrementing m_cImmunitiesProjectileLevelDec;
+	CImmunitiesSchoolAndSecondary m_cImmunitiesSchool;
+	CImmunitiesSchoolAndSecondary m_cImmunitiesSecondaryType;
+	CImmunitiesSchoolAndSecondary m_cBounceSchool;
+	CImmunitiesSchoolAndSecondary m_cBounceSecondaryType;
+	CImmunitiesItemEquipList m_cImmunitiesItemUse;
+	CImmunitiesItemTypeEquipList m_cImmunitiesItemTypeUse;
+	CImmunitiesSpellList m_cImmunitiesSpell;
+	CImmunitiesSpellList m_cBounceSpell;
+	CImmunitiesSchoolAndSecondaryDecrementing m_cImmunitiesSchoolLevelDec;
+	CImmunitiesSchoolAndSecondaryDecrementing m_cImmunitiesSecondaryTypeLevelDec;
+	CImmunitiesSchoolAndSecondaryDecrementing m_cBounceSchoolLevelDec;
+	CImmunitiesSchoolAndSecondaryDecrementing m_cBounceSecondaryTypeLevelDec;
+	CContingencyList m_cContingencyList;
+	CPersistantEffectListRegenerated m_cRegeneratedPersistantEffectList;
+	CImmunitiesSpellLevelDecrementing m_cSpellTrapLevelDec;
+	CContingencyList m_cSequencerList;
+	CColorRanges m_appliedColorRanges;
+	CColorEffects m_appliedColorEffects;
+	Array<CCreatureFileMemorizedSpellLevel,9> m_memorizedSpellsLevelMage;
+	Array<CCreatureFileMemorizedSpellLevel,7> m_memorizedSpellsLevelPriest;
+	Array<int,16> m_disabledButtons;
+	Array<int,3> m_disabledSpellTypes;
+	int m_disableSpells;
+	CApplyEffectList m_cExtraMeleeEffects;
+	CApplyEffectList m_cExtraRangedEffects;
+	CSelectiveBonusList m_cProtectionList;
+	CSelectiveWeaponTypeList m_cSelectiveWeaponTypeList;
+	CCriticalEntryList m_cCriticalEntryList;
+	Array<unsigned int,8> m_spellStates;
+};
+
+struct CCreatureFileMemorizedSpell
+{
+	Array<unsigned __int8,8> m_spellId;
+	unsigned __int16 m_flags;
+	Array<unsigned __int8,2> structureAlignment1;
+};
+
+struct CCreatureFileKnownSpell
+{
+	Array<unsigned __int8,8> m_knownSpellId;
+	unsigned __int16 m_spellLevel;
+	unsigned __int16 m_magicType;
+};
+
+struct CCreatureFileItem
+{
+	Array<unsigned __int8,8> m_itemId;
+	unsigned __int16 m_wear;
+	Array<unsigned __int16,3> m_usageCount;
+	unsigned int m_dynamicFlags;
+};
+
+struct CCreatureFileHeader
+{
+	unsigned int m_name;
+	unsigned int m_apparentName;
+	unsigned int m_flags;
+	unsigned int m_xpValue;
+	unsigned int m_xp;
+	unsigned int m_gold;
+	unsigned int m_generalState;
+	__int16 m_hitPoints;
+	unsigned __int16 m_maxHitPointsBase;
+	unsigned int m_animationType;
+	Array<unsigned __int8,7> m_colors;
+	unsigned __int8 m_effectVersion;
+	Array<unsigned __int8,8> m_portraitSmall;
+	Array<unsigned __int8,8> m_portraitLarge;
+	unsigned __int8 m_reputation;
+	unsigned __int8 m_hideInShadowsBase;
+	__int16 m_armorClass;
+	__int16 m_armorClassBase;
+	__int16 m_armorClassCrushingAdjustment;
+	__int16 m_armorClassMissileAdjustment;
+	__int16 m_armorClassPiercingAdjustment;
+	__int16 m_armorClassSlashingAdjustment;
+	char m_toHitArmorClass0Base;
+	unsigned __int8 m_numberOfAttacksBase;
+	unsigned __int8 m_saveVSDeathBase;
+	unsigned __int8 m_saveVSWandsBase;
+	unsigned __int8 m_saveVSPolyBase;
+	unsigned __int8 m_saveVSBreathBase;
+	unsigned __int8 m_saveVSSpellBase;
+	char m_resistFireBase;
+	char m_resistColdBase;
+	char m_resistElectricityBase;
+	char m_resistAcidBase;
+	char m_resistMagicBase;
+	char m_resistMagicFireBase;
+	char m_resistMagicColdBase;
+	char m_resistSlashingBase;
+	char m_resistCrushingBase;
+	char m_resistPiercingBase;
+	char m_resistMissileBase;
+	unsigned __int8 m_detectIllusionBase;
+	unsigned __int8 m_setTrapsBase;
+	unsigned __int8 m_loreBase;
+	unsigned __int8 m_lockPickingBase;
+	unsigned __int8 m_moveSilentlyBase;
+	unsigned __int8 m_trapsBase;
+	unsigned __int8 m_pickPocketBase;
+	unsigned __int8 m_fatigue;
+	unsigned __int8 m_intoxication;
+	char m_luckBase;
+	Array<char,15> m_proficiencies;
+	unsigned __int8 m_bNightmare;
+	unsigned __int8 m_nTranslucent;
+	char m_repChangeKilled;
+	char m_repChangeJoined;
+	char m_repChangeKicked;
+	unsigned __int8 m_undeadLevel;
+	unsigned __int8 m_trackingBase;
+	Array<char,32> m_trackingTarget;
+	Array<unsigned int,100> m_speech;
+	unsigned __int8 m_level1;
+	unsigned __int8 m_level2;
+	unsigned __int8 m_level3;
+	unsigned __int8 m_sex;
+	unsigned __int8 m_STRBase;
+	unsigned __int8 m_STRExtraBase;
+	unsigned __int8 m_INTBase;
+	unsigned __int8 m_WISBase;
+	unsigned __int8 m_DEXBase;
+	unsigned __int8 m_CONBase;
+	unsigned __int8 m_CHRBase;
+	unsigned __int8 m_morale;
+	unsigned __int8 m_moraleBreak;
+	unsigned __int8 m_hatedRace;
+	unsigned __int16 m_moraleRecoveryTime;
+	unsigned __int16 m_mageSpecUpperWord;
+	unsigned __int16 m_mageSpecialization;
+	Array<unsigned __int8,8> m_scriptOverRide;
+	Array<unsigned __int8,8> m_scriptClass;
+	Array<unsigned __int8,8> m_scriptRace;
+	Array<unsigned __int8,8> m_scriptGeneral;
+	Array<unsigned __int8,8> m_scriptDefault;
+};
+
+struct CBlood
+{
+	CGameArea* m_pArea;
+	CTypedPtrList<CPtrList,CParticle*> m_particleList;
+	CTypedPtrList<CPtrList,CParticle*> m_lstSplashParticles;
+	CPoint m_refPoint;
+	CPoint m_pos;
+	int m_posZ;
+	__int16 m_nTimeStamp;
+	Array<unsigned int,3> m_aColors;
+	CRect m_rBounding;
+	__int16 m_nDirection;
+	unsigned __int16 m_particleType;
+	unsigned __int16 m_bloodType;
+	int m_nCharHeight;
+	unsigned __int8 m_bLeavePool;
+};
+
+struct CBaldurProjector : CBaldurEngine
+{
+	struct CBaldurProjector_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	CResWebm* m_pMovie;
+	int bStretchToScreen;
+	CFile* mve_file;
+	int m_deactivateEngine;
+	Array<CKeyInfo,2> m_pVirtualKeys;
+	Array<int,2> m_pVirtualKeysFlags;
+	CTypedPtrList<CPtrList,CResRef*> m_movieResRef;
+	unsigned __int8 m_bSelectEngine;
+	unsigned __int8 m_bFirstRender;
+	void* m_pCodec;
+	int m_nFirstFrameTime;
+	CSound m_cSoundOverride;
+	CResRef m_cSubtitles;
+	CVidFont m_vidFont;
+	int m_bDisplayTOBMovie;
+};
+
+struct CBaldurMessage
+{
+	unsigned __int8 m_bInOnObjectAdd;
+	unsigned __int8 m_bInOnObjectDelete;
+	unsigned __int8 m_bInOnRestAnnounce;
+	unsigned __int8 m_bInOnJournalAnnounce;
+	unsigned __int8 m_bInOnAreaMapNoteAnnounce;
+	unsigned __int8 m_bInOnAnnounceBiography;
+	unsigned __int8 m_bInHandleBlockingMessages;
+	unsigned __int8 m_bPlayerShutdown;
+	CChatBuffer m_cChatBuffer;
+	unsigned __int8 m_nSignalQueueSize;
+	unsigned __int8 m_nSignalQueueStart;
+	unsigned __int8 m_nSignalQueueEnd;
+	Array<unsigned __int8,24> m_pnSignalFrom;
+	Array<unsigned __int8,24> m_pnSignalType;
+	Array<unsigned __int8,24> m_pnSignalData;
+	unsigned __int8 m_bDeleteAreaPolling;
+	CString m_sDeleteAreaString;
+	unsigned int m_dwDeleteAreaTimeout;
+	Array<unsigned __int8,6> m_pnDeleteAreaVotes;
+	Array<int,6> m_pnDeleteAreaVoters;
+	unsigned __int8 m_bCloseSessionPolling;
+	unsigned int m_dwCloseSessionTimeout;
+	Array<unsigned __int8,6> m_pnCloseSessionVotes;
+	Array<int,6> m_pnCloseSessionVoters;
+	Array<int,6> m_pRemovedPlayerID;
+	unsigned __int8 m_bRemovedPlayerID;
+	unsigned __int8 m_bDialogRequestPending;
+	unsigned __int8 m_bDialogReplyReturned;
+	unsigned __int8 m_bDialogReplyValue;
+	int m_nDialogReplyUpdates;
+	unsigned __int8 m_bLeaveAreaLuaRequestPending;
+	unsigned __int8 m_bLeaveAreaLuaReplyReturned;
+	unsigned __int8 m_nLeaveAreaLuaReplyValue;
+	unsigned __int8 m_bLeaveAreaNameRequestPending;
+	unsigned __int8 m_bLeaveAreaNameReplyReturned;
+	unsigned __int8 m_nLeaveAreaNameReplyValue;
+	unsigned __int8 m_bMultiplayerSynchClientPending;
+	unsigned __int8 m_bMultiplayerSynchClientFinished;
+	unsigned __int8 m_bMultiplayerSynchServerPending;
+	unsigned __int8 m_bMultiplayerSynchServerFinished;
+	unsigned __int8 m_nMultiplayerSynchClientLocation;
+	unsigned __int8 m_bVersionControlShutdown;
+	CString m_sVersionControlShutdownClientString;
+	CString m_sVersionControlShutdownServerString;
+	unsigned __int8 m_nVersionControlShutdownReason;
+	unsigned int m_dwSignalSecondsToTimeout;
+	unsigned __int8 m_bMultiplayerSessionShutdown;
+	unsigned __int8 m_bInReputationChange;
+	unsigned __int8 m_bInMessageSetDrawPoly;
+};
+
+#pragma pack(push, 1)
+struct CAreaVariable
+{
+	Array<char,32> m_name;
+	unsigned __int16 m_type;
+	unsigned __int16 m_resRefType;
+	unsigned int m_dWValue;
+	int m_intValue;
+	long double m_floatValue;
+	Array<char,32> m_stringValue;
+};
+#pragma pack(pop)
+
+struct CVariable : CAreaVariable
+{
+};
+
+struct CAreaUserNote
+{
+	unsigned __int16 m_startX;
+	unsigned __int16 m_startY;
+	unsigned int m_note;
+	unsigned int m_dwflags;
+	unsigned int m_id;
+	Array<unsigned int,9> m_notUsed;
+};
+
+struct CGameAreaNotes
+{
+	int m_bInitialized;
+	CPoint m_ptCellSize;
+	CPoint m_ptButtonSize;
+	CTypedPtrList<CPtrList,CAreaUserNote*> m_areaNoteList;
+	CAreaUserNote m_cAreaNote;
+	int m_bAddingNote;
+	unsigned int m_nNoteButtonClicked;
+	CResRef m_rArea;
+	CString m_szBuffer;
+	unsigned __int8 m_bNetworkDelete;
+	unsigned __int8 m_nCurrentIcon;
+};
+
+struct CAreaSoundsAndMusic
+{
+	unsigned int m_dayMusic;
+	unsigned int m_nightMusic;
+	unsigned int m_battleWinningMusic;
+	unsigned int m_battleStandOffMusic;
+	unsigned int m_battleLosingMusic;
+	unsigned int m_alt1Music0;
+	unsigned int m_alt1Music1;
+	unsigned int m_alt1Music2;
+	unsigned int m_alt1Music3;
+	unsigned int m_alt1Music4;
+	Array<unsigned __int8,8> m_dayAmbient;
+	Array<unsigned __int8,8> m_dayAmbientExtended;
+	unsigned int m_dayAmbientVolume;
+	Array<unsigned __int8,8> m_nightAmbient;
+	Array<unsigned __int8,8> m_nightAmbientExtended;
+	unsigned int m_nightAmbientVolume;
+	Array<unsigned int,16> m_notUsed;
+};
+
+struct CAreaFileStaticObject
+{
+	Array<char,32> m_scriptName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned int m_timeOfDayVisible;
+	Array<unsigned __int8,8> m_resref;
+	unsigned int m_nSequence;
+	unsigned int m_dwFlags;
+	__int16 m_height;
+	unsigned __int16 m_translucency;
+	unsigned __int16 m_startFrameRange;
+	unsigned __int8 m_probability;
+	unsigned __int8 m_period;
+	Array<unsigned __int8,8> m_paletteResref;
+	unsigned __int16 m_sizeX;
+	unsigned __int16 m_sizeY;
+};
+
+struct CAreaFileSoundObject
+{
+	Array<char,32> m_scriptName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned __int16 m_range;
+	Array<unsigned __int8,2> structureAlignment1;
+	unsigned int m_pitchVariance;
+	unsigned __int16 m_volumeVariance;
+	unsigned __int16 m_volume;
+	Array<Array<unsigned __int8,8>,10> m_soundObject;
+	unsigned __int16 m_soundObjectNum;
+	Array<unsigned __int8,2> structureAlignment2;
+	unsigned int m_period;
+	unsigned int m_periodVariance;
+	unsigned int m_timeOfDayActive;
+	unsigned int m_dwFlags;
+	Array<unsigned int,16> m_notUsed;
+};
+
+struct CAreaFileRestEncounter
+{
+	Array<char,32> m_scriptName;
+	Array<unsigned int,10> m_randomCreatureString;
+	Array<Array<unsigned __int8,8>,10> m_randomCreature;
+	unsigned __int16 m_randomCreatureNum;
+	unsigned __int16 m_difficulty;
+	unsigned int m_lifeSpan;
+	unsigned __int16 m_huntingRange;
+	unsigned __int16 m_followRange;
+	unsigned __int16 m_maxTypeNum;
+	unsigned __int16 m_activated;
+	unsigned __int16 m_probDay;
+	unsigned __int16 m_probNight;
+	unsigned __int16 m_wFlags;
+	Array<unsigned __int8,10> m_weights;
+	Array<unsigned int,11> m_notUsed;
+};
+
+struct CAreaFileRandomMonsterSpawningPoint
+{
+	Array<char,32> m_scriptName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	Array<Array<unsigned __int8,8>,10> m_randomCreature;
+	unsigned __int16 m_randomCreatureNum;
+	unsigned __int16 m_difficulty;
+	unsigned __int16 m_spawningRate;
+	unsigned __int16 m_wFlags;
+	unsigned int m_lifeSpan;
+	unsigned __int16 m_huntingRange;
+	unsigned __int16 m_followRange;
+	unsigned __int16 m_maxTypeNum;
+	unsigned __int16 m_activated;
+	unsigned int m_timeOfDayVisible;
+	unsigned __int16 m_probDay;
+	unsigned __int16 m_probNight;
+	unsigned int m_frequency;
+	unsigned int m_countdown;
+	Array<unsigned __int8,10> m_weights;
+	Array<unsigned __int16,19> m_notUsed;
+};
+
+struct CAreaFileProjectileObject
+{
+	Array<unsigned __int8,8> m_resref;
+	unsigned int m_effectListOffset;
+	unsigned __int16 m_effectListCount;
+	unsigned __int16 m_projectileID;
+	__int16 m_nDelayCount;
+	__int16 m_nRepetitionCount;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned __int16 m_posZ;
+	unsigned __int8 m_targetType;
+	char m_portraitNum;
+};
+
+struct CAreaFileHeader
+{
+	Array<unsigned __int8,8> m_areaName;
+	unsigned int m_lastSaved;
+	unsigned int m_flags;
+	Array<unsigned __int8,8> m_areaEdgeNorth;
+	unsigned int m_flagsEdgeNorth;
+	Array<unsigned __int8,8> m_areaEdgeEast;
+	unsigned int m_flagsEdgeEast;
+	Array<unsigned __int8,8> m_areaEdgeSouth;
+	unsigned int m_flagsEdgeSouth;
+	Array<unsigned __int8,8> m_areaEdgeWest;
+	unsigned int m_flagsEdgeWest;
+	unsigned __int16 m_areaType;
+	unsigned __int16 m_rainProbability;
+	unsigned __int16 m_snowProbability;
+	unsigned __int16 m_fogProbability;
+	unsigned __int16 m_lightningProbability;
+	unsigned __int8 m_waterAlpha;
+	unsigned __int8 m_unused;
+};
+
+struct CAreaFileContainer
+{
+	Array<char,32> m_scriptName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned __int16 m_containerType;
+	unsigned __int16 m_lockDifficulty;
+	unsigned int m_dwFlags;
+	unsigned __int16 m_trapDetectionDifficulty;
+	unsigned __int16 m_trapRemovalDifficulty;
+	unsigned __int16 m_trapActivated;
+	unsigned __int16 m_trapDetected;
+	unsigned __int16 m_posXTrapOrigin;
+	unsigned __int16 m_posYTrapOrigin;
+	unsigned __int16 m_boundingRectLeft;
+	unsigned __int16 m_boundingRectTop;
+	unsigned __int16 m_boundingRectRight;
+	unsigned __int16 m_boundingRectBottom;
+	unsigned int m_startingItem;
+	unsigned int m_itemCount;
+	Array<unsigned __int8,8> m_script;
+	unsigned int m_pickPointStart;
+	unsigned __int16 m_pickPointCount;
+	unsigned __int16 m_triggerRange;
+	Array<char,32> m_ownedBy;
+	Array<unsigned __int8,8> m_keyType;
+	unsigned int m_breakDifficulty;
+	unsigned int m_strNotPickable;
+	Array<unsigned int,14> m_notUsed;
+};
+
+struct CAreaFileCharacterEntryPoint
+{
+	Array<char,32> m_entryName;
+	unsigned __int16 m_startX;
+	unsigned __int16 m_startY;
+	unsigned int m_facing;
+	Array<unsigned int,16> m_notUsed;
+};
+
+typedef void (*type_CAIObjectType_Set)(CAIObjectType* pThis, CAIObjectType* that);
+extern type_CAIObjectType_Set p_CAIObjectType_Set;
+
+struct CAIObjectType
+{
+	static CAIObjectType* p_NOONE;
+	CString m_name;
+	unsigned __int8 m_EnemyAlly;
+	unsigned __int8 m_General;
+	unsigned __int8 m_Race;
+	unsigned __int8 m_Class;
+	int m_Instance;
+	Array<unsigned __int8,5> m_SpecialCase;
+	unsigned __int8 m_Specifics;
+	unsigned __int8 m_Gender;
+	unsigned __int8 m_Alignment;
+
+	void Set(CAIObjectType* that)
+	{
+		p_CAIObjectType_Set(this, that);
+	}
+};
+
+struct CAIAction
+{
+	__int16 m_actionID;
+	CAIObjectType m_actorID;
+	CAIObjectType m_acteeID;
+	CAIObjectType m_acteeID2;
+	int m_specificID;
+	int m_specificID2;
+	int m_specificID3;
+	CString m_string1;
+	CString m_string2;
+	CPoint m_dest;
+	unsigned int m_internalFlags;
+	CString m_source;
+};
+
+struct CSpawn
+{
+	struct CSpawn_vtbl
+	{
+		void (__fastcall *CSpawn_Destructor)(CSpawn*);
+	};
+
+	enum class ePMode : __int32
+	{
+		POINT_SELECT_RANDOM_SEQUENTIAL = 0,
+		POINT_SELECT_SEQUENTIAL = 1,
+		POINT_SELECT_INDEXED_SEQUENTIAL = 2,
+		POINT_SELECT_EXPLICIT = 3,
+	};
+
+	unsigned int Interval;
+	CString SectionAlias;
+	unsigned int SpawnFlags;
+	int DataIsValid;
+	CAIObjectType mSearchAI;
+	int mSearchQty;
+	Array<int,4> mSearchRegion;
+	CSpawnVar* mpSearchKeyVar;
+	CSpawnVar* mpSearchQtyVar;
+	CStringList mCREFiles;
+	int mCreateQty;
+	CString* mpCreateQtyScope;
+	CString* mpCreateQtyLabel;
+	CString* mpScriptName;
+	unsigned __int8 mEA;
+	unsigned __int8 mGeneral;
+	unsigned __int8 mRace;
+	unsigned __int8 mClass;
+	unsigned __int8 mGender;
+	unsigned __int8 mSpecifics;
+	unsigned __int8 mFaction;
+	unsigned __int8 mTeam;
+	unsigned __int8 mAlignment;
+	CString* mpOverrideScript;
+	CString* mpClassScript;
+	CString* mpRaceScript;
+	CString* mpGeneralScript;
+	CString* mpDefaultScript;
+	CString* mpAreaScript;
+	CString* mpSpecificsScript;
+	CStringList mDialogFiles;
+	int mDeathGoodModifier;
+	int mDeathLawModifier;
+	int mDeathLadyModifier;
+	int mDeathMurderModifier;
+	int Facing;
+	CSpawnPointArray mSpawnPointArray;
+	CSpawnPoint mSpelectedPoint;
+	CSpawn::ePMode mPointSelectMode;
+	CString* pPointIndexScope;
+	CString* pPointIndexLabel;
+	CSpawnPointVar* mpExplicitSpawnPoint;
+	CString* pExplicitSpawnFacingScope;
+	CString* pExplicitSpawnFacingLabel;
+	CSpawnPointVar* mpSpawnPointStorage;
+	CString* pSpawnFacingStorageScope;
+	CString* pSpawnFacingStorageLabel;
+	int mSequentialStartValue;
+	unsigned int mTimeOfDay;
+
+	virtual void CSpawn_Destructor()
+	{
+	}
+};
+
+struct CSelectiveWeaponType
+{
+	int m_slot;
+	CAIObjectType m_type;
+	CWeaponIdentification m_weapon;
+};
+
+struct CSelectiveBonus
+{
+	CAIObjectType m_type;
+	int m_bonus;
+};
+
+struct CScreenStore : CBaldurEngine
+{
+	struct CScreenStore_vtbl
+	{
+		void (__fastcall *CObject_Destructor)(CObject*);
+		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
+		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
+		void (__fastcall *RequestPause)(CWarp*);
+		void (__fastcall *EngineActivated)(CWarp*);
+		void (__fastcall *EngineDeactivated)(CWarp*);
+		void (__fastcall *EngineDestroyed)(CWarp*);
+		void (__fastcall *EngineInitialized)(CWarp*);
+		void (__fastcall *EngineGameInit)(CWarp*);
+		void (__fastcall *EngineGameUninit)(CWarp*);
+		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
+		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
+		int (__fastcall *GetEngineState)(CWarp*);
+		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
+		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
+		int (__fastcall *GetCtrlKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyShift)(CWarp*);
+		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
+		int (__fastcall *GetShiftKey)(CWarp*);
+		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
+		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
+		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
+		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
+		int (__fastcall *GetCapsLockKey)(CWarp*);
+		int (__fastcall *GetMenuKey)(CWarp*);
+		int (__fastcall *CheckMouseMove)(CWarp*);
+		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseLButton)(CWarp*);
+		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseMButton)(CWarp*);
+		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseRButton)(CWarp*);
+		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
+		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
+		int (__fastcall *CheckMouseWheel)(CWarp*);
+		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
+		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
+		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
+		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
+		void (__fastcall *OnKeyDown)(CWarp*, int);
+		void (__fastcall *OnKeyUp)(CWarp*, int);
+		void (__fastcall *OnTextInput)(CWarp*, const char*);
+		void (__fastcall *WindowResized)(CWarp*, int, int);
+		void (__fastcall *OnLowMemory)(CWarp*);
+		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
+		void (__fastcall *DisableEditKeys)(CWarp*);
+		void (__fastcall *ResetControls)(CWarp*);
+		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
+		void (__fastcall *TimerUpdate)(CWarp*);
+		void (__fastcall *RenderUI)(CWarp*);
+		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
+		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
+		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
+		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
+		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
+		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
+		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
+		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
+		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
+		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
+		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
+		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
+		void (__fastcall *CancelEngine)(CBaldurEngine*);
+		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
+		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
+		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
+		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
+		int (__fastcall *StopMusic)(CBaldurEngine*);
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+	unsigned __int8 m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	int m_nTopGroupItem;
+	CPtrList m_lGroupItems;
+	int m_nTopStoreItem;
+	CPtrList m_lStoreItems;
+	int m_nTopSpellItem;
+	CPtrList m_lSpellItems;
+	int m_nTopIdentifyItem;
+	CPtrList m_lIdentifyItems;
+	int m_nTopDrinkItem;
+	CResRef m_cResStore;
+	CResRef m_cResBag;
+	Array<unsigned int,4> m_adwButtonPanelId;
+	CStore* m_pStore;
+	CStore* m_pBag;
+	int m_nStoreCost;
+	int m_nGroupCost;
+	unsigned int m_dwSpellCost;
+	unsigned int m_dwIdentifyCost;
+	unsigned int m_dwRoomType;
+	CAIObjectType m_cAIProprietor;
+	CAIObjectType m_cAICustomer;
+	unsigned int m_dwDonationAmount;
+	int m_nDrinkRumorIndex;
+	int m_nDonateRumorIndex;
+	CPtrList m_lPopupStack;
+	CItem* m_pHistoryItem;
+	int m_bHistoryUseEnabled;
+	CResRef m_cResInfoSpell;
+	int m_nChatMessageCount;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	unsigned __int8 m_nCharisma;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	CVidFont m_preLoadFontTool;
+	unsigned int m_nRequesterAmount;
+	int m_nRequesterButtonId;
+	int m_bStoreIndex;
+	int m_bStoreStarted;
+	int m_nBagCount;
+	float m_fPanStorage;
+};
+
+struct CGameObject
+{
+	struct CGameObject_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+	};
+
+	CGameObjectType m_objectType;
+	CPoint m_pos;
+	int m_posZ;
+	CGameArea* m_pArea;
+	__POSITION* m_posVertList;
+	unsigned __int8 m_listType;
+	CAIObjectType m_typeAI;
+	int m_id;
+	__int16 m_canBeSeen;
+	int m_remotePlayerID;
+	int m_remoteObjectID;
+	unsigned __int8 m_AISpeed;
+	unsigned __int8 m_bLocalControl;
+	unsigned __int8 m_AIInhibitor;
+
+	virtual void CGameObject_Destructor()
+	{
+	}
+
+	virtual unsigned __int8 GetObjectType()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
+	{
+	}
+
+	virtual void AIUpdate()
+	{
+	}
+
+	virtual const CAIObjectType* GetAIType()
+	{
+		return *(const CAIObjectType**)nullptr;
+	}
+
+	virtual int GetTargetId()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void GetNextWaypoint(CPoint* _0)
+	{
+	}
+
+	virtual __POSITION* GetVertListPos()
+	{
+		return *(__POSITION**)nullptr;
+	}
+
+	virtual unsigned __int8 GetVertListType()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void SetVertListType(unsigned __int8 _0)
+	{
+	}
+
+	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual unsigned __int8 CompressTime(unsigned int _0)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
+	{
+	}
+
+	virtual int IsOver(const CPoint* _0)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int DoesIntersect(CRect _0)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int OnSearchMap()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void OnActionButton(const CPoint* _0)
+	{
+	}
+
+	virtual void OnFormationButton(const CPoint* _0)
+	{
+	}
+
+	virtual void RemoveFromArea()
+	{
+	}
+
+	virtual void Render(CGameArea* _0, CVidMode* _1)
+	{
+	}
+
+	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void SetAIType(const CAIObjectType* _0, int _1)
+	{
+	}
+
+	virtual void SetCursor(int _0)
+	{
+	}
+
+	virtual void SetTarget(CPoint _0, int _1)
+	{
+	}
+
+	virtual void SetVertListPos(__POSITION* _0)
+	{
+	}
+
+	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
+	{
+		return *(int*)nullptr;
+	}
+};
+
+struct CGameFireball3d : CGameObject
+{
+	struct CGameFireball3d_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+	};
+
+	Array<unsigned __int8,16> m_terrainTable;
+	Array<unsigned __int8,16> m_visibleTerrainTable;
+	unsigned __int16 m_animationID;
+	unsigned __int16 m_animationIDStatic;
+	Array<unsigned __int8,7> m_colorRangeValues;
+	unsigned __int16 m_ringGranularity;
+	CVidCell m_spriteSplashVidCell;
+	CVidPalette m_spriteSplashPalette;
+	__int16 m_holdDuration;
+	int m_radius;
+	int m_speed;
+	unsigned __int8 m_duration;
+	unsigned __int8 m_collision;
+	CSize m_ellipseSize;
+	unsigned __int8* m_pPlacementGrid;
+	CPoint m_nEllipse;
+	CRect* m_pEllipse;
+	unsigned __int8* m_flagEllipse;
+	CSound m_sndExplosion;
+	CString m_sSoundTemporal;
+	int m_bCenterSoundLooping;
+	int m_bSplashGlow;
+	int m_bBrightest;
+	int m_bRingTemporals;
+	int m_bInteriorTemporals;
+	int m_bRandomSpeed;
+	int m_bPalettedRing;
+	int m_bPalettedArea;
+	int m_bCone;
+	unsigned __int16 m_coneSize;
+	CPoint m_posEdge;
+	int m_bNewPalette;
+	CVidBitmap m_newPalette;
+	CResRef m_fireBallArea;
+	CResRef m_fireBallRing;
+	unsigned __int16 m_projectileType;
+	int m_bPermanent;
+	int m_bCanSave;
+};
+
+struct CProjectile : CGameObject
+{
+	struct CProjectile_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+		void (__fastcall *Fire)(CProjectile*, CGameArea*, int, int, CPoint, int, __int16);
+		void (__fastcall *OnArrival)(CProjectile*);
+		void (__fastcall *RemoveSelf)(CProjectile*);
+		void (__fastcall *DeliverEffects)(CProjectile*);
+		void (__fastcall *CallBack)(CProjectile*);
+		unsigned int (__fastcall *GetDefaultRenderFlags)(CProjectile*);
+		void (__fastcall *SetDefaultRenderFlags)(CProjectile*, unsigned int);
+		int (__fastcall *SaveProjectile)(CProjectile*);
+		void (__fastcall *Marshal)(CProjectile*, SProjectileWrapper*);
+		CAIObjectType* (__fastcall *GetTargetType)(CProjectile*, CAIObjectType*);
+		void (__fastcall *SetTargetType)(CProjectile*, const CAIObjectType*);
+		void (__fastcall *GetPreview)(CProjectile*, CGameArea*);
+	};
+
+	unsigned __int16 m_projectileType;
+	unsigned __int8 m_addToListType;
+	__int16 m_speed;
+	int m_sourceId;
+	int m_targetId;
+	int m_callBackProjectile;
+	CGameEffectList m_effectList;
+	__int16 m_nType;
+	__int16 m_nFileType;
+	CPoint m_posExact;
+	CPoint m_posDelta;
+	CPoint m_startDelta;
+	CPoint m_minRandomSpeed;
+	CPoint m_maxRandomSpeed;
+	int m_startSpeed;
+	CPoint m_posDest;
+	Array<unsigned __int8,16> m_terrainTable;
+	unsigned __int16 m_decAmmount;
+	int m_bSparkleTrail;
+	unsigned int m_defaultRenderFlags;
+	int m_bIgnoreTarget;
+	CSound m_sound;
+	CResRef m_fireSoundRef;
+	int m_loopFireSound;
+	CResRef m_arrivalSoundRef;
+	int m_loopArrivalSound;
+	unsigned __int8 m_bHasHeight;
+	__int16 m_nDeltaZ;
+	__int16 m_nDeltaZLast;
+	int m_nOrigDistance;
+	CPoint m_ptBamSize;
+	int m_dwFlags;
+	int m_maxBounces;
+	CString m_visualEffectRef;
+	int m_visualEffect;
+	__int16 m_maxDuration;
+	__int16 m_lanceWidth;
+	unsigned int m_extFlags;
+	unsigned int m_strRef;
+	unsigned int m_color;
+	unsigned __int16 m_colorSpeed;
+	unsigned __int16 m_shake;
+	unsigned __int16 m_IDSValue1;
+	unsigned __int16 m_IDSType1;
+	unsigned __int16 m_IDSValue2;
+	unsigned __int16 m_IDSType2;
+	CResRef m_failureSpell;
+	CResRef m_successSpell;
+	int m_ignoreDamage;
+
+	virtual void Fire(CGameArea* _0, int _1, int _2, CPoint _3, int _4, __int16 _5)
+	{
+	}
+
+	virtual void OnArrival()
+	{
+	}
+
+	virtual void RemoveSelf()
+	{
+	}
+
+	virtual void DeliverEffects()
+	{
+	}
+
+	virtual void CallBack()
+	{
+	}
+
+	virtual unsigned int GetDefaultRenderFlags()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual void SetDefaultRenderFlags(unsigned int _0)
+	{
+	}
+
+	virtual int SaveProjectile()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void Marshal(SProjectileWrapper* _0)
+	{
+	}
+
+	virtual CAIObjectType* GetTargetType()
+	{
+		return *(CAIObjectType**)nullptr;
+	}
+
+	virtual void SetTargetType(const CAIObjectType* _0)
+	{
+	}
+
+	virtual void GetPreview(CGameArea* _0)
+	{
+	}
+};
+
+struct CObjectMarker : CGameObject
+{
+	struct CObjectMarker_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+	};
+
+	CList<long,long> m_lstObjectIds;
+	bool m_bHealthBarMarker;
+};
+
+struct CGameTemporal : CGameObject
+{
+	struct CGameTemporal_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+	};
+
+	Array<unsigned __int8,16> m_visibleTerrainTable;
+	CGameAnimation m_animation;
+	int m_animationRunning;
+	CPoint m_posExact;
+	CPoint m_posDelta;
+	__int16 m_duration;
+	unsigned __int8 m_durationFade;
+	unsigned __int8 m_collision;
+	CSound m_sound;
+	int m_bPermanent;
+	int m_bAllowSave;
+	unsigned __int16 m_projectileType;
+};
+
+struct CGameStatic : CGameObject
+{
+	struct CGameStatic_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+	};
+
+	CAreaFileStaticObject m_header;
+	CVidCell m_vidCell;
+	CResWebm* m_pMovie;
+	CResPVR* m_pImage;
+	int m_bRender;
+	CSize m_size;
+	CTypedPtrList<CPtrList,CVidCell*> m_secondaryVidCellList;
+	int m_bNewPalette;
+	CVidBitmap m_newPalette;
+};
+
+struct CGameSpawning : CGameObject
+{
+	struct CGameSpawning_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+	};
+
+	CAreaFileRandomMonsterSpawningPoint m_spawningObject;
+	Array<unsigned __int8,16> m_terrainTable;
+	Array<unsigned __int8,16> m_visibleTerrainTable;
+	int m_nTrackingCounter;
+	unsigned int m_weightSum;
+};
+
+struct CGameSound : CGameObject
+{
+	struct CGameSound_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+	};
+
+	CAreaFileSoundObject m_soundObject;
+	CSound m_looping;
+	int m_bLoopPlaying;
+	int m_period;
+	int m_periodCount;
+	unsigned __int8 m_currentSound;
+	unsigned int m_timeOfDayActive;
+};
+
+struct CAITrigger
+{
+	__int16 m_triggerID;
+	int m_specificID;
+	CAIObjectType m_triggerCause;
+	int m_flags;
+	int m_specific2;
+	int m_specific3;
+	CString m_string1;
+	CString m_string2;
+};
+
+struct CGameAIBase : CGameObject
+{
+	struct CGameAIBase_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+		void (__fastcall *ClearActions)(CGameAIBase*, int);
+		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
+		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
+		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
+		void (__fastcall *DoAction)(CGameAIBase*);
+		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
+		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *ProcessAI)(CGameAIBase*);
+		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
+		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
+		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
+		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
+		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
+		void (__fastcall *ApplyTriggers)(CGameAIBase*);
+		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
+		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
+		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
+		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+	};
+
+	CAIObjectType m_lAttacker;
+	int m_lAttackStyle;
+	CAIObjectType m_lOrderedBy;
+	CAIObjectType m_protecting;
+	CAIObjectType m_protector;
+	CAIObjectType m_lTargeted;
+	CAIObjectType m_lHitter;
+	CAIObjectType m_lHelp;
+	CAIObjectType m_lTrigger;
+	CAIObjectType m_lSeen;
+	CAIObjectType m_lTalkedTo;
+	CAIObjectType m_lHeard;
+	CAIObjectType m_lSummonedBy;
+	CAIObjectType m_lKilled;
+	CAIObjectType m_lEnteredBy;
+	CAIObjectType m_lAttackerSent;
+	CAIObjectType m_lOrderedBySent;
+	CAIObjectType m_protectingSent;
+	CAIObjectType m_protectorSent;
+	CAIObjectType m_lTargetedSent;
+	CAIObjectType m_lHitterSent;
+	CAIObjectType m_lHelpSent;
+	CAIObjectType m_lTriggerSent;
+	CAIObjectType m_lSeenSent;
+	CAIObjectType m_lTalkedToSent;
+	CAIObjectType m_lHeardSent;
+	CAIObjectType m_lSummonedBySent;
+	CAIObjectType m_lKilledSent;
+	CAIScript* m_overrideScript;
+	CAIScript* m_areaScript;
+	CAIScript* m_specificsScript;
+	CAIScript* m_classScript;
+	CAIScript* m_raceScript;
+	CAIScript* m_generalScript;
+	CAIScript* m_defaultScript;
+	CAIScript* m_achievementScript;
+	CTypedPtrList<CPtrList,CAIAction*> m_queuedActions;
+	CTypedPtrList<CPtrList,CAITrigger*> m_pendingTriggers;
+	unsigned int m_PAICallCounter;
+	unsigned int m_PAICallCounterNoMod;
+	CTypedPtrList<CPtrList,CGameTimer*> m_timers;
+	__int16 m_curResponseNum;
+	__int16 m_curResponseSetNum;
+	__int16 m_curScriptNum;
+	int m_interrupt;
+	__int16 m_actionCount;
+	int m_bJustAttacked;
+	CAIAction m_curAction;
+	int m_nExpectedProcessPendingTriggersCalls;
+	__int16 m_nMissedProcessPendingTriggerCalls;
+	__int16 m_nAlertnessPeriod;
+	Array<char,32> m_scriptName;
+	int m_inCutScene;
+	int m_firstCall;
+	int m_forceActionPick;
+	int m_randValue;
+	unsigned __int8 m_reactionRoll;
+	__int16 m_nLastActionReturn;
+	unsigned __int8 m_nVisualRange;
+	unsigned int m_iGameText;
+	int m_bInActionExecution;
+	int m_bNewTrigger;
+	int m_triggerSwitch;
+	int m_bNoInterrupt;
+	int m_bDisableAI;
+	CSound m_forcePauseSound;
+	int m_nServerLastObjectSynchDelay;
+	CAITrigger triggerOverride;
+
+	virtual void ClearActions(int _0)
+	{
+	}
+
+	virtual void UpdateTarget(CGameObject* _0)
+	{
+	}
+
+	virtual void AddAction(const CAIAction* _0)
+	{
+	}
+
+	virtual void AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
+	{
+	}
+
+	virtual void ClearAI(unsigned __int8 _0)
+	{
+	}
+
+	virtual void DoAction()
+	{
+	}
+
+	virtual __int16 ExecuteAction()
+	{
+		return *(__int16*)nullptr;
+	}
+
+	virtual void InsertAction(const CAIAction* _0)
+	{
+	}
+
+	virtual void ProcessAI()
+	{
+	}
+
+	virtual void SetCurrAction(const CAIAction* _0)
+	{
+	}
+
+	virtual void SetScript(__int16 _0, CAIScript* _1)
+	{
+	}
+
+	virtual __int16 GetVisualRange()
+	{
+		return *(__int16*)nullptr;
+	}
+
+	virtual __int16 GetAttackRange()
+	{
+		return *(__int16*)nullptr;
+	}
+
+	virtual const unsigned __int8* GetVisibleTerrainTable()
+	{
+		return *(const unsigned __int8**)nullptr;
+	}
+
+	virtual const unsigned __int8* GetTerrainTable()
+	{
+		return *(const unsigned __int8**)nullptr;
+	}
+
+	virtual int QuickDecode(CAITrigger* _0, CGameSprite** _1)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual __int16 GetHelpRange()
+	{
+		return *(__int16*)nullptr;
+	}
+
+	virtual void ApplyTriggers()
+	{
+	}
+
+	virtual void AutoPause(unsigned int _0)
+	{
+	}
+
+	virtual int GetCanSeeInvisible()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void OnActionRemoval(CAIAction* _0)
+	{
+	}
+
+	virtual CRect* GetBounding()
+	{
+		return *(CRect**)nullptr;
+	}
+};
+
+struct CGameAIArea : CGameAIBase
+{
+	struct CGameAIArea_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+		void (__fastcall *ClearActions)(CGameAIBase*, int);
+		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
+		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
+		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
+		void (__fastcall *DoAction)(CGameAIBase*);
+		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
+		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *ProcessAI)(CGameAIBase*);
+		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
+		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
+		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
+		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
+		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
+		void (__fastcall *ApplyTriggers)(CGameAIBase*);
+		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
+		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
+		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
+		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+	};
+
+};
+
+struct CGameTrigger : CGameAIBase
+{
+	struct CGameTrigger_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+		void (__fastcall *ClearActions)(CGameAIBase*, int);
+		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
+		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
+		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
+		void (__fastcall *DoAction)(CGameAIBase*);
+		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
+		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *ProcessAI)(CGameAIBase*);
+		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
+		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
+		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
+		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
+		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
+		void (__fastcall *ApplyTriggers)(CGameAIBase*);
+		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
+		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
+		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
+		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+		int (__fastcall *IsOverActivate)(CGameTrigger*, const CPoint*);
+	};
+
+	unsigned __int16 m_triggerType;
+	CRect m_rBounding;
+	unsigned int m_cursorType;
+	Array<unsigned __int8,8> m_newArea;
+	Array<char,32> m_newEntryPoint;
+	unsigned int m_dwFlags;
+	unsigned int m_description;
+	CPoint* m_pPolygon;
+	unsigned __int16 m_nPolygon;
+	unsigned __int16 m_boundingRange;
+	Array<unsigned __int8,8> m_scriptRes;
+	Array<char,32> m_scriptName;
+	unsigned __int16 m_trapDetectionDifficulty;
+	unsigned __int16 m_trapDisarmingDifficulty;
+	unsigned __int16 m_trapActivated;
+	unsigned __int16 m_trapDetected;
+	CPoint m_posTrapOrigin;
+	CResRef m_keyType;
+	__int16 m_drawPoly;
+	unsigned int m_iGameText;
+	CPoint m_ptWalkTo;
+
+	virtual int IsOverActivate(const CPoint* _0)
+	{
+		return *(int*)nullptr;
+	}
+};
+
+struct CGameTiledObject : CGameAIBase
+{
+	struct CGameTiledObject_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+		void (__fastcall *ClearActions)(CGameAIBase*, int);
+		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
+		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
+		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
+		void (__fastcall *DoAction)(CGameAIBase*);
+		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
+		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *ProcessAI)(CGameAIBase*);
+		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
+		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
+		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
+		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
+		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
+		void (__fastcall *ApplyTriggers)(CGameAIBase*);
+		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
+		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
+		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
+		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+	};
+
+	CResRef m_resID;
+	unsigned int m_dwFlags;
+	CPoint* m_pPrimarySearch;
+	unsigned __int16 m_nPrimarySearch;
+	CPoint* m_pSecondarySearch;
+	unsigned __int16 m_nSecondarySearch;
+	CTiledObject m_tiledObject;
+	Array<char,32> m_scriptName;
+};
+
 typedef __int32 (*type_CGameSprite_GetKitMask)(CGameSprite* pThis);
 extern type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
 
@@ -20089,6 +12662,63 @@ extern type_CGameSprite_GetInternalButtonList p_CGameSprite_GetInternalButtonLis
 
 struct CGameSprite : CGameAIBase
 {
+	struct CGameSprite_vtbl
+	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+		void (__fastcall *ClearActions)(CGameAIBase*, int);
+		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
+		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
+		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
+		void (__fastcall *DoAction)(CGameAIBase*);
+		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
+		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *ProcessAI)(CGameAIBase*);
+		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
+		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
+		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
+		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
+		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
+		void (__fastcall *ApplyTriggers)(CGameAIBase*);
+		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
+		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
+		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
+		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+		void (__fastcall *SetTarget_2)(CGameSprite*, const CPoint*, int);
+		void (__fastcall *SetAIType_2)(CGameSprite*, const CAIObjectType*, int, int);
+		void (__fastcall *ResetAITypeLive)(CGameSprite*);
+		void (__fastcall *ResetAIType)(CGameSprite*);
+		void (__fastcall *ProcessPendingTriggers)(CGameSprite*, int);
+	};
+
 	struct GroundItem
 	{
 		int containerID;
@@ -20463,219 +13093,6 @@ struct CGameSprite : CGameAIBase
 		return p_CGameSprite_GetInternalButtonList(this);
 	}
 
-	virtual void CGameObject_Destructor()
-	{
-	}
-
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void ClearActions(int _0)
-	{
-	}
-
-	virtual void UpdateTarget(CGameObject* _0)
-	{
-	}
-
-	virtual void AddAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
-	{
-	}
-
-	virtual void ClearAI(unsigned __int8 _0)
-	{
-	}
-
-	virtual void DoAction()
-	{
-	}
-
-	virtual __int16 ExecuteAction()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void InsertAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void ProcessAI()
-	{
-	}
-
-	virtual void SetCurrAction(const CAIAction* _0)
-	{
-	}
-
-	virtual void SetScript(__int16 _0, CAIScript* _1)
-	{
-	}
-
-	virtual __int16 GetVisualRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual __int16 GetAttackRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual const unsigned __int8* GetVisibleTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual const unsigned __int8* GetTerrainTable()
-	{
-		return *(const unsigned __int8**)nullptr;
-	}
-
-	virtual int QuickDecode(CAITrigger* _0, CGameSprite** _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual __int16 GetHelpRange()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void ApplyTriggers()
-	{
-	}
-
-	virtual void AutoPause(unsigned int _0)
-	{
-	}
-
-	virtual int GetCanSeeInvisible()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionRemoval(CAIAction* _0)
-	{
-	}
-
-	virtual CRect* GetBounding()
-	{
-		return *(CRect**)nullptr;
-	}
-
 	virtual void SetTarget(const CPoint* _0, int _1)
 	{
 	}
@@ -20697,611 +13114,357 @@ struct CGameSprite : CGameAIBase
 	}
 };
 
-struct CGameStatic : CGameObject
+struct CGameDoor : CGameAIBase
 {
-	CAreaFileStaticObject m_header;
-	CVidCell m_vidCell;
-	CResWebm* m_pMovie;
-	CResPVR* m_pImage;
-	int m_bRender;
-	CSize m_size;
-	CTypedPtrList<CPtrList,CVidCell*> m_secondaryVidCellList;
-	int m_bNewPalette;
-	CVidBitmap m_newPalette;
-
-	virtual void CGameObject_Destructor()
+	struct CGameDoor_vtbl
 	{
-	}
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+		void (__fastcall *ClearActions)(CGameAIBase*, int);
+		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
+		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
+		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
+		void (__fastcall *DoAction)(CGameAIBase*);
+		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
+		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *ProcessAI)(CGameAIBase*);
+		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
+		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
+		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
+		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
+		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
+		void (__fastcall *ApplyTriggers)(CGameAIBase*);
+		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
+		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
+		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
+		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+	};
 
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
+	CResRef m_resID;
+	CRect m_rOpenBounding;
+	CRect m_rClosedBounding;
+	unsigned int m_cursorType;
+	unsigned int m_dwFlags;
+	CPoint* m_pOpenPolygon;
+	unsigned __int16 m_nOpenPolygon;
+	CPoint* m_pClosedPolygon;
+	unsigned __int16 m_nClosedPolygon;
+	CPoint* m_pOpenSearch;
+	unsigned __int16 m_nOpenSearch;
+	CPoint* m_pClosedSearch;
+	unsigned __int16 m_nClosedSearch;
+	CPoint m_ptDest1;
+	CPoint m_ptDest2;
+	Array<unsigned __int8,8> m_scriptRes;
+	CTiledObject m_tiledObject;
+	Array<char,32> m_scriptName;
+	Array<char,32> m_triggerName;
+	__int16 m_hitPoints;
+	__int16 m_armourClass;
+	CResRef m_openSound;
+	CResRef m_closeSound;
+	unsigned __int16 m_trapDetectionDifficulty;
+	unsigned __int16 m_trapDisarmingDifficulty;
+	unsigned __int16 m_trapActivated;
+	unsigned __int16 m_trapDetected;
+	unsigned __int16 m_posXTrapOrigin;
+	unsigned __int16 m_posYTrapOrigin;
+	CResRef m_keyType;
+	unsigned int m_detectionDifficulty;
+	unsigned int m_lockDifficulty;
+	__int16 m_drawPoly;
+	CPoint m_ptOpenDest;
+	CPoint m_ptClosedDest;
+	CSound m_sndDoor;
+	unsigned int m_strNotPickable;
+	int m_usedDelay;
+	unsigned __int8 m_probabilityRoll;
 };
 
-struct CGameAnimationType
+struct CGameContainer : CGameAIBase
 {
-	unsigned __int16 m_animationID;
-	unsigned __int8 m_moveScale;
-	unsigned __int8 m_moveScaleCurrent;
-	CRect m_rEllipse;
-	int m_nHeightOffset;
-	bool m_bUseSpriteShader;
-	unsigned __int8 m_colorBlood;
-	unsigned __int8 m_colorChunks;
-	unsigned int m_nSndFreq;
-	const char* m_pSndDeath;
-	Array<NECK_POINTS,8> m_neckOffsets;
-	Array<CVidBitmap,5> m_combatRounds;
-	unsigned __int8 m_personalSpace;
-	unsigned __int8 m_walkCount;
-	unsigned __int16 m_castFrame;
-	unsigned __int8 m_bBrightest;
-	unsigned __int8 m_bBrightestDesired;
-	unsigned __int8 m_bLightSource;
-	CResRef m_soundRef;
-	CString m_walkRef;
-	Array<CSequenceSoundList,20> m_sequenceRefs;
-	int m_bNewPalette;
-	CVidBitmap m_newPalette;
-
-	virtual void CGameAnimationType_Destructor()
+	struct CGameContainer_vtbl
 	{
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+		void (__fastcall *ClearActions)(CGameAIBase*, int);
+		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
+		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
+		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
+		void (__fastcall *DoAction)(CGameAIBase*);
+		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
+		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *ProcessAI)(CGameAIBase*);
+		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
+		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
+		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
+		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
+		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
+		void (__fastcall *ApplyTriggers)(CGameAIBase*);
+		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
+		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
+		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
+		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+		CPoint* (__fastcall *GetPoly)(CGameContainer*);
+		__int16 (__fastcall *GetNPoly)(CGameContainer*);
+	};
+
+	CRect m_rBounding;
+	CPoint* m_pPolygon;
+	unsigned __int16 m_nPolygon;
+	CTypedPtrList<CPtrList,CItem*> m_lstItems;
+	unsigned __int16 m_containerType;
+	CPoint m_ptWalkToUse;
+	Array<CVidCell,3> m_pileVidCell;
+	unsigned __int8 m_nPileVidCell;
+	unsigned __int8 m_bDeleteMe;
+	Array<unsigned __int8,8> m_scriptRes;
+	unsigned __int16 m_lockDifficulty;
+	unsigned int m_dwFlags;
+	unsigned __int16 m_trapDetectionDifficulty;
+	unsigned __int16 m_trapRemovalDifficulty;
+	unsigned __int16 m_trapActivated;
+	unsigned __int16 m_trapDetected;
+	CPoint m_posTrapOrigin;
+	unsigned __int16 m_triggerRange;
+	Array<char,32> m_ownedBy;
+	CResRef m_keyType;
+	unsigned int m_breakDifficulty;
+	__int16 m_drawPoly;
+	unsigned int m_strNotPickable;
+	int m_bJustCreated;
+	int m_bNeedUpdate;
+	unsigned __int8 m_probabilityRoll;
+
+	virtual CPoint* GetPoly()
+	{
+		return *(CPoint**)nullptr;
 	}
 
-	virtual void CalculateFxRect(CRect* _0, CPoint* _1, int _2)
-	{
-	}
-
-	virtual void CalculateGCBoundsRect(CRect* _0, const CPoint* _1, const CPoint* _2, int _3, int _4, int _5)
-	{
-	}
-
-	virtual void ChangeDirection(__int16 _0)
-	{
-	}
-
-	virtual void EquipArmor(char _0, unsigned __int8* _1)
-	{
-	}
-
-	virtual void EquipHelmet(const CString* _0, unsigned __int8* _1)
-	{
-	}
-
-	virtual void EquipShield(const CString* _0, unsigned __int8* _1)
-	{
-	}
-
-	virtual void EquipWeapon(const CString* _0, unsigned __int8* _1, unsigned int _2, const unsigned __int16* _3)
-	{
-	}
-
-	virtual CVidPalette* GetAnimationPalette(unsigned __int8 _0)
-	{
-		return *(CVidPalette**)nullptr;
-	}
-
-	virtual void GetAnimationResRef(CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual unsigned __int8 CanLieDown()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 DetectedByInfravision()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int16 GetCastFrame()
-	{
-		return *(unsigned __int16*)nullptr;
-	}
-
-	virtual unsigned __int8 GetColorBlood()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 GetColorChunks()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 GetListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 GetMoveScale()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetMoveScale(unsigned __int8 _0)
-	{
-	}
-
-	virtual void ResetMoveScale()
-	{
-	}
-
-	virtual unsigned __int8 GetMoveScaleDefault()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual NECK_POINTS GetNeckOffsets(__int16 _0)
-	{
-		return *(NECK_POINTS*)nullptr;
-	}
-
-	virtual const CRect* GetEllipseRect()
-	{
-		return *(const CRect**)nullptr;
-	}
-
-	virtual int GetPathSmooth()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual unsigned __int8 GetPersonalSpace()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual const char* GetSndArmor(char* _0)
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual const char* GetSndDeath(char* _0)
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual const char* GetSndReady(char* _0)
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual const char* GetSndWalk(char* _0, __int16 _1)
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual unsigned int GetSndWalkFreq()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual int IsFalseColor()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int IsInvulnerable()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int IsMirroring()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int IsBeginningOfSequence()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int IsEndOfSequence()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int IsEndOfTwitchSequence()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void IncrementFrame()
-	{
-	}
-
-	virtual void DecrementFrame()
-	{
-	}
-
-	virtual void Render(CInfinity* _0, CVidMode* _1, const CRect* _2, const CPoint* _3, const CPoint* _4, unsigned int _5, unsigned int _6, const CRect* _7, int _8, int _9, int _10, unsigned __int8 _11, CGameSprite* _12)
-	{
-	}
-
-	virtual void ClearColorEffects(unsigned __int8 _0)
-	{
-	}
-
-	virtual void ClearColorEffectsAll()
-	{
-	}
-
-	virtual void SetColorEffect(unsigned __int8 _0, unsigned __int8 _1, unsigned int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void SetColorEffectAll(unsigned __int8 _0, unsigned int _1, unsigned __int8 _2)
-	{
-	}
-
-	virtual void SetColorRange(unsigned __int8 _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual void SetColorRangeAll(unsigned __int8 _0)
-	{
-	}
-
-	virtual __int16 SetSequence(__int16 _0)
+	virtual __int16 GetNPoly()
 	{
 		return *(__int16*)nullptr;
 	}
-
-	virtual int GetHeightOffset()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void CalculateFxRectMax(CRect* _0, CPoint* _1, int _2)
-	{
-	}
-
-	virtual void CalculateEllipseRect()
-	{
-	}
-
-	virtual void SetNeckOffsets(__int16 _0, __int16 _1, __int16 _2, __int16 _3, __int16 _4, __int16 _5, __int16 _6, __int16 _7, __int16 _8, __int16 _9, __int16 _10, __int16 _11, __int16 _12, __int16 _13, __int16 _14, __int16 _15)
-	{
-	}
-
-	virtual unsigned __int8 GetAttackFrameType(unsigned __int8 _0, unsigned __int8 _1, unsigned __int8 _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual int GetAboveGround()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual __int16 GetAwakePlayInReverse()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void SetBrightest(unsigned __int8 _0)
-	{
-	}
-
-	virtual void SetBrightestDesired(unsigned __int8 _0)
-	{
-	}
-
-	virtual __int16 GetCastHeight()
-	{
-		return *(__int16*)nullptr;
-	}
-
-	virtual void GetCastingOffset(CPoint* _0)
-	{
-	}
-
-	virtual unsigned __int8 GetCurrentSequenceAndFrame(__int16* _0, __int16* _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 GetCurrentResRef(CString* _0, CString* _1, CString* _2, CString* _3)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void OverrideAnimation(CResRef _0, int _1)
-	{
-	}
-
-	virtual void Marshal(unsigned __int8** _0, unsigned int* _1)
-	{
-	}
-
-	virtual bool Unmarshal(CResRef _0)
-	{
-		return *(bool*)nullptr;
-	}
 };
 
-struct CGameFireball3d : CGameObject
+struct CGameAIGame : CGameAIBase
 {
-	Array<unsigned __int8,16> m_terrainTable;
-	Array<unsigned __int8,16> m_visibleTerrainTable;
-	unsigned __int16 m_animationID;
-	unsigned __int16 m_animationIDStatic;
-	Array<unsigned __int8,7> m_colorRangeValues;
-	unsigned __int16 m_ringGranularity;
-	CVidCell m_spriteSplashVidCell;
-	CVidPalette m_spriteSplashPalette;
-	__int16 m_holdDuration;
-	int m_radius;
-	int m_speed;
-	unsigned __int8 m_duration;
-	unsigned __int8 m_collision;
-	CSize m_ellipseSize;
-	unsigned __int8* m_pPlacementGrid;
-	CPoint m_nEllipse;
-	CRect* m_pEllipse;
-	unsigned __int8* m_flagEllipse;
-	CSound m_sndExplosion;
-	CString m_sSoundTemporal;
-	int m_bCenterSoundLooping;
-	int m_bSplashGlow;
-	int m_bBrightest;
-	int m_bRingTemporals;
-	int m_bInteriorTemporals;
-	int m_bRandomSpeed;
-	int m_bPalettedRing;
-	int m_bPalettedArea;
-	int m_bCone;
-	unsigned __int16 m_coneSize;
-	CPoint m_posEdge;
-	int m_bNewPalette;
-	CVidBitmap m_newPalette;
-	CResRef m_fireBallArea;
-	CResRef m_fireBallRing;
-	unsigned __int16 m_projectileType;
-	int m_bPermanent;
-	int m_bCanSave;
-
-	virtual void CGameObject_Destructor()
+	struct CGameAIGame_vtbl
 	{
-	}
+		void (__fastcall *CGameObject_Destructor)(CGameObject*);
+		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
+		void (__fastcall *AIUpdate)(CGameObject*);
+		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
+		int (__fastcall *GetTargetId)(CGameObject*);
+		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
+		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
+		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
+		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
+		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
+		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
+		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
+		int (__fastcall *OnSearchMap)(CGameObject*);
+		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
+		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
+		void (__fastcall *RemoveFromArea)(CGameObject*);
+		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
+		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
+		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
+		void (__fastcall *SetCursor)(CGameObject*, int);
+		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
+		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
+		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+		void (__fastcall *ClearActions)(CGameAIBase*, int);
+		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
+		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
+		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
+		void (__fastcall *DoAction)(CGameAIBase*);
+		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
+		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *ProcessAI)(CGameAIBase*);
+		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
+		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
+		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
+		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
+		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
+		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
+		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
+		void (__fastcall *ApplyTriggers)(CGameAIBase*);
+		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
+		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
+		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
+		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+	};
 
-	virtual unsigned __int8 GetObjectType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
-	{
-	}
-
-	virtual void AIUpdate()
-	{
-	}
-
-	virtual const CAIObjectType* GetAIType()
-	{
-		return *(const CAIObjectType**)nullptr;
-	}
-
-	virtual int GetTargetId()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void GetNextWaypoint(CPoint* _0)
-	{
-	}
-
-	virtual __POSITION* GetVertListPos()
-	{
-		return *(__POSITION**)nullptr;
-	}
-
-	virtual unsigned __int8 GetVertListType()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetVertListType(unsigned __int8 _0)
-	{
-	}
-
-	virtual unsigned __int8 CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 CompressTime(unsigned int _0)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void DebugDump(const CString* _0, unsigned __int8 _1)
-	{
-	}
-
-	virtual int IsOver(const CPoint* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int DoesIntersect(CRect _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int OnSearchMap()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void OnActionButton(const CPoint* _0)
-	{
-	}
-
-	virtual void OnFormationButton(const CPoint* _0)
-	{
-	}
-
-	virtual void RemoveFromArea()
-	{
-	}
-
-	virtual void Render(CGameArea* _0, CVidMode* _1)
-	{
-	}
-
-	virtual unsigned __int8 DoAIUpdate(unsigned __int8 _0, int _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void SetAIType(const CAIObjectType* _0, int _1)
-	{
-	}
-
-	virtual void SetCursor(int _0)
-	{
-	}
-
-	virtual void SetTarget(CPoint _0, int _1)
-	{
-	}
-
-	virtual void SetVertListPos(__POSITION* _0)
-	{
-	}
-
-	virtual int EvaluateStatusTrigger(const CAITrigger* _0)
-	{
-		return *(int*)nullptr;
-	}
 };
 
-struct CSearchBitmap
+struct CContingency
 {
-	CVidBitmap m_resSearch;
-	unsigned __int8* m_pDynamicCost;
-	unsigned __int8* m_snapshotDynamicCost;
-	const unsigned __int8* m_snapshotTerrainTable;
-	CSize m_GridSquareDimensions;
+	CAITrigger m_cTrigger;
+	CResRef m_cSpellRes;
+	CResRef m_cSpellRes2;
+	CResRef m_cSpellRes3;
+	CAIObjectType m_cTarget;
+	unsigned int m_dwFlags;
+	CGameEffect m_parentEffect;
+	unsigned int m_dwTarget;
+	unsigned int m_dwCondition;
+	unsigned int m_nLastCheck;
+};
+
+struct CInfinity
+{
+	Array<CInfTileSet*,5> pTileSets;
+	CResWED* pResWED;
+	CVRamPool* pVRPool;
+	CVidMode* pVidMode;
+	int bUseDestSrc;
+	int bRefreshVRamRect;
+	int bInitialized;
+	int bWEDDemanded;
+	int nOffsetX;
+	int nOffsetY;
+	int nTilesX;
+	int nTilesY;
+	int nNewX;
+	int nNewY;
+	CRect rViewPortNotZoomed;
+	CRect rViewPort;
+	CRect rVRamRect;
+	CRect rRequestRect;
+	int nVisibleTilesX;
+	int nVisibleTilesY;
+	int nAreaX;
+	int nAreaY;
+	int nCurrentTileX;
+	int nCurrentTileY;
+	int nCurrentX;
+	int nCurrentY;
+	int nSub1XOffset;
+	int nSub1YOffset;
+	int nSub2XOffset;
+	int nSub2YOffset;
+	int nSub3XOffset;
+	int nSub3YOffset;
+	int nSub4XOffset;
+	int nSub4YOffset;
+	CSound sndThunder;
+	int nCurrentLightningFrequency;
+	int nNextLightningFrequency;
+	int nNewLightningFrequency;
+	int nCurrentRainLevel;
+	int nNextRainLevel;
+	int nCurrentSnowLevel;
+	int nCurrentWindLevel;
+	int nCurrentFogLevel;
+	int nNextWindLevel;
+	int nCurrentTimeOfDay;
+	int nTimeToNextThunder;
+	int nThunderLength;
+	int bRenderCallLightning;
+	int nRenderLightningTimer;
+	CPoint cLightningPoint;
+	CVidCell m_glowVidCell;
+	CTypedPtrList<CPtrList,CAOEEntry*> m_lAOE;
+	std::vector<unsigned char*,std::allocator<unsigned char*>> m_RasterizedPolys;
+	std::vector<std::vector<WED_PolyPoint_st,std::allocator<WED_PolyPoint_st>>,std::allocator<std::vector<WED_PolyPoint_st,std::allocator<WED_PolyPoint_st>>>> m_DownsampledPolys;
+	unsigned __int16 m_areaType;
+	unsigned __int8 m_renderDayNightCode;
+	unsigned __int8 m_oldRenderDayNightCode;
+	unsigned __int8 m_dayLightIntensity;
+	unsigned __int8 m_requestDayNightCode;
+	unsigned __int8 m_oldRequestDualTileCode;
+	unsigned __int8 m_bResizedViewPort;
+	unsigned int m_nLastTickCount;
+	CPoint m_ptCurrentPosExact;
+	__int16 m_autoScrollSpeed;
+	CPoint m_ptScrollDest;
+	int m_nScrollAttempts;
+	int m_nOldScrollState;
+	unsigned __int8 m_nScrollDelay;
+	unsigned __int8 m_bMovieBroadcast;
+	int m_bStartLightning;
+	int m_bStopLightning;
+	unsigned __int8 m_lightningStrikeProb;
+	unsigned int m_rgbRainColor;
+	unsigned int m_rgbLightningGlobalLighting;
+	unsigned int m_rgbOverCastGlobalLighting;
+	unsigned int m_rgbGlobalLighting;
+	unsigned int m_rgbTimeOfDayGlobalLighting;
+	unsigned int m_rgbTimeOfDayRainColor;
+	int m_updateListenPosition;
 	CGameArea* m_pArea;
-	unsigned __int8 m_sourceSide;
-	unsigned __int8 m_snapshotPersonalSpace;
+	CVidBitmap m_vbMessageScreen;
+	unsigned int m_strrefMessage;
+	int m_bScreenShake;
+	CPoint m_screenShakeDelta;
+	CPoint m_screenShakeDecrease;
+	float m_fZoomSaved;
+	float m_fZoom;
+	float m_fStoredZoom;
+	int m_bZoomEnabled;
+	int m_bZooming;
 };
 
 struct CGameArea
@@ -21312,21 +13475,6 @@ struct CGameArea
 		int nLineCount;
 		CPoint* pVertexArray;
 		bool bReady;
-	};
-
-	struct CacheSearchMap
-	{
-		struct __l2
-		{
-			struct _lambda_858d28ddc87715ec3d5e1dd88541236f_
-			{
-				unsigned __int64* nNextVertex;
-				unsigned __int64* nCurVertexCapacity;
-				CPoint** pVertexArray;
-			};
-
-		};
-
 	};
 
 	CAreaFileHeader m_header;
@@ -21436,76 +13584,600 @@ struct CGameArea
 	unsigned __int16 m_sndAmbientNightVolume;
 };
 
-struct CVidMode
+struct DPWrapper
 {
-	int m_nPrintFile;
-	int m_nPointerNumber;
-	unsigned int m_dwCursorRenderFlags;
-	unsigned int m_dwRedMask;
-	unsigned int m_dwGreenMask;
-	unsigned int m_dwBlueMask;
-	unsigned __int8 m_bFadeTo;
-	unsigned __int8 m_nFade;
-	SDL_Window* m_pWindow;
-	void* m_glContext;
-	CVidBitmap m_circle;
-	int nWidth;
-	int nHeight;
-	bool bRedrawEntireScreen;
-	bool bHardwareMouseCursor;
-	CVidCell* pPointerVidCell;
-	CVidCell* pTooltipVidCell;
-	unsigned __int8 m_bPrintScreen;
-	unsigned int nTickCount;
-	float m_fInputScale;
-	unsigned int rgbGlobalTint;
-	unsigned __int8 m_nGammaCorrection;
-	unsigned __int8 m_nBrightnessCorrection;
-	int m_nScreenScrollY;
-	int m_nScreenScrollX;
-	int nRShift;
-	int nGShift;
-	int nBShift;
-	tagRGBQUAD rgbTint;
-	int bPointerEnabled;
-	CRect rPointerStorage;
-	CRect m_rLockedRect;
-	CVidCell* m_lastCursor;
-	int m_lastCursorFrame;
-	int m_lastCursorSequence;
-	int m_lastCursorNumber;
-	unsigned int m_lastCursorFlags;
-	unsigned int m_lastCursorResId;
-	SDL_Cursor* m_hwCursor;
-	SDL_Surface* m_hwCursorSurface;
-	int nVRamSurfaces;
-	CVidBitmap m_rgbMasterBitmap;
+	enum class PEER_STATE_t : __int32
+	{
+		PEER_INITIAL = 0,
+		PEER_DISCONNECTED = 1,
+		PEER_NEGOTIATING = 2,
+		PEER_CONNECTING = 3,
+		PEER_CONNECTED = 4,
+		PEER_INVALID_PASSWORD = 5,
+		PEER_JOIN_ROOM_FULL = 6,
+		PEER_JOIN_ERROR = 7,
+	};
+
+	std::vector<DP_Player*,std::allocator<DP_Player*>> m_players;
+	std::queue<DP_Packet*,std::deque<DP_Packet*,std::allocator<DP_Packet*>>> m_packetQueue;
+	int m_currentSessionId;
+	IDPProvider* m_provider;
+	IDPPeer* m_connection;
+	int m_peerState;
+	bool m_server;
+	int m_ReplyFlags;
+	int m_playerCreateID;
+	DP_ProviderID m_nProvider;
+	int m_nMyID;
+	DPWrapper::PEER_STATE_t PEER_STATE;
 };
 
-struct CSaveGameSlot
+struct CNetwork
 {
-	CString m_sFileName;
-	CString m_sSlotName;
-	CResBitmap m_cResScreenShot;
-	CResBitmap m_cBmpResPortrait0;
-	CResBitmap m_cBmpResPortrait1;
-	CResBitmap m_cBmpResPortrait2;
-	CResBitmap m_cBmpResPortrait3;
-	CResBitmap m_cBmpResPortrait4;
-	CResBitmap m_cBmpResPortrait5;
-	CResRef m_cResPortrait;
-	CString m_sCharacterName;
-	unsigned int m_nTime;
-	int m_nChapter;
-	CString m_sChapter;
+	_GUID m_nApplicationGuid;
+	unsigned __int8 m_bApplicationGuidDefined;
+	unsigned __int8 m_bAutoConnectCheck;
+	unsigned __int8 m_bServiceProviderEnumerated;
+	unsigned __int8 m_bServiceProviderSelected;
+	int m_nServiceProvider;
+	int m_nTotalServiceProviders;
+	Array<CString,4> m_ppszServiceProviderNames;
+	Array<DP_ProviderID,4> m_pnServiceProviderIDS;
+	unsigned __int8 m_bConnectionInitialized;
+	unsigned __int8 m_bSocketConnecting;
+	unsigned __int8 m_bSocketConnected;
+	CString m_sIPAddress;
+	unsigned __int8 padding2;
+	void* m_lpDPAddress;
+	unsigned int m_dwDPAddressSize;
+	CString m_version;
+	unsigned __int8 m_bSessionSelected;
+	int m_nSession;
+	unsigned __int8 m_bSessionNameToMake;
+	unsigned __int8 padding3;
+	CString m_sSessionNameToMake;
+	CString m_sSessionDescriptionToMake;
+	unsigned __int8 m_bSessionPasswordEnabled;
+	unsigned __int8 padding4;
+	CString m_sSessionPassword;
+	unsigned __int8 m_bAllowNewConnections;
+	unsigned __int8 m_bConnectionEstablished;
+	unsigned __int8 m_bIsHost;
+	DPWrapper m_directPlay;
+	int m_nMaxPlayers;
+	unsigned int m_dwSessionFlags;
+	unsigned __int8 m_bMaxPlayersDefined;
+	unsigned __int8 m_bSessionOptionsDefined;
+	CString m_sJoinedGame;
+	CString m_sLeftGame;
+	CString m_sDroppedGame;
+	unsigned __int8 m_bPlayerNameToMake;
+	unsigned __int8 m_bPlayerCreated;
+	int m_idLocalPlayer;
+	CString m_sLocalPlayerName;
+	int m_nTotalPlayers;
+	Array<CString,6> m_psPlayerName;
+	Array<int,6> m_pPlayerID;
+	Array<unsigned __int8,6> m_pbPlayerVisible;
+	Array<unsigned __int8,6> m_pbPlayerEnumerateFlag;
+	int m_nLocalPlayer;
+	int m_nHostPlayer;
+	CString m_sHostIPAddress;
+	int m_bAnnounceNewPlayers;
+	Array<CNetworkWindow,6> m_pSlidingWindow;
+	CNetworkWindow m_SystemWindow;
+	Array<unsigned int,256> m_dwCRC32;
+	CNetworkConnectionSettings m_connectionSettings;
+	unsigned int m_lastMessageSentTime;
+	Array<unsigned int,6> m_lastMessageReceivedTime;
 };
 
-struct CFileView
+struct CChitin
 {
-	file_t f;
-	view_t v;
-	int fileSize;
-	int filePos;
+	struct CChitin_vtbl
+	{
+		void (__fastcall *SynchronousUpdate)(CChitin*);
+		void (__fastcall *SetupPanels)(CChitin*);
+		unsigned int (__fastcall *GetIDSInvalidVideoMode)(CChitin*);
+		unsigned int (__fastcall *GetIDSOpenGLDll)(CChitin*);
+		unsigned int (__fastcall *GetIDSExclusiveMode)(CChitin*);
+		unsigned int (__fastcall *GetIDSChoosePixelFormat)(CChitin*);
+		unsigned int (__fastcall *GetIDSSetPixelFormat)(CChitin*);
+		unsigned int (__fastcall *GetIDSSetGameResolution)(CChitin*);
+		unsigned int (__fastcall *GetIDSSetGameBitDepth)(CChitin*);
+		unsigned int (__fastcall *GetIDSBadDeskTopBitDepth)(CChitin*);
+		unsigned int (__fastcall *GetIDSWindowsFonts)(CChitin*);
+		CRes* (__fastcall *AllocResObject)(CChitin*, int);
+		const CString* (__fastcall *GetIconRes)(CChitin*);
+		void (__fastcall *GetScreenShotFilePrefix)(CChitin*, CString*);
+		int (__fastcall *FontRectOutline)(CChitin*);
+		int (__fastcall *InitializeServices)(CChitin*);
+		void (__fastcall *SetProgressBar)(CChitin*, unsigned __int8, int, int, int, unsigned __int8, int, unsigned __int8, int, unsigned __int8, unsigned __int8, unsigned int);
+		void (__fastcall *SetProgressBarActivateEngine)(CChitin*, int);
+		void (__fastcall *BroadcastMultiplayerProgressBarInfo)(CChitin*);
+		void (__fastcall *SetCDSwitchStatus)(CChitin*, unsigned __int8, unsigned __int8, unsigned __int8, const CString*, unsigned __int8, unsigned __int8, unsigned __int8);
+		void (__fastcall *SetCDSwitchActivateEngine)(CChitin*, int);
+		void (__fastcall *OnMultiplayerSessionOpen)(CChitin*, CString*, CString*, CString*);
+		void (__fastcall *OnMultiplayerSessionToClose)(CChitin*);
+		void (__fastcall *OnMultiplayerSessionClose)(CChitin*);
+		void (__fastcall *OnMultiplayerPlayerJoin)(CChitin*, int, const CString*);
+		void (__fastcall *OnMultiplayerPlayerVisible)(CChitin*, int);
+		void (__fastcall *OnMultiplayerPlayerLeave)(CChitin*, int, const CString*);
+		int (__fastcall *MessageCallback)(CChitin*, unsigned __int8*, unsigned int);
+		unsigned __int8 (__fastcall *GetGamespyResponse)(CChitin*, unsigned __int8, unsigned __int8**, unsigned int*);
+		void (__fastcall *AsynchronousUpdate)(CChitin*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
+		void (__fastcall *SelectEngine)(CChitin*, CWarp*);
+		void (__fastcall *ShutDown)(CChitin*, int, const char*, const char*);
+		const char* (__fastcall *GetKeyFileName)(CChitin*);
+		unsigned __int8 (__fastcall *GetNumberSoundChannels)(CChitin*);
+		int (__fastcall *GetMovieVolume)(CChitin*);
+		void (__fastcall *LoadOptions)(CChitin*);
+		void (__fastcall *PreLoadFonts)(CChitin*);
+		void (__fastcall *SetSoundVolumes)(CChitin*);
+		unsigned __int16 (__fastcall *GetMultiplayerGameSpyPort)(CChitin*);
+		unsigned __int16 (__fastcall *GetMultiplayerDirectPlayPort)(CChitin*);
+		void (__fastcall *SetRenderCount)(CChitin*, unsigned __int8);
+		int (__fastcall *ConfirmQuit)(CChitin*);
+		void (__fastcall *GetGameSpyGameName)(CChitin*, CString*);
+		void (__fastcall *GetGameSpyCode)(CChitin*, CString*);
+		void (__fastcall *GetPanicCDStrings)(CChitin*, CString*, CString*, CString*);
+		void (__fastcall *OnMixerInitialize)(CChitin*);
+		int (__fastcall *Is3DSound)(CChitin*, int);
+		int (__fastcall *GetEAXActive)(CChitin*);
+		void (__fastcall *RedrawScreen)(CChitin*);
+		unsigned __int8 (__fastcall *GetSoundEnvironment)(CChitin*, CString, unsigned int*, float*, float*, float*, float*);
+		unsigned __int8 (__fastcall *CutsceneModeActive)(CChitin*);
+	};
+
+	int m_mouseLButton;
+	int m_mouseRButton;
+	int m_bMouseLButtonDown;
+	tagPOINT m_mouseLDblClickPoint;
+	unsigned int m_mouseLDblClickCount;
+	int m_bMouseRButtonDown;
+	tagPOINT m_mouseRDblClickPoint;
+	unsigned int m_mouseRDblClickCount;
+	int m_bMouseMButtonDown;
+	tagPOINT m_mouseMDblClickPoint;
+	unsigned int m_mouseMDblClickCount;
+	unsigned int m_mouseDblClickTime;
+	tagSIZE m_mouseDblClickSize;
+	int bEngineActive;
+	int bServicingEnabled;
+	int bMessagesEnabled;
+	CObList lEngines;
+	unsigned int nIterations;
+	CWarp* pStartingEngine;
+	unsigned int nTimer;
+	unsigned int nTimerRes;
+	CString m_sCommandLine;
+	CRect m_rClient;
+	unsigned __int8 m_bReInitializing;
+	unsigned __int8 m_bScreenEdgeScroll;
+	unsigned int m_opSystemPlatformId;
+	__int16 m_capsLockState;
+	CPoint m_ptScreen;
+	int m_bStartUpHost;
+	int m_bStartUpConnect;
+	CString m_sStartUpAddress;
+	CString m_sStartUpPort;
+	CString m_sStartUpPlayer;
+	CString m_sStartUpPassword;
+	int m_bStartUpNewGame;
+	int m_bStartUpLoadGame;
+	CString m_sStartUpSession;
+	unsigned __int8 m_bStartUpDirectPlayLobby;
+	unsigned __int8 m_bStartUpGameSpyLocation;
+	CString m_sStartUpGameSpyLocation;
+	unsigned __int8 m_bStartUpThroneOfBhaal;
+	CSoundMixer* cSoundMixer;
+	int m_nMaxPlayers;
+	int m_nCurrentSong;
+	_EAXPRESET m_nSoundEnvironment;
+	int m_bSoundInitialized;
+	unsigned __int8 padding;
+	int m_bInMouseWheelQueue;
+	CTypedPtrList<CPtrList,long*> m_lstMouseWheel;
+	unsigned int m_wheelScrollLines;
+	int m_bIsMouseInWindow;
+	int m_bFrameOutline;
+	int m_bUseMirrorFX;
+	unsigned int m_msgAutoPlay;
+	void* m_hEvent;
+	unsigned __int8 m_bUsePlanescapeSoundReductionCurve;
+	unsigned int m_nSoundReductionCurveRadius;
+	unsigned int m_nTickCount;
+	int m_nAIPerSec;
+	int m_nAIElasped;
+	unsigned int m_nRenderTickCount;
+	int m_nRenderPerSec;
+	int m_nRenderElasped;
+	int m_nAISleeper;
+	int m_bIsTouchUI;
+	int m_bUseBGRA;
+	int m_bRenderTilesLinear;
+	CString m_sFontName;
+	int m_nFullFrameTimer;
+	int m_nGameTimer;
+	int m_nRenderTimer;
+	int m_nSearchTimer;
+	_iobuf* m_fFrameTimeLog;
+	int m_bLogFrames;
+	CWarp* pActiveEngine;
+	CVideo cVideo;
+	CNetwork cNetwork;
+	CSteam cSteam;
+	unsigned __int8 padding2;
+	int bPointerUpdated;
+	CPoint cMousePosition;
+	int nAUCounter;
+	int bInTimer;
+	int m_AIStale;
+	int m_displayStale;
+	int m_bInSyncUpdate;
+	unsigned int m_keyRepeatDelay;
+	unsigned int m_keyRepeatRate;
+	CProgressBar cProgressBar;
+	unsigned __int16 m_nAICounter;
+	int m_bManualFrameControl;
+	int m_displayDebug;
+	int m_displaySerialize;
+	int m_bExitOnError;
+	int m_bEnableCucumber;
+	CResRef* pCurRes;
+	CString m_sFontNameNormal;
+	CString m_sFontNameRealms;
+	CString m_sFontNameStoneBig;
+	CString m_sFontNameStoneSml;
+	CString m_sFontNameToolFont;
+	CString m_sFontNameFloatTxt;
+	int m_bDisplaySubtitles;
+	int m_bReverseMouseWheelZoom;
+
+	virtual void SynchronousUpdate()
+	{
+	}
+
+	virtual void SetupPanels()
+	{
+	}
+
+	virtual unsigned int GetIDSInvalidVideoMode()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int GetIDSOpenGLDll()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int GetIDSExclusiveMode()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int GetIDSChoosePixelFormat()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int GetIDSSetPixelFormat()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int GetIDSSetGameResolution()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int GetIDSSetGameBitDepth()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int GetIDSBadDeskTopBitDepth()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int GetIDSWindowsFonts()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual CRes* AllocResObject(int _0)
+	{
+		return *(CRes**)nullptr;
+	}
+
+	virtual const CString* GetIconRes()
+	{
+		return *(const CString**)nullptr;
+	}
+
+	virtual void GetScreenShotFilePrefix(CString* _0)
+	{
+	}
+
+	virtual int FontRectOutline()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int InitializeServices()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void SetProgressBar(unsigned __int8 _0, int _1, int _2, int _3, unsigned __int8 _4, int _5, unsigned __int8 _6, int _7, unsigned __int8 _8, unsigned __int8 _9, unsigned int _10)
+	{
+	}
+
+	virtual void SetProgressBarActivateEngine(int _0)
+	{
+	}
+
+	virtual void BroadcastMultiplayerProgressBarInfo()
+	{
+	}
+
+	virtual void SetCDSwitchStatus(unsigned __int8 _0, unsigned __int8 _1, unsigned __int8 _2, const CString* _3, unsigned __int8 _4, unsigned __int8 _5, unsigned __int8 _6)
+	{
+	}
+
+	virtual void SetCDSwitchActivateEngine(int _0)
+	{
+	}
+
+	virtual void OnMultiplayerSessionOpen(CString* _0, CString* _1, CString* _2)
+	{
+	}
+
+	virtual void OnMultiplayerSessionToClose()
+	{
+	}
+
+	virtual void OnMultiplayerSessionClose()
+	{
+	}
+
+	virtual void OnMultiplayerPlayerJoin(int _0, const CString* _1)
+	{
+	}
+
+	virtual void OnMultiplayerPlayerVisible(int _0)
+	{
+	}
+
+	virtual void OnMultiplayerPlayerLeave(int _0, const CString* _1)
+	{
+	}
+
+	virtual int MessageCallback(unsigned __int8* _0, unsigned int _1)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual unsigned __int8 GetGamespyResponse(unsigned __int8 _0, unsigned __int8** _1, unsigned int* _2)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void AsynchronousUpdate(unsigned int _0, unsigned int _1, unsigned int _2, unsigned int _3, unsigned int _4)
+	{
+	}
+
+	virtual void SelectEngine(CWarp* _0)
+	{
+	}
+
+	virtual void ShutDown(int _0, const char* _1, const char* _2)
+	{
+	}
+
+	virtual const char* GetKeyFileName()
+	{
+		return *(const char**)nullptr;
+	}
+
+	virtual unsigned __int8 GetNumberSoundChannels()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual int GetMovieVolume()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void LoadOptions()
+	{
+	}
+
+	virtual void PreLoadFonts()
+	{
+	}
+
+	virtual void SetSoundVolumes()
+	{
+	}
+
+	virtual unsigned __int16 GetMultiplayerGameSpyPort()
+	{
+		return *(unsigned __int16*)nullptr;
+	}
+
+	virtual unsigned __int16 GetMultiplayerDirectPlayPort()
+	{
+		return *(unsigned __int16*)nullptr;
+	}
+
+	virtual void SetRenderCount(unsigned __int8 _0)
+	{
+	}
+
+	virtual int ConfirmQuit()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void GetGameSpyGameName(CString* _0)
+	{
+	}
+
+	virtual void GetGameSpyCode(CString* _0)
+	{
+	}
+
+	virtual void GetPanicCDStrings(CString* _0, CString* _1, CString* _2)
+	{
+	}
+
+	virtual void OnMixerInitialize()
+	{
+	}
+
+	virtual int Is3DSound(int _0)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int GetEAXActive()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void RedrawScreen()
+	{
+	}
+
+	virtual unsigned __int8 GetSoundEnvironment(CString _0, unsigned int* _1, float* _2, float* _3, float* _4, float* _5)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual unsigned __int8 CutsceneModeActive()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+};
+
+struct CBaldurChitin : CChitin
+{
+	struct CBaldurChitin_vtbl
+	{
+		void (__fastcall *SynchronousUpdate)(CChitin*);
+		void (__fastcall *SetupPanels)(CChitin*);
+		unsigned int (__fastcall *GetIDSInvalidVideoMode)(CChitin*);
+		unsigned int (__fastcall *GetIDSOpenGLDll)(CChitin*);
+		unsigned int (__fastcall *GetIDSExclusiveMode)(CChitin*);
+		unsigned int (__fastcall *GetIDSChoosePixelFormat)(CChitin*);
+		unsigned int (__fastcall *GetIDSSetPixelFormat)(CChitin*);
+		unsigned int (__fastcall *GetIDSSetGameResolution)(CChitin*);
+		unsigned int (__fastcall *GetIDSSetGameBitDepth)(CChitin*);
+		unsigned int (__fastcall *GetIDSBadDeskTopBitDepth)(CChitin*);
+		unsigned int (__fastcall *GetIDSWindowsFonts)(CChitin*);
+		CRes* (__fastcall *AllocResObject)(CChitin*, int);
+		const CString* (__fastcall *GetIconRes)(CChitin*);
+		void (__fastcall *GetScreenShotFilePrefix)(CChitin*, CString*);
+		int (__fastcall *FontRectOutline)(CChitin*);
+		int (__fastcall *InitializeServices)(CChitin*);
+		void (__fastcall *SetProgressBar)(CChitin*, unsigned __int8, int, int, int, unsigned __int8, int, unsigned __int8, int, unsigned __int8, unsigned __int8, unsigned int);
+		void (__fastcall *SetProgressBarActivateEngine)(CChitin*, int);
+		void (__fastcall *BroadcastMultiplayerProgressBarInfo)(CChitin*);
+		void (__fastcall *SetCDSwitchStatus)(CChitin*, unsigned __int8, unsigned __int8, unsigned __int8, const CString*, unsigned __int8, unsigned __int8, unsigned __int8);
+		void (__fastcall *SetCDSwitchActivateEngine)(CChitin*, int);
+		void (__fastcall *OnMultiplayerSessionOpen)(CChitin*, CString*, CString*, CString*);
+		void (__fastcall *OnMultiplayerSessionToClose)(CChitin*);
+		void (__fastcall *OnMultiplayerSessionClose)(CChitin*);
+		void (__fastcall *OnMultiplayerPlayerJoin)(CChitin*, int, const CString*);
+		void (__fastcall *OnMultiplayerPlayerVisible)(CChitin*, int);
+		void (__fastcall *OnMultiplayerPlayerLeave)(CChitin*, int, const CString*);
+		int (__fastcall *MessageCallback)(CChitin*, unsigned __int8*, unsigned int);
+		unsigned __int8 (__fastcall *GetGamespyResponse)(CChitin*, unsigned __int8, unsigned __int8**, unsigned int*);
+		void (__fastcall *AsynchronousUpdate)(CChitin*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
+		void (__fastcall *SelectEngine)(CChitin*, CWarp*);
+		void (__fastcall *ShutDown)(CChitin*, int, const char*, const char*);
+		const char* (__fastcall *GetKeyFileName)(CChitin*);
+		unsigned __int8 (__fastcall *GetNumberSoundChannels)(CChitin*);
+		int (__fastcall *GetMovieVolume)(CChitin*);
+		void (__fastcall *LoadOptions)(CChitin*);
+		void (__fastcall *PreLoadFonts)(CChitin*);
+		void (__fastcall *SetSoundVolumes)(CChitin*);
+		unsigned __int16 (__fastcall *GetMultiplayerGameSpyPort)(CChitin*);
+		unsigned __int16 (__fastcall *GetMultiplayerDirectPlayPort)(CChitin*);
+		void (__fastcall *SetRenderCount)(CChitin*, unsigned __int8);
+		int (__fastcall *ConfirmQuit)(CChitin*);
+		void (__fastcall *GetGameSpyGameName)(CChitin*, CString*);
+		void (__fastcall *GetGameSpyCode)(CChitin*, CString*);
+		void (__fastcall *GetPanicCDStrings)(CChitin*, CString*, CString*, CString*);
+		void (__fastcall *OnMixerInitialize)(CChitin*);
+		int (__fastcall *Is3DSound)(CChitin*, int);
+		int (__fastcall *GetEAXActive)(CChitin*);
+		void (__fastcall *RedrawScreen)(CChitin*);
+		unsigned __int8 (__fastcall *GetSoundEnvironment)(CChitin*, CString, unsigned int*, float*, float*, float*, float*);
+		unsigned __int8 (__fastcall *CutsceneModeActive)(CChitin*);
+		void (__fastcall *ShutDown_2)(CBaldurChitin*, int, char*, const char*);
+		void (__fastcall *UnloadFonts)(CBaldurChitin*);
+	};
+
+	CInfCursor* m_pObjectCursor;
+	CInfGame* m_pObjectGame;
+	CDungeonMaster* m_pEngineDM;
+	CBaldurProjector* m_pEngineProjector;
+	CScreenAI* m_pEngineAI;
+	CScreenCharacter* m_pEngineCharacter;
+	CScreenCreateChar* m_pEngineCreateChar;
+	CScreenCreateParty* m_pEngineCreateParty;
+	CScreenInventory* m_pEngineInventory;
+	CScreenJournal* m_pEngineJournal;
+	CScreenLoad* m_pEngineLoad;
+	CScreenMap* m_pEngineMap;
+	CScreenOptions* m_pEngineOptions;
+	CScreenPriestSpell* m_pEnginePriestSpell;
+	CScreenSave* m_pEngineSave;
+	CScreenStart* m_pEngineStart;
+	CScreenWizSpell* m_pEngineWizSpell;
+	CScreenWorld* m_pEngineWorld;
+	CScreenStore* m_pEngineStore;
+	CScreenMultiPlayer* m_pEngineMultiPlayer;
+	CScreenConnection* m_pEngineConnection;
+	CScreenWorldMap* m_pEngineWorldMap;
+	CScreenChapter* m_pEngineChapter;
+	CScreenMovies* m_pEngineMovies;
+	CScreenDLC* m_pEngineDLC;
+	CTlkTable m_cTlkTable;
+	CCacheStatus m_cCachingStatus;
+	CScriptCache m_scriptCache;
+	CBaldurMessage m_cBaldurMessage;
+	CMessageHandler m_cMessageHandler;
+	int m_bFontRectOutline;
+	unsigned __int8 m_bCDScanDone;
+	unsigned __int8 m_bCDFoundDrive;
+	CString m_sCDDriveName;
+	unsigned __int8 m_bCDMediaInDrive;
+	unsigned __int8 m_bCDFoundBaldurCD;
+	unsigned __int8 m_bIsAutoStarting;
+	int m_bDropPanels;
+	int m_bDropCaps;
+	int m_bDisableMovies;
+	int m_bStartConfig;
+	int m_bSuperSpeedAI;
+	int m_bFirstRun;
+	int m_nInstallType;
+	int m_bUseNewGui;
+	CVidFont m_preLoadedFont;
+	CVidMosaic m_tiledBackground;
+
+	virtual void ShutDown(int _0, char* _1, const char* _2)
+	{
+	}
+
+	virtual void UnloadFonts()
+	{
+	}
 };
 
 extern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;

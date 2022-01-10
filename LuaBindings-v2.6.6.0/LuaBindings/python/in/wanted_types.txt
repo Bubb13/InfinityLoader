@@ -4,7 +4,6 @@ CGameAIArea
 CGameAIGame
 CGameContainer
 CGameDoor
-CGameEffect_vtbl
 CGameFireball3d
 CGameSound
 CGameSpawning

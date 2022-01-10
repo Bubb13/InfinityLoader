@@ -6,7 +6,7 @@
 
 struct CharString
 {
-	nobinding char* data;
+	nobinding primitive char* data;
 
 	char getChar(int index)
 	{
@@ -18,7 +18,7 @@ struct CharString
 		data[index] = toSet;
 	}
 
-	void set(noreplace const char* toSet)
+	void set(primitive const char* toSet)
 	{
 		size_t len = strlen(toSet);
 		char* newStr = (char*)p_malloc(len + 1);
@@ -26,7 +26,7 @@ struct CharString
 		data = newStr;
 	}
 
-	void setL(noreplace const char* toSet, size_t neededLen)
+	void setL(primitive const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
 		if (cpyLen > neededLen)
@@ -38,12 +38,12 @@ struct CharString
 		data = newStr;
 	}
 
-	void write(noreplace const char* toSet)
+	void write(primitive const char* toSet)
 	{
 		strcpy(data, toSet);
 	}
 
-	void writeL(noreplace const char* toSet, size_t neededLen)
+	void writeL(primitive const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
 		if (cpyLen > neededLen)
@@ -53,7 +53,7 @@ struct CharString
 			memset((void*)(data + cpyLen), 0, neededLen - cpyLen);
 	}
 
-	void setReference(noreplace CharString* other)
+	void setReference(CharString* other)
 	{
 		data = other->data;
 	}
@@ -63,7 +63,7 @@ struct CharString
 		data = (char*)toSet;
 	}
 
-	noreplace char* get()
+	primitive char* get()
 	{
 		return data;
 	}
@@ -78,14 +78,14 @@ struct CharString
 
 struct ConstCharString
 {
-	nobinding const char* data;
+	nobinding primitive const char* data;
 
 	char getChar(int index)
 	{
 		return data[index];
 	}
 
-	void set(noreplace const char* toSet)
+	void set(primitive const char* toSet)
 	{
 		size_t len = strlen(toSet);
 		char* newStr = (char*)p_malloc(len + 1);
@@ -93,7 +93,7 @@ struct ConstCharString
 		data = newStr;
 	}
 
-	void setL(noreplace const char* toSet, size_t neededLen)
+	void setL(primitive const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
 		if (cpyLen > neededLen)
@@ -105,7 +105,7 @@ struct ConstCharString
 		data = newStr;
 	}
 
-	void setReference(noreplace ConstCharString* other)
+	void setReference(ConstCharString* other)
 	{
 		data = other->data;
 	}
@@ -115,7 +115,7 @@ struct ConstCharString
 		data = (const char*)toSet;
 	}
 
-	noreplace const char* get()
+	primitive const char* get()
 	{
 		return data;
 	}
@@ -131,21 +131,36 @@ struct Pointer
 {
 	POINTED_TO_TYPE* reference;
 
-	noreplace POINTED_TO_TYPE getValue()
+	POINTED_TO_TYPE getValue()
 	{
 		return *reference;
 	}
 
-	void setValue(noconst noreplace POINTED_TO_TYPE val)
+	void setValue(noconst POINTED_TO_TYPE val)
 	{
 		*reference = val;
+	}
+};
+
+struct VoidPointer
+{
+	nobinding void* reference;
+
+	void pointTo(void* ptr)
+	{
+		reference = ptr;
+	}
+
+	intptr_t toPointer()
+	{
+		return (intptr_t)reference;
 	}
 };
 
 template<class T, int size>
 struct Array
 {
-	T data[size];
+	nobinding T data[size];
 
 	T get(int index)
 	{
@@ -630,13 +645,13 @@ struct CInfGame
 // Global Function Bindings //
 //////////////////////////////
 
-uiMenu* findMenu(noreplace const char* name, int panel, int state);
+uiMenu* findMenu(primitive const char* name, int panel, int state);
 void saveMenuStack();
 void uiLoadMenu(CResText* menuRes);
 void** bsearch(void* key, void* base, size_t num, size_t width, void* func);
 void restoreMenuStack();
 int CompareCResByTypeThenName(const CRes* a, const CRes* b);
-int SDL_GetKeyFromName(noreplace const char* name);
+int SDL_GetKeyFromName(primitive const char* name);
 
 //////////////////////////////
 // Global Variable Bindings //

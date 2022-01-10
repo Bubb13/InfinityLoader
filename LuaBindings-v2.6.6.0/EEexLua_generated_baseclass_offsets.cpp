@@ -7,6 +7,69 @@ constexpr uintptr_t offsetofbase() {
 }
 
 std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> baseclassOffsets {
+	{"CResInfTile", {
+		{"CResTile", offsetofbase<CResInfTile, CResTile>()},
+	}},
+	{"CSnowFlake", {
+		{"CParticle", offsetofbase<CSnowFlake, CParticle>()},
+	}},
+	{"CRainDrop", {
+		{"CParticle", offsetofbase<CRainDrop, CParticle>()},
+	}},
+	{"CPoint", {
+		{"tagPOINT", offsetofbase<CPoint, tagPOINT>()},
+	}},
+	{"CRect", {
+		{"tagRECT", offsetofbase<CRect, tagRECT>()},
+	}},
+	{"CSize", {
+		{"tagSIZE", offsetofbase<CSize, tagSIZE>()},
+	}},
+	{"CSpawnPointVar", {
+		{"CSpawnVar", offsetofbase<CSpawnPointVar, CSpawnVar>()},
+	}},
+	{"CResWebm", {
+		{"CRes", offsetofbase<CResWebm, CRes>()},
+	}},
+	{"CResWave", {
+		{"CRes", offsetofbase<CResWave, CRes>()},
+	}},
+	{"CResWED", {
+		{"CRes", offsetofbase<CResWED, CRes>()},
+	}},
+	{"CResTileSet", {
+		{"CRes", offsetofbase<CResTileSet, CRes>()},
+	}},
+	{"CResText", {
+		{"CRes", offsetofbase<CResText, CRes>()},
+	}},
+	{"CResSpell", {
+		{"CRes", offsetofbase<CResSpell, CRes>()},
+	}},
+	{"CResPVR", {
+		{"CRes", offsetofbase<CResPVR, CRes>()},
+	}},
+	{"CResMosaic", {
+		{"CRes", offsetofbase<CResMosaic, CRes>()},
+	}},
+	{"CResItem", {
+		{"CRes", offsetofbase<CResItem, CRes>()},
+	}},
+	{"CResGame", {
+		{"CRes", offsetofbase<CResGame, CRes>()},
+	}},
+	{"CResFont", {
+		{"CRes", offsetofbase<CResFont, CRes>()},
+	}},
+	{"CResCell", {
+		{"CRes", offsetofbase<CResCell, CRes>()},
+	}},
+	{"CResBitmap", {
+		{"CRes", offsetofbase<CResBitmap, CRes>()},
+	}},
+	{"CList<long,long>", {
+		{"CObject", offsetofbase<CList<long,long>, CObject>()},
+	}},
 	{"CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>, CObject>()},
 	}},
@@ -145,7 +208,7 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CCriticalEntry*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CCriticalEntry*>, CObject>()},
 	}},
-	{"CTypedPtrList<CPtrList,CGameOptions*>", {
+	{"CTypedPtrList<CPtrList,EEex_CGameOptions*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameOptions*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,CDeathSound*>", {
@@ -214,65 +277,20 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrArray<CPtrArray,CGameDialogReply*>", {
 		{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogReply*>, CObject>()},
 	}},
-	{"CResInfTile", {
-		{"CResTile", offsetofbase<CResInfTile, CResTile>()},
+	{"CStringList", {
+		{"CObject", offsetofbase<CStringList, CObject>()},
 	}},
 	{"CPtrList", {
 		{"CObject", offsetofbase<CPtrList, CObject>()},
 	}},
-	{"CApplyEffectList", {
-		{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CApplyEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
-	}},
-	{"CBounceList", {
-		{"CTypedPtrList<CPtrList,CBounceEntry*>", offsetofbase<CBounceList, CTypedPtrList<CPtrList,CBounceEntry*>>()},
-	}},
-	{"CColorEffects", {
-		{"CTypedPtrList<CPtrList,CColorEffect*>", offsetofbase<CColorEffects, CTypedPtrList<CPtrList,CColorEffect*>>()},
-	}},
-	{"CColorRanges", {
-		{"CTypedPtrList<CPtrList,CColorRange*>", offsetofbase<CColorRanges, CTypedPtrList<CPtrList,CColorRange*>>()},
-	}},
-	{"CContingencyList", {
-		{"CTypedPtrList<CPtrList,CContingency*>", offsetofbase<CContingencyList, CTypedPtrList<CPtrList,CContingency*>>()},
-	}},
-	{"CCriticalEntryList", {
-		{"CTypedPtrList<CPtrList,CCriticalEntry*>", offsetofbase<CCriticalEntryList, CTypedPtrList<CPtrList,CCriticalEntry*>>()},
-	}},
-	{"CGameEffectUsabilityList", {
-		{"CTypedPtrList<CPtrList,CGameEffectUsability*>", offsetofbase<CGameEffectUsabilityList, CTypedPtrList<CPtrList,CGameEffectUsability*>>()},
-	}},
-	{"CImmunitiesAIType", {
-		{"CTypedPtrList<CPtrList,CAIObjectType*>", offsetofbase<CImmunitiesAIType, CTypedPtrList<CPtrList,CAIObjectType*>>()},
-	}},
-	{"CImmunitiesEffect", {
-		{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CImmunitiesEffect, CTypedPtrList<CPtrList,CGameEffect*>>()},
-	}},
-	{"CImmunitiesItemEquipList", {
-		{"CTypedPtrList<CPtrList,CImmunitiesItemEquip*>", offsetofbase<CImmunitiesItemEquipList, CTypedPtrList<CPtrList,CImmunitiesItemEquip*>>()},
-	}},
-	{"CImmunitiesItemTypeEquipList", {
-		{"CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>", offsetofbase<CImmunitiesItemTypeEquipList, CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>>()},
-	}},
-	{"CImmunitiesProjectile", {
-		{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesProjectile, CTypedPtrList<CPtrList,long*>>()},
-	}},
-	{"CImmunitiesSchoolAndSecondary", {
-		{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesSchoolAndSecondary, CTypedPtrList<CPtrList,long*>>()},
-	}},
-	{"CImmunitiesSchoolAndSecondaryDecrementing", {
-		{"CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>", offsetofbase<CImmunitiesSchoolAndSecondaryDecrementing, CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>>()},
-	}},
-	{"CImmunitiesSpellList", {
-		{"CTypedPtrList<CPtrList,CImmunitySpell*>", offsetofbase<CImmunitiesSpellList, CTypedPtrList<CPtrList,CImmunitySpell*>>()},
-	}},
-	{"CImmunitiesWeapon", {
-		{"CTypedPtrList<CPtrList,CWeaponIdentification*>", offsetofbase<CImmunitiesWeapon, CTypedPtrList<CPtrList,CWeaponIdentification*>>()},
-	}},
-	{"CMoveList", {
-		{"CTypedPtrList<CPtrList,CMoveListEntry*>", offsetofbase<CMoveList, CTypedPtrList<CPtrList,CMoveListEntry*>>()},
-	}},
 	{"CPersistantEffectList", {
 		{"CTypedPtrList<CPtrList,CPersistantEffect*>", offsetofbase<CPersistantEffectList, CTypedPtrList<CPtrList,CPersistantEffect*>>()},
+	}},
+	{"CPersistantEffectListRegenerated", {
+		{"CTypedPtrList<CPtrList,CPersistantEffect*>", offsetofbase<CPersistantEffectListRegenerated, CTypedPtrList<CPtrList,CPersistantEffect*>>()},
+	}},
+	{"CSpawnList", {
+		{"CTypedPtrList<CPtrList,CSpawn*>", offsetofbase<CSpawnList, CTypedPtrList<CPtrList,CSpawn*>>()},
 	}},
 	{"CSpawnFile", {
 		{"CTypedPtrList<CPtrList,void*>", offsetofbase<CSpawnFile, CTypedPtrList<CPtrList,void*>>()},
@@ -289,29 +307,59 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CPtrArray", {
 		{"CObject", offsetofbase<CPtrArray, CObject>()},
 	}},
-	{"CGameAbilityList", {
-		{"CTypedPtrArray<CPtrArray,CAbilityData*>", offsetofbase<CGameAbilityList, CTypedPtrArray<CPtrArray,CAbilityData*>>()},
-	}},
 	{"CSpawnPointArray", {
 		{"CTypedPtrArray<CPtrArray,CSpawnPoint*>", offsetofbase<CSpawnPointArray, CTypedPtrArray<CPtrArray,CSpawnPoint*>>()},
-	}},
-	{"CPersistantEffectListRegenerated", {
-		{"CTypedPtrList<CPtrList,CPersistantEffect*>", offsetofbase<CPersistantEffectListRegenerated, CTypedPtrList<CPtrList,CPersistantEffect*>>()},
-	}},
-	{"CSnowFlake", {
-		{"CParticle", offsetofbase<CSnowFlake, CParticle>()},
-	}},
-	{"CRainDrop", {
-		{"CParticle", offsetofbase<CRainDrop, CParticle>()},
 	}},
 	{"CObList", {
 		{"CObject", offsetofbase<CObList, CObject>()},
 	}},
+	{"EEex_CWarp", {
+		{"CObject", offsetofbase<CWarp, CObject>()},
+	}},
 	{"CObArray", {
 		{"CObject", offsetofbase<CObArray, CObject>()},
 	}},
-	{"CList<long,long>", {
-		{"CObject", offsetofbase<CList<long,long>, CObject>()},
+	{"CMoveList", {
+		{"CTypedPtrList<CPtrList,CMoveListEntry*>", offsetofbase<CMoveList, CTypedPtrList<CPtrList,CMoveListEntry*>>()},
+	}},
+	{"CMemINISection", {
+		{"CTypedPtrList<CPtrList,CMemINIValue*>", offsetofbase<CMemINISection, CTypedPtrList<CPtrList,CMemINIValue*>>()},
+	}},
+	{"CMemINI", {
+		{"CTypedPtrList<CPtrList,void*>", offsetofbase<CMemINI, CTypedPtrList<CPtrList,void*>>()},
+	}},
+	{"CMapStringToString", {
+		{"CObject", offsetofbase<CMapStringToString, CObject>()},
+	}},
+	{"CImmunitiesWeapon", {
+		{"CTypedPtrList<CPtrList,CWeaponIdentification*>", offsetofbase<CImmunitiesWeapon, CTypedPtrList<CPtrList,CWeaponIdentification*>>()},
+	}},
+	{"CImmunitiesSpellList", {
+		{"CTypedPtrList<CPtrList,CImmunitySpell*>", offsetofbase<CImmunitiesSpellList, CTypedPtrList<CPtrList,CImmunitySpell*>>()},
+	}},
+	{"CImmunitiesSchoolAndSecondaryDecrementing", {
+		{"CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>", offsetofbase<CImmunitiesSchoolAndSecondaryDecrementing, CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>>()},
+	}},
+	{"CImmunitiesSchoolAndSecondary", {
+		{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesSchoolAndSecondary, CTypedPtrList<CPtrList,long*>>()},
+	}},
+	{"CImmunitiesProjectile", {
+		{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesProjectile, CTypedPtrList<CPtrList,long*>>()},
+	}},
+	{"CImmunitiesItemTypeEquipList", {
+		{"CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>", offsetofbase<CImmunitiesItemTypeEquipList, CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>>()},
+	}},
+	{"CImmunitiesItemEquipList", {
+		{"CTypedPtrList<CPtrList,CImmunitiesItemEquip*>", offsetofbase<CImmunitiesItemEquipList, CTypedPtrList<CPtrList,CImmunitiesItemEquip*>>()},
+	}},
+	{"CImmunitiesEffect", {
+		{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CImmunitiesEffect, CTypedPtrList<CPtrList,CGameEffect*>>()},
+	}},
+	{"CImmunitiesAIType", {
+		{"CTypedPtrList<CPtrList,CAIObjectType*>", offsetofbase<CImmunitiesAIType, CTypedPtrList<CPtrList,CAIObjectType*>>()},
+	}},
+	{"CGameEffectUsabilityList", {
+		{"CTypedPtrList<CPtrList,CGameEffectUsability*>", offsetofbase<CGameEffectUsabilityList, CTypedPtrList<CPtrList,CGameEffectUsability*>>()},
 	}},
 	{"CGameEffectList", {
 		{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CGameEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
@@ -322,8 +370,32 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CGameButtonList", {
 		{"CTypedPtrList<CPtrList,CButtonData*>", offsetofbase<CGameButtonList, CTypedPtrList<CPtrList,CButtonData*>>()},
 	}},
+	{"CGameAbilityList", {
+		{"CTypedPtrArray<CPtrArray,CAbilityData*>", offsetofbase<CGameAbilityList, CTypedPtrArray<CPtrArray,CAbilityData*>>()},
+	}},
+	{"CFile", {
+		{"CObject", offsetofbase<CFile, CObject>()},
+	}},
+	{"CException", {
+		{"CObject", offsetofbase<CException, CObject>()},
+	}},
+	{"CFileException", {
+		{"CException", offsetofbase<CFileException, CException>()},
+	}},
 	{"CDWordArray", {
 		{"CObject", offsetofbase<CDWordArray, CObject>()},
+	}},
+	{"CCriticalEntryList", {
+		{"CTypedPtrList<CPtrList,CCriticalEntry*>", offsetofbase<CCriticalEntryList, CTypedPtrList<CPtrList,CCriticalEntry*>>()},
+	}},
+	{"CContingencyList", {
+		{"CTypedPtrList<CPtrList,CContingency*>", offsetofbase<CContingencyList, CTypedPtrList<CPtrList,CContingency*>>()},
+	}},
+	{"CColorRanges", {
+		{"CTypedPtrList<CPtrList,CColorRange*>", offsetofbase<CColorRanges, CTypedPtrList<CPtrList,CColorRange*>>()},
+	}},
+	{"CColorEffects", {
+		{"CTypedPtrList<CPtrList,CColorEffect*>", offsetofbase<CColorEffects, CTypedPtrList<CPtrList,CColorEffect*>>()},
 	}},
 	{"CCallResult<CSteam,CreateItemResult_t>", {
 		{"CCallbackBase", offsetofbase<CCallResult<CSteam,CreateItemResult_t>, CCallbackBase>()},
@@ -337,50 +409,8 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t>", {
 		{"CCallbackBase", offsetofbase<CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t>, CCallbackBase>()},
 	}},
-	{"CVidTile", {
-		{"CVidImage", offsetofbase<CVidTile, CVidImage>()},
-	}},
-	{"CGameStatsRes", {
-		{"CObject", offsetofbase<CGameStatsRes, CObject>()},
-	}},
-	{"CDerivedStats", {
-		{"CDerivedStatsTemplate", offsetofbase<CDerivedStats, CDerivedStatsTemplate>()},
-	}},
-	{"CVariable", {
-		{"CAreaVariable", offsetofbase<CVariable, CAreaVariable>()},
-	}},
-	{"CException", {
-		{"CObject", offsetofbase<CException, CObject>()},
-	}},
-	{"CFileException", {
-		{"CException", offsetofbase<CFileException, CException>()},
-	}},
-	{"CFile", {
-		{"CObject", offsetofbase<CFile, CObject>()},
-	}},
-	{"CMapStringToString", {
-		{"CObject", offsetofbase<CMapStringToString, CObject>()},
-	}},
-	{"CSpawnList", {
-		{"CTypedPtrList<CPtrList,CSpawn*>", offsetofbase<CSpawnList, CTypedPtrList<CPtrList,CSpawn*>>()},
-	}},
-	{"CMemINISection", {
-		{"CTypedPtrList<CPtrList,CMemINIValue*>", offsetofbase<CMemINISection, CTypedPtrList<CPtrList,CMemINIValue*>>()},
-	}},
-	{"CMemINI", {
-		{"CTypedPtrList<CPtrList,void*>", offsetofbase<CMemINI, CTypedPtrList<CPtrList,void*>>()},
-	}},
-	{"CSpawnPointVar", {
-		{"CSpawnVar", offsetofbase<CSpawnPointVar, CSpawnVar>()},
-	}},
-	{"CStringList", {
-		{"CObject", offsetofbase<CStringList, CObject>()},
-	}},
-	{"CPoint", {
-		{"tagPOINT", offsetofbase<CPoint, tagPOINT>()},
-	}},
-	{"EEex_CWarp", {
-		{"CObject", offsetofbase<CWarp, CObject>()},
+	{"CBounceList", {
+		{"CTypedPtrList<CPtrList,CBounceEntry*>", offsetofbase<CBounceList, CTypedPtrList<CPtrList,CBounceEntry*>>()},
 	}},
 	{"EEex_CBaldurEngine", {
 		{"EEex_CWarp", offsetofbase<CBaldurEngine, CWarp>()},
@@ -388,11 +418,11 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CDungeonMaster", {
 		{"EEex_CBaldurEngine", offsetofbase<CDungeonMaster, CBaldurEngine>()},
 	}},
-	{"EEex_CScreenWizSpell", {
-		{"EEex_CBaldurEngine", offsetofbase<CScreenWizSpell, CBaldurEngine>()},
+	{"CApplyEffectList", {
+		{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CApplyEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
 	}},
-	{"EEex_CScreenPriestSpell", {
-		{"EEex_CBaldurEngine", offsetofbase<CScreenPriestSpell, CBaldurEngine>()},
+	{"CVidTile", {
+		{"CVidImage", offsetofbase<CVidTile, CVidImage>()},
 	}},
 	{"EEex_CScreenMovies", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenMovies, CBaldurEngine>()},
@@ -400,125 +430,39 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenConnection", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenConnection, CBaldurEngine>()},
 	}},
+	{"CGameStatsRes", {
+		{"CObject", offsetofbase<CGameStatsRes, CObject>()},
+	}},
+	{"EEex_CScreenWizSpell", {
+		{"EEex_CBaldurEngine", offsetofbase<CScreenWizSpell, CBaldurEngine>()},
+	}},
+	{"EEex_CScreenPriestSpell", {
+		{"EEex_CBaldurEngine", offsetofbase<CScreenPriestSpell, CBaldurEngine>()},
+	}},
 	{"EEex_CScreenCharacter", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenCharacter, CBaldurEngine>()},
-	}},
-	{"CRect", {
-		{"tagRECT", offsetofbase<CRect, tagRECT>()},
-	}},
-	{"CObjectMarker", {
-		{"CGameObject", offsetofbase<CObjectMarker, CGameObject>()},
-	}},
-	{"CGameSpawning", {
-		{"CGameObject", offsetofbase<CGameSpawning, CGameObject>()},
-	}},
-	{"CSize", {
-		{"tagSIZE", offsetofbase<CSize, tagSIZE>()},
-	}},
-	{"CResWebm", {
-		{"CRes", offsetofbase<CResWebm, CRes>()},
-	}},
-	{"CResWave", {
-		{"CRes", offsetofbase<CResWave, CRes>()},
-	}},
-	{"CSoundImp", {
-		{"CObject", offsetofbase<CSoundImp, CObject>()},
-		{"CResHelper<CResWave,4>", offsetofbase<CSoundImp, CResHelper<CResWave,4>>()},
-	}},
-	{"CSound", {
-		{"CObject", offsetofbase<CSound, CObject>()},
-		{"CResHelper<CResWave,4>", offsetofbase<CSound, CResHelper<CResWave,4>>()},
-	}},
-	{"CProjectile", {
-		{"CGameObject", offsetofbase<CProjectile, CGameObject>()},
-	}},
-	{"CGameAIBase", {
-		{"CGameObject", offsetofbase<CGameAIBase, CGameObject>()},
-	}},
-	{"CGameAIArea", {
-		{"CGameAIBase", offsetofbase<CGameAIArea, CGameAIBase>()},
-	}},
-	{"CGameAIGame", {
-		{"CGameAIBase", offsetofbase<CGameAIGame, CGameAIBase>()},
-	}},
-	{"CGameDoor", {
-		{"CGameAIBase", offsetofbase<CGameDoor, CGameAIBase>()},
-	}},
-	{"CGameTiledObject", {
-		{"CGameAIBase", offsetofbase<CGameTiledObject, CGameAIBase>()},
-	}},
-	{"CGameTrigger", {
-		{"CGameAIBase", offsetofbase<CGameTrigger, CGameAIBase>()},
-	}},
-	{"CGameSound", {
-		{"CGameObject", offsetofbase<CGameSound, CGameObject>()},
-	}},
-	{"CGameTemporal", {
-		{"CGameObject", offsetofbase<CGameTemporal, CGameObject>()},
-	}},
-	{"CGameEffect", {
-		{"CGameEffectBase", offsetofbase<CGameEffect, CGameEffectBase>()},
-	}},
-	{"CGameEffectUsability", {
-		{"CGameEffect", offsetofbase<CGameEffectUsability, CGameEffect>()},
-	}},
-	{"CResWED", {
-		{"CRes", offsetofbase<CResWED, CRes>()},
-	}},
-	{"CResTileSet", {
-		{"CRes", offsetofbase<CResTileSet, CRes>()},
-	}},
-	{"CResText", {
-		{"CRes", offsetofbase<CResText, CRes>()},
 	}},
 	{"CAIIdList", {
 		{"CResHelper<CResText,1008>", offsetofbase<CAIIdList, CResHelper<CResText,1008>>()},
 	}},
+	{"CGameFile", {
+		{"CResHelper<CResGame,1013>", offsetofbase<CGameFile, CResHelper<CResGame,1013>>()},
+	}},
 	{"C2DArray", {
 		{"CResHelper<CResText,1012>", offsetofbase<C2DArray, CResHelper<CResText,1012>>()},
-	}},
-	{"CResSpell", {
-		{"CRes", offsetofbase<CResSpell, CRes>()},
-	}},
-	{"CSpell", {
-		{"CResHelper<CResSpell,1006>", offsetofbase<CSpell, CResHelper<CResSpell,1006>>()},
-	}},
-	{"CResPVR", {
-		{"CRes", offsetofbase<CResPVR, CRes>()},
-	}},
-	{"CResMosaic", {
-		{"CRes", offsetofbase<CResMosaic, CRes>()},
 	}},
 	{"CVidMosaic", {
 		{"CVidImage", offsetofbase<CVidMosaic, CVidImage>()},
 		{"CResHelper<CResMosaic,1004>", offsetofbase<CVidMosaic, CResHelper<CResMosaic,1004>>()},
 	}},
-	{"CResItem", {
-		{"CRes", offsetofbase<CResItem, CRes>()},
-	}},
-	{"CItem", {
-		{"CResHelper<CResItem,1005>", offsetofbase<CItem, CResHelper<CResItem,1005>>()},
-	}},
-	{"CResGame", {
-		{"CRes", offsetofbase<CResGame, CRes>()},
-	}},
-	{"CGameFile", {
-		{"CResHelper<CResGame,1013>", offsetofbase<CGameFile, CResHelper<CResGame,1013>>()},
-	}},
-	{"CResFont", {
-		{"CRes", offsetofbase<CResFont, CRes>()},
-	}},
 	{"CVidFont", {
 		{"CResHelper<CResFont,1034>", offsetofbase<CVidFont, CResHelper<CResFont,1034>>()},
 	}},
-	{"EEex_CScreenMap", {
-		{"EEex_CBaldurEngine", offsetofbase<CScreenMap, CBaldurEngine>()},
+	{"EEex_CScreenInventory", {
+		{"EEex_CBaldurEngine", offsetofbase<CScreenInventory, CBaldurEngine>()},
 	}},
-	{"EEex_CScreenWorld", {
-		{"EEex_CBaldurEngine", offsetofbase<CScreenWorld, CBaldurEngine>()},
-	}},
-	{"EEex_CScreenChapter", {
-		{"EEex_CBaldurEngine", offsetofbase<CScreenChapter, CBaldurEngine>()},
+	{"EEex_CScreenJournal", {
+		{"EEex_CBaldurEngine", offsetofbase<CScreenJournal, CBaldurEngine>()},
 	}},
 	{"EEex_CScreenCreateChar", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenCreateChar, CBaldurEngine>()},
@@ -529,14 +473,11 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenDLC", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenDLC, CBaldurEngine>()},
 	}},
-	{"EEex_CScreenInventory", {
-		{"EEex_CBaldurEngine", offsetofbase<CScreenInventory, CBaldurEngine>()},
-	}},
-	{"EEex_CScreenJournal", {
-		{"EEex_CBaldurEngine", offsetofbase<CScreenJournal, CBaldurEngine>()},
-	}},
 	{"EEex_CScreenLoad", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenLoad, CBaldurEngine>()},
+	}},
+	{"EEex_CScreenMap", {
+		{"EEex_CBaldurEngine", offsetofbase<CScreenMap, CBaldurEngine>()},
 	}},
 	{"EEex_CScreenMultiPlayer", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenMultiPlayer, CBaldurEngine>()},
@@ -550,15 +491,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenStart", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenStart, CBaldurEngine>()},
 	}},
-	{"EEex_CScreenStore", {
-		{"EEex_CBaldurEngine", offsetofbase<CScreenStore, CBaldurEngine>()},
-	}},
-	{"EEex_CBaldurProjector", {
-		{"EEex_CBaldurEngine", offsetofbase<CBaldurProjector, CBaldurEngine>()},
-	}},
-	{"CResCell", {
-		{"CRes", offsetofbase<CResCell, CRes>()},
-	}},
 	{"CVidCell", {
 		{"CVidImage", offsetofbase<CVidCell, CVidImage>()},
 		{"CResHelper<CResCell,1000>", offsetofbase<CVidCell, CResHelper<CResCell,1000>>()},
@@ -566,20 +498,8 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenWorldMap", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenWorldMap, CBaldurEngine>()},
 	}},
-	{"CGameContainer", {
-		{"CGameAIBase", offsetofbase<CGameContainer, CGameAIBase>()},
-	}},
-	{"EEex_CBaldurChitin", {
-		{"EEex_CChitin", offsetofbase<CBaldurChitin, CChitin>()},
-	}},
-	{"EEex_CInfToolTip", {
-		{"CVidCell", offsetofbase<CInfToolTip, CVidCell>()},
-	}},
 	{"CVidCellFont", {
 		{"CVidCell", offsetofbase<CVidCellFont, CVidCell>()},
-	}},
-	{"CResBitmap", {
-		{"CRes", offsetofbase<CResBitmap, CRes>()},
 	}},
 	{"CVidBitmap", {
 		{"CVidImage", offsetofbase<CVidBitmap, CVidImage>()},
@@ -588,13 +508,93 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CScreenAI", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenAI, CBaldurEngine>()},
 	}},
-	{"CGameSprite", {
-		{"CGameAIBase", offsetofbase<CGameSprite, CGameAIBase>()},
+	{"CSpell", {
+		{"CResHelper<CResSpell,1006>", offsetofbase<CSpell, CResHelper<CResSpell,1006>>()},
+	}},
+	{"CSoundImp", {
+		{"CObject", offsetofbase<CSoundImp, CObject>()},
+		{"CResHelper<CResWave,4>", offsetofbase<CSoundImp, CResHelper<CResWave,4>>()},
+	}},
+	{"CSound", {
+		{"CObject", offsetofbase<CSound, CObject>()},
+		{"CResHelper<CResWave,4>", offsetofbase<CSound, CResHelper<CResWave,4>>()},
+	}},
+	{"EEex_CScreenChapter", {
+		{"EEex_CBaldurEngine", offsetofbase<CScreenChapter, CBaldurEngine>()},
+	}},
+	{"EEex_CInfToolTip", {
+		{"CVidCell", offsetofbase<CInfToolTip, CVidCell>()},
+	}},
+	{"EEex_CScreenWorld", {
+		{"EEex_CBaldurEngine", offsetofbase<CScreenWorld, CBaldurEngine>()},
+	}},
+	{"CItem", {
+		{"CResHelper<CResItem,1005>", offsetofbase<CItem, CResHelper<CResItem,1005>>()},
+	}},
+	{"CGameEffect", {
+		{"CGameEffectBase", offsetofbase<CGameEffect, CGameEffectBase>()},
+	}},
+	{"CGameEffectUsability", {
+		{"CGameEffect", offsetofbase<CGameEffectUsability, CGameEffect>()},
+	}},
+	{"CDerivedStats", {
+		{"CDerivedStatsTemplate", offsetofbase<CDerivedStats, CDerivedStatsTemplate>()},
+	}},
+	{"EEex_CBaldurProjector", {
+		{"EEex_CBaldurEngine", offsetofbase<CBaldurProjector, CBaldurEngine>()},
+	}},
+	{"CVariable", {
+		{"CAreaVariable", offsetofbase<CVariable, CAreaVariable>()},
+	}},
+	{"EEex_CScreenStore", {
+		{"EEex_CBaldurEngine", offsetofbase<CScreenStore, CBaldurEngine>()},
+	}},
+	{"CGameFireball3d", {
+		{"CGameObject", offsetofbase<CGameFireball3d, CGameObject>()},
+	}},
+	{"CProjectile", {
+		{"CGameObject", offsetofbase<CProjectile, CGameObject>()},
+	}},
+	{"CObjectMarker", {
+		{"CGameObject", offsetofbase<CObjectMarker, CGameObject>()},
+	}},
+	{"CGameTemporal", {
+		{"CGameObject", offsetofbase<CGameTemporal, CGameObject>()},
 	}},
 	{"CGameStatic", {
 		{"CGameObject", offsetofbase<CGameStatic, CGameObject>()},
 	}},
-	{"CGameFireball3d", {
-		{"CGameObject", offsetofbase<CGameFireball3d, CGameObject>()},
+	{"CGameSpawning", {
+		{"CGameObject", offsetofbase<CGameSpawning, CGameObject>()},
+	}},
+	{"CGameSound", {
+		{"CGameObject", offsetofbase<CGameSound, CGameObject>()},
+	}},
+	{"CGameAIBase", {
+		{"CGameObject", offsetofbase<CGameAIBase, CGameObject>()},
+	}},
+	{"CGameAIArea", {
+		{"CGameAIBase", offsetofbase<CGameAIArea, CGameAIBase>()},
+	}},
+	{"CGameTrigger", {
+		{"CGameAIBase", offsetofbase<CGameTrigger, CGameAIBase>()},
+	}},
+	{"CGameTiledObject", {
+		{"CGameAIBase", offsetofbase<CGameTiledObject, CGameAIBase>()},
+	}},
+	{"CGameSprite", {
+		{"CGameAIBase", offsetofbase<CGameSprite, CGameAIBase>()},
+	}},
+	{"CGameDoor", {
+		{"CGameAIBase", offsetofbase<CGameDoor, CGameAIBase>()},
+	}},
+	{"CGameContainer", {
+		{"CGameAIBase", offsetofbase<CGameContainer, CGameAIBase>()},
+	}},
+	{"CGameAIGame", {
+		{"CGameAIBase", offsetofbase<CGameAIGame, CGameAIBase>()},
+	}},
+	{"EEex_CBaldurChitin", {
+		{"EEex_CChitin", offsetofbase<CBaldurChitin, CChitin>()},
 	}},
 };
