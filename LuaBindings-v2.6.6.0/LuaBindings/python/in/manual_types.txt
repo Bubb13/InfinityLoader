@@ -126,6 +126,54 @@ struct ConstCharString
 	}
 };
 
+template<int length>
+struct LCharString
+{
+	nobinding Array<primitive char, length> data;
+
+	char getChar(int index)
+	{
+		if (index < 0 || index >= length)
+		{
+			return NULL;
+		}
+		return data[index];
+	}
+
+	void setChar(int index, char toSet)
+	{
+		if (index < 0 || index >= length)
+		{
+			return;
+		}
+		data[index] = toSet;
+	}
+
+	void set(primitive const char* toSet)
+	{
+		size_t cpyLen = strlen(toSet);
+		if (cpyLen > length)
+			cpyLen = length;
+		memcpy((void*)&data, toSet, cpyLen);
+		if (cpyLen < length)
+			memset((void*)(&data + cpyLen), 0, length - cpyLen);
+	}
+
+	$custom_return_1 get()
+	{
+		char* localCopy = (char*)alloca(length + 1);
+		int i = 0;
+		for (; i < length; ++i) {
+			char readVal = data[i];
+			if (readVal == '\0')
+				break;
+			localCopy[i] = readVal;
+		}
+		localCopy[i] = '\0';
+		p_lua_pushstring(L, localCopy);
+	}
+};
+
 template<class POINTED_TO_TYPE>
 struct Pointer
 {
@@ -189,7 +237,7 @@ struct Array
 		data[index] = value;
 	}
 
-	$nobinding T operator[](int index)
+	$nobinding T& operator[](int index)
 	{
 		return data[index];
 	}
@@ -584,11 +632,29 @@ struct CResRef
 		int i = 0;
 		for (; i < sizeof(m_resRef); ++i) {
 			char readVal = m_resRef[i];
-			if (readVal == '\0') break;
+			if (readVal == '\0')
+				break;
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
 		p_lua_pushstring(L, localCopy);
+	}
+
+	void set(primitive const char* newVal)
+	{
+		int i = 0;
+		for (; i < sizeof(m_resRef); ++i) {
+			char readVal = newVal[i];
+			if (readVal >= 97 && readVal <= 122) {
+				readVal -= 32;
+			}
+			m_resRef[i] = readVal;
+			if (readVal == '\0')
+				break;
+		}
+		for (; i < sizeof(m_resRef); ++i) {
+			m_resRef[i] = '\0';
+		}
 	}
 };
 
@@ -600,6 +666,11 @@ struct CAIObjectType
 {
 	static CAIObjectType NOONE;
 	void Set(CAIObjectType* that);
+};
+
+struct CGameEffect : CGameEffectBase
+{
+	static CGameEffect* DecodeEffect(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
 };
 
 struct CObList : CObject

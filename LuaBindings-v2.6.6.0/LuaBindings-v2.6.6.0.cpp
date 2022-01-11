@@ -65,6 +65,14 @@ int memsetUserDataLua(lua_State* L) {
     return 0;
 }
 
+int newUserDataLua(lua_State* L) {
+    const char* userTypeStr = p_lua_tostring(L, 1);
+    p_lua_getglobal(L, userTypeStr);
+    p_lua_getfield(L, -1, "sizeof");
+    p_tolua_pushusertype_nocast(L, p_malloc(p_lua_tointeger(L, -1)), userTypeStr);
+    return 1;
+}
+
 int pointerToUserDataLua(lua_State * g_lua) {
     void* ptr = reinterpret_cast<void*>(p_lua_tointeger(g_lua, 1));
     if (!ptr) {
@@ -255,6 +263,8 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     exposeToLua(L, "EEex_GetUT", getUserTypeLua);
     exposeToLua(L, "EEex_MemsetUD", memsetUserDataLua);
     exposeToLua(L, "EEex_MemsetUserData", memsetUserDataLua);
+    exposeToLua(L, "EEex_NewUserData", newUserDataLua);
+    exposeToLua(L, "EEex_NewUD", newUserDataLua);
     exposeToLua(L, "EEex_PointerToUserData", pointerToUserDataLua);
     exposeToLua(L, "EEex_PtrToUD", pointerToUserDataLua);
     exposeToLua(L, "EEex_UDToLightUD", userDataToLightUserDataLua);

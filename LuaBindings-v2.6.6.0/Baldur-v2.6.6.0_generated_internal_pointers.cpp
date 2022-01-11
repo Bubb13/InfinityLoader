@@ -26,6 +26,7 @@ type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
 type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
 type_CInfGame_SetState p_CInfGame_SetState;
 type_CInfGame_SetIconIndex p_CInfGame_SetIconIndex;
+type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
 type_CAIObjectType_Set p_CAIObjectType_Set;
 CAIObjectType* CAIObjectType::p_NOONE;
 type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
@@ -60,6 +61,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&p_CInfButtonArray_SetQuickSlot)},
 	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&p_CInfGame_SetState)},
 	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&p_CInfGame_SetIconIndex)},
+	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&p_CGameEffect_DecodeEffect)},
 	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&p_CAIObjectType_Set)},
 	std::pair{TEXT("CAIObjectType::NOONE"), reinterpret_cast<void**>(&CAIObjectType::p_NOONE)},
 	std::pair{TEXT("CGameSprite::GetKitMask"), reinterpret_cast<void**>(&p_CGameSprite_GetKitMask)},

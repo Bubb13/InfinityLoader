@@ -5685,7 +5685,7 @@ struct Array
 		data[index] = value;
 	}
 
-	T operator[](int index)
+	T& operator[](int index)
 	{
 		return data[index];
 	}
@@ -6070,26 +6070,53 @@ union SDL_Event
 	Array<unsigned __int8,56> padding;
 };
 
-#pragma pack(push, 1)
-struct Item_effect_st
+template<int length>
+struct LCharString
 {
-	unsigned __int16 effectID;
-	unsigned __int8 targetType;
-	unsigned __int8 spellLevel;
-	int effectAmount;
-	unsigned int dwFlags;
-	unsigned __int16 durationType;
-	unsigned int duration;
-	unsigned __int8 probabilityUpper;
-	unsigned __int8 probabilityLower;
-	Array<unsigned __int8,8> res;
-	unsigned int numDice;
-	unsigned int diceSize;
-	unsigned int savingThrow;
-	int saveMod;
-	unsigned int special;
+	Array<char,length> data;
+
+	char getChar(int index)
+	{
+		if (index < 0 || index >= length)
+		{
+			return NULL;
+		}
+		return data[index];
+	}
+
+	void setChar(int index, char toSet)
+	{
+		if (index < 0 || index >= length)
+		{
+			return;
+		}
+		data[index] = toSet;
+	}
+
+	void set(const char* toSet)
+	{
+		size_t cpyLen = strlen(toSet);
+		if (cpyLen > length)
+			cpyLen = length;
+		memcpy((void*)&data, toSet, cpyLen);
+		if (cpyLen < length)
+			memset((void*)(&data + cpyLen), 0, length - cpyLen);
+	}
+
+	void get(lua_State* L)
+	{
+		char* localCopy = (char*)alloca(length + 1);
+		int i = 0;
+		for (; i < length; ++i) {
+			char readVal = data[i];
+			if (readVal == '\0')
+				break;
+			localCopy[i] = readVal;
+		}
+		localCopy[i] = '\0';
+		p_lua_pushstring(L, localCopy);
+	}
 };
-#pragma pack(pop)
 
 #pragma pack(push, 1)
 struct Item_ability_st
@@ -6754,11 +6781,29 @@ struct CResRef
 		int i = 0;
 		for (; i < sizeof(m_resRef); ++i) {
 			char readVal = m_resRef[i];
-			if (readVal == '\0') break;
+			if (readVal == '\0')
+				break;
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
 		p_lua_pushstring(L, localCopy);
+	}
+
+	void set(const char* newVal)
+	{
+		int i = 0;
+		for (; i < sizeof(m_resRef); ++i) {
+			char readVal = newVal[i];
+			if (readVal >= 97 && readVal <= 122) {
+				readVal -= 32;
+			}
+			m_resRef[i] = readVal;
+			if (readVal == '\0')
+				break;
+		}
+		for (; i < sizeof(m_resRef); ++i) {
+			m_resRef[i] = '\0';
+		}
 	}
 };
 
@@ -6904,6 +6949,27 @@ struct Spell_ability_st
 	unsigned __int16 usageFlags;
 	unsigned __int16 missileType;
 };
+
+#pragma pack(push, 1)
+struct Item_effect_st
+{
+	unsigned __int16 effectID;
+	unsigned __int8 targetType;
+	unsigned __int8 spellLevel;
+	int effectAmount;
+	unsigned int dwFlags;
+	unsigned __int16 durationType;
+	unsigned int duration;
+	unsigned __int8 probabilityUpper;
+	unsigned __int8 probabilityLower;
+	CResRef res;
+	unsigned int numDice;
+	unsigned int diceSize;
+	unsigned int savingThrow;
+	int saveMod;
+	unsigned int special;
+};
+#pragma pack(pop)
 
 struct CWorldMap
 {
@@ -10138,12 +10204,15 @@ struct CGameEffectBase
 	unsigned int m_sourceFlags;
 	unsigned int m_projectileType;
 	int m_slotNum;
-	Array<char,32> m_scriptName;
+	LCharString<32> m_scriptName;
 	unsigned int m_casterLevel;
 	unsigned int m_firstCall;
 	unsigned int m_secondaryType;
 	Array<unsigned int,15> m_pad;
 };
+
+typedef CGameEffect* (*type_CGameEffect_DecodeEffect)(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
+extern type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
 
 struct CGameEffect : CGameEffectBase
 {
@@ -10172,6 +10241,11 @@ struct CGameEffect : CGameEffectBase
 	int m_compareIdAndResrefOnly;
 	CSound m_sound;
 	int m_sourceTarget;
+
+	static CGameEffect* DecodeEffect(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget)
+	{
+		return p_CGameEffect_DecodeEffect(effect, source, sourceID, target, sourceTarget);
+	}
 
 	virtual void virtual_CGameEffect_Destructor()
 	{

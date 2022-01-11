@@ -395,6 +395,7 @@ class TypeReference:
 		self.group: Group = None
 		self.sourceGroup: Group = None
 		self.pointerLevel: int = 0
+		self.reference: bool = False
 		self.arrayParts: list = []
 		self.bitFieldPart: str = None
 		self.templateTypes: list[TypeReference] = []
@@ -667,8 +668,11 @@ class TypeReference:
 			parts.pop()
 			parts.append(">")
 
-		for _ in range(self.getUserTypePointerLevel() + pointerLevelAdjust):
+		for _ in range(self.getUserTypePointerLevel() + (pointerLevelAdjust if not self.reference else pointerLevelAdjust - 1)):
 			parts.append("*")
+
+		if self.reference:
+			parts.append("&")
 
 		return "".join(parts)
 
@@ -1069,7 +1073,7 @@ variablePatternLocal = "^\t((?:(?:nobinding|static)\s+)*)(?:__unaligned\s+){0,1}
 
 def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
-	functionImplementationMatch: Match = re.match("^\s*(?!typedef)(\$nobinding\s+){0,1}(?:(static)\s+){0,1}([, _a-zA-Z0-9*:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)(?:(;)){0,1}$", line)
+	functionImplementationMatch: Match = re.match("^\s*(?!typedef)(\$nobinding\s+){0,1}(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)(?:(;)){0,1}$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -2236,7 +2240,12 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 				for templateType in splitKeepBrackets(parts, [","]):
 					typeRef.templateTypes.append(defineTypeRef(mainState, sourceGroup, templateType, TypeRefSourceType.VARIABLE))
 
-		elif split == "*" or split == "&":
+		elif split in ("*", "&"):
+
+			if split == "&":
+				assert not typeRef.reference, "Cannot handle rvalue reference"
+				typeRef.reference = True
+
 			typeRef.pointerLevel += 1
 		else:
 			doBaseProcess(split)
