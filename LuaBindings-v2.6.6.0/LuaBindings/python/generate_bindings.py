@@ -2423,12 +2423,12 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 		groupOpenData.appliedHeaderName = group.getAppliedName(mainState, templateMappingTracker, templateTypeMode=TemplateTypeMode.HEADER)
 		groupNameStrIden, _ = re.subn("[^a-zA-Z0-9_]", "_", groupOpenData.appliedNameUsertypeNoOverride)
 
-		# Writing getReference() function which returns the userdata's internal pointer
+		# Writing getInternalReference() function which returns the userdata's internal pointer
 		if group != globalGroup and group.groupType != "enum" and group.name not in ("Pointer", "Array"):
 	
 			getTypeFunc = OpenFunctionData()
-			getTypeFunc.functionBindingName = f"tolua_function_{groupNameStrIden}_getReference"
-			getTypeFunc.functionName = "getReference"
+			getTypeFunc.functionBindingName = f"tolua_function_{groupNameStrIden}_getInternalReference"
+			getTypeFunc.functionName = "getInternalReference"
 
 			out.write(f"static int {getTypeFunc.functionBindingName}(lua_State* L)\n")
 			out.write("{\n")

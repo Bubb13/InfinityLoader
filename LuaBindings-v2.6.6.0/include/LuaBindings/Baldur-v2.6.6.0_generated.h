@@ -9,6 +9,7 @@
 
 struct ALCcontext_struct;
 struct ALCdevice_struct;
+struct C2DArray;
 struct CAIAction;
 struct CAIObjectType;
 struct CAIResponse;
@@ -58,6 +59,7 @@ struct CSequenceSound;
 struct CSound;
 struct CSoundMixerImp;
 struct CSpawn;
+struct CString;
 struct CUIControlTextDisplay;
 struct CVVCHashEntry;
 struct CVariable;
@@ -3916,9 +3918,34 @@ struct IDPPeer
 	}
 };
 
+struct CVidPoly
+{
+	CVIDPOLY_VERTEX* m_pVertices;
+	int m_nVertices;
+	_EdgeDescription* m_pET;
+	_EdgeDescription* m_pAET;
+	void (__fastcall *m_pDrawHLineFunction)(CVidPoly*, void*, int, int, unsigned int, const CRect*, const CPoint*);
+};
+
+typedef void (*type_CString_ConstructFromChars)(CString* pThis, const char* lpsz);
+extern type_CString_ConstructFromChars p_CString_ConstructFromChars;
+
+typedef void (*type_CString_Destruct)(CString* pThis);
+extern type_CString_Destruct p_CString_Destruct;
+
 struct CString
 {
 	char* m_pchData;
+
+	void ConstructFromChars(const char* lpsz)
+	{
+		p_CString_ConstructFromChars(this, lpsz);
+	}
+
+	void Destruct()
+	{
+		p_CString_Destruct(this);
+	}
 };
 
 struct CAIId
@@ -3954,15 +3981,6 @@ struct CSpawnVar
 
 struct CSpawnPointVar : CSpawnVar
 {
-};
-
-struct CVidPoly
-{
-	CVIDPOLY_VERTEX* m_pVertices;
-	int m_nVertices;
-	_EdgeDescription* m_pET;
-	_EdgeDescription* m_pAET;
-	void (__fastcall *m_pDrawHLineFunction)(CVidPoly*, void*, int, int, unsigned int, const CRect*, const CPoint*);
 };
 
 struct CSpawnPoint
@@ -5651,6 +5669,32 @@ struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 		void (__fastcall *CObject_Destructor)(CObject*);
 	};
 
+};
+
+template<class T>
+struct ArrayPointer
+{
+	T* data;
+
+	T get(int index)
+	{
+		return data[index];
+	}
+
+	T* getReference(int index)
+	{
+		return &data[index];
+	}
+
+	void set(int index, T value)
+	{
+		data[index] = value;
+	}
+
+	T& operator[](int index)
+	{
+		return data[index];
+	}
 };
 
 template<class T, int size>
@@ -7373,6 +7417,48 @@ struct CResHelper
 	CResRef cResRef;
 };
 
+typedef void (*type_C2DArray_Construct)(C2DArray* pThis);
+extern type_C2DArray_Construct p_C2DArray_Construct;
+
+typedef void (*type_C2DArray_Load)(C2DArray* pThis, const CResRef* res);
+extern type_C2DArray_Load p_C2DArray_Load;
+
+typedef const CString* (*type_C2DArray_GetAtLabels)(C2DArray* pThis, const CString* nX, const CString* nY);
+extern type_C2DArray_GetAtLabels p_C2DArray_GetAtLabels;
+
+typedef void (*type_C2DArray_Destruct)(C2DArray* pThis);
+extern type_C2DArray_Destruct p_C2DArray_Destruct;
+
+struct C2DArray : CResHelper<CResText,1012>
+{
+	ArrayPointer<CString> m_pNamesX;
+	ArrayPointer<CString> m_pNamesY;
+	ArrayPointer<CString> m_pArray;
+	CString m_default;
+	__int16 m_nSizeX;
+	__int16 m_nSizeY;
+
+	void Construct()
+	{
+		p_C2DArray_Construct(this);
+	}
+
+	void Load(const CResRef* res)
+	{
+		p_C2DArray_Load(this, res);
+	}
+
+	const CString* GetAtLabels(const CString* nX, const CString* nY)
+	{
+		return p_C2DArray_GetAtLabels(this, nX, nY);
+	}
+
+	void Destruct()
+	{
+		p_C2DArray_Destruct(this);
+	}
+};
+
 struct CAIIdList : CResHelper<CResText,1008>
 {
 	struct vtbl
@@ -7389,37 +7475,6 @@ struct CAIIdList : CResHelper<CResText,1008>
 	virtual void virtual_CAIIdList_Destructor()
 	{
 	}
-};
-
-struct CAIScriptFile
-{
-	__int16 m_parseMode;
-	int m_lineNumber;
-	CAIScript* m_curScript;
-	CAIResponseSet* m_curResponseSet;
-	CAICondition* m_curCondition;
-	CAIResponse* m_curResponse;
-	CString m_errors;
-	CFile m_file;
-	CString source;
-	CString m_decompiledText;
-	CAIIdList m_actions;
-	CAIIdList m_triggers;
-	CAIIdList m_objects;
-};
-
-struct CGameFile : CResHelper<CResGame,1013>
-{
-};
-
-struct C2DArray : CResHelper<CResText,1012>
-{
-	CString* m_pNamesX;
-	CString* m_pNamesY;
-	CString* m_pArray;
-	CString m_default;
-	__int16 m_nSizeX;
-	__int16 m_nSizeY;
 };
 
 struct CRuleTables
@@ -7667,6 +7722,27 @@ struct CRuleTables
 	Array<unsigned int,16> m_damageStrings;
 	Array<int,56> m_speechOffsets;
 	Array<int,56> m_speechNums;
+};
+
+struct CAIScriptFile
+{
+	__int16 m_parseMode;
+	int m_lineNumber;
+	CAIScript* m_curScript;
+	CAIResponseSet* m_curResponseSet;
+	CAICondition* m_curCondition;
+	CAIResponse* m_curResponse;
+	CString m_errors;
+	CFile m_file;
+	CString source;
+	CString m_decompiledText;
+	CAIIdList m_actions;
+	CAIIdList m_triggers;
+	CAIIdList m_objects;
+};
+
+struct CGameFile : CResHelper<CResGame,1013>
+{
 };
 
 struct CVidMosaic : CVidImage, CResHelper<CResMosaic,1004>

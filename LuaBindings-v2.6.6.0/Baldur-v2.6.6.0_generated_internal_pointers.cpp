@@ -2,6 +2,8 @@
 #include "Baldur-v2.6.6.0_generated.h"
 
 type_CGameObjectArray_GetShare p_CGameObjectArray_GetShare;
+type_CString_ConstructFromChars p_CString_ConstructFromChars;
+type_CString_Destruct p_CString_Destruct;
 type_CRes_Construct p_CRes_Construct;
 type_CRes_Destruct p_CRes_Destruct;
 type_CRes_Demand p_CRes_Demand;
@@ -22,6 +24,10 @@ CResText** p_menuSrc;
 int* p_menuLength;
 CTypedPtrArray<CPtrArray,CRes*>* p_resources;
 _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
+type_C2DArray_Construct p_C2DArray_Construct;
+type_C2DArray_Load p_C2DArray_Load;
+type_C2DArray_GetAtLabels p_C2DArray_GetAtLabels;
+type_C2DArray_Destruct p_C2DArray_Destruct;
 type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
 type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
 type_CInfGame_SetState p_CInfGame_SetState;
@@ -37,6 +43,8 @@ type_CGameSprite_GetInternalButtonList p_CGameSprite_GetInternalButtonList;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameObjectArray::GetShare"), reinterpret_cast<void**>(&p_CGameObjectArray_GetShare)},
+	std::pair{TEXT("CString::ConstructFromChars"), reinterpret_cast<void**>(&p_CString_ConstructFromChars)},
+	std::pair{TEXT("CString::Destruct"), reinterpret_cast<void**>(&p_CString_Destruct)},
 	std::pair{TEXT("CRes::Construct"), reinterpret_cast<void**>(&p_CRes_Construct)},
 	std::pair{TEXT("CRes::Destruct"), reinterpret_cast<void**>(&p_CRes_Destruct)},
 	std::pair{TEXT("CRes::Demand"), reinterpret_cast<void**>(&p_CRes_Demand)},
@@ -57,6 +65,10 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("menuLength"), reinterpret_cast<void**>(&p_menuLength)},
 	std::pair{TEXT("resources"), reinterpret_cast<void**>(&p_resources)},
 	std::pair{TEXT("capture"), reinterpret_cast<void**>(&p_capture)},
+	std::pair{TEXT("C2DArray::Construct"), reinterpret_cast<void**>(&p_C2DArray_Construct)},
+	std::pair{TEXT("C2DArray::Load"), reinterpret_cast<void**>(&p_C2DArray_Load)},
+	std::pair{TEXT("C2DArray::GetAtLabels"), reinterpret_cast<void**>(&p_C2DArray_GetAtLabels)},
+	std::pair{TEXT("C2DArray::Destruct"), reinterpret_cast<void**>(&p_C2DArray_Destruct)},
 	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&p_CInfButtonArray_SetState)},
 	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&p_CInfButtonArray_SetQuickSlot)},
 	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&p_CInfGame_SetState)},

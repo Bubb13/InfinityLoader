@@ -442,14 +442,14 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenCharacter", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenCharacter, CBaldurEngine>()},
 	}},
+	{"C2DArray", {
+		{"CResHelper<CResText,1012>", offsetofbase<C2DArray, CResHelper<CResText,1012>>()},
+	}},
 	{"CAIIdList", {
 		{"CResHelper<CResText,1008>", offsetofbase<CAIIdList, CResHelper<CResText,1008>>()},
 	}},
 	{"CGameFile", {
 		{"CResHelper<CResGame,1013>", offsetofbase<CGameFile, CResHelper<CResGame,1013>>()},
-	}},
-	{"C2DArray", {
-		{"CResHelper<CResText,1012>", offsetofbase<C2DArray, CResHelper<CResText,1012>>()},
 	}},
 	{"CVidMosaic", {
 		{"CVidImage", offsetofbase<CVidMosaic, CVidImage>()},

@@ -243,6 +243,32 @@ struct Array
 	}
 };
 
+template<class T>
+struct ArrayPointer
+{
+	nobinding T* data;
+
+	T get(int index)
+	{
+		return data[index];
+	}
+
+	T* getReference(int index)
+	{
+		return &data[index];
+	}
+
+	void set(int index, T value)
+	{
+		data[index] = value;
+	}
+
+	$nobinding T& operator[](int index)
+	{
+		return data[index];
+	}
+};
+
 struct UnmappedUserType
 {
 	intptr_t toPointer()
@@ -662,6 +688,14 @@ struct CResRef
 // Local Function Bindings //
 /////////////////////////////
 
+struct C2DArray : CResHelper<CResText,1012>
+{
+	void Construct();
+	void Load(const CResRef* res);
+	const CString* GetAtLabels(const CString* nX, const CString* nY);
+	void Destruct();
+};
+
 struct CAIObjectType
 {
 	static CAIObjectType NOONE;
@@ -710,6 +744,12 @@ struct CInfGame
 {
 	void SetState(__int16 state, bool allowDead);
 	void SetIconIndex(unsigned __int8 iconIndex);
+};
+
+struct CString
+{
+	void ConstructFromChars(primitive const char* lpsz);
+	void Destruct();
 };
 
 //////////////////////////////
