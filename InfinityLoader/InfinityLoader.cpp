@@ -203,6 +203,10 @@ DWORD startGame() {
 
 	STARTUPINFO startupInfo{};
 	startupInfo.cb = sizeof(STARTUPINFO);
+	startupInfo.dwFlags = STARTF_USESTDHANDLES;
+	startupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+	startupInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	startupInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
 	PROCESS_INFORMATION processInfo{};
 	DWORD lastError = ERROR_SUCCESS;
