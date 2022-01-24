@@ -1286,12 +1286,95 @@ DWORD patchExe() {
 	return 0;
 }
 
-void Init(DWORD parentProcess) {
+void BindCrtHandlesToStdHandles(DWORD parentProcess, HANDLE parentStdIn, HANDLE parentStdOut, HANDLE parentStdErr) {
+
+#define DupHandle(srcProcess,srcHandle,targetProcess,targetHandle)\
+	HANDLE targetHandle;\
+	DuplicateHandle(\
+		srcProcess,\
+		srcHandle,\
+		targetProcess,\
+		&targetHandle,\
+		NULL,\
+		false,\
+		DUPLICATE_SAME_ACCESS\
+	);
+
+	HANDLE parentProcessHandle = OpenProcess(PROCESS_DUP_HANDLE, false, parentProcess);
+
+	if (parentStdIn != INVALID_HANDLE_VALUE) {
+
+		DupHandle(parentProcessHandle, parentStdIn, GetCurrentProcess(), myHandle);
+		CloseHandle(GetStdHandle(STD_INPUT_HANDLE));
+		SetStdHandle(STD_INPUT_HANDLE, myHandle);
+
+		FILE* dummyFile;
+		freopen_s(&dummyFile, "nul", "r", stdin);
+
+		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+			if (_dup2(fd, _fileno(stdin)) == 0) {
+				setvbuf(stdin, NULL, _IONBF, 0);
+			}
+			_close(fd);
+		}
+
+		std::wcin.clear();
+		std::cin.clear();
+	}
+
+	if (parentStdOut != INVALID_HANDLE_VALUE) {
+
+		DupHandle(parentProcessHandle, parentStdOut, GetCurrentProcess(), myHandle);
+		CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+		SetStdHandle(STD_OUTPUT_HANDLE, myHandle);
+
+		FILE* dummyFile;
+		freopen_s(&dummyFile, "nul", "w", stdout);
+
+		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle), _O_TEXT); fd != -1) {
+			if (_dup2(fd, _fileno(stdout)) == 0) {
+				setvbuf(stdout, NULL, _IONBF, 0);
+			}
+			_close(fd);
+		}
+
+		std::wcout.clear();
+		std::cout.clear();
+	}
+
+	if (parentStdErr != INVALID_HANDLE_VALUE) {
+
+		DupHandle(parentProcessHandle, parentStdErr, GetCurrentProcess(), myHandle);
+		CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
+		SetStdHandle(STD_ERROR_HANDLE, myHandle);
+
+		FILE* dummyFile;
+		freopen_s(&dummyFile, "nul", "w", stderr);
+
+		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+			if (_dup2(fd, _fileno(stderr)) == 0) {
+				setvbuf(stderr, NULL, _IONBF, 0);
+			}
+			_close(fd);
+		}
+
+		std::wcerr.clear();
+		std::cerr.clear();
+	}
+
+	CloseHandle(parentProcessHandle);
+}
+
+void Init(DWORD parentProcess, HANDLE parentStdIn, HANDLE parentStdOut, HANDLE parentStdErr) {
 
 	if (!AttachConsole(parentProcess)) {
 		printf("AttachConsole failed (%d).\n", GetLastError());
 		return;
 	}
+	BindCrtHandlesToStdHandles(parentProcess, parentStdIn, parentStdOut, parentStdErr);
 
 	initPaths();
 

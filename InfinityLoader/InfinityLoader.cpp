@@ -113,6 +113,9 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 
 	writer.callToAddressFar(reinterpret_cast<intptr_t>(GetProcAddress));
 
+	writer.writeArgImmediate32(reinterpret_cast<int>(GetStdHandle(STD_ERROR_HANDLE)), 3);
+	writer.writeArgImmediate32(reinterpret_cast<int>(GetStdHandle(STD_OUTPUT_HANDLE)), 2);
+	writer.writeArgImmediate32(reinterpret_cast<int>(GetStdHandle(STD_INPUT_HANDLE)), 1);
 	writer.writeArgImmediate32(GetCurrentProcessId(), 0);
 	writer.writeBytesToBuffer(2, 0xFF, 0xD0);
 
@@ -203,15 +206,11 @@ DWORD startGame() {
 
 	STARTUPINFO startupInfo{};
 	startupInfo.cb = sizeof(STARTUPINFO);
-	startupInfo.dwFlags = STARTF_USESTDHANDLES;
-	startupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-	startupInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-	startupInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
 	PROCESS_INFORMATION processInfo{};
 	DWORD lastError = ERROR_SUCCESS;
 
-	if (!CreateProcess(exePath.c_str(), NULL, NULL, NULL, true, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
+	if (!CreateProcess(exePath.c_str(), NULL, NULL, NULL, false, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
 		lastError = GetLastError();
 		printfT(TEXT("[!] CreateProcess failed attempting to start \"%s\" (%d).\n"), exePath.c_str(), lastError);
 		return lastError;
