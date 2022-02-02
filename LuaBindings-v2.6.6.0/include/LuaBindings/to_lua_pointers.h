@@ -64,8 +64,8 @@ extern type_tolua_pushnumber* p_tolua_pushnumber;
 typedef void type_tolua_pushstring(lua_State* L, const char* value);
 extern type_tolua_pushstring* p_tolua_pushstring;
 
-typedef double type_tolua_tonumber(lua_State* L, int narg, double def);
-extern type_tolua_tonumber* p_tolua_tonumber;
+//typedef double type_tolua_tonumber(lua_State* L, int narg, double def);
+//extern type_tolua_tonumber* p_tolua_tonumber;
 
 typedef const char* type_tolua_tostring(lua_State* L, int narg, const char* def);
 extern type_tolua_tostring* p_tolua_tostring;
@@ -118,6 +118,7 @@ void* tolua_tousertype_dynamic(lua_State* L, int narg, void* def, const char* ta
 void p_tolua_open(lua_State* L);
 
 int p_tolua_toboolean(lua_State* L, int narg, int def);
+double p_tolua_tonumber(lua_State* L, int narg, double def);
 
 int p_class_newindex_event(lua_State* L);
 int p_module_newindex_event(lua_State* L);

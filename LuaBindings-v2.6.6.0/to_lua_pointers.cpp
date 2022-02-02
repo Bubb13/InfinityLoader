@@ -26,7 +26,7 @@ type_tolua_module* p_tolua_module;
 type_tolua_pushboolean* p_tolua_pushboolean;
 type_tolua_pushnumber* p_tolua_pushnumber;
 type_tolua_pushstring* p_tolua_pushstring;
-type_tolua_tonumber* p_tolua_tonumber;
+//type_tolua_tonumber* p_tolua_tonumber;
 type_tolua_tostring* p_tolua_tostring;
 type_tolua_tousertype* p_tolua_tousertype;
 type_tolua_usertype* p_tolua_usertype;
@@ -238,6 +238,17 @@ int p_tolua_toboolean(lua_State* L, int narg, int def) {
 		return p_lua_tonumber(L, narg) != 0;
 	}
 	return p_lua_toboolean(L, narg);
+}
+
+// The normal implementation of this interprets "true" as "0"!
+double p_tolua_tonumber(lua_State* L, int narg, double def) {
+	if (p_lua_gettop(L) < abs(narg)) {
+		return def;
+	}
+	if (p_lua_isboolean(L, narg)) {
+		return p_lua_toboolean(L, narg);
+	}
+	return p_lua_tonumber(L, narg);
 }
 
 // Expects   [ ..., key, value ]

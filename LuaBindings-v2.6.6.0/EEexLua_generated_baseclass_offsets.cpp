@@ -70,6 +70,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CList<long,long>", {
 		{"CObject", offsetofbase<CList<long,long>, CObject>()},
 	}},
+	{"CTypedPtrList<CPtrList,CAIId*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIId*>, CObject>()},
+	}},
 	{"CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>, CObject>()},
 	}},
@@ -111,9 +114,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CTypedPtrList<CPtrList,CMusicPosition*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMusicPosition*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CAIId*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIId*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,CGameJournalEntry*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameJournalEntry*>, CObject>()},

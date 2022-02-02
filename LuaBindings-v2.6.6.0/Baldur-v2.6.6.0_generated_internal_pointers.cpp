@@ -28,6 +28,9 @@ type_C2DArray_Construct p_C2DArray_Construct;
 type_C2DArray_Load p_C2DArray_Load;
 type_C2DArray_GetAtLabels p_C2DArray_GetAtLabels;
 type_C2DArray_Destruct p_C2DArray_Destruct;
+type_CAIIdList_Construct1 p_CAIIdList_Construct1;
+type_CAIIdList_Destruct p_CAIIdList_Destruct;
+type_CAIIdList_LoadList2 p_CAIIdList_LoadList2;
 type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
 type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
 type_CInfGame_SetState p_CInfGame_SetState;
@@ -69,6 +72,9 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("C2DArray::Load"), reinterpret_cast<void**>(&p_C2DArray_Load)},
 	std::pair{TEXT("C2DArray::GetAtLabels"), reinterpret_cast<void**>(&p_C2DArray_GetAtLabels)},
 	std::pair{TEXT("C2DArray::Destruct"), reinterpret_cast<void**>(&p_C2DArray_Destruct)},
+	std::pair{TEXT("CAIIdList::Construct1"), reinterpret_cast<void**>(&p_CAIIdList_Construct1)},
+	std::pair{TEXT("CAIIdList::Destruct"), reinterpret_cast<void**>(&p_CAIIdList_Destruct)},
+	std::pair{TEXT("CAIIdList::LoadList2"), reinterpret_cast<void**>(&p_CAIIdList_LoadList2)},
 	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&p_CInfButtonArray_SetState)},
 	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&p_CInfButtonArray_SetQuickSlot)},
 	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&p_CInfGame_SetState)},

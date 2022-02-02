@@ -2701,10 +2701,6 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 				if paramType.const and paramType.noconst:
 					return
 
-				# Must be primitive or pointer
-				if not paramType.isPrimitive() and paramType.getUserTypePointerLevel() == 0:
-					return
-
 
 			isNormal: bool = group != globalGroup
 			functionOpenData = OpenFunctionData()
@@ -2777,9 +2773,17 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 				i += parameterIMod
 				paramType = parameter.type.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 				if not checkPrimitiveHandling(paramType, i):
+
+					dereferenceStr = ""
+					if paramType.getUserTypePointerLevel() == 0:
+						paramType = paramType.shallowCopy()
+						paramType.adjustUserTypePointerLevel(mainState, 1)
+						dereferenceStr = "*"
+
 					appliedParamName = paramType.getAppliedHeaderName(mainState, group, templateMappingTracker)
 					appliedParamUsertype = paramType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
-					callArgParts.append(f"({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")")
+					
+					callArgParts.append(f"{dereferenceStr}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")")
 					callArgParts.append(", ")
 			
 			if functionImplementation.customReturnCount or len(functionImplementation.parameters) > 0:

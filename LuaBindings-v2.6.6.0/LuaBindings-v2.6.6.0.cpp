@@ -246,7 +246,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_tolua_pushboolean", tolua_pushboolean);
     setLuaPointer("Hardcoded_tolua_pushnumber", tolua_pushnumber);
     setLuaPointer("Hardcoded_tolua_pushstring", tolua_pushstring);
-    setLuaPointer("Hardcoded_tolua_tonumber", tolua_tonumber);
+    //setLuaPointer("Hardcoded_tolua_tonumber", tolua_tonumber);
     setLuaPointer("Hardcoded_tolua_tostring", tolua_tostring);
     setLuaPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
     setLuaPointer("Hardcoded_tolua_usertype", tolua_usertype);

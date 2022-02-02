@@ -11,6 +11,7 @@ struct ALCcontext_struct;
 struct ALCdevice_struct;
 struct C2DArray;
 struct CAIAction;
+struct CAIIdList;
 struct CAIObjectType;
 struct CAIResponse;
 struct CAIScript;
@@ -7459,6 +7460,15 @@ struct C2DArray : CResHelper<CResText,1012>
 	}
 };
 
+typedef void (*type_CAIIdList_Construct1)(CAIIdList* pThis);
+extern type_CAIIdList_Construct1 p_CAIIdList_Construct1;
+
+typedef void (*type_CAIIdList_Destruct)(CAIIdList* pThis);
+extern type_CAIIdList_Destruct p_CAIIdList_Destruct;
+
+typedef void (*type_CAIIdList_LoadList2)(CAIIdList* pThis, CResRef id, int faster);
+extern type_CAIIdList_LoadList2 p_CAIIdList_LoadList2;
+
 struct CAIIdList : CResHelper<CResText,1008>
 {
 	struct vtbl
@@ -7469,8 +7479,23 @@ struct CAIIdList : CResHelper<CResText,1008>
 	CString m_fileName;
 	CTypedPtrList<CPtrList,CAIId*> m_idList;
 	int m_faster;
-	CAIId** m_pIdArray;
+	ArrayPointer<CAIId*> m_pIdArray;
 	int m_nArray;
+
+	void Construct1()
+	{
+		p_CAIIdList_Construct1(this);
+	}
+
+	void Destruct()
+	{
+		p_CAIIdList_Destruct(this);
+	}
+
+	void LoadList2(CResRef id, int faster)
+	{
+		p_CAIIdList_LoadList2(this, id, faster);
+	}
 
 	virtual void virtual_CAIIdList_Destructor()
 	{
