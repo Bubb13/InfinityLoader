@@ -640,7 +640,49 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 	}
 
 	if (bExeSwitch) {
-		iniCategoryName.insert(0, String{ TEXT("!ExeSwitch-") }.append(exeName).append(TEXT("-")));
+
+		String exeAlias;
+		if (DWORD lastError { GetINIString(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitchAlias"), TEXT(""), exeAlias) }) {
+			return lastError;
+		}
+
+		String exeSwitchName { exeName };
+		if (exeAlias != TEXT("")) {
+
+			bool error { false };
+			forEveryCharSplit(exeAlias, TCHAR{ ',' }, [&](const String str) {
+
+				size_t colonI { str.find(TCHAR{ ':' }) };
+
+				if (colonI == std::string::npos) {
+					printfT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
+					error = true;
+					return true;
+				}
+
+				String alias { str.substr(0, colonI) };
+				String target { str.substr(colonI + 1) };
+
+				if (target.find(TCHAR{ ':' }) != std::string::npos) {
+					printfT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
+					error = true;
+					return true;
+				}
+
+				if (alias == exeName) {
+					exeSwitchName = target;
+					return true;
+				}
+
+				return false;
+			});
+
+			if (error) {
+				return -1;
+			}
+		}
+
+		iniCategoryName.insert(0, String{ TEXT("!ExeSwitch-") }.append(exeSwitchName).append(TEXT("-")));
 	}
 
 	String hardcodedPatchPattern;
@@ -1231,7 +1273,7 @@ DWORD writeInternalLuaHook(ImageSectionInfo& textInfo) {
 
 		__int32 relativeAmount = *reinterpret_cast<__int32*>(patchAddress + 1);
 		intptr_t target = patchAddress + 5 + relativeAmount;
-		
+
 		unsigned char codeBuff[1024];
 		AssemblyWriter writer{ codeBuff };
 
