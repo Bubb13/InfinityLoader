@@ -60,6 +60,9 @@
     <ClCompile Include="EEexLua_generated_baseclass_offsets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="engine_reimplementations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\LuaBindings\EEexLua_generated.h">

@@ -101,6 +101,7 @@
     <ClCompile Include="Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
     <ClCompile Include="EEexLua_generated.cpp" />
     <ClCompile Include="EEexLua_generated_baseclass_offsets.cpp" />
+    <ClCompile Include="engine_reimplementations.cpp" />
     <ClCompile Include="LuaBindings-v2.6.6.0.cpp" />
     <ClCompile Include="lua_pointers.cpp" />
     <ClCompile Include="tolua_reference\tolua_event.c">

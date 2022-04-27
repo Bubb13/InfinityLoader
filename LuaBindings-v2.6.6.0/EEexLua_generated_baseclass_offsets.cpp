@@ -16,9 +16,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CRainDrop", {
 		{"CParticle", offsetofbase<CRainDrop, CParticle>()},
 	}},
-	{"CPoint", {
-		{"tagPOINT", offsetofbase<CPoint, tagPOINT>()},
-	}},
 	{"CRect", {
 		{"tagRECT", offsetofbase<CRect, tagRECT>()},
 	}},
@@ -109,6 +106,18 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CSavedGameStoredLocation*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSavedGameStoredLocation*>, CObject>()},
 	}},
+	{"CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>, CObject>()},
+	}},
+	{"CTypedPtrList<CPtrList,__POSITION*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,__POSITION*>, CObject>()},
+	}},
+	{"CTypedPtrList<CPtrList,CTiledObject*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CTiledObject*>, CObject>()},
+	}},
+	{"CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>, CObject>()},
+	}},
 	{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>, CObject>()},
 	}},
@@ -129,18 +138,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CTypedPtrList<CPtrList,void*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,void*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,__POSITION*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,__POSITION*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CTiledObject*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CTiledObject*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,CGameEffectUsability*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameEffectUsability*>, CObject>()},

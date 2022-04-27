@@ -30,9 +30,9 @@ void exposeToLua(lua_State* L, const char* exposedName, lua_CFunction func) {
 // Lua Functions //
 ///////////////////
 
-void addPattern(std::map<String, PatternEntry>& patterns, const char* name, intptr_t value) {
+void addPattern(std::map<String, PatternEntry>& patterns, const char* name, void* value) {
     String nameStr = ToString(name);
-    patterns.try_emplace(nameStr, nameStr, value);
+    patterns.try_emplace(nameStr, nameStr, reinterpret_cast<intptr_t>(value));
 }
 
 int castUserDataLua(lua_State* g_lua) {
@@ -170,6 +170,12 @@ void runCallback(lua_State* L) {
     }
 }
 
+// Ugly hack to get a member-function pointer
+template<typename T>
+constexpr void* GetMemberPtr(T func) {
+    return reinterpret_cast<void*&>(func);
+}
+
 void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo) {
 
 #define setLuaPointer(patternName, pointerGlobal) \
@@ -284,17 +290,17 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     }
 
     // Export tolua overrides (the versions in-engine aren't sufficient)
-    addPattern(patterns, "override_tolua_open", reinterpret_cast<intptr_t>(p_tolua_open));
-    addPattern(patterns, "override_tolua_cclass", reinterpret_cast<intptr_t>(p_tolua_cclass_translate));
+    addPattern(patterns, "override_tolua_open", p_tolua_open);
+    addPattern(patterns, "override_tolua_cclass", p_tolua_cclass_translate);
     
-    addPattern(patterns, "override_module_newindex_event", reinterpret_cast<intptr_t>(p_module_newindex_event));
-    addPattern(patterns, "override_class_newindex_event", reinterpret_cast<intptr_t>(p_class_newindex_event));
+    addPattern(patterns, "override_module_newindex_event", p_module_newindex_event);
+    addPattern(patterns, "override_class_newindex_event", p_class_newindex_event);
 
-    addPattern(patterns, "override_module_index_event", reinterpret_cast<intptr_t>(p_module_index_event));
-    addPattern(patterns, "override_class_index_event", reinterpret_cast<intptr_t>(p_class_index_event));
+    addPattern(patterns, "override_module_index_event", p_module_index_event);
+    addPattern(patterns, "override_class_index_event", p_class_index_event);
 
-    addPattern(patterns, "Hardcoded_tolua_pushusertype", reinterpret_cast<intptr_t>(p_tolua_pushusertype_nocast));
-    
+    addPattern(patterns, "Hardcoded_tolua_pushusertype", p_tolua_pushusertype_nocast);
+
     // The Lua environment needs to grab the pattern map and execute any
     // patches relating to tolua before the Lua bindings are exported
     runCallback(L);

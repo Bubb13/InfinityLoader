@@ -7,10 +7,44 @@
 #include "InfinityLoaderCommon.h"
 #include "to_lua_pointers.h"
 
+typedef unsigned short ushort;
+typedef unsigned int uint;
+
+template<typename A>
+struct W
+{
+
+private:
+
+	union {
+		A val;
+	};
+
+public:
+
+	A* operator->() {
+		return &val;
+	}
+
+	A& operator*() {
+		return val;
+	}
+
+	template<typename... Args>
+	W(Args&&... args) {
+		val.Construct(std::forward<Args>(args)...);
+	}
+
+	~W() {
+		val.Destruct();
+	}
+};
+
 struct ALCcontext_struct;
 struct ALCdevice_struct;
 struct C2DArray;
 struct CAIAction;
+struct CAIGroup;
 struct CAIIdList;
 struct CAIObjectType;
 struct CAIResponse;
@@ -20,6 +54,7 @@ struct CAbilityData;
 struct CAreaFileContainer;
 struct CAreaFileProjectileObject;
 struct CAreaPoint;
+struct CBaldurChitin;
 struct CButtonData;
 struct CContingency;
 struct CCreatureFileHeader;
@@ -47,6 +82,7 @@ struct CMoveListEntry;
 struct CObList;
 struct CPathNode;
 struct CPlex;
+struct CPoint;
 struct CProjectile;
 struct CRes;
 struct CResPVR;
@@ -86,19 +122,24 @@ struct uiVariant;
 
 struct ALCcontext_struct
 {
+	ALCcontext_struct() = delete;
 };
 
 struct ALCdevice_struct
 {
+	ALCdevice_struct() = delete;
 };
 
 struct CUIControlTextDisplay
 {
+	CUIControlTextDisplay() = delete;
 };
 
 struct CVideo
 {
 	CVidMode* pCurrentMode;
+
+	CVideo() = delete;
 };
 
 struct SAreaFileWrapper
@@ -106,52 +147,69 @@ struct SAreaFileWrapper
 	CAreaFileContainer* pContainer;
 	CCreatureFileItem* pStartingItem;
 	CAreaPoint* pPickPointStart;
+
+	SAreaFileWrapper() = delete;
 };
 
 struct SDL_Cursor
 {
 	SDL_Cursor* next;
 	void* driverdata;
+
+	SDL_Cursor() = delete;
 };
 
 struct SProjectileWrapper
 {
 	CAreaFileProjectileObject* pProjectileObject;
 	unsigned __int8* pEffectList;
+
+	SProjectileWrapper() = delete;
 };
 
 struct __POSITION
 {
+	__POSITION() = delete;
 };
 
 struct WED_ScreenSectionList
 {
 	unsigned __int16 nStartingPoly;
 	unsigned __int16 nNumPolys;
+
+	WED_ScreenSectionList() = delete;
 };
 
 struct WED_PolyPoint_st
 {
 	unsigned __int16 x;
 	unsigned __int16 y;
+
+	WED_PolyPoint_st() = delete;
 };
 
 struct NECK_POINTS
 {
 	__int16 x;
 	__int16 y;
+
+	NECK_POINTS() = delete;
 };
 
 struct CVIDPOLY_VERTEX
 {
 	unsigned __int16 x;
 	unsigned __int16 y;
+
+	CVIDPOLY_VERTEX() = delete;
 };
 
 struct CAreaPoint
 {
 	unsigned __int16 m_xPos;
 	unsigned __int16 m_yPos;
+
+	CAreaPoint() = delete;
 };
 
 enum class WindowShapeMode : __int32
@@ -1084,6 +1142,8 @@ enum class DP_EventType : __int32
 struct CSoundMixer
 {
 	CSoundMixerImp* pimpl;
+
+	CSoundMixer() = delete;
 };
 
 enum class CScreenCreateCharStep : __int32
@@ -1161,6 +1221,8 @@ struct _6B279AA1C7A281E7C97E085DB9F2DFBB
 	__int32 right : 1;
 	__int32 top : 1;
 	__int32 bottom : 1;
+
+	_6B279AA1C7A281E7C97E085DB9F2DFBB() = delete;
 };
 
 struct CSteamID
@@ -1173,18 +1235,26 @@ struct CSteamID
 			unsigned __int32 m_unAccountInstance : 20;
 			unsigned __int32 m_EAccountType : 4;
 			__int32 m_EUniverse : 8;
+
+			SteamIDComponent_t() = delete;
 		};
 
 		CSteamID::SteamID_t::SteamIDComponent_t m_comp;
 		unsigned __int64 m_unAll64Bits;
+
+		SteamID_t() = delete;
 	};
 
 	CSteamID::SteamID_t m_steamid;
+
+	CSteamID() = delete;
 };
 
 struct VRAM_FLAGS
 {
 	unsigned __int8 bVRamUpdated : 1;
+
+	VRAM_FLAGS() = delete;
 };
 
 struct TILE_CODE
@@ -1193,6 +1263,8 @@ struct TILE_CODE
 	unsigned __int8 tileNE;
 	unsigned __int8 tileSW;
 	unsigned __int8 tileSE;
+
+	TILE_CODE() = delete;
 };
 
 struct SDL_version
@@ -1200,6 +1272,8 @@ struct SDL_version
 	unsigned __int8 major;
 	unsigned __int8 minor;
 	unsigned __int8 patch;
+
+	SDL_version() = delete;
 };
 
 struct SDL_Color
@@ -1208,18 +1282,24 @@ struct SDL_Color
 	unsigned __int8 g;
 	unsigned __int8 b;
 	unsigned __int8 a;
+
+	SDL_Color() = delete;
 };
 
 union SDL_WindowShapeParams
 {
 	unsigned __int8 binarizationCutoff;
 	SDL_Color colorKey;
+
+	SDL_WindowShapeParams() = delete;
 };
 
 struct SDL_WindowShapeMode
 {
 	WindowShapeMode mode;
 	SDL_WindowShapeParams parameters;
+
+	SDL_WindowShapeMode() = delete;
 };
 
 struct CVisibilityMapEllipse
@@ -1230,6 +1310,8 @@ struct CVisibilityMapEllipse
 	unsigned __int8* m_pYEllipsePts;
 	unsigned __int8 m_nXPtsSize;
 	unsigned __int8 m_nYPtsSize;
+
+	CVisibilityMapEllipse() = delete;
 };
 
 enum class CGameObjectType : __int8
@@ -1255,6 +1337,8 @@ struct CColorRange
 {
 	unsigned __int8 m_range;
 	unsigned __int8 m_color;
+
+	CColorRange() = delete;
 };
 
 struct SubmitItemUpdateResult_t
@@ -1262,6 +1346,8 @@ struct SubmitItemUpdateResult_t
 	EResult m_eResult;
 	bool m_bUserNeedsToAcceptWorkshopLegalAgreement;
 	unsigned __int64 m_nPublishedFileId;
+
+	SubmitItemUpdateResult_t() = delete;
 };
 
 struct CreateItemResult_t
@@ -1269,6 +1355,8 @@ struct CreateItemResult_t
 	EResult m_eResult;
 	unsigned __int64 m_nPublishedFileId;
 	bool m_bUserNeedsToAcceptWorkshopLegalAgreement;
+
+	CreateItemResult_t() = delete;
 };
 
 enum class importStateType : __int32
@@ -1288,14 +1376,20 @@ struct frameTableEntry_st
 		{
 			__int16 nQuadStart;
 			__int16 nQuadCount;
+
+			v2_t() = delete;
 		};
 
+
+		_anonymous_tag_() = delete;
 	};
 
 	union _C3D261E28D53B12983426B9B0D118A61
 	{
 		unsigned int nOffset;
 		frameTableEntry_st::_anonymous_tag_::v2_t v2;
+
+		_C3D261E28D53B12983426B9B0D118A61() = delete;
 	};
 
 	unsigned __int16 nWidth;
@@ -1303,6 +1397,8 @@ struct frameTableEntry_st
 	__int16 nCenterX;
 	__int16 nCenterY;
 	frameTableEntry_st::_C3D261E28D53B12983426B9B0D118A61 ___u4;
+
+	frameTableEntry_st() = delete;
 };
 
 struct file_t
@@ -1312,6 +1408,8 @@ struct file_t
 	int fs;
 	int zo;
 	int zs;
+
+	file_t() = delete;
 };
 
 struct cnetworkwindow_queueentry_st
@@ -1321,6 +1419,8 @@ struct cnetworkwindow_queueentry_st
 	unsigned __int8* pInfo;
 	unsigned int dwSize;
 	unsigned int dwFlags;
+
+	cnetworkwindow_queueentry_st() = delete;
 };
 
 struct bamHeader_st
@@ -1333,6 +1433,8 @@ struct bamHeader_st
 	unsigned int nTableOffset;
 	unsigned int nPaletteOffset;
 	unsigned int nFrameListOffset;
+
+	bamHeader_st() = delete;
 };
 
 struct _EdgeDescription
@@ -1346,6 +1448,8 @@ struct _EdgeDescription
 	int nErrTermAdjUp;
 	int nErrTermAdjDown;
 	int nCount;
+
+	_EdgeDescription() = delete;
 };
 
 struct _EAXPRESET
@@ -1354,11 +1458,15 @@ struct _EAXPRESET
 	float fVolume;
 	float fDecay;
 	float fDamping;
+
+	_EAXPRESET() = delete;
 };
 
 struct CSoundProperties
 {
 	_EAXPRESET m_iEAXpreset;
+
+	CSoundProperties() = delete;
 };
 
 struct WED_WedHeader_st
@@ -1376,6 +1484,8 @@ struct WED_WedHeader_st
 	unsigned __int16 nChanceOfFog;
 	unsigned __int16 nChanceOfSnow;
 	unsigned int dwFlags;
+
+	WED_WedHeader_st() = delete;
 };
 
 #pragma pack(push, 1)
@@ -1389,6 +1499,8 @@ struct WED_PolyList_st
 	unsigned __int16 nRight;
 	unsigned __int16 nTop;
 	unsigned __int16 nBottom;
+
+	WED_PolyList_st() = delete;
 };
 #pragma pack(pop)
 
@@ -1399,6 +1511,8 @@ struct WED_PolyHeader_st
 	unsigned int nOffsetToPointList;
 	unsigned int nOffsetToScreenSectionList;
 	unsigned int nOffsetToScreenPolyList;
+
+	WED_PolyHeader_st() = delete;
 };
 
 #pragma pack(push, 1)
@@ -1411,6 +1525,8 @@ struct WAV_Header
 	unsigned __int16 nBlockAlign;
 	unsigned __int16 wBitsPerSample;
 	unsigned __int16 cbSize;
+
+	WAV_Header() = delete;
 };
 #pragma pack(pop)
 
@@ -1418,6 +1534,8 @@ struct SteamParamStringArray_t
 {
 	const char** m_ppStrings;
 	int m_nNumStrings;
+
+	SteamParamStringArray_t() = delete;
 };
 
 struct SDL_WindowShaper
@@ -1428,6 +1546,8 @@ struct SDL_WindowShaper
 	SDL_WindowShapeMode mode;
 	SDL_bool hasshape;
 	void* driverdata;
+
+	SDL_WindowShaper() = delete;
 };
 
 struct SDL_WindowEvent
@@ -1441,6 +1561,8 @@ struct SDL_WindowEvent
 	unsigned __int8 padding3;
 	int data1;
 	int data2;
+
+	SDL_WindowEvent() = delete;
 };
 
 struct SDL_UserEvent
@@ -1451,6 +1573,8 @@ struct SDL_UserEvent
 	int code;
 	void* data1;
 	void* data2;
+
+	SDL_UserEvent() = delete;
 };
 
 struct SDL_TouchFingerEvent
@@ -1464,6 +1588,8 @@ struct SDL_TouchFingerEvent
 	float dx;
 	float dy;
 	float pressure;
+
+	SDL_TouchFingerEvent() = delete;
 };
 
 struct SDL_SysWMmsg
@@ -1476,15 +1602,21 @@ struct SDL_SysWMmsg
 			unsigned int msg;
 			unsigned __int64 wParam;
 			__int64 lParam;
+
+			win_t() = delete;
 		};
 
 		SDL_SysWMmsg::msg_t::win_t win;
 		int dummy;
+
+		msg_t() = delete;
 	};
 
 	SDL_version version;
 	SDL_SYSWM_TYPE subsystem;
 	SDL_SysWMmsg::msg_t msg;
+
+	SDL_SysWMmsg() = delete;
 };
 
 struct SDL_SysWMEvent
@@ -1492,6 +1624,8 @@ struct SDL_SysWMEvent
 	unsigned int type;
 	unsigned int timestamp;
 	SDL_SysWMmsg* msg;
+
+	SDL_SysWMEvent() = delete;
 };
 
 struct SDL_Rect
@@ -1500,6 +1634,8 @@ struct SDL_Rect
 	int y;
 	int w;
 	int h;
+
+	SDL_Rect() = delete;
 };
 
 struct SDL_Surface
@@ -1516,18 +1652,24 @@ struct SDL_Surface
 	SDL_Rect clip_rect;
 	SDL_BlitMap* map;
 	int refcount;
+
+	SDL_Surface() = delete;
 };
 
 struct SDL_QuitEvent
 {
 	unsigned int type;
 	unsigned int timestamp;
+
+	SDL_QuitEvent() = delete;
 };
 
 struct SDL_Point
 {
 	int x;
 	int y;
+
+	SDL_Point() = delete;
 };
 
 struct SDL_Palette
@@ -1536,6 +1678,8 @@ struct SDL_Palette
 	SDL_Color* colors;
 	unsigned int version;
 	int refcount;
+
+	SDL_Palette() = delete;
 };
 
 struct SDL_MultiGestureEvent
@@ -1549,6 +1693,8 @@ struct SDL_MultiGestureEvent
 	float y;
 	unsigned __int16 numFingers;
 	unsigned __int16 padding;
+
+	SDL_MultiGestureEvent() = delete;
 };
 
 struct SDL_MouseWheelEvent
@@ -1560,6 +1706,8 @@ struct SDL_MouseWheelEvent
 	int x;
 	int y;
 	unsigned int direction;
+
+	SDL_MouseWheelEvent() = delete;
 };
 
 struct SDL_MouseMotionEvent
@@ -1573,6 +1721,8 @@ struct SDL_MouseMotionEvent
 	int y;
 	int xrel;
 	int yrel;
+
+	SDL_MouseMotionEvent() = delete;
 };
 
 struct SDL_MouseButtonEvent
@@ -1587,6 +1737,8 @@ struct SDL_MouseButtonEvent
 	unsigned __int8 padding1;
 	int x;
 	int y;
+
+	SDL_MouseButtonEvent() = delete;
 };
 
 struct SDL_Keysym
@@ -1595,6 +1747,8 @@ struct SDL_Keysym
 	SDL_Keycode sym;
 	unsigned __int16 mod;
 	unsigned int unused;
+
+	SDL_Keysym() = delete;
 };
 
 struct SDL_KeyboardEvent
@@ -1607,6 +1761,8 @@ struct SDL_KeyboardEvent
 	unsigned __int8 padding2;
 	unsigned __int8 padding3;
 	SDL_Keysym keysym;
+
+	SDL_KeyboardEvent() = delete;
 };
 
 struct SDL_JoyHatEvent
@@ -1618,6 +1774,8 @@ struct SDL_JoyHatEvent
 	unsigned __int8 value;
 	unsigned __int8 padding1;
 	unsigned __int8 padding2;
+
+	SDL_JoyHatEvent() = delete;
 };
 
 struct SDL_JoyDeviceEvent
@@ -1625,6 +1783,8 @@ struct SDL_JoyDeviceEvent
 	unsigned int type;
 	unsigned int timestamp;
 	int which;
+
+	SDL_JoyDeviceEvent() = delete;
 };
 
 struct SDL_JoyButtonEvent
@@ -1636,6 +1796,8 @@ struct SDL_JoyButtonEvent
 	unsigned __int8 state;
 	unsigned __int8 padding1;
 	unsigned __int8 padding2;
+
+	SDL_JoyButtonEvent() = delete;
 };
 
 struct SDL_JoyBallEvent
@@ -1649,6 +1811,8 @@ struct SDL_JoyBallEvent
 	unsigned __int8 padding3;
 	__int16 xrel;
 	__int16 yrel;
+
+	SDL_JoyBallEvent() = delete;
 };
 
 struct SDL_JoyAxisEvent
@@ -1662,6 +1826,8 @@ struct SDL_JoyAxisEvent
 	unsigned __int8 padding3;
 	__int16 value;
 	unsigned __int16 padding4;
+
+	SDL_JoyAxisEvent() = delete;
 };
 
 struct SDL_DollarGestureEvent
@@ -1674,6 +1840,8 @@ struct SDL_DollarGestureEvent
 	float error;
 	float x;
 	float y;
+
+	SDL_DollarGestureEvent() = delete;
 };
 
 struct SDL_DisplayMode
@@ -1683,6 +1851,8 @@ struct SDL_DisplayMode
 	int h;
 	int refresh_rate;
 	void* driverdata;
+
+	SDL_DisplayMode() = delete;
 };
 
 struct SDL_ControllerDeviceEvent
@@ -1690,6 +1860,8 @@ struct SDL_ControllerDeviceEvent
 	unsigned int type;
 	unsigned int timestamp;
 	int which;
+
+	SDL_ControllerDeviceEvent() = delete;
 };
 
 struct SDL_ControllerButtonEvent
@@ -1701,6 +1873,8 @@ struct SDL_ControllerButtonEvent
 	unsigned __int8 state;
 	unsigned __int8 padding1;
 	unsigned __int8 padding2;
+
+	SDL_ControllerButtonEvent() = delete;
 };
 
 struct SDL_ControllerAxisEvent
@@ -1714,12 +1888,16 @@ struct SDL_ControllerAxisEvent
 	unsigned __int8 padding3;
 	__int16 value;
 	unsigned __int16 padding4;
+
+	SDL_ControllerAxisEvent() = delete;
 };
 
 struct SDL_CommonEvent
 {
 	unsigned int type;
 	unsigned int timestamp;
+
+	SDL_CommonEvent() = delete;
 };
 
 struct SDL_BlitInfo
@@ -1743,6 +1921,8 @@ struct SDL_BlitInfo
 	unsigned __int8 g;
 	unsigned __int8 b;
 	unsigned __int8 a;
+
+	SDL_BlitInfo() = delete;
 };
 
 struct SDL_BlitMap
@@ -1754,6 +1934,8 @@ struct SDL_BlitMap
 	SDL_BlitInfo info;
 	unsigned int dst_palette_version;
 	unsigned int src_palette_version;
+
+	SDL_BlitMap() = delete;
 };
 
 struct SDL_AudioDeviceEvent
@@ -1765,6 +1947,8 @@ struct SDL_AudioDeviceEvent
 	unsigned __int8 padding1;
 	unsigned __int8 padding2;
 	unsigned __int8 padding3;
+
+	SDL_AudioDeviceEvent() = delete;
 };
 
 struct ResFixedHeader_st
@@ -1774,6 +1958,8 @@ struct ResFixedHeader_st
 	unsigned int nNumber;
 	unsigned int nSize;
 	unsigned int nTableOffset;
+
+	ResFixedHeader_st() = delete;
 };
 
 struct MOSAICQUAD
@@ -1785,6 +1971,8 @@ struct MOSAICQUAD
 	int h;
 	int sx;
 	int sy;
+
+	MOSAICQUAD() = delete;
 };
 
 struct MOSAICHEADERV2
@@ -1795,6 +1983,8 @@ struct MOSAICHEADERV2
 	unsigned int nHeight;
 	unsigned int nQuads;
 	unsigned int nOffsetToQuads;
+
+	MOSAICHEADERV2() = delete;
 };
 
 struct LeaderboardEntry_t
@@ -1804,6 +1994,8 @@ struct LeaderboardEntry_t
 	int m_nScore;
 	int m_cDetails;
 	unsigned __int64 m_hUGC;
+
+	LeaderboardEntry_t() = delete;
 };
 
 struct DP_Packet
@@ -1812,6 +2004,8 @@ struct DP_Packet
 	unsigned __int8* data;
 	unsigned __int64 dataLength;
 	unsigned __int64 offset;
+
+	DP_Packet() = delete;
 };
 
 struct DP_Event
@@ -1821,12 +2015,16 @@ struct DP_Event
 	unsigned __int8 channelID;
 	unsigned int data;
 	DP_Packet* packet;
+
+	DP_Event() = delete;
 };
 
 struct CWorldMapHeader
 {
 	unsigned int m_nMapCount;
 	unsigned int m_nMapOffset;
+
+	CWorldMapHeader() = delete;
 };
 
 struct CWeaponIdentification
@@ -1835,30 +2033,40 @@ struct CWeaponIdentification
 	unsigned int m_itemFlags;
 	unsigned int m_itemFlagMask;
 	unsigned int m_attributes;
+
+	CWeaponIdentification() = delete;
 };
 
 struct CVariableHash
 {
 	CVariable* m_hashEntries;
 	int m_nTableEntries;
+
+	CVariableHash() = delete;
 };
 
 struct CVVCHash
 {
 	CVVCHashEntry* m_hashEntries;
 	int m_nTableEntries;
+
+	CVVCHash() = delete;
 };
 
 struct CVRamPool
 {
 	int nVTiles;
 	st_tiledef* pTileDef;
+
+	CVRamPool() = delete;
 };
 
 struct CTlkFileOverride
 {
 	int bLoaded;
 	int m_UserAddedCount;
+
+	CTlkFileOverride() = delete;
 };
 
 struct CTimerWorld
@@ -1866,24 +2074,32 @@ struct CTimerWorld
 	unsigned int m_gameTime;
 	unsigned __int8 m_active;
 	unsigned __int8 m_nLastPercentage;
+
+	CTimerWorld() = delete;
 };
 
 struct CSpellLevelDecrementing
 {
 	int m_bImmune;
 	int m_nLevels;
+
+	CSpellLevelDecrementing() = delete;
 };
 
 struct CScriptCache
 {
 	CAIScript** m_scriptMap;
 	int m_nTableEntries;
+
+	CScriptCache() = delete;
 };
 
 struct CSchoolAndSecondaryDecrementing
 {
 	unsigned int m_nType;
 	int m_nLevels;
+
+	CSchoolAndSecondaryDecrementing() = delete;
 };
 
 struct CResTile
@@ -1891,6 +2107,8 @@ struct CResTile
 	CResTileSet* tis;
 	int tileIndex;
 	CResPVR* pvr;
+
+	CResTile() = delete;
 };
 
 struct CResInfTile : CResTile
@@ -1899,6 +2117,8 @@ struct CResInfTile : CResTile
 	TILE_CODE renderCode;
 	CResTile* pDualTileRes;
 	VRAM_FLAGS flags;
+
+	CResInfTile() = delete;
 };
 
 struct CPathSearch
@@ -1911,6 +2131,8 @@ struct CPathSearch
 	int* m_pathBegin;
 	__int16 m_nPathNodes;
 	__int16 m_pathCurrent;
+
+	CPathSearch() = delete;
 };
 
 struct CPathNode
@@ -1920,6 +2142,8 @@ struct CPathNode
 	int m_costStart;
 	int m_costTotal;
 	unsigned __int8 m_fIsOpen;
+
+	CPathNode() = delete;
 };
 
 struct CPARTICLE_POINT
@@ -1927,6 +2151,8 @@ struct CPARTICLE_POINT
 	int x;
 	int y;
 	int z;
+
+	CPARTICLE_POINT() = delete;
 };
 
 struct CParticle
@@ -1941,6 +2167,8 @@ struct CParticle
 	CPARTICLE_POINT m_pos;
 	CPARTICLE_POINT m_vel;
 	int m_nGravity;
+
+	CParticle() = delete;
 };
 
 struct CSnowFlake : CParticle
@@ -1949,10 +2177,13 @@ struct CSnowFlake : CParticle
 	unsigned __int8 m_nDriftCounter;
 	unsigned __int16 m_nMeltTime;
 	int m_nLastDriftVelocity;
+
+	CSnowFlake() = delete;
 };
 
 struct CRainDrop : CParticle
 {
+	CRainDrop() = delete;
 };
 
 struct CMusicPosition
@@ -1960,11 +2191,15 @@ struct CMusicPosition
 	int m_nSong;
 	int m_nSection;
 	int m_nPosition;
+
+	CMusicPosition() = delete;
 };
 
 struct CMachineState
 {
 	unsigned int m_inputState;
+
+	CMachineState() = delete;
 };
 
 struct CKeyInfo
@@ -1973,6 +2208,8 @@ struct CKeyInfo
 	int m_keyCode;
 	unsigned __int8 m_repeatDelay;
 	unsigned __int8 m_repeatRate;
+
+	CKeyInfo() = delete;
 };
 
 struct CImmunitiesItemTypeEquip
@@ -1980,12 +2217,16 @@ struct CImmunitiesItemTypeEquip
 	unsigned int m_type;
 	unsigned int m_error;
 	CGameEffect* m_pEffect;
+
+	CImmunitiesItemTypeEquip() = delete;
 };
 
 struct CGameTimer
 {
 	int m_time;
 	unsigned __int8 m_id;
+
+	CGameTimer() = delete;
 };
 
 struct CGameRemoteObjectListEntry
@@ -1994,6 +2235,8 @@ struct CGameRemoteObjectListEntry
 	int remoteObjectID;
 	int localObjectID;
 	CGameRemoteObjectListEntry* pNext;
+
+	CGameRemoteObjectListEntry() = delete;
 };
 
 struct CGameRemoteObjectDeletion
@@ -2001,6 +2244,8 @@ struct CGameRemoteObjectDeletion
 	int deletedPlayerID;
 	int deletedObjectID;
 	CGameRemoteObjectDeletion* pNext;
+
+	CGameRemoteObjectDeletion() = delete;
 };
 
 struct CGameRemoteObjectControlChange
@@ -2011,6 +2256,8 @@ struct CGameRemoteObjectControlChange
 	int newObjectID;
 	CGameRemoteObjectControlChange* pNext;
 	unsigned __int8 localControl;
+
+	CGameRemoteObjectControlChange() = delete;
 };
 
 struct CGameOptions
@@ -2168,14 +2415,18 @@ struct CGameOptions
 	int m_bExpireTraps;
 	int m_bAreaMapZoom;
 	int m_nDifficultyLevel;
+
+	CGameOptions() = delete;
 };
 
-typedef __int8 (__cdecl *type_CGameObjectArray_GetShare)(int index, CGameObject** ptr);
+typedef byte (__cdecl  *type_CGameObjectArray_GetShare)(int index, CGameObject** ptr);
 extern type_CGameObjectArray_GetShare p_CGameObjectArray_GetShare;
 
 struct CGameObjectArray
 {
-	static __int8 GetShare(int index, CGameObject** ptr)
+	CGameObjectArray() = delete;
+
+	static byte GetShare(int index, CGameObject** ptr)
 	{
 		return p_CGameObjectArray_GetShare(index, ptr);
 	}
@@ -2189,6 +2440,8 @@ struct CGameJournalEntry
 	unsigned __int16 m_wType;
 	unsigned __int8 m_bCharacter;
 	unsigned __int8 m_nCharacterHasNotRead;
+
+	CGameJournalEntry() = delete;
 };
 
 struct CGameAnimation
@@ -2199,6 +2452,8 @@ struct CGameAnimation
 	unsigned __int8 m_detectedByInfravision;
 	unsigned __int8 m_bloodColor;
 	unsigned __int8 m_personalSpace;
+
+	CGameAnimation() = delete;
 };
 
 struct CDeathSound
@@ -2208,6 +2463,8 @@ struct CDeathSound
 	__int16 m_soundNum;
 	int m_started;
 	CAITrigger* m_pTrigger;
+
+	CDeathSound() = delete;
 };
 
 struct CCreatureFileMemorizedSpellLevel
@@ -2218,6 +2475,8 @@ struct CCreatureFileMemorizedSpellLevel
 	unsigned __int16 m_magicType;
 	unsigned int m_memorizedStartingSpell;
 	unsigned int m_memorizedCount;
+
+	CCreatureFileMemorizedSpellLevel() = delete;
 };
 
 struct CColorEffect
@@ -2226,6 +2485,8 @@ struct CColorEffect
 	unsigned __int8 m_range;
 	unsigned int m_tintColor;
 	unsigned __int8 m_periodLength;
+
+	CColorEffect() = delete;
 };
 
 struct CBounceEntry
@@ -2237,6 +2498,8 @@ struct CBounceEntry
 	unsigned int m_string;
 	int m_stringOnly;
 	int m_recoverSpellLevels;
+
+	CBounceEntry() = delete;
 };
 
 struct BAMHEADERV2
@@ -2249,18 +2512,24 @@ struct BAMHEADERV2
 	unsigned int nFramesOffset;
 	unsigned int nSequencesOffset;
 	unsigned int nQuadsOffset;
+
+	BAMHEADERV2() = delete;
 };
 
 union _9CC80BF4F2F1300360474CD60BF15E00
 {
 	_6B279AA1C7A281E7C97E085DB9F2DFBB __s0;
 	int all;
+
+	_9CC80BF4F2F1300360474CD60BF15E00() = delete;
 };
 
 struct _4BC756EB7537E12A00FC57C6BF2CCA8B
 {
 	_9CC80BF4F2F1300360474CD60BF15E00 selected;
 	SDL_Rect mouseOver;
+
+	_4BC756EB7537E12A00FC57C6BF2CCA8B() = delete;
 };
 
 struct _9B9540D9920A90D57A3D80DDD1A70514
@@ -2270,10 +2539,14 @@ struct _9B9540D9920A90D57A3D80DDD1A70514
 	uiItem* item;
 	uiMenu* m;
 	_4BC756EB7537E12A00FC57C6BF2CCA8B editor;
+
+	_9B9540D9920A90D57A3D80DDD1A70514() = delete;
 };
 
 struct UnmappedUserType
 {
+	UnmappedUserType() = delete;
+
 	intptr_t toPointer()
 	{
 		return (intptr_t)this;
@@ -2292,12 +2565,16 @@ struct mosHeader_st
 	unsigned __int8 nTransparentColor;
 	unsigned __int8 nCompressed;
 	unsigned int nPaletteOffset;
+
+	mosHeader_st() = delete;
 };
 
 struct sequenceTableEntry_st
 {
 	__int16 nFrames;
 	unsigned __int16 nStartingFrame;
+
+	sequenceTableEntry_st() = delete;
 };
 
 struct st_tiledef
@@ -2306,107 +2583,13 @@ struct st_tiledef
 	int nUsageCount;
 	int texture;
 	CInfTileSet* pTileSet;
-};
 
-struct CPoint : tagPOINT
-{
-};
-
-struct CAOEEntry
-{
-	enum class AOEType : __int32
-	{
-		AOE_CIRCLE = 0,
-		AOE_CONE = 1,
-		AOE_RECTANGLE = 2,
-		AOE_LINE = 3,
-	};
-
-	CAOEEntry::AOEType m_type;
-	CPoint m_center;
-	CPoint m_radius;
-	unsigned int m_color;
-};
-
-struct CFog
-{
-	float* densityLast;
-	float* densityCurrent;
-	float* densityNext;
-	int N;
-	float dt;
-	float diff;
-	float visc;
-	float force;
-	float source;
-	int dvel;
-	float* u;
-	float* v;
-	float* u_prev;
-	float* v_prev;
-	float* dens;
-	float* dens_prev;
-	bool pointEnabled;
-	int pointAmount;
-	int pointDuration;
-	CPoint pointPos;
-	float pointUForce;
-	float pointVForce;
-	CPoint explosionPos;
-	int updateCounter;
-	bool fading;
-	bool initialized;
-	float alpha;
-	int contrast;
-	unsigned int innerColor;
-	unsigned int outerColor;
-};
-
-struct CGameAreaClairvoyanceEntry
-{
-	CPoint m_position;
-	int m_id;
-	int m_timeKill;
-	unsigned __int8* m_pVisibleTerrainTable;
-	int m_charId;
-	__int16 m_visRange;
-	int* m_pVisMapExploredArea;
-};
-
-struct MAP_CHAR_POSITIONS
-{
-	CPoint ptPos;
-	int id;
-};
-
-struct CVIDMODE_RETICLE_DESCRIPTION
-{
-	CPoint ptCenter;
-	__int16 xAxis;
-	__int16 yAxis;
-	__int16 piePiecePtXOffset;
-	__int16 piePiecePtYOffset;
-	__int16 piePieceXOffset;
-	__int16 piePieceYOffset;
-	__int16 xGap;
-	__int16 yGap;
-	__int16 cursor;
-};
-
-struct CMarker
-{
-	unsigned __int8 m_type;
-	__int16 m_nReticleCounter;
-	unsigned __int8 m_nReticleForceRender;
-	unsigned __int8 m_nReticleForceRenderTarget;
-	unsigned int m_rgbColor;
-	CVIDMODE_RETICLE_DESCRIPTION m_reticleDesc;
-	unsigned __int8 m_bTalking;
-	unsigned __int8 m_bDoubleSize;
+	st_tiledef() = delete;
 };
 
 struct CRect : tagRECT
 {
+	CRect() = delete;
 };
 
 struct CRainStorm
@@ -2416,6 +2599,8 @@ struct CRainStorm
 	CRect m_rOldWorldViewPort;
 	__int16 m_nWindGustCounter;
 	int m_nRainDrops;
+
+	CRainStorm() = delete;
 };
 
 struct CSnowStorm
@@ -2423,10 +2608,13 @@ struct CSnowStorm
 	CSnowFlake* m_pSnowFlakes;
 	unsigned __int16 m_nCurrentDensity;
 	CRect m_rOldWorldViewPort;
+
+	CSnowStorm() = delete;
 };
 
 struct CSize : tagSIZE
 {
+	CSize() = delete;
 };
 
 struct uiColumn
@@ -2434,6 +2622,8 @@ struct uiColumn
 	uiVariant* width;
 	uiItem* items;
 	uiColumn* next;
+
+	uiColumn() = delete;
 };
 
 enum class uiItemType : __int32
@@ -2466,6 +2656,8 @@ struct view_t
 	unsigned int viewBase;
 	unsigned int viewSize;
 	int size;
+
+	view_t() = delete;
 };
 
 struct CFileView
@@ -2474,11 +2666,15 @@ struct CFileView
 	view_t v;
 	int fileSize;
 	int filePos;
+
+	CFileView() = delete;
 };
 
 struct VoidPointer
 {
 	void* reference;
+
+	VoidPointer() = delete;
 
 	void pointTo(void* ptr)
 	{
@@ -2496,6 +2692,8 @@ struct Pointer
 {
 	POINTED_TO_TYPE* reference;
 
+	Pointer() = delete;
+
 	POINTED_TO_TYPE getValue()
 	{
 		return *reference;
@@ -2510,6 +2708,8 @@ struct Pointer
 struct ConstCharString
 {
 	const char* data;
+
+	ConstCharString() = delete;
 
 	char getChar(int index)
 	{
@@ -2565,10 +2765,14 @@ struct uiVariant
 		const char* strVal;
 		float floatVal;
 		int luaFunc;
+
+		value_t() = delete;
 	};
 
 	uiVariantType type;
 	uiVariant::value_t value;
+
+	uiVariant() = delete;
 };
 
 struct Marker
@@ -2577,6 +2781,8 @@ struct Marker
 	int start;
 	int count;
 	int line;
+
+	Marker() = delete;
 };
 
 struct uiMenu
@@ -2598,6 +2804,8 @@ struct uiMenu
 	int height;
 	int enabled;
 	int ignoreEsc;
+
+	uiMenu() = delete;
 };
 
 struct ISteamRemoteStorage
@@ -2659,8 +2867,12 @@ struct ISteamRemoteStorage
 		unsigned __int64 (__fastcall *EnumeratePublishedFilesByUserAction)(ISteamRemoteStorage*, EWorkshopFileAction, unsigned int);
 		unsigned __int64 (__fastcall *EnumeratePublishedWorkshopFiles)(ISteamRemoteStorage*, EWorkshopEnumerationType, unsigned int, unsigned int, unsigned int, SteamParamStringArray_t*, SteamParamStringArray_t*);
 		unsigned __int64 (__fastcall *UGCDownloadToLocation)(ISteamRemoteStorage*, unsigned __int64, const char*, unsigned int);
+
+		vtbl() = delete;
 	};
 
+
+	ISteamRemoteStorage() = delete;
 
 	virtual bool virtual_FileWrite(const char* _0, void* _1, int _2)
 	{
@@ -2951,8 +3163,12 @@ struct IDPProvider
 		void (__fastcall *SetVersion)(IDPProvider*, const char*);
 		bool (__fastcall *IsBackendConnected)(IDPProvider*);
 		void (__fastcall *IDPProvider_Destructor)(IDPProvider*);
+
+		vtbl() = delete;
 	};
 
+
+	IDPProvider() = delete;
 
 	virtual void virtual_Connect(int _0, const char* _1)
 	{
@@ -3001,6 +3217,8 @@ struct IDPProvider
 struct CharString
 {
 	char* data;
+
+	CharString() = delete;
 
 	char getChar(int index)
 	{
@@ -3075,6 +3293,8 @@ struct SDL_WindowUserData
 	char* name;
 	void* data;
 	SDL_WindowUserData* next;
+
+	SDL_WindowUserData() = delete;
 };
 
 struct SDL_Window
@@ -3109,6 +3329,8 @@ struct SDL_Window
 	void* driverdata;
 	SDL_Window* prev;
 	SDL_Window* next;
+
+	SDL_Window() = delete;
 };
 
 struct SDL_DropEvent
@@ -3116,6 +3338,8 @@ struct SDL_DropEvent
 	unsigned int type;
 	unsigned int timestamp;
 	char* file;
+
+	SDL_DropEvent() = delete;
 };
 
 struct ISteamUserStats
@@ -3167,8 +3391,12 @@ struct ISteamUserStats
 		int (__fastcall *GetGlobalStatHistory_2)(ISteamUserStats*, const char*, __int64*, unsigned int);
 		bool (__fastcall *GetAchievementProgressLimits)(ISteamUserStats*, const char*, float*, float*);
 		bool (__fastcall *GetAchievementProgressLimits_2)(ISteamUserStats*, const char*, int*, int*);
+
+		vtbl() = delete;
 	};
 
+
+	ISteamUserStats() = delete;
 
 	virtual bool virtual_RequestCurrentStats()
 	{
@@ -3479,8 +3707,12 @@ struct ISteamUGC
 		unsigned __int64 (__fastcall *RemoveAppDependency)(ISteamUGC*, unsigned __int64, unsigned int);
 		unsigned __int64 (__fastcall *GetAppDependencies)(ISteamUGC*, unsigned __int64);
 		unsigned __int64 (__fastcall *DeleteItem)(ISteamUGC*, unsigned __int64);
+
+		vtbl() = delete;
 	};
 
+
+	ISteamUGC() = delete;
 
 	virtual unsigned __int64 virtual_CreateQueryUserUGCRequest(unsigned int _0, EUserUGCList _1, EUGCMatchingUGCType _2, EUserUGCListSortOrder _3, unsigned int _4, unsigned int _5, unsigned int _6)
 	{
@@ -3887,10 +4119,14 @@ struct IDPPeer
 		void (__fastcall *Disconnect)(IDPPeer*);
 		void (__fastcall *GetAddress)(IDPPeer*, char*, unsigned __int64);
 		void (__fastcall *IDPPeer_Destructor)(IDPPeer*);
+
+		vtbl() = delete;
 	};
 
 	int m_packetSentCount;
 	int m_packetReceivedCount;
+
+	IDPPeer() = delete;
 
 	virtual void virtual_Send(DP_Packet* _0, int _1)
 	{
@@ -3926,19 +4162,23 @@ struct CVidPoly
 	_EdgeDescription* m_pET;
 	_EdgeDescription* m_pAET;
 	void (__fastcall *m_pDrawHLineFunction)(CVidPoly*, void*, int, int, unsigned int, const CRect*, const CPoint*);
+
+	CVidPoly() = delete;
 };
 
-typedef void (*type_CString_ConstructFromChars)(CString* pThis, const char* lpsz);
+typedef void (__thiscall *type_CString_ConstructFromChars)(CString* pThis, const char* lpsz);
 extern type_CString_ConstructFromChars p_CString_ConstructFromChars;
 
-typedef void (*type_CString_Destruct)(CString* pThis);
+typedef void (__thiscall *type_CString_Destruct)(CString* pThis);
 extern type_CString_Destruct p_CString_Destruct;
 
 struct CString
 {
 	char* m_pchData;
 
-	void ConstructFromChars(const char* lpsz)
+	CString() = delete;
+
+	void Construct(const char* lpsz)
 	{
 		p_CString_ConstructFromChars(this, lpsz);
 	}
@@ -3954,6 +4194,8 @@ struct CAIId
 	int m_id;
 	CString m_line;
 	CString m_start;
+
+	CAIId() = delete;
 };
 
 struct CFeedbackEntry
@@ -3965,6 +4207,8 @@ struct CFeedbackEntry
 	unsigned int ref1;
 	int int4;
 	CString stringIn;
+
+	CFeedbackEntry() = delete;
 };
 
 struct CNetworkConnectionSettings
@@ -3972,40 +4216,30 @@ struct CNetworkConnectionSettings
 	unsigned int dwFlags;
 	unsigned int dwMaxPlayers;
 	CString sPlayerName;
+
+	CNetworkConnectionSettings() = delete;
 };
 
 struct CSpawnVar
 {
 	CString mScope;
 	CString mLabel;
+
+	CSpawnVar() = delete;
 };
 
 struct CSpawnPointVar : CSpawnVar
 {
+	CSpawnPointVar() = delete;
 };
 
-struct CSpawnPoint
-{
-	struct vtbl
-	{
-		void (__fastcall *CSpawnPoint_Destructor)(CSpawnPoint*);
-	};
-
-	CPoint mLocation;
-	int mFacing;
-
-	virtual void virtual_CSpawnPoint_Destructor()
-	{
-	}
-};
-
-typedef void (*type_CRes_Construct)(CRes* pThis);
+typedef void (__thiscall *type_CRes_Construct)(CRes* pThis);
 extern type_CRes_Construct p_CRes_Construct;
 
-typedef void (*type_CRes_Destruct)(CRes* pThis);
+typedef void (__thiscall *type_CRes_Destruct)(CRes* pThis);
 extern type_CRes_Destruct p_CRes_Destruct;
 
-typedef void* (*type_CRes_Demand)(CRes* pThis);
+typedef void* (__thiscall *type_CRes_Demand)(CRes* pThis);
 extern type_CRes_Demand p_CRes_Demand;
 
 struct CRes
@@ -4015,6 +4249,8 @@ struct CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	const char* resref;
@@ -4029,7 +4265,9 @@ struct CRes
 	bool bWasMalloced;
 	bool bLoaded;
 
-	CRes()
+	CRes() = delete;
+
+	void Construct()
 	{
 		p_CRes_Construct(this);
 	}
@@ -4066,6 +4304,8 @@ struct CResWebm : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	void* m_pCodec;
@@ -4083,6 +4323,8 @@ struct CResWebm : CRes
 	float m_nDeltaY;
 	float m_nOffsetX;
 	float m_nOffsetY;
+
+	CResWebm() = delete;
 };
 
 struct CResWave : CRes
@@ -4092,6 +4334,8 @@ struct CResWave : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	int m_bCompressed;
@@ -4100,6 +4344,8 @@ struct CResWave : CRes
 	unsigned int m_nWaveCompressedSize;
 	unsigned __int8* m_pWaveData;
 	WAV_Header* m_pWaveFormatEx;
+
+	CResWave() = delete;
 };
 
 struct CResWED : CRes
@@ -4109,6 +4355,8 @@ struct CResWED : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	WED_WedHeader_st* pWEDHeader;
@@ -4117,6 +4365,8 @@ struct CResWED : CRes
 	WED_ScreenSectionList* pScreenSectionList;
 	WED_PolyList_st* pPolyList;
 	WED_PolyPoint_st* pPolyPoints;
+
+	CResWED() = delete;
 };
 
 struct CResTileSet : CRes
@@ -4126,9 +4376,13 @@ struct CResTileSet : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	ResFixedHeader_st* h;
+
+	CResTileSet() = delete;
 };
 
 struct CResText : CRes
@@ -4138,9 +4392,13 @@ struct CResText : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	CString m_string;
+
+	CResText() = delete;
 };
 
 struct CResSpell : CRes
@@ -4150,11 +4408,15 @@ struct CResSpell : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	Spell_ability_st* pAbilities;
 	Item_effect_st* pEffects;
 	Spell_Header_st* pHeader;
+
+	CResSpell() = delete;
 };
 
 struct CResPVR : CRes
@@ -4164,12 +4426,16 @@ struct CResPVR : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	int texture;
 	int format;
 	int filtering;
 	CSize size;
+
+	CResPVR() = delete;
 };
 
 struct CResMosaic : CRes
@@ -4179,6 +4445,8 @@ struct CResMosaic : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	void* pUncompressedData;
@@ -4190,6 +4458,8 @@ struct CResMosaic : CRes
 	tagRGBQUAD* pPalettes;
 	unsigned __int8* m_pData;
 	unsigned int* pOffsets;
+
+	CResMosaic() = delete;
 };
 
 struct CResItem : CRes
@@ -4199,11 +4469,15 @@ struct CResItem : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	Item_ability_st* pAbilities;
 	Item_effect_st* pEffects;
 	Item_Header_st* pHeader;
+
+	CResItem() = delete;
 };
 
 struct CResGame : CRes
@@ -4213,8 +4487,12 @@ struct CResGame : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
+
+	CResGame() = delete;
 };
 
 struct CResFont : CRes
@@ -4224,9 +4502,13 @@ struct CResFont : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	void* font;
+
+	CResFont() = delete;
 };
 
 struct CResCell : CRes
@@ -4236,6 +4518,8 @@ struct CResCell : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	void* pUncompressedData;
@@ -4249,6 +4533,8 @@ struct CResCell : CRes
 	unsigned __int16 m_nFrameList;
 	tagRGBQUAD* m_pPalette;
 	int m_bParsing;
+
+	CResCell() = delete;
 };
 
 struct CResBitmap : CRes
@@ -4258,6 +4544,8 @@ struct CResBitmap : CRes
 		bool (__fastcall *Parse)(CRes*, void*);
 		void (__fastcall *Dump)(CRes*);
 		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
+
+		vtbl() = delete;
 	};
 
 	unsigned __int8* m_pDataDecompressed;
@@ -4268,6 +4556,156 @@ struct CResBitmap : CRes
 	tagBITMAPFILEHEADER* pBitmapFileHeader;
 	tagBITMAPINFOHEADER* pBitmapInfoHeader;
 	tagRGBQUAD* pColorTable;
+
+	CResBitmap() = delete;
+};
+
+struct CPoint
+{
+	int x;
+	int y;
+
+	CPoint()
+	{
+		this->x = 0;
+		this->y = 0;
+	}
+
+	CPoint(int x, int y)
+	{
+		this->x = x;
+		this->y = y;
+	}
+
+	CPoint(CPoint* point)
+	{
+		this->x = point->x;
+		this->y = point->y;
+	}
+};
+
+struct CAOEEntry
+{
+	enum class AOEType : __int32
+	{
+		AOE_CIRCLE = 0,
+		AOE_CONE = 1,
+		AOE_RECTANGLE = 2,
+		AOE_LINE = 3,
+	};
+
+	CAOEEntry::AOEType m_type;
+	CPoint m_center;
+	CPoint m_radius;
+	unsigned int m_color;
+
+	CAOEEntry() = delete;
+};
+
+struct CFog
+{
+	float* densityLast;
+	float* densityCurrent;
+	float* densityNext;
+	int N;
+	float dt;
+	float diff;
+	float visc;
+	float force;
+	float source;
+	int dvel;
+	float* u;
+	float* v;
+	float* u_prev;
+	float* v_prev;
+	float* dens;
+	float* dens_prev;
+	bool pointEnabled;
+	int pointAmount;
+	int pointDuration;
+	CPoint pointPos;
+	float pointUForce;
+	float pointVForce;
+	CPoint explosionPos;
+	int updateCounter;
+	bool fading;
+	bool initialized;
+	float alpha;
+	int contrast;
+	unsigned int innerColor;
+	unsigned int outerColor;
+
+	CFog() = delete;
+};
+
+struct CGameAreaClairvoyanceEntry
+{
+	CPoint m_position;
+	int m_id;
+	int m_timeKill;
+	unsigned __int8* m_pVisibleTerrainTable;
+	int m_charId;
+	__int16 m_visRange;
+	int* m_pVisMapExploredArea;
+
+	CGameAreaClairvoyanceEntry() = delete;
+};
+
+struct MAP_CHAR_POSITIONS
+{
+	CPoint ptPos;
+	int id;
+
+	MAP_CHAR_POSITIONS() = delete;
+};
+
+struct CVIDMODE_RETICLE_DESCRIPTION
+{
+	CPoint ptCenter;
+	__int16 xAxis;
+	__int16 yAxis;
+	__int16 piePiecePtXOffset;
+	__int16 piePiecePtYOffset;
+	__int16 piePieceXOffset;
+	__int16 piePieceYOffset;
+	__int16 xGap;
+	__int16 yGap;
+	__int16 cursor;
+
+	CVIDMODE_RETICLE_DESCRIPTION() = delete;
+};
+
+struct CMarker
+{
+	unsigned __int8 m_type;
+	__int16 m_nReticleCounter;
+	unsigned __int8 m_nReticleForceRender;
+	unsigned __int8 m_nReticleForceRenderTarget;
+	unsigned int m_rgbColor;
+	CVIDMODE_RETICLE_DESCRIPTION m_reticleDesc;
+	unsigned __int8 m_bTalking;
+	unsigned __int8 m_bDoubleSize;
+
+	CMarker() = delete;
+};
+
+struct CSpawnPoint
+{
+	struct vtbl
+	{
+		void (__fastcall *CSpawnPoint_Destructor)(CSpawnPoint*);
+
+		vtbl() = delete;
+	};
+
+	CPoint mLocation;
+	int mFacing;
+
+	CSpawnPoint() = delete;
+
+	virtual void virtual_CSpawnPoint_Destructor()
+	{
+	}
 };
 
 struct CPersistantEffect
@@ -4277,6 +4715,8 @@ struct CPersistantEffect
 		void (__fastcall *CPersistantEffect_Destructor)(CPersistantEffect*);
 		void (__fastcall *AIUpdate)(CPersistantEffect*, CGameSprite*, int);
 		CPersistantEffect* (__fastcall *Copy)(CPersistantEffect*);
+
+		vtbl() = delete;
 	};
 
 	int m_done;
@@ -4287,6 +4727,8 @@ struct CPersistantEffect
 	__int16 m_period;
 	__int16 m_periodCounter;
 	int m_counter;
+
+	CPersistantEffect() = delete;
 
 	virtual void virtual_CPersistantEffect_Destructor()
 	{
@@ -4307,8 +4749,12 @@ struct CObject
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CObject() = delete;
 
 	virtual void virtual_CObject_Destructor()
 	{
@@ -4323,6 +4769,8 @@ struct CList : CObject
 		CList::CNode* pNext;
 		CList::CNode* pPrev;
 		TYPE data;
+
+		CNode() = delete;
 	};
 
 	CList::CNode* m_pNodeHead;
@@ -4331,6 +4779,8 @@ struct CList : CObject
 	CList::CNode* m_pNodeFree;
 	CPlex* m_pBlocks;
 	int m_nBlockSize;
+
+	CList() = delete;
 };
 
 template<class BASE_CLASS, class T>
@@ -4341,6 +4791,8 @@ struct CTypedPtrList : CObject
 		CTypedPtrList::CNode* pNext;
 		CTypedPtrList::CNode* pPrev;
 		T data;
+
+		CNode() = delete;
 	};
 
 	CTypedPtrList::CNode* m_pNodeHead;
@@ -4350,9 +4802,21 @@ struct CTypedPtrList : CObject
 	CPlex* m_pBlocks;
 	int m_nBlockSize;
 
-	void RemoveHead()
+	CTypedPtrList() = delete;
+
+	void Construct(int size)
 	{
-		((CObList*)this)->RemoveHead();
+		((CObList*)this)->Construct(size);
+	}
+
+	CTypedPtrList::CNode* AddTail(T newElement)
+	{
+		return (CTypedPtrList::CNode*)((CObList*)this)->AddTail((void*)newElement);
+	}
+
+	T RemoveHead()
+	{
+		return (T)((CObList*)this)->RemoveHead();
 	}
 
 	void Destruct()
@@ -4368,6 +4832,8 @@ struct CTypedPtrArray : CObject
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;
+
+	CTypedPtrArray() = delete;
 };
 
 struct CStringList : CObject
@@ -4377,11 +4843,15 @@ struct CStringList : CObject
 		CStringList::CNode* pNext;
 		CStringList::CNode* pPrev;
 		CString data;
+
+		CNode() = delete;
 	};
 
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CStringList::CNode* m_pNodeHead;
@@ -4390,6 +4860,8 @@ struct CStringList : CObject
 	CStringList::CNode* m_pNodeFree;
 	CPlex* m_pBlocks;
 	int m_nBlockSize;
+
+	CStringList() = delete;
 };
 
 struct CPtrList : CObject
@@ -4399,11 +4871,15 @@ struct CPtrList : CObject
 		CPtrList::CNode* pNext;
 		CPtrList::CNode* pPrev;
 		void* data;
+
+		CNode() = delete;
 	};
 
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CPtrList::CNode* m_pNodeHead;
@@ -4412,6 +4888,8 @@ struct CPtrList : CObject
 	CPtrList::CNode* m_pNodeFree;
 	CPlex* m_pBlocks;
 	int m_nBlockSize;
+
+	CPtrList() = delete;
 };
 
 struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
@@ -4419,8 +4897,12 @@ struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CPersistantEffectList() = delete;
 };
 
 struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffect*>
@@ -4428,22 +4910,21 @@ struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffe
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	unsigned int m_nCounter;
-};
 
-struct CAIGroup
-{
-	__int16 m_groupId;
-	int m_groupChanged;
-	CTypedPtrList<CPtrList,long> m_memberList;
+	CPersistantEffectListRegenerated() = delete;
 };
 
 struct CAIResponseSet
 {
 	CTypedPtrList<CPtrList,CAIResponse*> m_responseList;
 	int m_weightTotal;
+
+	CAIResponseSet() = delete;
 };
 
 struct CChatBuffer
@@ -4452,12 +4933,16 @@ struct CChatBuffer
 	CTypedPtrList<CPtrList,CString*> m_lMessages;
 	int m_nMessageCount;
 	int m_nDisplayCount;
+
+	CChatBuffer() = delete;
 };
 
 struct CMessageHandler
 {
 	CTypedPtrList<CPtrList,CMessage*> m_messageList;
 	unsigned __int8 m_bLastArbitrationLockStatus;
+
+	CMessageHandler() = delete;
 };
 
 struct CAIResponse
@@ -4467,17 +4952,23 @@ struct CAIResponse
 	__int16 m_responseSetNum;
 	__int16 m_scriptNum;
 	CTypedPtrList<CPtrList,CAIAction*> m_actionList;
+
+	CAIResponse() = delete;
 };
 
 struct CAICondition
 {
 	CTypedPtrList<CPtrList,CAITrigger*> m_triggerList;
+
+	CAICondition() = delete;
 };
 
 struct CAIConditionResponse
 {
 	CAICondition m_condition;
 	CAIResponseSet m_responseSet;
+
+	CAIConditionResponse() = delete;
 };
 
 struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
@@ -4485,6 +4976,8 @@ struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CString mSectionAlias;
@@ -4494,6 +4987,8 @@ struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
 	unsigned int SpawnTimeOfDay;
 	unsigned int mInterval;
 	CSpawnVar* pControlVar;
+
+	CSpawnList() = delete;
 };
 
 struct CSpawnFile : CTypedPtrList<CPtrList,void*>
@@ -4501,11 +4996,15 @@ struct CSpawnFile : CTypedPtrList<CPtrList,void*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CSpawnList* mpExitList;
 	CSpawnList* mpEnterList;
 	int m_bInSpawn;
+
+	CSpawnFile() = delete;
 };
 
 struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
@@ -4513,11 +5012,15 @@ struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	__POSITION* m_currentSound;
 	int m_soundPlaying;
 	int m_channel;
+
+	CSequenceSoundList() = delete;
 };
 
 struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
@@ -4525,8 +5028,12 @@ struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CSelectiveWeaponTypeList() = delete;
 };
 
 struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
@@ -4534,8 +5041,12 @@ struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CSelectiveBonusList() = delete;
 };
 
 struct CPtrArray : CObject
@@ -4543,18 +5054,24 @@ struct CPtrArray : CObject
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	void** m_pData;
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;
+
+	CPtrArray() = delete;
 };
 
 struct CGameJournal
 {
 	int IWD_TimeCheat;
 	CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*> m_aChapters;
+
+	CGameJournal() = delete;
 };
 
 struct CImportGame
@@ -4570,6 +5087,8 @@ struct CImportGame
 	unsigned __int8* m_pGlobalVariables;
 	unsigned int m_nPartyGold;
 	unsigned int m_nReputation;
+
+	CImportGame() = delete;
 };
 
 struct CSpawnPointArray : CTypedPtrArray<CPtrArray,CSpawnPoint*>
@@ -4577,16 +5096,26 @@ struct CSpawnPointArray : CTypedPtrArray<CPtrArray,CSpawnPoint*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	int mDefaultFacing;
+
+	CSpawnPointArray() = delete;
 };
 
-typedef CObject* (*type_CObList_RemoveHead)(CObList* pThis);
+typedef void (__thiscall *type_CObList_Construct)(CObList* pThis, int size);
+extern type_CObList_Construct p_CObList_Construct;
+
+typedef CObject* (__thiscall *type_CObList_RemoveHead)(CObList* pThis);
 extern type_CObList_RemoveHead p_CObList_RemoveHead;
 
-typedef void (*type_CObList_Destruct)(CObList* pThis);
+typedef void (__thiscall *type_CObList_Destruct)(CObList* pThis);
 extern type_CObList_Destruct p_CObList_Destruct;
+
+typedef __POSITION* (__thiscall *type_CObList_AddTail)(CObList* pThis, void* newElement);
+extern type_CObList_AddTail p_CObList_AddTail;
 
 struct CObList : CObject
 {
@@ -4595,11 +5124,15 @@ struct CObList : CObject
 		CObList::CNode* pNext;
 		CObList::CNode* pPrev;
 		CObject* data;
+
+		CNode() = delete;
 	};
 
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CObList::CNode* m_pNodeHead;
@@ -4609,6 +5142,13 @@ struct CObList : CObject
 	CPlex* m_pBlocks;
 	int m_nBlockSize;
 
+	CObList() = delete;
+
+	void Construct(int size)
+	{
+		p_CObList_Construct(this, size);
+	}
+
 	CObject* RemoveHead()
 	{
 		return p_CObList_RemoveHead(this);
@@ -4617,6 +5157,11 @@ struct CObList : CObject
 	void Destruct()
 	{
 		p_CObList_Destruct(this);
+	}
+
+	__POSITION* AddTail(void* newElement)
+	{
+		return p_CObList_AddTail(this, newElement);
 	}
 };
 
@@ -4680,10 +5225,14 @@ struct CWarp : CObject
 		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
 		void (__fastcall *TimerUpdate)(CWarp*);
 		void (__fastcall *RenderUI)(CWarp*);
+
+		vtbl() = delete;
 	};
 
 	CWarp* pLastEngine;
 	CObList lTimers;
+
+	CWarp() = delete;
 
 	virtual void virtual_InvalidateCursorRect(const CRect* _0)
 	{
@@ -4929,12 +5478,16 @@ struct CObArray : CObject
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CObject** m_pData;
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;
+
+	CObArray() = delete;
 };
 
 struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
@@ -4942,8 +5495,12 @@ struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CMoveList() = delete;
 };
 
 struct CMessage
@@ -4957,10 +5514,14 @@ struct CMessage
 		void (__fastcall *MarshalMessage)(CMessage*, unsigned __int8**, unsigned int*);
 		int (__fastcall *UnmarshalMessage)(CMessage*, unsigned __int8*, unsigned int);
 		void (__fastcall *Run)(CMessage*);
+
+		vtbl() = delete;
 	};
 
 	int m_targetId;
 	int m_sourceId;
+
+	CMessage() = delete;
 
 	virtual void virtual_CMessage_Destructor()
 	{
@@ -5000,10 +5561,14 @@ struct CMemINIValue
 	struct vtbl
 	{
 		void (__fastcall *CMemINIValue_Destructor)(CMemINIValue*);
+
+		vtbl() = delete;
 	};
 
 	CString mName;
 	CString mValue;
+
+	CMemINIValue() = delete;
 
 	virtual void virtual_CMemINIValue_Destructor()
 	{
@@ -5015,9 +5580,13 @@ struct CMemINISection : CTypedPtrList<CPtrList,CMemINIValue*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CString mSectionName;
+
+	CMemINISection() = delete;
 };
 
 struct CMemINI : CTypedPtrList<CPtrList,void*>
@@ -5025,10 +5594,14 @@ struct CMemINI : CTypedPtrList<CPtrList,void*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CString mFileName;
 	CMemINISection* mpLastSection;
+
+	CMemINI() = delete;
 };
 
 struct CMapStringToString : CObject
@@ -5039,11 +5612,15 @@ struct CMapStringToString : CObject
 		unsigned int nHashValue;
 		CString key;
 		CString value;
+
+		CAssoc() = delete;
 	};
 
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CMapStringToString::CAssoc** m_pHashTable;
@@ -5052,6 +5629,8 @@ struct CMapStringToString : CObject
 	CMapStringToString::CAssoc* m_pFreeList;
 	CPlex* m_pBlocks;
 	int m_nBlockSize;
+
+	CMapStringToString() = delete;
 };
 
 struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
@@ -5059,8 +5638,12 @@ struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CImmunitiesWeapon() = delete;
 };
 
 struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
@@ -5068,8 +5651,12 @@ struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CImmunitiesSpellList() = delete;
 };
 
 struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>
@@ -5077,8 +5664,12 @@ struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoo
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CImmunitiesSchoolAndSecondaryDecrementing() = delete;
 };
 
 struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
@@ -5086,8 +5677,12 @@ struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CImmunitiesSchoolAndSecondary() = delete;
 };
 
 struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
@@ -5095,8 +5690,12 @@ struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CImmunitiesProjectile() = delete;
 };
 
 struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>
@@ -5104,8 +5703,12 @@ struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemType
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CImmunitiesItemTypeEquipList() = delete;
 };
 
 struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
@@ -5113,8 +5716,12 @@ struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CImmunitiesItemEquipList() = delete;
 };
 
 struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
@@ -5122,8 +5729,12 @@ struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CImmunitiesEffect() = delete;
 };
 
 struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
@@ -5131,8 +5742,12 @@ struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CImmunitiesAIType() = delete;
 };
 
 struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
@@ -5140,8 +5755,12 @@ struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CGameEffectUsabilityList() = delete;
 };
 
 struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
@@ -5149,12 +5768,16 @@ struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	__POSITION* m_posNext;
 	__POSITION* m_posCurrent;
 	int m_newEffect;
 	int m_retry;
+
+	CGameEffectList() = delete;
 };
 
 struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
@@ -5162,6 +5785,8 @@ struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	unsigned int m_dialogText;
@@ -5170,6 +5795,8 @@ struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
 	unsigned int m_conditionPriority;
 	unsigned int m_dialogIndex;
 	unsigned __int8 m_bDisplayButton;
+
+	CGameDialogEntry() = delete;
 };
 
 struct CGameButtonList : CTypedPtrList<CPtrList,CButtonData*>
@@ -5177,9 +5804,13 @@ struct CGameButtonList : CTypedPtrList<CPtrList,CButtonData*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	int m_nFirstMageSpellIndex;
+
+	CGameButtonList() = delete;
 };
 
 struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
@@ -5187,8 +5818,12 @@ struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CGameAbilityList() = delete;
 };
 
 struct CFile : CObject
@@ -5211,11 +5846,15 @@ struct CFile : CObject
 		void (__fastcall *Flush)(CFile*);
 		void (__fastcall *Close)(CFile*);
 		unsigned int (__fastcall *GetBufferPtr)(CFile*, unsigned int, unsigned int, void**, void**);
+
+		vtbl() = delete;
 	};
 
 	unsigned int m_hFile;
 	int m_bCloseOnDelete;
 	CString m_strFileName;
+
+	CFile() = delete;
 
 	virtual unsigned int virtual_GetPosition()
 	{
@@ -5294,10 +5933,14 @@ struct CException : CObject
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
 		int (__fastcall *GetErrorMessage)(CException*, char*, unsigned int, unsigned int*);
+
+		vtbl() = delete;
 	};
 
 	int m_bAutoDelete;
 	int m_bReadyForDelete;
+
+	CException() = delete;
 
 	virtual int virtual_GetErrorMessage(char* _0, unsigned int _1, unsigned int* _2)
 	{
@@ -5311,11 +5954,15 @@ struct CFileException : CException
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
 		int (__fastcall *GetErrorMessage)(CException*, char*, unsigned int, unsigned int*);
+
+		vtbl() = delete;
 	};
 
 	int m_cause;
 	int m_lOsError;
 	CString m_strFileName;
+
+	CFileException() = delete;
 };
 
 struct CDWordArray : CObject
@@ -5323,12 +5970,16 @@ struct CDWordArray : CObject
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	unsigned int* m_pData;
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;
+
+	CDWordArray() = delete;
 };
 
 struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
@@ -5336,8 +5987,12 @@ struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CCriticalEntryList() = delete;
 };
 
 struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
@@ -5345,8 +6000,12 @@ struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CContingencyList() = delete;
 };
 
 struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
@@ -5354,8 +6013,12 @@ struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CColorRanges() = delete;
 };
 
 struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
@@ -5363,8 +6026,12 @@ struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CColorEffects() = delete;
 };
 
 struct CCallbackBase
@@ -5374,10 +6041,14 @@ struct CCallbackBase
 		void (__fastcall *Run)(CCallbackBase*, void*, bool, unsigned __int64);
 		void (__fastcall *Run_2)(CCallbackBase*, void*);
 		int (__fastcall *GetCallbackSizeBytes)(CCallbackBase*);
+
+		vtbl() = delete;
 	};
 
 	unsigned __int8 m_nCallbackFlags;
 	int m_iCallback;
+
+	CCallbackBase() = delete;
 
 	virtual void virtual_Run(void* _0, bool _1, unsigned __int64 _2)
 	{
@@ -5399,6 +6070,8 @@ struct CCallResult : CCallbackBase
 	unsigned __int64 m_hAPICall;
 	BASE_CLASS* m_pObj;
 	void (__thiscall *m_Func)(BASE_CLASS*, RESULT_CLASS*, bool);
+
+	CCallResult() = delete;
 };
 
 struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
@@ -5406,8 +6079,12 @@ struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CBounceList() = delete;
 };
 
 struct CBaldurEngine : CWarp
@@ -5490,10 +6167,14 @@ struct CBaldurEngine : CWarp
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	int m_nSelectedCharacter;
 	int m_nPickedCharacter;
+
+	CBaldurEngine() = delete;
 
 	virtual int virtual_GetSelectedCharacter(int _0)
 	{
@@ -5659,8 +6340,12 @@ struct CDungeonMaster : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
+
+	CDungeonMaster() = delete;
 };
 
 struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
@@ -5668,14 +6353,71 @@ struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
+
+	CApplyEffectList() = delete;
+};
+
+typedef void (__thiscall *type_CAIGroup_FollowLeader)(CAIGroup* pThis, CPoint target, int additive);
+extern type_CAIGroup_FollowLeader p_CAIGroup_FollowLeader;
+
+typedef void (__thiscall *type_CAIGroup_RemoveFromSearch)(CAIGroup* pThis, CSearchBitmap* search);
+extern type_CAIGroup_RemoveFromSearch p_CAIGroup_RemoveFromSearch;
+
+typedef void (__thiscall *type_CAIGroup_AddToSearch)(CAIGroup* pThis, CSearchBitmap* search);
+extern type_CAIGroup_AddToSearch p_CAIGroup_AddToSearch;
+
+typedef short* (__thiscall *type_CAIGroup_GetFacings)(CAIGroup* pThis, short formationType, short direction);
+extern type_CAIGroup_GetFacings p_CAIGroup_GetFacings;
+
+typedef CPoint* (__thiscall *type_CAIGroup_GetOffsets)(CAIGroup* pThis, short formationType, short direction, byte bFullParty);
+extern type_CAIGroup_GetOffsets p_CAIGroup_GetOffsets;
+
+struct CAIGroup
+{
+	__int16 m_groupId;
+	int m_groupChanged;
+	CTypedPtrList<CPtrList,long> m_memberList;
+
+	CAIGroup() = delete;
+
+	void Override_GroupSetTarget(CPoint target, int additive, ushort formationType, CPoint cursor);
+
+	void FollowLeader(CPoint target, int additive)
+	{
+		p_CAIGroup_FollowLeader(this, target, additive);
+	}
+
+	void RemoveFromSearch(CSearchBitmap* search)
+	{
+		p_CAIGroup_RemoveFromSearch(this, search);
+	}
+
+	void AddToSearch(CSearchBitmap* search)
+	{
+		p_CAIGroup_AddToSearch(this, search);
+	}
+
+	short* GetFacings(short formationType, short direction)
+	{
+		return p_CAIGroup_GetFacings(this, formationType, direction);
+	}
+
+	CPoint* GetOffsets(short formationType, short direction, byte bFullParty)
+	{
+		return p_CAIGroup_GetOffsets(this, formationType, direction, bFullParty);
+	}
 };
 
 template<class T>
 struct ArrayPointer
 {
 	T* data;
+
+	ArrayPointer() = delete;
 
 	T get(int index)
 	{
@@ -5702,6 +6444,8 @@ template<class T, int size>
 struct Array
 {
 	T data[size];
+
+	Array() = delete;
 
 	T get(int index)
 	{
@@ -5747,6 +6491,8 @@ struct uiItem
 		uiVariant* greyscale;
 		uiVariant* usealpha;
 		int scaletoclip;
+
+		bam_t() = delete;
 	};
 
 	struct bmp_t
@@ -5754,6 +6500,8 @@ struct uiItem
 		int resname;
 		uiVariant* resref;
 		SDL_Rect area;
+
+		bmp_t() = delete;
 	};
 
 	struct button_t
@@ -5769,6 +6517,8 @@ struct uiItem
 		uiVariant* clickable;
 		uiVariant* actionBar;
 		const char* sound;
+
+		button_t() = delete;
 	};
 
 	struct edit_t
@@ -5780,6 +6530,8 @@ struct uiItem
 		int cursor;
 		int selectStart;
 		int selectEnd;
+
+		edit_t() = delete;
 	};
 
 	struct list_t
@@ -5798,17 +6550,23 @@ struct uiItem
 		int height;
 		uiVariant* color;
 		int currentRow;
+
+		list_t() = delete;
 	};
 
 	struct map_t
 	{
 		int type;
+
+		map_t() = delete;
 	};
 
 	struct mosaic_t
 	{
 		uiVariant* resref;
 		int respectClipping;
+
+		mosaic_t() = delete;
 	};
 
 	struct movie_t
@@ -5819,6 +6577,8 @@ struct uiItem
 		unsigned int background;
 		int loop;
 		uiVariant* queuedMovie;
+
+		movie_t() = delete;
 	};
 
 	struct progressBar_t
@@ -5826,12 +6586,16 @@ struct uiItem
 		uiVariant* percent;
 		uiVariant* color;
 		uiVariant* fullColor;
+
+		progressBar_t() = delete;
 	};
 
 	struct rectangle_t
 	{
 		int number;
 		uiVariant* opacity;
+
+		rectangle_t() = delete;
 	};
 
 	struct scrollbar_t
@@ -5846,6 +6610,8 @@ struct uiItem
 		int respectConstraints;
 		int clunkyScroll;
 		int skipReset;
+
+		scrollbar_t() = delete;
 	};
 
 	struct slider_t
@@ -5855,6 +6621,8 @@ struct uiItem
 		int palette;
 		const char* background;
 		int right;
+
+		slider_t() = delete;
 	};
 
 	struct slot_t
@@ -5864,6 +6632,8 @@ struct uiItem
 		uiVariant* usages;
 		uiVariant* highlight;
 		uiVariant* tint;
+
+		slot_t() = delete;
 	};
 
 	struct text_t
@@ -5878,6 +6648,8 @@ struct uiItem
 		int lower;
 		uiVariant* shadow;
 		uiVariant* showhighlight;
+
+		text_t() = delete;
 	};
 
 	struct tooltip_t
@@ -5887,11 +6659,15 @@ struct uiItem
 		uiVariant* force;
 		int position;
 		int forceTop;
+
+		tooltip_t() = delete;
 	};
 
 	struct uiTemplate_t
 	{
 		uiItem* item;
+
+		uiTemplate_t() = delete;
 	};
 
 	uiItemType type;
@@ -5941,6 +6717,8 @@ struct uiItem
 	uiVariant* glow;
 	uiVariant* pulse;
 	uiItem* next;
+
+	uiItem() = delete;
 };
 
 struct WED_LayerHeader_st
@@ -5952,6 +6730,8 @@ struct WED_LayerHeader_st
 	unsigned __int16 nLayerFlags;
 	unsigned int nOffsetToTileData;
 	unsigned int nOffsetToTileList;
+
+	WED_LayerHeader_st() = delete;
 };
 
 struct SteamUGCQueryCompleted_t
@@ -5962,6 +6742,8 @@ struct SteamUGCQueryCompleted_t
 	unsigned int m_unTotalMatchingResults;
 	bool m_bCachedData;
 	Array<char,256> m_rgchNextCursor;
+
+	SteamUGCQueryCompleted_t() = delete;
 };
 
 struct SteamUGCDetails_t
@@ -5992,12 +6774,16 @@ struct SteamUGCDetails_t
 	unsigned int m_unVotesDown;
 	float m_flScore;
 	unsigned int m_unNumChildren;
+
+	SteamUGCDetails_t() = delete;
 };
 
 struct SteamUGCRequestUGCDetailsResult_t
 {
 	SteamUGCDetails_t m_details;
 	bool m_bCachedData;
+
+	SteamUGCRequestUGCDetailsResult_t() = delete;
 };
 
 #pragma pack(push, 1)
@@ -6041,6 +6827,8 @@ struct Spell_Header_st
 	unsigned int effectsOffset;
 	unsigned __int16 castingStartingEffect;
 	unsigned __int16 castingEffectCount;
+
+	Spell_Header_st() = delete;
 };
 #pragma pack(pop)
 
@@ -6050,6 +6838,8 @@ struct SDL_TextInputEvent
 	unsigned int timestamp;
 	unsigned int windowID;
 	Array<char,32> text;
+
+	SDL_TextInputEvent() = delete;
 };
 
 struct SDL_TextEditingEvent
@@ -6060,6 +6850,8 @@ struct SDL_TextEditingEvent
 	Array<char,32> text;
 	int start;
 	int length;
+
+	SDL_TextEditingEvent() = delete;
 };
 
 struct SDL_PixelFormat
@@ -6083,6 +6875,8 @@ struct SDL_PixelFormat
 	unsigned __int8 Ashift;
 	int refcount;
 	SDL_PixelFormat* next;
+
+	SDL_PixelFormat() = delete;
 };
 
 union SDL_Event
@@ -6113,12 +6907,16 @@ union SDL_Event
 	SDL_DollarGestureEvent dgesture;
 	SDL_DropEvent drop;
 	Array<unsigned __int8,56> padding;
+
+	SDL_Event() = delete;
 };
 
 template<int length>
 struct LCharString
 {
 	Array<char,length> data;
+
+	LCharString() = delete;
 
 	char getChar(int index)
 	{
@@ -6191,6 +6989,8 @@ struct Item_ability_st
 	unsigned int abilityFlags;
 	unsigned __int16 missileType;
 	Array<unsigned __int16,6> attackProbability;
+
+	Item_ability_st() = delete;
 };
 #pragma pack(pop)
 
@@ -6234,29 +7034,34 @@ struct Item_Header_st
 	unsigned int effectsOffset;
 	unsigned __int16 equipedStartingEffect;
 	unsigned __int16 equipedEffectCount;
+
+	Item_Header_st() = delete;
 };
 #pragma pack(pop)
 
-typedef uiMenu* (*type_findMenu)(const char* name, int panel, int state);
+typedef uiMenu* ( *type_findMenu)(const char* name, int panel, int state);
 extern type_findMenu p_findMenu;
 
-typedef void (*type_saveMenuStack)();
+typedef void ( *type_saveMenuStack)();
 extern type_saveMenuStack p_saveMenuStack;
 
-typedef void (*type_uiLoadMenu)(CResText* menuRes);
+typedef void ( *type_uiLoadMenu)(CResText* menuRes);
 extern type_uiLoadMenu p_uiLoadMenu;
 
-typedef void** (*type_bsearch)(void* key, void* base, size_t num, size_t width, void* func);
+typedef void** ( *type_bsearch)(void* key, void* base, size_t num, size_t width, void* func);
 extern type_bsearch p_bsearch;
 
-typedef void (*type_restoreMenuStack)();
+typedef void ( *type_restoreMenuStack)();
 extern type_restoreMenuStack p_restoreMenuStack;
 
-typedef int (*type_CompareCResByTypeThenName)(const CRes* a, const CRes* b);
+typedef int ( *type_CompareCResByTypeThenName)(const CRes* a, const CRes* b);
 extern type_CompareCResByTypeThenName p_CompareCResByTypeThenName;
 
-typedef int (*type_SDL_GetKeyFromName)(const char* name);
+typedef int ( *type_SDL_GetKeyFromName)(const char* name);
 extern type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
+
+typedef int ( *type_rand)();
+extern type_rand p_rand;
 
 extern int* p_numMenus;
 extern Array<uiMenu,256>* p_menus;
@@ -6266,6 +7071,7 @@ extern CResText** p_menuSrc;
 extern int* p_menuLength;
 extern CTypedPtrArray<CPtrArray,CRes*>* p_resources;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
+extern CBaldurChitin** p_g_pBaldurChitin;
 
 struct DP_Player
 {
@@ -6277,6 +7083,8 @@ struct DP_Player
 	void* batton;
 	IDPPeer* peer;
 	bool in_game;
+
+	DP_Player() = delete;
 };
 
 struct CWorldMapLinks
@@ -6292,6 +7100,8 @@ struct CWorldMapLinks
 	Array<unsigned __int8,8> m_resRandomEncounterArea4;
 	unsigned int m_nEncounterProbability;
 	Array<unsigned int,32> nUnused;
+
+	CWorldMapLinks() = delete;
 };
 
 struct CWorldMapData
@@ -6310,6 +7120,8 @@ struct CWorldMapData
 	Array<unsigned __int8,8> m_resAreaIcons;
 	unsigned int m_dwFlags;
 	Array<unsigned int,31> nUnused;
+
+	CWorldMapData() = delete;
 };
 
 struct CWorldMapArea
@@ -6333,6 +7145,8 @@ struct CWorldMapArea
 	unsigned int m_nEastEdgeStartingLink;
 	unsigned int m_nEastEdgeCount;
 	Array<unsigned int,32> nUnused;
+
+	CWorldMapArea() = delete;
 };
 
 struct CVisibilityMapTreeNode
@@ -6341,6 +7155,8 @@ struct CVisibilityMapTreeNode
 	unsigned __int16 m_nRange;
 	Array<__int16,3> m_aChildren;
 	__int16 m_parent;
+
+	CVisibilityMapTreeNode() = delete;
 };
 
 struct CVisibilityMap
@@ -6354,6 +7170,8 @@ struct CVisibilityMap
 	Array<int,15> m_aCharacterIds;
 	CVisibilityMapTreeNode** m_pVisMapTrees;
 	CVisibilityMapEllipse* m_pVisMapEllipses;
+
+	CVisibilityMap() = delete;
 };
 
 struct CVidPalette
@@ -6367,6 +7185,8 @@ struct CVidPalette
 	unsigned __int8 m_bPaletteOwner;
 	int m_bSubRangesCalculated;
 	Array<unsigned __int8,7> m_rangeColors;
+
+	CVidPalette() = delete;
 };
 
 struct CVIDIMG_PALETTEAFFECT
@@ -6381,18 +7201,24 @@ struct CVIDIMG_PALETTEAFFECT
 	Array<unsigned int*,7> pRangeLights;
 	Array<unsigned __int8,7> aRangeLightPeriods;
 	unsigned __int8 suppressTints;
+
+	CVIDIMG_PALETTEAFFECT() = delete;
 };
 
 struct CVidImage
 {
 	CVidPalette m_cPalette;
 	CVIDIMG_PALETTEAFFECT mPaletteAffects;
+
+	CVidImage() = delete;
 };
 
 struct CVidTile : CVidImage
 {
 	CResTile* pRes;
 	unsigned int m_dwFlags;
+
+	CVidTile() = delete;
 };
 
 struct CTlkTable
@@ -6404,12 +7230,16 @@ struct CTlkTable
 	unsigned int* m_engineStrings;
 	unsigned int m_nEngineStrings;
 	unsigned int m_nEngineStringBase;
+
+	CTlkTable() = delete;
 };
 
 struct CStoreFileSpell
 {
 	Array<unsigned __int8,8> m_spell;
 	unsigned int m_cost;
+
+	CStoreFileSpell() = delete;
 };
 
 struct CStoreFileItem
@@ -6420,6 +7250,8 @@ struct CStoreFileItem
 	unsigned int m_dynamicFlags;
 	unsigned int m_nInStock;
 	unsigned int m_nStoreFlags;
+
+	CStoreFileItem() = delete;
 };
 
 struct CStoreFileHeader
@@ -6459,6 +7291,8 @@ struct CStoreFileHeader
 	unsigned int m_rouletWinAmount;
 	unsigned int m_crapsWinAmount;
 	unsigned int m_wheelWinAmount;
+
+	CStoreFileHeader() = delete;
 };
 
 struct CStoreFileDrinks
@@ -6467,6 +7301,8 @@ struct CStoreFileDrinks
 	unsigned int m_strName;
 	unsigned int m_nCost;
 	unsigned int m_nRumorChance;
+
+	CStoreFileDrinks() = delete;
 };
 
 struct CSteam
@@ -6476,6 +7312,8 @@ struct CSteam
 		Array<unsigned __int64,16> vecPublished;
 		int curSubscribed;
 		int numSubscribed;
+
+		SubscribedItems() = delete;
 	};
 
 	bool m_isSteamConnected;
@@ -6495,6 +7333,8 @@ struct CSteam
 	ISteamUGC* m_UGC;
 	ISteamUserStats* m_UserStats;
 	void (*logger)(const char*, ...);
+
+	CSteam() = delete;
 };
 
 struct CSoundMixerImp
@@ -6531,6 +7371,8 @@ struct CSoundMixerImp
 	int nYCoordinate;
 	int nZCoordinate;
 	CTypedPtrList<CPtrList,CMusicPosition*> m_lMusicPositions;
+
+	CSoundMixerImp() = delete;
 };
 
 struct CSearchRequest
@@ -6561,6 +7403,8 @@ struct CSearchRequest
 	__int16 m_searchRc;
 	__int16 m_nPath;
 	int* m_pPath;
+
+	CSearchRequest() = delete;
 };
 
 struct CScreenMovies : CBaldurEngine
@@ -6643,6 +7487,8 @@ struct CScreenMovies : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -6651,6 +7497,8 @@ struct CScreenMovies : CBaldurEngine
 	CStringList* m_pMovies;
 	int m_nMovieIndex;
 	CString m_sSelectedMovie;
+
+	CScreenMovies() = delete;
 };
 
 struct CScreenConnection : CBaldurEngine
@@ -6733,6 +7581,8 @@ struct CScreenConnection : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -6766,6 +7616,8 @@ struct CScreenConnection : CBaldurEngine
 	unsigned __int8 m_bJoinReturnValue;
 	int m_nWaitingForProviderNumber;
 	int m_nWaitingForProviderCount;
+
+	CScreenConnection() = delete;
 };
 
 struct CSavedGameStoredLocation
@@ -6773,6 +7625,8 @@ struct CSavedGameStoredLocation
 	Array<unsigned __int8,8> m_areaName;
 	unsigned __int16 m_xPos;
 	unsigned __int16 m_yPos;
+
+	CSavedGameStoredLocation() = delete;
 };
 
 struct CSavedGamePartyCreature
@@ -6814,11 +7668,15 @@ struct CSavedGamePartyCreature
 	Array<Array<unsigned __int8,8>,4> m_lWeaponStatsName;
 	Array<__int16,4> m_lWeaponStatsCount;
 	Array<unsigned __int8,8> m_secondarySounds;
+
+	CSavedGamePartyCreature() = delete;
 };
 
 struct CResRef
 {
 	Array<unsigned __int8,8> m_resRef;
+
+	CResRef() = delete;
 
 	void get(lua_State* L)
 	{
@@ -6857,10 +7715,14 @@ struct CGameStatsRes : CObject
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CResRef m_cResRef;
 	__int16 m_nTimesUsed;
+
+	CGameStatsRes() = delete;
 };
 
 struct CAbilityData
@@ -6874,6 +7736,8 @@ struct CAbilityData
 	CString m_sPrereq;
 	CString m_sExcludedBy;
 	CString m_sAlignmentRestriction;
+
+	CAbilityData() = delete;
 };
 
 struct CAbilityId
@@ -6885,6 +7749,8 @@ struct CAbilityId
 	unsigned __int8 m_targetType;
 	unsigned __int8 m_targetCount;
 	unsigned int m_toolTip;
+
+	CAbilityId() = delete;
 };
 
 struct CButtonData
@@ -6897,6 +7763,8 @@ struct CButtonData
 	CAbilityId m_abilityId;
 	unsigned __int8 m_bDisabled;
 	unsigned __int8 m_bDisplayCount;
+
+	CButtonData() = delete;
 };
 
 struct CCriticalEntry
@@ -6907,6 +7775,8 @@ struct CCriticalEntry
 	int m_attackType;
 	int m_itemType;
 	int m_bonus;
+
+	CCriticalEntry() = delete;
 };
 
 struct CGameDialogReply
@@ -6926,6 +7796,8 @@ struct CGameDialogReply
 	CString m_responseString;
 	int m_needToParseResponse;
 	int m_bracketedActions;
+
+	CGameDialogReply() = delete;
 };
 
 struct CGameDialogSprite
@@ -6947,6 +7819,8 @@ struct CGameDialogSprite
 	int m_bItemDialog;
 	int m_bSuppressName;
 	int m_UpdateTime;
+
+	CGameDialogSprite() = delete;
 };
 
 struct CImmunitiesItemEquip
@@ -6954,6 +7828,8 @@ struct CImmunitiesItemEquip
 	CResRef m_res;
 	unsigned int m_error;
 	CGameEffect* m_pEffect;
+
+	CImmunitiesItemEquip() = delete;
 };
 
 struct CImmunitySpell
@@ -6961,6 +7837,8 @@ struct CImmunitySpell
 	CResRef m_res;
 	unsigned int m_error;
 	int m_item;
+
+	CImmunitySpell() = delete;
 };
 
 struct CMoveListEntry
@@ -6971,6 +7849,8 @@ struct CMoveListEntry
 	CPoint m_ptSource;
 	unsigned __int8 m_nFacing;
 	int m_nDelay;
+
+	CMoveListEntry() = delete;
 };
 
 struct Spell_ability_st
@@ -6993,6 +7873,8 @@ struct Spell_ability_st
 	unsigned __int16 maxUsageCount;
 	unsigned __int16 usageFlags;
 	unsigned __int16 missileType;
+
+	Spell_ability_st() = delete;
 };
 
 #pragma pack(push, 1)
@@ -7013,6 +7895,8 @@ struct Item_effect_st
 	unsigned int savingThrow;
 	int saveMod;
 	unsigned int special;
+
+	Item_effect_st() = delete;
 };
 #pragma pack(pop)
 
@@ -7023,6 +7907,8 @@ struct CWorldMap
 	CWorldMapData* m_pData;
 	CWorldMapArea** m_ppAreas;
 	CWorldMapLinks** m_ppLinks;
+
+	CWorldMap() = delete;
 };
 
 struct CVVCHashEntry
@@ -7031,12 +7917,16 @@ struct CVVCHashEntry
 	unsigned __int16 m_priority;
 	unsigned int m_renderType;
 	unsigned int m_renderMask;
+
+	CVVCHashEntry() = delete;
 };
 
 struct CAIScript
 {
 	CResRef cResRef;
 	CTypedPtrList<CPtrList,CAIConditionResponse*> m_caList;
+
+	CAIScript() = delete;
 };
 
 struct CTiledObject
@@ -7047,6 +7937,8 @@ struct CTiledObject
 	unsigned __int16 m_wRenderState;
 	__POSITION* m_posAreaList;
 	CResRef m_resId;
+
+	CTiledObject() = delete;
 };
 
 struct CStore
@@ -7062,12 +7954,16 @@ struct CStore
 	unsigned int m_nSpells;
 	Array<unsigned __int8,8> m_pVersion;
 	int m_bLocalCopy;
+
+	CStore() = delete;
 };
 
 struct CSequenceSound
 {
 	CResRef m_sound;
 	int m_offset;
+
+	CSequenceSound() = delete;
 };
 
 struct CScreenWizSpell : CBaldurEngine
@@ -7150,6 +8046,8 @@ struct CScreenWizSpell : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -7168,6 +8066,8 @@ struct CScreenWizSpell : CBaldurEngine
 	int m_bPauseState;
 	int m_bContingency;
 	CResRef m_resEraseSpell;
+
+	CScreenWizSpell() = delete;
 };
 
 struct CScreenPriestSpell : CBaldurEngine
@@ -7250,6 +8150,8 @@ struct CScreenPriestSpell : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -7267,6 +8169,8 @@ struct CScreenPriestSpell : CBaldurEngine
 	int m_bPriestPage;
 	int m_bPauseState;
 	int m_bControlled;
+
+	CScreenPriestSpell() = delete;
 };
 
 struct CScreenCharacter : CBaldurEngine
@@ -7349,6 +8253,8 @@ struct CScreenCharacter : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -7391,6 +8297,8 @@ struct CScreenCharacter : CBaldurEngine
 	int m_bPauseState;
 	int m_bIsLevelingUp;
 	int m_bIsCharGenMenu;
+
+	CScreenCharacter() = delete;
 };
 
 struct CSaveGameSlot
@@ -7409,6 +8317,8 @@ struct CSaveGameSlot
 	unsigned int m_nTime;
 	int m_nChapter;
 	CString m_sChapter;
+
+	CSaveGameSlot() = delete;
 };
 
 template<class RES_CLASS, int RES_ID>
@@ -7416,18 +8326,20 @@ struct CResHelper
 {
 	RES_CLASS* pRes;
 	CResRef cResRef;
+
+	CResHelper() = delete;
 };
 
-typedef void (*type_C2DArray_Construct)(C2DArray* pThis);
+typedef void (__thiscall *type_C2DArray_Construct)(C2DArray* pThis);
 extern type_C2DArray_Construct p_C2DArray_Construct;
 
-typedef void (*type_C2DArray_Load)(C2DArray* pThis, const CResRef* res);
+typedef void (__thiscall *type_C2DArray_Load)(C2DArray* pThis, const CResRef* res);
 extern type_C2DArray_Load p_C2DArray_Load;
 
-typedef const CString* (*type_C2DArray_GetAtLabels)(C2DArray* pThis, const CString* nX, const CString* nY);
+typedef const CString* (__thiscall *type_C2DArray_GetAtLabels)(C2DArray* pThis, const CString* nX, const CString* nY);
 extern type_C2DArray_GetAtLabels p_C2DArray_GetAtLabels;
 
-typedef void (*type_C2DArray_Destruct)(C2DArray* pThis);
+typedef void (__thiscall *type_C2DArray_Destruct)(C2DArray* pThis);
 extern type_C2DArray_Destruct p_C2DArray_Destruct;
 
 struct C2DArray : CResHelper<CResText,1012>
@@ -7438,6 +8350,8 @@ struct C2DArray : CResHelper<CResText,1012>
 	CString m_default;
 	__int16 m_nSizeX;
 	__int16 m_nSizeY;
+
+	C2DArray() = delete;
 
 	void Construct()
 	{
@@ -7460,13 +8374,13 @@ struct C2DArray : CResHelper<CResText,1012>
 	}
 };
 
-typedef void (*type_CAIIdList_Construct1)(CAIIdList* pThis);
+typedef void (__thiscall *type_CAIIdList_Construct1)(CAIIdList* pThis);
 extern type_CAIIdList_Construct1 p_CAIIdList_Construct1;
 
-typedef void (*type_CAIIdList_Destruct)(CAIIdList* pThis);
+typedef void (__thiscall *type_CAIIdList_Destruct)(CAIIdList* pThis);
 extern type_CAIIdList_Destruct p_CAIIdList_Destruct;
 
-typedef void (*type_CAIIdList_LoadList2)(CAIIdList* pThis, CResRef id, int faster);
+typedef void (__thiscall *type_CAIIdList_LoadList2)(CAIIdList* pThis, CResRef id, int faster);
 extern type_CAIIdList_LoadList2 p_CAIIdList_LoadList2;
 
 struct CAIIdList : CResHelper<CResText,1008>
@@ -7474,6 +8388,8 @@ struct CAIIdList : CResHelper<CResText,1008>
 	struct vtbl
 	{
 		void (__fastcall *CAIIdList_Destructor)(CAIIdList*);
+
+		vtbl() = delete;
 	};
 
 	CString m_fileName;
@@ -7481,6 +8397,8 @@ struct CAIIdList : CResHelper<CResText,1008>
 	int m_faster;
 	ArrayPointer<CAIId*> m_pIdArray;
 	int m_nArray;
+
+	CAIIdList() = delete;
 
 	void Construct1()
 	{
@@ -7747,6 +8665,8 @@ struct CRuleTables
 	Array<unsigned int,16> m_damageStrings;
 	Array<int,56> m_speechOffsets;
 	Array<int,56> m_speechNums;
+
+	CRuleTables() = delete;
 };
 
 struct CAIScriptFile
@@ -7764,14 +8684,18 @@ struct CAIScriptFile
 	CAIIdList m_actions;
 	CAIIdList m_triggers;
 	CAIIdList m_objects;
+
+	CAIScriptFile() = delete;
 };
 
 struct CGameFile : CResHelper<CResGame,1013>
 {
+	CGameFile() = delete;
 };
 
 struct CVidMosaic : CVidImage, CResHelper<CResMosaic,1004>
 {
+	CVidMosaic() = delete;
 };
 
 struct CVidFont : CResHelper<CResFont,1034>
@@ -7781,6 +8705,8 @@ struct CVidFont : CResHelper<CResFont,1034>
 	unsigned int tintcolor;
 	int pointSize;
 	int zoom;
+
+	CVidFont() = delete;
 };
 
 struct CScreenInventory : CBaldurEngine
@@ -7863,6 +8789,8 @@ struct CScreenInventory : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	CItem* m_pTempItem;
@@ -7890,6 +8818,8 @@ struct CScreenInventory : CBaldurEngine
 	int m_bLearnSpellFailed;
 	unsigned int m_strLearnSpellFailedReason;
 	int m_bPauseState;
+
+	CScreenInventory() = delete;
 };
 
 struct CScreenJournal : CBaldurEngine
@@ -7972,6 +8902,8 @@ struct CScreenJournal : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -7986,6 +8918,8 @@ struct CScreenJournal : CBaldurEngine
 	CVidFont m_preLoadFontRealms;
 	CVidFont m_preLoadFontTool;
 	int m_bPauseState;
+
+	CScreenJournal() = delete;
 };
 
 struct CScreenCreateChar : CBaldurEngine
@@ -8068,6 +9002,8 @@ struct CScreenCreateChar : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	C2DArray m_kitList;
@@ -8180,6 +9116,8 @@ struct CScreenCreateChar : CBaldurEngine
 	unsigned __int8 m_nSelectedAbilityInd;
 	int m_nDualClass;
 	int m_nSpecialization;
+
+	CScreenCreateChar() = delete;
 };
 
 struct CScreenCreateParty : CBaldurEngine
@@ -8262,6 +9200,8 @@ struct CScreenCreateParty : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,5> m_pVirtualKeys;
@@ -8271,6 +9211,8 @@ struct CScreenCreateParty : CBaldurEngine
 	int m_firstCall;
 	CVidFont m_preloadFontStnSml;
 	int m_nCharacterSlot;
+
+	CScreenCreateParty() = delete;
 };
 
 struct CScreenDLC : CBaldurEngine
@@ -8353,6 +9295,8 @@ struct CScreenDLC : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -8371,6 +9315,8 @@ struct CScreenDLC : CBaldurEngine
 	int m_nNumDLC;
 	int m_nCurrentDLC;
 	int m_nDlcState;
+
+	CScreenDLC() = delete;
 };
 
 struct CScreenLoad : CBaldurEngine
@@ -8453,6 +9399,8 @@ struct CScreenLoad : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,5> m_pVirtualKeys;
@@ -8472,6 +9420,8 @@ struct CScreenLoad : CBaldurEngine
 	CVidFont m_preLoadFontStnSml;
 	int m_bHideSoA;
 	int m_bHideToB;
+
+	CScreenLoad() = delete;
 };
 
 struct CScreenMap : CBaldurEngine
@@ -8554,6 +9504,8 @@ struct CScreenMap : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -8588,6 +9540,8 @@ struct CScreenMap : CBaldurEngine
 	int m_nCharactersChanged;
 	unsigned int m_nUserNoteId;
 	CRect m_rMap;
+
+	CScreenMap() = delete;
 };
 
 struct CScreenMultiPlayer : CBaldurEngine
@@ -8670,6 +9624,8 @@ struct CScreenMultiPlayer : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -8693,6 +9649,8 @@ struct CScreenMultiPlayer : CBaldurEngine
 	Array<CString,6> m_playerNames;
 	Array<CString,6> m_characterNames;
 	Array<CString,6> m_characterPortrait;
+
+	CScreenMultiPlayer() = delete;
 };
 
 struct CScreenOptions : CBaldurEngine
@@ -8775,6 +9733,8 @@ struct CScreenOptions : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -8803,6 +9763,8 @@ struct CScreenOptions : CBaldurEngine
 	char m_cKeymapEditConflictValue;
 	int m_bPauseState;
 	int m_nEngineState;
+
+	CScreenOptions() = delete;
 };
 
 struct CScreenSave : CBaldurEngine
@@ -8885,6 +9847,8 @@ struct CScreenSave : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	int m_bQuitGameSave;
@@ -8906,6 +9870,8 @@ struct CScreenSave : CBaldurEngine
 	CVidFont m_preLoadFontRealms;
 	CVidFont m_preLoadFontStnSml;
 	int m_bPauseState;
+
+	CScreenSave() = delete;
 };
 
 struct CScreenStart : CBaldurEngine
@@ -8988,6 +9954,8 @@ struct CScreenStart : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	int m_bStartMusic;
@@ -9011,6 +9979,8 @@ struct CScreenStart : CBaldurEngine
 	int m_nLastImageUpdate;
 	int m_nDlcState;
 	CVidFont m_preloadFontStnSml;
+
+	CScreenStart() = delete;
 };
 
 struct CVidCell : CVidImage, CResHelper<CResCell,1000>
@@ -9022,6 +9992,8 @@ struct CVidCell : CVidImage, CResHelper<CResCell,1000>
 		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
 		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
 		int (__fastcall *GetFrame)(CVidCell*);
+
+		vtbl() = delete;
 	};
 
 	__int16 m_nCurrentFrame;
@@ -9030,6 +10002,8 @@ struct CVidCell : CVidImage, CResHelper<CResCell,1000>
 	int m_bPaletteChanged;
 	frameTableEntry_st* m_pFrame;
 	unsigned __int8 m_bShadowOn;
+
+	CVidCell() = delete;
 
 	virtual int virtual_FrameAdvance()
 	{
@@ -9136,6 +10110,8 @@ struct CScreenWorldMap : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -9177,6 +10153,8 @@ struct CScreenWorldMap : CBaldurEngine
 	CResRef m_rForceRandomEncounter;
 	CString m_sForcedEncounterEntry;
 	int m_bFontDropShadow;
+
+	CScreenWorldMap() = delete;
 };
 
 struct CCacheStatus
@@ -9201,6 +10179,8 @@ struct CCacheStatus
 	int m_nAnimationFrame;
 	int m_nAnimationDirection;
 	int m_bActivateEngine;
+
+	CCacheStatus() = delete;
 };
 
 struct CInfButtonSettings
@@ -9218,6 +10198,8 @@ struct CInfButtonSettings
 	int m_itemCount;
 	int m_itemCharge;
 	int m_bGreyOut;
+
+	CInfButtonSettings() = delete;
 };
 
 struct CPortraitIcon
@@ -9225,6 +10207,8 @@ struct CPortraitIcon
 	int icon;
 	int frame;
 	CVidCell bam;
+
+	CPortraitIcon() = delete;
 };
 
 struct CVidCellFont : CVidCell
@@ -9236,14 +10220,20 @@ struct CVidCellFont : CVidCell
 		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
 		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
 		int (__fastcall *GetFrame)(CVidCell*);
+
+		vtbl() = delete;
 	};
 
+
+	CVidCellFont() = delete;
 };
 
 struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 {
 	__int16 m_nBitCount;
 	CString m_szResFileName;
+
+	CVidBitmap() = delete;
 };
 
 struct CScreenAI : CBaldurEngine
@@ -9326,6 +10316,8 @@ struct CScreenAI : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	CVidBitmap m_bmpScreen;
@@ -9337,7 +10329,12 @@ struct CScreenAI : CBaldurEngine
 	Array<CKeyInfo,5> m_pVirtualKeys;
 	Array<int,5> m_pVirtualKeysFlags;
 	unsigned __int8 m_bCtrlKeyDown;
+
+	CScreenAI() = delete;
 };
+
+typedef byte (__thiscall *type_CSearchBitmap_GetCost)(CSearchBitmap* pThis, CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump);
+extern type_CSearchBitmap_GetCost p_CSearchBitmap_GetCost;
 
 struct CSearchBitmap
 {
@@ -9349,6 +10346,13 @@ struct CSearchBitmap
 	CGameArea* m_pArea;
 	unsigned __int8 m_sourceSide;
 	unsigned __int8 m_snapshotPersonalSpace;
+
+	CSearchBitmap() = delete;
+
+	byte GetCost(CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump)
+	{
+		return p_CSearchBitmap_GetCost(this, point, terrainTable, snapshotPersonalSpace, nTableIndex, bCheckBump);
+	}
 };
 
 struct CVidMode
@@ -9395,10 +10399,13 @@ struct CVidMode
 	SDL_Surface* m_hwCursorSurface;
 	int nVRamSurfaces;
 	CVidBitmap m_rgbMasterBitmap;
+
+	CVidMode() = delete;
 };
 
 struct CSpell : CResHelper<CResSpell,1006>
 {
+	CSpell() = delete;
 };
 
 struct CSoundImp : CObject, CResHelper<CResWave,4>
@@ -9406,6 +10413,8 @@ struct CSoundImp : CObject, CResHelper<CResWave,4>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CSound* m_pParent;
@@ -9433,6 +10442,8 @@ struct CSoundImp : CObject, CResHelper<CResWave,4>
 	unsigned __int64 m_nArea;
 	int m_dwOverrideFlags;
 	bool m_bSoundIsntDucked;
+
+	CSoundImp() = delete;
 };
 
 struct CSound : CObject, CResHelper<CResWave,4>
@@ -9440,9 +10451,13 @@ struct CSound : CObject, CResHelper<CResWave,4>
 	struct vtbl
 	{
 		void (__fastcall *CObject_Destructor)(CObject*);
+
+		vtbl() = delete;
 	};
 
 	CSoundImp* pimpl;
+
+	CSound() = delete;
 };
 
 struct CScreenChapter : CBaldurEngine
@@ -9525,6 +10540,8 @@ struct CScreenChapter : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,5> m_pVirtualKeys;
@@ -9548,6 +10565,8 @@ struct CScreenChapter : CBaldurEngine
 	int m_nCustomSong;
 	int m_waitingForNetwork;
 	CWarp* m_destinationEngine;
+
+	CScreenChapter() = delete;
 };
 
 struct CInfToolTip : CVidCell
@@ -9559,6 +10578,8 @@ struct CInfToolTip : CVidCell
 		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
 		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
 		int (__fastcall *GetFrame)(CVidCell*);
+
+		vtbl() = delete;
 	};
 
 	CString m_sText;
@@ -9566,6 +10587,8 @@ struct CInfToolTip : CVidCell
 	int m_bUseSourceRect;
 	CVidFont m_textFont;
 	CSound m_openSnd;
+
+	CInfToolTip() = delete;
 };
 
 struct CInfCursor
@@ -9581,12 +10604,16 @@ struct CInfCursor
 	int nDirection;
 	int nState;
 	unsigned __int8 bAnimatingCustom;
+
+	CInfCursor() = delete;
 };
 
 struct STR_RES
 {
 	CString szText;
 	CSound cSound;
+
+	STR_RES() = delete;
 };
 
 struct CWeather
@@ -9613,6 +10640,8 @@ struct CWeather
 	unsigned int m_nWindVolumeLevel;
 	unsigned int m_nRainVolumeLevel;
 	unsigned __int8 m_bReInitialize;
+
+	CWeather() = delete;
 };
 
 struct CScreenWorld : CBaldurEngine
@@ -9695,6 +10724,8 @@ struct CScreenWorld : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	int m_nStupidMovieWait;
@@ -9848,6 +10879,8 @@ struct CScreenWorld : CBaldurEngine
 	float m_fOriginalZoom;
 	int* m_storedGroup;
 	int m_nStoredGroupMembers;
+
+	CScreenWorld() = delete;
 };
 
 struct CProgressBar
@@ -9867,12 +10900,16 @@ struct CProgressBar
 	Array<int,6> m_nRemoteActionProgress;
 	Array<int,6> m_nRemoteActionTarget;
 	Array<int,6> m_nRemoteWaitingReason;
+
+	CProgressBar() = delete;
 };
 
 struct CPlex
 {
 	CPlex* pNext;
 	Array<unsigned int,1> dwReserved;
+
+	CPlex() = delete;
 };
 
 struct CNetworkWindow
@@ -9903,11 +10940,15 @@ struct CNetworkWindow
 	unsigned int m_nNextEvent;
 	unsigned int m_nPlayerTimeout;
 	unsigned int m_nNoMessageTimeout;
+
+	CNetworkWindow() = delete;
 };
 
 struct CMachineStates
 {
 	Array<CMachineState,6> m_machineStates;
+
+	CMachineStates() = delete;
 };
 
 struct CItem : CResHelper<CResItem,1005>
@@ -9915,6 +10956,8 @@ struct CItem : CResHelper<CResItem,1005>
 	struct vtbl
 	{
 		void (__fastcall *CItem_Destructor)(CItem*);
+
+		vtbl() = delete;
 	};
 
 	int m_nAbilities;
@@ -9926,6 +10969,8 @@ struct CItem : CResHelper<CResItem,1005>
 	Array<CSound,2> m_useSound;
 	__int16 m_numSounds;
 	CGameEffectUsabilityList m_Usability;
+
+	CItem() = delete;
 
 	virtual void virtual_CItem_Destructor()
 	{
@@ -9940,12 +10985,14 @@ struct CInfTileSet
 	CResInfTile** pResTiles;
 	unsigned int nTiles;
 	unsigned int nTileSize;
+
+	CInfTileSet() = delete;
 };
 
-typedef int (*type_CInfButtonArray_SetState)(CInfButtonArray* pThis, int nState);
+typedef int (__thiscall *type_CInfButtonArray_SetState)(CInfButtonArray* pThis, int nState);
 extern type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
 
-typedef void (*type_CInfButtonArray_SetQuickSlot)(CButtonData* pButtonData, int nButton, int nType);
+typedef void ( *type_CInfButtonArray_SetQuickSlot)(CButtonData* pButtonData, int nButton, int nType);
 extern type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
 
 struct CInfButtonArray
@@ -9965,6 +11012,8 @@ struct CInfButtonArray
 	int m_nFirstMageSpellIndex;
 	int m_bToggleButtonCleric;
 
+	CInfButtonArray() = delete;
+
 	int SetState(int nState)
 	{
 		return p_CInfButtonArray_SetState(this, nState);
@@ -9979,11 +11028,15 @@ struct CInfButtonArray
 struct CImmunitiesSpellLevelDecrementing
 {
 	Array<CSpellLevelDecrementing,10> m_levels;
+
+	CImmunitiesSpellLevelDecrementing() = delete;
 };
 
 struct CImmunitiesSpellLevel
 {
 	Array<int,10> m_levels;
+
+	CImmunitiesSpellLevel() = delete;
 };
 
 struct CGameStatsSprite
@@ -9999,6 +11052,8 @@ struct CGameStatsSprite
 	unsigned int m_nGameKillsNumber;
 	Array<CGameStatsRes,4> m_pSpellStats;
 	Array<CGameStatsRes,4> m_pWeaponStats;
+
+	CGameStatsSprite() = delete;
 };
 
 struct CGameSpriteLastUpdate
@@ -10037,6 +11092,8 @@ struct CGameSpriteLastUpdate
 	unsigned __int8 m_bActiveImprisonment;
 	Array<unsigned int,8> m_spellState;
 	int m_bFullUpdateRequired;
+
+	CGameSpriteLastUpdate() = delete;
 };
 
 struct CGameSpriteEquipment
@@ -10046,6 +11103,8 @@ struct CGameSpriteEquipment
 	unsigned __int16 m_selectedWeaponAbility;
 	CItem* m_pTempItem;
 	CGameSprite* m_pSprite;
+
+	CGameSpriteEquipment() = delete;
 };
 
 struct CGameSaveCharacter
@@ -10054,6 +11113,8 @@ struct CGameSaveCharacter
 	Array<CButtonData,4> m_quickWeapons;
 	Array<CButtonData,3> m_quickSpells;
 	Array<CButtonData,3> m_quickItems;
+
+	CGameSaveCharacter() = delete;
 };
 
 struct CGameSave
@@ -10070,6 +11131,8 @@ struct CGameSave
 	unsigned int m_mode;
 	int m_cutScene;
 	int m_nCutSceneStatusOverride;
+
+	CGameSave() = delete;
 };
 
 struct CGameRemoteObjectArray
@@ -10086,11 +11149,15 @@ struct CGameRemoteObjectArray
 	Array<CResRef,6> m_psControlsAreaChangedName;
 	Array<unsigned int,6> m_pnControlsAreaChangedPlayerNum;
 	Array<__int16,6> m_pnControlsAreaChangedFirstObject;
+
+	CGameRemoteObjectArray() = delete;
 };
 
 struct CGamePermission
 {
 	Array<unsigned __int8,8> m_permission;
+
+	CGamePermission() = delete;
 };
 
 struct CMultiplayerSettings
@@ -10119,12 +11186,14 @@ struct CMultiplayerSettings
 	int m_idHostPermittedStore;
 	unsigned __int8 m_bFirstConnected;
 	CString m_sCampaignType;
+
+	CMultiplayerSettings() = delete;
 };
 
-typedef void (*type_CInfGame_SetState)(CInfGame* pThis, __int16 state, bool allowDead);
+typedef void (__thiscall *type_CInfGame_SetState)(CInfGame* pThis, __int16 state, bool allowDead);
 extern type_CInfGame_SetState p_CInfGame_SetState;
 
-typedef void (*type_CInfGame_SetIconIndex)(CInfGame* pThis, unsigned __int8 iconIndex);
+typedef void (__thiscall *type_CInfGame_SetIconIndex)(CInfGame* pThis, unsigned __int8 iconIndex);
 extern type_CInfGame_SetIconIndex p_CInfGame_SetIconIndex;
 
 struct CInfGame
@@ -10258,6 +11327,8 @@ struct CInfGame
 	CVVCHash m_VVCPriorities;
 	int m_nCurrentVVCPriority;
 
+	CInfGame() = delete;
+
 	void SetState(__int16 state, bool allowDead)
 	{
 		p_CInfGame_SetState(this, state, allowDead);
@@ -10310,9 +11381,11 @@ struct CGameEffectBase
 	unsigned int m_firstCall;
 	unsigned int m_secondaryType;
 	Array<unsigned int,15> m_pad;
+
+	CGameEffectBase() = delete;
 };
 
-typedef CGameEffect* (*type_CGameEffect_DecodeEffect)(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
+typedef CGameEffect* ( *type_CGameEffect_DecodeEffect)(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
 extern type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
 
 struct CGameEffect : CGameEffectBase
@@ -10330,6 +11403,8 @@ struct CGameEffect : CGameEffectBase
 		int (__fastcall *UsesDice)(CGameEffect*);
 		void (__fastcall *DisplayString)(CGameEffect*, CGameSprite*);
 		void (__fastcall *OnRemove)(CGameEffect*, CGameSprite*);
+
+		vtbl() = delete;
 	};
 
 	int m_sourceId;
@@ -10342,6 +11417,8 @@ struct CGameEffect : CGameEffectBase
 	int m_compareIdAndResrefOnly;
 	CSound m_sound;
 	int m_sourceTarget;
+
+	CGameEffect() = delete;
 
 	static CGameEffect* DecodeEffect(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget)
 	{
@@ -10413,8 +11490,12 @@ struct CGameEffectUsability : CGameEffect
 		int (__fastcall *UsesDice)(CGameEffect*);
 		void (__fastcall *DisplayString)(CGameEffect*, CGameSprite*);
 		void (__fastcall *OnRemove)(CGameEffect*, CGameSprite*);
+
+		vtbl() = delete;
 	};
 
+
+	CGameEffectUsability() = delete;
 };
 
 struct CGameAnimationType
@@ -10483,6 +11564,8 @@ struct CGameAnimationType
 		void (__fastcall *OverrideAnimation)(CGameAnimationType*, CResRef, int);
 		void (__fastcall *Marshal)(CGameAnimationType*, unsigned __int8**, unsigned int*);
 		bool (__fastcall *Unmarshal)(CGameAnimationType*, CResRef);
+
+		vtbl() = delete;
 	};
 
 	unsigned __int16 m_animationID;
@@ -10508,6 +11591,8 @@ struct CGameAnimationType
 	Array<CSequenceSoundList,20> m_sequenceRefs;
 	int m_bNewPalette;
 	CVidBitmap m_newPalette;
+
+	CGameAnimationType() = delete;
 
 	virtual void virtual_CGameAnimationType_Destructor()
 	{
@@ -10994,6 +12079,8 @@ struct CDerivedStatsTemplate
 	int m_nLevelDrain;
 	int m_bDoNotDraw;
 	int m_bIgnoreDrainDeath;
+
+	CDerivedStatsTemplate() = delete;
 };
 
 struct CDerivedStats : CDerivedStatsTemplate
@@ -11041,6 +12128,8 @@ struct CDerivedStats : CDerivedStatsTemplate
 	CSelectiveWeaponTypeList m_cSelectiveWeaponTypeList;
 	CCriticalEntryList m_cCriticalEntryList;
 	Array<unsigned int,8> m_spellStates;
+
+	CDerivedStats() = delete;
 };
 
 struct CCreatureFileMemorizedSpell
@@ -11048,6 +12137,8 @@ struct CCreatureFileMemorizedSpell
 	Array<unsigned __int8,8> m_spellId;
 	unsigned __int16 m_flags;
 	Array<unsigned __int8,2> structureAlignment1;
+
+	CCreatureFileMemorizedSpell() = delete;
 };
 
 struct CCreatureFileKnownSpell
@@ -11055,6 +12146,8 @@ struct CCreatureFileKnownSpell
 	Array<unsigned __int8,8> m_knownSpellId;
 	unsigned __int16 m_spellLevel;
 	unsigned __int16 m_magicType;
+
+	CCreatureFileKnownSpell() = delete;
 };
 
 struct CCreatureFileItem
@@ -11063,6 +12156,8 @@ struct CCreatureFileItem
 	unsigned __int16 m_wear;
 	Array<unsigned __int16,3> m_usageCount;
 	unsigned int m_dynamicFlags;
+
+	CCreatureFileItem() = delete;
 };
 
 struct CCreatureFileHeader
@@ -11149,6 +12244,8 @@ struct CCreatureFileHeader
 	Array<unsigned __int8,8> m_scriptRace;
 	Array<unsigned __int8,8> m_scriptGeneral;
 	Array<unsigned __int8,8> m_scriptDefault;
+
+	CCreatureFileHeader() = delete;
 };
 
 struct CBlood
@@ -11167,6 +12264,8 @@ struct CBlood
 	unsigned __int16 m_bloodType;
 	int m_nCharHeight;
 	unsigned __int8 m_bLeavePool;
+
+	CBlood() = delete;
 };
 
 struct CBaldurProjector : CBaldurEngine
@@ -11249,6 +12348,8 @@ struct CBaldurProjector : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	CResWebm* m_pMovie;
@@ -11266,6 +12367,8 @@ struct CBaldurProjector : CBaldurEngine
 	CResRef m_cSubtitles;
 	CVidFont m_vidFont;
 	int m_bDisplayTOBMovie;
+
+	CBaldurProjector() = delete;
 };
 
 struct CBaldurMessage
@@ -11319,6 +12422,8 @@ struct CBaldurMessage
 	unsigned __int8 m_bMultiplayerSessionShutdown;
 	unsigned __int8 m_bInReputationChange;
 	unsigned __int8 m_bInMessageSetDrawPoly;
+
+	CBaldurMessage() = delete;
 };
 
 #pragma pack(push, 1)
@@ -11331,11 +12436,14 @@ struct CAreaVariable
 	int m_intValue;
 	long double m_floatValue;
 	Array<char,32> m_stringValue;
+
+	CAreaVariable() = delete;
 };
 #pragma pack(pop)
 
 struct CVariable : CAreaVariable
 {
+	CVariable() = delete;
 };
 
 struct CAreaUserNote
@@ -11346,6 +12454,8 @@ struct CAreaUserNote
 	unsigned int m_dwflags;
 	unsigned int m_id;
 	Array<unsigned int,9> m_notUsed;
+
+	CAreaUserNote() = delete;
 };
 
 struct CGameAreaNotes
@@ -11361,6 +12471,8 @@ struct CGameAreaNotes
 	CString m_szBuffer;
 	unsigned __int8 m_bNetworkDelete;
 	unsigned __int8 m_nCurrentIcon;
+
+	CGameAreaNotes() = delete;
 };
 
 struct CAreaSoundsAndMusic
@@ -11382,6 +12494,8 @@ struct CAreaSoundsAndMusic
 	Array<unsigned __int8,8> m_nightAmbientExtended;
 	unsigned int m_nightAmbientVolume;
 	Array<unsigned int,16> m_notUsed;
+
+	CAreaSoundsAndMusic() = delete;
 };
 
 struct CAreaFileStaticObject
@@ -11401,6 +12515,8 @@ struct CAreaFileStaticObject
 	Array<unsigned __int8,8> m_paletteResref;
 	unsigned __int16 m_sizeX;
 	unsigned __int16 m_sizeY;
+
+	CAreaFileStaticObject() = delete;
 };
 
 struct CAreaFileSoundObject
@@ -11421,6 +12537,8 @@ struct CAreaFileSoundObject
 	unsigned int m_timeOfDayActive;
 	unsigned int m_dwFlags;
 	Array<unsigned int,16> m_notUsed;
+
+	CAreaFileSoundObject() = delete;
 };
 
 struct CAreaFileRestEncounter
@@ -11440,6 +12558,8 @@ struct CAreaFileRestEncounter
 	unsigned __int16 m_wFlags;
 	Array<unsigned __int8,10> m_weights;
 	Array<unsigned int,11> m_notUsed;
+
+	CAreaFileRestEncounter() = delete;
 };
 
 struct CAreaFileRandomMonsterSpawningPoint
@@ -11464,6 +12584,8 @@ struct CAreaFileRandomMonsterSpawningPoint
 	unsigned int m_countdown;
 	Array<unsigned __int8,10> m_weights;
 	Array<unsigned __int16,19> m_notUsed;
+
+	CAreaFileRandomMonsterSpawningPoint() = delete;
 };
 
 struct CAreaFileProjectileObject
@@ -11479,6 +12601,8 @@ struct CAreaFileProjectileObject
 	unsigned __int16 m_posZ;
 	unsigned __int8 m_targetType;
 	char m_portraitNum;
+
+	CAreaFileProjectileObject() = delete;
 };
 
 struct CAreaFileHeader
@@ -11501,6 +12625,8 @@ struct CAreaFileHeader
 	unsigned __int16 m_lightningProbability;
 	unsigned __int8 m_waterAlpha;
 	unsigned __int8 m_unused;
+
+	CAreaFileHeader() = delete;
 };
 
 struct CAreaFileContainer
@@ -11532,6 +12658,8 @@ struct CAreaFileContainer
 	unsigned int m_breakDifficulty;
 	unsigned int m_strNotPickable;
 	Array<unsigned int,14> m_notUsed;
+
+	CAreaFileContainer() = delete;
 };
 
 struct CAreaFileCharacterEntryPoint
@@ -11541,9 +12669,11 @@ struct CAreaFileCharacterEntryPoint
 	unsigned __int16 m_startY;
 	unsigned int m_facing;
 	Array<unsigned int,16> m_notUsed;
+
+	CAreaFileCharacterEntryPoint() = delete;
 };
 
-typedef void (*type_CAIObjectType_Set)(CAIObjectType* pThis, CAIObjectType* that);
+typedef void (__thiscall *type_CAIObjectType_Set)(CAIObjectType* pThis, CAIObjectType* that);
 extern type_CAIObjectType_Set p_CAIObjectType_Set;
 
 struct CAIObjectType
@@ -11560,11 +12690,19 @@ struct CAIObjectType
 	unsigned __int8 m_Gender;
 	unsigned __int8 m_Alignment;
 
+	CAIObjectType() = delete;
+
 	void Set(CAIObjectType* that)
 	{
 		p_CAIObjectType_Set(this, that);
 	}
 };
+
+typedef void (__thiscall *type_CAIAction_Construct1)(CAIAction* pThis, short actionID, CPoint* dest, int specificID, int sp2);
+extern type_CAIAction_Construct1 p_CAIAction_Construct1;
+
+typedef void (__thiscall *type_CAIAction_Destruct)(CAIAction* pThis);
+extern type_CAIAction_Destruct p_CAIAction_Destruct;
 
 struct CAIAction
 {
@@ -11580,6 +12718,18 @@ struct CAIAction
 	CPoint m_dest;
 	unsigned int m_internalFlags;
 	CString m_source;
+
+	CAIAction() = delete;
+
+	void Construct(short actionID, CPoint* dest, int specificID, int sp2)
+	{
+		p_CAIAction_Construct1(this, actionID, dest, specificID, sp2);
+	}
+
+	void Destruct()
+	{
+		p_CAIAction_Destruct(this);
+	}
 };
 
 struct CSpawn
@@ -11595,6 +12745,8 @@ struct CSpawn
 	struct vtbl
 	{
 		void (__fastcall *CSpawn_Destructor)(CSpawn*);
+
+		vtbl() = delete;
 	};
 
 	unsigned int Interval;
@@ -11647,6 +12799,8 @@ struct CSpawn
 	int mSequentialStartValue;
 	unsigned int mTimeOfDay;
 
+	CSpawn() = delete;
+
 	virtual void virtual_CSpawn_Destructor()
 	{
 	}
@@ -11657,12 +12811,16 @@ struct CSelectiveWeaponType
 	int m_slot;
 	CAIObjectType m_type;
 	CWeaponIdentification m_weapon;
+
+	CSelectiveWeaponType() = delete;
 };
 
 struct CSelectiveBonus
 {
 	CAIObjectType m_type;
 	int m_bonus;
+
+	CSelectiveBonus() = delete;
 };
 
 struct CScreenStore : CBaldurEngine
@@ -11745,6 +12903,8 @@ struct CScreenStore : CBaldurEngine
 		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
 		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
 		int (__fastcall *StopMusic)(CBaldurEngine*);
+
+		vtbl() = delete;
 	};
 
 	Array<CKeyInfo,98> m_pVirtualKeys;
@@ -11795,6 +12955,8 @@ struct CScreenStore : CBaldurEngine
 	int m_bStoreStarted;
 	int m_nBagCount;
 	float m_fPanStorage;
+
+	CScreenStore() = delete;
 };
 
 struct CGameObject
@@ -11827,8 +12989,11 @@ struct CGameObject
 		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
 		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
 		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+
+		vtbl() = delete;
 	};
 
+	static Array<byte,16>* p_DEFAULT_TERRAIN_TABLE;
 	CGameObjectType m_objectType;
 	CPoint m_pos;
 	int m_posZ;
@@ -11843,6 +13008,8 @@ struct CGameObject
 	unsigned __int8 m_AISpeed;
 	unsigned __int8 m_bLocalControl;
 	unsigned __int8 m_AIInhibitor;
+
+	CGameObject() = delete;
 
 	virtual void virtual_CGameObject_Destructor()
 	{
@@ -11991,6 +13158,8 @@ struct CGameFireball3d : CGameObject
 		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
 		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
 		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+
+		vtbl() = delete;
 	};
 
 	Array<unsigned __int8,16> m_terrainTable;
@@ -12031,6 +13200,8 @@ struct CGameFireball3d : CGameObject
 	unsigned __int16 m_projectileType;
 	int m_bPermanent;
 	int m_bCanSave;
+
+	CGameFireball3d() = delete;
 };
 
 struct CProjectile : CGameObject
@@ -12075,6 +13246,8 @@ struct CProjectile : CGameObject
 		CAIObjectType* (__fastcall *GetTargetType)(CProjectile*, CAIObjectType*);
 		void (__fastcall *SetTargetType)(CProjectile*, const CAIObjectType*);
 		void (__fastcall *GetPreview)(CProjectile*, CGameArea*);
+
+		vtbl() = delete;
 	};
 
 	unsigned __int16 m_projectileType;
@@ -12126,6 +13299,8 @@ struct CProjectile : CGameObject
 	CResRef m_failureSpell;
 	CResRef m_successSpell;
 	int m_ignoreDamage;
+
+	CProjectile() = delete;
 
 	virtual void virtual_Fire(CGameArea* _0, int _1, int _2, CPoint _3, int _4, __int16 _5)
 	{
@@ -12209,10 +13384,14 @@ struct CObjectMarker : CGameObject
 		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
 		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
 		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+
+		vtbl() = delete;
 	};
 
 	CList<long,long> m_lstObjectIds;
 	bool m_bHealthBarMarker;
+
+	CObjectMarker() = delete;
 };
 
 struct CGameTemporal : CGameObject
@@ -12245,6 +13424,8 @@ struct CGameTemporal : CGameObject
 		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
 		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
 		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+
+		vtbl() = delete;
 	};
 
 	Array<unsigned __int8,16> m_visibleTerrainTable;
@@ -12259,6 +13440,8 @@ struct CGameTemporal : CGameObject
 	int m_bPermanent;
 	int m_bAllowSave;
 	unsigned __int16 m_projectileType;
+
+	CGameTemporal() = delete;
 };
 
 struct CGameStatic : CGameObject
@@ -12291,6 +13474,8 @@ struct CGameStatic : CGameObject
 		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
 		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
 		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+
+		vtbl() = delete;
 	};
 
 	CAreaFileStaticObject m_header;
@@ -12302,6 +13487,8 @@ struct CGameStatic : CGameObject
 	CTypedPtrList<CPtrList,CVidCell*> m_secondaryVidCellList;
 	int m_bNewPalette;
 	CVidBitmap m_newPalette;
+
+	CGameStatic() = delete;
 };
 
 struct CGameSpawning : CGameObject
@@ -12334,6 +13521,8 @@ struct CGameSpawning : CGameObject
 		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
 		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
 		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+
+		vtbl() = delete;
 	};
 
 	CAreaFileRandomMonsterSpawningPoint m_spawningObject;
@@ -12341,6 +13530,8 @@ struct CGameSpawning : CGameObject
 	Array<unsigned __int8,16> m_visibleTerrainTable;
 	int m_nTrackingCounter;
 	unsigned int m_weightSum;
+
+	CGameSpawning() = delete;
 };
 
 struct CGameSound : CGameObject
@@ -12373,6 +13564,8 @@ struct CGameSound : CGameObject
 		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
 		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
 		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
+
+		vtbl() = delete;
 	};
 
 	CAreaFileSoundObject m_soundObject;
@@ -12382,6 +13575,8 @@ struct CGameSound : CGameObject
 	int m_periodCount;
 	unsigned __int8 m_currentSound;
 	unsigned int m_timeOfDayActive;
+
+	CGameSound() = delete;
 };
 
 struct CAITrigger
@@ -12394,6 +13589,8 @@ struct CAITrigger
 	int m_specific3;
 	CString m_string1;
 	CString m_string2;
+
+	CAITrigger() = delete;
 };
 
 struct CGameAIBase : CGameObject
@@ -12439,7 +13636,7 @@ struct CGameAIBase : CGameObject
 		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
 		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
 		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
+		byte* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
 		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
 		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
 		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
@@ -12448,6 +13645,8 @@ struct CGameAIBase : CGameObject
 		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
 		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
 		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+
+		vtbl() = delete;
 	};
 
 	CAIObjectType m_lAttacker;
@@ -12519,6 +13718,8 @@ struct CGameAIBase : CGameObject
 	int m_nServerLastObjectSynchDelay;
 	CAITrigger triggerOverride;
 
+	CGameAIBase() = delete;
+
 	virtual void virtual_ClearActions(int _0)
 	{
 	}
@@ -12574,9 +13775,9 @@ struct CGameAIBase : CGameObject
 		return *(__int16*)nullptr;
 	}
 
-	virtual const unsigned __int8* virtual_GetVisibleTerrainTable()
+	virtual byte* virtual_GetVisibleTerrainTable()
 	{
-		return *(const unsigned __int8**)nullptr;
+		return *(byte**)nullptr;
 	}
 
 	virtual const unsigned __int8* virtual_GetTerrainTable()
@@ -12669,8 +13870,12 @@ struct CGameAIArea : CGameAIBase
 		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
 		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
 		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+
+		vtbl() = delete;
 	};
 
+
+	CGameAIArea() = delete;
 };
 
 struct CGameTrigger : CGameAIBase
@@ -12726,6 +13931,8 @@ struct CGameTrigger : CGameAIBase
 		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
 		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
 		int (__fastcall *IsOverActivate)(CGameTrigger*, const CPoint*);
+
+		vtbl() = delete;
 	};
 
 	unsigned __int16 m_triggerType;
@@ -12749,6 +13956,8 @@ struct CGameTrigger : CGameAIBase
 	__int16 m_drawPoly;
 	unsigned int m_iGameText;
 	CPoint m_ptWalkTo;
+
+	CGameTrigger() = delete;
 
 	virtual int virtual_IsOverActivate(const CPoint* _0)
 	{
@@ -12808,6 +14017,8 @@ struct CGameTiledObject : CGameAIBase
 		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
 		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
 		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+
+		vtbl() = delete;
 	};
 
 	CResRef m_resID;
@@ -12818,22 +14029,33 @@ struct CGameTiledObject : CGameAIBase
 	unsigned __int16 m_nSecondarySearch;
 	CTiledObject m_tiledObject;
 	Array<char,32> m_scriptName;
+
+	CGameTiledObject() = delete;
 };
 
-typedef __int32 (*type_CGameSprite_GetKitMask)(CGameSprite* pThis);
+typedef __int32 (__thiscall *type_CGameSprite_GetKitMask)(CGameSprite* pThis);
 extern type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
 
-typedef CGameButtonList* (*type_CGameSprite_GetQuickButtons)(CGameSprite* pThis, unsigned __int16 buttonType, unsigned __int8 existanceCheck);
+typedef CGameButtonList* (__thiscall *type_CGameSprite_GetQuickButtons)(CGameSprite* pThis, unsigned __int16 buttonType, unsigned __int8 existanceCheck);
 extern type_CGameSprite_GetQuickButtons p_CGameSprite_GetQuickButtons;
 
-typedef void (*type_CGameSprite_ReadySpell)(CGameSprite* pThis, CButtonData* button, bool firstCall);
+typedef void (__thiscall *type_CGameSprite_ReadySpell)(CGameSprite* pThis, CButtonData* button, bool firstCall);
 extern type_CGameSprite_ReadySpell p_CGameSprite_ReadySpell;
 
-typedef void (*type_CGameSprite_ReadyOffInternalList)(CGameSprite* pThis, CButtonData* button, bool firstCall);
+typedef void (__thiscall *type_CGameSprite_ReadyOffInternalList)(CGameSprite* pThis, CButtonData* button, bool firstCall);
 extern type_CGameSprite_ReadyOffInternalList p_CGameSprite_ReadyOffInternalList;
 
-typedef CGameButtonList* (*type_CGameSprite_GetInternalButtonList)(CGameSprite* pThis);
+typedef CGameButtonList* (__thiscall *type_CGameSprite_GetInternalButtonList)(CGameSprite* pThis);
 extern type_CGameSprite_GetInternalButtonList p_CGameSprite_GetInternalButtonList;
+
+typedef CDerivedStats* (__thiscall *type_CGameSprite_GetActiveStats)(CGameSprite* pThis);
+extern type_CGameSprite_GetActiveStats p_CGameSprite_GetActiveStats;
+
+typedef void (__thiscall *type_CGameSprite_FeedBack)(CGameSprite* pThis, uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
+extern type_CGameSprite_FeedBack p_CGameSprite_FeedBack;
+
+typedef void (__thiscall *type_CGameSprite_PlaySound)(CGameSprite* pThis, byte soundID, int showText, int showCircle, int overrideOption);
+extern type_CGameSprite_PlaySound p_CGameSprite_PlaySound;
 
 struct CGameSprite : CGameAIBase
 {
@@ -12845,6 +14067,8 @@ struct CGameSprite : CGameAIBase
 		CResRef itemIcon;
 		unsigned __int16 count;
 		unsigned int itemFlags;
+
+		GroundItem() = delete;
 	};
 
 	struct vtbl
@@ -12902,6 +14126,8 @@ struct CGameSprite : CGameAIBase
 		void (__fastcall *ResetAITypeLive)(CGameSprite*);
 		void (__fastcall *ResetAIType)(CGameSprite*);
 		void (__fastcall *ProcessPendingTriggers)(CGameSprite*, int);
+
+		vtbl() = delete;
 	};
 
 	CResRef m_resref;
@@ -13243,6 +14469,8 @@ struct CGameSprite : CGameAIBase
 	int m_nMaxHitPointsOnceOnlyBonus;
 	bool m_bOutline;
 
+	CGameSprite() = delete;
+
 	__int32 GetKitMask()
 	{
 		return p_CGameSprite_GetKitMask(this);
@@ -13266,6 +14494,21 @@ struct CGameSprite : CGameAIBase
 	CGameButtonList* GetInternalButtonList()
 	{
 		return p_CGameSprite_GetInternalButtonList(this);
+	}
+
+	CDerivedStats* GetActiveStats()
+	{
+		return p_CGameSprite_GetActiveStats(this);
+	}
+
+	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn)
+	{
+		p_CGameSprite_FeedBack(this, feedBackId, int1, int2, int3, ref1, int4, stringIn);
+	}
+
+	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption)
+	{
+		p_CGameSprite_PlaySound(this, soundID, showText, showCircle, overrideOption);
 	}
 
 	virtual void virtual_SetTarget_2(const CPoint* _0, int _1)
@@ -13341,6 +14584,8 @@ struct CGameDoor : CGameAIBase
 		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
 		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
 		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+
+		vtbl() = delete;
 	};
 
 	CResRef m_resID;
@@ -13382,6 +14627,8 @@ struct CGameDoor : CGameAIBase
 	unsigned int m_strNotPickable;
 	int m_usedDelay;
 	unsigned __int8 m_probabilityRoll;
+
+	CGameDoor() = delete;
 };
 
 struct CGameContainer : CGameAIBase
@@ -13438,6 +14685,8 @@ struct CGameContainer : CGameAIBase
 		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
 		CPoint* (__fastcall *GetPoly)(CGameContainer*);
 		__int16 (__fastcall *GetNPoly)(CGameContainer*);
+
+		vtbl() = delete;
 	};
 
 	CRect m_rBounding;
@@ -13466,6 +14715,8 @@ struct CGameContainer : CGameAIBase
 	int m_bJustCreated;
 	int m_bNeedUpdate;
 	unsigned __int8 m_probabilityRoll;
+
+	CGameContainer() = delete;
 
 	virtual CPoint* virtual_GetPoly()
 	{
@@ -13530,8 +14781,12 @@ struct CGameAIGame : CGameAIBase
 		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
 		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
 		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
+
+		vtbl() = delete;
 	};
 
+
+	CGameAIGame() = delete;
 };
 
 struct CContingency
@@ -13546,6 +14801,8 @@ struct CContingency
 	unsigned int m_dwTarget;
 	unsigned int m_dwCondition;
 	unsigned int m_nLastCheck;
+
+	CContingency() = delete;
 };
 
 struct CInfinity
@@ -13640,7 +14897,15 @@ struct CInfinity
 	float m_fStoredZoom;
 	int m_bZoomEnabled;
 	int m_bZooming;
+
+	CInfinity() = delete;
 };
+
+typedef int (__thiscall *type_CGameArea_AdjustTarget)(CGameArea* pThis, CPoint start, CPoint* goal, byte personalSpace, short tolerance);
+extern type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
+
+typedef int (__thiscall *type_CGameArea_CheckWalkable)(CGameArea* pThis, CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
+extern type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
 
 struct CGameArea
 {
@@ -13650,6 +14915,8 @@ struct CGameArea
 		int nLineCount;
 		CPoint* pVertexArray;
 		bool bReady;
+
+		m_cWalkableRenderCache_t() = delete;
 	};
 
 	CAreaFileHeader m_header;
@@ -13706,10 +14973,10 @@ struct CGameArea
 	unsigned __int8* m_pDynamicHeight;
 	int m_startedMusic;
 	unsigned int m_startedMusicCounter;
-	CTypedPtrList<CPtrList,long*> m_lVertSort;
-	CTypedPtrList<CPtrList,long*> m_lVertSortBack;
-	CTypedPtrList<CPtrList,long*> m_lVertSortFlight;
-	CTypedPtrList<CPtrList,long*> m_lVertSortUnder;
+	CTypedPtrList<CPtrList,long> m_lVertSort;
+	CTypedPtrList<CPtrList,long> m_lVertSortBack;
+	CTypedPtrList<CPtrList,long> m_lVertSortFlight;
+	CTypedPtrList<CPtrList,long> m_lVertSortUnder;
 	CTypedPtrList<CPtrList,long*> m_lVertSortAdd;
 	CTypedPtrList<CPtrList,long*> m_lVertSortBackAdd;
 	CTypedPtrList<CPtrList,long*> m_lVertSortFlightAdd;
@@ -13757,6 +15024,20 @@ struct CGameArea
 	unsigned __int8 m_sndAmbientVolume;
 	unsigned __int16 m_sndAmbientDayVolume;
 	unsigned __int16 m_sndAmbientNightVolume;
+
+	CGameArea() = delete;
+
+	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
+
+	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance)
+	{
+		return p_CGameArea_AdjustTarget(this, start, goal, personalSpace, tolerance);
+	}
+
+	int CheckWalkable(CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored)
+	{
+		return p_CGameArea_CheckWalkable(this, start, goal, terrainTable, personalSpace, bCheckIfExplored);
+	}
 };
 
 struct DPWrapper
@@ -13785,6 +15066,8 @@ struct DPWrapper
 	DP_ProviderID m_nProvider;
 	int m_nMyID;
 	DPWrapper::PEER_STATE_t PEER_STATE;
+
+	DPWrapper() = delete;
 };
 
 struct CNetwork
@@ -13845,6 +15128,8 @@ struct CNetwork
 	CNetworkConnectionSettings m_connectionSettings;
 	unsigned int m_lastMessageSentTime;
 	Array<unsigned int,6> m_lastMessageReceivedTime;
+
+	CNetwork() = delete;
 };
 
 struct CChitin
@@ -13902,6 +15187,8 @@ struct CChitin
 		void (__fastcall *RedrawScreen)(CChitin*);
 		unsigned __int8 (__fastcall *GetSoundEnvironment)(CChitin*, CString, unsigned int*, float*, float*, float*, float*);
 		unsigned __int8 (__fastcall *CutsceneModeActive)(CChitin*);
+
+		vtbl() = delete;
 	};
 
 	int m_mouseLButton;
@@ -14008,6 +15295,8 @@ struct CChitin
 	CString m_sFontNameFloatTxt;
 	int m_bDisplaySubtitles;
 	int m_bReverseMouseWheelZoom;
+
+	CChitin() = delete;
 
 	virtual void virtual_SynchronousUpdate()
 	{
@@ -14296,6 +15585,8 @@ struct CBaldurChitin : CChitin
 		unsigned __int8 (__fastcall *CutsceneModeActive)(CChitin*);
 		void (__fastcall *ShutDown_2)(CBaldurChitin*, int, char*, const char*);
 		void (__fastcall *UnloadFonts)(CBaldurChitin*);
+
+		vtbl() = delete;
 	};
 
 	CInfCursor* m_pObjectCursor;
@@ -14345,6 +15636,8 @@ struct CBaldurChitin : CChitin
 	int m_bUseNewGui;
 	CVidFont m_preLoadedFont;
 	CVidMosaic m_tiledBackground;
+
+	CBaldurChitin() = delete;
 
 	virtual void virtual_ShutDown_2(int _0, char* _1, const char* _2)
 	{

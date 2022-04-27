@@ -7,8 +7,15 @@ type_CString_Destruct p_CString_Destruct;
 type_CRes_Construct p_CRes_Construct;
 type_CRes_Destruct p_CRes_Destruct;
 type_CRes_Demand p_CRes_Demand;
+type_CObList_Construct p_CObList_Construct;
 type_CObList_RemoveHead p_CObList_RemoveHead;
 type_CObList_Destruct p_CObList_Destruct;
+type_CObList_AddTail p_CObList_AddTail;
+type_CAIGroup_FollowLeader p_CAIGroup_FollowLeader;
+type_CAIGroup_RemoveFromSearch p_CAIGroup_RemoveFromSearch;
+type_CAIGroup_AddToSearch p_CAIGroup_AddToSearch;
+type_CAIGroup_GetFacings p_CAIGroup_GetFacings;
+type_CAIGroup_GetOffsets p_CAIGroup_GetOffsets;
 type_findMenu p_findMenu;
 type_saveMenuStack p_saveMenuStack;
 type_uiLoadMenu p_uiLoadMenu;
@@ -16,6 +23,7 @@ type_bsearch p_bsearch;
 type_restoreMenuStack p_restoreMenuStack;
 type_CompareCResByTypeThenName p_CompareCResByTypeThenName;
 type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
+type_rand p_rand;
 int* p_numMenus;
 Array<uiMenu,256>* p_menus;
 Array<uiMenu*,256>* p_menuStack;
@@ -24,6 +32,7 @@ CResText** p_menuSrc;
 int* p_menuLength;
 CTypedPtrArray<CPtrArray,CRes*>* p_resources;
 _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
+CBaldurChitin** p_g_pBaldurChitin;
 type_C2DArray_Construct p_C2DArray_Construct;
 type_C2DArray_Load p_C2DArray_Load;
 type_C2DArray_GetAtLabels p_C2DArray_GetAtLabels;
@@ -31,6 +40,7 @@ type_C2DArray_Destruct p_C2DArray_Destruct;
 type_CAIIdList_Construct1 p_CAIIdList_Construct1;
 type_CAIIdList_Destruct p_CAIIdList_Destruct;
 type_CAIIdList_LoadList2 p_CAIIdList_LoadList2;
+type_CSearchBitmap_GetCost p_CSearchBitmap_GetCost;
 type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
 type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
 type_CInfGame_SetState p_CInfGame_SetState;
@@ -38,11 +48,19 @@ type_CInfGame_SetIconIndex p_CInfGame_SetIconIndex;
 type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
 type_CAIObjectType_Set p_CAIObjectType_Set;
 CAIObjectType* CAIObjectType::p_NOONE;
+type_CAIAction_Construct1 p_CAIAction_Construct1;
+type_CAIAction_Destruct p_CAIAction_Destruct;
+Array<byte,16>* CGameObject::p_DEFAULT_TERRAIN_TABLE;
 type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
 type_CGameSprite_GetQuickButtons p_CGameSprite_GetQuickButtons;
 type_CGameSprite_ReadySpell p_CGameSprite_ReadySpell;
 type_CGameSprite_ReadyOffInternalList p_CGameSprite_ReadyOffInternalList;
 type_CGameSprite_GetInternalButtonList p_CGameSprite_GetInternalButtonList;
+type_CGameSprite_GetActiveStats p_CGameSprite_GetActiveStats;
+type_CGameSprite_FeedBack p_CGameSprite_FeedBack;
+type_CGameSprite_PlaySound p_CGameSprite_PlaySound;
+type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
+type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameObjectArray::GetShare"), reinterpret_cast<void**>(&p_CGameObjectArray_GetShare)},
@@ -51,8 +69,15 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CRes::Construct"), reinterpret_cast<void**>(&p_CRes_Construct)},
 	std::pair{TEXT("CRes::Destruct"), reinterpret_cast<void**>(&p_CRes_Destruct)},
 	std::pair{TEXT("CRes::Demand"), reinterpret_cast<void**>(&p_CRes_Demand)},
+	std::pair{TEXT("CObList::Construct"), reinterpret_cast<void**>(&p_CObList_Construct)},
 	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&p_CObList_RemoveHead)},
 	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&p_CObList_Destruct)},
+	std::pair{TEXT("CObList::AddTail"), reinterpret_cast<void**>(&p_CObList_AddTail)},
+	std::pair{TEXT("CAIGroup::FollowLeader"), reinterpret_cast<void**>(&p_CAIGroup_FollowLeader)},
+	std::pair{TEXT("CAIGroup::RemoveFromSearch"), reinterpret_cast<void**>(&p_CAIGroup_RemoveFromSearch)},
+	std::pair{TEXT("CAIGroup::AddToSearch"), reinterpret_cast<void**>(&p_CAIGroup_AddToSearch)},
+	std::pair{TEXT("CAIGroup::GetFacings"), reinterpret_cast<void**>(&p_CAIGroup_GetFacings)},
+	std::pair{TEXT("CAIGroup::GetOffsets"), reinterpret_cast<void**>(&p_CAIGroup_GetOffsets)},
 	std::pair{TEXT("findMenu"), reinterpret_cast<void**>(&p_findMenu)},
 	std::pair{TEXT("saveMenuStack"), reinterpret_cast<void**>(&p_saveMenuStack)},
 	std::pair{TEXT("uiLoadMenu"), reinterpret_cast<void**>(&p_uiLoadMenu)},
@@ -60,6 +85,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("restoreMenuStack"), reinterpret_cast<void**>(&p_restoreMenuStack)},
 	std::pair{TEXT("CompareCResByTypeThenName"), reinterpret_cast<void**>(&p_CompareCResByTypeThenName)},
 	std::pair{TEXT("SDL_GetKeyFromName"), reinterpret_cast<void**>(&p_SDL_GetKeyFromName)},
+	std::pair{TEXT("rand"), reinterpret_cast<void**>(&p_rand)},
 	std::pair{TEXT("numMenus"), reinterpret_cast<void**>(&p_numMenus)},
 	std::pair{TEXT("menus"), reinterpret_cast<void**>(&p_menus)},
 	std::pair{TEXT("menuStack"), reinterpret_cast<void**>(&p_menuStack)},
@@ -68,6 +94,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("menuLength"), reinterpret_cast<void**>(&p_menuLength)},
 	std::pair{TEXT("resources"), reinterpret_cast<void**>(&p_resources)},
 	std::pair{TEXT("capture"), reinterpret_cast<void**>(&p_capture)},
+	std::pair{TEXT("g_pBaldurChitin"), reinterpret_cast<void**>(&p_g_pBaldurChitin)},
 	std::pair{TEXT("C2DArray::Construct"), reinterpret_cast<void**>(&p_C2DArray_Construct)},
 	std::pair{TEXT("C2DArray::Load"), reinterpret_cast<void**>(&p_C2DArray_Load)},
 	std::pair{TEXT("C2DArray::GetAtLabels"), reinterpret_cast<void**>(&p_C2DArray_GetAtLabels)},
@@ -75,6 +102,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAIIdList::Construct1"), reinterpret_cast<void**>(&p_CAIIdList_Construct1)},
 	std::pair{TEXT("CAIIdList::Destruct"), reinterpret_cast<void**>(&p_CAIIdList_Destruct)},
 	std::pair{TEXT("CAIIdList::LoadList2"), reinterpret_cast<void**>(&p_CAIIdList_LoadList2)},
+	std::pair{TEXT("CSearchBitmap::GetCost"), reinterpret_cast<void**>(&p_CSearchBitmap_GetCost)},
 	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&p_CInfButtonArray_SetState)},
 	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&p_CInfButtonArray_SetQuickSlot)},
 	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&p_CInfGame_SetState)},
@@ -82,9 +110,17 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&p_CGameEffect_DecodeEffect)},
 	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&p_CAIObjectType_Set)},
 	std::pair{TEXT("CAIObjectType::NOONE"), reinterpret_cast<void**>(&CAIObjectType::p_NOONE)},
+	std::pair{TEXT("CAIAction::Construct1"), reinterpret_cast<void**>(&p_CAIAction_Construct1)},
+	std::pair{TEXT("CAIAction::Destruct"), reinterpret_cast<void**>(&p_CAIAction_Destruct)},
+	std::pair{TEXT("CGameObject::DEFAULT_TERRAIN_TABLE"), reinterpret_cast<void**>(&CGameObject::p_DEFAULT_TERRAIN_TABLE)},
 	std::pair{TEXT("CGameSprite::GetKitMask"), reinterpret_cast<void**>(&p_CGameSprite_GetKitMask)},
 	std::pair{TEXT("CGameSprite::GetQuickButtons"), reinterpret_cast<void**>(&p_CGameSprite_GetQuickButtons)},
 	std::pair{TEXT("CGameSprite::ReadySpell"), reinterpret_cast<void**>(&p_CGameSprite_ReadySpell)},
 	std::pair{TEXT("CGameSprite::ReadyOffInternalList"), reinterpret_cast<void**>(&p_CGameSprite_ReadyOffInternalList)},
 	std::pair{TEXT("CGameSprite::GetInternalButtonList"), reinterpret_cast<void**>(&p_CGameSprite_GetInternalButtonList)},
+	std::pair{TEXT("CGameSprite::GetActiveStats"), reinterpret_cast<void**>(&p_CGameSprite_GetActiveStats)},
+	std::pair{TEXT("CGameSprite::FeedBack"), reinterpret_cast<void**>(&p_CGameSprite_FeedBack)},
+	std::pair{TEXT("CGameSprite::PlaySound"), reinterpret_cast<void**>(&p_CGameSprite_PlaySound)},
+	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&p_CGameArea_AdjustTarget)},
+	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&p_CGameArea_CheckWalkable)},
 };

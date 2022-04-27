@@ -172,12 +172,12 @@ def splitKeepBrackets(stringIn, toSplit, noSplit=[], includeToSplit=False):
 		elif char == ">":
 			level -= 1
 		elif level == 0:
-		
+
 			noSplitLen = inList(stringIn, i, noSplit)
 			if noSplitLen != -1:
 				i += noSplitLen
 				continue
-		
+
 			splitLen = inList(stringIn, i, toSplit)
 			if splitLen != -1:
 
@@ -295,7 +295,7 @@ class MainState:
 
 		if existingGroup := self.groupsDict.get(group.name):
 
-			if not existingGroup is group: 
+			if not existingGroup is group:
 
 				# Note: This merge can be a source of errors if Group is updated to include new variables
 
@@ -307,7 +307,7 @@ class MainState:
 
 				group.isDirectlyWanted = group.isDirectlyWanted or existingGroup.isDirectlyWanted
 				group.isSoftWanted = group.isSoftWanted or existingGroup.isSoftWanted
-				
+
 				for inRef in existingGroup.inwardTypeRefs:
 					inRef.group = group
 					group.inwardTypeRefs.addUnique(inRef)
@@ -319,7 +319,7 @@ class MainState:
 			self.groups.append(group)
 
 		self.groupsDict[group.name] = group
-		
+
 
 	def getGroup(self, name: str):
 		return self.groupsDict[name]
@@ -383,8 +383,8 @@ class TemplateTypeMode(Enum):
 
 
 
-primitives = {"intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "wchar_t", "double", "long double"}
-primitiveNumbers = {"intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "float", "double", "long double"}
+primitives = {"byte", "short", "ushort", "uint", "intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "wchar_t", "double", "long double"}
+primitiveNumbers = {"byte", "short", "ushort", "uint", "intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "float", "double", "long double"}
 
 class TypeReference:
 
@@ -542,7 +542,7 @@ class TypeReference:
 
 
 	def checkReplaceTemplateType(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker) -> TypeReference:
-		
+
 		toReturn = self
 		toReturnName = toReturn.getName()
 
@@ -858,7 +858,7 @@ class CharReference(TypeReference):
 			super().setUserTypePointerLevel(mainState, newVal)
 			self.charPointerLevel = newVal + 1
 		elif self.mode == CharReferenceMode.MORPHING:
-			newVal = newVal if self.charPointerLevel != 1 else newVal + 1 
+			newVal = newVal if self.charPointerLevel != 1 else newVal + 1
 			self.charPointerLevel = newVal
 			if newVal == 1:
 				super().setUserTypePointerLevel(mainState, 0)
@@ -962,15 +962,19 @@ class FunctionImplementation:
 		self.parameters: list[FunctionImplementationParameter] = []
 		self.body: list[str] = []
 		self.isInternal = None
+		self.noDeclaration = False
 		self.isConstructor: bool = False
+		self.isFakeConstructor: bool = False
+		self.isDestructor: bool = False
 		self.customReturnCount: int = None
 		self.noBinding: bool = False
 		self.group = None
 		self.virtual: bool = False
+		self.externalImplementation = False
 
 
 	def getAllTypeReferences(self, mainState: MainState):
-		
+
 		refs = []
 
 		if self.returnType != None:
@@ -993,11 +997,14 @@ class FunctionImplementation:
 		if self.isStatic:
 			parts.append("static ")
 
-		if not self.isConstructor:
+		if self.isFakeConstructor:
+			parts.append(f"{self.returnType.getHeaderName()} Construct")
+		elif not self.isConstructor and not self.isDestructor:
 			parts.append(self.returnType.getHeaderName())
 			parts.append(" ")
 			parts.append(self.name)
 		else:
+			if self.isDestructor: parts.append("~")
 			parts.append(self.group.singleName)
 
 		parts.append("(")
@@ -1015,16 +1022,30 @@ class FunctionImplementation:
 		if self.customReturnCount or len(self.parameters) > 0:
 			parts.pop()
 
-		parts.append(")\n")
+		parts.append(")")
 
-		if not self.isInternal:
+		if self.virtual:
+
+			parts.append("\n")
+			parts.append(f"{indent}\t{{\n")
+
+			if not self.returnType.isVoid():
+				parts.append(f"{indent}\t\treturn *({self.returnType.getHeaderName()}*)nullptr;\n")
+
+			parts.append(f"{indent}\t}}\n")
+
+		elif not self.isInternal:
+			assert not self.externalImplementation, "Function cannot be header-defined and externally-defined"
+			parts.append("\n")
 			for bodyLine in self.body:
 				parts.append(indent)
 				parts.append(bodyLine)
 				parts.append("\n")
-		else:
-			parts.append(f"{indent}")
-			parts.append("\t{\n")
+
+		elif not self.externalImplementation:
+
+			parts.append("\n")
+			parts.append(f"{indent}\t{{\n")
 			parts.append(f"{indent}\t\t")
 
 			if not self.returnType.isVoid():
@@ -1044,8 +1065,9 @@ class FunctionImplementation:
 				del parts[-1]
 
 			parts.append(");\n")
-			parts.append(f"{indent}")
-			parts.append("\t}\n")
+			parts.append(f"{indent}\t}}\n")
+		else:
+			parts.append(";\n")
 
 		return "".join(parts)
 
@@ -1068,32 +1090,49 @@ class CheckUnnamedStructsState:
 		self.lines: list[str] = []
 
 
-variablePatternGlobal = "^((?:(?:nobinding|static)\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
-variablePatternLocal = "^\t((?:(?:nobinding|static)\s+)*)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"	
+variablePatternGlobal = "^((?:(?:nopointer|nobinding|static)\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
+variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\s+)*)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
 
 def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
-	functionImplementationMatch: Match = re.match("^\s*(?!typedef)(\$nobinding\s+){0,1}(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)(?:(;)){0,1}$", line)
+	functionImplementationMatch: Match = re.match("^\s*(?!typedef)((?:(?:\$nobinding|\$nodeclaration)\s+)*)(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)(?:(;)){0,1}$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
 		state.currentFunctionImplementation.group = group
-		state.currentFunctionImplementation.noBinding = functionImplementationMatch.group(1) != None
+
+		if keywordMatch := functionImplementationMatch.group(1):
+			for keyword in keywordMatch.strip().split(" "):
+				if keyword == "$nobinding":
+					assert not state.currentFunctionImplementation.noBinding, "nobinding already defined"
+					state.currentFunctionImplementation.noBinding = True
+				elif keyword == "$nodeclaration":
+					assert not state.currentFunctionImplementation.noDeclaration, "nodeclaration already defined"
+					state.currentFunctionImplementation.noDeclaration = True
+
 		state.currentFunctionImplementation.isStatic = functionImplementationMatch.group(2) != None
 
-		retTypeStr = functionImplementationMatch.group(3)
+		retTypeStr: str = functionImplementationMatch.group(3)
 
 		if customReturnMatch := re.match("^\$custom_return_(\d+)$", retTypeStr):
 			state.currentFunctionImplementation.customReturnCount = int(customReturnMatch.group(1))
 			retTypeStr = "void"
 		elif retTypeStr.startswith("$constructor"):
-			state.currentFunctionImplementation.isConstructor = True
 			if retTypeStr == "$constructor_copy":
 				group.copyConstructor = state.currentFunctionImplementation
+				state.currentFunctionImplementation.isConstructor = True
+			elif retTypeStr == "$constructor_fake":
+				state.currentFunctionImplementation.isFakeConstructor = True
 			else:
 				assert retTypeStr == "$constructor", "Bad bindings directive"
-
+				state.currentFunctionImplementation.isConstructor = True
 			retTypeStr = "void"
+		elif retTypeStr.startswith("$destructor"):
+			state.currentFunctionImplementation.isDestructor = True
+			retTypeStr = "void"
+		elif retTypeStr.startswith("$external_implementation"):
+			state.currentFunctionImplementation.externalImplementation = True
+			retTypeStr = retTypeStr[len("$external_implementation"):].lstrip()
 
 		state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION)
 		state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(4)
@@ -1147,7 +1186,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 					state.hitFirstBracket = False
 					state.functionImplementationBody = []
 					state.currentFunctionImplementation = None
-	
+
 
 	variableMatch: Match = re.match(variablePatternGlobal if group == globalGroup else variablePatternLocal, line)
 	if variableMatch != None:
@@ -1162,6 +1201,9 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 				elif keyword == "static":
 					assert not variableField.static, "static already defined"
 					variableField.static = True
+				elif keyword == "nopointer":
+					assert not variableField.nopointer, "nopointer already defined"
+					variableField.nopointer = True
 
 		variableField.variableType = defineTypeRef(mainState, group, variableMatch.group(2), TypeRefSourceType.VARIABLE, variableMatch.group(4))
 		variableField.variableType.bitFieldPart = variableMatch.group(5)
@@ -1216,7 +1258,7 @@ class Group:
 
 		self.dependsOn: dict[str,bool] = {}      # Map of group names which this group needs to be defined in order to be valid.
 		self.lightDependsOn: dict[str,bool] = {} # Map of group names which this group needs to be declared in order to be valid.
-		
+
 		self.listIndex: int = None      # Position in MainState groups list.
 		self.sortedPosition: int = None # Position in MainState filteredGroups list.
 
@@ -1229,7 +1271,7 @@ class Group:
 
 		self.isDirectlyWanted: bool = False # True if the group was listed in -wantedFile.
 		self.isSoftWanted: bool = False
-		
+
 		self.fieldsMap: dict[str, Field] = {}                           # Map of fields the group immediately contains.
 		self.fields: list[Field] = []                                   # List of fields the group immediately contains.
 
@@ -1295,6 +1337,19 @@ class Group:
 		varField.variableType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE)
 
 
+	def retypeFunctionFieldRet(self, mainState: MainState, fieldName: str, newTypeStr: str):
+
+		field = self.fieldsMap[fieldName]
+		assert field.type == FieldType.FUNCTION, "Unhandled field.type in Group.retypeField()"
+
+		functionField: FunctionField = field
+
+		for ref in functionField.returnType.getAllTypeReferences(mainState):
+			ref.removeFromGroupRefs()
+
+		functionField.returnType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE)
+
+
 	def removeField(self, mainState: MainState, fieldName: str):
 
 		field = self.fieldsMap[fieldName]
@@ -1324,7 +1379,7 @@ class Group:
 			field.listI = insertI
 			self.fields.insert(insertI, field)
 			for i in range(insertI + 1, len(self.fields)):
-				self.fields[i].listI += 1 
+				self.fields[i].listI += 1
 		else:
 			field.listI = len(self.fields)
 			self.fields.append(field)
@@ -1341,7 +1396,7 @@ class Group:
 
 		"""
 		Fills: self.templateTypeNames, self.extends, self.fields, and self.enumTuples\n
-		and calls defineTypeRef() to define any relevant TypeReferences in the process. 
+		and calls defineTypeRef() to define any relevant TypeReferences in the process.
 		"""
 
 		self.linesProcessed = True
@@ -1422,7 +1477,7 @@ class Group:
 		"""
 		Fills:
 			templateTypeNameMapping
-			
+
 		Maps the template names that appear in this Group's inheritance hierarchy to their originating Group.
 		"""
 
@@ -1660,7 +1715,7 @@ class Group:
 		"""
 		Fills:
 			vGroup
-		
+
 		Fills vGroup and removes __vftable field if present.
 		"""
 
@@ -1697,14 +1752,6 @@ class Group:
 
 			impl: FunctionImplementation = functionField.toImplementation(self)
 			impl.name = f"virtual_{functionField.functionName}"
-
-			impl.body = ["\t{"]
-			
-			if not impl.returnType.isVoid():
-				impl.body.append(f"\t\treturn *({impl.returnType.getHeaderName()}*)nullptr;")
-
-			impl.body.append("\t}")
-
 			impl.virtual = True
 			self.functionImplementations.append(impl)
 
@@ -1720,32 +1767,39 @@ class Group:
 
 			for functionImp in group.functionImplementations:
 
-				if functionImp.isInternal:
+				if functionImp.isInternal and not functionImp.externalImplementation:
 
 					identifier1: str = f"{group.name}_{functionImp.name}" if isNormal else functionImp.name
 					identifier2: str = f"{group.name}::{functionImp.name}" if isNormal else functionImp.name
 
 					bindingPtrTypeName = f"type_{identifier1}"
-					conventionStr: str = f"{functionImp.callingConvention} " if functionImp.callingConvention != None else ""
-					parts.append(f"typedef {functionImp.returnType.getHeaderName()} ({conventionStr}*{bindingPtrTypeName})(")
 
-					if isNormal and not functionImp.isStatic:
-						parts.append(f"{group.name}* pThis")
-						parts.append(", ")
-
-					for param in functionImp.parameters:
-						parts.append(f"{param.type.getHeaderName()} {param.name}")
-						parts.append(", ")
-
-					if (isNormal and not functionImp.isStatic) or len(functionImp.parameters) > 0:
-						del parts[-1]
-
-					parts.append(");\n")
 					internalPointersOut.write(f"{bindingPtrTypeName} p_{identifier1};\n")
 					internalPointersListOut.append((f"{identifier2}", f"p_{identifier1}"))
-					parts.append(f"{indent}extern {bindingPtrTypeName} p_{identifier1};")
-					parts.append("\n\n")
-					wroteSomething = True
+
+					if not functionImp.noDeclaration:
+
+						conventionStr: str = f"{functionImp.callingConvention} " if functionImp.callingConvention != None else ""
+						if conventionStr == "" and isNormal and not functionImp.isStatic:
+							conventionStr = "__thiscall"
+
+						parts.append(f"typedef {functionImp.returnType.getHeaderName()} ({conventionStr} *{bindingPtrTypeName})(")
+
+						if isNormal and not functionImp.isStatic:
+							parts.append(f"{group.name}* pThis")
+							parts.append(", ")
+
+						for param in functionImp.parameters:
+							parts.append(f"{param.type.getHeaderName()} {param.name}")
+							parts.append(", ")
+
+						if (isNormal and not functionImp.isStatic) or len(functionImp.parameters) > 0:
+							del parts[-1]
+
+						parts.append(");\n")
+						parts.append(f"{indent}extern {bindingPtrTypeName} p_{identifier1};")
+						parts.append("\n\n")
+						wroteSomething = True
 
 			if isNormal:
 				for field in group.fields:
@@ -1753,13 +1807,15 @@ class Group:
 						varField: VariableField = field
 						if varField.static:
 							varNameP = f"{self.name}::p_{varField.variableName}"
-							internalPointersOut.write(f"{varField.variableType.getHeaderName()}* {varNameP};\n")
+							pointerLevelAdjust: int = 0 if varField.nopointer else 1
+							internalPointersOut.write(f"{varField.variableType.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)} {varNameP};\n")
 							internalPointersListOut.append((f"{self.name}::{varField.variableName}", varNameP))
 			else:
 				for field in group.fields:
 					if field.type == FieldType.VARIABLE:
 						varField: VariableField = field
-						varStr = f"{varField.variableType.getHeaderName(pointerLevelAdjust=1)} p_{varField.variableName};"
+						pointerLevelAdjust: int = 0 if varField.nopointer else 1
+						varStr = f"{varField.variableType.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)} p_{varField.variableName};"
 						internalPointersOut.write(f"{varStr}\n")
 						internalPointersListOut.append((varField.variableName, f"p_{varField.variableName}"))
 						parts.append(f"extern {varStr}")
@@ -1818,31 +1874,6 @@ class Group:
 			parts.append("{\n")
 
 			nextIndent = indent + "\t"
-
-			if headerType == HeaderType.CLEANED and self.template != None:
-				parts.append(nextIndent)
-				parts.append("TOLUA_TEMPLATE_BIND(")
-
-				defNames = self.templateTypeNames[self.name]
-				for defName in defNames:
-					parts.append(defName)
-					parts.append(" ")
-
-				parts.pop()
-				parts.append(",")
-
-				for templateUse in self.templateUses:
-
-					for useType in templateUse:
-						parts.append(useType.toString())
-						parts.append(" ")
-
-					parts.pop()
-					parts.append(",")
-
-				parts.pop()
-				parts.append(")\n")
-
 			wroteSomethingBeforeFuncImps = False
 
 			for subgroup in self.subGroups:
@@ -1863,6 +1894,20 @@ class Group:
 				parts.append(field.toString(mainState, nextIndent))
 				parts.append("\n")
 				wroteSomethingBeforeFuncImps = True
+
+			if not mainState.noCustomTypes and self.groupType != "enum":
+
+				deleteDefault: bool = True
+				for funcImp in self.functionImplementations:
+					if funcImp.isConstructor and len(funcImp.parameters) == 0:
+						deleteDefault = False
+						break
+
+				if deleteDefault:
+					if wroteSomethingBeforeFuncImps:
+						parts.append("\n")
+					parts.append(f"{nextIndent}{self.singleName}() = delete;\n")
+					wroteSomethingBeforeFuncImps = True
 
 			if wroteSomethingBeforeFuncImps and len(self.functionImplementations) > 0:
 				parts.append("\n")
@@ -1943,7 +1988,7 @@ def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, s
 		subGroup.defined = True
 		subGroup.lines = state.lines
 		subGroup.superGroup = superGroup
-		
+
 		subGroup.updateSingleName(mainState, myTypeName)
 		superGroup.subGroups.addUnique(subGroup)
 
@@ -2089,6 +2134,7 @@ class VariableField(Field):
 		self.variableName: str = None
 		self.nobinding: bool = False
 		self.static: bool = False
+		self.nopointer: bool = False
 
 
 	def getName(self):
@@ -2104,7 +2150,8 @@ class VariableField(Field):
 
 		#TODO: Handle nested Arrays
 		if (not mainState.noCustomTypes) or self.variableType.getName() != "Array":
-			parts.append(f"{self.variableType.getHeaderName()}{'*' if self.static else ''}")
+			pointerLevelAdjust: int = 1 if self.static and not self.nopointer else 0
+			parts.append(f"{self.variableType.getHeaderName(pointerLevelAdjust)}")
 			parts.append(" ")
 			parts.append(f"{'p_' if self.static else ''}{self.variableName}")
 		else:
@@ -2125,7 +2172,7 @@ class VariableField(Field):
 			parts.append(" : ")
 			parts.append(self.variableType.bitFieldPart)
 
-		parts.append(";")		
+		parts.append(";")
 		return "".join(parts)
 
 
@@ -2425,7 +2472,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 		# Writing getInternalReference() function which returns the userdata's internal pointer
 		if group != globalGroup and group.groupType != "enum" and group.name not in ("Pointer", "Array"):
-	
+
 			getTypeFunc = OpenFunctionData()
 			getTypeFunc.functionBindingName = f"tolua_function_{groupNameStrIden}_getInternalReference"
 			getTypeFunc.functionName = "getInternalReference"
@@ -2476,7 +2523,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 			isNormal: bool = group != globalGroup
 			shouldWritePointerCast = isNormal and not isPointerCast and not group.name == "Pointer"
 			primitiveReturned = False
-			
+
 			addressPrefix = "reference_" if isPointerCast else ""
 
 			groupOpenData.fieldBindings.append(fieldOpenData)
@@ -2664,7 +2711,16 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 
 					if not checkPrimitiveHandling(varType):
-						selfStr = "self->" if isNormal else "*"
+
+						selfStr: str = None
+						if isNormal:
+							if variableField.static:
+								selfStr = f"*{groupOpenData.appliedHeaderName}::"
+							else:
+								selfStr = "self->"
+						else:
+							selfStr = "*"
+
 						out.write(f"\t{selfStr}{varNameHeader} = ({varType.getAppliedHeaderName(mainState, group, templateMappingTracker)})tolua_tousertype_dynamic(L, 2, 0, \"{varType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)}\");\n")
 
 					out.write("\treturn 0;\n")
@@ -2759,6 +2815,10 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 			if functionImplementation.isConstructor:
 				out.write(f"new (self) {groupOpenData.appliedHeaderName}(")
+			elif functionImplementation.isFakeConstructor:
+				out.write(f"self->Construct(")
+			elif functionImplementation.isDestructor:
+				out.write(f"self->~{groupOpenData.appliedHeaderName}(")
 			elif isNormal and not functionImplementation.isStatic:
 				out.write(f"self->{functionNameHeader}(")
 			else:
@@ -2782,10 +2842,10 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 					appliedParamName = paramType.getAppliedHeaderName(mainState, group, templateMappingTracker)
 					appliedParamUsertype = paramType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
-					
+
 					callArgParts.append(f"{dereferenceStr}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")")
 					callArgParts.append(", ")
-			
+
 			if functionImplementation.customReturnCount or len(functionImplementation.parameters) > 0:
 				callArgParts.pop()
 
@@ -2829,7 +2889,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 					out.write("\");\n")
 
 
-			if functionImplementation.customReturnCount:	
+			if functionImplementation.customReturnCount:
 				out.write(f"\treturn {functionImplementation.customReturnCount};\n")
 			elif not returnType.isVoid():
 				out.write("\treturn 1;\n")
@@ -2847,7 +2907,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 				out.write(f"static int {addressVar.getBindingName}(lua_State* L)\n")
 				out.write("{\n")
-				out.write(f"\ttolua_pushusertype(L, {f'{groupOpenData.appliedNameUsertypeFunc}::{functionNameHeader}' if isNormal else f'*{functionNameHeader}'}, \"UnmappedUserType\");\n")	
+				out.write(f"\ttolua_pushusertype(L, {f'{groupOpenData.appliedNameUsertypeFunc}::{functionNameHeader}' if isNormal else f'*{functionNameHeader}'}, \"UnmappedUserType\");\n")
 				out.write("\treturn 1;\n")
 				out.write("}\n\n")
 
@@ -2889,7 +2949,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 		if group.template != None:
 			for templateUse in group.templateUses:
 				if templateUseHasGeneric(templateUse):
-					# Don't treat a use of a generic template as an actual use 
+					# Don't treat a use of a generic template as an actual use
 					continue
 				writeGroupWithTemplateUse(group, templateMappingTracker, templateUse)
 		else:
@@ -2899,7 +2959,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 	out.write("\n")
 
-	templateMappingTracker = TemplateMappingTracker() 
+	templateMappingTracker = TemplateMappingTracker()
 	for group in groups:
 		if group.isSubgroup(): continue
 		writeGroup(group, templateMappingTracker)
@@ -3110,7 +3170,7 @@ def outputFile(filePath, out: TextIOWrapper):
 
 
 def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, packingFile: str):
-	
+
 	"""
 	Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
 	"""
@@ -3180,8 +3240,7 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 	#	print(f"    {group.name}")
 
 
-
-def checkRename(mainState, alreadyDefinedUsertypesFile: str):
+def checkRename(mainState: MainState, alreadyDefinedUsertypesFile: str):
 
 	"""
 	Rename groups to remove invalid characters / improve autogenerated names, fix clashing function fields, and fix clashing usertype names.
@@ -3244,7 +3303,7 @@ def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
 		for lightDependency in group.lightDependsOn:
 
 			lightDepend = mainState.tryGetGroup(lightDependency)
-			
+
 			if (not lightDepend or lightDepend == globalGroup
 				or lightDepend.isPrimitive() or lightDepend.name == "void"
 				or lightDepend.isSubgroup() or lightDepend.ignoreHeader or not lightDepend.isUsed(mainState)
@@ -3347,9 +3406,9 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 
 		# Attempt to start Group and fill .template, .groupType, .name, and .singleName
 		if declMatch != None:
-			
+
 			nameStr: str = declMatch.group(2)
-			
+
 			existingGroup = mainState.tryGetGroup(nameStr)
 			if existingGroup and existingGroup.defined:
 				alreadyExisted = True
@@ -3372,7 +3431,7 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 				currentGroup.groupType = declMatch.group(1)
 				currentGroup.defined = True
 				currentGroup.updateSingleName(mainState, nameStr)
-		
+
 		# Track template lines, (previousTemplate is only set if the previous line was a template declaration outside of a Group)
 		if currentGroup == None and len(split) >= 1 and stripTypeBrackets(split[0]) == "template":
 			previousTemplate = line
@@ -3427,6 +3486,7 @@ def main():
 	bindingsFileName: str = None
 	fixupFileName: str = None
 	preludeFile: str = None
+	suffixFile: str = None
 	bindingsPreludeFile: str = None
 	ignoreHeaderFile: str = None
 	wantedFile: str = None
@@ -3443,6 +3503,7 @@ def main():
 		elif (v := re.search("-bindingsOutFile=(.+)",             k)) != None: bindingsFileName            = v.group(1)
 		elif (v := re.search("-fixupFile=(.+)",                   k)) != None: fixupFileName               = v.group(1)
 		elif (v := re.search("-preludeFile=(.+)",                 k)) != None: preludeFile                 = v.group(1)
+		elif (v := re.search("-suffixFile=(.+)",                  k)) != None: suffixFile                  = v.group(1)
 		elif (v := re.search("-bindingsPreludeFile=(.+)",         k)) != None: bindingsPreludeFile         = v.group(1)
 		elif (v := re.search("-ignoreHeaderFile=(.+)",            k)) != None: ignoreHeaderFile            = v.group(1)
 		elif (v := re.search("-wantedFile=(.+)",                  k)) != None: wantedFile                  = v.group(1)
@@ -3541,6 +3602,9 @@ struct ConstCharString
 
 		# Write header
 		outputHeader(mainState, outputFileName, out)
+
+		# Write header suffix
+		outputFile(suffixFile, out)
 
 
 

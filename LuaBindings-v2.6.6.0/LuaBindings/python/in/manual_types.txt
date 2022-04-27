@@ -349,9 +349,19 @@ struct CTypedPtrList : CObject
 	CPlex* m_pBlocks;
 	int m_nBlockSize;
 
-	void RemoveHead()
+	$constructor_fake Construct(int size)
 	{
-		((CObList*)this)->RemoveHead();
+		((CObList*)this)->Construct(size);
+	}
+
+	CTypedPtrList::CNode* AddTail(T newElement)
+	{
+		return (CTypedPtrList::CNode*)((CObList*)this)->AddTail((void*)newElement);
+	}
+
+	T RemoveHead()
+	{
+		return (T)((CObList*)this)->RemoveHead();
 	}
 
 	void Destruct()
@@ -716,13 +726,15 @@ struct CGameEffect : CGameEffectBase
 
 struct CObList : CObject
 {
+	$constructor_fake Construct(int size);
 	CObject* RemoveHead();
 	void Destruct();
+	__POSITION* AddTail(void* newElement);
 };
 
 struct CGameObjectArray
 {
-	static __int8 __cdecl GetShare(int index, CGameObject** ptr);
+	static byte __cdecl GetShare(int index, CGameObject** ptr);
 };
 
 struct CGameSprite : CGameAIBase
@@ -732,11 +744,14 @@ struct CGameSprite : CGameAIBase
 	void ReadySpell(CButtonData* button, bool firstCall);
 	void ReadyOffInternalList(CButtonData* button, bool firstCall);
 	CGameButtonList* GetInternalButtonList();
+	CDerivedStats* GetActiveStats();
+	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
+	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption);
 };
 
 struct CRes
 {
-	$constructor Construct();
+	$constructor_fake Construct();
 	void Destruct();
 	void* Demand();
 };
@@ -755,7 +770,64 @@ struct CInfGame
 
 struct CString
 {
-	void ConstructFromChars(primitive const char* lpsz);
+	$constructor_fake ConstructFromChars(primitive const char* lpsz);
+	void Destruct();
+};
+
+struct CSearchBitmap
+{
+	byte GetCost(CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump);
+};
+
+struct CGameObject
+{
+	static byte DEFAULT_TERRAIN_TABLE[16];
+};
+
+struct CGameArea
+{
+	$external_implementation int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
+	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
+	int CheckWalkable(CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
+};
+
+struct CAIGroup
+{
+	$external_implementation void Override_GroupSetTarget(CPoint target, int additive, ushort formationType, CPoint cursor);
+	void FollowLeader(CPoint target, int additive);
+	void RemoveFromSearch(CSearchBitmap* search);
+	void AddToSearch(CSearchBitmap* search);
+	short* GetFacings(short formationType, short direction);
+	CPoint* GetOffsets(short formationType, short direction, byte bFullParty);
+};
+
+struct CPoint
+{
+	int x;
+	int y;
+
+	$nobinding $constructor Construct()
+	{
+		this->x = 0;
+		this->y = 0;
+	}
+
+	$nobinding $constructor ConstructFromXY(int x, int y)
+	{
+		this->x = x;
+		this->y = y;
+	}
+
+	$nobinding $constructor ConstructFromPoint(CPoint* point)
+	{
+		this->x = point->x;
+		this->y = point->y;
+	}
+};
+
+struct CAIAction
+{
+	$constructor_fake Construct1(short actionID, CPoint* dest, int specificID, int sp2);
 	void Destruct();
 };
 
@@ -770,6 +842,7 @@ void** bsearch(void* key, void* base, size_t num, size_t width, void* func);
 void restoreMenuStack();
 int CompareCResByTypeThenName(const CRes* a, const CRes* b);
 int SDL_GetKeyFromName(primitive const char* name);
+int rand();
 
 //////////////////////////////
 // Global Variable Bindings //
@@ -783,3 +856,4 @@ CResText* menuSrc;
 int menuLength;
 CTypedPtrArray<CPtrArray,CRes*> resources;
 $9B9540D9920A90D57A3D80DDD1A70514 capture;
+CBaldurChitin* g_pBaldurChitin;
