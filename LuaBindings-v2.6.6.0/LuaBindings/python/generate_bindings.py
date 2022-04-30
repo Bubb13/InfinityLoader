@@ -2668,14 +2668,6 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 						out.write(f"\tif (!self) tolua_error(L, \"invalid 'self' in accessing variable '{variableField.variableName}'\", NULL);\n")
 
 					varNameHeader = variableField.variableName if (isNormal and not variableField.static) else f"p_{variableField.variableName}"
-					selfStr: str = None
-					if isNormal:
-						if variableField.static:
-							selfStr = f"{groupOpenData.appliedHeaderName}::"
-						else:
-							selfStr = "self->"
-					else:
-						selfStr = "*"*(varType.getUserTypePointerLevel() + 1)
 
 					def checkPrimitiveHandling(varType: TypeReference):
 
@@ -2689,6 +2681,15 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 						if varType.group and varType.group.groupType == "enum":
 							enumCastStr = f"({varType.group.name})"
 							checkType = varType.group.extends[0]
+
+						selfStr: str = None
+						if isNormal:
+							if variableField.static:
+								selfStr = f"*{groupOpenData.appliedHeaderName}::"
+							else:
+								selfStr = "self->"
+						else:
+							selfStr = "*"*(varType.getUserTypePointerLevel() + 1)
 
 						if checkType.isPrimitiveNumber():
 							out.write(f"\t{selfStr}{varNameHeader} = ")

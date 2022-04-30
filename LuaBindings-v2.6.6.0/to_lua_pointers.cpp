@@ -147,7 +147,7 @@ void dumpStackIndex(lua_State* L, const char* label, int index) {
 	p_lua_getglobal(L, "EEex_Dump");    // [ debug, traceback, EEex_Dump ]
 	p_lua_pushstring(L, label);         // [ debug, traceback, EEex_Dump, label ]
 	p_lua_pushvalue(L, index);          // [ debug, traceback, EEex_Dump, label, stack[index] ]
-	
+
 	if (p_lua_pcallk(L, 2, 0, -4, 0, nullptr) != LUA_OK) {
 		// [ debug, traceback, errorMessage ]
 		printf("[!] %s\n", p_lua_tostring(L, -1));
@@ -289,8 +289,8 @@ static void p_storeatpeer(lua_State* L, int index) {
 
 	p_lua_insert(L, -4);                // 4 [ dest, key, value, registry["tolua_peer"] ]
 	p_lua_pop(L, 1);                    // 3 [ dest, key, value ]
-	p_lua_rawset(L, -3);                // 1 [ dest ]  
-	p_lua_pop(L, 1);                    // 0 [ ]  
+	p_lua_rawset(L, -3);                // 1 [ dest ]
+	p_lua_pop(L, 1);                    // 0 [ ]
 }
 
 // Expects   [ ..., table, key, value ]
@@ -319,6 +319,36 @@ void callSetI(lua_State* L) {
 // Expects   [ ..., table, key, value ]
 // End Stack [ ..., table, key, value ]
 int callSet(lua_State* L) {
+
+	///////////////////////////////////////////
+	// local setT = table[".set"]            //
+	// if type(setT) == "table" then         //
+	//     local setV = setT[key]            //
+	//     if type(setV) == "cfunction" then //
+	//         return setV(table, value)     //
+	//     end                               //
+	// end                                   //
+	///////////////////////////////////////////
+
+	p_lua_pushstring(L, ".set");            // 4 [ ..., table, key, value, ".set" ]
+	p_lua_rawget(L, -4);                    // 4 [ ..., table, key, value, table[".set"] ]
+	if (p_lua_istable(L, -1)) {
+		p_lua_pushvalue(L, -3);             // 5 [ ..., table, key, value, table[".set"], key ]
+		p_lua_rawget(L, -2);                // 5 [ ..., table, key, value, table[".set"], table[".set"][key] ]
+		if (p_lua_iscfunction(L, -1)) {
+			p_lua_pushvalue(L, -5);         // 6 [ ..., table, key, value, table[".set"], table[".set"][key], table ]
+			p_lua_pushvalue(L, -4);         // 7 [ ..., table, key, value, table[".set"], table[".set"][key], table, value ]
+			p_lua_call(L, 2, 0);            // 4 [ ..., table, key, value, table[".set"] ]
+			p_lua_pop(L, 1);                // 3 [ ..., table, key, value ]
+			return 1;
+		}
+		else {
+			p_lua_pop(L, 2);                // 3 [ ..., table, key, value ]
+		}
+	}
+	else {
+		p_lua_pop(L, 1);                    // 3 [ ..., table, key, value ]
+	}
 
 	//////////////////////////////////////////////
 	// local curTable = table                   //
@@ -501,7 +531,7 @@ int callSetDynamic(lua_State* L) {
 			p_lua_pop(L, 1);            // 2 [ ..., table, key, value ]
 		}
 	}
-	return 0;                     
+	return 0;
 }
 
 // Expects   [ ..., table, key ]
@@ -551,7 +581,7 @@ int p_module_newindex_event(lua_State* L) {
 	if (callSet(L)) {
 		return 0;
 	}
-	
+
 	//if (p_lua_getmetatable(L, 1) && p_lua_getmetatable(L, -1)) {
 	//	                                   // [ table, key, value, ?, getmetatable(table), getmetatable(getmetatable(table)) ]
 	//	p_lua_pushstring(L, "__newindex"); // [ table, key, value, getmetatable(table), getmetatable(getmetatable(table)), "__newindex" ]
@@ -963,7 +993,7 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 // Expects   [ ..., module ]
 // End Stack [ ..., module ]
 void p_tolua_cclass(lua_State* L, const char* lname, const char* name, std::initializer_list<const char*>&& bases, lua_CFunction col) {
-	
+
 	const char* base = bases.size() > 0 ? *bases.begin() : "";
 	char cname[128] = "const ";
 	char cbase[128] = "const ";
@@ -1032,7 +1062,7 @@ void* tolua_tousertype_dynamic(lua_State* L, int index, void* def, const char* t
 		if (p_lua_isnumber(L, -1)) {
 			offset = p_lua_tointeger(L, -1);
 		}
-		
+
 		p_lua_pop(L, 3);                       // 0 [ ... ]
 		return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + offset);
 	}

@@ -831,6 +831,17 @@ struct CAIAction
 	void Destruct();
 };
 
+struct CVidMode
+{
+	static ushort SCREENWIDTH;
+	static ushort SCREENHEIGHT;
+};
+
+struct CChitin
+{
+	void OnResizeWindow(int w, int h);
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////

@@ -56,6 +56,7 @@ struct CAreaFileProjectileObject;
 struct CAreaPoint;
 struct CBaldurChitin;
 struct CButtonData;
+struct CChitin;
 struct CContingency;
 struct CCreatureFileHeader;
 struct CCreatureFileItem;
@@ -10357,6 +10358,8 @@ struct CSearchBitmap
 
 struct CVidMode
 {
+	static ushort* p_SCREENWIDTH;
+	static ushort* p_SCREENHEIGHT;
 	int m_nPrintFile;
 	int m_nPointerNumber;
 	unsigned int m_dwCursorRenderFlags;
@@ -15132,6 +15135,9 @@ struct CNetwork
 	CNetwork() = delete;
 };
 
+typedef void (__thiscall *type_CChitin_OnResizeWindow)(CChitin* pThis, int w, int h);
+extern type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
+
 struct CChitin
 {
 	struct vtbl
@@ -15297,6 +15303,11 @@ struct CChitin
 	int m_bReverseMouseWheelZoom;
 
 	CChitin() = delete;
+
+	void OnResizeWindow(int w, int h)
+	{
+		p_CChitin_OnResizeWindow(this, w, h);
+	}
 
 	virtual void virtual_SynchronousUpdate()
 	{
