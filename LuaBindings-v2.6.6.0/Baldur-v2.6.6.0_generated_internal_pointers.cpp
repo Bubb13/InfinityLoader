@@ -1,6 +1,7 @@
 
 #include "Baldur-v2.6.6.0_generated.h"
 
+type_CVariableHash_FindKey p_CVariableHash_FindKey;
 type_CGameObjectArray_GetShare p_CGameObjectArray_GetShare;
 type_CString_ConstructFromChars p_CString_ConstructFromChars;
 type_CString_Destruct p_CString_Destruct;
@@ -40,6 +41,10 @@ type_C2DArray_Destruct p_C2DArray_Destruct;
 type_CAIIdList_Construct1 p_CAIIdList_Construct1;
 type_CAIIdList_Destruct p_CAIIdList_Destruct;
 type_CAIIdList_LoadList2 p_CAIIdList_LoadList2;
+type_CAIIdList_Find1 p_CAIIdList_Find1;
+type_CAIScriptFile_Construct p_CAIScriptFile_Construct;
+type_CAIScriptFile_Destruct p_CAIScriptFile_Destruct;
+type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
 type_CSearchBitmap_GetCost p_CSearchBitmap_GetCost;
 ushort* CVidMode::p_SCREENWIDTH;
 ushort* CVidMode::p_SCREENHEIGHT;
@@ -51,7 +56,10 @@ type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
 type_CAIObjectType_Set p_CAIObjectType_Set;
 CAIObjectType* CAIObjectType::p_NOONE;
 type_CAIAction_Construct1 p_CAIAction_Construct1;
+type_CAIAction_ConstructCopy p_CAIAction_ConstructCopy;
 type_CAIAction_Destruct p_CAIAction_Destruct;
+type_CAIAction_operator_equ p_CAIAction_operator_equ;
+type_CAIAction_Decode p_CAIAction_Decode;
 Array<byte,16>* CGameObject::p_DEFAULT_TERRAIN_TABLE;
 type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
 type_CGameSprite_GetQuickButtons p_CGameSprite_GetQuickButtons;
@@ -61,11 +69,13 @@ type_CGameSprite_GetInternalButtonList p_CGameSprite_GetInternalButtonList;
 type_CGameSprite_GetActiveStats p_CGameSprite_GetActiveStats;
 type_CGameSprite_FeedBack p_CGameSprite_FeedBack;
 type_CGameSprite_PlaySound p_CGameSprite_PlaySound;
+type_CGameSprite_UpdateTarget p_CGameSprite_UpdateTarget;
 type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
 type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
 type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
+	std::pair{TEXT("CVariableHash::FindKey"), reinterpret_cast<void**>(&p_CVariableHash_FindKey)},
 	std::pair{TEXT("CGameObjectArray::GetShare"), reinterpret_cast<void**>(&p_CGameObjectArray_GetShare)},
 	std::pair{TEXT("CString::ConstructFromChars"), reinterpret_cast<void**>(&p_CString_ConstructFromChars)},
 	std::pair{TEXT("CString::Destruct"), reinterpret_cast<void**>(&p_CString_Destruct)},
@@ -105,6 +115,10 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAIIdList::Construct1"), reinterpret_cast<void**>(&p_CAIIdList_Construct1)},
 	std::pair{TEXT("CAIIdList::Destruct"), reinterpret_cast<void**>(&p_CAIIdList_Destruct)},
 	std::pair{TEXT("CAIIdList::LoadList2"), reinterpret_cast<void**>(&p_CAIIdList_LoadList2)},
+	std::pair{TEXT("CAIIdList::Find1"), reinterpret_cast<void**>(&p_CAIIdList_Find1)},
+	std::pair{TEXT("CAIScriptFile::Construct"), reinterpret_cast<void**>(&p_CAIScriptFile_Construct)},
+	std::pair{TEXT("CAIScriptFile::Destruct"), reinterpret_cast<void**>(&p_CAIScriptFile_Destruct)},
+	std::pair{TEXT("CAIScriptFile::ParseResponseString"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseResponseString)},
 	std::pair{TEXT("CSearchBitmap::GetCost"), reinterpret_cast<void**>(&p_CSearchBitmap_GetCost)},
 	std::pair{TEXT("CVidMode::SCREENWIDTH"), reinterpret_cast<void**>(&CVidMode::p_SCREENWIDTH)},
 	std::pair{TEXT("CVidMode::SCREENHEIGHT"), reinterpret_cast<void**>(&CVidMode::p_SCREENHEIGHT)},
@@ -116,7 +130,10 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&p_CAIObjectType_Set)},
 	std::pair{TEXT("CAIObjectType::NOONE"), reinterpret_cast<void**>(&CAIObjectType::p_NOONE)},
 	std::pair{TEXT("CAIAction::Construct1"), reinterpret_cast<void**>(&p_CAIAction_Construct1)},
+	std::pair{TEXT("CAIAction::ConstructCopy"), reinterpret_cast<void**>(&p_CAIAction_ConstructCopy)},
 	std::pair{TEXT("CAIAction::Destruct"), reinterpret_cast<void**>(&p_CAIAction_Destruct)},
+	std::pair{TEXT("CAIAction::operator_equ"), reinterpret_cast<void**>(&p_CAIAction_operator_equ)},
+	std::pair{TEXT("CAIAction::Decode"), reinterpret_cast<void**>(&p_CAIAction_Decode)},
 	std::pair{TEXT("CGameObject::DEFAULT_TERRAIN_TABLE"), reinterpret_cast<void**>(&CGameObject::p_DEFAULT_TERRAIN_TABLE)},
 	std::pair{TEXT("CGameSprite::GetKitMask"), reinterpret_cast<void**>(&p_CGameSprite_GetKitMask)},
 	std::pair{TEXT("CGameSprite::GetQuickButtons"), reinterpret_cast<void**>(&p_CGameSprite_GetQuickButtons)},
@@ -126,6 +143,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameSprite::GetActiveStats"), reinterpret_cast<void**>(&p_CGameSprite_GetActiveStats)},
 	std::pair{TEXT("CGameSprite::FeedBack"), reinterpret_cast<void**>(&p_CGameSprite_FeedBack)},
 	std::pair{TEXT("CGameSprite::PlaySound"), reinterpret_cast<void**>(&p_CGameSprite_PlaySound)},
+	std::pair{TEXT("CGameSprite::UpdateTarget"), reinterpret_cast<void**>(&p_CGameSprite_UpdateTarget)},
 	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&p_CGameArea_AdjustTarget)},
 	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&p_CGameArea_CheckWalkable)},
 	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&p_CChitin_OnResizeWindow)},

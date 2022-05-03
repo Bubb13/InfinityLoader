@@ -49,6 +49,7 @@ struct CAIIdList;
 struct CAIObjectType;
 struct CAIResponse;
 struct CAIScript;
+struct CAIScriptFile;
 struct CAITrigger;
 struct CAbilityData;
 struct CAreaFileContainer;
@@ -63,6 +64,7 @@ struct CCreatureFileItem;
 struct CCriticalEntry;
 struct CDerivedStats;
 struct CFileException;
+struct CGameAIBase;
 struct CGameAnimationType;
 struct CGameArea;
 struct CGameDialogReply;
@@ -101,6 +103,7 @@ struct CString;
 struct CUIControlTextDisplay;
 struct CVVCHashEntry;
 struct CVariable;
+struct CVariableHash;
 struct CVidCellFont;
 struct CVidMode;
 struct IDPPeer;
@@ -1251,6 +1254,14 @@ struct CSteamID
 	CSteamID() = delete;
 };
 
+enum class VertListType : __int8
+{
+	LIST_FRONT = 0,
+	LIST_BACK = 1,
+	LIST_FLIGHT = 2,
+	LIST_UNDER = 3,
+};
+
 struct VRAM_FLAGS
 {
 	unsigned __int8 bVRamUpdated : 1;
@@ -2038,12 +2049,20 @@ struct CWeaponIdentification
 	CWeaponIdentification() = delete;
 };
 
+typedef CVariable* (__thiscall *type_CVariableHash_FindKey)(CVariableHash* pThis, CString* inVarName);
+extern type_CVariableHash_FindKey p_CVariableHash_FindKey;
+
 struct CVariableHash
 {
 	CVariable* m_hashEntries;
 	int m_nTableEntries;
 
 	CVariableHash() = delete;
+
+	CVariable* FindKey(CString* inVarName)
+	{
+		return p_CVariableHash_FindKey(this, inVarName);
+	}
 };
 
 struct CVVCHash
@@ -8384,6 +8403,9 @@ extern type_CAIIdList_Destruct p_CAIIdList_Destruct;
 typedef void (__thiscall *type_CAIIdList_LoadList2)(CAIIdList* pThis, CResRef id, int faster);
 extern type_CAIIdList_LoadList2 p_CAIIdList_LoadList2;
 
+typedef CAIId* (__thiscall *type_CAIIdList_Find1)(CAIIdList* pThis, int id);
+extern type_CAIIdList_Find1 p_CAIIdList_Find1;
+
 struct CAIIdList : CResHelper<CResText,1008>
 {
 	struct vtbl
@@ -8414,6 +8436,11 @@ struct CAIIdList : CResHelper<CResText,1008>
 	void LoadList2(CResRef id, int faster)
 	{
 		p_CAIIdList_LoadList2(this, id, faster);
+	}
+
+	CAIId* Find1(int id)
+	{
+		return p_CAIIdList_Find1(this, id);
 	}
 
 	virtual void virtual_CAIIdList_Destructor()
@@ -8670,6 +8697,15 @@ struct CRuleTables
 	CRuleTables() = delete;
 };
 
+typedef void (__thiscall *type_CAIScriptFile_Construct)(CAIScriptFile* pThis);
+extern type_CAIScriptFile_Construct p_CAIScriptFile_Construct;
+
+typedef void (__thiscall *type_CAIScriptFile_Destruct)(CAIScriptFile* pThis);
+extern type_CAIScriptFile_Destruct p_CAIScriptFile_Destruct;
+
+typedef void (__thiscall *type_CAIScriptFile_ParseResponseString)(CAIScriptFile* pThis, CString* data);
+extern type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
+
 struct CAIScriptFile
 {
 	__int16 m_parseMode;
@@ -8687,6 +8723,21 @@ struct CAIScriptFile
 	CAIIdList m_objects;
 
 	CAIScriptFile() = delete;
+
+	void Construct()
+	{
+		p_CAIScriptFile_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_CAIScriptFile_Destruct(this);
+	}
+
+	void ParseResponseString(CString* data)
+	{
+		p_CAIScriptFile_ParseResponseString(this, data);
+	}
 };
 
 struct CGameFile : CResHelper<CResGame,1013>
@@ -12704,8 +12755,17 @@ struct CAIObjectType
 typedef void (__thiscall *type_CAIAction_Construct1)(CAIAction* pThis, short actionID, CPoint* dest, int specificID, int sp2);
 extern type_CAIAction_Construct1 p_CAIAction_Construct1;
 
+typedef void (__thiscall *type_CAIAction_ConstructCopy)(CAIAction* pThis, const CAIAction* that);
+extern type_CAIAction_ConstructCopy p_CAIAction_ConstructCopy;
+
 typedef void (__thiscall *type_CAIAction_Destruct)(CAIAction* pThis);
 extern type_CAIAction_Destruct p_CAIAction_Destruct;
+
+typedef CAIAction* (__thiscall *type_CAIAction_operator_equ)(CAIAction* pThis, const CAIAction* y);
+extern type_CAIAction_operator_equ p_CAIAction_operator_equ;
+
+typedef void (__thiscall *type_CAIAction_Decode)(CAIAction* pThis, CGameAIBase* caller);
+extern type_CAIAction_Decode p_CAIAction_Decode;
 
 struct CAIAction
 {
@@ -12729,9 +12789,24 @@ struct CAIAction
 		p_CAIAction_Construct1(this, actionID, dest, specificID, sp2);
 	}
 
+	void Construct(const CAIAction* that)
+	{
+		p_CAIAction_ConstructCopy(this, that);
+	}
+
 	void Destruct()
 	{
 		p_CAIAction_Destruct(this);
+	}
+
+	CAIAction* operator_equ(const CAIAction* y)
+	{
+		return p_CAIAction_operator_equ(this, y);
+	}
+
+	void Decode(CGameAIBase* caller)
+	{
+		p_CAIAction_Decode(this, caller);
 	}
 };
 
@@ -12974,7 +13049,7 @@ struct CGameObject
 		int (__fastcall *GetTargetId)(CGameObject*);
 		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
 		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
+		VertListType (__fastcall *GetVertListType)(CGameObject*);
 		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
 		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
 		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
@@ -13002,7 +13077,7 @@ struct CGameObject
 	int m_posZ;
 	CGameArea* m_pArea;
 	__POSITION* m_posVertList;
-	unsigned __int8 m_listType;
+	VertListType m_listType;
 	CAIObjectType m_typeAI;
 	int m_id;
 	__int16 m_canBeSeen;
@@ -13050,9 +13125,9 @@ struct CGameObject
 		return *(__POSITION**)nullptr;
 	}
 
-	virtual unsigned __int8 virtual_GetVertListType()
+	virtual VertListType virtual_GetVertListType()
 	{
-		return *(unsigned __int8*)nullptr;
+		return *(VertListType*)nullptr;
 	}
 
 	virtual void virtual_SetVertListType(unsigned __int8 _0)
@@ -14060,6 +14135,9 @@ extern type_CGameSprite_FeedBack p_CGameSprite_FeedBack;
 typedef void (__thiscall *type_CGameSprite_PlaySound)(CGameSprite* pThis, byte soundID, int showText, int showCircle, int overrideOption);
 extern type_CGameSprite_PlaySound p_CGameSprite_PlaySound;
 
+typedef void (__thiscall *type_CGameSprite_UpdateTarget)(CGameSprite* pThis, CGameObject* target);
+extern type_CGameSprite_UpdateTarget p_CGameSprite_UpdateTarget;
+
 struct CGameSprite : CGameAIBase
 {
 	struct GroundItem
@@ -14512,6 +14590,11 @@ struct CGameSprite : CGameAIBase
 	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption)
 	{
 		p_CGameSprite_PlaySound(this, soundID, showText, showCircle, overrideOption);
+	}
+
+	void UpdateTarget(CGameObject* target)
+	{
+		p_CGameSprite_UpdateTarget(this, target);
 	}
 
 	virtual void virtual_SetTarget_2(const CPoint* _0, int _1)
@@ -15031,6 +15114,8 @@ struct CGameArea
 	CGameArea() = delete;
 
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
+
+	int Override_GetNearest(int startObject, CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
 
 	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance)
 	{

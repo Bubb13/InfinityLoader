@@ -374,6 +374,14 @@ struct CTypedPtrList : CObject
 // Manual Engine Type Definitions //
 ////////////////////////////////////
 
+enum VertListType : __int8
+{
+	LIST_FRONT = 0x0,
+	LIST_BACK = 0x1,
+	LIST_FLIGHT = 0x2,
+	LIST_UNDER = 0x3,
+};
+
 enum SDL_Keycode : __int32
 {
 	SDLK_UNKNOWN = 0x0,
@@ -711,6 +719,7 @@ struct CAIIdList : CResHelper<CResText,1008>
 	void Construct1();
 	void Destruct();
 	void LoadList2(CResRef id, int faster);
+	CAIId* Find1(int id);
 };
 
 struct CAIObjectType
@@ -747,6 +756,7 @@ struct CGameSprite : CGameAIBase
 	CDerivedStats* GetActiveStats();
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
 	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption);
+	void UpdateTarget(CGameObject* target);
 };
 
 struct CRes
@@ -828,7 +838,10 @@ struct CPoint
 struct CAIAction
 {
 	$constructor_fake Construct1(short actionID, CPoint* dest, int specificID, int sp2);
+	$constructor_fake ConstructCopy(const CAIAction* that);
 	void Destruct();
+	CAIAction* operator_equ(const CAIAction* y);
+	void Decode(CGameAIBase* caller);
 };
 
 struct CVidMode
@@ -840,6 +853,18 @@ struct CVidMode
 struct CChitin
 {
 	void OnResizeWindow(int w, int h);
+};
+
+struct CVariableHash
+{
+	CVariable* FindKey(CString* inVarName);
+};
+
+struct CAIScriptFile
+{
+	$constructor_fake Construct();
+	void Destruct();
+	void ParseResponseString(CString* data);
 };
 
 //////////////////////////////
