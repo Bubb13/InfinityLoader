@@ -15115,8 +15115,6 @@ struct CGameArea
 
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 
-	int Override_GetNearest(int startObject, CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
-
 	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance)
 	{
 		return p_CGameArea_AdjustTarget(this, start, goal, personalSpace, tolerance);
