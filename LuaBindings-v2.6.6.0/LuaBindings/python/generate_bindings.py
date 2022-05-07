@@ -8,7 +8,7 @@
 from enum import Enum
 from io import TextIOWrapper
 from itertools import islice
-from typing import Callable, Match, Tuple, TypeVar
+from typing import Callable, Generic, Match, Tuple, TypeVar
 import builtins
 import importlib
 import re
@@ -17,61 +17,162 @@ import sys
 
 T = TypeVar("T")
 
-class UniqueWrapper:
+class UniqueList(Generic[T]): pass
 
-	def __init__(self, object: T, pHash: Callable[[T], int], pEq: Callable[[T, T], bool]) -> None:
-		self.object: T = object
-		self.pHash: Callable[[T], int] = pHash
-		self.pEq: Callable[[T, T], bool] = pEq
+class UniqueWrapper(Generic[T]):
+
+	__slots__ = ("list", "value")
+	def __init__(self, list: UniqueList[T], value: T) -> None:
+		self.list: UniqueList[T] = list
+		self.value: T = value
 
 	def __hash__(self) -> int:
-		return self.pHash(self.object)
+		return self.list.pHash(self.value)
 
 	def __eq__(self, other: object) -> bool:
-		return isinstance(other, UniqueWrapper) and self.pEq(self.object, other.object)
+		return isinstance(other, UniqueWrapper) and self.list.pEq(self.value, other.value)
 
+class UniqueListNode(Generic[T]):
 
-class UniqueList(list[T]):
+	__slots__ = ("previous", "next", "value")
+	def __init__(self, previous, next, value) -> None:
+		self.previous: UniqueListNode[T] = previous
+		self.next: UniqueListNode[T] = next
+		self.value: T = value
 
-	def defaultHash(object: T):
+class UniqueListValueIterator(Generic[T]): pass
+class UniqueListValueIterator(Generic[T]):
+
+	__slots__ = ("node")
+	def __init__(self, node) -> None:
+		self.node: UniqueListNode[T] = node
+
+	def __iter__(self) -> UniqueListValueIterator[T]:
+		return self
+
+	def __next__(self) -> T:
+		if self.node.next:
+			toReturn: T = self.node.value
+			self.node = self.node.next
+			return toReturn
+		else:
+			raise StopIteration
+
+class UniqueListNodeIterator(Generic[T]): pass
+class UniqueListNodeIterator(Generic[T]):
+
+	__slots__ = ("node")
+	def __init__(self, node) -> None:
+		self.node: UniqueListNode[T] = node
+
+	def __iter__(self) -> UniqueListNodeIterator[T]:
+		return self
+
+	def __next__(self) -> UniqueListNode[T]:
+		if self.node.next:
+			toReturn: UniqueListNode[T] = self.node
+			self.node = self.node.next
+			return toReturn
+		else:
+			raise StopIteration
+
+class UniqueList(Generic[T]):
+
+	def defaultHash(object: T) -> int:
 		return id(object)
 
-
-	def defaultEq(a: T, b: T):
+	def defaultEq(a: T, b: T) -> bool:
 		return a is b
 
-
+	__slots__ = ("head", "tail", "pHash", "pEq", "map", "tempKey")
 	def __init__(self, pHash: Callable[[T], int]=None, pEq: Callable[[T, T], bool]=None) -> None:
 		super().__init__()
+		self.head: UniqueListNode[T] = UniqueListNode(None, None, None)
+		self.tail: UniqueListNode[T] = UniqueListNode(None, None, None)
+		self.head.next = self.tail
+		self.tail.previous = self.head
 		self.pHash: Callable[[T], int] = pHash or UniqueList.defaultHash
 		self.pEq: Callable[[T, T], bool] = pEq or UniqueList.defaultEq
-		self.listIndexMapping: dict[UniqueWrapper[T], int] = {}
+		self.map: dict[UniqueWrapper, UniqueListNode] = {}
+		self.tempKey: UniqueWrapper[T] = UniqueWrapper(self, None)
 
+	def __iter__(self) -> UniqueListValueIterator[T]:
+		return UniqueListValueIterator(self.head.next)
 
-	def containsUnique(self, v: T):
-		return UniqueWrapper(v, self.pHash, self.pEq) in self.listIndexMapping
+	def nodes(self) -> UniqueListNodeIterator[T]:
+		return UniqueListNodeIterator(self.head.next)
 
+	def addUnique(self, value: T) -> None:
+		valueWrapper: UniqueWrapper[T] = UniqueWrapper(self, value)
+		if not valueWrapper in self.map:
+			self.map[valueWrapper] = self.append(value)
 
-	def addUnique(self, v: T):
-		if (wrapper := UniqueWrapper(v, self.pHash, self.pEq)) not in self.listIndexMapping:
-			self.listIndexMapping[wrapper] = len(self)
-			self.append(v)
+	def containsUnique(self, value: T) -> bool:
+		self.tempKey.value = value
+		return self.tempKey in self.map
 
+	def removeUnique(self, value: T) -> None:
+		self.tempKey.value = value
+		if node := self.map.get(self.tempKey):
+			del self.map[self.tempKey]
+			self.remove(node)
 
-	def removeUnique(self, v: T):
-		if index := self.listIndexMapping.get(wrapper := UniqueWrapper(v, self.pHash, self.pEq)):
-			del self.listIndexMapping[wrapper]
-			del self[index]
-			for i in range(index, len(self)):
-				self.listIndexMapping[UniqueWrapper(self[i], self.pHash, self.pEq)] = i
+	def append(self, value: T) -> UniqueListNode[T]:
+		node: UniqueListNode[T] = UniqueListNode(self.tail.previous, self.tail, value)
+		self.tail.previous.next = node
+		self.tail.previous = node
+		return node
 
+	def insertNodeBefore(self, node: UniqueListNode[T], insertingNode: UniqueListNode[T]) -> None:
+		assert node != self.head
+		insertingNode.previous = node.previous.previous
+		insertingNode.next = node
+		node.previous.next = insertingNode
+		node.previous = insertingNode
 
-	def rebuildIndexMapping(self):
-		newMapping: dict[UniqueWrapper[T], int] = {}
-		for i, v in enumerate(self):
-			if (wrapper := UniqueWrapper(v, self.pHash, self.pEq)) in self.listIndexMapping:
-				newMapping[wrapper] = i
-		self.listIndexMapping = newMapping
+	def insertNodeAfter(self, node: UniqueListNode[T], insertingNode: UniqueListNode[T]) -> None:
+		assert node != self.tail
+		insertingNode.previous = node
+		insertingNode.next = node.next
+		node.next.previous = insertingNode
+		node.next = insertingNode
+
+	def insertBefore(self, node: UniqueListNode[T], value: T) -> None:
+		self.insertNodeBefore(node, UniqueListNode(None, None, value))
+
+	def insertAfter(self, node: UniqueListNode[T], value: T) -> None:
+		self.insertNodeAfter(node, UniqueListNode(None, None, value))
+
+	def moveNodeBefore(self, movingNode: UniqueListNode[T], node: UniqueListNode[T]) -> None:
+		self.remove(movingNode)
+		self.insertNodeBefore(node, movingNode)
+
+	def moveNodeAfter(self, movingNode: UniqueListNode[T], node: UniqueListNode[T]) -> None:
+		self.remove(movingNode)
+		self.insertNodeAfter(node, movingNode)
+
+	def remove(self, node: UniqueListNode[T]) -> None:
+		assert node != self.head and node != self.tail
+		node.previous.next = node.next
+		node.next.previous = node.previous
+
+	def insertionSort(self, comparator: Callable[[T, T], int]):
+
+		curMovingNode: UniqueListNode[T] = self.head.next
+		while curMovingNode != self.tail:
+
+			curCompareNode: UniqueListNode[T] = curMovingNode
+			while True:
+
+				curCompareNode = curCompareNode.previous
+				if curCompareNode == self.head:
+					break
+
+				if comparator(curCompareNode.value, curMovingNode.value) < 0:
+					break
+
+			curMovingNode = curMovingNode.next
+			self.moveNodeAfter(curMovingNode.previous, curCompareNode)
 
 
 
@@ -373,7 +474,7 @@ class TemplateMappingTracker:
 				tup = val[i]
 				print(f"\t[{i}]:")
 				for j in range(len(tup)):
-					print(f"\t\t[{j}]=\"{tup[j].toString()}\"")
+					print(f"\t\t[{j}]=\"{tup[j].getHeaderName()}\"")
 
 
 
@@ -559,7 +660,7 @@ class TypeReference:
 			# HACK a PointerReference.                                                        HACK
 			# HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
 			if sourceGroup.name == "Pointer":
-				toReturn = defineTypeRef(mainState, sourceGroup, toReturn.getHeaderName(pointerLevelAdjust=self.getUserTypePointerLevel()), TypeRefSourceType.VARIABLE)
+				toReturn = defineTypeRef(mainState, sourceGroup, toReturn.getHeaderName(pointerLevelAdjust=self.getUserTypePointerLevel()), TypeRefSourceType.VARIABLE, debugLine="checkReplaceTemplateType()")
 			else:
 				toReturn = toReturn.shallowCopy()
 				toReturn.adjustUserTypePointerLevel(mainState, self.getUserTypePointerLevel())
@@ -591,7 +692,8 @@ class TypeReference:
 			parts.append(superRef._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, templateTypeMode=templateTypeMode))
 			parts.append("::")
 
-		if len(self.templateTypes) > 0:
+		templateTypes: list[TypeReference] = self.getTemplates(mainState, askingGroup=self.group)
+		if len(templateTypes) > 0:
 
 			parts.append(self.getSingleName())
 			assert parts[-1] != None, "Using bad self.getSingleName()"
@@ -599,13 +701,13 @@ class TypeReference:
 			parts.append("<")
 
 			if templateTypeMode == TemplateTypeMode.USER_TYPE:
-				for templateType in self.templateTypes:
+				for templateType in templateTypes:
 					replaced = templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
 					parts.append(replaced.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
 					assert parts[-1] != None, f"Using bad templateType.getAppliedUserTypeName() for (original: {type(templateType).__name__}, replaced: {type(replaced).__name__}) [TemplateTypeMode.USER_TYPE]"
 					parts.append(",")
 			elif templateTypeMode == TemplateTypeMode.HEADER:
-				for templateType in self.templateTypes:
+				for templateType in templateTypes:
 					replaced = templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
 					parts.append(replaced.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
 					assert parts[-1] != None, f"Using bad templateType.getAppliedUserTypeName() for (original: {type(templateType).__name__}, replaced: {type(replaced).__name__}) [TemplateTypeMode.HEADER]"
@@ -691,7 +793,7 @@ class PointerReference(TypeReference):
 
 
 	@staticmethod
-	def create(mainState: MainState, originalRef: TypeReference):
+	def create(mainState: MainState, originalRef: TypeReference, debugLine: str=""):
 
 		assert not isinstance(originalRef, PointerReference), "Wrapception: PointerReference"
 		obj = PointerReference()
@@ -955,6 +1057,7 @@ class FunctionImplementationParameter:
 class FunctionImplementation:
 
 	def __init__(self):
+		self.isConst = None
 		self.isStatic = None
 		self.returnType: TypeReference = None
 		self.callingConvention: str = None
@@ -1023,6 +1126,9 @@ class FunctionImplementation:
 			parts.pop()
 
 		parts.append(")")
+
+		if self.isConst:
+			parts.append(" const")
 
 		if self.virtual:
 
@@ -1095,7 +1201,7 @@ variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\s+)*)(?:__unaligne
 
 def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
-	functionImplementationMatch: Match = re.match("^\s*(?!typedef)((?:(?:\$nobinding|\$nodeclaration)\s+)*)(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)(?:(;)){0,1}$", line)
+	functionImplementationMatch: Match = re.match("^\s*(?!typedef)((?:(?:\$nobinding|\$nodeclaration)\s+)*)(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)\s*(const){0,1}\s*(?:(;)){0,1}$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1134,7 +1240,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 			state.currentFunctionImplementation.externalImplementation = True
 			retTypeStr = retTypeStr[len("$external_implementation"):].lstrip()
 
-		state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION)
+		state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, debugLine=f"processCommonGroupLines()-1 {line}")
 		state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(4)
 
 		state.currentFunctionImplementation.name = functionImplementationMatch.group(5)
@@ -1155,12 +1261,13 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 				typeStr = "".join(parts)
 				funcParameter = FunctionImplementationParameter()
-				funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION)
+				funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION, debugLine=f"processCommonGroupLines()-2 {line}")
 				funcParameter.name = spaceSplit[-1]
 
 				state.currentFunctionImplementation.parameters.append(funcParameter)
 
-		state.currentFunctionImplementation.isInternal = functionImplementationMatch.group(7) != None
+		state.currentFunctionImplementation.isConst = functionImplementationMatch.group(7) != None
+		state.currentFunctionImplementation.isInternal = functionImplementationMatch.group(8) != None
 
 
 	if state.currentFunctionImplementation != None:
@@ -1205,7 +1312,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 					assert not variableField.nopointer, "nopointer already defined"
 					variableField.nopointer = True
 
-		variableField.variableType = defineTypeRef(mainState, group, variableMatch.group(2), TypeRefSourceType.VARIABLE, variableMatch.group(4))
+		variableField.variableType = defineTypeRef(mainState, group, variableMatch.group(2), TypeRefSourceType.VARIABLE, variableMatch.group(4), debugLine=f"processCommonGroupLines()-3 {line}")
 		variableField.variableType.bitFieldPart = variableMatch.group(5)
 
 		variableField.variableName = variableMatch.group(3)
@@ -1285,7 +1392,8 @@ class Group:
 		self.copyConstructor: FunctionImplementation = None # Specially-defined copy constructor implementation
 		self.pack: int = None                               # Specially-defined struct packing
 		self.vGroup: Group = None
-		self.vFuncs: list[FunctionField] = []
+		self.numOriginalVFuncs: int = None
+
 
 
 	def isSubgroup(self):
@@ -1334,7 +1442,7 @@ class Group:
 		for ref in varField.variableType.getAllTypeReferences(mainState):
 			ref.removeFromGroupRefs()
 
-		varField.variableType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE)
+		varField.variableType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE, debugLine="retypeField()")
 
 
 	def retypeFunctionFieldRet(self, mainState: MainState, fieldName: str, newTypeStr: str):
@@ -1347,31 +1455,49 @@ class Group:
 		for ref in functionField.returnType.getAllTypeReferences(mainState):
 			ref.removeFromGroupRefs()
 
-		functionField.returnType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE)
+		functionField.returnType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE, debugLine="retypeFunctionFieldRet()")
 
 
-	def removeField(self, mainState: MainState, fieldName: str):
-
-		field = self.fieldsMap[fieldName]
+	def removeField(self, mainState: MainState, field: Field) -> None:
 
 		for ref in field.getAllTypeReferences(mainState):
 			ref.removeFromGroupRefs()
 
-		del self.fieldsMap[fieldName]
+		del self.fieldsMap[field.getName()]
 		del self.fields[field.listI]
 		for i in range(field.listI, len(self.fields)):
 			self.fields[i].listI -= 1
 
 
+	def removeFieldByIndex(self, mainState: MainState, fieldI: int) -> None:
+		self.removeField(mainState, self.fields[fieldI])
+
+
+	def removeFieldByName(self, mainState: MainState, fieldName: str) -> None:
+		self.removeField(mainState, self.fieldsMap[fieldName])
+
+
+	def renameField(self, field: Field, newName: str):
+		del self.fieldsMap[field.getName()]
+		self.fieldsMap[newName] = field
+		field.setName(newName)
+
+
 	def addField(self, field: Field, insertI: int=None):
 
-		name: str = None
-
 		assert field.type in (FieldType.VARIABLE, FieldType.FUNCTION), "Unhandled field.type in Group.addField()"
-		if field.type == FieldType.VARIABLE:
-			name = field.variableName
-		elif field.type == FieldType.FUNCTION:
-			name = field.functionName
+
+		name: str = field.getName()
+
+		if self.fieldsMap.get(name):
+			i: int = 2
+			while True:
+				newName: str = f"{name}_{i}"
+				if not self.fieldsMap.get(newName):
+					field.setName(newName)
+					name = newName
+					break
+				i += 1
 
 		self.fieldsMap[name] = field
 
@@ -1388,7 +1514,7 @@ class Group:
 	def addVariableField(self, mainState: MainState, fieldName: str, typeStr: str, insertI: int=None):
 		field = VariableField()
 		field.variableName = fieldName
-		field.variableType = defineTypeRef(mainState, self, typeStr, TypeRefSourceType.VARIABLE)
+		field.variableType = defineTypeRef(mainState, self, typeStr, TypeRefSourceType.VARIABLE, debugLine="addVariableField()")
 		self.addField(field, insertI=insertI)
 
 
@@ -1422,14 +1548,14 @@ class Group:
 				extendsStr = declMatch.group(2)
 				if extendsStr != None:
 					for extendsType in splitKeepBrackets(extendsStr, [","]):
-						self.extends.append(defineTypeRef(mainState, self, extendsType, TypeRefSourceType.VARIABLE))
+						self.extends.append(defineTypeRef(mainState, self, extendsType, TypeRefSourceType.VARIABLE, debugLine=f"processLinesFillTypes()-1 {line}"))
 
 			# Define function fields
 			functionVariableMatch: Match = re.match("^\t([, _a-zA-Z0-9*:<>]+?)\s*\(\s*(?:([_a-zA-Z]+?)\s*){0,1}\*\s*([_a-zA-Z0-9~]+)\s*\)\s*\((?:\s*([, _a-zA-Z0-9*:<>]+?)\s+\*\s*this(?:\s*,\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\s+\*\s*result(?:\s*,\s+){0,1}){0,1}\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\.\.\.(?=\s*\))){0,1}){0,1}\s*\)\;$", line)
 			if functionVariableMatch != None:
 
 				functionField = FunctionField()
-				functionField.returnType = defineTypeRef(mainState, self, functionVariableMatch.group(1), TypeRefSourceType.FUNCTION)
+				functionField.returnType = defineTypeRef(mainState, self, functionVariableMatch.group(1), TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-2 {line}")
 				functionField.callConvention = functionVariableMatch.group(2)
 				functionField.functionName = functionVariableMatch.group(3)
 
@@ -1437,15 +1563,15 @@ class Group:
 					functionField.functionName = functionField.functionName[1:] + "_Destructor"
 
 				if thisTypeNoPtrMatch := functionVariableMatch.group(4):
-					functionField.thisType = defineTypeRef(mainState, self, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION)
+					functionField.thisType = defineTypeRef(mainState, self, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-3 {line}")
 
 				if resultTypeNoPtrMatch := functionVariableMatch.group(5):
-					functionField.resultType = defineTypeRef(mainState, self, f"{resultTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION)
+					functionField.resultType = defineTypeRef(mainState, self, f"{resultTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-4 {line}")
 
 				parameterStr = functionVariableMatch.group(6)
 				if parameterStr != None and parameterStr != "":
 					for paramType in splitKeepBrackets(parameterStr, [","]):
-						functionField.parameterTypes.append(defineTypeRef(mainState, self, paramType, TypeRefSourceType.FUNCTION))
+						functionField.parameterTypes.append(defineTypeRef(mainState, self, paramType, TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-5 {line}"))
 
 				self.addField(functionField)
 
@@ -1710,7 +1836,7 @@ class Group:
 		return "".join(groupNameParts)
 
 
-	def checkForVGroup(self, mainState: MainState) -> None:
+	def checkForVGroup(self, mainState: MainState) -> Group:
 
 		"""
 		Fills:
@@ -1719,17 +1845,33 @@ class Group:
 		Fills vGroup and removes __vftable field if present.
 		"""
 
-		vtblStruct = mainState.tryGetGroup(f"{self.name}_vtbl")
-		if vtblStruct == None:
+		if vtblStruct := mainState.tryGetGroup(f"{self.name}::vtbl"):
+			return vtblStruct
+
+		if not (vtblStruct := mainState.tryGetGroup(f"{self.name}_vtbl")):
 			return
 
 		self.vGroup = vtblStruct
 		vtblStruct.relocate(mainState, f"{self.name}::vtbl")
 
 		if self.hasField("__vftable"):
-			self.removeField(mainState, "__vftable")
+			self.removeFieldByName(mainState, "__vftable")
 
-		seenFuncNames: dict[str,int] = {}
+		superVGroup: Group = None
+		for extendRef in self.extends:
+			assert extendRef.group, "checkForVGroup() - extendRef has no group assigned"
+			if superVGroupTemp := extendRef.group.checkForVGroup(mainState):
+				if len(self.extends) == 1:
+					superVGroup = superVGroupTemp
+					vtblStruct.extends.append(defineTypeRef(mainState, vtblStruct, superVGroup.name, TypeRefSourceType.VARIABLE, debugLine=f"checkForVGroup()"))
+				# I don't know how to handle multiple inheritance with vftables
+
+		vtblStruct.numOriginalVFuncs = len(vtblStruct.fields)
+
+		if superVGroup:
+			for _ in range(superVGroup.numOriginalVFuncs):
+				vtblStruct.removeFieldByIndex(mainState, 0)
+
 		for field in vtblStruct.fields:
 
 			if field.type != FieldType.FUNCTION:
@@ -1737,14 +1879,6 @@ class Group:
 				break
 
 			functionField: FunctionField = field
-
-			# Rename clashing function names in vftables
-			# These are overloaded functions, but they can't
-			# have the same name in a struct.
-			seenCount = seenFuncNames.get(functionField.functionName, 0) + 1
-			seenFuncNames[functionField.functionName] = seenCount
-			if seenCount > 1:
-				functionField.functionName += f"_{seenCount}"
 
 			thisType = functionField.thisType
 			if thisType and thisType.getGroup() != self:
@@ -1754,6 +1888,8 @@ class Group:
 			impl.name = f"virtual_{functionField.functionName}"
 			impl.virtual = True
 			self.functionImplementations.append(impl)
+
+		return vtblStruct
 
 
 	def writeHeader(self, mainState, internalPointersOut, internalPointersListOut: list[tuple[str,str]], headerType: HeaderType, indent="") -> str:
@@ -1786,7 +1922,8 @@ class Group:
 						parts.append(f"typedef {functionImp.returnType.getHeaderName()} ({conventionStr} *{bindingPtrTypeName})(")
 
 						if isNormal and not functionImp.isStatic:
-							parts.append(f"{group.name}* pThis")
+							constStr: str = "const " if functionImp.isConst else ""
+							parts.append(f"{constStr}{group.name}* pThis")
 							parts.append(", ")
 
 						for param in functionImp.parameters:
@@ -1996,7 +2133,7 @@ def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, s
 		subGroup.processLinesFillTypes(mainState)
 
 		newSuperField = VariableField()
-		newSuperField.variableType = defineTypeRef(mainState, superGroup, myFullName, TypeRefSourceType.VARIABLE)
+		newSuperField.variableType = defineTypeRef(mainState, superGroup, myFullName, TypeRefSourceType.VARIABLE, debugLine=f"checkUnnamedStructs() {line}")
 		newSuperField.variableName = myName
 		superGroup.addField(newSuperField)
 
@@ -2022,6 +2159,9 @@ class Field:
 
 	def getName(self) -> str:
 		assert False, "Field.getName() intentionally unimplemented"
+
+	def setName(self, newName: str) -> None:
+		assert False, "Field.setName() intentionally unimplemented"
 
 	def toString(self, indent="") -> str:
 		assert False, "Field.toString() intentionally unimplemented"
@@ -2065,6 +2205,10 @@ class FunctionField(Field):
 
 	def getName(self):
 		return self.functionName
+
+
+	def setName(self, newName: str) -> None:
+		self.functionName = newName
 
 
 	def toString(self, mainState: MainState, indent="") -> str:
@@ -2141,6 +2285,10 @@ class VariableField(Field):
 		return self.variableName
 
 
+	def setName(self, newName: str) -> None:
+		self.variableName = newName
+
+
 	def toString(self, mainState: MainState, indent="") -> str:
 
 		parts = [indent]
@@ -2186,7 +2334,7 @@ class TypeRefSourceType(Enum):
 	FUNCTION = 2
 
 
-def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup: Group, inStr: str, src: TypeRefSourceType, arrayStr: str=None):
+def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup: Group, inStr: str, src: TypeRefSourceType, arrayStr: str=None, debugLine: str=""):
 
 	assert inStr != None
 	str = inStr
@@ -2210,7 +2358,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 			allMatches = [x for x in re.finditer("\[(\d+)\]", arrayStr)]
 			all = [x.group(0) for x in allMatches]
 			nextArrayStr = "".join(all[:-1]) if len(all) > 1 else None
-			return defineTypeRef(mainState, sourceGroup, f"Array<{str},{allMatches[-1].group(1)}>", src, nextArrayStr)
+			return defineTypeRef(mainState, sourceGroup, f"Array<{str},{allMatches[-1].group(1)}>", src, nextArrayStr, debugLine=debugLine)
 		else:
 			needArrayPart = True
 
@@ -2285,7 +2433,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 				name, parts = separateTemplateTypeParts(split, typeStartI)
 				doBaseProcess(name)
 				for templateType in splitKeepBrackets(parts, [","]):
-					typeRef.templateTypes.append(defineTypeRef(mainState, sourceGroup, templateType, TypeRefSourceType.VARIABLE))
+					typeRef.templateTypes.append(defineTypeRef(mainState, sourceGroup, templateType, TypeRefSourceType.VARIABLE, debugLine=debugLine))
 
 		elif split in ("*", "&"):
 
@@ -2326,11 +2474,11 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 	# Transform pointers into PointerReference
 	else:
 		assert groupName != "Array" or len(typeRef.templateTypes) == 2, "defineTypeRefPart() created invalid Array"
-		return PointerReference.create(mainState, typeRef)
+		return PointerReference.create(mainState, typeRef, debugLine=debugLine)
 
 
 
-def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeRefSourceType, arrayStr: str=None):
+def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeRefSourceType, arrayStr: str=None, debugLine: str=""):
 
 	if str == None:
 		return
@@ -2341,9 +2489,9 @@ def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeR
 	if numSplits == 0:
 		return
 
-	lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], src, arrayStr)
+	lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], src, arrayStr, debugLine=debugLine)
 	for i in range(1, numSplits):
-		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], src, None)
+		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], src, None, debugLine=debugLine)
 
 	return lastRef
 
@@ -2361,42 +2509,54 @@ def moveElementAfter(list: list, originalIndex, afterIndex):
 
 
 
-def tryResolveDependencyOrder(groups: list[Group]):
+def tryResolveDependencyOrder(groups: UniqueList[Group]):
 
 	"""
 	Brute force dependency order, moving groups when needed. \n
 	OH the time complexity!
 	"""
 
+	def alphabetically(a: Group, b: Group) -> int:
+		if a.name < b.name:
+			return -1
+		elif a.name == b.name:
+			return 0
+		else:
+			return 1
+
 	# Sort groups alphabetically based on name
-	groups.sort(key=lambda x: x.name)
+	groups.insertionSort(alphabetically)
 
-	curCheckI = 0
-	while curCheckI < len(groups):
+	curCheckNode: UniqueListNode[Group] = groups.head.next
+	curCheckNodeI: int = 0
+	while curCheckNode != groups.tail:
 
-		group = groups[curCheckI]
+		curCheckGroup: Group = curCheckNode.value
 
-		if len(group.dependsOn) > 0:
+		if len(curCheckGroup.dependsOn) > 0:
 
-			maxDependIndex = 0
-			for dependName in group.dependsOn:
-				i = 0
-				for checkGroup in groups:
-					if checkGroup.name == dependName:
-						maxDependIndex = max(maxDependIndex, i)
+			maxDependNode: UniqueListNode[Group] = None
+			maxDependIndex: int = 0
+			for dependName in curCheckGroup.dependsOn:
+				i: int = 0
+				for checkDependNode in groups.nodes():
+					checkDependGroup: Group = checkDependNode.value
+					if checkDependGroup.name == dependName and i > maxDependIndex:
+						maxDependNode = checkDependNode
+						maxDependIndex = i
 					i += 1
 
-			#print(f"{group.name} at [{curCheckI}] needs to go after {groups[maxDependIndex].name} at [{maxDependIndex}]")
-			if curCheckI < maxDependIndex:
-				moveElementAfter(groups, curCheckI, maxDependIndex)
-				assert group != groups[curCheckI], "Duplicate group in list"
+			if curCheckNodeI < maxDependIndex:
+				curCheckNode = curCheckNode.next
+				groups.moveNodeAfter(curCheckNode.previous, maxDependNode)
+				assert curCheckGroup != curCheckNode.value, f"Duplicate group in list: {curCheckGroup.name} and {curCheckNode.value.name}"
 				continue
 
-		curCheckI += 1
+		curCheckNode = curCheckNode.next
+		curCheckNodeI += 1
 
 	for group in groups:
 		tryResolveDependencyOrder(group.subGroups)
-		group.subGroups.rebuildIndexMapping()
 
 
 
