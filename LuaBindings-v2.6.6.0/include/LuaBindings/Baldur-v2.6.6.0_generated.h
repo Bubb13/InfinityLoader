@@ -63,7 +63,6 @@ struct CCreatureFileHeader;
 struct CCreatureFileItem;
 struct CCriticalEntry;
 struct CDerivedStats;
-struct CFileException;
 struct CGameAIBase;
 struct CGameAnimationType;
 struct CGameArea;
@@ -73,6 +72,7 @@ struct CGameEffectUsability;
 struct CGameFile;
 struct CGameObject;
 struct CGameSprite;
+struct CImmunitiesAIType;
 struct CImmunitiesItemEquip;
 struct CImmunitySpell;
 struct CInfButtonArray;
@@ -1127,6 +1127,20 @@ enum class EItemPreviewType : __int32
 	k_EItemPreviewType_ReservedMax = 255,
 };
 
+enum class EEex_MatchObjectFlags : __int32
+{
+	IGNORE_LOS = 1,
+	MATCH_NON_SPRITES = 2,
+	IGNORE_INVISIBLE = 4,
+	MATCH_INVISIBLE = 8,
+	MATCH_SLEEPING = 16,
+	MATCH_DEAD = 32,
+	MATCH_BACKLIST = 64,
+	PRIORITIZE_BACKLIST = 128,
+	IGNORE_FRONTLIST = 256,
+	FARTHEST = 512,
+};
+
 enum class DP_ProviderID : __int32
 {
 	DP_PROVIDER_NONE = 0,
@@ -1391,7 +1405,6 @@ struct frameTableEntry_st
 
 			v2_t() = delete;
 		};
-
 
 		_anonymous_tag_() = delete;
 	};
@@ -2439,7 +2452,7 @@ struct CGameOptions
 	CGameOptions() = delete;
 };
 
-typedef byte (__cdecl  *type_CGameObjectArray_GetShare)(int index, CGameObject** ptr);
+typedef byte (__cdecl *type_CGameObjectArray_GetShare)(int index, CGameObject** ptr);
 extern type_CGameObjectArray_GetShare p_CGameObjectArray_GetShare;
 
 struct CGameObjectArray
@@ -2571,6 +2584,11 @@ struct UnmappedUserType
 	{
 		return (intptr_t)this;
 	}
+};
+
+namespace EEex
+{
+	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 };
 
 struct mosHeader_st
@@ -2891,7 +2909,6 @@ struct ISteamRemoteStorage
 		vtbl() = delete;
 	};
 
-
 	ISteamRemoteStorage() = delete;
 
 	virtual bool virtual_FileWrite(const char* _0, void* _1, int _2)
@@ -3187,7 +3204,6 @@ struct IDPProvider
 		vtbl() = delete;
 	};
 
-
 	IDPProvider() = delete;
 
 	virtual void virtual_Connect(int _0, const char* _1)
@@ -3414,7 +3430,6 @@ struct ISteamUserStats
 
 		vtbl() = delete;
 	};
-
 
 	ISteamUserStats() = delete;
 
@@ -3730,7 +3745,6 @@ struct ISteamUGC
 
 		vtbl() = delete;
 	};
-
 
 	ISteamUGC() = delete;
 
@@ -4319,12 +4333,8 @@ struct CRes
 
 struct CResWebm : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4349,12 +4359,8 @@ struct CResWebm : CRes
 
 struct CResWave : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4370,12 +4376,8 @@ struct CResWave : CRes
 
 struct CResWED : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4391,12 +4393,8 @@ struct CResWED : CRes
 
 struct CResTileSet : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4407,12 +4405,8 @@ struct CResTileSet : CRes
 
 struct CResText : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4423,12 +4417,8 @@ struct CResText : CRes
 
 struct CResSpell : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4441,12 +4431,8 @@ struct CResSpell : CRes
 
 struct CResPVR : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4460,12 +4446,8 @@ struct CResPVR : CRes
 
 struct CResMosaic : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4484,12 +4466,8 @@ struct CResMosaic : CRes
 
 struct CResItem : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4502,27 +4480,18 @@ struct CResItem : CRes
 
 struct CResGame : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
-
 
 	CResGame() = delete;
 };
 
 struct CResFont : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4533,12 +4502,8 @@ struct CResFont : CRes
 
 struct CResCell : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4559,12 +4524,8 @@ struct CResCell : CRes
 
 struct CResBitmap : CRes
 {
-	struct vtbl
+	struct vtbl : CRes::vtbl
 	{
-		bool (__fastcall *Parse)(CRes*, void*);
-		void (__fastcall *Dump)(CRes*);
-		CResRef* (__fastcall *GetResRef)(CRes*, CResRef*);
-
 		vtbl() = delete;
 	};
 
@@ -4773,12 +4734,60 @@ struct CObject
 		vtbl() = delete;
 	};
 
-
 	CObject() = delete;
 
 	virtual void virtual_CObject_Destructor()
 	{
 	}
+};
+
+struct CDWordArray : CObject
+{
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int* m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
+
+	CDWordArray() = delete;
+};
+
+struct CException : CObject
+{
+	struct vtbl : CObject::vtbl
+	{
+		int (__fastcall *GetErrorMessage)(CException*, char*, unsigned int, unsigned int*);
+
+		vtbl() = delete;
+	};
+
+	int m_bAutoDelete;
+	int m_bReadyForDelete;
+
+	CException() = delete;
+
+	virtual int virtual_GetErrorMessage(char* _0, unsigned int _1, unsigned int* _2)
+	{
+		return *(int*)nullptr;
+	}
+};
+
+struct CFileException : CException
+{
+	struct vtbl : CException::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_cause;
+	int m_lOsError;
+	CString m_strFileName;
+
+	CFileException() = delete;
 };
 
 template<class TYPE, class ARG_TYPE>
@@ -4801,6 +4810,48 @@ struct CList : CObject
 	int m_nBlockSize;
 
 	CList() = delete;
+};
+
+struct CMapStringToString : CObject
+{
+	struct CAssoc
+	{
+		CMapStringToString::CAssoc* pNext;
+		unsigned int nHashValue;
+		CString key;
+		CString value;
+
+		CAssoc() = delete;
+	};
+
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMapStringToString::CAssoc** m_pHashTable;
+	unsigned int m_nHashTableSize;
+	int m_nCount;
+	CMapStringToString::CAssoc* m_pFreeList;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+
+	CMapStringToString() = delete;
+};
+
+struct CObArray : CObject
+{
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CObject** m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
+
+	CObArray() = delete;
 };
 
 template<class BASE_CLASS, class T>
@@ -4867,10 +4918,8 @@ struct CStringList : CObject
 		CNode() = delete;
 	};
 
-	struct vtbl
+	struct vtbl : CObject::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -4895,10 +4944,8 @@ struct CPtrList : CObject
 		CNode() = delete;
 	};
 
-	struct vtbl
+	struct vtbl : CObject::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -4920,7 +4967,6 @@ struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
 
 		vtbl() = delete;
 	};
-
 
 	CPersistantEffectList() = delete;
 };
@@ -5052,7 +5098,6 @@ struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
 		vtbl() = delete;
 	};
 
-
 	CSelectiveWeaponTypeList() = delete;
 };
 
@@ -5065,16 +5110,13 @@ struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
 		vtbl() = delete;
 	};
 
-
 	CSelectiveBonusList() = delete;
 };
 
 struct CPtrArray : CObject
 {
-	struct vtbl
+	struct vtbl : CObject::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -5148,10 +5190,8 @@ struct CObList : CObject
 		CNode() = delete;
 	};
 
-	struct vtbl
+	struct vtbl : CObject::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -5187,9 +5227,8 @@ struct CObList : CObject
 
 struct CWarp : CObject
 {
-	struct vtbl
+	struct vtbl : CObject::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
 		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
 		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
 		void (__fastcall *RequestPause)(CWarp*);
@@ -5493,23 +5532,6 @@ struct CWarp : CObject
 	}
 };
 
-struct CObArray : CObject
-{
-	struct vtbl
-	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CObject** m_pData;
-	int m_nSize;
-	int m_nMaxSize;
-	int m_nGrowBy;
-
-	CObArray() = delete;
-};
-
 struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
 {
 	struct vtbl
@@ -5518,7 +5540,6 @@ struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
 
 		vtbl() = delete;
 	};
-
 
 	CMoveList() = delete;
 };
@@ -5624,35 +5645,6 @@ struct CMemINI : CTypedPtrList<CPtrList,void*>
 	CMemINI() = delete;
 };
 
-struct CMapStringToString : CObject
-{
-	struct CAssoc
-	{
-		CMapStringToString::CAssoc* pNext;
-		unsigned int nHashValue;
-		CString key;
-		CString value;
-
-		CAssoc() = delete;
-	};
-
-	struct vtbl
-	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CMapStringToString::CAssoc** m_pHashTable;
-	unsigned int m_nHashTableSize;
-	int m_nCount;
-	CMapStringToString::CAssoc* m_pFreeList;
-	CPlex* m_pBlocks;
-	int m_nBlockSize;
-
-	CMapStringToString() = delete;
-};
-
 struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
 {
 	struct vtbl
@@ -5661,7 +5653,6 @@ struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
 
 		vtbl() = delete;
 	};
-
 
 	CImmunitiesWeapon() = delete;
 };
@@ -5675,7 +5666,6 @@ struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
 		vtbl() = delete;
 	};
 
-
 	CImmunitiesSpellList() = delete;
 };
 
@@ -5687,7 +5677,6 @@ struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoo
 
 		vtbl() = delete;
 	};
-
 
 	CImmunitiesSchoolAndSecondaryDecrementing() = delete;
 };
@@ -5701,7 +5690,6 @@ struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
 		vtbl() = delete;
 	};
 
-
 	CImmunitiesSchoolAndSecondary() = delete;
 };
 
@@ -5713,7 +5701,6 @@ struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
 
 		vtbl() = delete;
 	};
-
 
 	CImmunitiesProjectile() = delete;
 };
@@ -5727,7 +5714,6 @@ struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemType
 		vtbl() = delete;
 	};
 
-
 	CImmunitiesItemTypeEquipList() = delete;
 };
 
@@ -5739,7 +5725,6 @@ struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
 
 		vtbl() = delete;
 	};
-
 
 	CImmunitiesItemEquipList() = delete;
 };
@@ -5753,9 +5738,11 @@ struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
 		vtbl() = delete;
 	};
 
-
 	CImmunitiesEffect() = delete;
 };
+
+typedef int (__thiscall *type_CImmunitiesAIType_OnList)(CImmunitiesAIType* pThis, const CAIObjectType* type);
+extern type_CImmunitiesAIType_OnList p_CImmunitiesAIType_OnList;
 
 struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 {
@@ -5766,8 +5753,12 @@ struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 		vtbl() = delete;
 	};
 
-
 	CImmunitiesAIType() = delete;
+
+	int OnList(const CAIObjectType* type)
+	{
+		return p_CImmunitiesAIType_OnList(this, type);
+	}
 };
 
 struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
@@ -5778,7 +5769,6 @@ struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
 
 		vtbl() = delete;
 	};
-
 
 	CGameEffectUsabilityList() = delete;
 };
@@ -5842,15 +5832,13 @@ struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
 		vtbl() = delete;
 	};
 
-
 	CGameAbilityList() = delete;
 };
 
 struct CFile : CObject
 {
-	struct vtbl
+	struct vtbl : CObject::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
 		unsigned int (__fastcall *GetPosition)(CFile*);
 		CString* (__fastcall *GetFileName)(CFile*, CString*);
 		CString* (__fastcall *GetFileTitle)(CFile*, CString*);
@@ -5947,61 +5935,6 @@ struct CFile : CObject
 	}
 };
 
-struct CException : CObject
-{
-	struct vtbl
-	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		int (__fastcall *GetErrorMessage)(CException*, char*, unsigned int, unsigned int*);
-
-		vtbl() = delete;
-	};
-
-	int m_bAutoDelete;
-	int m_bReadyForDelete;
-
-	CException() = delete;
-
-	virtual int virtual_GetErrorMessage(char* _0, unsigned int _1, unsigned int* _2)
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CFileException : CException
-{
-	struct vtbl
-	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		int (__fastcall *GetErrorMessage)(CException*, char*, unsigned int, unsigned int*);
-
-		vtbl() = delete;
-	};
-
-	int m_cause;
-	int m_lOsError;
-	CString m_strFileName;
-
-	CFileException() = delete;
-};
-
-struct CDWordArray : CObject
-{
-	struct vtbl
-	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	unsigned int* m_pData;
-	int m_nSize;
-	int m_nMaxSize;
-	int m_nGrowBy;
-
-	CDWordArray() = delete;
-};
-
 struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
 {
 	struct vtbl
@@ -6010,7 +5943,6 @@ struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
 
 		vtbl() = delete;
 	};
-
 
 	CCriticalEntryList() = delete;
 };
@@ -6024,7 +5956,6 @@ struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
 		vtbl() = delete;
 	};
 
-
 	CContingencyList() = delete;
 };
 
@@ -6037,7 +5968,6 @@ struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
 		vtbl() = delete;
 	};
 
-
 	CColorRanges() = delete;
 };
 
@@ -6049,7 +5979,6 @@ struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
 
 		vtbl() = delete;
 	};
-
 
 	CColorEffects() = delete;
 };
@@ -6103,70 +6032,13 @@ struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
 		vtbl() = delete;
 	};
 
-
 	CBounceList() = delete;
 };
 
 struct CBaldurEngine : CWarp
 {
-	struct vtbl
+	struct vtbl : CWarp::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
 		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
 		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
 		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
@@ -6282,88 +6154,10 @@ struct CBaldurEngine : CWarp
 
 struct CDungeonMaster : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
-
 
 	CDungeonMaster() = delete;
 };
@@ -6376,7 +6170,6 @@ struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 
 		vtbl() = delete;
 	};
-
 
 	CApplyEffectList() = delete;
 };
@@ -6471,7 +6264,7 @@ struct Array
 	{
 		if (index < 0 || index >= size)
 		{
-			return NULL;
+			return (T)NULL;
 		}
 		return data[index];
 	}
@@ -7059,28 +6852,28 @@ struct Item_Header_st
 };
 #pragma pack(pop)
 
-typedef uiMenu* ( *type_findMenu)(const char* name, int panel, int state);
+typedef uiMenu* (*type_findMenu)(const char* name, int panel, int state);
 extern type_findMenu p_findMenu;
 
-typedef void ( *type_saveMenuStack)();
+typedef void (*type_saveMenuStack)();
 extern type_saveMenuStack p_saveMenuStack;
 
-typedef void ( *type_uiLoadMenu)(CResText* menuRes);
+typedef void (*type_uiLoadMenu)(CResText* menuRes);
 extern type_uiLoadMenu p_uiLoadMenu;
 
-typedef void** ( *type_bsearch)(void* key, void* base, size_t num, size_t width, void* func);
+typedef void** (*type_bsearch)(void* key, void* base, size_t num, size_t width, void* func);
 extern type_bsearch p_bsearch;
 
-typedef void ( *type_restoreMenuStack)();
+typedef void (*type_restoreMenuStack)();
 extern type_restoreMenuStack p_restoreMenuStack;
 
-typedef int ( *type_CompareCResByTypeThenName)(const CRes* a, const CRes* b);
+typedef int (*type_CompareCResByTypeThenName)(const CRes* a, const CRes* b);
 extern type_CompareCResByTypeThenName p_CompareCResByTypeThenName;
 
-typedef int ( *type_SDL_GetKeyFromName)(const char* name);
+typedef int (*type_SDL_GetKeyFromName)(const char* name);
 extern type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
 
-typedef int ( *type_rand)();
+typedef int (*type_rand)();
 extern type_rand p_rand;
 
 extern int* p_numMenus;
@@ -7092,7 +6885,7 @@ extern int* p_menuLength;
 extern CTypedPtrArray<CPtrArray,CRes*>* p_resources;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 extern CBaldurChitin** p_g_pBaldurChitin;
-
+extern lua_State** p_g_lua;
 struct DP_Player
 {
 	unsigned int id;
@@ -7429,85 +7222,8 @@ struct CSearchRequest
 
 struct CScreenMovies : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -7523,85 +7239,8 @@ struct CScreenMovies : CBaldurEngine
 
 struct CScreenConnection : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -7728,21 +7367,6 @@ struct CResRef
 			m_resRef[i] = '\0';
 		}
 	}
-};
-
-struct CGameStatsRes : CObject
-{
-	struct vtbl
-	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CResRef m_cResRef;
-	__int16 m_nTimesUsed;
-
-	CGameStatsRes() = delete;
 };
 
 struct CAbilityData
@@ -7873,6 +7497,19 @@ struct CMoveListEntry
 	CMoveListEntry() = delete;
 };
 
+struct CGameStatsRes : CObject
+{
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_cResRef;
+	__int16 m_nTimesUsed;
+
+	CGameStatsRes() = delete;
+};
+
 struct Spell_ability_st
 {
 	unsigned __int16 type;
@@ -7988,85 +7625,8 @@ struct CSequenceSound
 
 struct CScreenWizSpell : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -8092,85 +7652,8 @@ struct CScreenWizSpell : CBaldurEngine
 
 struct CScreenPriestSpell : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -8195,85 +7678,8 @@ struct CScreenPriestSpell : CBaldurEngine
 
 struct CScreenCharacter : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -8763,85 +8169,8 @@ struct CVidFont : CResHelper<CResFont,1034>
 
 struct CScreenInventory : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -8876,85 +8205,8 @@ struct CScreenInventory : CBaldurEngine
 
 struct CScreenJournal : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -8976,85 +8228,8 @@ struct CScreenJournal : CBaldurEngine
 
 struct CScreenCreateChar : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -9174,85 +8349,8 @@ struct CScreenCreateChar : CBaldurEngine
 
 struct CScreenCreateParty : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -9269,85 +8367,8 @@ struct CScreenCreateParty : CBaldurEngine
 
 struct CScreenDLC : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -9373,85 +8394,8 @@ struct CScreenDLC : CBaldurEngine
 
 struct CScreenLoad : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -9478,85 +8422,8 @@ struct CScreenLoad : CBaldurEngine
 
 struct CScreenMap : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -9598,85 +8465,8 @@ struct CScreenMap : CBaldurEngine
 
 struct CScreenMultiPlayer : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -9707,85 +8497,8 @@ struct CScreenMultiPlayer : CBaldurEngine
 
 struct CScreenOptions : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -9821,85 +8534,8 @@ struct CScreenOptions : CBaldurEngine
 
 struct CScreenSave : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -9928,85 +8564,8 @@ struct CScreenSave : CBaldurEngine
 
 struct CScreenStart : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -10084,85 +8643,8 @@ struct CVidCell : CVidImage, CResHelper<CResCell,1000>
 
 struct CScreenWorldMap : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -10265,17 +8747,10 @@ struct CPortraitIcon
 
 struct CVidCellFont : CVidCell
 {
-	struct vtbl
+	struct vtbl : CVidCell::vtbl
 	{
-		int (__fastcall *FrameAdvance)(CVidCell*);
-		int (__fastcall *Render)(CVidCell*, unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*);
-		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
-		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
-		int (__fastcall *GetFrame)(CVidCell*);
-
 		vtbl() = delete;
 	};
-
 
 	CVidCellFont() = delete;
 };
@@ -10290,85 +8765,8 @@ struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 
 struct CScreenAI : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -10516,85 +8914,8 @@ struct CSound : CObject, CResHelper<CResWave,4>
 
 struct CScreenChapter : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -10625,14 +8946,8 @@ struct CScreenChapter : CBaldurEngine
 
 struct CInfToolTip : CVidCell
 {
-	struct vtbl
+	struct vtbl : CVidCell::vtbl
 	{
-		int (__fastcall *FrameAdvance)(CVidCell*);
-		int (__fastcall *Render)(CVidCell*, unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*);
-		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
-		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
-		int (__fastcall *GetFrame)(CVidCell*);
-
 		vtbl() = delete;
 	};
 
@@ -10700,85 +9015,8 @@ struct CWeather
 
 struct CScreenWorld : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -11046,7 +9284,7 @@ struct CInfTileSet
 typedef int (__thiscall *type_CInfButtonArray_SetState)(CInfButtonArray* pThis, int nState);
 extern type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
 
-typedef void ( *type_CInfButtonArray_SetQuickSlot)(CButtonData* pButtonData, int nButton, int nType);
+typedef void (*type_CInfButtonArray_SetQuickSlot)(CButtonData* pButtonData, int nButton, int nType);
 extern type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
 
 struct CInfButtonArray
@@ -11439,7 +9677,7 @@ struct CGameEffectBase
 	CGameEffectBase() = delete;
 };
 
-typedef CGameEffect* ( *type_CGameEffect_DecodeEffect)(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
+typedef CGameEffect* (*type_CGameEffect_DecodeEffect)(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
 extern type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
 
 struct CGameEffect : CGameEffectBase
@@ -11531,23 +9769,10 @@ struct CGameEffect : CGameEffectBase
 
 struct CGameEffectUsability : CGameEffect
 {
-	struct vtbl
+	struct vtbl : CGameEffect::vtbl
 	{
-		void (__fastcall *CGameEffect_Destructor)(CGameEffect*);
-		CGameEffect* (__fastcall *Copy)(CGameEffect*);
-		int (__fastcall *ApplyEffect)(CGameEffect*, CGameSprite*);
-		int (__fastcall *ResolveEffect)(CGameEffect*, CGameSprite*);
-		void (__fastcall *OnAdd)(CGameEffect*, CGameSprite*);
-		void (__fastcall *OnAddSpecific)(CGameEffect*, CGameSprite*);
-		void (__fastcall *OnLoad)(CGameEffect*, CGameSprite*);
-		int (__fastcall *CheckSave)(CGameEffect*, CGameSprite*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*);
-		int (__fastcall *UsesDice)(CGameEffect*);
-		void (__fastcall *DisplayString)(CGameEffect*, CGameSprite*);
-		void (__fastcall *OnRemove)(CGameEffect*, CGameSprite*);
-
 		vtbl() = delete;
 	};
-
 
 	CGameEffectUsability() = delete;
 };
@@ -12137,6 +10362,9 @@ struct CDerivedStatsTemplate
 	CDerivedStatsTemplate() = delete;
 };
 
+typedef int (__thiscall *type_CDerivedStats_GetSpellState)(CDerivedStats* pThis, uint bit);
+extern type_CDerivedStats_GetSpellState p_CDerivedStats_GetSpellState;
+
 struct CDerivedStats : CDerivedStatsTemplate
 {
 	CImmunitiesProjectile m_cImmunitiesProjectile;
@@ -12184,6 +10412,11 @@ struct CDerivedStats : CDerivedStatsTemplate
 	Array<unsigned int,8> m_spellStates;
 
 	CDerivedStats() = delete;
+
+	int GetSpellState(uint bit)
+	{
+		return p_CDerivedStats_GetSpellState(this, bit);
+	}
 };
 
 struct CCreatureFileMemorizedSpell
@@ -12324,85 +10557,8 @@ struct CBlood
 
 struct CBaldurProjector : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -12730,6 +10886,9 @@ struct CAreaFileCharacterEntryPoint
 typedef void (__thiscall *type_CAIObjectType_Set)(CAIObjectType* pThis, CAIObjectType* that);
 extern type_CAIObjectType_Set p_CAIObjectType_Set;
 
+typedef byte (__thiscall *type_CAIObjectType_OfType)(const CAIObjectType* pThis, const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance);
+extern type_CAIObjectType_OfType p_CAIObjectType_OfType;
+
 struct CAIObjectType
 {
 	static CAIObjectType* p_NOONE;
@@ -12749,6 +10908,11 @@ struct CAIObjectType
 	void Set(CAIObjectType* that)
 	{
 		p_CAIObjectType_Set(this, that);
+	}
+
+	byte OfType(const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance) const
+	{
+		return p_CAIObjectType_OfType(this, type, checkForNonSprites, noNonSprites, deathMatchAllowance);
 	}
 };
 
@@ -12903,85 +11067,8 @@ struct CSelectiveBonus
 
 struct CScreenStore : CBaldurEngine
 {
-	struct vtbl
+	struct vtbl : CBaldurEngine::vtbl
 	{
-		void (__fastcall *CObject_Destructor)(CObject*);
-		void (__fastcall *InvalidateCursorRect)(CWarp*, const CRect*);
-		void (__fastcall *NormalizePanelRect)(CWarp*, unsigned int, CRect*);
-		void (__fastcall *RequestPause)(CWarp*);
-		void (__fastcall *EngineActivated)(CWarp*);
-		void (__fastcall *EngineDeactivated)(CWarp*);
-		void (__fastcall *EngineDestroyed)(CWarp*);
-		void (__fastcall *EngineInitialized)(CWarp*);
-		void (__fastcall *EngineGameInit)(CWarp*);
-		void (__fastcall *EngineGameUninit)(CWarp*);
-		void (__fastcall *SelectEngine)(CWarp*, CWarp*);
-		bool (__fastcall *OnEvent)(CWarp*, SDL_Event*);
-		int (__fastcall *GetEngineState)(CWarp*);
-		int (__fastcall *CheckSystemKeyCtrl)(CWarp*);
-		void (__fastcall *SetSystemKeyCtrl)(CWarp*, unsigned __int8);
-		int (__fastcall *GetCtrlKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyShift)(CWarp*);
-		void (__fastcall *SetSystemKeyShift)(CWarp*, int);
-		int (__fastcall *GetShiftKey)(CWarp*);
-		int (__fastcall *CheckSystemKeyMenu)(CWarp*);
-		void (__fastcall *SetSystemKeyMenu)(CWarp*, int);
-		int (__fastcall *CheckSystemKeyCapsLock)(CWarp*);
-		void (__fastcall *SetSystemKeyCapsLock)(CWarp*, int);
-		int (__fastcall *GetCapsLockKey)(CWarp*);
-		int (__fastcall *GetMenuKey)(CWarp*);
-		int (__fastcall *CheckMouseMove)(CWarp*);
-		void (__fastcall *OnMouseMove)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseLButton)(CWarp*);
-		void (__fastcall *OnLButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnLButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseMButton)(CWarp*);
-		void (__fastcall *OnMButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnMButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseRButton)(CWarp*);
-		void (__fastcall *OnRButtonDblClk)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonDown)(CWarp*, CPoint);
-		void (__fastcall *OnRButtonUp)(CWarp*, CPoint);
-		int (__fastcall *CheckMouseWheel)(CWarp*);
-		void (__fastcall *OnMouseWheel)(CWarp*, int, int, unsigned int, unsigned __int16);
-		__int16 (__fastcall *GetNumVirtualKeys)(CWarp*);
-		CKeyInfo* (__fastcall *GetVirtualKeys)(CWarp*);
-		int* (__fastcall *GetVirtualKeysFlags)(CWarp*);
-		void (__fastcall *OnKeyDown)(CWarp*, int);
-		void (__fastcall *OnKeyUp)(CWarp*, int);
-		void (__fastcall *OnTextInput)(CWarp*, const char*);
-		void (__fastcall *WindowResized)(CWarp*, int, int);
-		void (__fastcall *OnLowMemory)(CWarp*);
-		void (__fastcall *EnableEditKeys)(CWarp*, __int16);
-		void (__fastcall *DisableEditKeys)(CWarp*);
-		void (__fastcall *ResetControls)(CWarp*);
-		void (__fastcall *TimerAsynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerSynchronousUpdate)(CWarp*);
-		void (__fastcall *TimerUpdate)(CWarp*);
-		void (__fastcall *RenderUI)(CWarp*);
-		int (__fastcall *GetSelectedCharacter)(CBaldurEngine*, int);
-		int (__fastcall *GetPickedCharacter)(CBaldurEngine*);
-		void (__fastcall *SetSelectedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *SetPickedCharacter)(CBaldurEngine*, int);
-		void (__fastcall *OnPortraitLClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *OnPortraitLDblClick)(CBaldurEngine*, unsigned int);
-		void (__fastcall *UpdateContainerStatus)(CBaldurEngine*, int, __int16);
-		void (__fastcall *UpdatePersonalItemStatus)(CBaldurEngine*, int);
-		void (__fastcall *OnRestButtonClick)(CBaldurEngine*);
-		void (__fastcall *UpdateGroundItems)(CBaldurEngine*);
-		void (__fastcall *UpdateCursorShape)(CBaldurEngine*, unsigned __int8);
-		void (__fastcall *CheckEnablePortraits)(CBaldurEngine*, unsigned int);
-		void (__fastcall *CheckEnableLeftPanel)(CBaldurEngine*);
-		void (__fastcall *EnablePortrait)(CBaldurEngine*, unsigned int, unsigned int, int);
-		void (__fastcall *CancelEngine)(CBaldurEngine*);
-		void (__fastcall *UpdateCharacterStatus)(CBaldurEngine*, int);
-		void (__fastcall *UpdatePartyGoldStatus)(CBaldurEngine*);
-		void (__fastcall *GetChatEditBoxStatus)(CBaldurEngine*, CString*, int*);
-		void (__fastcall *SetChatEditBoxStatus)(CBaldurEngine*, const CString*, int);
-		int (__fastcall *StopMusic)(CBaldurEngine*);
-
 		vtbl() = delete;
 	};
 
@@ -13042,13 +11129,13 @@ struct CGameObject
 	struct vtbl
 	{
 		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
+		CGameObjectType (__fastcall *GetObjectType)(CGameObject*);
 		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
 		void (__fastcall *AIUpdate)(CGameObject*);
 		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
 		int (__fastcall *GetTargetId)(CGameObject*);
 		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
+		CTypedPtrList<CPtrList,long>::CNode* (__fastcall *GetVertListPos)(CGameObject*);
 		VertListType (__fastcall *GetVertListType)(CGameObject*);
 		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
 		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
@@ -13093,9 +11180,9 @@ struct CGameObject
 	{
 	}
 
-	virtual unsigned __int8 virtual_GetObjectType()
+	virtual CGameObjectType virtual_GetObjectType()
 	{
-		return *(unsigned __int8*)nullptr;
+		return *(CGameObjectType*)nullptr;
 	}
 
 	virtual void virtual_AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
@@ -13120,9 +11207,9 @@ struct CGameObject
 	{
 	}
 
-	virtual __POSITION* virtual_GetVertListPos()
+	virtual CTypedPtrList<CPtrList,long>::CNode* virtual_GetVertListPos()
 	{
-		return *(__POSITION**)nullptr;
+		return *(CTypedPtrList<CPtrList,long>::CNode**)nullptr;
 	}
 
 	virtual VertListType virtual_GetVertListType()
@@ -13208,35 +11295,8 @@ struct CGameObject
 
 struct CGameFireball3d : CGameObject
 {
-	struct vtbl
+	struct vtbl : CGameObject::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-
 		vtbl() = delete;
 	};
 
@@ -13284,34 +11344,8 @@ struct CGameFireball3d : CGameObject
 
 struct CProjectile : CGameObject
 {
-	struct vtbl
+	struct vtbl : CGameObject::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
 		void (__fastcall *Fire)(CProjectile*, CGameArea*, int, int, CPoint, int, __int16);
 		void (__fastcall *OnArrival)(CProjectile*);
 		void (__fastcall *RemoveSelf)(CProjectile*);
@@ -13434,35 +11468,8 @@ struct CProjectile : CGameObject
 
 struct CObjectMarker : CGameObject
 {
-	struct vtbl
+	struct vtbl : CGameObject::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-
 		vtbl() = delete;
 	};
 
@@ -13474,35 +11481,8 @@ struct CObjectMarker : CGameObject
 
 struct CGameTemporal : CGameObject
 {
-	struct vtbl
+	struct vtbl : CGameObject::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-
 		vtbl() = delete;
 	};
 
@@ -13524,35 +11504,8 @@ struct CGameTemporal : CGameObject
 
 struct CGameStatic : CGameObject
 {
-	struct vtbl
+	struct vtbl : CGameObject::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-
 		vtbl() = delete;
 	};
 
@@ -13571,35 +11524,8 @@ struct CGameStatic : CGameObject
 
 struct CGameSpawning : CGameObject
 {
-	struct vtbl
+	struct vtbl : CGameObject::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-
 		vtbl() = delete;
 	};
 
@@ -13614,35 +11540,8 @@ struct CGameSpawning : CGameObject
 
 struct CGameSound : CGameObject
 {
-	struct vtbl
+	struct vtbl : CGameObject::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-
 		vtbl() = delete;
 	};
 
@@ -13673,34 +11572,8 @@ struct CAITrigger
 
 struct CGameAIBase : CGameObject
 {
-	struct vtbl
+	struct vtbl : CGameObject::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
 		void (__fastcall *ClearActions)(CGameAIBase*, int);
 		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
 		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
@@ -13896,118 +11769,10 @@ struct CGameAIBase : CGameObject
 	}
 };
 
-struct CGameAIArea : CGameAIBase
-{
-	struct vtbl
-	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-		void (__fastcall *ClearActions)(CGameAIBase*, int);
-		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
-		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
-		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
-		void (__fastcall *DoAction)(CGameAIBase*);
-		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
-		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *ProcessAI)(CGameAIBase*);
-		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
-		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
-		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
-		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
-		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
-		void (__fastcall *ApplyTriggers)(CGameAIBase*);
-		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
-		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
-		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
-		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
-
-		vtbl() = delete;
-	};
-
-
-	CGameAIArea() = delete;
-};
-
 struct CGameTrigger : CGameAIBase
 {
-	struct vtbl
+	struct vtbl : CGameAIBase::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-		void (__fastcall *ClearActions)(CGameAIBase*, int);
-		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
-		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
-		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
-		void (__fastcall *DoAction)(CGameAIBase*);
-		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
-		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *ProcessAI)(CGameAIBase*);
-		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
-		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
-		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
-		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
-		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
-		void (__fastcall *ApplyTriggers)(CGameAIBase*);
-		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
-		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
-		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
-		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
 		int (__fastcall *IsOverActivate)(CGameTrigger*, const CPoint*);
 
 		vtbl() = delete;
@@ -14045,57 +11810,8 @@ struct CGameTrigger : CGameAIBase
 
 struct CGameTiledObject : CGameAIBase
 {
-	struct vtbl
+	struct vtbl : CGameAIBase::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-		void (__fastcall *ClearActions)(CGameAIBase*, int);
-		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
-		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
-		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
-		void (__fastcall *DoAction)(CGameAIBase*);
-		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
-		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *ProcessAI)(CGameAIBase*);
-		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
-		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
-		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
-		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
-		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
-		void (__fastcall *ApplyTriggers)(CGameAIBase*);
-		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
-		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
-		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
-		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
-
 		vtbl() = delete;
 	};
 
@@ -14152,56 +11868,8 @@ struct CGameSprite : CGameAIBase
 		GroundItem() = delete;
 	};
 
-	struct vtbl
+	struct vtbl : CGameAIBase::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-		void (__fastcall *ClearActions)(CGameAIBase*, int);
-		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
-		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
-		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
-		void (__fastcall *DoAction)(CGameAIBase*);
-		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
-		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *ProcessAI)(CGameAIBase*);
-		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
-		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
-		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
-		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
-		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
-		void (__fastcall *ApplyTriggers)(CGameAIBase*);
-		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
-		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
-		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
-		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
 		void (__fastcall *SetTarget_2)(CGameSprite*, const CPoint*, int);
 		void (__fastcall *SetAIType_2)(CGameSprite*, const CAIObjectType*, int, int);
 		void (__fastcall *ResetAITypeLive)(CGameSprite*);
@@ -14620,57 +12288,8 @@ struct CGameSprite : CGameAIBase
 
 struct CGameDoor : CGameAIBase
 {
-	struct vtbl
+	struct vtbl : CGameAIBase::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-		void (__fastcall *ClearActions)(CGameAIBase*, int);
-		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
-		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
-		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
-		void (__fastcall *DoAction)(CGameAIBase*);
-		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
-		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *ProcessAI)(CGameAIBase*);
-		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
-		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
-		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
-		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
-		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
-		void (__fastcall *ApplyTriggers)(CGameAIBase*);
-		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
-		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
-		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
-		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
-
 		vtbl() = delete;
 	};
 
@@ -14719,56 +12338,8 @@ struct CGameDoor : CGameAIBase
 
 struct CGameContainer : CGameAIBase
 {
-	struct vtbl
+	struct vtbl : CGameAIBase::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-		void (__fastcall *ClearActions)(CGameAIBase*, int);
-		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
-		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
-		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
-		void (__fastcall *DoAction)(CGameAIBase*);
-		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
-		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *ProcessAI)(CGameAIBase*);
-		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
-		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
-		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
-		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
-		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
-		void (__fastcall *ApplyTriggers)(CGameAIBase*);
-		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
-		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
-		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
-		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
 		CPoint* (__fastcall *GetPoly)(CGameContainer*);
 		__int16 (__fastcall *GetNPoly)(CGameContainer*);
 
@@ -14817,62 +12388,22 @@ struct CGameContainer : CGameAIBase
 
 struct CGameAIGame : CGameAIBase
 {
-	struct vtbl
+	struct vtbl : CGameAIBase::vtbl
 	{
-		void (__fastcall *CGameObject_Destructor)(CGameObject*);
-		unsigned __int8 (__fastcall *GetObjectType)(CGameObject*);
-		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
-		void (__fastcall *AIUpdate)(CGameObject*);
-		const CAIObjectType* (__fastcall *GetAIType)(CGameObject*);
-		int (__fastcall *GetTargetId)(CGameObject*);
-		void (__fastcall *GetNextWaypoint)(CGameObject*, CPoint*);
-		__POSITION* (__fastcall *GetVertListPos)(CGameObject*);
-		unsigned __int8 (__fastcall *GetVertListType)(CGameObject*);
-		void (__fastcall *SetVertListType)(CGameObject*, unsigned __int8);
-		unsigned __int8 (__fastcall *CanSaveGame)(CGameObject*, unsigned int*, int, int);
-		unsigned __int8 (__fastcall *CompressTime)(CGameObject*, unsigned int);
-		void (__fastcall *DebugDump)(CGameObject*, const CString*, unsigned __int8);
-		int (__fastcall *IsOver)(CGameObject*, const CPoint*);
-		int (__fastcall *DoesIntersect)(CGameObject*, CRect);
-		int (__fastcall *OnSearchMap)(CGameObject*);
-		void (__fastcall *OnActionButton)(CGameObject*, const CPoint*);
-		void (__fastcall *OnFormationButton)(CGameObject*, const CPoint*);
-		void (__fastcall *RemoveFromArea)(CGameObject*);
-		void (__fastcall *Render)(CGameObject*, CGameArea*, CVidMode*);
-		unsigned __int8 (__fastcall *DoAIUpdate)(CGameObject*, unsigned __int8, int);
-		void (__fastcall *SetAIType)(CGameObject*, const CAIObjectType*, int);
-		void (__fastcall *SetCursor)(CGameObject*, int);
-		void (__fastcall *SetTarget)(CGameObject*, CPoint, int);
-		void (__fastcall *SetVertListPos)(CGameObject*, __POSITION*);
-		int (__fastcall *EvaluateStatusTrigger)(CGameObject*, const CAITrigger*);
-		void (__fastcall *ClearActions)(CGameAIBase*, int);
-		void (__fastcall *UpdateTarget)(CGameAIBase*, CGameObject*);
-		void (__fastcall *AddAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *AddEffect)(CGameAIBase*, CGameEffect*, unsigned __int8, int, int);
-		void (__fastcall *ClearAI)(CGameAIBase*, unsigned __int8);
-		void (__fastcall *DoAction)(CGameAIBase*);
-		__int16 (__fastcall *ExecuteAction)(CGameAIBase*);
-		void (__fastcall *InsertAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *ProcessAI)(CGameAIBase*);
-		void (__fastcall *SetCurrAction)(CGameAIBase*, const CAIAction*);
-		void (__fastcall *SetScript)(CGameAIBase*, __int16, CAIScript*);
-		__int16 (__fastcall *GetVisualRange)(CGameAIBase*);
-		__int16 (__fastcall *GetAttackRange)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetVisibleTerrainTable)(CGameAIBase*);
-		const unsigned __int8* (__fastcall *GetTerrainTable)(CGameAIBase*);
-		int (__fastcall *QuickDecode)(CGameAIBase*, CAITrigger*, CGameSprite**);
-		__int16 (__fastcall *GetHelpRange)(CGameAIBase*);
-		void (__fastcall *ApplyTriggers)(CGameAIBase*);
-		void (__fastcall *AutoPause)(CGameAIBase*, unsigned int);
-		int (__fastcall *GetCanSeeInvisible)(CGameAIBase*);
-		void (__fastcall *OnActionRemoval)(CGameAIBase*, CAIAction*);
-		CRect* (__fastcall *GetBounding)(CGameAIBase*, CRect*);
-
 		vtbl() = delete;
 	};
 
-
 	CGameAIGame() = delete;
+};
+
+struct CGameAIArea : CGameAIBase
+{
+	struct vtbl : CGameAIBase::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CGameAIArea() = delete;
 };
 
 struct CContingency
@@ -14987,11 +12518,17 @@ struct CInfinity
 	CInfinity() = delete;
 };
 
+typedef int (__thiscall *type_CGameArea_GetNearest2)(CGameArea* pThis, CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
+extern type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
+
 typedef int (__thiscall *type_CGameArea_AdjustTarget)(CGameArea* pThis, CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 extern type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
 
 typedef int (__thiscall *type_CGameArea_CheckWalkable)(CGameArea* pThis, CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
 extern type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
+
+typedef int (__thiscall *type_CGameArea_CheckLOS)(CGameArea* pThis, const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
+extern type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
 
 struct CGameArea
 {
@@ -15115,6 +12652,15 @@ struct CGameArea
 
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 
+	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
+
+	int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
+
+	int GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest)
+	{
+		return p_CGameArea_GetNearest2(this, center, type, range, terrainTable, lineOfSight, seeInvisible, nNearest);
+	}
+
 	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance)
 	{
 		return p_CGameArea_AdjustTarget(this, start, goal, personalSpace, tolerance);
@@ -15123,6 +12669,11 @@ struct CGameArea
 	int CheckWalkable(CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored)
 	{
 		return p_CGameArea_CheckWalkable(this, start, goal, terrainTable, personalSpace, bCheckIfExplored);
+	}
+
+	int CheckLOS(const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange)
+	{
+		return p_CGameArea_CheckLOS(this, start, goal, terrainTable, bCheckIfExplored, nVisualRange);
 	}
 };
 
@@ -15624,59 +13175,8 @@ struct CChitin
 
 struct CBaldurChitin : CChitin
 {
-	struct vtbl
+	struct vtbl : CChitin::vtbl
 	{
-		void (__fastcall *SynchronousUpdate)(CChitin*);
-		void (__fastcall *SetupPanels)(CChitin*);
-		unsigned int (__fastcall *GetIDSInvalidVideoMode)(CChitin*);
-		unsigned int (__fastcall *GetIDSOpenGLDll)(CChitin*);
-		unsigned int (__fastcall *GetIDSExclusiveMode)(CChitin*);
-		unsigned int (__fastcall *GetIDSChoosePixelFormat)(CChitin*);
-		unsigned int (__fastcall *GetIDSSetPixelFormat)(CChitin*);
-		unsigned int (__fastcall *GetIDSSetGameResolution)(CChitin*);
-		unsigned int (__fastcall *GetIDSSetGameBitDepth)(CChitin*);
-		unsigned int (__fastcall *GetIDSBadDeskTopBitDepth)(CChitin*);
-		unsigned int (__fastcall *GetIDSWindowsFonts)(CChitin*);
-		CRes* (__fastcall *AllocResObject)(CChitin*, int);
-		const CString* (__fastcall *GetIconRes)(CChitin*);
-		void (__fastcall *GetScreenShotFilePrefix)(CChitin*, CString*);
-		int (__fastcall *FontRectOutline)(CChitin*);
-		int (__fastcall *InitializeServices)(CChitin*);
-		void (__fastcall *SetProgressBar)(CChitin*, unsigned __int8, int, int, int, unsigned __int8, int, unsigned __int8, int, unsigned __int8, unsigned __int8, unsigned int);
-		void (__fastcall *SetProgressBarActivateEngine)(CChitin*, int);
-		void (__fastcall *BroadcastMultiplayerProgressBarInfo)(CChitin*);
-		void (__fastcall *SetCDSwitchStatus)(CChitin*, unsigned __int8, unsigned __int8, unsigned __int8, const CString*, unsigned __int8, unsigned __int8, unsigned __int8);
-		void (__fastcall *SetCDSwitchActivateEngine)(CChitin*, int);
-		void (__fastcall *OnMultiplayerSessionOpen)(CChitin*, CString*, CString*, CString*);
-		void (__fastcall *OnMultiplayerSessionToClose)(CChitin*);
-		void (__fastcall *OnMultiplayerSessionClose)(CChitin*);
-		void (__fastcall *OnMultiplayerPlayerJoin)(CChitin*, int, const CString*);
-		void (__fastcall *OnMultiplayerPlayerVisible)(CChitin*, int);
-		void (__fastcall *OnMultiplayerPlayerLeave)(CChitin*, int, const CString*);
-		int (__fastcall *MessageCallback)(CChitin*, unsigned __int8*, unsigned int);
-		unsigned __int8 (__fastcall *GetGamespyResponse)(CChitin*, unsigned __int8, unsigned __int8**, unsigned int*);
-		void (__fastcall *AsynchronousUpdate)(CChitin*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
-		void (__fastcall *SelectEngine)(CChitin*, CWarp*);
-		void (__fastcall *ShutDown)(CChitin*, int, const char*, const char*);
-		const char* (__fastcall *GetKeyFileName)(CChitin*);
-		unsigned __int8 (__fastcall *GetNumberSoundChannels)(CChitin*);
-		int (__fastcall *GetMovieVolume)(CChitin*);
-		void (__fastcall *LoadOptions)(CChitin*);
-		void (__fastcall *PreLoadFonts)(CChitin*);
-		void (__fastcall *SetSoundVolumes)(CChitin*);
-		unsigned __int16 (__fastcall *GetMultiplayerGameSpyPort)(CChitin*);
-		unsigned __int16 (__fastcall *GetMultiplayerDirectPlayPort)(CChitin*);
-		void (__fastcall *SetRenderCount)(CChitin*, unsigned __int8);
-		int (__fastcall *ConfirmQuit)(CChitin*);
-		void (__fastcall *GetGameSpyGameName)(CChitin*, CString*);
-		void (__fastcall *GetGameSpyCode)(CChitin*, CString*);
-		void (__fastcall *GetPanicCDStrings)(CChitin*, CString*, CString*, CString*);
-		void (__fastcall *OnMixerInitialize)(CChitin*);
-		int (__fastcall *Is3DSound)(CChitin*, int);
-		int (__fastcall *GetEAXActive)(CChitin*);
-		void (__fastcall *RedrawScreen)(CChitin*);
-		unsigned __int8 (__fastcall *GetSoundEnvironment)(CChitin*, CString, unsigned int*, float*, float*, float*, float*);
-		unsigned __int8 (__fastcall *CutsceneModeActive)(CChitin*);
 		void (__fastcall *ShutDown_2)(CBaldurChitin*, int, char*, const char*);
 		void (__fastcall *UnloadFonts)(CBaldurChitin*);
 
@@ -15741,5 +13241,6 @@ struct CBaldurChitin : CChitin
 	{
 	}
 };
+
 
 extern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;

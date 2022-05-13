@@ -99,6 +99,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
+    <ClCompile Include="EEex.cpp" />
     <ClCompile Include="EEexLua_generated.cpp" />
     <ClCompile Include="EEexLua_generated_baseclass_offsets.cpp" />
     <ClCompile Include="engine_reimplementations.cpp" />
@@ -134,6 +135,7 @@
     <ClInclude Include="tolua_reference\tolua_event.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="util.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />

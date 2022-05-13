@@ -151,7 +151,7 @@ void dumpLuaStack(lua_State* L) {
 ////////////////////
 
 void runCallback(lua_State* L) {
-    
+
     if (p_lua_type(L, 2) != LUA_TFUNCTION)
         return;
 
@@ -186,7 +186,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
         printf("[!] Lua pattern not defined: \"%s\"; binding failed!\n", patternName); \
         return; \
     }
-    
+
     // Read required function pointers from the pattern map
     setLuaPointer("Hardcoded_free", free);
     setLuaPointer("Hardcoded_lua_callk", lua_callk);
@@ -227,6 +227,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_lua_touserdata", lua_touserdata);
     setLuaPointer("Hardcoded_lua_type", lua_type);
     setLuaPointer("Hardcoded_luaL_loadfilex", luaL_loadfilex);
+    setLuaPointer("Hardcoded_luaL_loadstring", luaL_loadstring);
     setLuaPointer("Hardcoded_malloc", malloc);
     setLuaPointer("Hardcoded_tolua_beginmodule", tolua_beginmodule);
     //setLuaPointer("Hardcoded_tolua_cclass", tolua_cclass);
@@ -278,7 +279,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     exposeToLua(L, "EEex_UserDataToLightUserData", userDataToLightUserDataLua);
     exposeToLua(L, "EEex_UserDataToPointer", userDataToPointerLua);
 
-    // Populate internal engine pointers from patterns 
+    // Populate internal engine pointers from patterns
     for (auto& pair : internalPointersMap) {
         if (auto node = patterns.find(pair.first); node != patterns.end()) {
             PatternEntry& pattern = node->second;
@@ -292,7 +293,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     // Export tolua overrides (the versions in-engine aren't sufficient)
     addPattern(patterns, "override_tolua_open", p_tolua_open);
     addPattern(patterns, "override_tolua_cclass", p_tolua_cclass_translate);
-    
+
     addPattern(patterns, "override_module_newindex_event", p_module_newindex_event);
     addPattern(patterns, "override_class_newindex_event", p_class_newindex_event);
 

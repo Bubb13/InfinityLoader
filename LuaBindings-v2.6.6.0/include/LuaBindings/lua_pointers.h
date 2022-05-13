@@ -121,6 +121,9 @@ extern type_lua_type* p_lua_type;
 typedef int type_luaL_loadfilex(lua_State* L, const char* fileName, const char* mode);
 extern type_luaL_loadfilex* p_luaL_loadfilex;
 
+typedef int type_luaL_loadstring(lua_State* L, const char* s);
+extern type_luaL_loadstring* p_luaL_loadstring;
+
 typedef void type_lua_gettable(lua_State* L, int index);
 extern type_lua_gettable* p_lua_gettable;
 

@@ -18,6 +18,8 @@ def fixup(mainState):
 	mainState.getGroup("CGameEffectBase").retypeField(mainState, "m_scriptName", "LCharString<32>")
 	mainState.getGroup("CGameObject").retypeField(mainState, "m_listType", "VertListType")
 	mainState.getGroup("CGameObject").retypeField(mainState, "m_objectType", "CGameObjectType")
+	mainState.getGroup("CGameObject_vtbl").retypeFunctionFieldRet(mainState, "GetObjectType", "CGameObjectType")
+	mainState.getGroup("CGameObject_vtbl").retypeFunctionFieldRet(mainState, "GetVertListPos", "CTypedPtrList<CPtrList,long>::CNode*")
 	mainState.getGroup("CGameObject_vtbl").retypeFunctionFieldRet(mainState, "GetVertListType", "VertListType")
 	mainState.getGroup("CInfButtonArray").retypeField(mainState, "m_nSelectedButton", "CButtonType")
 	mainState.getGroup("Item_effect_st").retypeField(mainState, "res", "CResRef")

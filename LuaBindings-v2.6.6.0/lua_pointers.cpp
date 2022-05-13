@@ -43,6 +43,7 @@ type_lua_tonumberx* p_lua_tonumberx;
 type_lua_touserdata* p_lua_touserdata;
 type_lua_type* p_lua_type;
 type_luaL_loadfilex* p_luaL_loadfilex;
+type_luaL_loadstring* p_luaL_loadstring;
 type_lua_gettable* p_lua_gettable;
 
 ///////////////////////

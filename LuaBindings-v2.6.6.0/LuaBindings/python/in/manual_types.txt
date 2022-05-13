@@ -214,7 +214,7 @@ struct Array
 	{
 		if (index < 0 || index >= size)
 		{
-			return NULL;
+			return (T)NULL;
 		}
 		return data[index];
 	}
@@ -726,6 +726,7 @@ struct CAIObjectType
 {
 	static CAIObjectType NOONE;
 	void Set(CAIObjectType* that);
+	byte OfType(const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance) const;
 };
 
 struct CGameEffect : CGameEffectBase
@@ -797,8 +798,12 @@ struct CGameObject
 struct CGameArea
 {
 	$external_implementation int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
+	$external_implementation int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
+	$external_implementation int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
+	int GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
 	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 	int CheckWalkable(CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
+	int CheckLOS(const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
 };
 
 struct CAIGroup
@@ -867,6 +872,16 @@ struct CAIScriptFile
 	void ParseResponseString(CString* data);
 };
 
+struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
+{
+	int OnList(const CAIObjectType* type);
+};
+
+struct CDerivedStats : CDerivedStatsTemplate
+{
+	int GetSpellState(uint bit);
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////
@@ -893,3 +908,27 @@ int menuLength;
 CTypedPtrArray<CPtrArray,CRes*> resources;
 $9B9540D9920A90D57A3D80DDD1A70514 capture;
 CBaldurChitin* g_pBaldurChitin;
+lua_State* g_lua;
+
+//////////
+// EEex //
+//////////
+
+enum EEex_MatchObjectFlags : __int32
+{
+	IGNORE_LOS           = 0x00000001,
+	MATCH_NON_SPRITES    = 0x00000002,
+	IGNORE_INVISIBLE     = 0x00000004,
+	MATCH_INVISIBLE      = 0x00000008,
+	MATCH_SLEEPING       = 0x00000010,
+	MATCH_DEAD           = 0x00000020,
+	MATCH_BACKLIST       = 0x00000040,
+	PRIORITIZE_BACKLIST  = 0x00000080,
+	IGNORE_FRONTLIST     = 0x00000100,
+	FARTHEST             = 0x00000200,
+};
+
+namespace EEex
+{
+	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+};

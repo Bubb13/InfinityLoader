@@ -12,3 +12,4 @@ CGameStatic
 CGameTemporal
 CGameTiledObject
 CGameTrigger
+EEex

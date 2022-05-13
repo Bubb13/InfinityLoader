@@ -28,44 +28,113 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CResWebm", {
 		{"CRes", offsetofbase<CResWebm, CRes>()},
 	}},
+	{"CResWebm::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResWebm::vtbl, CRes::vtbl>()},
+	}},
 	{"CResWave", {
 		{"CRes", offsetofbase<CResWave, CRes>()},
+	}},
+	{"CResWave::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResWave::vtbl, CRes::vtbl>()},
 	}},
 	{"CResWED", {
 		{"CRes", offsetofbase<CResWED, CRes>()},
 	}},
+	{"CResWED::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResWED::vtbl, CRes::vtbl>()},
+	}},
 	{"CResTileSet", {
 		{"CRes", offsetofbase<CResTileSet, CRes>()},
+	}},
+	{"CResTileSet::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResTileSet::vtbl, CRes::vtbl>()},
 	}},
 	{"CResText", {
 		{"CRes", offsetofbase<CResText, CRes>()},
 	}},
+	{"CResText::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResText::vtbl, CRes::vtbl>()},
+	}},
 	{"CResSpell", {
 		{"CRes", offsetofbase<CResSpell, CRes>()},
+	}},
+	{"CResSpell::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResSpell::vtbl, CRes::vtbl>()},
 	}},
 	{"CResPVR", {
 		{"CRes", offsetofbase<CResPVR, CRes>()},
 	}},
+	{"CResPVR::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResPVR::vtbl, CRes::vtbl>()},
+	}},
 	{"CResMosaic", {
 		{"CRes", offsetofbase<CResMosaic, CRes>()},
+	}},
+	{"CResMosaic::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResMosaic::vtbl, CRes::vtbl>()},
 	}},
 	{"CResItem", {
 		{"CRes", offsetofbase<CResItem, CRes>()},
 	}},
+	{"CResItem::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResItem::vtbl, CRes::vtbl>()},
+	}},
 	{"CResGame", {
 		{"CRes", offsetofbase<CResGame, CRes>()},
+	}},
+	{"CResGame::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResGame::vtbl, CRes::vtbl>()},
 	}},
 	{"CResFont", {
 		{"CRes", offsetofbase<CResFont, CRes>()},
 	}},
+	{"CResFont::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResFont::vtbl, CRes::vtbl>()},
+	}},
 	{"CResCell", {
 		{"CRes", offsetofbase<CResCell, CRes>()},
+	}},
+	{"CResCell::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResCell::vtbl, CRes::vtbl>()},
 	}},
 	{"CResBitmap", {
 		{"CRes", offsetofbase<CResBitmap, CRes>()},
 	}},
+	{"CResBitmap::vtbl", {
+		{"CRes::vtbl", offsetofbase<CResBitmap::vtbl, CRes::vtbl>()},
+	}},
+	{"CDWordArray", {
+		{"CObject", offsetofbase<CDWordArray, CObject>()},
+	}},
+	{"CDWordArray::vtbl", {
+		{"CObject::vtbl", offsetofbase<CDWordArray::vtbl, CObject::vtbl>()},
+	}},
+	{"CException", {
+		{"CObject", offsetofbase<CException, CObject>()},
+	}},
+	{"CException::vtbl", {
+		{"CObject::vtbl", offsetofbase<CException::vtbl, CObject::vtbl>()},
+	}},
+	{"CFileException", {
+		{"CException", offsetofbase<CFileException, CException>()},
+	}},
+	{"CFileException::vtbl", {
+		{"CException::vtbl", offsetofbase<CFileException::vtbl, CException::vtbl>()},
+	}},
 	{"CList<long,long>", {
 		{"CObject", offsetofbase<CList<long,long>, CObject>()},
+	}},
+	{"CMapStringToString", {
+		{"CObject", offsetofbase<CMapStringToString, CObject>()},
+	}},
+	{"CMapStringToString::vtbl", {
+		{"CObject::vtbl", offsetofbase<CMapStringToString::vtbl, CObject::vtbl>()},
+	}},
+	{"CObArray", {
+		{"CObject", offsetofbase<CObArray, CObject>()},
+	}},
+	{"CObArray::vtbl", {
+		{"CObject::vtbl", offsetofbase<CObArray::vtbl, CObject::vtbl>()},
 	}},
 	{"CTypedPtrList<CPtrList,CAIId*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIId*>, CObject>()},
@@ -118,6 +187,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>, CObject>()},
 	}},
+	{"CTypedPtrList<CPtrList,CAIObjectType*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIObjectType*>, CObject>()},
+	}},
 	{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>, CObject>()},
 	}},
@@ -165,9 +237,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CTypedPtrList<CPtrList,CGameEffect*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameEffect*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CAIObjectType*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIObjectType*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,CWeaponIdentification*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CWeaponIdentification*>, CObject>()},
@@ -277,8 +346,14 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CStringList", {
 		{"CObject", offsetofbase<CStringList, CObject>()},
 	}},
+	{"CStringList::vtbl", {
+		{"CObject::vtbl", offsetofbase<CStringList::vtbl, CObject::vtbl>()},
+	}},
 	{"CPtrList", {
 		{"CObject", offsetofbase<CPtrList, CObject>()},
+	}},
+	{"CPtrList::vtbl", {
+		{"CObject::vtbl", offsetofbase<CPtrList::vtbl, CObject::vtbl>()},
 	}},
 	{"CPersistantEffectList", {
 		{"CTypedPtrList<CPtrList,CPersistantEffect*>", offsetofbase<CPersistantEffectList, CTypedPtrList<CPtrList,CPersistantEffect*>>()},
@@ -304,17 +379,23 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CPtrArray", {
 		{"CObject", offsetofbase<CPtrArray, CObject>()},
 	}},
+	{"CPtrArray::vtbl", {
+		{"CObject::vtbl", offsetofbase<CPtrArray::vtbl, CObject::vtbl>()},
+	}},
 	{"CSpawnPointArray", {
 		{"CTypedPtrArray<CPtrArray,CSpawnPoint*>", offsetofbase<CSpawnPointArray, CTypedPtrArray<CPtrArray,CSpawnPoint*>>()},
 	}},
 	{"CObList", {
 		{"CObject", offsetofbase<CObList, CObject>()},
 	}},
+	{"CObList::vtbl", {
+		{"CObject::vtbl", offsetofbase<CObList::vtbl, CObject::vtbl>()},
+	}},
 	{"EEex_CWarp", {
 		{"CObject", offsetofbase<CWarp, CObject>()},
 	}},
-	{"CObArray", {
-		{"CObject", offsetofbase<CObArray, CObject>()},
+	{"CWarp::vtbl", {
+		{"CObject::vtbl", offsetofbase<CWarp::vtbl, CObject::vtbl>()},
 	}},
 	{"CMoveList", {
 		{"CTypedPtrList<CPtrList,CMoveListEntry*>", offsetofbase<CMoveList, CTypedPtrList<CPtrList,CMoveListEntry*>>()},
@@ -324,9 +405,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CMemINI", {
 		{"CTypedPtrList<CPtrList,void*>", offsetofbase<CMemINI, CTypedPtrList<CPtrList,void*>>()},
-	}},
-	{"CMapStringToString", {
-		{"CObject", offsetofbase<CMapStringToString, CObject>()},
 	}},
 	{"CImmunitiesWeapon", {
 		{"CTypedPtrList<CPtrList,CWeaponIdentification*>", offsetofbase<CImmunitiesWeapon, CTypedPtrList<CPtrList,CWeaponIdentification*>>()},
@@ -373,14 +451,8 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CFile", {
 		{"CObject", offsetofbase<CFile, CObject>()},
 	}},
-	{"CException", {
-		{"CObject", offsetofbase<CException, CObject>()},
-	}},
-	{"CFileException", {
-		{"CException", offsetofbase<CFileException, CException>()},
-	}},
-	{"CDWordArray", {
-		{"CObject", offsetofbase<CDWordArray, CObject>()},
+	{"CFile::vtbl", {
+		{"CObject::vtbl", offsetofbase<CFile::vtbl, CObject::vtbl>()},
 	}},
 	{"CCriticalEntryList", {
 		{"CTypedPtrList<CPtrList,CCriticalEntry*>", offsetofbase<CCriticalEntryList, CTypedPtrList<CPtrList,CCriticalEntry*>>()},
@@ -412,8 +484,14 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CBaldurEngine", {
 		{"EEex_CWarp", offsetofbase<CBaldurEngine, CWarp>()},
 	}},
+	{"CBaldurEngine::vtbl", {
+		{"EEex_CWarp::vtbl", offsetofbase<CBaldurEngine::vtbl, CWarp::vtbl>()},
+	}},
 	{"CDungeonMaster", {
 		{"EEex_CBaldurEngine", offsetofbase<CDungeonMaster, CBaldurEngine>()},
+	}},
+	{"CDungeonMaster::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CDungeonMaster::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"CApplyEffectList", {
 		{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CApplyEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
@@ -424,20 +502,38 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenMovies", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenMovies, CBaldurEngine>()},
 	}},
+	{"CScreenMovies::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenMovies::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"EEex_CScreenConnection", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenConnection, CBaldurEngine>()},
+	}},
+	{"CScreenConnection::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenConnection::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"CGameStatsRes", {
 		{"CObject", offsetofbase<CGameStatsRes, CObject>()},
 	}},
+	{"CGameStatsRes::vtbl", {
+		{"CObject::vtbl", offsetofbase<CGameStatsRes::vtbl, CObject::vtbl>()},
+	}},
 	{"EEex_CScreenWizSpell", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenWizSpell, CBaldurEngine>()},
+	}},
+	{"CScreenWizSpell::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWizSpell::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"EEex_CScreenPriestSpell", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenPriestSpell, CBaldurEngine>()},
 	}},
+	{"CScreenPriestSpell::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenPriestSpell::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"EEex_CScreenCharacter", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenCharacter, CBaldurEngine>()},
+	}},
+	{"CScreenCharacter::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenCharacter::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"C2DArray", {
 		{"CResHelper<CResText,1012>", offsetofbase<C2DArray, CResHelper<CResText,1012>>()},
@@ -458,35 +554,68 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenInventory", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenInventory, CBaldurEngine>()},
 	}},
+	{"CScreenInventory::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenInventory::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"EEex_CScreenJournal", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenJournal, CBaldurEngine>()},
+	}},
+	{"CScreenJournal::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenJournal::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"EEex_CScreenCreateChar", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenCreateChar, CBaldurEngine>()},
 	}},
+	{"CScreenCreateChar::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenCreateChar::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"EEex_CScreenCreateParty", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenCreateParty, CBaldurEngine>()},
+	}},
+	{"CScreenCreateParty::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenCreateParty::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"EEex_CScreenDLC", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenDLC, CBaldurEngine>()},
 	}},
+	{"CScreenDLC::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenDLC::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"EEex_CScreenLoad", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenLoad, CBaldurEngine>()},
+	}},
+	{"CScreenLoad::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenLoad::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"EEex_CScreenMap", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenMap, CBaldurEngine>()},
 	}},
+	{"CScreenMap::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenMap::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"EEex_CScreenMultiPlayer", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenMultiPlayer, CBaldurEngine>()},
+	}},
+	{"CScreenMultiPlayer::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenMultiPlayer::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"EEex_CScreenOptions", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenOptions, CBaldurEngine>()},
 	}},
+	{"CScreenOptions::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenOptions::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"EEex_CScreenSave", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenSave, CBaldurEngine>()},
 	}},
+	{"CScreenSave::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenSave::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"EEex_CScreenStart", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenStart, CBaldurEngine>()},
+	}},
+	{"CScreenStart::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenStart::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"CVidCell", {
 		{"CVidImage", offsetofbase<CVidCell, CVidImage>()},
@@ -495,8 +624,14 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenWorldMap", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenWorldMap, CBaldurEngine>()},
 	}},
+	{"CScreenWorldMap::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorldMap::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"CVidCellFont", {
 		{"CVidCell", offsetofbase<CVidCellFont, CVidCell>()},
+	}},
+	{"CVidCellFont::vtbl", {
+		{"CVidCell::vtbl", offsetofbase<CVidCellFont::vtbl, CVidCell::vtbl>()},
 	}},
 	{"CVidBitmap", {
 		{"CVidImage", offsetofbase<CVidBitmap, CVidImage>()},
@@ -504,6 +639,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CScreenAI", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenAI, CBaldurEngine>()},
+	}},
+	{"CScreenAI::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenAI::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"CSpell", {
 		{"CResHelper<CResSpell,1006>", offsetofbase<CSpell, CResHelper<CResSpell,1006>>()},
@@ -519,11 +657,20 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenChapter", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenChapter, CBaldurEngine>()},
 	}},
+	{"CScreenChapter::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenChapter::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"EEex_CInfToolTip", {
 		{"CVidCell", offsetofbase<CInfToolTip, CVidCell>()},
 	}},
+	{"CInfToolTip::vtbl", {
+		{"CVidCell::vtbl", offsetofbase<CInfToolTip::vtbl, CVidCell::vtbl>()},
+	}},
 	{"EEex_CScreenWorld", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenWorld, CBaldurEngine>()},
+	}},
+	{"CScreenWorld::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorld::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"CItem", {
 		{"CResHelper<CResItem,1005>", offsetofbase<CItem, CResHelper<CResItem,1005>>()},
@@ -534,11 +681,17 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CGameEffectUsability", {
 		{"CGameEffect", offsetofbase<CGameEffectUsability, CGameEffect>()},
 	}},
+	{"CGameEffectUsability::vtbl", {
+		{"CGameEffect::vtbl", offsetofbase<CGameEffectUsability::vtbl, CGameEffect::vtbl>()},
+	}},
 	{"CDerivedStats", {
 		{"CDerivedStatsTemplate", offsetofbase<CDerivedStats, CDerivedStatsTemplate>()},
 	}},
 	{"EEex_CBaldurProjector", {
 		{"EEex_CBaldurEngine", offsetofbase<CBaldurProjector, CBaldurEngine>()},
+	}},
+	{"CBaldurProjector::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CBaldurProjector::vtbl, CBaldurEngine::vtbl>()},
 	}},
 	{"CVariable", {
 		{"CAreaVariable", offsetofbase<CVariable, CAreaVariable>()},
@@ -546,52 +699,103 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"EEex_CScreenStore", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenStore, CBaldurEngine>()},
 	}},
+	{"CScreenStore::vtbl", {
+		{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenStore::vtbl, CBaldurEngine::vtbl>()},
+	}},
 	{"CGameFireball3d", {
 		{"CGameObject", offsetofbase<CGameFireball3d, CGameObject>()},
+	}},
+	{"CGameFireball3d::vtbl", {
+		{"CGameObject::vtbl", offsetofbase<CGameFireball3d::vtbl, CGameObject::vtbl>()},
 	}},
 	{"CProjectile", {
 		{"CGameObject", offsetofbase<CProjectile, CGameObject>()},
 	}},
+	{"CProjectile::vtbl", {
+		{"CGameObject::vtbl", offsetofbase<CProjectile::vtbl, CGameObject::vtbl>()},
+	}},
 	{"CObjectMarker", {
 		{"CGameObject", offsetofbase<CObjectMarker, CGameObject>()},
+	}},
+	{"CObjectMarker::vtbl", {
+		{"CGameObject::vtbl", offsetofbase<CObjectMarker::vtbl, CGameObject::vtbl>()},
 	}},
 	{"CGameTemporal", {
 		{"CGameObject", offsetofbase<CGameTemporal, CGameObject>()},
 	}},
+	{"CGameTemporal::vtbl", {
+		{"CGameObject::vtbl", offsetofbase<CGameTemporal::vtbl, CGameObject::vtbl>()},
+	}},
 	{"CGameStatic", {
 		{"CGameObject", offsetofbase<CGameStatic, CGameObject>()},
+	}},
+	{"CGameStatic::vtbl", {
+		{"CGameObject::vtbl", offsetofbase<CGameStatic::vtbl, CGameObject::vtbl>()},
 	}},
 	{"CGameSpawning", {
 		{"CGameObject", offsetofbase<CGameSpawning, CGameObject>()},
 	}},
+	{"CGameSpawning::vtbl", {
+		{"CGameObject::vtbl", offsetofbase<CGameSpawning::vtbl, CGameObject::vtbl>()},
+	}},
 	{"CGameSound", {
 		{"CGameObject", offsetofbase<CGameSound, CGameObject>()},
+	}},
+	{"CGameSound::vtbl", {
+		{"CGameObject::vtbl", offsetofbase<CGameSound::vtbl, CGameObject::vtbl>()},
 	}},
 	{"CGameAIBase", {
 		{"CGameObject", offsetofbase<CGameAIBase, CGameObject>()},
 	}},
-	{"CGameAIArea", {
-		{"CGameAIBase", offsetofbase<CGameAIArea, CGameAIBase>()},
+	{"CGameAIBase::vtbl", {
+		{"CGameObject::vtbl", offsetofbase<CGameAIBase::vtbl, CGameObject::vtbl>()},
 	}},
 	{"CGameTrigger", {
 		{"CGameAIBase", offsetofbase<CGameTrigger, CGameAIBase>()},
 	}},
+	{"CGameTrigger::vtbl", {
+		{"CGameAIBase::vtbl", offsetofbase<CGameTrigger::vtbl, CGameAIBase::vtbl>()},
+	}},
 	{"CGameTiledObject", {
 		{"CGameAIBase", offsetofbase<CGameTiledObject, CGameAIBase>()},
+	}},
+	{"CGameTiledObject::vtbl", {
+		{"CGameAIBase::vtbl", offsetofbase<CGameTiledObject::vtbl, CGameAIBase::vtbl>()},
 	}},
 	{"CGameSprite", {
 		{"CGameAIBase", offsetofbase<CGameSprite, CGameAIBase>()},
 	}},
+	{"CGameSprite::vtbl", {
+		{"CGameAIBase::vtbl", offsetofbase<CGameSprite::vtbl, CGameAIBase::vtbl>()},
+	}},
 	{"CGameDoor", {
 		{"CGameAIBase", offsetofbase<CGameDoor, CGameAIBase>()},
+	}},
+	{"CGameDoor::vtbl", {
+		{"CGameAIBase::vtbl", offsetofbase<CGameDoor::vtbl, CGameAIBase::vtbl>()},
 	}},
 	{"CGameContainer", {
 		{"CGameAIBase", offsetofbase<CGameContainer, CGameAIBase>()},
 	}},
+	{"CGameContainer::vtbl", {
+		{"CGameAIBase::vtbl", offsetofbase<CGameContainer::vtbl, CGameAIBase::vtbl>()},
+	}},
 	{"CGameAIGame", {
 		{"CGameAIBase", offsetofbase<CGameAIGame, CGameAIBase>()},
 	}},
+	{"CGameAIGame::vtbl", {
+		{"CGameAIBase::vtbl", offsetofbase<CGameAIGame::vtbl, CGameAIBase::vtbl>()},
+	}},
+	{"CGameAIArea", {
+		{"CGameAIBase", offsetofbase<CGameAIArea, CGameAIBase>()},
+	}},
+	{"CGameAIArea::vtbl", {
+		{"CGameAIBase::vtbl", offsetofbase<CGameAIArea::vtbl, CGameAIBase::vtbl>()},
+	}},
 	{"EEex_CBaldurChitin", {
 		{"EEex_CChitin", offsetofbase<CBaldurChitin, CChitin>()},
+	}},
+	{"CBaldurChitin::vtbl", {
+		{"EEex_CChitin::vtbl", offsetofbase<CBaldurChitin::vtbl, CChitin::vtbl>()},
 	}},
 };

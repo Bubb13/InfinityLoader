@@ -9,79 +9,90 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Header Files\LuaBindings">
-      <UniqueIdentifier>{e8bbdb94-35c7-4c22-8ce1-e19b0dc2a42f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Build Tasks">
       <UniqueIdentifier>{fb352c1f-1edc-4298-a4ca-4318a65b789e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="tolua_reference">
-      <UniqueIdentifier>{faab61e7-a377-4b36-aa4a-cf2784167eae}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\lua">
       <UniqueIdentifier>{3946674d-33b4-4350-8239-edf4104daa8c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Generated">
+      <UniqueIdentifier>{14edab24-d755-492d-af81-1a23ba9e3cec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Generated">
+      <UniqueIdentifier>{ba3b8235-31fd-49ca-86d1-19c30ceedff0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EEex">
+      <UniqueIdentifier>{62065f07-dc22-4224-a50d-0ec2a85a1443}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lua Bindings">
+      <UniqueIdentifier>{1d8a858c-45e9-4402-8d1e-fb151ab2e4f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Lua Bindings">
+      <UniqueIdentifier>{e8bbdb94-35c7-4c22-8ce1-e19b0dc2a42f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Module Definition">
+      <UniqueIdentifier>{85ff999f-0e47-419c-a3f5-f257da351b75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\References">
+      <UniqueIdentifier>{4fab8402-d7ec-42c2-ae30-25db28ccd00e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\References\Engine">
+      <UniqueIdentifier>{b3d94e9e-d364-462b-b4f5-1448b5e3e816}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\References\tolua">
+      <UniqueIdentifier>{faab61e7-a377-4b36-aa4a-cf2784167eae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="LuaBindings-v2.6.6.0.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EEexLua_generated.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="lua_pointers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="to_lua_pointers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Baldur-v2.6.6.0_generated_internal_pointers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="tolua_reference\tolua_map.c">
-      <Filter>tolua_reference</Filter>
+      <Filter>Source Files\References\tolua</Filter>
     </ClCompile>
     <ClCompile Include="tolua_reference\tolua_push.c">
-      <Filter>tolua_reference</Filter>
+      <Filter>Source Files\References\tolua</Filter>
     </ClCompile>
     <ClCompile Include="tolua_reference\tolua_to.c">
-      <Filter>tolua_reference</Filter>
+      <Filter>Source Files\References\tolua</Filter>
     </ClCompile>
     <ClCompile Include="tolua_reference\tolua_event.c">
-      <Filter>tolua_reference</Filter>
+      <Filter>Source Files\References\tolua</Filter>
     </ClCompile>
     <ClCompile Include="tolua_reference\tolua_is.c">
-      <Filter>tolua_reference</Filter>
+      <Filter>Source Files\References\tolua</Filter>
+    </ClCompile>
+    <ClCompile Include="EEexLua_generated.cpp">
+      <Filter>Source Files\Generated</Filter>
     </ClCompile>
     <ClCompile Include="EEexLua_generated_baseclass_offsets.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="Baldur-v2.6.6.0_generated_internal_pointers.cpp">
+      <Filter>Source Files\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="to_lua_pointers.cpp">
+      <Filter>Source Files\Lua Bindings</Filter>
+    </ClCompile>
+    <ClCompile Include="lua_pointers.cpp">
+      <Filter>Source Files\Lua Bindings</Filter>
+    </ClCompile>
+    <ClCompile Include="LuaBindings-v2.6.6.0.cpp">
+      <Filter>Source Files\Lua Bindings</Filter>
+    </ClCompile>
+    <ClCompile Include="EEex.cpp">
+      <Filter>Source Files\EEex</Filter>
     </ClCompile>
     <ClCompile Include="engine_reimplementations.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\References\Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\LuaBindings\EEexLua_generated.h">
-      <Filter>Header Files\LuaBindings</Filter>
-    </ClInclude>
     <ClInclude Include="include\LuaBindings\to_lua_pointers.h">
-      <Filter>Header Files\LuaBindings</Filter>
+      <Filter>Header Files\Lua Bindings</Filter>
     </ClInclude>
     <ClInclude Include="include\LuaBindings\lua_pointers.h">
-      <Filter>Header Files\LuaBindings</Filter>
-    </ClInclude>
-    <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_generated.h">
-      <Filter>Header Files\LuaBindings</Filter>
+      <Filter>Header Files\Lua Bindings</Filter>
     </ClInclude>
     <ClInclude Include="tolua_reference\tolua_event.h">
-      <Filter>tolua_reference</Filter>
-    </ClInclude>
-    <ClInclude Include="include\LuaBindings\EEexLua_generated_baseclass_offsets.h">
-      <Filter>Header Files\LuaBindings</Filter>
+      <Filter>Source Files\References\tolua</Filter>
     </ClInclude>
     <ClInclude Include="include\lua\lua.h">
       <Filter>Header Files\lua</Filter>
@@ -89,19 +100,31 @@
     <ClInclude Include="include\lua\luaconf.h">
       <Filter>Header Files\lua</Filter>
     </ClInclude>
-    <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_lua_generated.h">
-      <Filter>Header Files\LuaBindings</Filter>
-    </ClInclude>
     <ClInclude Include="include\lua\lauxlib.h">
       <Filter>Header Files\lua</Filter>
     </ClInclude>
+    <ClInclude Include="include\LuaBindings\EEexLua_generated.h">
+      <Filter>Header Files\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LuaBindings\EEexLua_generated_baseclass_offsets.h">
+      <Filter>Header Files\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_lua_generated.h">
+      <Filter>Header Files\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_generated.h">
+      <Filter>Header Files\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="util.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="LuaBindings-v2.6.6.0.def">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="COPY_TO_GAME.ps1">
       <Filter>Build Tasks</Filter>
+    </None>
+    <None Include="LuaBindings-v2.6.6.0.def">
+      <Filter>Module Definition</Filter>
     </None>
   </ItemGroup>
 </Project>

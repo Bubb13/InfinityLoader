@@ -12,6 +12,7 @@ type_CObList_Construct p_CObList_Construct;
 type_CObList_RemoveHead p_CObList_RemoveHead;
 type_CObList_Destruct p_CObList_Destruct;
 type_CObList_AddTail p_CObList_AddTail;
+type_CImmunitiesAIType_OnList p_CImmunitiesAIType_OnList;
 type_CAIGroup_FollowLeader p_CAIGroup_FollowLeader;
 type_CAIGroup_RemoveFromSearch p_CAIGroup_RemoveFromSearch;
 type_CAIGroup_AddToSearch p_CAIGroup_AddToSearch;
@@ -34,6 +35,7 @@ int* p_menuLength;
 CTypedPtrArray<CPtrArray,CRes*>* p_resources;
 _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 CBaldurChitin** p_g_pBaldurChitin;
+lua_State** p_g_lua;
 type_C2DArray_Construct p_C2DArray_Construct;
 type_C2DArray_Load p_C2DArray_Load;
 type_C2DArray_GetAtLabels p_C2DArray_GetAtLabels;
@@ -53,7 +55,9 @@ type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
 type_CInfGame_SetState p_CInfGame_SetState;
 type_CInfGame_SetIconIndex p_CInfGame_SetIconIndex;
 type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
+type_CDerivedStats_GetSpellState p_CDerivedStats_GetSpellState;
 type_CAIObjectType_Set p_CAIObjectType_Set;
+type_CAIObjectType_OfType p_CAIObjectType_OfType;
 CAIObjectType* CAIObjectType::p_NOONE;
 type_CAIAction_Construct1 p_CAIAction_Construct1;
 type_CAIAction_ConstructCopy p_CAIAction_ConstructCopy;
@@ -70,8 +74,10 @@ type_CGameSprite_GetActiveStats p_CGameSprite_GetActiveStats;
 type_CGameSprite_FeedBack p_CGameSprite_FeedBack;
 type_CGameSprite_PlaySound p_CGameSprite_PlaySound;
 type_CGameSprite_UpdateTarget p_CGameSprite_UpdateTarget;
+type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
 type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
 type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
+type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
 type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
@@ -86,6 +92,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&p_CObList_RemoveHead)},
 	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&p_CObList_Destruct)},
 	std::pair{TEXT("CObList::AddTail"), reinterpret_cast<void**>(&p_CObList_AddTail)},
+	std::pair{TEXT("CImmunitiesAIType::OnList"), reinterpret_cast<void**>(&p_CImmunitiesAIType_OnList)},
 	std::pair{TEXT("CAIGroup::FollowLeader"), reinterpret_cast<void**>(&p_CAIGroup_FollowLeader)},
 	std::pair{TEXT("CAIGroup::RemoveFromSearch"), reinterpret_cast<void**>(&p_CAIGroup_RemoveFromSearch)},
 	std::pair{TEXT("CAIGroup::AddToSearch"), reinterpret_cast<void**>(&p_CAIGroup_AddToSearch)},
@@ -108,6 +115,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("resources"), reinterpret_cast<void**>(&p_resources)},
 	std::pair{TEXT("capture"), reinterpret_cast<void**>(&p_capture)},
 	std::pair{TEXT("g_pBaldurChitin"), reinterpret_cast<void**>(&p_g_pBaldurChitin)},
+	std::pair{TEXT("g_lua"), reinterpret_cast<void**>(&p_g_lua)},
 	std::pair{TEXT("C2DArray::Construct"), reinterpret_cast<void**>(&p_C2DArray_Construct)},
 	std::pair{TEXT("C2DArray::Load"), reinterpret_cast<void**>(&p_C2DArray_Load)},
 	std::pair{TEXT("C2DArray::GetAtLabels"), reinterpret_cast<void**>(&p_C2DArray_GetAtLabels)},
@@ -127,7 +135,9 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&p_CInfGame_SetState)},
 	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&p_CInfGame_SetIconIndex)},
 	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&p_CGameEffect_DecodeEffect)},
+	std::pair{TEXT("CDerivedStats::GetSpellState"), reinterpret_cast<void**>(&p_CDerivedStats_GetSpellState)},
 	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&p_CAIObjectType_Set)},
+	std::pair{TEXT("CAIObjectType::OfType"), reinterpret_cast<void**>(&p_CAIObjectType_OfType)},
 	std::pair{TEXT("CAIObjectType::NOONE"), reinterpret_cast<void**>(&CAIObjectType::p_NOONE)},
 	std::pair{TEXT("CAIAction::Construct1"), reinterpret_cast<void**>(&p_CAIAction_Construct1)},
 	std::pair{TEXT("CAIAction::ConstructCopy"), reinterpret_cast<void**>(&p_CAIAction_ConstructCopy)},
@@ -144,7 +154,9 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameSprite::FeedBack"), reinterpret_cast<void**>(&p_CGameSprite_FeedBack)},
 	std::pair{TEXT("CGameSprite::PlaySound"), reinterpret_cast<void**>(&p_CGameSprite_PlaySound)},
 	std::pair{TEXT("CGameSprite::UpdateTarget"), reinterpret_cast<void**>(&p_CGameSprite_UpdateTarget)},
+	std::pair{TEXT("CGameArea::GetNearest2"), reinterpret_cast<void**>(&p_CGameArea_GetNearest2)},
 	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&p_CGameArea_AdjustTarget)},
 	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&p_CGameArea_CheckWalkable)},
+	std::pair{TEXT("CGameArea::CheckLOS"), reinterpret_cast<void**>(&p_CGameArea_CheckLOS)},
 	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&p_CChitin_OnResizeWindow)},
 };
