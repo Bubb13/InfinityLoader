@@ -294,7 +294,7 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 			} \
 		}
 
-	if ((flags & EEex_MatchObjectFlags::IGNORE_FRONTLIST) == 0)
+	if ((flags & EEex_MatchObjectFlags::MATCH_ONLY_BACKLIST) == 0)
 	{
 		const VertListType vertListType { pStartAIBase->virtual_GetVertListType() };
 		if (vertListType == VertListType::LIST_FRONT)
@@ -316,9 +316,11 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 
 	if ((flags & EEex_MatchObjectFlags::MATCH_DEAD) != 0
 		|| (flags & EEex_MatchObjectFlags::MATCH_BACKLIST) != 0
-		|| (flags & EEex_MatchObjectFlags::PRIORITIZE_BACKLIST) != 0)
+		|| (flags & EEex_MatchObjectFlags::PRIORITIZE_BACKLIST) != 0
+		|| (flags & EEex_MatchObjectFlags::MATCH_ONLY_BACKLIST) != 0)
 	{
-		if ((flags & EEex_MatchObjectFlags::PRIORITIZE_BACKLIST) != 0)
+		if ((flags & EEex_MatchObjectFlags::PRIORITIZE_BACKLIST) != 0
+			|| (flags & EEex_MatchObjectFlags::MATCH_ONLY_BACKLIST) != 0)
 		{
 			CTypedPtrList<CPtrList,long>::CNode* pNextNode { pArea->m_lVertSortBack.m_pNodeHead };
 			check(pNextNode, pNext, EEex_CheckShortCircuitDirection::IMPOSSIBLE);
