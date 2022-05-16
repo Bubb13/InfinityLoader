@@ -11830,6 +11830,9 @@ struct CGameTiledObject : CGameAIBase
 typedef __int32 (__thiscall *type_CGameSprite_GetKitMask)(CGameSprite* pThis);
 extern type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
 
+typedef short (__thiscall *type_CGameSprite_GetLauncherSlot)(CGameSprite* pThis, short slotNum, short abilityNum);
+extern type_CGameSprite_GetLauncherSlot p_CGameSprite_GetLauncherSlot;
+
 typedef CGameButtonList* (__thiscall *type_CGameSprite_GetQuickButtons)(CGameSprite* pThis, unsigned __int16 buttonType, unsigned __int8 existanceCheck);
 extern type_CGameSprite_GetQuickButtons p_CGameSprite_GetQuickButtons;
 
@@ -12223,6 +12226,11 @@ struct CGameSprite : CGameAIBase
 	__int32 GetKitMask()
 	{
 		return p_CGameSprite_GetKitMask(this);
+	}
+
+	short GetLauncherSlot(short slotNum, short abilityNum)
+	{
+		return p_CGameSprite_GetLauncherSlot(this, slotNum, abilityNum);
 	}
 
 	CGameButtonList* GetQuickButtons(unsigned __int16 buttonType, unsigned __int8 existanceCheck)

@@ -750,6 +750,7 @@ struct CGameObjectArray
 struct CGameSprite : CGameAIBase
 {
 	__int32 GetKitMask();
+	short GetLauncherSlot(short slotNum, short abilityNum);
 	CGameButtonList* GetQuickButtons(unsigned __int16 buttonType, unsigned __int8 existanceCheck);
 	void ReadySpell(CButtonData* button, bool firstCall);
 	void ReadyOffInternalList(CButtonData* button, bool firstCall);
