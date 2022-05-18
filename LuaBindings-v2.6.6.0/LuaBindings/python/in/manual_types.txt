@@ -747,6 +747,11 @@ struct CGameObjectArray
 	static byte __cdecl GetShare(int index, CGameObject** ptr);
 };
 
+struct CGameAIBase : CGameObject
+{
+	CGameObject* GetTargetShare();
+};
+
 struct CGameSprite : CGameAIBase
 {
 	__int32 GetKitMask();

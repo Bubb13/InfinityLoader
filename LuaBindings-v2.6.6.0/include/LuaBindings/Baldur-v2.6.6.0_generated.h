@@ -11570,6 +11570,9 @@ struct CAITrigger
 	CAITrigger() = delete;
 };
 
+typedef CGameObject* (__thiscall *type_CGameAIBase_GetTargetShare)(CGameAIBase* pThis);
+extern type_CGameAIBase_GetTargetShare p_CGameAIBase_GetTargetShare;
+
 struct CGameAIBase : CGameObject
 {
 	struct vtbl : CGameObject::vtbl
@@ -11670,6 +11673,11 @@ struct CGameAIBase : CGameObject
 	CAITrigger triggerOverride;
 
 	CGameAIBase() = delete;
+
+	CGameObject* GetTargetShare()
+	{
+		return p_CGameAIBase_GetTargetShare(this);
+	}
 
 	virtual void virtual_ClearActions(int _0)
 	{

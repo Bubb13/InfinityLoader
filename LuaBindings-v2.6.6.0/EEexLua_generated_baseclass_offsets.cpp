@@ -139,6 +139,15 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CAIId*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIId*>, CObject>()},
 	}},
+	{"CTypedPtrList<CPtrList,CAIAction*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIAction*>, CObject>()},
+	}},
+	{"CTypedPtrList<CPtrList,CAITrigger*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAITrigger*>, CObject>()},
+	}},
+	{"CTypedPtrList<CPtrList,CGameTimer*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameTimer*>, CObject>()},
+	}},
 	{"CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>, CObject>()},
 	}},
@@ -226,12 +235,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CAIResponse*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIResponse*>, CObject>()},
 	}},
-	{"CTypedPtrList<CPtrList,CAITrigger*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAITrigger*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CAIAction*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIAction*>, CObject>()},
-	}},
 	{"CTypedPtrList<CPtrList,CSpawn*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSpawn*>, CObject>()},
 	}},
@@ -285,9 +288,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CTypedPtrList<CPtrList,CMessage*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMessage*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CGameTimer*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameTimer*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,CBounceEntry*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CBounceEntry*>, CObject>()},
