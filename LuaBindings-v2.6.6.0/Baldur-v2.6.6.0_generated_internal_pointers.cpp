@@ -36,6 +36,7 @@ CTypedPtrArray<CPtrArray,CRes*>* p_resources;
 _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 CBaldurChitin** p_g_pBaldurChitin;
 lua_State** p_g_lua;
+type_CAIScript_Construct1 p_CAIScript_Construct1;
 type_C2DArray_Construct p_C2DArray_Construct;
 type_C2DArray_Load p_C2DArray_Load;
 type_C2DArray_GetAtLabels p_C2DArray_GetAtLabels;
@@ -118,6 +119,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("capture"), reinterpret_cast<void**>(&p_capture)},
 	std::pair{TEXT("g_pBaldurChitin"), reinterpret_cast<void**>(&p_g_pBaldurChitin)},
 	std::pair{TEXT("g_lua"), reinterpret_cast<void**>(&p_g_lua)},
+	std::pair{TEXT("CAIScript::Construct1"), reinterpret_cast<void**>(&p_CAIScript_Construct1)},
 	std::pair{TEXT("C2DArray::Construct"), reinterpret_cast<void**>(&p_C2DArray_Construct)},
 	std::pair{TEXT("C2DArray::Load"), reinterpret_cast<void**>(&p_C2DArray_Load)},
 	std::pair{TEXT("C2DArray::GetAtLabels"), reinterpret_cast<void**>(&p_C2DArray_GetAtLabels)},

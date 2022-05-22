@@ -7369,6 +7369,22 @@ struct CResRef
 	}
 };
 
+typedef void (__thiscall *type_CAIScript_Construct1)(CAIScript* pThis, CResRef cNewResRef, int playerscript);
+extern type_CAIScript_Construct1 p_CAIScript_Construct1;
+
+struct CAIScript
+{
+	CResRef cResRef;
+	CTypedPtrList<CPtrList,CAIConditionResponse*> m_caList;
+
+	CAIScript() = delete;
+
+	void Construct(CResRef cNewResRef, int playerscript)
+	{
+		p_CAIScript_Construct1(this, cNewResRef, playerscript);
+	}
+};
+
 struct CAbilityData
 {
 	CResRef m_icon;
@@ -7576,14 +7592,6 @@ struct CVVCHashEntry
 	unsigned int m_renderMask;
 
 	CVVCHashEntry() = delete;
-};
-
-struct CAIScript
-{
-	CResRef cResRef;
-	CTypedPtrList<CPtrList,CAIConditionResponse*> m_caList;
-
-	CAIScript() = delete;
 };
 
 struct CTiledObject

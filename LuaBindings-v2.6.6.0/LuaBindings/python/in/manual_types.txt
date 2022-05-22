@@ -888,6 +888,11 @@ struct CDerivedStats : CDerivedStatsTemplate
 	int GetSpellState(uint bit);
 };
 
+struct CAIScript
+{
+	$constructor_fake Construct1(CResRef cNewResRef, int playerscript);
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////

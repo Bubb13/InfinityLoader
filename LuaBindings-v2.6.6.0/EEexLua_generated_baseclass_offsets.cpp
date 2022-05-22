@@ -199,6 +199,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CAIObjectType*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIObjectType*>, CObject>()},
 	}},
+	{"CTypedPtrList<CPtrList,CAIConditionResponse*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIConditionResponse*>, CObject>()},
+	}},
 	{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>, CObject>()},
 	}},
@@ -228,9 +231,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CTypedPtrList<CPtrList,CMemINIValue*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMemINIValue*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CAIConditionResponse*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIConditionResponse*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,CAIResponse*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIResponse*>, CObject>()},
