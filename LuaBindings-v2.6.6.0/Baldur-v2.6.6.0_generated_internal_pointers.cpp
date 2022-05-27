@@ -2,6 +2,7 @@
 #include "Baldur-v2.6.6.0_generated.h"
 
 type_CVariableHash_FindKey p_CVariableHash_FindKey;
+type_CVariableHash_AddKey p_CVariableHash_AddKey;
 type_CGameObjectArray_GetShare p_CGameObjectArray_GetShare;
 type_CString_ConstructFromChars p_CString_ConstructFromChars;
 type_CString_Destruct p_CString_Destruct;
@@ -18,6 +19,7 @@ type_CAIGroup_RemoveFromSearch p_CAIGroup_RemoveFromSearch;
 type_CAIGroup_AddToSearch p_CAIGroup_AddToSearch;
 type_CAIGroup_GetFacings p_CAIGroup_GetFacings;
 type_CAIGroup_GetOffsets p_CAIGroup_GetOffsets;
+type_CVariable_Construct p_CVariable_Construct;
 type_findMenu p_findMenu;
 type_saveMenuStack p_saveMenuStack;
 type_uiLoadMenu p_uiLoadMenu;
@@ -85,6 +87,7 @@ type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CVariableHash::FindKey"), reinterpret_cast<void**>(&p_CVariableHash_FindKey)},
+	std::pair{TEXT("CVariableHash::AddKey"), reinterpret_cast<void**>(&p_CVariableHash_AddKey)},
 	std::pair{TEXT("CGameObjectArray::GetShare"), reinterpret_cast<void**>(&p_CGameObjectArray_GetShare)},
 	std::pair{TEXT("CString::ConstructFromChars"), reinterpret_cast<void**>(&p_CString_ConstructFromChars)},
 	std::pair{TEXT("CString::Destruct"), reinterpret_cast<void**>(&p_CString_Destruct)},
@@ -101,6 +104,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAIGroup::AddToSearch"), reinterpret_cast<void**>(&p_CAIGroup_AddToSearch)},
 	std::pair{TEXT("CAIGroup::GetFacings"), reinterpret_cast<void**>(&p_CAIGroup_GetFacings)},
 	std::pair{TEXT("CAIGroup::GetOffsets"), reinterpret_cast<void**>(&p_CAIGroup_GetOffsets)},
+	std::pair{TEXT("CVariable::Construct"), reinterpret_cast<void**>(&p_CVariable_Construct)},
 	std::pair{TEXT("findMenu"), reinterpret_cast<void**>(&p_findMenu)},
 	std::pair{TEXT("saveMenuStack"), reinterpret_cast<void**>(&p_saveMenuStack)},
 	std::pair{TEXT("uiLoadMenu"), reinterpret_cast<void**>(&p_uiLoadMenu)},

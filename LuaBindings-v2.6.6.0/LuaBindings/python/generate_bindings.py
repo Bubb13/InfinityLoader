@@ -9,7 +9,6 @@ from enum import Enum
 from io import TextIOWrapper
 from itertools import islice
 from typing import Callable, Generic, Match, Tuple, TypeVar
-import builtins
 import importlib
 import re
 import sys
@@ -380,17 +379,19 @@ class HeaderType(Enum):
 
 # Foward declarations just to suppress warnings
 class Group: pass
-globalGroup: Group
 class TypeReference: pass
 class Field: pass
 
 
 class MainState:
 
-	groupsDict: dict[str,Group] = {}
-	groups: list[Group] = []
-	filteredGroups: UniqueList[Group] = UniqueList()
-	noCustomTypes: bool = None
+	def __init__(self):
+		self.groupsDict: dict[str,Group] = {}
+		self.groups: list[Group] = []
+		self.globalGroup: Group = None
+		self.filteredGroups: UniqueList[Group] = UniqueList()
+		self.noCustomTypes: bool = None
+
 
 	def addGroup(self, group: Group):
 
@@ -1091,10 +1092,10 @@ class FunctionImplementation:
 		return refs
 
 
-	def toString(self, indent=""):
+	def toString(self, mainState: MainState, indent=""):
 
 		parts: list[str] = [indent]
-		if self.group != globalGroup:
+		if self.group != mainState.globalGroup:
 			parts.append("\t")
 
 		if self.virtual:
@@ -1301,7 +1302,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 					state.currentFunctionImplementation = None
 
 
-	variableMatch: Match = re.match(variablePatternGlobal if group == globalGroup else variablePatternLocal, line)
+	variableMatch: Match = re.match(variablePatternGlobal if group == mainState.globalGroup else variablePatternLocal, line)
 	if variableMatch != None:
 
 		variableField = VariableField(group)
@@ -1587,7 +1588,7 @@ class Group:
 			if self.groupType == "enum":
 				enumLineMatch: Match = re.match("^\t([_a-zA-Z0-9]+)\s*=\s*(.+?)\s*,\s*$", line)
 				if enumLineMatch:
-					firstExtendName = self.extends[0].getName()
+					firstExtendName = self.extends[0].getName() if len(self.extends) > 0 else "__int32"
 					if firstExtendName == "__int8":
 						value = int(enumLineMatch.group(2), 16)
 						if value & 0x80 != 0: value = -1 - (0xFF - value)
@@ -1904,7 +1905,7 @@ class Group:
 
 		def writeGroupInternalFunctionPointers(group: Group):
 
-			isNormal: bool = group != globalGroup
+			isNormal: bool = group != mainState.globalGroup
 			wroteSomething = False
 
 			for functionImp in group.functionImplementations:
@@ -1984,7 +1985,7 @@ class Group:
 		if not self.isSubgroup():
 			wroteSomething = writeGroupInternalFunctionPointers(self)
 
-		isNormal: bool = self != globalGroup
+		isNormal: bool = self != mainState.globalGroup
 
 		if isNormal:
 
@@ -2064,7 +2065,7 @@ class Group:
 
 		if isNormal:
 			for functionImplementation in self.functionImplementations:
-				parts.append(functionImplementation.toString(indent))
+				parts.append(functionImplementation.toString(mainState, indent))
 				parts.append("\n")
 				wroteSomething = True
 		else:
@@ -2074,7 +2075,7 @@ class Group:
 					if globalLineBetweenPointers and wroteSomething:
 						globalLineBetweenPointers = False
 						parts.append("\n")
-					parts.append(functionImplementation.toString())
+					parts.append(functionImplementation.toString(mainState))
 					parts.append("\n")
 					wroteSomething = True
 
@@ -2656,7 +2657,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 		groupNameStrIden, _ = re.subn("[^a-zA-Z0-9_]", "_", groupOpenData.appliedNameUsertypeNoOverride)
 
 		# Writing getInternalReference() function which returns the userdata's internal pointer
-		if group != globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Pointer", "Array"):
+		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Pointer", "Array"):
 
 			getTypeFunc = OpenFunctionData()
 			getTypeFunc.functionBindingName = f"tolua_function_{groupNameStrIden}_getInternalReference"
@@ -2672,7 +2673,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 			groupOpenData.functionBindings.append(getTypeFunc)
 
 		# Writing sizeof variable which returns the value of the sizeof operator when run on the usertype
-		if group != globalGroup and group.groupType not in ("enum", "namespace") and group.name != "void":
+		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name != "void":
 			sizeofConstant = OpenConstantData()
 			sizeofConstant.name = "sizeof"
 			sizeofConstant.valueType = OpenConstantType.STRING
@@ -2704,7 +2705,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 				fieldNameStr = functionField.functionName
 
 			fieldOpenData = OpenFieldData()
-			isNormal: bool = group != globalGroup
+			isNormal: bool = group != mainState.globalGroup
 			shouldWritePointerCast = isNormal and not isPointerCast and not group.name == "Pointer"
 			primitiveReturned = False
 
@@ -2947,7 +2948,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 					return
 
 
-			isNormal: bool = group != globalGroup
+			isNormal: bool = group != mainState.globalGroup
 			functionOpenData = OpenFunctionData()
 
 			functionOpenData.functionName = functionImplementation.name
@@ -3185,7 +3186,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 	for openData in openDataGroups:
 
 		# Write global mappings
-		if openData.group == globalGroup:
+		if openData.group == mainState.globalGroup:
 
 			out.write(f"\ttolua_cclass(L, \"EngineGlobals\", \"EngineGlobals\", {{}}, NULL);\n")
 			out.write("\ttolua_beginmodule(L, \"EngineGlobals\");\n")
@@ -3351,7 +3352,7 @@ def registerPointerTypes(mainState: MainState):
 				registerPointerTypesForGroup(subGroup, tracker)
 
 	for group in mainState.filteredGroups:
-		if group.isSubgroup() or group in (globalGroup, array, pointer):
+		if group.isSubgroup() or group in (mainState.globalGroup, array, pointer):
 			continue
 		registerPointerTypesForGroup(group, TemplateMappingTracker())
 
@@ -3507,7 +3508,7 @@ def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
 
 			lightDepend = mainState.tryGetGroup(lightDependency)
 
-			if (not lightDepend or lightDepend == globalGroup
+			if (not lightDepend or lightDepend == mainState.globalGroup
 				or lightDepend.isPrimitive() or lightDepend.name == "void"
 				or lightDepend.isSubgroup() or lightDepend.ignoreHeader or not lightDepend.isUsed(mainState)
 				or (lightDepend.defined and lightDepend.sortedPosition <= group.sortedPosition)
@@ -3517,7 +3518,7 @@ def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
 			forwardDeclarations.add(lightDependency)
 
 		# Non-static internal member functions need a forward def for the 'this' pointer.
-		if group != globalGroup and group.groupType != "namespace":
+		if group != mainState.globalGroup and group.groupType != "namespace":
 			for funcImp in group.functionImplementations:
 				if not funcImp.isStatic and funcImp.noBody:
 					forwardDeclarations.add(group.name)
@@ -3664,7 +3665,7 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 				alreadyExisted = False
 
 		else:
-			processCommonGroupLines(mainState, state, line, globalGroup)
+			processCommonGroupLines(mainState, state, line, mainState.globalGroup)
 
 	if filePath:
 		with open(filePath) as file:
@@ -3715,10 +3716,10 @@ def main():
 		elif (v := re.search("-packingFile=(.+)",                 k)) != None: packingFile                 = v.group(1)
 
 
-	builtins.globalGroup = Group()
-	globalGroup.updateSingleName(mainState, "EngineGlobals")
-	globalGroup.defined = True
-	mainState.addGroup(globalGroup)
+	mainState.globalGroup = Group()
+	mainState.globalGroup.updateSingleName(mainState, "EngineGlobals")
+	mainState.globalGroup.defined = True
+	mainState.addGroup(mainState.globalGroup)
 
 	if mainState.noCustomTypes:
 		processInputHeader(mainState, blob="""
@@ -3811,5 +3812,86 @@ struct ConstCharString
 
 
 
+def doCompare(compare1: str, compare2: str):
+
+	def loadCompareMainState(inputFileName: str) -> MainState:
+
+		mainState = MainState()
+		mainState.noCustomTypes = True
+
+		mainState.globalGroup = Group()
+		mainState.globalGroup.updateSingleName(mainState, "EngineGlobals")
+		mainState.globalGroup.defined = True
+		mainState.addGroup(mainState.globalGroup)
+
+		processInputHeader(mainState, blob="""
+template<class T, int size>
+struct Array
+{
+};
+
+template<class POINTED_TO_TYPE>
+struct Pointer
+{
+};
+
+struct VoidPointer
+{
+};
+
+struct CharString
+{
+};
+
+struct ConstCharString
+{
+};
+		""")
+
+		processInputHeader(mainState, inputFileName)
+
+		# Process Group lines to derive types
+		for group in mainState.groups:
+			if group.linesProcessed: continue
+			group.processLinesFillTypes(mainState)
+
+		# Move multi-layer structs so that they nest properly
+		for group in mainState.groups:
+			group.updateNesting(mainState)
+
+		# Rename groups to remove invalid characters / improve autogenerated names, fix clashing function fields, and fix clashing usertype names.
+		checkRename(mainState, None)
+
+		return mainState
+
+
+	mainStateOld = loadCompareMainState(compare1)
+	mainStateNew = loadCompareMainState(compare2)
+
+	for newGroup in mainStateNew.groups:
+
+		if (oldGroup := mainStateOld.tryGetGroup(newGroup.name)) != None:
+
+			for field in newGroup.fields:
+				if oldGroup.fieldsMap.get(field.getName()) == None:
+					print(f"{newGroup.name} added field: {field.getName()}")
+
+			for oldField in oldGroup.fields:
+				if newGroup.fieldsMap.get(oldField.getName()) == None:
+					print(f"{newGroup.name} removed field: {oldField.getName()}")
+
+
+
 if __name__ == "__main__":
-    main()
+
+	compare1: str = None
+	compare2: str = None
+
+	for k in islice(sys.argv, 1, None):
+		if   (v := re.search("-compare1=(.+)", k)) != None: compare1 = v.group(1)
+		elif (v := re.search("-compare2=(.+)", k)) != None: compare2 = v.group(1)
+
+	if compare1 and compare2:
+		doCompare(compare1, compare2)
+	else:
+		main()

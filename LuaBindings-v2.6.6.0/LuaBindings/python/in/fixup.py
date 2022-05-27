@@ -10,6 +10,8 @@ def fixup(mainState):
 	mainState.getGroup("C2DArray").retypeField(mainState, "m_pNamesY", "ArrayPointer<CString>")
 	mainState.getGroup("CAIGroup").retypeField(mainState, "m_memberList", "CTypedPtrList<CPtrList,long>")
 	mainState.getGroup("CAIIdList").retypeField(mainState, "m_pIdArray", "ArrayPointer<CAIId*>")
+	mainState.getGroup("CAreaVariable").retypeField(mainState, "m_name", "LCharString<32>")
+	mainState.getGroup("CAreaVariable").retypeField(mainState, "m_stringValue", "LCharString<32>")
 	mainState.getGroup("CGameAIBase_vtbl").retypeFunctionFieldRet(mainState, "GetVisibleTerrainTable", "byte*")
 	mainState.getGroup("CGameArea").retypeField(mainState, "m_lVertSort", "CTypedPtrList<CPtrList,long>")
 	mainState.getGroup("CGameArea").retypeField(mainState, "m_lVertSortBack", "CTypedPtrList<CPtrList,long>")

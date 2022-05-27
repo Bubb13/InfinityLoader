@@ -2065,6 +2065,9 @@ struct CWeaponIdentification
 typedef CVariable* (__thiscall *type_CVariableHash_FindKey)(CVariableHash* pThis, CString* inVarName);
 extern type_CVariableHash_FindKey p_CVariableHash_FindKey;
 
+typedef int (__thiscall *type_CVariableHash_AddKey)(CVariableHash* pThis, CVariable* var);
+extern type_CVariableHash_AddKey p_CVariableHash_AddKey;
+
 struct CVariableHash
 {
 	CVariable* m_hashEntries;
@@ -2075,6 +2078,11 @@ struct CVariableHash
 	CVariable* FindKey(CString* inVarName)
 	{
 		return p_CVariableHash_FindKey(this, inVarName);
+	}
+
+	int AddKey(CVariable* var)
+	{
+		return p_CVariableHash_AddKey(this, var);
 	}
 };
 
@@ -6756,7 +6764,7 @@ struct LCharString
 			cpyLen = length;
 		memcpy((void*)&data, toSet, cpyLen);
 		if (cpyLen < length)
-			memset((void*)(&data + cpyLen), 0, length - cpyLen);
+			memset((void*)&data[cpyLen], 0, length - cpyLen);
 	}
 
 	void get(lua_State* L)
@@ -6771,6 +6779,34 @@ struct LCharString
 		}
 		localCopy[i] = '\0';
 		p_lua_pushstring(L, localCopy);
+	}
+};
+
+#pragma pack(push, 1)
+struct CAreaVariable
+{
+	LCharString<32> m_name;
+	unsigned __int16 m_type;
+	unsigned __int16 m_resRefType;
+	unsigned int m_dWValue;
+	int m_intValue;
+	long double m_floatValue;
+	LCharString<32> m_stringValue;
+
+	CAreaVariable() = delete;
+};
+#pragma pack(pop)
+
+typedef void (__thiscall *type_CVariable_Construct)(CVariable* pThis);
+extern type_CVariable_Construct p_CVariable_Construct;
+
+struct CVariable : CAreaVariable
+{
+	CVariable() = delete;
+
+	void Construct()
+	{
+		p_CVariable_Construct(this);
 	}
 };
 
@@ -7366,6 +7402,11 @@ struct CResRef
 		for (; i < sizeof(m_resRef); ++i) {
 			m_resRef[i] = '\0';
 		}
+	}
+
+	void copy(CResRef* newVal)
+	{
+		*reinterpret_cast<__int64*>(&m_resRef) = *reinterpret_cast<__int64*>(newVal);
 	}
 };
 
@@ -10642,26 +10683,6 @@ struct CBaldurMessage
 	unsigned __int8 m_bInMessageSetDrawPoly;
 
 	CBaldurMessage() = delete;
-};
-
-#pragma pack(push, 1)
-struct CAreaVariable
-{
-	Array<char,32> m_name;
-	unsigned __int16 m_type;
-	unsigned __int16 m_resRefType;
-	unsigned int m_dWValue;
-	int m_intValue;
-	long double m_floatValue;
-	Array<char,32> m_stringValue;
-
-	CAreaVariable() = delete;
-};
-#pragma pack(pop)
-
-struct CVariable : CAreaVariable
-{
-	CVariable() = delete;
 };
 
 struct CAreaUserNote

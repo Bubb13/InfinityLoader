@@ -496,6 +496,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CApplyEffectList", {
 		{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CApplyEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
 	}},
+	{"CVariable", {
+		{"CAreaVariable", offsetofbase<CVariable, CAreaVariable>()},
+	}},
 	{"CVidTile", {
 		{"CVidImage", offsetofbase<CVidTile, CVidImage>()},
 	}},
@@ -692,9 +695,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CBaldurProjector::vtbl", {
 		{"EEex_CBaldurEngine::vtbl", offsetofbase<CBaldurProjector::vtbl, CBaldurEngine::vtbl>()},
-	}},
-	{"CVariable", {
-		{"CAreaVariable", offsetofbase<CVariable, CAreaVariable>()},
 	}},
 	{"EEex_CScreenStore", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenStore, CBaldurEngine>()},
