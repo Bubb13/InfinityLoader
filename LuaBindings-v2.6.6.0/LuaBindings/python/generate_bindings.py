@@ -8,7 +8,7 @@
 from enum import Enum
 from io import TextIOWrapper
 from itertools import islice
-from typing import Callable, Generic, Match, Tuple, TypeVar
+from typing import Callable, Generic, Match, Pattern, Tuple, TypeVar
 import importlib
 import re
 import sys
@@ -178,6 +178,21 @@ class UniqueList(Generic[T]):
 ##################
 # String Utility #
 ##################
+
+def manipulate(typeManipulator: Callable[[str], str], typeStr: str) -> str:
+	if typeManipulator:
+		manipulated, _ = typeManipulator(typeStr)
+		return manipulated
+	else:
+		return typeStr
+
+
+def attemptManipulate(typeManipulator: Callable[[str], str], typeStr: str) -> tuple[str,bool]:
+	if typeManipulator:
+		return typeManipulator(typeStr)
+	else:
+		return typeStr, False
+
 
 def stripUnnecessaryTypeSpaces(typeStr: str):
 
@@ -391,6 +406,7 @@ class MainState:
 		self.globalGroup: Group = None
 		self.filteredGroups: UniqueList[Group] = UniqueList()
 		self.noCustomTypes: bool = None
+		self.idaUnnamedScheme: bool = False
 
 
 	def addGroup(self, group: Group):
@@ -672,7 +688,9 @@ class TypeReference:
 		return toReturn
 
 
-	def _getAppliedNameInternal(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False, noModifiers=False, templateTypeMode: TemplateTypeMode=None):
+	def _getAppliedNameInternal(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker,
+		pointerLevelAdjust=0, useUsertypeOverride=False, noModifiers=False, templateTypeMode: TemplateTypeMode=None,
+		typeManipulator: Callable[[str], str]=None, noTemplate: bool=False, noPointers: bool=False):
 
 		"""
 		Given a TypeRef in which the caller wants to express an arbritary series of template uses, returns a
@@ -689,93 +707,148 @@ class TypeReference:
 		if not noModifiers:
 			parts.append(self.getModifierStr())
 
+		alreadyHaveName = False
+
 		if superRef := self.getSuperRef():
-			parts.append(superRef._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, templateTypeMode=templateTypeMode))
-			parts.append("::")
+
+			manipulatedNameNoTemplatesOrPointers: str = None
+			manipulated: bool = False
+
+			if typeManipulator:
+
+				manipulatedNameNoTemplatesOrPointers, manipulated = attemptManipulate(typeManipulator, self._getAppliedNameInternal(mainState, sourceGroup,
+					templateMappingTracker, useUsertypeOverride=useUsertypeOverride, templateTypeMode=templateTypeMode, noModifiers=True, noTemplate=True, noPointers=True))
+
+			if manipulated:
+				parts.append(manipulatedNameNoTemplatesOrPointers)
+				alreadyHaveName = True
+			else:
+				parts.append(superRef._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
+					templateTypeMode=templateTypeMode, typeManipulator=typeManipulator))
+				parts.append("::")
 
 		templateTypes: list[TypeReference] = self.getTemplates(mainState, askingGroup=self.group)
 		if len(templateTypes) > 0:
 
-			parts.append(self.getSingleName())
+			if not alreadyHaveName:
+				parts.append(manipulate(typeManipulator, self.getSingleName()))
+
 			assert parts[-1] != None, "Using bad self.getSingleName()"
 
-			parts.append("<")
+			if not noTemplate:
 
-			if templateTypeMode == TemplateTypeMode.USER_TYPE:
-				for templateType in templateTypes:
-					replaced = templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
-					parts.append(replaced.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
-					assert parts[-1] != None, f"Using bad templateType.getAppliedUserTypeName() for (original: {type(templateType).__name__}, replaced: {type(replaced).__name__}) [TemplateTypeMode.USER_TYPE]"
-					parts.append(",")
-			elif templateTypeMode == TemplateTypeMode.HEADER:
-				for templateType in templateTypes:
-					replaced = templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
-					parts.append(replaced.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
-					assert parts[-1] != None, f"Using bad templateType.getAppliedUserTypeName() for (original: {type(templateType).__name__}, replaced: {type(replaced).__name__}) [TemplateTypeMode.HEADER]"
-					parts.append(",")
+				parts.append("<")
 
-			parts.pop()
-			parts.append(">")
+				if templateTypeMode == TemplateTypeMode.USER_TYPE:
+					for templateType in templateTypes:
+						replaced = templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
+						parts.append(replaced.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
+							typeManipulator=typeManipulator))
+						assert parts[-1] != None, f"Using bad templateType.getAppliedUserTypeName() for (original: {type(templateType).__name__}, replaced: {type(replaced).__name__}) [TemplateTypeMode.USER_TYPE]"
+						parts.append(",")
+				elif templateTypeMode == TemplateTypeMode.HEADER:
+					for templateType in templateTypes:
+						replaced = templateType.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
+						parts.append(replaced.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
+							typeManipulator=typeManipulator))
+						assert parts[-1] != None, f"Using bad templateType.getAppliedUserTypeName() for (original: {type(templateType).__name__}, replaced: {type(replaced).__name__}) [TemplateTypeMode.HEADER]"
+						parts.append(",")
+
+				parts.pop()
+				parts.append(">")
 
 		elif self.group:
-			parts.append(self.group.getAppliedName(mainState, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, templateTypeMode=templateTypeMode, singleName=True))
+			parts.append(self.group.getAppliedName(mainState, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, templateTypeMode=templateTypeMode,
+				singleName=True, typeManipulator=typeManipulator, noTemplate=noTemplate, noName=alreadyHaveName))
 			assert parts[-1] != None, "Using bad group.getAppliedName()"
 		else:
-			parts.append(self.sourceString)
+			parts.append(manipulate(typeManipulator, self.sourceString))
 			assert parts[-1] != None, "Using bad self.sourceString"
 
-		for _ in range(self.getUserTypePointerLevel() + pointerLevelAdjust):
-			parts.append("*")
+		if not noPointers:
+			for _ in range(self.getUserTypePointerLevel() + pointerLevelAdjust):
+				parts.append("*")
 
 		return "".join(parts)
 
 
-	def getHeaderName(self, pointerLevelAdjust=0):
-		return self.toString(pointerLevelAdjust=pointerLevelAdjust, templatesUseHeaderName=True, iKnowWhatIAmDoing=True)
+	def getHeaderName(self, pointerLevelAdjust=0, typeManipulator: Callable[[str], str]=None):
+		return self.toString(pointerLevelAdjust=pointerLevelAdjust, templatesUseHeaderName=True, iKnowWhatIAmDoing=True, typeManipulator=typeManipulator)
 
 
-	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
-		return self._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust, useUsertypeOverride=useUsertypeOverride, templateTypeMode=TemplateTypeMode.HEADER)
+	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False,
+		typeManipulator: Callable[[str], str]=None):
+
+		return self._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust, useUsertypeOverride=useUsertypeOverride,
+			templateTypeMode=TemplateTypeMode.HEADER, typeManipulator=typeManipulator)
 
 
-	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False):
-		return self._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, noModifiers=True, templateTypeMode=TemplateTypeMode.HEADER)
+	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False,
+		typeManipulator: Callable[[str], str]=None):
+
+		return self._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, noModifiers=True,
+			templateTypeMode=TemplateTypeMode.HEADER, typeManipulator=typeManipulator)
 
 
-	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False) -> str:
+	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False,
+		typeManipulator: Callable[[str], str]=None, noModifiers: bool=False, noTemplate: bool=False, noPointers: bool=False) -> str:
 
-		parts: list[str] = [self.getModifierStr()]
+		parts: list[str] = []
+
+		if not noModifiers:
+			parts.append(self.getModifierStr())
+
+		alreadyHaveName: bool = False
 
 		if superRef := self.getSuperRef():
-			parts.append(superRef.toString(useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName, iKnowWhatIAmDoing=iKnowWhatIAmDoing))
-			parts.append("::")
 
-		if useUsertypeOverride and self.group != None and self.group.overrideUsertypeSingleName != None:
-			parts.append(self.group.overrideUsertypeSingleName)
-		else:
-			parts.append(self.getSingleName())
+			manipulatedNameNoTemplatesOrPointers: str = None
+			manipulated: bool = False
 
-		if len(self.templateTypes) > 0:
+			if typeManipulator:
 
-			parts.append("<")
+				manipulatedNameNoTemplatesOrPointers, manipulated = attemptManipulate(typeManipulator, self.toString(self, useUsertypeOverride=useUsertypeOverride,
+					templatesUseHeaderName=templatesUseHeaderName, iKnowWhatIAmDoing=iKnowWhatIAmDoing, noModifiers=True, noTemplate=True, noPointers=True))
 
-			if templatesUseHeaderName:
-				for templateType in self.templateTypes:
-					parts.append(templateType.getHeaderName())
-					parts.append(",")
+			if manipulated:
+				parts.append(manipulatedNameNoTemplatesOrPointers)
+				alreadyHaveName = True
 			else:
-				for templateType in self.templateTypes:
-					parts.append(templateType.toString(iKnowWhatIAmDoing=iKnowWhatIAmDoing))
-					parts.append(",")
+				parts.append(superRef.toString(useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName,
+					iKnowWhatIAmDoing=iKnowWhatIAmDoing, typeManipulator=typeManipulator))
+				parts.append("::")
 
-			parts.pop()
-			parts.append(">")
+		if not alreadyHaveName:
+			if useUsertypeOverride and self.group != None and self.group.overrideUsertypeSingleName != None:
+				parts.append(manipulate(typeManipulator, self.group.overrideUsertypeSingleName))
+			else:
+				parts.append(manipulate(typeManipulator, self.getSingleName()))
 
-		for _ in range(self.getUserTypePointerLevel() + (pointerLevelAdjust if not self.reference else pointerLevelAdjust - 1)):
-			parts.append("*")
+		if not noTemplate:
 
-		if self.reference:
-			parts.append("&")
+			if len(self.templateTypes) > 0:
+
+				parts.append("<")
+
+				if templatesUseHeaderName:
+					for templateType in self.templateTypes:
+						parts.append(templateType.getHeaderName(typeManipulator=typeManipulator))
+						parts.append(",")
+				else:
+					for templateType in self.templateTypes:
+						parts.append(templateType.toString(iKnowWhatIAmDoing=iKnowWhatIAmDoing, typeManipulator=typeManipulator))
+						parts.append(",")
+
+				parts.pop()
+				parts.append(">")
+
+		if not noPointers:
+
+			for _ in range(self.getUserTypePointerLevel() + (pointerLevelAdjust if not self.reference else pointerLevelAdjust - 1)):
+				parts.append("*")
+
+			if self.reference:
+				parts.append("&")
 
 		return "".join(parts)
 
@@ -856,31 +929,38 @@ class PointerReference(TypeReference):
 			self.changeReferencedGroup(mainState.getGroup("Pointer"))
 
 
-	def getHeaderName(self, pointerLevelAdjust=0):
+	def getHeaderName(self, pointerLevelAdjust=0, typeManipulator: Callable[[str], str]=None):
 		if self.getUserTypePointerLevel() == 0:
-			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)}"
+			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust, typeManipulator=typeManipulator)}"
 		else:
-			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust + 1)}"
+			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust + 1, typeManipulator=typeManipulator)}"
 
 
-	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
+	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False,
+		typeManipulator: Callable[[str], str]=None):
+
 		if self.getUserTypePointerLevel() == 0:
-			return self.originalRef.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust, useUsertypeOverride=useUsertypeOverride)
+			return self.originalRef.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust,
+				useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator)
 		else:
 			innerType = self.originalRef.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
-			return f"{innerType.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust + 1, useUsertypeOverride=useUsertypeOverride)}"
+			return f"{innerType.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=pointerLevelAdjust + 1, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator)}"
 
 
-	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False):
+	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False,
+		typeManipulator: Callable[[str], str]=None):
+
 		if self.getUserTypePointerLevel() == 0:
-			return self.originalRef.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride)
+			return self.originalRef.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
+				typeManipulator=typeManipulator)
 		else:
 			innerType = self.originalRef.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
 			innerStr: str = None
 			if innerType.getUserTypePointerLevel() == 0 and not innerType.isPrimitive():
-				innerStr = innerType.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride)
+				innerStr = innerType.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
+					typeManipulator=typeManipulator)
 			else:
-				innerStr = f"Pointer<{innerType.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride)}>"
+				innerStr = f"{manipulate(typeManipulator, 'Pointer')}<{innerType.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator)}>"
 			return innerStr
 
 
@@ -909,10 +989,13 @@ class PointerReference(TypeReference):
 		return parts
 
 
-	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False) -> str:
+	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False,
+		typeManipulator: Callable[[str], str]=None) -> str:
+
 		assert iKnowWhatIAmDoing, "You don't know what you're doing!"
 		effectivePointerAdj = pointerLevelAdjust if self.getUserTypePointerLevel() == 0 else pointerLevelAdjust + 1
-		return self.originalRef.toString(pointerLevelAdjust=effectivePointerAdj, useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName, iKnowWhatIAmDoing=iKnowWhatIAmDoing)
+		return self.originalRef.toString(pointerLevelAdjust=effectivePointerAdj, useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName,
+			iKnowWhatIAmDoing=iKnowWhatIAmDoing, typeManipulator=typeManipulator)
 
 
 
@@ -971,27 +1054,31 @@ class CharReference(TypeReference):
 				self.changeReferencedGroup(mainState.getGroup("char"))
 
 
-	def getHeaderName(self, pointerLevelAdjust=0):
+	def getHeaderName(self, pointerLevelAdjust=0, typeManipulator: Callable[[str], str]=None):
 		if self.mode == CharReferenceMode.MORPHING:
-			return f"{self.getModifierStr()}char{'*'*(self.charPointerLevel + pointerLevelAdjust)}"
+			return f"{self.getModifierStr()}{manipulate(typeManipulator, 'char')}{'*'*(self.charPointerLevel + pointerLevelAdjust)}"
 		else:
-			return f"{self.getModifierStr()}{self.group.name}{'*'*(self.getUserTypePointerLevel() + pointerLevelAdjust)}"
+			return f"{self.getModifierStr()}{manipulate(typeManipulator, self.group.name)}{'*'*(self.getUserTypePointerLevel() + pointerLevelAdjust)}"
 
 
-	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
-		return self.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)
+	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False,
+		typeManipulator: Callable[[str], str]=None):
+
+		return self.getHeaderName(pointerLevelAdjust=pointerLevelAdjust, typeManipulator=typeManipulator)
 
 
-	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False):
+	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False,
+		typeManipulator: Callable[[str], str]=None):
+
 		charLevel = self.charPointerLevel
 		if charLevel == 0:
-			return f"char"
+			return manipulate(typeManipulator, "char")
 		elif charLevel == 1:
-			return f"{'Const' if self.const else ''}CharString"
+			return manipulate(typeManipulator, f"{'Const' if self.const else ''}CharString")
 		elif self.mode == CharReferenceMode.USER_TYPE_ONLY and charLevel == 2:
 			return self.group.name
 		else:
-			return f"Pointer<char{'*'*(charLevel - 1)}>"
+			return f"{manipulate(typeManipulator, 'Pointer')}<{manipulate(typeManipulator, 'char')}>{'*'*(charLevel - 1)}"
 
 
 
@@ -1021,23 +1108,29 @@ class VoidPointerReference(TypeReference):
 			self.changeReferencedGroup(mainState.getGroup("VoidPointer"))
 
 
-	def getHeaderName(self, pointerLevelAdjust=0):
-		return f"void{'*'*(self.getUserTypePointerLevel() + pointerLevelAdjust)}"
+	def getHeaderName(self, pointerLevelAdjust=0, typeManipulator: Callable[[str], str]=None):
+		return f"{manipulate(typeManipulator, 'void')}{'*'*(self.getUserTypePointerLevel() + pointerLevelAdjust)}"
 
 
-	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False):
-		return self.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)
+	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False,
+		typeManipulator: Callable[[str], str]=None):
+
+		return self.getHeaderName(pointerLevelAdjust=pointerLevelAdjust, typeManipulator=typeManipulator)
 
 
-	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False):
+	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False,
+		typeManipulator: Callable[[str], str]=None):
+
 		if (pointerLevel := self.getUserTypePointerLevel()) == 1:
-			return "VoidPointer"
+			return manipulate(typeManipulator, "VoidPointer")
 		else:
-			return f"Pointer<void{'*'*(pointerLevel - 1)}>"
+			return f"{manipulate(typeManipulator, 'Pointer')}<{manipulate(typeManipulator, 'void')}{'*'*(pointerLevel - 1)}>"
 
 
-	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False) -> str:
-		return self.getHeaderName(pointerLevelAdjust)
+	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False,
+		typeManipulator: Callable[[str], str]=None) -> str:
+
+		return self.getHeaderName(pointerLevelAdjust, typeManipulator=typeManipulator)
 
 
 def templateUseHasGeneric(currentTemplate: tuple[TypeReference]):
@@ -1200,8 +1293,8 @@ class CheckUnnamedStructsState:
 		self.lines: list[str] = []
 
 
-variablePatternGlobal = "^((?:(?:nopointer|nobinding|static)\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
-variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\s+)*)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
+variablePatternGlobal = "^((?:(?:nopointer|nobinding|static)\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*&:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
+variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\s+)*)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*&:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
 
 def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
@@ -1399,6 +1492,7 @@ class Group:
 		self.copyConstructor: FunctionImplementation = None # Specially-defined copy constructor implementation
 		self.pack: int = None                               # Specially-defined struct packing
 		self.vGroup: Group = None
+		self.hadVfptrField: bool = False
 		self.numOriginalVFuncs: int = None
 
 
@@ -1806,7 +1900,30 @@ class Group:
 		self.rebuildInwardTypeRefs(mainState)
 
 
-	def getAppliedName(self, mainState: MainState, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False, noTemplate=False, singleName=False, templateTypeMode: TemplateTypeMode=None):
+	def appendTemplates(self, mainState: MainState, templateMappingTracker: TemplateMappingTracker, parts: list[str], useUsertypeOverride=False,
+		templateTypeMode: TemplateTypeMode=None, typeManipulator: Callable[[str], str]=None):
+
+		if templateMappingTracker != None and (v := templateMappingTracker.getMapping(self.name)) != None:
+
+			parts.append("<")
+
+			if templateTypeMode == TemplateTypeMode.USER_TYPE:
+				for typeRef in v:
+					parts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).getAppliedUserTypeName(mainState, self,
+						templateMappingTracker, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator))
+					parts.append(",")
+			elif templateTypeMode == TemplateTypeMode.HEADER:
+				for typeRef in v:
+					parts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).getAppliedHeaderName(mainState, self,
+						templateMappingTracker, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator))
+					parts.append(",")
+
+			parts.pop()
+			parts.append(">")
+
+
+	def getAppliedName(self, mainState: MainState, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False, noTemplate=False,
+		singleName=False, noName=False, templateTypeMode: TemplateTypeMode=None, typeManipulator: Callable[[str], str]=None):
 
 		"""
 		Given a Group in which the caller wants to express an arbritary series of template uses, returns a
@@ -1818,27 +1935,26 @@ class Group:
 
 		groupNameParts = []
 
-		if not singleName and self.superGroup:
-			groupNameParts.append(self.superGroup.getAppliedName(mainState, templateMappingTracker, templateTypeMode=templateTypeMode))
-			groupNameParts.append("::")
+		if not noName:
 
-		groupNameParts.append(self.overrideUsertypeSingleName if useUsertypeOverride and self.overrideUsertypeSingleName != None else self.singleName)
+			if not singleName and self.superGroup:
 
-		if not noTemplate and templateMappingTracker != None and (v := templateMappingTracker.getMapping(self.name)) != None:
+				nameNoTemplates, success = attemptManipulate(typeManipulator, self.superGroup.getAppliedName(mainState, templateMappingTracker,
+					templateTypeMode=templateTypeMode, noTemplate=True))
 
-			groupNameParts.append("<")
+				if success:
+					groupNameParts.append(nameNoTemplates)
+				else:
+					groupNameParts.append(self.superGroup.getAppliedName(mainState, templateMappingTracker, templateTypeMode=templateTypeMode,
+						typeManipulator=typeManipulator))
+					groupNameParts.append("::")
 
-			if templateTypeMode == TemplateTypeMode.USER_TYPE:
-				for typeRef in v:
-					groupNameParts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).getAppliedUserTypeName(mainState, self, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
-					groupNameParts.append(",")
-			elif templateTypeMode == TemplateTypeMode.HEADER:
-				for typeRef in v:
-					groupNameParts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).getAppliedHeaderName(mainState, self, templateMappingTracker, useUsertypeOverride=useUsertypeOverride))
-					groupNameParts.append(",")
+			groupNameParts.append(manipulate(typeManipulator, self.overrideUsertypeSingleName if useUsertypeOverride
+				and self.overrideUsertypeSingleName != None else self.singleName))
 
-			groupNameParts.pop()
-			groupNameParts.append(">")
+		if not noTemplate:
+			self.appendTemplates(mainState, templateMappingTracker, groupNameParts, useUsertypeOverride=useUsertypeOverride,
+				templateTypeMode=templateTypeMode, typeManipulator=typeManipulator)
 
 		return "".join(groupNameParts)
 
@@ -1862,6 +1978,7 @@ class Group:
 		vtblStruct.relocate(mainState, f"{self.name}::vtbl")
 
 		if self.hasField("__vftable"):
+			self.hadVfptrField = True
 			self.removeFieldByName(mainState, "__vftable")
 
 		superVGroup: Group = None
@@ -2141,7 +2258,8 @@ def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, s
 	if unnamedStructEnd != None and state.bracketLevel == state.preBracketLevel:
 
 		myName = unnamedStructEnd.group(1)
-		myTypeName = f"{myName}_t"
+
+		myTypeName = f"<unnamed_type_{myName}>" if mainState.idaUnnamedScheme else f"{myName}_t"
 		myFullName = f"{superGroup.name}::{myTypeName}"
 
 		subGroup = Group()
@@ -2235,9 +2353,9 @@ class FunctionField(Field):
 		self.functionName = newName
 
 
-	def toString(self, mainState: MainState, indent="") -> str:
+	def toString(self, mainState: MainState, typeManipulator: Callable[[str], str], indent="") -> str:
 
-		parts = [indent, self.returnType.getHeaderName(), " ("]
+		parts = [indent, self.returnType.getHeaderName(typeManipulator=typeManipulator), " ("]
 
 		if self.callConvention:
 			parts.append(self.callConvention)
@@ -2250,17 +2368,17 @@ class FunctionField(Field):
 		hadParam = False
 
 		if self.thisType:
-			parts.append(self.thisType.getHeaderName())
+			parts.append(self.thisType.getHeaderName(typeManipulator=typeManipulator))
 			parts.append(", ")
 			hadParam = True
 
 		if self.resultType:
-			parts.append(self.resultType.getHeaderName())
+			parts.append(self.resultType.getHeaderName(typeManipulator=typeManipulator))
 			parts.append(", ")
 			hadParam = True
 
 		for parameterType in self.parameterTypes:
-			parts.append(parameterType.getHeaderName())
+			parts.append(parameterType.getHeaderName(typeManipulator=typeManipulator))
 			parts.append(", ")
 			hadParam = True
 
@@ -3282,6 +3400,12 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 	baseclassOut.write("};\n")
 
 
+
+def fileAsString(fileName: str):
+	with open(fileName) as file:
+		return file.read()
+
+
 def fileAsLines(fileName: str):
 	lines = []
 	with open(fileName) as file:
@@ -3812,19 +3936,18 @@ struct ConstCharString
 
 
 
-def doCompare(compare1: str, compare2: str):
+def loadMinimumMainState(inputFileName: str, fixupFileName: str=None, manualTypesFile: str=None, checkRename=True, idaUnnamedScheme=False) -> MainState:
 
-	def loadCompareMainState(inputFileName: str) -> MainState:
+	mainState = MainState()
+	mainState.noCustomTypes = True
+	mainState.idaUnnamedScheme = idaUnnamedScheme
 
-		mainState = MainState()
-		mainState.noCustomTypes = True
+	mainState.globalGroup = Group()
+	mainState.globalGroup.updateSingleName(mainState, "EngineGlobals")
+	mainState.globalGroup.defined = True
+	mainState.addGroup(mainState.globalGroup)
 
-		mainState.globalGroup = Group()
-		mainState.globalGroup.updateSingleName(mainState, "EngineGlobals")
-		mainState.globalGroup.defined = True
-		mainState.addGroup(mainState.globalGroup)
-
-		processInputHeader(mainState, blob="""
+	processInputHeader(mainState, blob="""
 template<class T, int size>
 struct Array
 {
@@ -3848,25 +3971,40 @@ struct ConstCharString
 };
 		""")
 
-		processInputHeader(mainState, inputFileName)
+	if manualTypesFile != None:
+		processInputHeader(mainState, manualTypesFile)
 
-		# Process Group lines to derive types
-		for group in mainState.groups:
-			if group.linesProcessed: continue
-			group.processLinesFillTypes(mainState)
+	processInputHeader(mainState, inputFileName)
 
-		# Move multi-layer structs so that they nest properly
-		for group in mainState.groups:
-			group.updateNesting(mainState)
+	# Process Group lines to derive types
+	for group in mainState.groups:
+		if group.linesProcessed: continue
+		group.processLinesFillTypes(mainState)
 
+	# Move multi-layer structs so that they nest properly
+	for group in mainState.groups:
+		group.updateNesting(mainState)
+
+	# Run fixup file to make some necessary changes
+	if fixupFileName != None:
+		my_module = importlib.import_module(fixupFileName)
+		my_module.fixup(mainState)
+
+	for group in mainState.groups:
+		group.checkForVGroup(mainState) # Fills vGroup and removes __vftable field if present.
+
+	if checkRename:
 		# Rename groups to remove invalid characters / improve autogenerated names, fix clashing function fields, and fix clashing usertype names.
 		checkRename(mainState, None)
 
-		return mainState
+	return mainState
 
 
-	mainStateOld = loadCompareMainState(compare1)
-	mainStateNew = loadCompareMainState(compare2)
+
+def doCompare(compare1: str, compare2: str):
+
+	mainStateOld = loadMinimumMainState(compare1)
+	mainStateNew = loadMinimumMainState(compare2)
 
 	for newGroup in mainStateNew.groups:
 
@@ -3882,7 +4020,201 @@ struct ConstCharString
 
 
 
-if __name__ == "__main__":
+class IDAStructFields:
+
+	__slots__ = ("size", "fieldOffsets", "baseclassOffsets")
+	def __init__(self, size: int) -> None:
+		self.size: int = size
+		self.fieldOffsets: list[tuple[str,int]] = []
+		self.baseclassOffsets: list[int] = []
+
+
+idaStructFieldPattern: Pattern = re.compile('(?<=\n)([0-9a-fA-F]{8})(?:(?: ([^;\s]+)\s+(?!ends\n)\S+\s+[^;\s]+.*)|(\s+db \? ; undefined))\n')
+
+def readIdaStructFieldOffsets(idaStructsPath: str) -> dict[str,int]:
+
+	toReturn: dict[str,IDAStructFields] = {}
+	fileContents: str = fileAsString(idaStructsPath)
+
+	for startMatch in re.finditer("(?<=\n)00000000 (.+) (?:struc|union) .*sizeof=0x([0-9a-fA-F]+).*\n", fileContents):
+
+		structNameOriginal: str = startMatch.group(1).strip()
+
+		idaStructFields: IDAStructFields = IDAStructFields(int(startMatch.group(2), 16))
+		toReturn[structNameOriginal] = idaStructFields
+
+		idaEndStructPattern = re.compile("(?<=\n)[0-9a-fA-F]{8} (" + re.escape(structNameOriginal) + ") \s*ends\n")
+		endMatch = idaEndStructPattern.search(fileContents, startMatch.span(0)[1])
+		if not endMatch:
+			raise Exception("PARSE ERROR")
+
+		structContents: str = fileContents[startMatch.span(1)[0]:endMatch.span(0)[1]]
+
+		hitNonBaseclass = False
+		for fieldMatch in idaStructFieldPattern.finditer(structContents):
+
+			fieldOffset: int = int(fieldMatch.group(1), 16)
+
+			if fieldMatch.group(3):
+
+				idaStructFields.fieldOffsets.append((":padding", fieldOffset))
+
+			else:
+
+				fieldName: str = fieldMatch.group(2)
+
+				if not hitNonBaseclass and fieldName.startswith("baseclass_"):
+					idaStructFields.baseclassOffsets.append(fieldOffset)
+				elif fieldName != "__vftable":
+					hitNonBaseclass = True
+					idaStructFields.fieldOffsets.append((fieldName, fieldOffset))
+
+	return toReturn
+
+
+def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStructsPath: str, fixupFileName: str, manualTypesFile: str):
+
+	idaStructFieldOffsets: dict[str,IDAStructFields] = readIdaStructFieldOffsets(idaStructsPath)
+	mainState = loadMinimumMainState(requestHeaderPath, fixupFileName=fixupFileName, manualTypesFile=manualTypesFile, checkRename=False, idaUnnamedScheme=True)
+
+	with open("./out/requested_types.txt", "w") as out:
+
+		taggedTypes = fileAsSet(requestTypesPath)
+
+
+		def refify(typeName: str) -> str:
+			typeNameDisplay = re.sub("<unnamed_type_(.+?)>", "\\1_t", typeName)
+			if typeName in taggedTypes:
+				typeNameDisplay = re.sub("([<>])", "\\\\\\1", typeNameDisplay)
+				typeName = re.sub("([<>])", "\\\\\\1", typeName)
+				return f":ref:`{typeNameDisplay}<{typeName}>`", True
+			else:
+				if typeNameDisplay not in ("Array", "void") and typeNameDisplay not in primitives and not typeNameDisplay.isnumeric():
+					print(f"Unable to refify: \"{typeNameDisplay}\"")
+				return typeNameDisplay, False
+
+
+		for typeName in taggedTypes:
+
+			if group := mainState.tryGetGroup(typeName):
+
+				if not (idaFieldOffsets := idaStructFieldOffsets.get(typeName)):
+					print(f"** Failed to find field offsets for group with name: \"{typeName}\" **")
+					continue
+
+				out.write(f":{typeName}|{idaFieldOffsets.size}\n")
+
+				if group.hadVfptrField:
+					out.write(f"vfptr|0|qword\n")
+
+				for i, extendRef in enumerate(group.extends):
+					fieldName = f"baseclass_{i}"
+					offsetHex = str.format("{:X}", idaFieldOffsets.baseclassOffsets[i])
+					typeDisplayName = extendRef.getHeaderName(typeManipulator=refify)
+					typeDisplayName = re.sub(",:ref:", ", :ref:", typeDisplayName)
+					typeDisplayName = re.sub("(:ref:`[^`]*?`)(?=[^\s.,:;!?\\\\\/'\")\]}>])", "\\1\\\\", typeDisplayName)
+					out.write(f"{fieldName}|{offsetHex}|{typeDisplayName}\n")
+
+				fieldOffsetsLen = len(idaFieldOffsets.fieldOffsets)
+				idaIndex = 0
+
+				for field in group.fields:
+
+					offsetTup: tuple[str,int] = None
+
+					firstPaddingOffset: int = None
+					while True:
+
+						offsetTup = idaFieldOffsets.fieldOffsets[idaIndex] if idaIndex < fieldOffsetsLen else None
+
+						if not offsetTup or not offsetTup[0].startswith(":padding"):
+
+							if firstPaddingOffset:
+								offsetHex = str.format("{:X}", firstPaddingOffset)
+								out.write(f"``<padding>``|{offsetHex}|<blank>\n")
+
+							break
+
+						if not firstPaddingOffset:
+							firstPaddingOffset = offsetTup[1]
+
+						idaIndex += 1
+
+
+					fieldName = field.getName()
+
+					if not offsetTup or offsetTup[0] != fieldName:
+
+						tupName = offsetTup[0] if offsetTup else ""
+						print(f"** IDA expected \"{typeName}.{tupName}\", header has \"{fieldName}\" **")
+
+						for backIndex in range(idaIndex, -1, -1):
+
+							if backIndex >= fieldOffsetsLen:
+								continue
+
+							previousOffsetTup = idaFieldOffsets.fieldOffsets[backIndex]
+							print(f"** \"{typeName}.{fieldName}\" falling back to \"{previousOffsetTup[0]}\" offset **")
+							offsetTup = previousOffsetTup
+							break
+
+
+					if not offsetTup:
+						raise Exception("** Failed to get offsetTup in group with name \"{typeName}\" **")
+
+					offsetHex = str.format("{:X}", offsetTup[1])
+					typeDisplayName = field.variableType.getHeaderName(typeManipulator=refify) if field.type == FieldType.VARIABLE \
+						else field.toString(mainState, typeManipulator=refify).replace("*", "\\*")
+					typeDisplayName = re.sub(",:ref:", ", :ref:", typeDisplayName)
+					typeDisplayName = re.sub("(:ref:`[^`]*?`)(?=[^\s.,:;!?\\\\/'\")\]}>])", "\\1\\\\", typeDisplayName)
+
+					out.write(f"{fieldName}|{offsetHex}|{typeDisplayName}\n")
+					idaIndex += 1
+
+
+				firstPaddingOffset: int = None
+				while idaIndex < fieldOffsetsLen:
+
+					offsetTup = idaFieldOffsets.fieldOffsets[idaIndex]
+
+					if not offsetTup[0].startswith(":padding"):
+						raise Exception(f"** \"{typeName}\" field index:{idaIndex}, name:\"{offsetTup[0]}\" should have been padding **")
+
+					if not firstPaddingOffset:
+						firstPaddingOffset = offsetTup[1]
+
+					idaIndex += 1
+
+
+				if firstPaddingOffset:
+					offsetHex = str.format("{:X}", firstPaddingOffset)
+					out.write(f"``<padding>``|{offsetHex}|<blank>\n")
+
+				out.write(":end\n")
+
+			else:
+				print(f"* Failed to find group with name: \"{typeName}\" *")
+
+
+
+def mainSwitch():
+
+	requestHeader: str = None
+	requestTypes: str = None
+	idaStructs: str = None
+	fixupFileName: str = None
+	manualTypesFile: str = None
+
+	for k in islice(sys.argv, 1, None):
+		if (v := re.search("-requestHeaderFile=(.+)", k)) != None: requestHeader = v.group(1)
+		elif (v := re.search("-requestTypesFile=(.+)", k)) != None: requestTypes = v.group(1)
+		elif (v := re.search("-idaStructsFile=(.+)", k)) != None: idaStructs = v.group(1)
+		elif (v := re.search("-fixupFile=(.+)",  k)) != None: fixupFileName = v.group(1)
+		elif (v := re.search("-manualTypesFile=(.+)", k)) != None: manualTypesFile = v.group(1)
+
+	if requestTypes and idaStructs:
+		doRequestFieldTypes(requestHeader, requestTypes, idaStructs, fixupFileName, manualTypesFile)
+		return
 
 	compare1: str = None
 	compare2: str = None
@@ -3893,5 +4225,10 @@ if __name__ == "__main__":
 
 	if compare1 and compare2:
 		doCompare(compare1, compare2)
-	else:
-		main()
+		return
+
+	main()
+
+
+if __name__ == "__main__":
+	mainSwitch()
