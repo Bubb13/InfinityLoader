@@ -2800,7 +2800,7 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 					pointerName = "VoidPointer"
 				elif group.name == "Pointer":
 					innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
-					pointerName = f"Pointer<{innerRef.getHeaderName(pointerLevelAdjust=1)}>"
+					pointerName = f"Pointer<{innerRef.getHeaderName(pointerLevelAdjust=1, useUsertypeOverride=True)}>"
 				elif group.name == "VoidPointer":
 					pointerName = "Pointer<void*>"
 
