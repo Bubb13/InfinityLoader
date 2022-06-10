@@ -53,12 +53,17 @@ type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
 type_CSearchBitmap_GetCost p_CSearchBitmap_GetCost;
 ushort* CVidMode::p_SCREENWIDTH;
 ushort* CVidMode::p_SCREENHEIGHT;
+type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
 type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
 type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
 type_CInfGame_SetState p_CInfGame_SetState;
 type_CInfGame_SetIconIndex p_CInfGame_SetIconIndex;
 type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
 type_CDerivedStats_GetSpellState p_CDerivedStats_GetSpellState;
+type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
+type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
+type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
+type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
 type_CAIObjectType_Set p_CAIObjectType_Set;
 type_CAIObjectType_OfType p_CAIObjectType_OfType;
 CAIObjectType* CAIObjectType::p_NOONE;
@@ -79,11 +84,6 @@ type_CGameSprite_GetActiveStats p_CGameSprite_GetActiveStats;
 type_CGameSprite_FeedBack p_CGameSprite_FeedBack;
 type_CGameSprite_PlaySound p_CGameSprite_PlaySound;
 type_CGameSprite_UpdateTarget p_CGameSprite_UpdateTarget;
-type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
-type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
-type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
-type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
-type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CVariableHash::FindKey"), reinterpret_cast<void**>(&p_CVariableHash_FindKey)},
@@ -138,12 +138,17 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CSearchBitmap::GetCost"), reinterpret_cast<void**>(&p_CSearchBitmap_GetCost)},
 	std::pair{TEXT("CVidMode::SCREENWIDTH"), reinterpret_cast<void**>(&CVidMode::p_SCREENWIDTH)},
 	std::pair{TEXT("CVidMode::SCREENHEIGHT"), reinterpret_cast<void**>(&CVidMode::p_SCREENHEIGHT)},
+	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&p_CChitin_OnResizeWindow)},
 	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&p_CInfButtonArray_SetState)},
 	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&p_CInfButtonArray_SetQuickSlot)},
 	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&p_CInfGame_SetState)},
 	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&p_CInfGame_SetIconIndex)},
 	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&p_CGameEffect_DecodeEffect)},
 	std::pair{TEXT("CDerivedStats::GetSpellState"), reinterpret_cast<void**>(&p_CDerivedStats_GetSpellState)},
+	std::pair{TEXT("CGameArea::GetNearest2"), reinterpret_cast<void**>(&p_CGameArea_GetNearest2)},
+	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&p_CGameArea_AdjustTarget)},
+	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&p_CGameArea_CheckWalkable)},
+	std::pair{TEXT("CGameArea::CheckLOS"), reinterpret_cast<void**>(&p_CGameArea_CheckLOS)},
 	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&p_CAIObjectType_Set)},
 	std::pair{TEXT("CAIObjectType::OfType"), reinterpret_cast<void**>(&p_CAIObjectType_OfType)},
 	std::pair{TEXT("CAIObjectType::NOONE"), reinterpret_cast<void**>(&CAIObjectType::p_NOONE)},
@@ -164,9 +169,4 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameSprite::FeedBack"), reinterpret_cast<void**>(&p_CGameSprite_FeedBack)},
 	std::pair{TEXT("CGameSprite::PlaySound"), reinterpret_cast<void**>(&p_CGameSprite_PlaySound)},
 	std::pair{TEXT("CGameSprite::UpdateTarget"), reinterpret_cast<void**>(&p_CGameSprite_UpdateTarget)},
-	std::pair{TEXT("CGameArea::GetNearest2"), reinterpret_cast<void**>(&p_CGameArea_GetNearest2)},
-	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&p_CGameArea_AdjustTarget)},
-	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&p_CGameArea_CheckWalkable)},
-	std::pair{TEXT("CGameArea::CheckLOS"), reinterpret_cast<void**>(&p_CGameArea_CheckLOS)},
-	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&p_CChitin_OnResizeWindow)},
 };

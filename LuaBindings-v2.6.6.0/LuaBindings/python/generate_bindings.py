@@ -83,13 +83,14 @@ class UniqueList(Generic[T]):
 	def defaultEq(a: T, b: T) -> bool:
 		return a is b
 
-	__slots__ = ("head", "tail", "pHash", "pEq", "map", "tempKey")
+	__slots__ = ("head", "tail", "size", "pHash", "pEq", "map", "tempKey")
 	def __init__(self, pHash: Callable[[T], int]=None, pEq: Callable[[T, T], bool]=None) -> None:
 		super().__init__()
 		self.head: UniqueListNode[T] = UniqueListNode(None, None, None)
 		self.tail: UniqueListNode[T] = UniqueListNode(None, None, None)
 		self.head.next = self.tail
 		self.tail.previous = self.head
+		self.size = 0
 		self.pHash: Callable[[T], int] = pHash or UniqueList.defaultHash
 		self.pEq: Callable[[T, T], bool] = pEq or UniqueList.defaultEq
 		self.map: dict[UniqueWrapper, UniqueListNode] = {}
@@ -105,21 +106,29 @@ class UniqueList(Generic[T]):
 		valueWrapper: UniqueWrapper[T] = UniqueWrapper(self, value)
 		if not valueWrapper in self.map:
 			self.map[valueWrapper] = self.append(value)
+			self.size += 1
 
 	def containsUnique(self, value: T) -> bool:
 		self.tempKey.value = value
 		return self.tempKey in self.map
+
+	def getUnique(self, value: T) -> T:
+		self.tempKey.value = value
+		node: UniqueListNode[T] = self.map.get(self.tempKey)
+		return node.value if node else None
 
 	def removeUnique(self, value: T) -> None:
 		self.tempKey.value = value
 		if node := self.map.get(self.tempKey):
 			del self.map[self.tempKey]
 			self.remove(node)
+			self.size -= 1
 
 	def append(self, value: T) -> UniqueListNode[T]:
 		node: UniqueListNode[T] = UniqueListNode(self.tail.previous, self.tail, value)
 		self.tail.previous.next = node
 		self.tail.previous = node
+		self.size += 1
 		return node
 
 	def insertNodeBefore(self, node: UniqueListNode[T], insertingNode: UniqueListNode[T]) -> None:
@@ -128,6 +137,7 @@ class UniqueList(Generic[T]):
 		insertingNode.next = node
 		node.previous.next = insertingNode
 		node.previous = insertingNode
+		self.size += 1
 
 	def insertNodeAfter(self, node: UniqueListNode[T], insertingNode: UniqueListNode[T]) -> None:
 		assert node != self.tail
@@ -135,12 +145,15 @@ class UniqueList(Generic[T]):
 		insertingNode.next = node.next
 		node.next.previous = insertingNode
 		node.next = insertingNode
+		self.size += 1
 
 	def insertBefore(self, node: UniqueListNode[T], value: T) -> None:
 		self.insertNodeBefore(node, UniqueListNode(None, None, value))
+		self.size += 1
 
 	def insertAfter(self, node: UniqueListNode[T], value: T) -> None:
 		self.insertNodeAfter(node, UniqueListNode(None, None, value))
+		self.size += 1
 
 	def moveNodeBefore(self, movingNode: UniqueListNode[T], node: UniqueListNode[T]) -> None:
 		self.remove(movingNode)
@@ -154,6 +167,7 @@ class UniqueList(Generic[T]):
 		assert node != self.head and node != self.tail
 		node.previous.next = node.next
 		node.next.previous = node.previous
+		self.size -= 1
 
 	def insertionSort(self, comparator: Callable[[T, T], int]):
 
@@ -172,6 +186,9 @@ class UniqueList(Generic[T]):
 
 			curMovingNode = curMovingNode.next
 			self.moveNodeAfter(curMovingNode.previous, curCompareNode)
+
+	def getSize(self):
+		return self.size
 
 
 
@@ -659,15 +676,15 @@ class TypeReference:
 		self.setUserTypePointerLevel(mainState, self.getUserTypePointerLevel() + adjustAmount)
 
 
-	def checkReplaceTemplateType(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker) -> TypeReference:
+	def replaceTemplateType(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker) -> TypeReference:
 
-		toReturn = self
-		toReturnName = toReturn.getName()
+		toReturn: TypeReference = None
+		selfName: str = self.getName()
 
-		if sourceGroup and (v := sourceGroup.templateTypeNameMapping.get(toReturnName)) != None:
+		if sourceGroup and (v := sourceGroup.templateTypeNameMapping.get(selfName)) != None:
 
-			index = v.templateTypeNames.index(toReturnName)
-			toReturn: TypeReference = templateMappingTracker.getMapping(v.name)[index]
+			index: int = v.templateTypeNames.index(selfName)
+			mapped: TypeReference = templateMappingTracker.getMapping(v.name)[index]
 
 			# HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
 			# HACK PointerReferences store their internal TypeReference as their template     HACK
@@ -677,15 +694,20 @@ class TypeReference:
 			# HACK a PointerReference.                                                        HACK
 			# HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
 			if sourceGroup.name == "Pointer":
-				toReturn = defineTypeRef(mainState, sourceGroup, toReturn.getHeaderName(pointerLevelAdjust=self.getUserTypePointerLevel()), TypeRefSourceType.VARIABLE, debugLine="checkReplaceTemplateType()")
+				toReturn = defineTypeRef(mainState, sourceGroup, mapped.getHeaderName(pointerLevelAdjust=self.getUserTypePointerLevel()), TypeRefSourceType.VARIABLE, debugLine="checkReplaceTemplateType()")
 			else:
-				toReturn = toReturn.shallowCopy()
+				toReturn = mapped.shallowCopy()
 				toReturn.adjustUserTypePointerLevel(mainState, self.getUserTypePointerLevel())
 
 			toReturn.primitive = toReturn.primitive or self.primitive
 			toReturn.noconst = toReturn.noconst or self.noconst
 
 		return toReturn
+
+
+	def checkReplaceTemplateType(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker) -> TypeReference:
+		toReturn: TypeReference = self.replaceTemplateType(mainState, sourceGroup, templateMappingTracker)
+		return toReturn if toReturn else self
 
 
 	def _getAppliedNameInternal(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker,
@@ -772,8 +794,8 @@ class TypeReference:
 		return "".join(parts)
 
 
-	def getHeaderName(self, pointerLevelAdjust=0, typeManipulator: Callable[[str], str]=None):
-		return self.toString(pointerLevelAdjust=pointerLevelAdjust, templatesUseHeaderName=True, iKnowWhatIAmDoing=True, typeManipulator=typeManipulator)
+	def getHeaderName(self, pointerLevelAdjust=0, useUsertypeOverride: bool=False, typeManipulator: Callable[[str], str]=None):
+		return self.toString(pointerLevelAdjust=pointerLevelAdjust, useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=True, iKnowWhatIAmDoing=True, typeManipulator=typeManipulator)
 
 
 	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False,
@@ -844,10 +866,12 @@ class TypeReference:
 
 		if not noPointers:
 
-			for _ in range(self.getUserTypePointerLevel() + (pointerLevelAdjust if not self.reference else pointerLevelAdjust - 1)):
+			adjustedPointerLevel: int = self.getUserTypePointerLevel() + pointerLevelAdjust
+
+			for _ in range(adjustedPointerLevel if not self.reference else adjustedPointerLevel - 1):
 				parts.append("*")
 
-			if self.reference:
+			if self.reference and adjustedPointerLevel > 0:
 				parts.append("&")
 
 		return "".join(parts)
@@ -874,7 +898,6 @@ class PointerReference(TypeReference):
 		obj.copyTrivialFields(originalRef)
 
 		obj.originalRef = originalRef
-		obj.changeReferencedGroup(mainState.getGroup("Pointer"))
 		obj.setUserTypePointerLevel(mainState, originalRef.getUserTypePointerLevel())
 
 		if originalRef.group:
@@ -915,25 +938,34 @@ class PointerReference(TypeReference):
 
 
 	def setUserTypePointerLevel(self, mainState: MainState, newVal: int) -> None:
+
 		super().setUserTypePointerLevel(mainState, newVal)
+
 		if newVal == 0:
+
 			self.originalRef.setUserTypePointerLevel(mainState, 0)
 			if len(self.templateTypes) > 0:
 				self.templateTypes.pop()
-			if originalGroup := self.originalRef.group:
-				self.changeReferencedGroup(originalGroup)
+
+			self.changeReferencedGroup(self.originalRef.group)
+
 		else:
+
 			self.originalRef.setUserTypePointerLevel(mainState, newVal - 1)
 			if len(self.templateTypes) == 0:
 				self.templateTypes.append(self.originalRef)
-			self.changeReferencedGroup(mainState.getGroup("Pointer"))
+
+			if self.originalRef.isVoid():
+				self.changeReferencedGroup(mainState.getGroup("VoidPointer"))
+			else:
+				self.changeReferencedGroup(mainState.getGroup("Pointer"))
 
 
-	def getHeaderName(self, pointerLevelAdjust=0, typeManipulator: Callable[[str], str]=None):
+	def getHeaderName(self, pointerLevelAdjust=0, useUsertypeOverride: bool=False, typeManipulator: Callable[[str], str]=None):
 		if self.getUserTypePointerLevel() == 0:
-			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust, typeManipulator=typeManipulator)}"
+			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator)}"
 		else:
-			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust + 1, typeManipulator=typeManipulator)}"
+			return f"{self.originalRef.getHeaderName(pointerLevelAdjust=pointerLevelAdjust + 1, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator)}"
 
 
 	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False,
@@ -960,12 +992,12 @@ class PointerReference(TypeReference):
 				innerStr = innerType.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
 					typeManipulator=typeManipulator)
 			else:
-				innerStr = f"{manipulate(typeManipulator, 'Pointer')}<{innerType.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator)}>"
+				innerStr = f"{manipulate(typeManipulator, self.group.name)}<{innerType.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator)}>"
 			return innerStr
 
 
 	def getTemplates(self, mainState: MainState, askingGroup: Group=None):
-		if askingGroup.name == "Pointer":
+		if askingGroup.name in ("Pointer", "VoidPointer"):
 			return self.templateTypes
 		elif self.getUserTypePointerLevel() == 0:
 			return self.originalRef.getTemplates(mainState)
@@ -1054,7 +1086,7 @@ class CharReference(TypeReference):
 				self.changeReferencedGroup(mainState.getGroup("char"))
 
 
-	def getHeaderName(self, pointerLevelAdjust=0, typeManipulator: Callable[[str], str]=None):
+	def getHeaderName(self, pointerLevelAdjust=0, useUsertypeOverride: bool=False, typeManipulator: Callable[[str], str]=None):
 		if self.mode == CharReferenceMode.MORPHING:
 			return f"{self.getModifierStr()}{manipulate(typeManipulator, 'char')}{'*'*(self.charPointerLevel + pointerLevelAdjust)}"
 		else:
@@ -1078,67 +1110,7 @@ class CharReference(TypeReference):
 		elif self.mode == CharReferenceMode.USER_TYPE_ONLY and charLevel == 2:
 			return self.group.name
 		else:
-			return f"{manipulate(typeManipulator, 'Pointer')}<{manipulate(typeManipulator, 'char')}>{'*'*(charLevel - 1)}"
-
-
-
-class VoidPointerReference(TypeReference):
-
-	@staticmethod
-	def create(mainState: MainState, originalRef: TypeReference):
-
-		obj = VoidPointerReference()
-		obj.copyTrivialFields(originalRef)
-
-		obj.setUserTypePointerLevel(mainState, originalRef.getUserTypePointerLevel())
-		return obj
-
-
-	def shallowCopy(self, copyObj=None):
-		copyObj = copyObj or VoidPointerReference()
-		super().shallowCopy(copyObj)
-		return copyObj
-
-
-	def setUserTypePointerLevel(self, mainState: MainState, newVal: int) -> None:
-		super().setUserTypePointerLevel(mainState, newVal)
-		if newVal > 1:
-			self.changeReferencedGroup(mainState.getGroup("void"))
-		elif newVal == 1:
-			self.changeReferencedGroup(mainState.getGroup("VoidPointer"))
-
-
-	def getHeaderName(self, pointerLevelAdjust=0, typeManipulator: Callable[[str], str]=None):
-		return f"{manipulate(typeManipulator, 'void')}{'*'*(self.getUserTypePointerLevel() + pointerLevelAdjust)}"
-
-
-	def getAppliedHeaderName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, pointerLevelAdjust=0, useUsertypeOverride=False,
-		typeManipulator: Callable[[str], str]=None):
-
-		return self.getHeaderName(pointerLevelAdjust=pointerLevelAdjust, typeManipulator=typeManipulator)
-
-
-	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False,
-		typeManipulator: Callable[[str], str]=None):
-
-		if (pointerLevel := self.getUserTypePointerLevel()) == 1:
-			return manipulate(typeManipulator, "VoidPointer")
-		else:
-			return f"{manipulate(typeManipulator, 'Pointer')}<{manipulate(typeManipulator, 'void')}{'*'*(pointerLevel - 1)}>"
-
-
-	def toString(self, pointerLevelAdjust=0, useUsertypeOverride=False, templatesUseHeaderName=False, iKnowWhatIAmDoing=False,
-		typeManipulator: Callable[[str], str]=None) -> str:
-
-		return self.getHeaderName(pointerLevelAdjust, typeManipulator=typeManipulator)
-
-
-def templateUseHasGeneric(currentTemplate: tuple[TypeReference]):
-	if currentTemplate != None:
-		for templateRef in currentTemplate:
-			if templateRef.isGenericTemplate():
-				return True
-	return False
+			return f"{manipulate(typeManipulator, 'Pointer')}<{manipulate(typeManipulator, 'char')}{'*'*(charLevel - 1)}>"
 
 
 class FunctionImplementationParameter:
@@ -1421,19 +1393,27 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 
 
-class UniqueTemplateUsesByHeaderName(UniqueList[tuple[TypeReference]]):
+class TemplateUse:
 
-	def pHash(use: tuple[TypeReference]):
+	__slots__ = ("tup", "maxPointerLevel")
+	def __init__(self, templateUse: tuple[TypeReference], maxPointerLevel: int) -> None:
+		self.tup: tuple[TypeReference] = templateUse
+		self.maxPointerLevel = maxPointerLevel
+
+
+class UniqueTemplateUsesByHeaderName(UniqueList[TemplateUse]):
+
+	def pHash(templateUse: TemplateUse):
 		toReturn = 0
-		for ref in use:
+		for ref in templateUse.tup:
 			toReturn += 3 * hash(ref.getHeaderName())
 		return toReturn
 
-	def pEq(a: tuple[TypeReference], b: tuple[TypeReference]):
-		if len(a) != len(b):
+	def pEq(a: TemplateUse, b: TemplateUse):
+		if len(a.tup) != len(b.tup):
 			return False
-		for i in range(len(a)):
-			if a[i].getHeaderName() != b[i].getHeaderName():
+		for i in range(len(a.tup)):
+			if a.tup[i].getHeaderName() != b.tup[i].getHeaderName():
 				return False
 		return True
 
@@ -1716,8 +1696,14 @@ class Group:
 		process(self)
 
 
-	def addTemplateUse(self, useEntry: tuple[TypeReference]):
-		self.templateUses.addUnique(useEntry)
+	def addTemplateUse(self, useTup: tuple[TypeReference], pointerLevel: int):
+
+		templateUse = TemplateUse(useTup, pointerLevel)
+		if existing := self.templateUses.getUnique(templateUse):
+			if pointerLevel > existing.maxPointerLevel:
+				existing.maxPointerLevel = pointerLevel
+		else:
+			self.templateUses.addUnique(templateUse)
 
 
 	def scanInwardTypeRefs(self, mainState: MainState):
@@ -1734,41 +1720,59 @@ class Group:
 
 		for typeRef in self.inwardTypeRefs:
 
-			# The Group that generated this TypeReference must be in view
-			if not typeRef.getGroup() or not typeRef.sourceGroup or not typeRef.sourceGroup.isUsed(mainState) or typeRef.isUnparameterized():
+			# The Group that generated this TypeReference must be in-view
+			if not typeRef.sourceGroup or not typeRef.sourceGroup.isUsed(mainState):
 				continue
 
 			templates = typeRef.getTemplates(mainState, askingGroup=self)
 
 			if len(templates) > 0:
 
-				# All Groups used as templateTypes must be in view and parameterized
+				# Groups used as templates must be non-generic and parameterized
 				needContinue = False
 				for templateRef in templates:
-					if not templateRef.isGroupUsed(mainState) or templateRef.isUnparameterized():
+					if templateRef.isGenericTemplate() or templateRef.isUnparameterized():
 						needContinue = True
 						break
 
 				if needContinue:
 					continue
 
-				self.addTemplateUse(tuple(templates))
+				self.addTemplateUse(tuple(templates), typeRef.getUserTypePointerLevel())
 
 			self.uniqueUseRepresentations[typeRef.getHeaderName()] = typeRef
 
 
-	def getAllTypeReferences(self, mainState: MainState):
+	def resolveTemplateUseRepresentations(self, mainState: MainState, templateMappingTracker: TemplateMappingTracker):
+
+		for templateUse in self.templateUses:
+
+			templateMappingTracker.registerMapping(self.name, templateUse.tup)
+
+			for typeRef in self.getAllTypeReferences(mainState, noGroups=True):
+				if (replacedType := typeRef.replaceTemplateType(mainState, self, templateMappingTracker)) and (group := replacedType.getGroup()):
+					group.uniqueUseRepresentations[replacedType.getAppliedHeaderName(mainState, self, templateMappingTracker)] = replacedType
+
+			for subGroup in self.subGroups:
+				subGroup.resolveTemplateUseRepresentations(mainState, templateMappingTracker)
+
+			templateMappingTracker.deregisterMapping(self.name)
+
+
+	def getAllTypeReferences(self, mainState: MainState, noGroups: bool=False):
 
 		parts: list[TypeReference] = []
 
-		myself = TypeReference()
-		myself.name = self.name
-		myself.group = self
-		parts.append(myself)
+		if not noGroups:
+			myself = TypeReference()
+			myself.name = self.name
+			myself.group = self
+			parts.append(myself)
 
-		for subgroup in self.subGroups:
-			for ref in subgroup.getAllTypeReferences(mainState):
-				parts.append(ref)
+		if not noGroups:
+			for subgroup in self.subGroups:
+				for ref in subgroup.getAllTypeReferences(mainState, noGroups=noGroups):
+					parts.append(ref)
 
 		for extendRef in self.extends:
 			for ref in extendRef.getAllTypeReferences(mainState):
@@ -2353,7 +2357,7 @@ class FunctionField(Field):
 		self.functionName = newName
 
 
-	def toString(self, mainState: MainState, typeManipulator: Callable[[str], str], indent="") -> str:
+	def toString(self, mainState: MainState, typeManipulator: Callable[[str], str]=None, indent="") -> str:
 
 		parts = [indent, self.returnType.getHeaderName(typeManipulator=typeManipulator), " ("]
 
@@ -2581,7 +2585,9 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 		elif split in ("*", "&"):
 
-			if split == "&":
+			# HACK: Array's operator[] needs to return a reference
+			# even though I usually convert them to pointers
+			if split == "&" and sourceGroup.name in ("Array", "ArrayPointer"):
 				assert not typeRef.reference, "Cannot handle rvalue reference"
 				typeRef.reference = True
 
@@ -2608,12 +2614,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 	# Transform char into CharReference
 	elif groupName == "char":
 		mode = CharReferenceMode.PRIMITIVE_ONLY if primitive else CharReferenceMode.MORPHING
-		charRef = CharReference.create(mainState, typeRef, mode)
-		return charRef
-
-	# Transform void pointers into VoidPointerReference
-	elif groupName == "void" and typeRef.pointerLevel > 0:
-		return VoidPointerReference.create(mainState, typeRef)
+		return CharReference.create(mainState, typeRef, mode)
 
 	# Transform pointers into PointerReference
 	else:
@@ -2704,7 +2705,7 @@ def tryResolveDependencyOrder(groups: UniqueList[Group]):
 
 
 
-def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper, baseclassHeaderOut: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
+def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWrapper, baseclassHeaderOut: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
 
 	baseclassHeaderOut.write("\n#pragma once\n\n")
 	baseclassHeaderOut.write("#include <unordered_map>\n\n")
@@ -2759,14 +2760,14 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 	openDataGroups: list[OpenGroupData] = []
 
 
-	def writeGroupWithTemplateUse(group: Group, templateMappingTracker: TemplateMappingTracker, currentTemplate: tuple[TypeReference]=None):
+	def writeGroupWithTemplateUse(group: Group, templateMappingTracker: TemplateMappingTracker, currentTemplate: TemplateUse=None):
 
 		groupOpenData = OpenGroupData()
 		groupOpenData.group = group
 		openDataGroups.append(groupOpenData)
 
 		if currentTemplate != None:
-			templateMappingTracker.registerMapping(group.name, currentTemplate)
+			templateMappingTracker.registerMapping(group.name, currentTemplate.tup)
 
 		groupOpenData.appliedNameUsertypeNoOverride = group.getAppliedName(mainState, templateMappingTracker, templateTypeMode=TemplateTypeMode.HEADER)
 		groupOpenData.appliedNameUsertype = group.getAppliedName(mainState, templateMappingTracker, useUsertypeOverride=True, templateTypeMode=TemplateTypeMode.HEADER)
@@ -2775,20 +2776,39 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 		groupNameStrIden, _ = re.subn("[^a-zA-Z0-9_]", "_", groupOpenData.appliedNameUsertypeNoOverride)
 
 		# Writing getInternalReference() function which returns the userdata's internal pointer
-		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Pointer", "Array"):
+		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Array", "CharString", "ConstCharString"):
 
-			getTypeFunc = OpenFunctionData()
-			getTypeFunc.functionBindingName = f"tolua_function_{groupNameStrIden}_getInternalReference"
-			getTypeFunc.functionName = "getInternalReference"
+			skip: bool = False
 
-			out.write(f"static int {getTypeFunc.functionBindingName}(lua_State* L)\n")
-			out.write("{\n")
-			out.write(f"\tvoid** ptr = (void**)lua_touserdata(L, 1);\n")
-			out.write(f"\ttolua_pushusertype(L, ptr, \"Pointer<{groupOpenData.appliedHeaderName}>\");\n")
-			out.write("\treturn 1;\n")
-			out.write("}\n\n")
+			if group.name == "Pointer":
+				innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
+				if innerRef.getUserTypePointerLevel() >= currentTemplate.maxPointerLevel:
+					skip = True
 
-			groupOpenData.functionBindings.append(getTypeFunc)
+			if not skip:
+
+				getTypeFunc = OpenFunctionData()
+				getTypeFunc.functionBindingName = f"tolua_function_{groupNameStrIden}_getInternalReference"
+				getTypeFunc.functionName = "getInternalReference"
+
+				out.write(f"static int {getTypeFunc.functionBindingName}(lua_State* L)\n")
+				out.write("{\n")
+				out.write(f"\tvoid** ptr = (void**)lua_touserdata(L, 1);\n")
+
+				pointerName = f"Pointer<{groupOpenData.appliedHeaderName}>"
+				if group.name == "void":
+					pointerName = "VoidPointer"
+				elif group.name == "Pointer":
+					innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
+					pointerName = f"Pointer<{innerRef.getHeaderName(pointerLevelAdjust=1)}>"
+				elif group.name == "VoidPointer":
+					pointerName = "Pointer<void*>"
+
+				out.write(f"\ttolua_pushusertype(L, ptr, \"{pointerName}\");\n")
+				out.write("\treturn 1;\n")
+				out.write("}\n\n")
+
+				groupOpenData.functionBindings.append(getTypeFunc)
 
 		# Writing sizeof variable which returns the value of the sizeof operator when run on the usertype
 		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name != "void":
@@ -3062,7 +3082,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 				paramType = param.type.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 
 				# Can't have conflicting const requirements (the noconst directive prevents the function binding from generating for const types)
-				if paramType.const and paramType.noconst:
+				if paramType.isVoid() or (paramType.const and paramType.noconst):
 					return
 
 
@@ -3152,17 +3172,24 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 				paramType = parameter.type.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 				if not checkPrimitiveHandling(paramType, i):
 
-					dereferenceStr = ""
-					if paramType.getUserTypePointerLevel() == 0:
-						paramType = paramType.shallowCopy()
-						paramType.adjustUserTypePointerLevel(mainState, 1)
-						dereferenceStr = "*"
+					if paramType.getName() == "VoidPointer" and paramType.getUserTypePointerLevel() == 0:
 
-					appliedParamName = paramType.getAppliedHeaderName(mainState, group, templateMappingTracker)
-					appliedParamUsertype = paramType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
+						callArgParts.append(f"p_tolua_tousertype(L, {i}, 0)")
+						callArgParts.append(", ")
 
-					callArgParts.append(f"{dereferenceStr}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")")
-					callArgParts.append(", ")
+					else:
+
+						dereferenceStr = ""
+						if paramType.getUserTypePointerLevel() == 0:
+							paramType = paramType.shallowCopy()
+							paramType.adjustUserTypePointerLevel(mainState, 1)
+							dereferenceStr = "*"
+
+						appliedParamName = paramType.getAppliedHeaderName(mainState, group, templateMappingTracker)
+						appliedParamUsertype = paramType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
+
+						callArgParts.append(f"{dereferenceStr}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")")
+						callArgParts.append(", ")
 
 			if functionImplementation.customReturnCount or functionImplementation.passLuaState or len(functionImplementation.parameters) > 0:
 				callArgParts.pop()
@@ -3270,9 +3297,6 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 		if group.template != None:
 			for templateUse in group.templateUses:
-				if templateUseHasGeneric(templateUse):
-					# Don't treat a use of a generic template as an actual use
-					continue
 				writeGroupWithTemplateUse(group, templateMappingTracker, templateUse)
 		else:
 			writeGroupWithTemplateUse(group, templateMappingTracker)
@@ -3338,7 +3362,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 			for extendRef in openData.group.extends:
 
-				extendRefUT = extendRef.toString(useUsertypeOverride=True, iKnowWhatIAmDoing=True)
+				extendRefUT = extendRef.getHeaderName(useUsertypeOverride=True)
 
 				parts.append(f"\"{extendRefUT}\"")
 				parts.append(",")
@@ -3348,7 +3372,7 @@ def writeBindings(mainState: MainState, groups: list[Group], out: TextIOWrapper,
 
 				if hasNonPrimitiveBase:
 					baseclassOut.write(f"\t\t{{\"{extendRefUT}\", ")
-					baseclassOut.write(f"offsetofbase<{openData.appliedHeaderName}, {extendRef.toString(iKnowWhatIAmDoing=True)}>()")
+					baseclassOut.write(f"offsetofbase<{openData.appliedHeaderName}, {extendRef.getHeaderName()}>()")
 					baseclassOut.write("},\n")
 
 			parts.pop()
@@ -3449,36 +3473,22 @@ def registerPointerTypes(mainState: MainState):
 	array = mainState.getGroup("Array")
 	pointer = mainState.getGroup("Pointer")
 
-	def registerPointerType(group: Group, tracker: TemplateMappingTracker):
+
+	def registerPointerTypesForGroup(group: Group):
 		for uniqueRepresentation in group.uniqueUseRepresentations.values():
+			if uniqueRepresentation.isVoid() or uniqueRepresentation.isUnparameterized(): continue
 			specialRef = uniqueRepresentation.shallowCopy()
-			specialRef.adjustUserTypePointerLevel(mainState, 1)
-			pointer.addTemplateUse( (specialRef,) )
+			pointer.addTemplateUse( (specialRef,), 0 )
 
-	def registerPointerTypesForGroup(group: Group, tracker: TemplateMappingTracker):
 
-		if not group.isUsed(mainState):
-			#print(f"Excluding {group.name}: Not used")
-			return
-
-		if group.template:
-			for templateUse in group.templateUses:
-
-				tracker.registerMapping(group.name, templateUse)
-				registerPointerType(group, tracker)
-				for subGroup in group.subGroups:
-					registerPointerTypesForGroup(subGroup, tracker)
-
-				tracker.deregisterMapping(group.name)
-		else:
-			registerPointerType(group, tracker)
-			for subGroup in group.subGroups:
-				registerPointerTypesForGroup(subGroup, tracker)
+	registerPointerTypesForGroup(pointer)
 
 	for group in mainState.filteredGroups:
-		if group.isSubgroup() or group in (mainState.globalGroup, array, pointer):
+
+		if group in (mainState.globalGroup, array, pointer):
 			continue
-		registerPointerTypesForGroup(group, TemplateMappingTracker())
+
+		registerPointerTypesForGroup(group)
 
 
 def fileAsSet(filePath):
@@ -3506,6 +3516,7 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 	wantedNames = fileAsSet(wantedFile)
 	wantedNames.add("EngineGlobals")
 	wantedNames.add("Pointer") # WORKAROUND
+	wantedNames.add("VoidPointer") # WORKAROUND
 	wantedNames.add("UnmappedUserType")
 
 	if mainState.noCustomTypes:
@@ -3544,6 +3555,10 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 			if subGroup.name in wantedNames: continue
 			pendingProcessed.append(subGroup.name)
 			wantedNames.add(subGroup.name)
+
+	for groupNode in mainState.filteredGroups.nodes():
+		if not groupNode.value.isUsed(mainState):
+			mainState.filteredGroups.remove(groupNode)
 
 	if ignoreHeaderFile:
 		with open(ignoreHeaderFile) as fileIn:
@@ -3626,7 +3641,7 @@ def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
 	# Attempt to derive needed forward declarations
 	for group in mainState.filteredGroups:
 
-		if group.isSubgroup() or group.ignoreHeader or not group.isUsed(mainState): continue
+		if group.isSubgroup() or group.ignoreHeader: continue
 
 		for lightDependency in group.lightDependsOn:
 
@@ -3670,8 +3685,7 @@ def outputHeader(mainState: MainState, outputFileName: str, out: TextIOWrapper):
 
 		# Output groups
 		for group in mainState.filteredGroups:
-			if group.isSubgroup() or group.ignoreHeader: continue
-			if not group.isUsed(mainState) or group.groupType == "undefined": continue
+			if group.isSubgroup() or group.ignoreHeader or group.groupType == "undefined": continue
 			out.write(newline)
 			groupStr = group.writeHeader(mainState, internalPointersOut, internalPointersList, HeaderType.NORMAL)
 			if groupStr != "":
@@ -3902,6 +3916,9 @@ struct ConstCharString
 		# Fill templateUses and uniqueUseRepresentations
 		for group in mainState.filteredGroups:
 			group.scanInwardTypeRefs(mainState)
+
+		for group in mainState.filteredGroups:
+			group.resolveTemplateUseRepresentations(mainState, TemplateMappingTracker())
 
 		# Try to fix dependency order (SLOW)
 		tryResolveDependencyOrder(mainState.filteredGroups)

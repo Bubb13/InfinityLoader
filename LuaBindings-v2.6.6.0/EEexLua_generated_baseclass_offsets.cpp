@@ -103,6 +103,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CResBitmap::vtbl", {
 		{"CRes::vtbl", offsetofbase<CResBitmap::vtbl, CRes::vtbl>()},
 	}},
+	{"CArray<CRect,CRect*>", {
+		{"CObject", offsetofbase<CArray<CRect,CRect*>, CObject>()},
+	}},
 	{"CDWordArray", {
 		{"CObject", offsetofbase<CDWordArray, CObject>()},
 	}},
@@ -123,6 +126,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CList<long,long>", {
 		{"CObject", offsetofbase<CList<long,long>, CObject>()},
+	}},
+	{"CList<unsigned long,unsigned long*>", {
+		{"CObject", offsetofbase<CList<unsigned long,unsigned long*>, CObject>()},
 	}},
 	{"CMapStringToString", {
 		{"CObject", offsetofbase<CMapStringToString, CObject>()},
@@ -696,6 +702,12 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CBaldurProjector::vtbl", {
 		{"EEex_CBaldurEngine::vtbl", offsetofbase<CBaldurProjector::vtbl, CBaldurEngine::vtbl>()},
 	}},
+	{"EEex_CBaldurChitin", {
+		{"EEex_CChitin", offsetofbase<CBaldurChitin, CChitin>()},
+	}},
+	{"CBaldurChitin::vtbl", {
+		{"EEex_CChitin::vtbl", offsetofbase<CBaldurChitin::vtbl, CChitin::vtbl>()},
+	}},
 	{"EEex_CScreenStore", {
 		{"EEex_CBaldurEngine", offsetofbase<CScreenStore, CBaldurEngine>()},
 	}},
@@ -791,11 +803,5 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CGameAIArea::vtbl", {
 		{"CGameAIBase::vtbl", offsetofbase<CGameAIArea::vtbl, CGameAIBase::vtbl>()},
-	}},
-	{"EEex_CBaldurChitin", {
-		{"EEex_CChitin", offsetofbase<CBaldurChitin, CChitin>()},
-	}},
-	{"CBaldurChitin::vtbl", {
-		{"EEex_CChitin::vtbl", offsetofbase<CBaldurChitin::vtbl, CChitin::vtbl>()},
 	}},
 };

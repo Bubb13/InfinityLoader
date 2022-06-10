@@ -13,7 +13,7 @@ python generate_bindings.py^
  -packingFile=./in/packing.txt^
  -bindingsOutFile=./out/EEexLua_generated.cpp^
  -outFile=./out/Baldur-v2.6.6.0_generated.h^
- > log.txt
+ > log.txt 2>&1
  
 copy /Y .\out\Baldur-v2.6.6.0_generated.h ..\..\include\LuaBindings\
 copy /Y .\out\EEexLua_generated_baseclass_offsets.h ..\..\include\LuaBindings\

@@ -1039,6 +1039,28 @@ int readU8Lua(lua_State* L) {
 	return 1;
 }
 
+int readLString(lua_State* L) {
+	const char *const data { reinterpret_cast<char*>(p_lua_tointeger(L, 1)) };
+	const lua_Integer length { p_lua_tointeger(L, 2) };
+	char *const localCopy { reinterpret_cast<char*>(alloca(length + 1)) };
+	lua_Integer i { 0 };
+	for (; i < length; ++i) {
+		const char readVal { data[i] };
+		if (readVal == '\0') {
+			break;
+		}
+		localCopy[i] = readVal;
+	}
+	localCopy[i] = '\0';
+	p_lua_pushstring(L, localCopy);
+	return 1;
+}
+
+int readString(lua_State* L) {
+	p_lua_pushstring(L, reinterpret_cast<const char*>(p_lua_tointeger(L, 1)));
+	return 1;
+}
+
 int rshiftLua(lua_State* L) {
 	p_lua_pushinteger(L, static_cast<uintptr_t>(p_lua_tointeger(L, 1)) >> static_cast<uintptr_t>(p_lua_tointeger(L, 2)));
 	return 1;
@@ -1227,6 +1249,8 @@ void internalLuaHook() {
 	exposeToLua(L, "EEex_ReadU64", readU64Lua);
 #endif
 	exposeToLua(L, "EEex_ReadU8", readU8Lua);
+	exposeToLua(L, "EEex_ReadLString", readLString);
+	exposeToLua(L, "EEex_ReadString", readString);
 	exposeToLua(L, "EEex_RShift", rshiftLua);
 	exposeToLua(L, "EEex_RunWithStack", runWithStackLua);
 	exposeToLua(L, "EEex_SetLuaRegistryIndex", setLuaRegistryIndexLua);

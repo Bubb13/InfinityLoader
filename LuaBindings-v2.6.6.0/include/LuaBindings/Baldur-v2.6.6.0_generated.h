@@ -52,6 +52,7 @@ struct CAIScript;
 struct CAIScriptFile;
 struct CAITrigger;
 struct CAbilityData;
+struct CAreaFileCharacterEntryPoint;
 struct CAreaFileContainer;
 struct CAreaFileProjectileObject;
 struct CAreaPoint;
@@ -78,11 +79,11 @@ struct CImmunitySpell;
 struct CInfButtonArray;
 struct CInfGame;
 struct CInfTileSet;
-struct CInfinity;
 struct CItem;
 struct CMessage;
 struct CMoveListEntry;
 struct CObList;
+struct CObjectMarker;
 struct CPathNode;
 struct CPlex;
 struct CPoint;
@@ -92,6 +93,7 @@ struct CResPVR;
 struct CResRef;
 struct CResTileSet;
 struct CSavedGamePartyCreature;
+struct CScreenStore;
 struct CSearchBitmap;
 struct CSelectiveBonus;
 struct CSelectiveWeaponType;
@@ -106,7 +108,9 @@ struct CVariable;
 struct CVariableHash;
 struct CVidCellFont;
 struct CVidMode;
+struct DP_Player;
 struct IDPPeer;
+struct IDPProvider;
 struct Item_Header_st;
 struct Item_ability_st;
 struct Item_effect_st;
@@ -117,7 +121,6 @@ struct SDL_Window;
 struct Spell_Header_st;
 struct Spell_ability_st;
 struct SteamUGCDetails_t;
-struct VoidPointer;
 struct WED_LayerHeader_st;
 struct st_tiledef;
 struct uiItem;
@@ -169,6 +172,13 @@ struct SProjectileWrapper
 	unsigned __int8* pEffectList;
 
 	SProjectileWrapper() = delete;
+};
+
+struct VoidPointer
+{
+	void* reference;
+
+	VoidPointer() = delete;
 };
 
 struct __POSITION
@@ -2044,6 +2054,36 @@ struct DP_Event
 	DP_Event() = delete;
 };
 
+struct DPWrapper
+{
+	enum class PEER_STATE_t : __int32
+	{
+		PEER_INITIAL = 0,
+		PEER_DISCONNECTED = 1,
+		PEER_NEGOTIATING = 2,
+		PEER_CONNECTING = 3,
+		PEER_CONNECTED = 4,
+		PEER_INVALID_PASSWORD = 5,
+		PEER_JOIN_ROOM_FULL = 6,
+		PEER_JOIN_ERROR = 7,
+	};
+
+	std::vector<DP_Player*,std::allocator<DP_Player*>> m_players;
+	std::queue<DP_Packet*,std::deque<DP_Packet*,std::allocator<DP_Packet*>>> m_packetQueue;
+	int m_currentSessionId;
+	IDPProvider* m_provider;
+	IDPPeer* m_connection;
+	int m_peerState;
+	bool m_server;
+	int m_ReplyFlags;
+	int m_playerCreateID;
+	DP_ProviderID m_nProvider;
+	int m_nMyID;
+	DPWrapper::PEER_STATE_t PEER_STATE;
+
+	DPWrapper() = delete;
+};
+
 struct CWorldMapHeader
 {
 	unsigned int m_nMapCount;
@@ -2716,23 +2756,6 @@ struct CFileView
 	CFileView() = delete;
 };
 
-struct VoidPointer
-{
-	void* reference;
-
-	VoidPointer() = delete;
-
-	void pointTo(void* ptr)
-	{
-		reference = ptr;
-	}
-
-	intptr_t toPointer()
-	{
-		return (intptr_t)reference;
-	}
-};
-
 template<class POINTED_TO_TYPE>
 struct Pointer
 {
@@ -2858,9 +2881,9 @@ struct ISteamRemoteStorage
 {
 	struct vtbl
 	{
-		bool (__fastcall *FileWrite)(ISteamRemoteStorage*, const char*, void*, int);
+		bool (__fastcall *FileWrite)(ISteamRemoteStorage*, const char*, const void*, int);
 		int (__fastcall *FileRead)(ISteamRemoteStorage*, const char*, void*, int);
-		unsigned __int64 (__fastcall *FileWriteAsync)(ISteamRemoteStorage*, const char*, void*, unsigned int);
+		unsigned __int64 (__fastcall *FileWriteAsync)(ISteamRemoteStorage*, const char*, const void*, unsigned int);
 		unsigned __int64 (__fastcall *FileReadAsync)(ISteamRemoteStorage*, const char*, unsigned int, unsigned int);
 		bool (__fastcall *FileReadAsyncComplete)(ISteamRemoteStorage*, unsigned __int64, void*, unsigned int);
 		bool (__fastcall *FileForget)(ISteamRemoteStorage*, const char*);
@@ -2868,7 +2891,7 @@ struct ISteamRemoteStorage
 		unsigned __int64 (__fastcall *FileShare)(ISteamRemoteStorage*, const char*);
 		bool (__fastcall *SetSyncPlatforms)(ISteamRemoteStorage*, const char*, ERemoteStoragePlatform);
 		unsigned __int64 (__fastcall *FileWriteStreamOpen)(ISteamRemoteStorage*, const char*);
-		bool (__fastcall *FileWriteStreamWriteChunk)(ISteamRemoteStorage*, unsigned __int64, void*, int);
+		bool (__fastcall *FileWriteStreamWriteChunk)(ISteamRemoteStorage*, unsigned __int64, const void*, int);
 		bool (__fastcall *FileWriteStreamClose)(ISteamRemoteStorage*, unsigned __int64);
 		bool (__fastcall *FileWriteStreamCancel)(ISteamRemoteStorage*, unsigned __int64);
 		bool (__fastcall *FileExists)(ISteamRemoteStorage*, const char*);
@@ -2919,7 +2942,7 @@ struct ISteamRemoteStorage
 
 	ISteamRemoteStorage() = delete;
 
-	virtual bool virtual_FileWrite(const char* _0, void* _1, int _2)
+	virtual bool virtual_FileWrite(const char* _0, const void* _1, int _2)
 	{
 		return *(bool*)nullptr;
 	}
@@ -2929,7 +2952,7 @@ struct ISteamRemoteStorage
 		return *(int*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_FileWriteAsync(const char* _0, void* _1, unsigned int _2)
+	virtual unsigned __int64 virtual_FileWriteAsync(const char* _0, const void* _1, unsigned int _2)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
@@ -2969,7 +2992,7 @@ struct ISteamRemoteStorage
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual bool virtual_FileWriteStreamWriteChunk(unsigned __int64 _0, void* _1, int _2)
+	virtual bool virtual_FileWriteStreamWriteChunk(unsigned __int64 _0, const void* _1, int _2)
 	{
 		return *(bool*)nullptr;
 	}
@@ -3324,6 +3347,20 @@ struct CharString
 		return data;
 	}
 
+	void getL(lua_State* L, size_t length)
+	{
+		char* localCopy = (char*)alloca(length + 1);
+		int i = 0;
+		for (; i < length; ++i) {
+			char readVal = data[i];
+			if (readVal == '\0')
+				break;
+			localCopy[i] = readVal;
+		}
+		localCopy[i] = '\0';
+		p_lua_pushstring(L, localCopy);
+	}
+
 	void free()
 	{
 		if (data) {
@@ -3343,7 +3380,7 @@ struct SDL_WindowUserData
 
 struct SDL_Window
 {
-	void* magic;
+	const void* magic;
 	unsigned int id;
 	char* title;
 	SDL_Surface* icon;
@@ -4749,6 +4786,17 @@ struct CObject
 	}
 };
 
+template<class TYPE, class ARG_TYPE>
+struct CArray : CObject
+{
+	TYPE* m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
+
+	CArray() = delete;
+};
+
 struct CDWordArray : CObject
 {
 	struct vtbl : CObject::vtbl
@@ -5857,7 +5905,7 @@ struct CFile : CObject
 		void (__fastcall *SetLength)(CFile*, unsigned int);
 		unsigned int (__fastcall *GetLength)(CFile*);
 		unsigned int (__fastcall *Read)(CFile*, void*, unsigned int);
-		unsigned int (__fastcall *Write)(CFile*, void*, unsigned int);
+		unsigned int (__fastcall *Write)(CFile*, const void*, unsigned int);
 		void (__fastcall *Abort)(CFile*);
 		void (__fastcall *Flush)(CFile*);
 		void (__fastcall *Close)(CFile*);
@@ -5920,7 +5968,7 @@ struct CFile : CObject
 		return *(unsigned int*)nullptr;
 	}
 
-	virtual unsigned int virtual_Write(void* _0, unsigned int _1)
+	virtual unsigned int virtual_Write(const void* _0, unsigned int _1)
 	{
 		return *(unsigned int*)nullptr;
 	}
@@ -8721,9 +8769,12 @@ struct CScreenWorldMap : CBaldurEngine
 	int m_bMapDragging;
 	CGameArea* m_pCurrentArea;
 	int m_nLeaderSprite;
+	CList<unsigned long,unsigned long*>* m_pPath;
 	int m_nLeavingEdge;
 	unsigned int m_nCurrentLink;
 	CResRef m_cResCurrentArea;
+	CArray<CRect,CRect*> m_aAreaRect;
+	CArray<CRect,CRect*> m_aAreaMarker;
 	CUIControlTextDisplay* m_pChatDisplay;
 	int m_nChatMessageCount;
 	unsigned __int8 m_bInControl;
@@ -8974,6 +9025,7 @@ struct CScreenChapter : CBaldurEngine
 	int m_nChapter;
 	int m_nDream;
 	CResRef m_cResText;
+	CList<unsigned long,unsigned long*>* m_pTextList;
 	CTypedPtrList<CPtrList,CResRef*> m_bmpList;
 	int m_nBmpFlip;
 	int m_nCurrBmp;
@@ -9285,6 +9337,472 @@ struct CNetworkWindow
 	CNetworkWindow() = delete;
 };
 
+struct CNetwork
+{
+	_GUID m_nApplicationGuid;
+	unsigned __int8 m_bApplicationGuidDefined;
+	unsigned __int8 m_bAutoConnectCheck;
+	unsigned __int8 m_bServiceProviderEnumerated;
+	unsigned __int8 m_bServiceProviderSelected;
+	int m_nServiceProvider;
+	int m_nTotalServiceProviders;
+	Array<CString,4> m_ppszServiceProviderNames;
+	Array<DP_ProviderID,4> m_pnServiceProviderIDS;
+	unsigned __int8 m_bConnectionInitialized;
+	unsigned __int8 m_bSocketConnecting;
+	unsigned __int8 m_bSocketConnected;
+	CString m_sIPAddress;
+	unsigned __int8 padding2;
+	void* m_lpDPAddress;
+	unsigned int m_dwDPAddressSize;
+	CString m_version;
+	unsigned __int8 m_bSessionSelected;
+	int m_nSession;
+	unsigned __int8 m_bSessionNameToMake;
+	unsigned __int8 padding3;
+	CString m_sSessionNameToMake;
+	CString m_sSessionDescriptionToMake;
+	unsigned __int8 m_bSessionPasswordEnabled;
+	unsigned __int8 padding4;
+	CString m_sSessionPassword;
+	unsigned __int8 m_bAllowNewConnections;
+	unsigned __int8 m_bConnectionEstablished;
+	unsigned __int8 m_bIsHost;
+	DPWrapper m_directPlay;
+	int m_nMaxPlayers;
+	unsigned int m_dwSessionFlags;
+	unsigned __int8 m_bMaxPlayersDefined;
+	unsigned __int8 m_bSessionOptionsDefined;
+	CString m_sJoinedGame;
+	CString m_sLeftGame;
+	CString m_sDroppedGame;
+	unsigned __int8 m_bPlayerNameToMake;
+	unsigned __int8 m_bPlayerCreated;
+	int m_idLocalPlayer;
+	CString m_sLocalPlayerName;
+	int m_nTotalPlayers;
+	Array<CString,6> m_psPlayerName;
+	Array<int,6> m_pPlayerID;
+	Array<unsigned __int8,6> m_pbPlayerVisible;
+	Array<unsigned __int8,6> m_pbPlayerEnumerateFlag;
+	int m_nLocalPlayer;
+	int m_nHostPlayer;
+	CString m_sHostIPAddress;
+	int m_bAnnounceNewPlayers;
+	Array<CNetworkWindow,6> m_pSlidingWindow;
+	CNetworkWindow m_SystemWindow;
+	Array<unsigned int,256> m_dwCRC32;
+	CNetworkConnectionSettings m_connectionSettings;
+	unsigned int m_lastMessageSentTime;
+	Array<unsigned int,6> m_lastMessageReceivedTime;
+
+	CNetwork() = delete;
+};
+
+typedef void (__thiscall *type_CChitin_OnResizeWindow)(CChitin* pThis, int w, int h);
+extern type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
+
+struct CChitin
+{
+	struct vtbl
+	{
+		void (__fastcall *SynchronousUpdate)(CChitin*);
+		void (__fastcall *SetupPanels)(CChitin*);
+		unsigned int (__fastcall *GetIDSInvalidVideoMode)(CChitin*);
+		unsigned int (__fastcall *GetIDSOpenGLDll)(CChitin*);
+		unsigned int (__fastcall *GetIDSExclusiveMode)(CChitin*);
+		unsigned int (__fastcall *GetIDSChoosePixelFormat)(CChitin*);
+		unsigned int (__fastcall *GetIDSSetPixelFormat)(CChitin*);
+		unsigned int (__fastcall *GetIDSSetGameResolution)(CChitin*);
+		unsigned int (__fastcall *GetIDSSetGameBitDepth)(CChitin*);
+		unsigned int (__fastcall *GetIDSBadDeskTopBitDepth)(CChitin*);
+		unsigned int (__fastcall *GetIDSWindowsFonts)(CChitin*);
+		CRes* (__fastcall *AllocResObject)(CChitin*, int);
+		const CString* (__fastcall *GetIconRes)(CChitin*);
+		void (__fastcall *GetScreenShotFilePrefix)(CChitin*, CString*);
+		int (__fastcall *FontRectOutline)(CChitin*);
+		int (__fastcall *InitializeServices)(CChitin*);
+		void (__fastcall *SetProgressBar)(CChitin*, unsigned __int8, int, int, int, unsigned __int8, int, unsigned __int8, int, unsigned __int8, unsigned __int8, unsigned int);
+		void (__fastcall *SetProgressBarActivateEngine)(CChitin*, int);
+		void (__fastcall *BroadcastMultiplayerProgressBarInfo)(CChitin*);
+		void (__fastcall *SetCDSwitchStatus)(CChitin*, unsigned __int8, unsigned __int8, unsigned __int8, const CString*, unsigned __int8, unsigned __int8, unsigned __int8);
+		void (__fastcall *SetCDSwitchActivateEngine)(CChitin*, int);
+		void (__fastcall *OnMultiplayerSessionOpen)(CChitin*, CString*, CString*, CString*);
+		void (__fastcall *OnMultiplayerSessionToClose)(CChitin*);
+		void (__fastcall *OnMultiplayerSessionClose)(CChitin*);
+		void (__fastcall *OnMultiplayerPlayerJoin)(CChitin*, int, const CString*);
+		void (__fastcall *OnMultiplayerPlayerVisible)(CChitin*, int);
+		void (__fastcall *OnMultiplayerPlayerLeave)(CChitin*, int, const CString*);
+		int (__fastcall *MessageCallback)(CChitin*, unsigned __int8*, unsigned int);
+		unsigned __int8 (__fastcall *GetGamespyResponse)(CChitin*, unsigned __int8, unsigned __int8**, unsigned int*);
+		void (__fastcall *AsynchronousUpdate)(CChitin*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
+		void (__fastcall *SelectEngine)(CChitin*, CWarp*);
+		void (__fastcall *ShutDown)(CChitin*, int, const char*, const char*);
+		const char* (__fastcall *GetKeyFileName)(CChitin*);
+		unsigned __int8 (__fastcall *GetNumberSoundChannels)(CChitin*);
+		int (__fastcall *GetMovieVolume)(CChitin*);
+		void (__fastcall *LoadOptions)(CChitin*);
+		void (__fastcall *PreLoadFonts)(CChitin*);
+		void (__fastcall *SetSoundVolumes)(CChitin*);
+		unsigned __int16 (__fastcall *GetMultiplayerGameSpyPort)(CChitin*);
+		unsigned __int16 (__fastcall *GetMultiplayerDirectPlayPort)(CChitin*);
+		void (__fastcall *SetRenderCount)(CChitin*, unsigned __int8);
+		int (__fastcall *ConfirmQuit)(CChitin*);
+		void (__fastcall *GetGameSpyGameName)(CChitin*, CString*);
+		void (__fastcall *GetGameSpyCode)(CChitin*, CString*);
+		void (__fastcall *GetPanicCDStrings)(CChitin*, CString*, CString*, CString*);
+		void (__fastcall *OnMixerInitialize)(CChitin*);
+		int (__fastcall *Is3DSound)(CChitin*, int);
+		int (__fastcall *GetEAXActive)(CChitin*);
+		void (__fastcall *RedrawScreen)(CChitin*);
+		unsigned __int8 (__fastcall *GetSoundEnvironment)(CChitin*, CString, unsigned int*, float*, float*, float*, float*);
+		unsigned __int8 (__fastcall *CutsceneModeActive)(CChitin*);
+
+		vtbl() = delete;
+	};
+
+	int m_mouseLButton;
+	int m_mouseRButton;
+	int m_bMouseLButtonDown;
+	tagPOINT m_mouseLDblClickPoint;
+	unsigned int m_mouseLDblClickCount;
+	int m_bMouseRButtonDown;
+	tagPOINT m_mouseRDblClickPoint;
+	unsigned int m_mouseRDblClickCount;
+	int m_bMouseMButtonDown;
+	tagPOINT m_mouseMDblClickPoint;
+	unsigned int m_mouseMDblClickCount;
+	unsigned int m_mouseDblClickTime;
+	tagSIZE m_mouseDblClickSize;
+	int bEngineActive;
+	int bServicingEnabled;
+	int bMessagesEnabled;
+	CObList lEngines;
+	unsigned int nIterations;
+	CWarp* pStartingEngine;
+	unsigned int nTimer;
+	unsigned int nTimerRes;
+	CString m_sCommandLine;
+	CRect m_rClient;
+	unsigned __int8 m_bReInitializing;
+	unsigned __int8 m_bScreenEdgeScroll;
+	unsigned int m_opSystemPlatformId;
+	__int16 m_capsLockState;
+	CPoint m_ptScreen;
+	int m_bStartUpHost;
+	int m_bStartUpConnect;
+	CString m_sStartUpAddress;
+	CString m_sStartUpPort;
+	CString m_sStartUpPlayer;
+	CString m_sStartUpPassword;
+	int m_bStartUpNewGame;
+	int m_bStartUpLoadGame;
+	CString m_sStartUpSession;
+	unsigned __int8 m_bStartUpDirectPlayLobby;
+	unsigned __int8 m_bStartUpGameSpyLocation;
+	CString m_sStartUpGameSpyLocation;
+	unsigned __int8 m_bStartUpThroneOfBhaal;
+	CSoundMixer* cSoundMixer;
+	int m_nMaxPlayers;
+	int m_nCurrentSong;
+	_EAXPRESET m_nSoundEnvironment;
+	int m_bSoundInitialized;
+	unsigned __int8 padding;
+	int m_bInMouseWheelQueue;
+	CTypedPtrList<CPtrList,long*> m_lstMouseWheel;
+	unsigned int m_wheelScrollLines;
+	int m_bIsMouseInWindow;
+	int m_bFrameOutline;
+	int m_bUseMirrorFX;
+	unsigned int m_msgAutoPlay;
+	void* m_hEvent;
+	unsigned __int8 m_bUsePlanescapeSoundReductionCurve;
+	unsigned int m_nSoundReductionCurveRadius;
+	unsigned int m_nTickCount;
+	int m_nAIPerSec;
+	int m_nAIElasped;
+	unsigned int m_nRenderTickCount;
+	int m_nRenderPerSec;
+	int m_nRenderElasped;
+	int m_nAISleeper;
+	int m_bIsTouchUI;
+	int m_bUseBGRA;
+	int m_bRenderTilesLinear;
+	CString m_sFontName;
+	int m_nFullFrameTimer;
+	int m_nGameTimer;
+	int m_nRenderTimer;
+	int m_nSearchTimer;
+	_iobuf* m_fFrameTimeLog;
+	int m_bLogFrames;
+	CWarp* pActiveEngine;
+	CVideo cVideo;
+	CNetwork cNetwork;
+	CSteam cSteam;
+	unsigned __int8 padding2;
+	int bPointerUpdated;
+	CPoint cMousePosition;
+	int nAUCounter;
+	int bInTimer;
+	int m_AIStale;
+	int m_displayStale;
+	int m_bInSyncUpdate;
+	unsigned int m_keyRepeatDelay;
+	unsigned int m_keyRepeatRate;
+	CProgressBar cProgressBar;
+	unsigned __int16 m_nAICounter;
+	int m_bManualFrameControl;
+	int m_displayDebug;
+	int m_displaySerialize;
+	int m_bExitOnError;
+	int m_bEnableCucumber;
+	CResRef* pCurRes;
+	CString m_sFontNameNormal;
+	CString m_sFontNameRealms;
+	CString m_sFontNameStoneBig;
+	CString m_sFontNameStoneSml;
+	CString m_sFontNameToolFont;
+	CString m_sFontNameFloatTxt;
+	int m_bDisplaySubtitles;
+	int m_bReverseMouseWheelZoom;
+
+	CChitin() = delete;
+
+	void OnResizeWindow(int w, int h)
+	{
+		p_CChitin_OnResizeWindow(this, w, h);
+	}
+
+	virtual void virtual_SynchronousUpdate()
+	{
+	}
+
+	virtual void virtual_SetupPanels()
+	{
+	}
+
+	virtual unsigned int virtual_GetIDSInvalidVideoMode()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetIDSOpenGLDll()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetIDSExclusiveMode()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetIDSChoosePixelFormat()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetIDSSetPixelFormat()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetIDSSetGameResolution()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetIDSSetGameBitDepth()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetIDSBadDeskTopBitDepth()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetIDSWindowsFonts()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual CRes* virtual_AllocResObject(int _0)
+	{
+		return *(CRes**)nullptr;
+	}
+
+	virtual const CString* virtual_GetIconRes()
+	{
+		return *(const CString**)nullptr;
+	}
+
+	virtual void virtual_GetScreenShotFilePrefix(CString* _0)
+	{
+	}
+
+	virtual int virtual_FontRectOutline()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int virtual_InitializeServices()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void virtual_SetProgressBar(unsigned __int8 _0, int _1, int _2, int _3, unsigned __int8 _4, int _5, unsigned __int8 _6, int _7, unsigned __int8 _8, unsigned __int8 _9, unsigned int _10)
+	{
+	}
+
+	virtual void virtual_SetProgressBarActivateEngine(int _0)
+	{
+	}
+
+	virtual void virtual_BroadcastMultiplayerProgressBarInfo()
+	{
+	}
+
+	virtual void virtual_SetCDSwitchStatus(unsigned __int8 _0, unsigned __int8 _1, unsigned __int8 _2, const CString* _3, unsigned __int8 _4, unsigned __int8 _5, unsigned __int8 _6)
+	{
+	}
+
+	virtual void virtual_SetCDSwitchActivateEngine(int _0)
+	{
+	}
+
+	virtual void virtual_OnMultiplayerSessionOpen(CString* _0, CString* _1, CString* _2)
+	{
+	}
+
+	virtual void virtual_OnMultiplayerSessionToClose()
+	{
+	}
+
+	virtual void virtual_OnMultiplayerSessionClose()
+	{
+	}
+
+	virtual void virtual_OnMultiplayerPlayerJoin(int _0, const CString* _1)
+	{
+	}
+
+	virtual void virtual_OnMultiplayerPlayerVisible(int _0)
+	{
+	}
+
+	virtual void virtual_OnMultiplayerPlayerLeave(int _0, const CString* _1)
+	{
+	}
+
+	virtual int virtual_MessageCallback(unsigned __int8* _0, unsigned int _1)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual unsigned __int8 virtual_GetGamespyResponse(unsigned __int8 _0, unsigned __int8** _1, unsigned int* _2)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void virtual_AsynchronousUpdate(unsigned int _0, unsigned int _1, unsigned int _2, unsigned int _3, unsigned int _4)
+	{
+	}
+
+	virtual void virtual_SelectEngine(CWarp* _0)
+	{
+	}
+
+	virtual void virtual_ShutDown(int _0, const char* _1, const char* _2)
+	{
+	}
+
+	virtual const char* virtual_GetKeyFileName()
+	{
+		return *(const char**)nullptr;
+	}
+
+	virtual unsigned __int8 virtual_GetNumberSoundChannels()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual int virtual_GetMovieVolume()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void virtual_LoadOptions()
+	{
+	}
+
+	virtual void virtual_PreLoadFonts()
+	{
+	}
+
+	virtual void virtual_SetSoundVolumes()
+	{
+	}
+
+	virtual unsigned __int16 virtual_GetMultiplayerGameSpyPort()
+	{
+		return *(unsigned __int16*)nullptr;
+	}
+
+	virtual unsigned __int16 virtual_GetMultiplayerDirectPlayPort()
+	{
+		return *(unsigned __int16*)nullptr;
+	}
+
+	virtual void virtual_SetRenderCount(unsigned __int8 _0)
+	{
+	}
+
+	virtual int virtual_ConfirmQuit()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void virtual_GetGameSpyGameName(CString* _0)
+	{
+	}
+
+	virtual void virtual_GetGameSpyCode(CString* _0)
+	{
+	}
+
+	virtual void virtual_GetPanicCDStrings(CString* _0, CString* _1, CString* _2)
+	{
+	}
+
+	virtual void virtual_OnMixerInitialize()
+	{
+	}
+
+	virtual int virtual_Is3DSound(int _0)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int virtual_GetEAXActive()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void virtual_RedrawScreen()
+	{
+	}
+
+	virtual unsigned __int8 virtual_GetSoundEnvironment(CString _0, unsigned int* _1, float* _2, float* _3, float* _4, float* _5)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual unsigned __int8 virtual_CutsceneModeActive()
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+};
+
 struct CMachineStates
 {
 	Array<CMachineState,6> m_machineStates;
@@ -9316,6 +9834,102 @@ struct CItem : CResHelper<CResItem,1005>
 	virtual void virtual_CItem_Destructor()
 	{
 	}
+};
+
+struct CInfinity
+{
+	Array<CInfTileSet*,5> pTileSets;
+	CResWED* pResWED;
+	CVRamPool* pVRPool;
+	CVidMode* pVidMode;
+	int bUseDestSrc;
+	int bRefreshVRamRect;
+	int bInitialized;
+	int bWEDDemanded;
+	int nOffsetX;
+	int nOffsetY;
+	int nTilesX;
+	int nTilesY;
+	int nNewX;
+	int nNewY;
+	CRect rViewPortNotZoomed;
+	CRect rViewPort;
+	CRect rVRamRect;
+	CRect rRequestRect;
+	int nVisibleTilesX;
+	int nVisibleTilesY;
+	int nAreaX;
+	int nAreaY;
+	int nCurrentTileX;
+	int nCurrentTileY;
+	int nCurrentX;
+	int nCurrentY;
+	int nSub1XOffset;
+	int nSub1YOffset;
+	int nSub2XOffset;
+	int nSub2YOffset;
+	int nSub3XOffset;
+	int nSub3YOffset;
+	int nSub4XOffset;
+	int nSub4YOffset;
+	CSound sndThunder;
+	int nCurrentLightningFrequency;
+	int nNextLightningFrequency;
+	int nNewLightningFrequency;
+	int nCurrentRainLevel;
+	int nNextRainLevel;
+	int nCurrentSnowLevel;
+	int nCurrentWindLevel;
+	int nCurrentFogLevel;
+	int nNextWindLevel;
+	int nCurrentTimeOfDay;
+	int nTimeToNextThunder;
+	int nThunderLength;
+	int bRenderCallLightning;
+	int nRenderLightningTimer;
+	CPoint cLightningPoint;
+	CVidCell m_glowVidCell;
+	CTypedPtrList<CPtrList,CAOEEntry*> m_lAOE;
+	std::vector<unsigned char*,std::allocator<unsigned char*>> m_RasterizedPolys;
+	std::vector<std::vector<WED_PolyPoint_st,std::allocator<WED_PolyPoint_st>>,std::allocator<std::vector<WED_PolyPoint_st,std::allocator<WED_PolyPoint_st>>>> m_DownsampledPolys;
+	unsigned __int16 m_areaType;
+	unsigned __int8 m_renderDayNightCode;
+	unsigned __int8 m_oldRenderDayNightCode;
+	unsigned __int8 m_dayLightIntensity;
+	unsigned __int8 m_requestDayNightCode;
+	unsigned __int8 m_oldRequestDualTileCode;
+	unsigned __int8 m_bResizedViewPort;
+	unsigned int m_nLastTickCount;
+	CPoint m_ptCurrentPosExact;
+	__int16 m_autoScrollSpeed;
+	CPoint m_ptScrollDest;
+	int m_nScrollAttempts;
+	int m_nOldScrollState;
+	unsigned __int8 m_nScrollDelay;
+	unsigned __int8 m_bMovieBroadcast;
+	int m_bStartLightning;
+	int m_bStopLightning;
+	unsigned __int8 m_lightningStrikeProb;
+	unsigned int m_rgbRainColor;
+	unsigned int m_rgbLightningGlobalLighting;
+	unsigned int m_rgbOverCastGlobalLighting;
+	unsigned int m_rgbGlobalLighting;
+	unsigned int m_rgbTimeOfDayGlobalLighting;
+	unsigned int m_rgbTimeOfDayRainColor;
+	int m_updateListenPosition;
+	CGameArea* m_pArea;
+	CVidBitmap m_vbMessageScreen;
+	unsigned int m_strrefMessage;
+	int m_bScreenShake;
+	CPoint m_screenShakeDelta;
+	CPoint m_screenShakeDecrease;
+	float m_fZoomSaved;
+	float m_fZoom;
+	float m_fStoredZoom;
+	int m_bZoomEnabled;
+	int m_bZooming;
+
+	CInfinity() = delete;
 };
 
 struct CInfTileSet
@@ -10685,6 +11299,75 @@ struct CBaldurMessage
 	CBaldurMessage() = delete;
 };
 
+struct CBaldurChitin : CChitin
+{
+	struct vtbl : CChitin::vtbl
+	{
+		void (__fastcall *ShutDown_2)(CBaldurChitin*, int, char*, const char*);
+		void (__fastcall *UnloadFonts)(CBaldurChitin*);
+
+		vtbl() = delete;
+	};
+
+	CInfCursor* m_pObjectCursor;
+	CInfGame* m_pObjectGame;
+	CDungeonMaster* m_pEngineDM;
+	CBaldurProjector* m_pEngineProjector;
+	CScreenAI* m_pEngineAI;
+	CScreenCharacter* m_pEngineCharacter;
+	CScreenCreateChar* m_pEngineCreateChar;
+	CScreenCreateParty* m_pEngineCreateParty;
+	CScreenInventory* m_pEngineInventory;
+	CScreenJournal* m_pEngineJournal;
+	CScreenLoad* m_pEngineLoad;
+	CScreenMap* m_pEngineMap;
+	CScreenOptions* m_pEngineOptions;
+	CScreenPriestSpell* m_pEnginePriestSpell;
+	CScreenSave* m_pEngineSave;
+	CScreenStart* m_pEngineStart;
+	CScreenWizSpell* m_pEngineWizSpell;
+	CScreenWorld* m_pEngineWorld;
+	CScreenStore* m_pEngineStore;
+	CScreenMultiPlayer* m_pEngineMultiPlayer;
+	CScreenConnection* m_pEngineConnection;
+	CScreenWorldMap* m_pEngineWorldMap;
+	CScreenChapter* m_pEngineChapter;
+	CScreenMovies* m_pEngineMovies;
+	CScreenDLC* m_pEngineDLC;
+	CTlkTable m_cTlkTable;
+	CCacheStatus m_cCachingStatus;
+	CScriptCache m_scriptCache;
+	CBaldurMessage m_cBaldurMessage;
+	CMessageHandler m_cMessageHandler;
+	int m_bFontRectOutline;
+	unsigned __int8 m_bCDScanDone;
+	unsigned __int8 m_bCDFoundDrive;
+	CString m_sCDDriveName;
+	unsigned __int8 m_bCDMediaInDrive;
+	unsigned __int8 m_bCDFoundBaldurCD;
+	unsigned __int8 m_bIsAutoStarting;
+	int m_bDropPanels;
+	int m_bDropCaps;
+	int m_bDisableMovies;
+	int m_bStartConfig;
+	int m_bSuperSpeedAI;
+	int m_bFirstRun;
+	int m_nInstallType;
+	int m_bUseNewGui;
+	CVidFont m_preLoadedFont;
+	CVidMosaic m_tiledBackground;
+
+	CBaldurChitin() = delete;
+
+	virtual void virtual_ShutDown_2(int _0, char* _1, const char* _2)
+	{
+	}
+
+	virtual void virtual_UnloadFonts()
+	{
+	}
+};
+
 struct CAreaUserNote
 {
 	unsigned __int16 m_startX;
@@ -10866,6 +11549,165 @@ struct CAreaFileHeader
 	unsigned __int8 m_unused;
 
 	CAreaFileHeader() = delete;
+};
+
+typedef int (__thiscall *type_CGameArea_GetNearest2)(CGameArea* pThis, CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
+extern type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
+
+typedef int (__thiscall *type_CGameArea_AdjustTarget)(CGameArea* pThis, CPoint start, CPoint* goal, byte personalSpace, short tolerance);
+extern type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
+
+typedef int (__thiscall *type_CGameArea_CheckWalkable)(CGameArea* pThis, CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
+extern type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
+
+typedef int (__thiscall *type_CGameArea_CheckLOS)(CGameArea* pThis, const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
+extern type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
+
+struct CGameArea
+{
+	struct m_cWalkableRenderCache_t
+	{
+		int nTriCount;
+		int nLineCount;
+		CPoint* pVertexArray;
+		bool bReady;
+
+		m_cWalkableRenderCache_t() = delete;
+	};
+
+	CAreaFileHeader m_header;
+	int m_bHeaderExtendedNight;
+	CAreaSoundsAndMusic m_headerSound;
+	CAreaFileRestEncounter m_headerRestEncounter;
+	CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*> m_entryPoints;
+	unsigned __int8 m_id;
+	unsigned __int8 m_nCharacters;
+	unsigned __int8 m_nInfravision;
+	unsigned __int8 m_bAreaLoaded;
+	CResRef m_resref;
+	CResRef m_restMovieDay;
+	CResRef m_restMovieNight;
+	unsigned __int8 m_waterAlpha;
+	CResWED* m_pResWED;
+	CInfGame* m_pGame;
+	int m_nScrollState;
+	int m_nKeyScrollState;
+	int m_bSelectionSquareEnabled;
+	int m_bTravelSquare;
+	int m_iPickedOnDown;
+	int m_iPicked;
+	int m_iPickedTarget;
+	int m_bPicked;
+	int m_nToolTip;
+	CPoint m_mousePos;
+	CVidBitmap m_bmLum;
+	CVidBitmap* m_pbmLumNight;
+	CVidBitmap m_bmHeight;
+	CObjectMarker* m_pObjectMarker;
+	CObjectMarker* m_pObjectMarkerHealthBar;
+	unsigned __int8 m_firstRender;
+	CRect m_selectSquare;
+	__int16 m_rotation;
+	CPoint m_moveDest;
+	int m_groupMove;
+	Array<unsigned __int8,16> m_terrainTable;
+	Array<unsigned __int8,16> m_visibleTerrainTable;
+	int m_nAIIndex;
+	int m_bInPathSearch;
+	unsigned int m_nInitialAreaID;
+	unsigned int m_nFirstObject;
+	unsigned int m_dwLastProgressRenderTickCount;
+	unsigned int m_dwLastProgressMsgTickCount;
+	unsigned __int8 m_nRandomMonster;
+	__int16 m_nVisibleMonster;
+	unsigned __int8 m_bRecentlySaved;
+	unsigned int m_nSavedTime;
+	CGameAreaNotes m_cGameAreaNotes;
+	CInfinity m_cInfinity;
+	CSearchBitmap m_search;
+	CVisibilityMap m_visibility;
+	unsigned __int8* m_pDynamicHeight;
+	int m_startedMusic;
+	unsigned int m_startedMusicCounter;
+	CTypedPtrList<CPtrList,long> m_lVertSort;
+	CTypedPtrList<CPtrList,long> m_lVertSortBack;
+	CTypedPtrList<CPtrList,long> m_lVertSortFlight;
+	CTypedPtrList<CPtrList,long> m_lVertSortUnder;
+	CTypedPtrList<CPtrList,long*> m_lVertSortAdd;
+	CTypedPtrList<CPtrList,long*> m_lVertSortBackAdd;
+	CTypedPtrList<CPtrList,long*> m_lVertSortFlightAdd;
+	CTypedPtrList<CPtrList,long*> m_lVertSortUnderAdd;
+	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortRemove;
+	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortBackRemove;
+	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortFlightRemove;
+	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortUnderRemove;
+	CTypedPtrList<CPtrList,CTiledObject*> m_lTiledObjects;
+	CTypedPtrList<CPtrList,long*> m_lGameTextObjects;
+	CTypedPtrList<CPtrList,long*> m_lVertSortTransition;
+	CPoint m_ptOldViewPos;
+	CVariableHash m_variables;
+	CVariableHash m_namedCreatures;
+	unsigned __int8 m_bPermitNewCharacters;
+	__int16 m_nCurrentSong;
+	int m_nBattleSongCounter;
+	int m_nDamageCounter;
+	__int16 m_nScreenFlash;
+	__int16 m_nScreenFlashFade;
+	unsigned int m_screenFlashRGB;
+	CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*> m_lClairvoyanceObjects;
+	CTypedPtrList<CPtrList,long*> m_lContainersNeedingUpdate;
+	int m_bAnySpritesInActions;
+	int m_nMPSynchCounter;
+	unsigned __int8 m_nMPSignalType;
+	unsigned __int8 m_nMPSignalData;
+	int m_nMPSignalsToSend;
+	int m_nEnemyCountWork;
+	int m_nEnemyCountLast;
+	int m_nEnemyCount2ndLast;
+	int m_nEnemyCountSequestered;
+	int m_nTrapCountWork;
+	int m_nTrapCountLast;
+	int m_nTrapCount2ndLast;
+	int m_nUnloadCounter;
+	int m_bDisplayingHealth;
+	CMemINI INIFile;
+	CSpawnFile* mpSpawner;
+	int m_nCreatureNodeCount;
+	CSize m_lightmapRatio;
+	CGameArea::m_cWalkableRenderCache_t m_cWalkableRenderCache;
+	CSound m_sndAmbientDay;
+	CSound m_sndAmbientNight;
+	unsigned __int8 m_sndAmbientVolume;
+	unsigned __int16 m_sndAmbientDayVolume;
+	unsigned __int16 m_sndAmbientNightVolume;
+
+	CGameArea() = delete;
+
+	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
+
+	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
+
+	int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
+
+	int GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest)
+	{
+		return p_CGameArea_GetNearest2(this, center, type, range, terrainTable, lineOfSight, seeInvisible, nNearest);
+	}
+
+	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance)
+	{
+		return p_CGameArea_AdjustTarget(this, start, goal, personalSpace, tolerance);
+	}
+
+	int CheckWalkable(CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored)
+	{
+		return p_CGameArea_CheckWalkable(this, start, goal, terrainTable, personalSpace, bCheckIfExplored);
+	}
+
+	int CheckLOS(const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange)
+	{
+		return p_CGameArea_CheckLOS(this, start, goal, terrainTable, bCheckIfExplored, nVisualRange);
+	}
 };
 
 struct CAreaFileContainer
@@ -12465,826 +13307,6 @@ struct CContingency
 	unsigned int m_nLastCheck;
 
 	CContingency() = delete;
-};
-
-struct CInfinity
-{
-	Array<CInfTileSet*,5> pTileSets;
-	CResWED* pResWED;
-	CVRamPool* pVRPool;
-	CVidMode* pVidMode;
-	int bUseDestSrc;
-	int bRefreshVRamRect;
-	int bInitialized;
-	int bWEDDemanded;
-	int nOffsetX;
-	int nOffsetY;
-	int nTilesX;
-	int nTilesY;
-	int nNewX;
-	int nNewY;
-	CRect rViewPortNotZoomed;
-	CRect rViewPort;
-	CRect rVRamRect;
-	CRect rRequestRect;
-	int nVisibleTilesX;
-	int nVisibleTilesY;
-	int nAreaX;
-	int nAreaY;
-	int nCurrentTileX;
-	int nCurrentTileY;
-	int nCurrentX;
-	int nCurrentY;
-	int nSub1XOffset;
-	int nSub1YOffset;
-	int nSub2XOffset;
-	int nSub2YOffset;
-	int nSub3XOffset;
-	int nSub3YOffset;
-	int nSub4XOffset;
-	int nSub4YOffset;
-	CSound sndThunder;
-	int nCurrentLightningFrequency;
-	int nNextLightningFrequency;
-	int nNewLightningFrequency;
-	int nCurrentRainLevel;
-	int nNextRainLevel;
-	int nCurrentSnowLevel;
-	int nCurrentWindLevel;
-	int nCurrentFogLevel;
-	int nNextWindLevel;
-	int nCurrentTimeOfDay;
-	int nTimeToNextThunder;
-	int nThunderLength;
-	int bRenderCallLightning;
-	int nRenderLightningTimer;
-	CPoint cLightningPoint;
-	CVidCell m_glowVidCell;
-	CTypedPtrList<CPtrList,CAOEEntry*> m_lAOE;
-	std::vector<unsigned char*,std::allocator<unsigned char*>> m_RasterizedPolys;
-	std::vector<std::vector<WED_PolyPoint_st,std::allocator<WED_PolyPoint_st>>,std::allocator<std::vector<WED_PolyPoint_st,std::allocator<WED_PolyPoint_st>>>> m_DownsampledPolys;
-	unsigned __int16 m_areaType;
-	unsigned __int8 m_renderDayNightCode;
-	unsigned __int8 m_oldRenderDayNightCode;
-	unsigned __int8 m_dayLightIntensity;
-	unsigned __int8 m_requestDayNightCode;
-	unsigned __int8 m_oldRequestDualTileCode;
-	unsigned __int8 m_bResizedViewPort;
-	unsigned int m_nLastTickCount;
-	CPoint m_ptCurrentPosExact;
-	__int16 m_autoScrollSpeed;
-	CPoint m_ptScrollDest;
-	int m_nScrollAttempts;
-	int m_nOldScrollState;
-	unsigned __int8 m_nScrollDelay;
-	unsigned __int8 m_bMovieBroadcast;
-	int m_bStartLightning;
-	int m_bStopLightning;
-	unsigned __int8 m_lightningStrikeProb;
-	unsigned int m_rgbRainColor;
-	unsigned int m_rgbLightningGlobalLighting;
-	unsigned int m_rgbOverCastGlobalLighting;
-	unsigned int m_rgbGlobalLighting;
-	unsigned int m_rgbTimeOfDayGlobalLighting;
-	unsigned int m_rgbTimeOfDayRainColor;
-	int m_updateListenPosition;
-	CGameArea* m_pArea;
-	CVidBitmap m_vbMessageScreen;
-	unsigned int m_strrefMessage;
-	int m_bScreenShake;
-	CPoint m_screenShakeDelta;
-	CPoint m_screenShakeDecrease;
-	float m_fZoomSaved;
-	float m_fZoom;
-	float m_fStoredZoom;
-	int m_bZoomEnabled;
-	int m_bZooming;
-
-	CInfinity() = delete;
-};
-
-typedef int (__thiscall *type_CGameArea_GetNearest2)(CGameArea* pThis, CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
-extern type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
-
-typedef int (__thiscall *type_CGameArea_AdjustTarget)(CGameArea* pThis, CPoint start, CPoint* goal, byte personalSpace, short tolerance);
-extern type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
-
-typedef int (__thiscall *type_CGameArea_CheckWalkable)(CGameArea* pThis, CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
-extern type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
-
-typedef int (__thiscall *type_CGameArea_CheckLOS)(CGameArea* pThis, const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
-extern type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
-
-struct CGameArea
-{
-	struct m_cWalkableRenderCache_t
-	{
-		int nTriCount;
-		int nLineCount;
-		CPoint* pVertexArray;
-		bool bReady;
-
-		m_cWalkableRenderCache_t() = delete;
-	};
-
-	CAreaFileHeader m_header;
-	int m_bHeaderExtendedNight;
-	CAreaSoundsAndMusic m_headerSound;
-	CAreaFileRestEncounter m_headerRestEncounter;
-	CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*> m_entryPoints;
-	unsigned __int8 m_id;
-	unsigned __int8 m_nCharacters;
-	unsigned __int8 m_nInfravision;
-	unsigned __int8 m_bAreaLoaded;
-	CResRef m_resref;
-	CResRef m_restMovieDay;
-	CResRef m_restMovieNight;
-	unsigned __int8 m_waterAlpha;
-	CResWED* m_pResWED;
-	CInfGame* m_pGame;
-	int m_nScrollState;
-	int m_nKeyScrollState;
-	int m_bSelectionSquareEnabled;
-	int m_bTravelSquare;
-	int m_iPickedOnDown;
-	int m_iPicked;
-	int m_iPickedTarget;
-	int m_bPicked;
-	int m_nToolTip;
-	CPoint m_mousePos;
-	CVidBitmap m_bmLum;
-	CVidBitmap* m_pbmLumNight;
-	CVidBitmap m_bmHeight;
-	CObjectMarker* m_pObjectMarker;
-	CObjectMarker* m_pObjectMarkerHealthBar;
-	unsigned __int8 m_firstRender;
-	CRect m_selectSquare;
-	__int16 m_rotation;
-	CPoint m_moveDest;
-	int m_groupMove;
-	Array<unsigned __int8,16> m_terrainTable;
-	Array<unsigned __int8,16> m_visibleTerrainTable;
-	int m_nAIIndex;
-	int m_bInPathSearch;
-	unsigned int m_nInitialAreaID;
-	unsigned int m_nFirstObject;
-	unsigned int m_dwLastProgressRenderTickCount;
-	unsigned int m_dwLastProgressMsgTickCount;
-	unsigned __int8 m_nRandomMonster;
-	__int16 m_nVisibleMonster;
-	unsigned __int8 m_bRecentlySaved;
-	unsigned int m_nSavedTime;
-	CGameAreaNotes m_cGameAreaNotes;
-	CInfinity m_cInfinity;
-	CSearchBitmap m_search;
-	CVisibilityMap m_visibility;
-	unsigned __int8* m_pDynamicHeight;
-	int m_startedMusic;
-	unsigned int m_startedMusicCounter;
-	CTypedPtrList<CPtrList,long> m_lVertSort;
-	CTypedPtrList<CPtrList,long> m_lVertSortBack;
-	CTypedPtrList<CPtrList,long> m_lVertSortFlight;
-	CTypedPtrList<CPtrList,long> m_lVertSortUnder;
-	CTypedPtrList<CPtrList,long*> m_lVertSortAdd;
-	CTypedPtrList<CPtrList,long*> m_lVertSortBackAdd;
-	CTypedPtrList<CPtrList,long*> m_lVertSortFlightAdd;
-	CTypedPtrList<CPtrList,long*> m_lVertSortUnderAdd;
-	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortRemove;
-	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortBackRemove;
-	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortFlightRemove;
-	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortUnderRemove;
-	CTypedPtrList<CPtrList,CTiledObject*> m_lTiledObjects;
-	CTypedPtrList<CPtrList,long*> m_lGameTextObjects;
-	CTypedPtrList<CPtrList,long*> m_lVertSortTransition;
-	CPoint m_ptOldViewPos;
-	CVariableHash m_variables;
-	CVariableHash m_namedCreatures;
-	unsigned __int8 m_bPermitNewCharacters;
-	__int16 m_nCurrentSong;
-	int m_nBattleSongCounter;
-	int m_nDamageCounter;
-	__int16 m_nScreenFlash;
-	__int16 m_nScreenFlashFade;
-	unsigned int m_screenFlashRGB;
-	CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*> m_lClairvoyanceObjects;
-	CTypedPtrList<CPtrList,long*> m_lContainersNeedingUpdate;
-	int m_bAnySpritesInActions;
-	int m_nMPSynchCounter;
-	unsigned __int8 m_nMPSignalType;
-	unsigned __int8 m_nMPSignalData;
-	int m_nMPSignalsToSend;
-	int m_nEnemyCountWork;
-	int m_nEnemyCountLast;
-	int m_nEnemyCount2ndLast;
-	int m_nEnemyCountSequestered;
-	int m_nTrapCountWork;
-	int m_nTrapCountLast;
-	int m_nTrapCount2ndLast;
-	int m_nUnloadCounter;
-	int m_bDisplayingHealth;
-	CMemINI INIFile;
-	CSpawnFile* mpSpawner;
-	int m_nCreatureNodeCount;
-	CSize m_lightmapRatio;
-	CGameArea::m_cWalkableRenderCache_t m_cWalkableRenderCache;
-	CSound m_sndAmbientDay;
-	CSound m_sndAmbientNight;
-	unsigned __int8 m_sndAmbientVolume;
-	unsigned __int16 m_sndAmbientDayVolume;
-	unsigned __int16 m_sndAmbientNightVolume;
-
-	CGameArea() = delete;
-
-	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
-
-	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
-
-	int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
-
-	int GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest)
-	{
-		return p_CGameArea_GetNearest2(this, center, type, range, terrainTable, lineOfSight, seeInvisible, nNearest);
-	}
-
-	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance)
-	{
-		return p_CGameArea_AdjustTarget(this, start, goal, personalSpace, tolerance);
-	}
-
-	int CheckWalkable(CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored)
-	{
-		return p_CGameArea_CheckWalkable(this, start, goal, terrainTable, personalSpace, bCheckIfExplored);
-	}
-
-	int CheckLOS(const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange)
-	{
-		return p_CGameArea_CheckLOS(this, start, goal, terrainTable, bCheckIfExplored, nVisualRange);
-	}
-};
-
-struct DPWrapper
-{
-	enum class PEER_STATE_t : __int32
-	{
-		PEER_INITIAL = 0,
-		PEER_DISCONNECTED = 1,
-		PEER_NEGOTIATING = 2,
-		PEER_CONNECTING = 3,
-		PEER_CONNECTED = 4,
-		PEER_INVALID_PASSWORD = 5,
-		PEER_JOIN_ROOM_FULL = 6,
-		PEER_JOIN_ERROR = 7,
-	};
-
-	std::vector<DP_Player*,std::allocator<DP_Player*>> m_players;
-	std::queue<DP_Packet*,std::deque<DP_Packet*,std::allocator<DP_Packet*>>> m_packetQueue;
-	int m_currentSessionId;
-	IDPProvider* m_provider;
-	IDPPeer* m_connection;
-	int m_peerState;
-	bool m_server;
-	int m_ReplyFlags;
-	int m_playerCreateID;
-	DP_ProviderID m_nProvider;
-	int m_nMyID;
-	DPWrapper::PEER_STATE_t PEER_STATE;
-
-	DPWrapper() = delete;
-};
-
-struct CNetwork
-{
-	_GUID m_nApplicationGuid;
-	unsigned __int8 m_bApplicationGuidDefined;
-	unsigned __int8 m_bAutoConnectCheck;
-	unsigned __int8 m_bServiceProviderEnumerated;
-	unsigned __int8 m_bServiceProviderSelected;
-	int m_nServiceProvider;
-	int m_nTotalServiceProviders;
-	Array<CString,4> m_ppszServiceProviderNames;
-	Array<DP_ProviderID,4> m_pnServiceProviderIDS;
-	unsigned __int8 m_bConnectionInitialized;
-	unsigned __int8 m_bSocketConnecting;
-	unsigned __int8 m_bSocketConnected;
-	CString m_sIPAddress;
-	unsigned __int8 padding2;
-	void* m_lpDPAddress;
-	unsigned int m_dwDPAddressSize;
-	CString m_version;
-	unsigned __int8 m_bSessionSelected;
-	int m_nSession;
-	unsigned __int8 m_bSessionNameToMake;
-	unsigned __int8 padding3;
-	CString m_sSessionNameToMake;
-	CString m_sSessionDescriptionToMake;
-	unsigned __int8 m_bSessionPasswordEnabled;
-	unsigned __int8 padding4;
-	CString m_sSessionPassword;
-	unsigned __int8 m_bAllowNewConnections;
-	unsigned __int8 m_bConnectionEstablished;
-	unsigned __int8 m_bIsHost;
-	DPWrapper m_directPlay;
-	int m_nMaxPlayers;
-	unsigned int m_dwSessionFlags;
-	unsigned __int8 m_bMaxPlayersDefined;
-	unsigned __int8 m_bSessionOptionsDefined;
-	CString m_sJoinedGame;
-	CString m_sLeftGame;
-	CString m_sDroppedGame;
-	unsigned __int8 m_bPlayerNameToMake;
-	unsigned __int8 m_bPlayerCreated;
-	int m_idLocalPlayer;
-	CString m_sLocalPlayerName;
-	int m_nTotalPlayers;
-	Array<CString,6> m_psPlayerName;
-	Array<int,6> m_pPlayerID;
-	Array<unsigned __int8,6> m_pbPlayerVisible;
-	Array<unsigned __int8,6> m_pbPlayerEnumerateFlag;
-	int m_nLocalPlayer;
-	int m_nHostPlayer;
-	CString m_sHostIPAddress;
-	int m_bAnnounceNewPlayers;
-	Array<CNetworkWindow,6> m_pSlidingWindow;
-	CNetworkWindow m_SystemWindow;
-	Array<unsigned int,256> m_dwCRC32;
-	CNetworkConnectionSettings m_connectionSettings;
-	unsigned int m_lastMessageSentTime;
-	Array<unsigned int,6> m_lastMessageReceivedTime;
-
-	CNetwork() = delete;
-};
-
-typedef void (__thiscall *type_CChitin_OnResizeWindow)(CChitin* pThis, int w, int h);
-extern type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
-
-struct CChitin
-{
-	struct vtbl
-	{
-		void (__fastcall *SynchronousUpdate)(CChitin*);
-		void (__fastcall *SetupPanels)(CChitin*);
-		unsigned int (__fastcall *GetIDSInvalidVideoMode)(CChitin*);
-		unsigned int (__fastcall *GetIDSOpenGLDll)(CChitin*);
-		unsigned int (__fastcall *GetIDSExclusiveMode)(CChitin*);
-		unsigned int (__fastcall *GetIDSChoosePixelFormat)(CChitin*);
-		unsigned int (__fastcall *GetIDSSetPixelFormat)(CChitin*);
-		unsigned int (__fastcall *GetIDSSetGameResolution)(CChitin*);
-		unsigned int (__fastcall *GetIDSSetGameBitDepth)(CChitin*);
-		unsigned int (__fastcall *GetIDSBadDeskTopBitDepth)(CChitin*);
-		unsigned int (__fastcall *GetIDSWindowsFonts)(CChitin*);
-		CRes* (__fastcall *AllocResObject)(CChitin*, int);
-		const CString* (__fastcall *GetIconRes)(CChitin*);
-		void (__fastcall *GetScreenShotFilePrefix)(CChitin*, CString*);
-		int (__fastcall *FontRectOutline)(CChitin*);
-		int (__fastcall *InitializeServices)(CChitin*);
-		void (__fastcall *SetProgressBar)(CChitin*, unsigned __int8, int, int, int, unsigned __int8, int, unsigned __int8, int, unsigned __int8, unsigned __int8, unsigned int);
-		void (__fastcall *SetProgressBarActivateEngine)(CChitin*, int);
-		void (__fastcall *BroadcastMultiplayerProgressBarInfo)(CChitin*);
-		void (__fastcall *SetCDSwitchStatus)(CChitin*, unsigned __int8, unsigned __int8, unsigned __int8, const CString*, unsigned __int8, unsigned __int8, unsigned __int8);
-		void (__fastcall *SetCDSwitchActivateEngine)(CChitin*, int);
-		void (__fastcall *OnMultiplayerSessionOpen)(CChitin*, CString*, CString*, CString*);
-		void (__fastcall *OnMultiplayerSessionToClose)(CChitin*);
-		void (__fastcall *OnMultiplayerSessionClose)(CChitin*);
-		void (__fastcall *OnMultiplayerPlayerJoin)(CChitin*, int, const CString*);
-		void (__fastcall *OnMultiplayerPlayerVisible)(CChitin*, int);
-		void (__fastcall *OnMultiplayerPlayerLeave)(CChitin*, int, const CString*);
-		int (__fastcall *MessageCallback)(CChitin*, unsigned __int8*, unsigned int);
-		unsigned __int8 (__fastcall *GetGamespyResponse)(CChitin*, unsigned __int8, unsigned __int8**, unsigned int*);
-		void (__fastcall *AsynchronousUpdate)(CChitin*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
-		void (__fastcall *SelectEngine)(CChitin*, CWarp*);
-		void (__fastcall *ShutDown)(CChitin*, int, const char*, const char*);
-		const char* (__fastcall *GetKeyFileName)(CChitin*);
-		unsigned __int8 (__fastcall *GetNumberSoundChannels)(CChitin*);
-		int (__fastcall *GetMovieVolume)(CChitin*);
-		void (__fastcall *LoadOptions)(CChitin*);
-		void (__fastcall *PreLoadFonts)(CChitin*);
-		void (__fastcall *SetSoundVolumes)(CChitin*);
-		unsigned __int16 (__fastcall *GetMultiplayerGameSpyPort)(CChitin*);
-		unsigned __int16 (__fastcall *GetMultiplayerDirectPlayPort)(CChitin*);
-		void (__fastcall *SetRenderCount)(CChitin*, unsigned __int8);
-		int (__fastcall *ConfirmQuit)(CChitin*);
-		void (__fastcall *GetGameSpyGameName)(CChitin*, CString*);
-		void (__fastcall *GetGameSpyCode)(CChitin*, CString*);
-		void (__fastcall *GetPanicCDStrings)(CChitin*, CString*, CString*, CString*);
-		void (__fastcall *OnMixerInitialize)(CChitin*);
-		int (__fastcall *Is3DSound)(CChitin*, int);
-		int (__fastcall *GetEAXActive)(CChitin*);
-		void (__fastcall *RedrawScreen)(CChitin*);
-		unsigned __int8 (__fastcall *GetSoundEnvironment)(CChitin*, CString, unsigned int*, float*, float*, float*, float*);
-		unsigned __int8 (__fastcall *CutsceneModeActive)(CChitin*);
-
-		vtbl() = delete;
-	};
-
-	int m_mouseLButton;
-	int m_mouseRButton;
-	int m_bMouseLButtonDown;
-	tagPOINT m_mouseLDblClickPoint;
-	unsigned int m_mouseLDblClickCount;
-	int m_bMouseRButtonDown;
-	tagPOINT m_mouseRDblClickPoint;
-	unsigned int m_mouseRDblClickCount;
-	int m_bMouseMButtonDown;
-	tagPOINT m_mouseMDblClickPoint;
-	unsigned int m_mouseMDblClickCount;
-	unsigned int m_mouseDblClickTime;
-	tagSIZE m_mouseDblClickSize;
-	int bEngineActive;
-	int bServicingEnabled;
-	int bMessagesEnabled;
-	CObList lEngines;
-	unsigned int nIterations;
-	CWarp* pStartingEngine;
-	unsigned int nTimer;
-	unsigned int nTimerRes;
-	CString m_sCommandLine;
-	CRect m_rClient;
-	unsigned __int8 m_bReInitializing;
-	unsigned __int8 m_bScreenEdgeScroll;
-	unsigned int m_opSystemPlatformId;
-	__int16 m_capsLockState;
-	CPoint m_ptScreen;
-	int m_bStartUpHost;
-	int m_bStartUpConnect;
-	CString m_sStartUpAddress;
-	CString m_sStartUpPort;
-	CString m_sStartUpPlayer;
-	CString m_sStartUpPassword;
-	int m_bStartUpNewGame;
-	int m_bStartUpLoadGame;
-	CString m_sStartUpSession;
-	unsigned __int8 m_bStartUpDirectPlayLobby;
-	unsigned __int8 m_bStartUpGameSpyLocation;
-	CString m_sStartUpGameSpyLocation;
-	unsigned __int8 m_bStartUpThroneOfBhaal;
-	CSoundMixer* cSoundMixer;
-	int m_nMaxPlayers;
-	int m_nCurrentSong;
-	_EAXPRESET m_nSoundEnvironment;
-	int m_bSoundInitialized;
-	unsigned __int8 padding;
-	int m_bInMouseWheelQueue;
-	CTypedPtrList<CPtrList,long*> m_lstMouseWheel;
-	unsigned int m_wheelScrollLines;
-	int m_bIsMouseInWindow;
-	int m_bFrameOutline;
-	int m_bUseMirrorFX;
-	unsigned int m_msgAutoPlay;
-	void* m_hEvent;
-	unsigned __int8 m_bUsePlanescapeSoundReductionCurve;
-	unsigned int m_nSoundReductionCurveRadius;
-	unsigned int m_nTickCount;
-	int m_nAIPerSec;
-	int m_nAIElasped;
-	unsigned int m_nRenderTickCount;
-	int m_nRenderPerSec;
-	int m_nRenderElasped;
-	int m_nAISleeper;
-	int m_bIsTouchUI;
-	int m_bUseBGRA;
-	int m_bRenderTilesLinear;
-	CString m_sFontName;
-	int m_nFullFrameTimer;
-	int m_nGameTimer;
-	int m_nRenderTimer;
-	int m_nSearchTimer;
-	_iobuf* m_fFrameTimeLog;
-	int m_bLogFrames;
-	CWarp* pActiveEngine;
-	CVideo cVideo;
-	CNetwork cNetwork;
-	CSteam cSteam;
-	unsigned __int8 padding2;
-	int bPointerUpdated;
-	CPoint cMousePosition;
-	int nAUCounter;
-	int bInTimer;
-	int m_AIStale;
-	int m_displayStale;
-	int m_bInSyncUpdate;
-	unsigned int m_keyRepeatDelay;
-	unsigned int m_keyRepeatRate;
-	CProgressBar cProgressBar;
-	unsigned __int16 m_nAICounter;
-	int m_bManualFrameControl;
-	int m_displayDebug;
-	int m_displaySerialize;
-	int m_bExitOnError;
-	int m_bEnableCucumber;
-	CResRef* pCurRes;
-	CString m_sFontNameNormal;
-	CString m_sFontNameRealms;
-	CString m_sFontNameStoneBig;
-	CString m_sFontNameStoneSml;
-	CString m_sFontNameToolFont;
-	CString m_sFontNameFloatTxt;
-	int m_bDisplaySubtitles;
-	int m_bReverseMouseWheelZoom;
-
-	CChitin() = delete;
-
-	void OnResizeWindow(int w, int h)
-	{
-		p_CChitin_OnResizeWindow(this, w, h);
-	}
-
-	virtual void virtual_SynchronousUpdate()
-	{
-	}
-
-	virtual void virtual_SetupPanels()
-	{
-	}
-
-	virtual unsigned int virtual_GetIDSInvalidVideoMode()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetIDSOpenGLDll()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetIDSExclusiveMode()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetIDSChoosePixelFormat()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetIDSSetPixelFormat()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetIDSSetGameResolution()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetIDSSetGameBitDepth()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetIDSBadDeskTopBitDepth()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetIDSWindowsFonts()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual CRes* virtual_AllocResObject(int _0)
-	{
-		return *(CRes**)nullptr;
-	}
-
-	virtual const CString* virtual_GetIconRes()
-	{
-		return *(const CString**)nullptr;
-	}
-
-	virtual void virtual_GetScreenShotFilePrefix(CString* _0)
-	{
-	}
-
-	virtual int virtual_FontRectOutline()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int virtual_InitializeServices()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void virtual_SetProgressBar(unsigned __int8 _0, int _1, int _2, int _3, unsigned __int8 _4, int _5, unsigned __int8 _6, int _7, unsigned __int8 _8, unsigned __int8 _9, unsigned int _10)
-	{
-	}
-
-	virtual void virtual_SetProgressBarActivateEngine(int _0)
-	{
-	}
-
-	virtual void virtual_BroadcastMultiplayerProgressBarInfo()
-	{
-	}
-
-	virtual void virtual_SetCDSwitchStatus(unsigned __int8 _0, unsigned __int8 _1, unsigned __int8 _2, const CString* _3, unsigned __int8 _4, unsigned __int8 _5, unsigned __int8 _6)
-	{
-	}
-
-	virtual void virtual_SetCDSwitchActivateEngine(int _0)
-	{
-	}
-
-	virtual void virtual_OnMultiplayerSessionOpen(CString* _0, CString* _1, CString* _2)
-	{
-	}
-
-	virtual void virtual_OnMultiplayerSessionToClose()
-	{
-	}
-
-	virtual void virtual_OnMultiplayerSessionClose()
-	{
-	}
-
-	virtual void virtual_OnMultiplayerPlayerJoin(int _0, const CString* _1)
-	{
-	}
-
-	virtual void virtual_OnMultiplayerPlayerVisible(int _0)
-	{
-	}
-
-	virtual void virtual_OnMultiplayerPlayerLeave(int _0, const CString* _1)
-	{
-	}
-
-	virtual int virtual_MessageCallback(unsigned __int8* _0, unsigned int _1)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual unsigned __int8 virtual_GetGamespyResponse(unsigned __int8 _0, unsigned __int8** _1, unsigned int* _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual void virtual_AsynchronousUpdate(unsigned int _0, unsigned int _1, unsigned int _2, unsigned int _3, unsigned int _4)
-	{
-	}
-
-	virtual void virtual_SelectEngine(CWarp* _0)
-	{
-	}
-
-	virtual void virtual_ShutDown(int _0, const char* _1, const char* _2)
-	{
-	}
-
-	virtual const char* virtual_GetKeyFileName()
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual unsigned __int8 virtual_GetNumberSoundChannels()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual int virtual_GetMovieVolume()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void virtual_LoadOptions()
-	{
-	}
-
-	virtual void virtual_PreLoadFonts()
-	{
-	}
-
-	virtual void virtual_SetSoundVolumes()
-	{
-	}
-
-	virtual unsigned __int16 virtual_GetMultiplayerGameSpyPort()
-	{
-		return *(unsigned __int16*)nullptr;
-	}
-
-	virtual unsigned __int16 virtual_GetMultiplayerDirectPlayPort()
-	{
-		return *(unsigned __int16*)nullptr;
-	}
-
-	virtual void virtual_SetRenderCount(unsigned __int8 _0)
-	{
-	}
-
-	virtual int virtual_ConfirmQuit()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void virtual_GetGameSpyGameName(CString* _0)
-	{
-	}
-
-	virtual void virtual_GetGameSpyCode(CString* _0)
-	{
-	}
-
-	virtual void virtual_GetPanicCDStrings(CString* _0, CString* _1, CString* _2)
-	{
-	}
-
-	virtual void virtual_OnMixerInitialize()
-	{
-	}
-
-	virtual int virtual_Is3DSound(int _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int virtual_GetEAXActive()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void virtual_RedrawScreen()
-	{
-	}
-
-	virtual unsigned __int8 virtual_GetSoundEnvironment(CString _0, unsigned int* _1, float* _2, float* _3, float* _4, float* _5)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 virtual_CutsceneModeActive()
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-};
-
-struct CBaldurChitin : CChitin
-{
-	struct vtbl : CChitin::vtbl
-	{
-		void (__fastcall *ShutDown_2)(CBaldurChitin*, int, char*, const char*);
-		void (__fastcall *UnloadFonts)(CBaldurChitin*);
-
-		vtbl() = delete;
-	};
-
-	CInfCursor* m_pObjectCursor;
-	CInfGame* m_pObjectGame;
-	CDungeonMaster* m_pEngineDM;
-	CBaldurProjector* m_pEngineProjector;
-	CScreenAI* m_pEngineAI;
-	CScreenCharacter* m_pEngineCharacter;
-	CScreenCreateChar* m_pEngineCreateChar;
-	CScreenCreateParty* m_pEngineCreateParty;
-	CScreenInventory* m_pEngineInventory;
-	CScreenJournal* m_pEngineJournal;
-	CScreenLoad* m_pEngineLoad;
-	CScreenMap* m_pEngineMap;
-	CScreenOptions* m_pEngineOptions;
-	CScreenPriestSpell* m_pEnginePriestSpell;
-	CScreenSave* m_pEngineSave;
-	CScreenStart* m_pEngineStart;
-	CScreenWizSpell* m_pEngineWizSpell;
-	CScreenWorld* m_pEngineWorld;
-	CScreenStore* m_pEngineStore;
-	CScreenMultiPlayer* m_pEngineMultiPlayer;
-	CScreenConnection* m_pEngineConnection;
-	CScreenWorldMap* m_pEngineWorldMap;
-	CScreenChapter* m_pEngineChapter;
-	CScreenMovies* m_pEngineMovies;
-	CScreenDLC* m_pEngineDLC;
-	CTlkTable m_cTlkTable;
-	CCacheStatus m_cCachingStatus;
-	CScriptCache m_scriptCache;
-	CBaldurMessage m_cBaldurMessage;
-	CMessageHandler m_cMessageHandler;
-	int m_bFontRectOutline;
-	unsigned __int8 m_bCDScanDone;
-	unsigned __int8 m_bCDFoundDrive;
-	CString m_sCDDriveName;
-	unsigned __int8 m_bCDMediaInDrive;
-	unsigned __int8 m_bCDFoundBaldurCD;
-	unsigned __int8 m_bIsAutoStarting;
-	int m_bDropPanels;
-	int m_bDropCaps;
-	int m_bDisableMovies;
-	int m_bStartConfig;
-	int m_bSuperSpeedAI;
-	int m_bFirstRun;
-	int m_nInstallType;
-	int m_bUseNewGui;
-	CVidFont m_preLoadedFont;
-	CVidMosaic m_tiledBackground;
-
-	CBaldurChitin() = delete;
-
-	virtual void virtual_ShutDown_2(int _0, char* _1, const char* _2)
-	{
-	}
-
-	virtual void virtual_UnloadFonts()
-	{
-	}
 };
 
 

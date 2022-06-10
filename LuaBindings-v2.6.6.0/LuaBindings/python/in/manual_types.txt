@@ -68,6 +68,20 @@ struct CharString
 		return data;
 	}
 
+	$custom_return_1 getL(size_t length)
+	{
+		char* localCopy = (char*)alloca(length + 1);
+		int i = 0;
+		for (; i < length; ++i) {
+			char readVal = data[i];
+			if (readVal == '\0')
+				break;
+			localCopy[i] = readVal;
+		}
+		localCopy[i] = '\0';
+		p_lua_pushstring(L, localCopy);
+	}
+
 	void free()
 	{
 		if (data) {
@@ -192,17 +206,7 @@ struct Pointer
 
 struct VoidPointer
 {
-	nobinding void* reference;
-
-	void pointTo(void* ptr)
-	{
-		reference = ptr;
-	}
-
-	intptr_t toPointer()
-	{
-		return (intptr_t)reference;
-	}
+	void* reference;
 };
 
 template<class T, int size>
