@@ -83,6 +83,9 @@
     <ClCompile Include="engine_reimplementations.cpp">
       <Filter>Source Files\References\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="util.cpp">
+      <Filter>Source Files\Lua Bindings</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\LuaBindings\to_lua_pointers.h">

@@ -6970,6 +6970,7 @@ extern CTypedPtrArray<CPtrArray,CRes*>* p_resources;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 extern CBaldurChitin** p_g_pBaldurChitin;
 extern lua_State** p_g_lua;
+extern char** p_afxPchNil;
 struct DP_Player
 {
 	unsigned int id;
@@ -8209,6 +8210,9 @@ extern type_CAIScriptFile_Destruct p_CAIScriptFile_Destruct;
 typedef void (__thiscall *type_CAIScriptFile_ParseResponseString)(CAIScriptFile* pThis, CString* data);
 extern type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
 
+typedef CAIObjectType* (__thiscall *type_CAIScriptFile_ParseObjectType)(CAIScriptFile* pThis, CAIObjectType* result, CString* input);
+extern type_CAIScriptFile_ParseObjectType p_CAIScriptFile_ParseObjectType;
+
 struct CAIScriptFile
 {
 	__int16 m_parseMode;
@@ -8240,6 +8244,11 @@ struct CAIScriptFile
 	void ParseResponseString(CString* data)
 	{
 		p_CAIScriptFile_ParseResponseString(this, data);
+	}
+
+	CAIObjectType* ParseObjectType(CAIObjectType* result, CString* input)
+	{
+		return p_CAIScriptFile_ParseObjectType(this, result, input);
 	}
 };
 
@@ -11754,11 +11763,20 @@ struct CAreaFileCharacterEntryPoint
 	CAreaFileCharacterEntryPoint() = delete;
 };
 
-typedef void (__thiscall *type_CAIObjectType_Set)(CAIObjectType* pThis, CAIObjectType* that);
-extern type_CAIObjectType_Set p_CAIObjectType_Set;
+typedef void (__thiscall *type_CAIObjectType_Construct1)(CAIObjectType* pThis, byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
+extern type_CAIObjectType_Construct1 p_CAIObjectType_Construct1;
+
+typedef void (__thiscall *type_CAIObjectType_Decode)(CAIObjectType* pThis, CGameAIBase* caller);
+extern type_CAIObjectType_Decode p_CAIObjectType_Decode;
+
+typedef CGameObject* (__thiscall *type_CAIObjectType_GetShare)(CAIObjectType* pThis, CGameAIBase* caller, int checkBackList);
+extern type_CAIObjectType_GetShare p_CAIObjectType_GetShare;
 
 typedef byte (__thiscall *type_CAIObjectType_OfType)(const CAIObjectType* pThis, const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance);
 extern type_CAIObjectType_OfType p_CAIObjectType_OfType;
+
+typedef void (__thiscall *type_CAIObjectType_Set)(CAIObjectType* pThis, const CAIObjectType* that);
+extern type_CAIObjectType_Set p_CAIObjectType_Set;
 
 struct CAIObjectType
 {
@@ -11776,14 +11794,40 @@ struct CAIObjectType
 
 	CAIObjectType() = delete;
 
-	void Set(CAIObjectType* that)
+	void Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name)
 	{
-		p_CAIObjectType_Set(this, that);
+		p_CAIObjectType_Construct1(this, EnemyAlly, General, Race, Class, Specifics, Gender, Alignment, Instance, SpecialCase, name);
+	}
+
+	void Decode(CGameAIBase* caller)
+	{
+		p_CAIObjectType_Decode(this, caller);
+	}
+
+	CGameObject* GetShare(CGameAIBase* caller, int checkBackList)
+	{
+		return p_CAIObjectType_GetShare(this, caller, checkBackList);
 	}
 
 	byte OfType(const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance) const
 	{
 		return p_CAIObjectType_OfType(this, type, checkForNonSprites, noNonSprites, deathMatchAllowance);
+	}
+
+	void Set(const CAIObjectType* that)
+	{
+		p_CAIObjectType_Set(this, that);
+	}
+
+	void Construct(const CAIObjectType* toCopy)
+	{
+		this->m_name.m_pchData = *p_afxPchNil;
+		this->Set(toCopy);
+	}
+
+	void Destruct()
+	{
+		this->m_name.Destruct();
 	}
 };
 

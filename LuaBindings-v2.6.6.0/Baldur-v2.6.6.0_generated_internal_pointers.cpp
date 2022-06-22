@@ -38,6 +38,7 @@ CTypedPtrArray<CPtrArray,CRes*>* p_resources;
 _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 CBaldurChitin** p_g_pBaldurChitin;
 lua_State** p_g_lua;
+char** p_afxPchNil;
 type_CAIScript_Construct1 p_CAIScript_Construct1;
 type_C2DArray_Construct p_C2DArray_Construct;
 type_C2DArray_Load p_C2DArray_Load;
@@ -50,6 +51,7 @@ type_CAIIdList_Find1 p_CAIIdList_Find1;
 type_CAIScriptFile_Construct p_CAIScriptFile_Construct;
 type_CAIScriptFile_Destruct p_CAIScriptFile_Destruct;
 type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
+type_CAIScriptFile_ParseObjectType p_CAIScriptFile_ParseObjectType;
 type_CSearchBitmap_GetCost p_CSearchBitmap_GetCost;
 ushort* CVidMode::p_SCREENWIDTH;
 ushort* CVidMode::p_SCREENHEIGHT;
@@ -64,8 +66,11 @@ type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
 type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
 type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
 type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
-type_CAIObjectType_Set p_CAIObjectType_Set;
+type_CAIObjectType_Construct1 p_CAIObjectType_Construct1;
+type_CAIObjectType_Decode p_CAIObjectType_Decode;
+type_CAIObjectType_GetShare p_CAIObjectType_GetShare;
 type_CAIObjectType_OfType p_CAIObjectType_OfType;
+type_CAIObjectType_Set p_CAIObjectType_Set;
 CAIObjectType* CAIObjectType::p_NOONE;
 type_CAIAction_Construct1 p_CAIAction_Construct1;
 type_CAIAction_ConstructCopy p_CAIAction_ConstructCopy;
@@ -123,6 +128,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("capture"), reinterpret_cast<void**>(&p_capture)},
 	std::pair{TEXT("g_pBaldurChitin"), reinterpret_cast<void**>(&p_g_pBaldurChitin)},
 	std::pair{TEXT("g_lua"), reinterpret_cast<void**>(&p_g_lua)},
+	std::pair{TEXT("afxPchNil"), reinterpret_cast<void**>(&p_afxPchNil)},
 	std::pair{TEXT("CAIScript::Construct1"), reinterpret_cast<void**>(&p_CAIScript_Construct1)},
 	std::pair{TEXT("C2DArray::Construct"), reinterpret_cast<void**>(&p_C2DArray_Construct)},
 	std::pair{TEXT("C2DArray::Load"), reinterpret_cast<void**>(&p_C2DArray_Load)},
@@ -135,6 +141,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAIScriptFile::Construct"), reinterpret_cast<void**>(&p_CAIScriptFile_Construct)},
 	std::pair{TEXT("CAIScriptFile::Destruct"), reinterpret_cast<void**>(&p_CAIScriptFile_Destruct)},
 	std::pair{TEXT("CAIScriptFile::ParseResponseString"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseResponseString)},
+	std::pair{TEXT("CAIScriptFile::ParseObjectType"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseObjectType)},
 	std::pair{TEXT("CSearchBitmap::GetCost"), reinterpret_cast<void**>(&p_CSearchBitmap_GetCost)},
 	std::pair{TEXT("CVidMode::SCREENWIDTH"), reinterpret_cast<void**>(&CVidMode::p_SCREENWIDTH)},
 	std::pair{TEXT("CVidMode::SCREENHEIGHT"), reinterpret_cast<void**>(&CVidMode::p_SCREENHEIGHT)},
@@ -149,8 +156,11 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&p_CGameArea_AdjustTarget)},
 	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&p_CGameArea_CheckWalkable)},
 	std::pair{TEXT("CGameArea::CheckLOS"), reinterpret_cast<void**>(&p_CGameArea_CheckLOS)},
-	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&p_CAIObjectType_Set)},
+	std::pair{TEXT("CAIObjectType::Construct1"), reinterpret_cast<void**>(&p_CAIObjectType_Construct1)},
+	std::pair{TEXT("CAIObjectType::Decode"), reinterpret_cast<void**>(&p_CAIObjectType_Decode)},
+	std::pair{TEXT("CAIObjectType::GetShare"), reinterpret_cast<void**>(&p_CAIObjectType_GetShare)},
 	std::pair{TEXT("CAIObjectType::OfType"), reinterpret_cast<void**>(&p_CAIObjectType_OfType)},
+	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&p_CAIObjectType_Set)},
 	std::pair{TEXT("CAIObjectType::NOONE"), reinterpret_cast<void**>(&CAIObjectType::p_NOONE)},
 	std::pair{TEXT("CAIAction::Construct1"), reinterpret_cast<void**>(&p_CAIAction_Construct1)},
 	std::pair{TEXT("CAIAction::ConstructCopy"), reinterpret_cast<void**>(&p_CAIAction_ConstructCopy)},

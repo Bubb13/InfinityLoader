@@ -734,8 +734,22 @@ struct CAIIdList : CResHelper<CResText,1008>
 struct CAIObjectType
 {
 	static CAIObjectType NOONE;
-	void Set(CAIObjectType* that);
+	$constructor_fake Construct1(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
+	void Decode(CGameAIBase* caller);
+	CGameObject* GetShare(CGameAIBase* caller, int checkBackList);
 	byte OfType(const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance) const;
+	void Set(const CAIObjectType* that);
+
+	$constructor_fake ConstructCopy(const CAIObjectType* toCopy)
+	{
+		this->m_name.m_pchData = *p_afxPchNil;
+		this->Set(toCopy);
+	}
+
+	void Destruct()
+	{
+		this->m_name.Destruct();
+	}
 };
 
 struct CGameEffect : CGameEffectBase
@@ -891,6 +905,7 @@ struct CAIScriptFile
 	$constructor_fake Construct();
 	void Destruct();
 	void ParseResponseString(CString* data);
+	CAIObjectType* ParseObjectType(CAIObjectType* result, CString* input);
 };
 
 struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
@@ -935,6 +950,7 @@ CTypedPtrArray<CPtrArray,CRes*> resources;
 $9B9540D9920A90D57A3D80DDD1A70514 capture;
 CBaldurChitin* g_pBaldurChitin;
 lua_State* g_lua;
+char* afxPchNil;
 
 //////////
 // EEex //

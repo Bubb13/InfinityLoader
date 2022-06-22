@@ -266,31 +266,31 @@ static void p_storeatpeer(lua_State* L, int index) {
 	// dest[key] = value                                             //
 	///////////////////////////////////////////////////////////////////
 
-	p_lua_pushstring(L, "tolua_peer");  // 3 [ key, value, "tolua_peer" ]
-	p_lua_rawget(L, LUA_REGISTRYINDEX); // 3 [ key, value, registry["tolua_peer"] ]
-	p_lua_pushvalue(L, index);          // 4 [ key, value, registry["tolua_peer"], stack[index] ]
-	p_lua_rawget(L, -2);                // 4 [ key, value, registry["tolua_peer"], registry["tolua_peer"][stack[index]] -> dest ]
+	p_lua_pushstring(L, "tolua_peer");  // 3 [ ..., key, value, "tolua_peer" ]
+	p_lua_rawget(L, LUA_REGISTRYINDEX); // 3 [ ..., key, value, registry["tolua_peer"] ]
+	p_lua_pushvalue(L, index);          // 4 [ ..., key, value, registry["tolua_peer"], stack[index] ]
+	p_lua_rawget(L, -2);                // 4 [ ..., key, value, registry["tolua_peer"], registry["tolua_peer"][stack[index]] -> dest ]
 	if (!p_lua_istable(L, -1)) {
 
 		///////////////////////////////////////////////////////
 		// registry["tolua_peer"][stack[index]] = {} -> dest //
 		///////////////////////////////////////////////////////
 
-		p_lua_pop(L, 1);                // 3 [ key, value, registry["tolua_peer"] ]
-		p_lua_newtable(L);              // 4 [ key, value, registry["tolua_peer"], newtable ]
-		p_lua_pushvalue(L, index);      // 5 [ key, value, registry["tolua_peer"], newtable, stack[index] ]
-		p_lua_pushvalue(L, -2);         // 6 [ key, value, registry["tolua_peer"], newtable, stack[index], newtable ]
-		p_lua_settable(L, -4);          // 4 [ key, value, registry["tolua_peer"], newtable -> dest ]
+		p_lua_pop(L, 1);                // 3 [ ..., key, value, registry["tolua_peer"] ]
+		p_lua_newtable(L);              // 4 [ ..., key, value, registry["tolua_peer"], newtable ]
+		p_lua_pushvalue(L, index);      // 5 [ ..., key, value, registry["tolua_peer"], newtable, stack[index] ]
+		p_lua_pushvalue(L, -2);         // 6 [ ..., key, value, registry["tolua_peer"], newtable, stack[index], newtable ]
+		p_lua_settable(L, -4);          // 4 [ ..., key, value, registry["tolua_peer"], newtable -> dest ]
 	}
 
 	///////////////////////
 	// dest[key] = value //
 	///////////////////////
 
-	p_lua_insert(L, -4);                // 4 [ dest, key, value, registry["tolua_peer"] ]
-	p_lua_pop(L, 1);                    // 3 [ dest, key, value ]
-	p_lua_rawset(L, -3);                // 1 [ dest ]
-	p_lua_pop(L, 1);                    // 0 [ ]
+	p_lua_insert(L, -4);                // 4 [ ..., dest, key, value, registry["tolua_peer"] ]
+	p_lua_pop(L, 1);                    // 3 [ ..., dest, key, value ]
+	p_lua_rawset(L, -3);                // 1 [ ..., dest ]
+	p_lua_pop(L, 1);                    // 0 [ ... ]
 }
 
 // Expects   [ ..., table, key, value ]
@@ -459,7 +459,7 @@ KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, SingleAction act
 				}
 			}
 			else {
-				p_lua_pop(L, 3);                       // 7  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i ]
+				p_lua_pop(L, 3);                       // 5  [ ..., mt, key, registry["tolua_base"], registry["tolua_base"][mt], i ]
 			}
 		}
 	}
@@ -507,6 +507,10 @@ KeyKeyReturn findKeyKey(lua_State* L, const char* keykey, SingleAction action) {
 		p_lua_pop(L, 2);                                        // 1 [ ..., mtVal ]
 		return retVal;
 	}
+	else {
+		                                                        // 2 [ ..., table, key ]
+		p_lua_pop(L, 2);                                        // 0 [ ... ]
+	}
 	return KeyKeyReturn::NONE;
 }
 
@@ -528,7 +532,7 @@ int callSetDynamic(lua_State* L) {
 			return 1;
 		}
 		else {
-			p_lua_pop(L, 1);            // 2 [ ..., table, key, value ]
+			p_lua_pop(L, 1);            // 3 [ ..., table, key, value ]
 		}
 	}
 	return 0;
