@@ -878,6 +878,11 @@ struct CAIAction
 	void Decode(CGameAIBase* caller);
 };
 
+struct CAICondition
+{
+	int Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+};
+
 struct CVidMode
 {
 	static ushort SCREENWIDTH;
@@ -904,8 +909,9 @@ struct CAIScriptFile
 {
 	$constructor_fake Construct();
 	void Destruct();
-	void ParseResponseString(CString* data);
+	void ParseConditionalString(CString* data);
 	CAIObjectType* ParseObjectType(CAIObjectType* result, CString* input);
+	void ParseResponseString(CString* data);
 };
 
 struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>

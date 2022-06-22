@@ -9,6 +9,7 @@ type_CString_Destruct p_CString_Destruct;
 type_CRes_Construct p_CRes_Construct;
 type_CRes_Destruct p_CRes_Destruct;
 type_CRes_Demand p_CRes_Demand;
+type_CAICondition_Hold p_CAICondition_Hold;
 type_CObList_Construct p_CObList_Construct;
 type_CObList_RemoveHead p_CObList_RemoveHead;
 type_CObList_Destruct p_CObList_Destruct;
@@ -50,8 +51,9 @@ type_CAIIdList_LoadList2 p_CAIIdList_LoadList2;
 type_CAIIdList_Find1 p_CAIIdList_Find1;
 type_CAIScriptFile_Construct p_CAIScriptFile_Construct;
 type_CAIScriptFile_Destruct p_CAIScriptFile_Destruct;
-type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
+type_CAIScriptFile_ParseConditionalString p_CAIScriptFile_ParseConditionalString;
 type_CAIScriptFile_ParseObjectType p_CAIScriptFile_ParseObjectType;
+type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
 type_CSearchBitmap_GetCost p_CSearchBitmap_GetCost;
 ushort* CVidMode::p_SCREENWIDTH;
 ushort* CVidMode::p_SCREENHEIGHT;
@@ -99,6 +101,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CRes::Construct"), reinterpret_cast<void**>(&p_CRes_Construct)},
 	std::pair{TEXT("CRes::Destruct"), reinterpret_cast<void**>(&p_CRes_Destruct)},
 	std::pair{TEXT("CRes::Demand"), reinterpret_cast<void**>(&p_CRes_Demand)},
+	std::pair{TEXT("CAICondition::Hold"), reinterpret_cast<void**>(&p_CAICondition_Hold)},
 	std::pair{TEXT("CObList::Construct"), reinterpret_cast<void**>(&p_CObList_Construct)},
 	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&p_CObList_RemoveHead)},
 	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&p_CObList_Destruct)},
@@ -140,8 +143,9 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAIIdList::Find1"), reinterpret_cast<void**>(&p_CAIIdList_Find1)},
 	std::pair{TEXT("CAIScriptFile::Construct"), reinterpret_cast<void**>(&p_CAIScriptFile_Construct)},
 	std::pair{TEXT("CAIScriptFile::Destruct"), reinterpret_cast<void**>(&p_CAIScriptFile_Destruct)},
-	std::pair{TEXT("CAIScriptFile::ParseResponseString"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseResponseString)},
+	std::pair{TEXT("CAIScriptFile::ParseConditionalString"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseConditionalString)},
 	std::pair{TEXT("CAIScriptFile::ParseObjectType"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseObjectType)},
+	std::pair{TEXT("CAIScriptFile::ParseResponseString"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseResponseString)},
 	std::pair{TEXT("CSearchBitmap::GetCost"), reinterpret_cast<void**>(&p_CSearchBitmap_GetCost)},
 	std::pair{TEXT("CVidMode::SCREENWIDTH"), reinterpret_cast<void**>(&CVidMode::p_SCREENWIDTH)},
 	std::pair{TEXT("CVidMode::SCREENHEIGHT"), reinterpret_cast<void**>(&CVidMode::p_SCREENHEIGHT)},

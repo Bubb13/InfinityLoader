@@ -44,6 +44,7 @@ struct ALCcontext_struct;
 struct ALCdevice_struct;
 struct C2DArray;
 struct CAIAction;
+struct CAICondition;
 struct CAIGroup;
 struct CAIIdList;
 struct CAIObjectType;
@@ -5041,12 +5042,35 @@ struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffe
 	CPersistantEffectListRegenerated() = delete;
 };
 
+typedef int (__thiscall *type_CAICondition_Hold)(CAICondition* pThis, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+extern type_CAICondition_Hold p_CAICondition_Hold;
+
+struct CAICondition
+{
+	CTypedPtrList<CPtrList,CAITrigger*> m_triggerList;
+
+	CAICondition() = delete;
+
+	int Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller)
+	{
+		return p_CAICondition_Hold(this, triggerList, caller);
+	}
+};
+
 struct CAIResponseSet
 {
 	CTypedPtrList<CPtrList,CAIResponse*> m_responseList;
 	int m_weightTotal;
 
 	CAIResponseSet() = delete;
+};
+
+struct CAIConditionResponse
+{
+	CAICondition m_condition;
+	CAIResponseSet m_responseSet;
+
+	CAIConditionResponse() = delete;
 };
 
 struct CChatBuffer
@@ -5076,21 +5100,6 @@ struct CAIResponse
 	CTypedPtrList<CPtrList,CAIAction*> m_actionList;
 
 	CAIResponse() = delete;
-};
-
-struct CAICondition
-{
-	CTypedPtrList<CPtrList,CAITrigger*> m_triggerList;
-
-	CAICondition() = delete;
-};
-
-struct CAIConditionResponse
-{
-	CAICondition m_condition;
-	CAIResponseSet m_responseSet;
-
-	CAIConditionResponse() = delete;
 };
 
 struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
@@ -7475,6 +7484,27 @@ struct CAIScript
 	}
 };
 
+struct CGameDialogReply
+{
+	unsigned int m_flags;
+	unsigned int m_replyText;
+	unsigned int m_journalEntry;
+	CAICondition m_condition;
+	CAIResponse m_response;
+	CResRef m_nextDialog;
+	unsigned int m_nextEntryIndex;
+	__POSITION* m_displayPosition;
+	int m_removeIfPicked;
+	unsigned __int8 m_displayListId;
+	CString m_conditionString;
+	int m_needToParseCondition;
+	CString m_responseString;
+	int m_needToParseResponse;
+	int m_bracketedActions;
+
+	CGameDialogReply() = delete;
+};
+
 struct CAbilityData
 {
 	CResRef m_icon;
@@ -7527,27 +7557,6 @@ struct CCriticalEntry
 	int m_bonus;
 
 	CCriticalEntry() = delete;
-};
-
-struct CGameDialogReply
-{
-	unsigned int m_flags;
-	unsigned int m_replyText;
-	unsigned int m_journalEntry;
-	CAICondition m_condition;
-	CAIResponse m_response;
-	CResRef m_nextDialog;
-	unsigned int m_nextEntryIndex;
-	__POSITION* m_displayPosition;
-	int m_removeIfPicked;
-	unsigned __int8 m_displayListId;
-	CString m_conditionString;
-	int m_needToParseCondition;
-	CString m_responseString;
-	int m_needToParseResponse;
-	int m_bracketedActions;
-
-	CGameDialogReply() = delete;
 };
 
 struct CGameDialogSprite
@@ -8207,11 +8216,14 @@ extern type_CAIScriptFile_Construct p_CAIScriptFile_Construct;
 typedef void (__thiscall *type_CAIScriptFile_Destruct)(CAIScriptFile* pThis);
 extern type_CAIScriptFile_Destruct p_CAIScriptFile_Destruct;
 
-typedef void (__thiscall *type_CAIScriptFile_ParseResponseString)(CAIScriptFile* pThis, CString* data);
-extern type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
+typedef void (__thiscall *type_CAIScriptFile_ParseConditionalString)(CAIScriptFile* pThis, CString* data);
+extern type_CAIScriptFile_ParseConditionalString p_CAIScriptFile_ParseConditionalString;
 
 typedef CAIObjectType* (__thiscall *type_CAIScriptFile_ParseObjectType)(CAIScriptFile* pThis, CAIObjectType* result, CString* input);
 extern type_CAIScriptFile_ParseObjectType p_CAIScriptFile_ParseObjectType;
+
+typedef void (__thiscall *type_CAIScriptFile_ParseResponseString)(CAIScriptFile* pThis, CString* data);
+extern type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
 
 struct CAIScriptFile
 {
@@ -8241,14 +8253,19 @@ struct CAIScriptFile
 		p_CAIScriptFile_Destruct(this);
 	}
 
-	void ParseResponseString(CString* data)
+	void ParseConditionalString(CString* data)
 	{
-		p_CAIScriptFile_ParseResponseString(this, data);
+		p_CAIScriptFile_ParseConditionalString(this, data);
 	}
 
 	CAIObjectType* ParseObjectType(CAIObjectType* result, CString* input)
 	{
 		return p_CAIScriptFile_ParseObjectType(this, result, input);
+	}
+
+	void ParseResponseString(CString* data)
+	{
+		p_CAIScriptFile_ParseResponseString(this, data);
 	}
 };
 
