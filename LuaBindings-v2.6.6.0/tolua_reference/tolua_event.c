@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tolua.h"
+#include "tolua_reference/tolua.h"
 
 // Expects   [ ..., key, value ]
 // End Stack [ ... ]

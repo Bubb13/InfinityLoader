@@ -12,7 +12,7 @@
 ** enhancements, or modifications.
 */
 
-#include "tolua.h"
+#include "tolua_reference/tolua.h"
 
 #include <string.h>
 #include <stdlib.h>

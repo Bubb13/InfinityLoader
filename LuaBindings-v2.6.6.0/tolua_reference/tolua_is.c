@@ -12,8 +12,8 @@
   ** enhancements, or modifications.
   */
 
-#include "tolua.h"
-#include "lauxlib.h"
+#include "tolua_reference/tolua.h"
+#include "tolua_reference/lauxlib.h"
 
 #include <stdlib.h>
 #include <string.h>

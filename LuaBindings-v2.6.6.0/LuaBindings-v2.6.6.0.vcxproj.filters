@@ -42,23 +42,17 @@
     <Filter Include="Source Files\References\tolua">
       <UniqueIdentifier>{faab61e7-a377-4b36-aa4a-cf2784167eae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\References\tolua\header">
+      <UniqueIdentifier>{83e1227b-81c1-42c0-86f9-dcca5f5babdf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\References\tolua\source">
+      <UniqueIdentifier>{b7554a35-ce0b-4307-8e94-c91de7b251f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\tolua">
+      <UniqueIdentifier>{2beb2473-53c3-4ede-89a6-2274ef970e91}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tolua_reference\tolua_map.c">
-      <Filter>Source Files\References\tolua</Filter>
-    </ClCompile>
-    <ClCompile Include="tolua_reference\tolua_push.c">
-      <Filter>Source Files\References\tolua</Filter>
-    </ClCompile>
-    <ClCompile Include="tolua_reference\tolua_to.c">
-      <Filter>Source Files\References\tolua</Filter>
-    </ClCompile>
-    <ClCompile Include="tolua_reference\tolua_event.c">
-      <Filter>Source Files\References\tolua</Filter>
-    </ClCompile>
-    <ClCompile Include="tolua_reference\tolua_is.c">
-      <Filter>Source Files\References\tolua</Filter>
-    </ClCompile>
     <ClCompile Include="EEexLua_generated.cpp">
       <Filter>Source Files\Generated</Filter>
     </ClCompile>
@@ -86,6 +80,21 @@
     <ClCompile Include="util.cpp">
       <Filter>Source Files\Lua Bindings</Filter>
     </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_event.c">
+      <Filter>Source Files\References\tolua\source</Filter>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_is.c">
+      <Filter>Source Files\References\tolua\source</Filter>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_map.c">
+      <Filter>Source Files\References\tolua\source</Filter>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_push.c">
+      <Filter>Source Files\References\tolua\source</Filter>
+    </ClCompile>
+    <ClCompile Include="tolua_reference\tolua_to.c">
+      <Filter>Source Files\References\tolua\source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\LuaBindings\to_lua_pointers.h">
@@ -93,9 +102,6 @@
     </ClInclude>
     <ClInclude Include="include\LuaBindings\lua_pointers.h">
       <Filter>Header Files\Lua Bindings</Filter>
-    </ClInclude>
-    <ClInclude Include="tolua_reference\tolua_event.h">
-      <Filter>Source Files\References\tolua</Filter>
     </ClInclude>
     <ClInclude Include="include\lua\lua.h">
       <Filter>Header Files\lua</Filter>
@@ -120,6 +126,30 @@
     </ClInclude>
     <ClInclude Include="util.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\tolua.h">
+      <Filter>Source Files\References\tolua\header</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\tolua_event.h">
+      <Filter>Source Files\References\tolua\header</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\lauxlib.h">
+      <Filter>Source Files\References\tolua\header</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\lua.h">
+      <Filter>Source Files\References\tolua\header</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\lua.hpp">
+      <Filter>Source Files\References\tolua\header</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\luaconf.h">
+      <Filter>Source Files\References\tolua\header</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\lualib.h">
+      <Filter>Source Files\References\tolua\header</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tolua\tolua.h">
+      <Filter>Header Files\tolua</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -81,7 +81,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)common/include;$(ProjectDir)include/LuaBindings;$(ProjectDir)include/lua;$(ProjectDir)include/tolua</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)common/include;$(ProjectDir)include;$(ProjectDir)include/LuaBindings;$(ProjectDir)include/lua;$(ProjectDir)include/tolua</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -133,7 +133,26 @@
     <ClInclude Include="include\lua\lauxlib.h" />
     <ClInclude Include="include\lua\lua.h" />
     <ClInclude Include="include\lua\luaconf.h" />
-    <ClInclude Include="tolua_reference\tolua_event.h">
+    <ClInclude Include="include\tolua\tolua.h" />
+    <ClInclude Include="include\tolua_reference\lauxlib.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\lua.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\lua.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\luaconf.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\lualib.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\tolua.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\tolua_reference\tolua_event.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="util.hpp" />
