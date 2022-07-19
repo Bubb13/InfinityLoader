@@ -368,6 +368,11 @@ struct CTypedPtrList : CObject
 		return (T)((CObList*)this)->RemoveHead();
 	}
 
+	void RemoveAt(__POSITION* position)
+	{
+		((CObList*)this)->RemoveAt(position);
+	}
+
 	void Destruct()
 	{
 		((CObList*)this)->Destruct();
@@ -723,6 +728,11 @@ struct C2DArray : CResHelper<CResText,1012>
 	void Destruct();
 };
 
+struct CAbilityId
+{
+	$constructor_fake Construct();
+};
+
 struct CAIIdList : CResHelper<CResText,1008>
 {
 	void Construct1();
@@ -761,6 +771,7 @@ struct CObList : CObject
 {
 	$constructor_fake Construct(int size);
 	CObject* RemoveHead();
+	void RemoveAt(__POSITION* position);
 	void Destruct();
 	__POSITION* AddTail(void* newElement);
 };
@@ -777,6 +788,7 @@ struct CGameAIBase : CGameObject
 
 struct CGameSprite : CGameAIBase
 {
+	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
 	__int32 GetKitMask();
 	short GetLauncherSlot(short slotNum, short abilityNum);
 	CGameButtonList* GetQuickButtons(unsigned __int16 buttonType, unsigned __int8 existanceCheck);

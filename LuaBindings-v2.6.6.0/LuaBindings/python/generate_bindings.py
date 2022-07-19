@@ -1539,6 +1539,13 @@ class Group:
 		functionField.returnType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE, debugLine="retypeFunctionFieldRet()")
 
 
+	def addFunctionFieldParameter(self, mainState: MainState, fieldName: str, newTypeStr: str):
+		field = self.fieldsMap[fieldName]
+		assert field.type == FieldType.FUNCTION, "Unhandled field.type in Group.retypeField()"
+		functionField: FunctionField = field
+		functionField.parameterTypes.append(defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE, debugLine="addFunctionFieldParameter()"))
+
+
 	def removeField(self, mainState: MainState, field: Field) -> None:
 
 		for ref in field.getAllTypeReferences(mainState):
@@ -1641,7 +1648,7 @@ class Group:
 				functionField.functionName = functionVariableMatch.group(3)
 
 				if functionField.functionName.startswith("~"):
-					functionField.functionName = functionField.functionName[1:] + "_Destructor"
+					functionField.functionName = "Destruct"
 
 				if thisTypeNoPtrMatch := functionVariableMatch.group(4):
 					functionField.thisType = defineTypeRef(mainState, self, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-3 {line}")

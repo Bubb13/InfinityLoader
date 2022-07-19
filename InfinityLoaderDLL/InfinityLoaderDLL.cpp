@@ -990,6 +990,11 @@ int messageBoxInternalLua(lua_State* L) {
 	return 0;
 }
 
+int printLua(lua_State* L) {
+	printf("%s\n", p_lua_tostring(L, 1));
+	return 0;
+}
+
 int read16Lua(lua_State* L) {
 	p_lua_pushinteger(L, *reinterpret_cast<__int16*>(p_lua_tointeger(L, 1)));
 	return 1;
@@ -1235,6 +1240,7 @@ void internalLuaHook() {
 	exposeToLua(L, "EEex_Memcpy", memcpyLua);
 	exposeToLua(L, "EEex_Memset", memsetLua);
 	exposeToLua(L, "EEex_MessageBoxInternal", messageBoxInternalLua);
+	exposeToLua(L, "EEex_Print", printLua);
 	exposeToLua(L, "EEex_Read16", read16Lua);
 	exposeToLua(L, "EEex_Read32", read32Lua);
 #if defined(_WIN64)

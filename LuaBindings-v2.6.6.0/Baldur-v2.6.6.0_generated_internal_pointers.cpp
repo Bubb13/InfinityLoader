@@ -12,6 +12,7 @@ type_CRes_Demand p_CRes_Demand;
 type_CAICondition_Hold p_CAICondition_Hold;
 type_CObList_Construct p_CObList_Construct;
 type_CObList_RemoveHead p_CObList_RemoveHead;
+type_CObList_RemoveAt p_CObList_RemoveAt;
 type_CObList_Destruct p_CObList_Destruct;
 type_CObList_AddTail p_CObList_AddTail;
 type_CImmunitiesAIType_OnList p_CImmunitiesAIType_OnList;
@@ -41,6 +42,7 @@ CBaldurChitin** p_g_pBaldurChitin;
 lua_State** p_g_lua;
 char** p_afxPchNil;
 type_CAIScript_Construct1 p_CAIScript_Construct1;
+type_CAbilityId_Construct p_CAbilityId_Construct;
 type_C2DArray_Construct p_C2DArray_Construct;
 type_C2DArray_Load p_C2DArray_Load;
 type_C2DArray_GetAtLabels p_C2DArray_GetAtLabels;
@@ -81,6 +83,7 @@ type_CAIAction_operator_equ p_CAIAction_operator_equ;
 type_CAIAction_Decode p_CAIAction_Decode;
 Array<byte,16>* CGameObject::p_DEFAULT_TERRAIN_TABLE;
 type_CGameAIBase_GetTargetShare p_CGameAIBase_GetTargetShare;
+type_CGameSprite_CheckQuickLists p_CGameSprite_CheckQuickLists;
 type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
 type_CGameSprite_GetLauncherSlot p_CGameSprite_GetLauncherSlot;
 type_CGameSprite_GetQuickButtons p_CGameSprite_GetQuickButtons;
@@ -104,6 +107,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAICondition::Hold"), reinterpret_cast<void**>(&p_CAICondition_Hold)},
 	std::pair{TEXT("CObList::Construct"), reinterpret_cast<void**>(&p_CObList_Construct)},
 	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&p_CObList_RemoveHead)},
+	std::pair{TEXT("CObList::RemoveAt"), reinterpret_cast<void**>(&p_CObList_RemoveAt)},
 	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&p_CObList_Destruct)},
 	std::pair{TEXT("CObList::AddTail"), reinterpret_cast<void**>(&p_CObList_AddTail)},
 	std::pair{TEXT("CImmunitiesAIType::OnList"), reinterpret_cast<void**>(&p_CImmunitiesAIType_OnList)},
@@ -133,6 +137,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("g_lua"), reinterpret_cast<void**>(&p_g_lua)},
 	std::pair{TEXT("afxPchNil"), reinterpret_cast<void**>(&p_afxPchNil)},
 	std::pair{TEXT("CAIScript::Construct1"), reinterpret_cast<void**>(&p_CAIScript_Construct1)},
+	std::pair{TEXT("CAbilityId::Construct"), reinterpret_cast<void**>(&p_CAbilityId_Construct)},
 	std::pair{TEXT("C2DArray::Construct"), reinterpret_cast<void**>(&p_C2DArray_Construct)},
 	std::pair{TEXT("C2DArray::Load"), reinterpret_cast<void**>(&p_C2DArray_Load)},
 	std::pair{TEXT("C2DArray::GetAtLabels"), reinterpret_cast<void**>(&p_C2DArray_GetAtLabels)},
@@ -173,6 +178,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAIAction::Decode"), reinterpret_cast<void**>(&p_CAIAction_Decode)},
 	std::pair{TEXT("CGameObject::DEFAULT_TERRAIN_TABLE"), reinterpret_cast<void**>(&CGameObject::p_DEFAULT_TERRAIN_TABLE)},
 	std::pair{TEXT("CGameAIBase::GetTargetShare"), reinterpret_cast<void**>(&p_CGameAIBase_GetTargetShare)},
+	std::pair{TEXT("CGameSprite::CheckQuickLists"), reinterpret_cast<void**>(&p_CGameSprite_CheckQuickLists)},
 	std::pair{TEXT("CGameSprite::GetKitMask"), reinterpret_cast<void**>(&p_CGameSprite_GetKitMask)},
 	std::pair{TEXT("CGameSprite::GetLauncherSlot"), reinterpret_cast<void**>(&p_CGameSprite_GetLauncherSlot)},
 	std::pair{TEXT("CGameSprite::GetQuickButtons"), reinterpret_cast<void**>(&p_CGameSprite_GetQuickButtons)},
