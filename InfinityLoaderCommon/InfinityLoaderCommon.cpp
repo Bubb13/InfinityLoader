@@ -193,6 +193,10 @@ AssemblyWriter::AssemblyWriter(unsigned char* buff) {
 	buffer = buff;
 }
 
+intptr_t AssemblyWriter::getLocation() {
+	return curMemAddress;
+}
+
 void AssemblyWriter::setLocation(intptr_t newCurMemAddress) {
 	startMemAddress = newCurMemAddress;
 	curMemAddress = newCurMemAddress;

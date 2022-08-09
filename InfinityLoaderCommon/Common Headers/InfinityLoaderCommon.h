@@ -107,6 +107,7 @@ private:
 	intptr_t curMemAddress;
 public:
 	AssemblyWriter(unsigned char* buff);
+	intptr_t getLocation();
 	void setLocation(intptr_t newCurMemAddress);
 	void writeBytesToBuffer(int numBytes, ...);
 	void writeNumberToBuffer(intptr_t pointer, size_t writeSize);

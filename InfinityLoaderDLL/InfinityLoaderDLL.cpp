@@ -995,6 +995,11 @@ int printLua(lua_State* L) {
 	return 0;
 }
 
+int printErrLua(lua_State* L) {
+	fprintf(stderr, "%s\n", p_lua_tostring(L, 1));
+	return 0;
+}
+
 int read16Lua(lua_State* L) {
 	p_lua_pushinteger(L, *reinterpret_cast<__int16*>(p_lua_tointeger(L, 1)));
 	return 1;
@@ -1157,6 +1162,159 @@ int writeStringAutoLua(lua_State* L) {
 // Initialization //
 ////////////////////
 
+DWORD parentProcess;
+HANDLE parentStdIn;
+HANDLE parentStdOut;
+HANDLE parentStdErr;
+
+void BindCrtHandlesToStdHandles(DWORD parentProcess, HANDLE parentStdIn, HANDLE parentStdOut, HANDLE parentStdErr) {
+
+#define DupHandle(srcProcess,srcHandle,targetProcess,targetHandle)\
+	HANDLE targetHandle;\
+	DuplicateHandle(\
+		srcProcess,\
+		srcHandle,\
+		targetProcess,\
+		&targetHandle,\
+		NULL,\
+		false,\
+		DUPLICATE_SAME_ACCESS\
+	);
+
+	HANDLE parentProcessHandle = OpenProcess(PROCESS_DUP_HANDLE, false, parentProcess);
+
+	if (parentStdIn != INVALID_HANDLE_VALUE) {
+
+		DupHandle(parentProcessHandle, parentStdIn, GetCurrentProcess(), myHandle);
+		CloseHandle(GetStdHandle(STD_INPUT_HANDLE));
+		SetStdHandle(STD_INPUT_HANDLE, myHandle);
+
+		FILE* dummyFile;
+		freopen_s(&dummyFile, "nul", "r", stdin);
+
+		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+			if (_dup2(fd, _fileno(stdin)) == 0) {
+				setvbuf(stdin, NULL, _IONBF, 0);
+			}
+			_close(fd);
+		}
+
+		std::wcin.clear();
+		std::cin.clear();
+	}
+
+	if (parentStdOut != INVALID_HANDLE_VALUE) {
+
+		DupHandle(parentProcessHandle, parentStdOut, GetCurrentProcess(), myHandle);
+		CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+		SetStdHandle(STD_OUTPUT_HANDLE, myHandle);
+
+		FILE* dummyFile;
+		freopen_s(&dummyFile, "nul", "w", stdout);
+
+		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+			if (_dup2(fd, _fileno(stdout)) == 0) {
+				setvbuf(stdout, NULL, _IONBF, 0);
+			}
+			_close(fd);
+		}
+
+		std::wcout.clear();
+		std::cout.clear();
+	}
+
+	if (parentStdErr != INVALID_HANDLE_VALUE) {
+
+		DupHandle(parentProcessHandle, parentStdErr, GetCurrentProcess(), myHandle);
+		CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
+		SetStdHandle(STD_ERROR_HANDLE, myHandle);
+
+		FILE* dummyFile;
+		freopen_s(&dummyFile, "nul", "w", stderr);
+
+		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+			if (_dup2(fd, _fileno(stderr)) == 0) {
+				setvbuf(stderr, NULL, _IONBF, 0);
+			}
+			_close(fd);
+		}
+
+		std::wcerr.clear();
+		std::cerr.clear();
+	}
+
+	CloseHandle(parentProcessHandle);
+}
+
+DWORD writeReplaceLogFunction() {
+
+	intptr_t patchAddress;
+	if (DWORD lastError = findINICategoryPattern(textInfo, iniPath, TEXT("Hardcoded_SDL_LogOutput()_fprintf"), patchAddress)) {
+		return lastError;
+	}
+
+	intptr_t curAllocatedPtr;
+	SYSTEM_INFO info;
+	GetSystemInfo(&info);
+
+	if (DWORD lastError = allocateNear(textInfo.ImageBase, info.dwAllocationGranularity,
+		info.dwAllocationGranularity, curAllocatedPtr))
+	{
+		return lastError;
+	}
+
+	unsigned char codeBuff[1024];
+	AssemblyWriter writer{ codeBuff };
+
+	writer.setLocation(patchAddress);
+	writer.jmpToAddress(curAllocatedPtr);
+	disableCodeProtection();
+	writer.flush();
+	enableCodeProtection();
+
+	writer.setLocation(curAllocatedPtr);
+	writer.writeArgImmediate32(2, 0);
+	writer.callToAddressFar(reinterpret_cast<intptr_t>(__acrt_iob_func));
+	writer.writeBytesToBuffer(3, 0x48, 0x8B, 0xC8); // mov rcx,rax
+	writer.callToAddressFar(reinterpret_cast<intptr_t>(fprintf));
+	writer.jmpToAddress(patchAddress + 5);
+	writer.flush();
+	curAllocatedPtr = writer.getLocation();
+
+	return 0;
+}
+
+void winMainHook() {
+
+	if (!AttachConsole(parentProcess)) {
+		printf("AttachConsole failed (%d).\n", GetLastError());
+		return;
+	}
+	BindCrtHandlesToStdHandles(parentProcess, parentStdIn, parentStdOut, parentStdErr);
+
+	if (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_CHAR) {
+
+		// Redirecting output, use my fprintf so that it is actually redirected.
+		// Ideally the exe's stdin, stdout, and stderr would be redirected, however,
+		// this is extremely difficult to correct due to its statically linked c-runtime.
+		// If AttachConsole() + BindCrtHandlesToStdHandles() are run in this DLL's Init()
+		// the game will inherit redirected handles, though this makes logging too slow
+		// in the case of stderr being spammed, (fprintf is SLOW, the engine normally
+		// uses WriteConsole).
+		//
+		// Note: This only redirects SDL_LogOutput(), though most of the game's logging
+		// goes through this function, and stdin, stdout, and stderr aren't normally
+		// hooked up to the console anyway.
+
+		if (writeReplaceLogFunction() != 0) {
+			printf("[!] Console redirection failed.\n");
+		}
+	}
+}
+
 void internalLuaHook() {
 
 #define hardcodedLookup(name, type, outName) \
@@ -1241,6 +1399,7 @@ void internalLuaHook() {
 	exposeToLua(L, "EEex_Memset", memsetLua);
 	exposeToLua(L, "EEex_MessageBoxInternal", messageBoxInternalLua);
 	exposeToLua(L, "EEex_Print", printLua);
+	exposeToLua(L, "EEex_PrintErr", printErrLua);
 	exposeToLua(L, "EEex_Read16", read16Lua);
 	exposeToLua(L, "EEex_Read32", read32Lua);
 #if defined(_WIN64)
@@ -1278,17 +1437,53 @@ void internalLuaHook() {
 	callOverrideFile(L, "EEex_Main");
 }
 
+void writeCallHookProcAfterCall(AssemblyWriter& writer, intptr_t& curAllocatedPtr, intptr_t patchAddress, void* targetProc) {
+
+	__int32 relativeAmount = *reinterpret_cast<__int32*>(patchAddress + 1);
+	intptr_t target = patchAddress + 5 + relativeAmount;
+
+	writer.setLocation(patchAddress);
+	writer.jmpToAddress(curAllocatedPtr);
+	disableCodeProtection();
+	writer.flush();
+	enableCodeProtection();
+
+	writer.setLocation(curAllocatedPtr);
+	writer.callToAddress(target);
+	writer.pushVolatileRegisters();
+	writer.alignStackAndMakeShadowSpace();
+	writer.callToAddressFar(reinterpret_cast<intptr_t>(targetProc));
+	writer.undoAlignAndShadowSpace();
+	writer.popVolatileRegisters();
+	writer.jmpToAddress(patchAddress + 5);
+	writer.flush();
+	curAllocatedPtr = writer.getLocation();
+}
+
 DWORD writeInternalLuaHook(ImageSectionInfo& textInfo) {
 
-	intptr_t allocated;
+	intptr_t curAllocatedPtr;
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
 
 	if (DWORD lastError = allocateNear(textInfo.ImageBase, info.dwAllocationGranularity,
-		info.dwAllocationGranularity, allocated))
+		info.dwAllocationGranularity, curAllocatedPtr))
 	{
 		return lastError;
 	}
+
+	// Write hook early in WinMain to check for Console redirection
+
+	intptr_t winMainPatchAddress;
+	if (DWORD lastError = findINICategoryPattern(textInfo, iniPath, TEXT("Hardcoded_WinMainPatchLocation"), winMainPatchAddress)) {
+		return lastError;
+	}
+
+	unsigned char codeBuff[1024];
+	AssemblyWriter writer{ codeBuff };
+	writeCallHookProcAfterCall(writer, curAllocatedPtr, winMainPatchAddress, winMainHook);
+
+	// Write Lua initialization hook
 
 	if (DWORD lastError = loadLuaMode()) {
 		return lastError;
@@ -1301,27 +1496,7 @@ DWORD writeInternalLuaHook(ImageSectionInfo& textInfo) {
 			return lastError;
 		}
 
-		__int32 relativeAmount = *reinterpret_cast<__int32*>(patchAddress + 1);
-		intptr_t target = patchAddress + 5 + relativeAmount;
-
-		unsigned char codeBuff[1024];
-		AssemblyWriter writer{ codeBuff };
-
-		writer.setLocation(patchAddress);
-		writer.jmpToAddress(allocated);
-		disableCodeProtection();
-		writer.flush();
-		enableCodeProtection();
-
-		writer.setLocation(allocated);
-		writer.callToAddress(target);
-		writer.pushVolatileRegisters();
-		writer.alignStackAndMakeShadowSpace();
-		writer.callToAddressFar(reinterpret_cast<intptr_t>(internalLuaHook));
-		writer.undoAlignAndShadowSpace();
-		writer.popVolatileRegisters();
-		writer.jmpToAddress(patchAddress + 5);
-		writer.flush();
+		writeCallHookProcAfterCall(writer, curAllocatedPtr, patchAddress, internalLuaHook);
 	}
 	else {
 		printf("[!] LuaPatchMode::EXTERNAL unimplemented.\n");
@@ -1358,99 +1533,13 @@ DWORD patchExe() {
 	return 0;
 }
 
-void BindCrtHandlesToStdHandles(DWORD parentProcess, HANDLE parentStdIn, HANDLE parentStdOut, HANDLE parentStdErr) {
+void Init(DWORD argParentProcess, HANDLE argParentStdIn, HANDLE argParentStdOut, HANDLE argParentStdErr) {
 
-#define DupHandle(srcProcess,srcHandle,targetProcess,targetHandle)\
-	HANDLE targetHandle;\
-	DuplicateHandle(\
-		srcProcess,\
-		srcHandle,\
-		targetProcess,\
-		&targetHandle,\
-		NULL,\
-		false,\
-		DUPLICATE_SAME_ACCESS\
-	);
-
-	HANDLE parentProcessHandle = OpenProcess(PROCESS_DUP_HANDLE, false, parentProcess);
-
-	if (parentStdIn != INVALID_HANDLE_VALUE) {
-
-		DupHandle(parentProcessHandle, parentStdIn, GetCurrentProcess(), myHandle);
-		CloseHandle(GetStdHandle(STD_INPUT_HANDLE));
-		SetStdHandle(STD_INPUT_HANDLE, myHandle);
-
-		FILE* dummyFile;
-		freopen_s(&dummyFile, "nul", "r", stdin);
-
-		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
-		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
-			if (_dup2(fd, _fileno(stdin)) == 0) {
-				setvbuf(stdin, NULL, _IONBF, 0);
-			}
-			_close(fd);
-		}
-
-		std::wcin.clear();
-		std::cin.clear();
-	}
-
-	if (parentStdOut != INVALID_HANDLE_VALUE) {
-
-		DupHandle(parentProcessHandle, parentStdOut, GetCurrentProcess(), myHandle);
-		CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
-		SetStdHandle(STD_OUTPUT_HANDLE, myHandle);
-
-		FILE* dummyFile;
-		freopen_s(&dummyFile, "nul", "w", stdout);
-
-		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
-		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle), _O_TEXT); fd != -1) {
-			if (_dup2(fd, _fileno(stdout)) == 0) {
-				setvbuf(stdout, NULL, _IONBF, 0);
-			}
-			_close(fd);
-		}
-
-		std::wcout.clear();
-		std::cout.clear();
-	}
-
-	if (parentStdErr != INVALID_HANDLE_VALUE) {
-
-		DupHandle(parentProcessHandle, parentStdErr, GetCurrentProcess(), myHandle);
-		CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
-		SetStdHandle(STD_ERROR_HANDLE, myHandle);
-
-		FILE* dummyFile;
-		freopen_s(&dummyFile, "nul", "w", stderr);
-
-		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
-		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
-			if (_dup2(fd, _fileno(stderr)) == 0) {
-				setvbuf(stderr, NULL, _IONBF, 0);
-			}
-			_close(fd);
-		}
-
-		std::wcerr.clear();
-		std::cerr.clear();
-	}
-
-	CloseHandle(parentProcessHandle);
-}
-
-void Init(DWORD parentProcess, HANDLE parentStdIn, HANDLE parentStdOut, HANDLE parentStdErr) {
-
-	if (!AttachConsole(parentProcess)) {
-		printf("AttachConsole failed (%d).\n", GetLastError());
-		return;
-	}
-	BindCrtHandlesToStdHandles(parentProcess, parentStdIn, parentStdOut, parentStdErr);
+	parentProcess = argParentProcess;
+	parentStdIn = argParentStdIn;
+	parentStdOut = argParentStdOut;
+	parentStdErr = argParentStdErr;
 
 	initPaths();
-
-	if (patchExe()) {
-		return;
-	}
+	patchExe();
 }
