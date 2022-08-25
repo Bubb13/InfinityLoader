@@ -1145,6 +1145,19 @@ int writeLStringLua(lua_State* L) {
 	return 0;
 }
 
+int writeStringLua(lua_State* L) {
+	char* writePtr = reinterpret_cast<char*>(p_lua_tointeger(L, 1));
+	const char* str = p_lua_tostring(L, 2);
+	while (true) {
+		const char existingChar = *str++;
+		*writePtr++ = existingChar;
+		if (existingChar == '\0') {
+			break;
+		}
+	}
+	return 0;
+}
+
 int writeStringAutoLua(lua_State* L) {
 	const char* str = p_lua_tostring(L, 1);
 	size_t len = strlen(str);
@@ -1287,13 +1300,21 @@ DWORD writeReplaceLogFunction() {
 	return 0;
 }
 
-void winMainHook() {
-
+DWORD attachToConsole() {
 	if (!AttachConsole(parentProcess)) {
-		printf("AttachConsole failed (%d).\n", GetLastError());
-		return;
+		const DWORD lastError = GetLastError();
+		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("AttachConsole failed (%d)."), lastError);
+		return lastError;
 	}
 	BindCrtHandlesToStdHandles(parentProcess, parentStdIn, parentStdOut, parentStdErr);
+	return ERROR_SUCCESS;
+}
+
+void winMainHook() {
+
+	if (attachToConsole() != ERROR_SUCCESS) {
+		return;
+	}
 
 	if (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_CHAR) {
 
@@ -1428,6 +1449,7 @@ void internalLuaHook() {
 	exposeToLua(L, "EEex_WritePointer", writePointerLua);
 	exposeToLua(L, "EEex_WritePtr", writePointerLua);
 	exposeToLua(L, "EEex_WriteLString", writeLStringLua);
+	exposeToLua(L, "EEex_WriteString", writeStringLua);
 	exposeToLua(L, "EEex_WriteStringAuto", writeStringAutoLua);
 
 	///////////////////////
@@ -1540,6 +1562,14 @@ void Init(DWORD argParentProcess, HANDLE argParentStdIn, HANDLE argParentStdOut,
 	parentStdOut = argParentStdOut;
 	parentStdErr = argParentStdErr;
 
+	// This function runs before the console has been attached, temporarily attach it for error output
+	if (attachToConsole() != ERROR_SUCCESS) {
+		return;
+	}
+
 	initPaths();
 	patchExe();
+
+	// Free the attached console so that the game doesn't inherit it
+	FreeConsole();
 }

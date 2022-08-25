@@ -103,6 +103,7 @@ struct CSequenceSound;
 struct CSound;
 struct CSoundMixerImp;
 struct CSpawn;
+struct CSpell;
 struct CString;
 struct CUIControlTextDisplay;
 struct CVVCHashEntry;
@@ -9003,9 +9004,17 @@ struct CVidMode
 	CVidMode() = delete;
 };
 
+typedef void (__thiscall *type_CSpell_Construct)(CSpell* pThis, CResRef res);
+extern type_CSpell_Construct p_CSpell_Construct;
+
 struct CSpell : CResHelper<CResSpell,1006>
 {
 	CSpell() = delete;
+
+	void Construct(CResRef res)
+	{
+		p_CSpell_Construct(this, res);
+	}
 };
 
 struct CSoundImp : CObject, CResHelper<CResWave,4>
@@ -11611,6 +11620,12 @@ extern type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
 typedef int (__thiscall *type_CGameArea_CheckLOS)(CGameArea* pThis, const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
 extern type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
 
+typedef void (__thiscall *type_CGameArea_GetAllInRange1)(CGameArea* pThis, const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+extern type_CGameArea_GetAllInRange1 p_CGameArea_GetAllInRange1;
+
+typedef void (__thiscall *type_CGameArea_GetAllInRange2)(CGameArea* pThis, __POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+extern type_CGameArea_GetAllInRange2 p_CGameArea_GetAllInRange2;
+
 struct CGameArea
 {
 	struct m_cWalkableRenderCache_t
@@ -11755,6 +11770,16 @@ struct CGameArea
 	int CheckLOS(const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange)
 	{
 		return p_CGameArea_CheckLOS(this, start, goal, terrainTable, bCheckIfExplored, nVisualRange);
+	}
+
+	void GetAllInRange1(const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites)
+	{
+		p_CGameArea_GetAllInRange1(this, center, type, range, terrainTable, targets, lineOfSight, checkForNonSprites);
+	}
+
+	void GetAllInRange2(__POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites)
+	{
+		p_CGameArea_GetAllInRange2(this, posVertList, ptStart, type, range, terrainTable, targets, lineOfSight, checkForNonSprites);
 	}
 };
 
@@ -12112,6 +12137,7 @@ struct CGameObject
 		vtbl() = delete;
 	};
 
+	static Array<byte,16>* p_DEFAULT_VISIBLE_TERRAIN_TABLE;
 	static Array<byte,16>* p_DEFAULT_TERRAIN_TABLE;
 	CGameObjectType m_objectType;
 	CPoint m_pos;
@@ -12789,6 +12815,9 @@ struct CGameTiledObject : CGameAIBase
 	CGameTiledObject() = delete;
 };
 
+typedef short (__thiscall *type_CGameSprite_GetCasterLevel)(CGameSprite* pThis, CSpell* pSpell, int includeWildMage);
+extern type_CGameSprite_GetCasterLevel p_CGameSprite_GetCasterLevel;
+
 typedef void (__thiscall *type_CGameSprite_CheckQuickLists)(CGameSprite* pThis, CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
 extern type_CGameSprite_CheckQuickLists p_CGameSprite_CheckQuickLists;
 
@@ -13187,6 +13216,11 @@ struct CGameSprite : CGameAIBase
 	bool m_bOutline;
 
 	CGameSprite() = delete;
+
+	short GetCasterLevel(CSpell* pSpell, int includeWildMage)
+	{
+		return p_CGameSprite_GetCasterLevel(this, pSpell, includeWildMage);
+	}
 
 	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero)
 	{

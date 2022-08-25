@@ -788,6 +788,7 @@ struct CGameAIBase : CGameObject
 
 struct CGameSprite : CGameAIBase
 {
+	short GetCasterLevel(CSpell* pSpell, int includeWildMage);
 	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
 	__int32 GetKitMask();
 	short GetLauncherSlot(short slotNum, short abilityNum);
@@ -820,6 +821,11 @@ struct CInfGame
 	void SetIconIndex(unsigned __int8 iconIndex);
 };
 
+struct CSpell : CResHelper<CResSpell,1006>
+{
+	$constructor_fake Construct(CResRef res);
+};
+
 struct CString
 {
 	$constructor_fake ConstructFromChars(primitive const char* lpsz);
@@ -833,6 +839,7 @@ struct CSearchBitmap
 
 struct CGameObject
 {
+	static byte DEFAULT_VISIBLE_TERRAIN_TABLE[16];
 	static byte DEFAULT_TERRAIN_TABLE[16];
 };
 
@@ -845,6 +852,8 @@ struct CGameArea
 	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 	int CheckWalkable(CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
 	int CheckLOS(const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
+	void GetAllInRange1(const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+	void GetAllInRange2(__POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
 };
 
 struct CAIGroup

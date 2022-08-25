@@ -190,6 +190,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CSavedGameStoredLocation*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSavedGameStoredLocation*>, CObject>()},
 	}},
+	{"CTypedPtrList<CPtrList,long>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,long>, CObject>()},
+	}},
 	{"CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>, CObject>()},
 	}},
@@ -312,9 +315,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CTypedPtrList<CPtrList,CVidCell*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CVidCell*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,long>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,long>, CObject>()},
 	}},
 	{"CTypedPtrArray<CPtrArray,CRes*>", {
 		{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CRes*>, CObject>()},

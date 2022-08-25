@@ -59,6 +59,7 @@ type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
 type_CSearchBitmap_GetCost p_CSearchBitmap_GetCost;
 ushort* CVidMode::p_SCREENWIDTH;
 ushort* CVidMode::p_SCREENHEIGHT;
+type_CSpell_Construct p_CSpell_Construct;
 type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
 type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
 type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
@@ -70,6 +71,8 @@ type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
 type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
 type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
 type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
+type_CGameArea_GetAllInRange1 p_CGameArea_GetAllInRange1;
+type_CGameArea_GetAllInRange2 p_CGameArea_GetAllInRange2;
 type_CAIObjectType_Construct1 p_CAIObjectType_Construct1;
 type_CAIObjectType_Decode p_CAIObjectType_Decode;
 type_CAIObjectType_GetShare p_CAIObjectType_GetShare;
@@ -81,8 +84,10 @@ type_CAIAction_ConstructCopy p_CAIAction_ConstructCopy;
 type_CAIAction_Destruct p_CAIAction_Destruct;
 type_CAIAction_operator_equ p_CAIAction_operator_equ;
 type_CAIAction_Decode p_CAIAction_Decode;
+Array<byte,16>* CGameObject::p_DEFAULT_VISIBLE_TERRAIN_TABLE;
 Array<byte,16>* CGameObject::p_DEFAULT_TERRAIN_TABLE;
 type_CGameAIBase_GetTargetShare p_CGameAIBase_GetTargetShare;
+type_CGameSprite_GetCasterLevel p_CGameSprite_GetCasterLevel;
 type_CGameSprite_CheckQuickLists p_CGameSprite_CheckQuickLists;
 type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
 type_CGameSprite_GetLauncherSlot p_CGameSprite_GetLauncherSlot;
@@ -154,6 +159,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CSearchBitmap::GetCost"), reinterpret_cast<void**>(&p_CSearchBitmap_GetCost)},
 	std::pair{TEXT("CVidMode::SCREENWIDTH"), reinterpret_cast<void**>(&CVidMode::p_SCREENWIDTH)},
 	std::pair{TEXT("CVidMode::SCREENHEIGHT"), reinterpret_cast<void**>(&CVidMode::p_SCREENHEIGHT)},
+	std::pair{TEXT("CSpell::Construct"), reinterpret_cast<void**>(&p_CSpell_Construct)},
 	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&p_CChitin_OnResizeWindow)},
 	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&p_CInfButtonArray_SetState)},
 	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&p_CInfButtonArray_SetQuickSlot)},
@@ -165,6 +171,8 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&p_CGameArea_AdjustTarget)},
 	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&p_CGameArea_CheckWalkable)},
 	std::pair{TEXT("CGameArea::CheckLOS"), reinterpret_cast<void**>(&p_CGameArea_CheckLOS)},
+	std::pair{TEXT("CGameArea::GetAllInRange1"), reinterpret_cast<void**>(&p_CGameArea_GetAllInRange1)},
+	std::pair{TEXT("CGameArea::GetAllInRange2"), reinterpret_cast<void**>(&p_CGameArea_GetAllInRange2)},
 	std::pair{TEXT("CAIObjectType::Construct1"), reinterpret_cast<void**>(&p_CAIObjectType_Construct1)},
 	std::pair{TEXT("CAIObjectType::Decode"), reinterpret_cast<void**>(&p_CAIObjectType_Decode)},
 	std::pair{TEXT("CAIObjectType::GetShare"), reinterpret_cast<void**>(&p_CAIObjectType_GetShare)},
@@ -176,8 +184,10 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAIAction::Destruct"), reinterpret_cast<void**>(&p_CAIAction_Destruct)},
 	std::pair{TEXT("CAIAction::operator_equ"), reinterpret_cast<void**>(&p_CAIAction_operator_equ)},
 	std::pair{TEXT("CAIAction::Decode"), reinterpret_cast<void**>(&p_CAIAction_Decode)},
+	std::pair{TEXT("CGameObject::DEFAULT_VISIBLE_TERRAIN_TABLE"), reinterpret_cast<void**>(&CGameObject::p_DEFAULT_VISIBLE_TERRAIN_TABLE)},
 	std::pair{TEXT("CGameObject::DEFAULT_TERRAIN_TABLE"), reinterpret_cast<void**>(&CGameObject::p_DEFAULT_TERRAIN_TABLE)},
 	std::pair{TEXT("CGameAIBase::GetTargetShare"), reinterpret_cast<void**>(&p_CGameAIBase_GetTargetShare)},
+	std::pair{TEXT("CGameSprite::GetCasterLevel"), reinterpret_cast<void**>(&p_CGameSprite_GetCasterLevel)},
 	std::pair{TEXT("CGameSprite::CheckQuickLists"), reinterpret_cast<void**>(&p_CGameSprite_CheckQuickLists)},
 	std::pair{TEXT("CGameSprite::GetKitMask"), reinterpret_cast<void**>(&p_CGameSprite_GetKitMask)},
 	std::pair{TEXT("CGameSprite::GetLauncherSlot"), reinterpret_cast<void**>(&p_CGameSprite_GetLauncherSlot)},

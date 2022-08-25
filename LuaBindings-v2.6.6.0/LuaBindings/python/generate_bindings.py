@@ -2765,6 +2765,21 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 
 
 	openDataGroups: list[OpenGroupData] = []
+	usedIdentifiers: set[str] = set()
+
+	def resolveIdentifer(identifer):
+
+		attempt = identifer
+		attemptI: int = 1
+		while True:
+			if attempt in usedIdentifiers:
+				attempt = f"{identifer}_clashing{attemptI}"
+				attemptI = attemptI + 1
+			else:
+				break
+
+		usedIdentifiers.add(attempt)
+		return attempt
 
 
 	def writeGroupWithTemplateUse(group: Group, templateMappingTracker: TemplateMappingTracker, currentTemplate: TemplateUse=None):
@@ -2795,7 +2810,7 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 			if not skip:
 
 				getTypeFunc = OpenFunctionData()
-				getTypeFunc.functionBindingName = f"tolua_function_{groupNameStrIden}_getInternalReference"
+				getTypeFunc.functionBindingName = resolveIdentifer(f"tolua_function_{groupNameStrIden}_getInternalReference")
 				getTypeFunc.functionName = "getInternalReference"
 
 				out.write(f"static int {getTypeFunc.functionBindingName}(lua_State* L)\n")
@@ -2860,9 +2875,9 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 			fieldOpenData.fieldBindingName = f"{addressPrefix}{fieldNameStr}"
 
 			if isNormal:
-				fieldOpenData.getBindingName = f"tolua_get_{groupNameStrIden}_{addressPrefix}{fieldNameStr}"
+				fieldOpenData.getBindingName = resolveIdentifer(f"tolua_get_{groupNameStrIden}_{addressPrefix}{fieldNameStr}")
 			else:
-				fieldOpenData.getBindingName = f"tolua_get_{addressPrefix}{fieldNameStr}"
+				fieldOpenData.getBindingName = resolveIdentifer(f"tolua_get_{addressPrefix}{fieldNameStr}")
 
 			# GETTER START
 
@@ -2981,9 +2996,9 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 			if allowSetter:
 
 				if isNormal:
-					fieldOpenData.setBindingName = f"tolua_set_{groupNameStrIden}_{addressPrefix}{fieldNameStr}"
+					fieldOpenData.setBindingName = resolveIdentifer(f"tolua_set_{groupNameStrIden}_{addressPrefix}{fieldNameStr}")
 				else:
-					fieldOpenData.setBindingName = f"tolua_set_{addressPrefix}{fieldNameStr}"
+					fieldOpenData.setBindingName = resolveIdentifer(f"tolua_set_{addressPrefix}{fieldNameStr}")
 
 				out.write(f"static int {fieldOpenData.setBindingName}(lua_State* L)\n")
 				out.write("{\n")
@@ -3098,7 +3113,7 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 
 			functionOpenData.functionName = functionImplementation.name
 			groupIden = f"{groupNameStrIden}_" if isNormal else ""
-			functionOpenData.functionBindingName = f"tolua_function_{groupIden}{functionImplementation.name}"
+			functionOpenData.functionBindingName = resolveIdentifer(f"tolua_function_{groupIden}{functionImplementation.name}")
 
 			groupOpenData.functionBindings.append(functionOpenData)
 
@@ -3259,7 +3274,7 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 
 				addressVar = OpenFieldData()
 				addressVar.fieldBindingName = f"reference_{functionImplementation.name}"
-				addressVar.getBindingName = f"tolua_get_reference_{groupIden}{functionImplementation.name}"
+				addressVar.getBindingName = resolveIdentifer(f"tolua_get_reference_{groupIden}{functionImplementation.name}")
 
 				out.write(f"static int {addressVar.getBindingName}(lua_State* L)\n")
 				out.write("{\n")
