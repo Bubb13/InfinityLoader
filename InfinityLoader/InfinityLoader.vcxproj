@@ -96,6 +96,15 @@
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="InfinityLoader.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="EEex.ico" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
