@@ -3039,22 +3039,22 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 							selfStr = "*"*(varType.getUserTypePointerLevel() + 1)
 
 						if checkType.isPrimitiveNumber():
+
 							out.write(f"\t{selfStr}{varNameHeader} = ")
 
 							if (not enumCastStr) and varTypeName == "__int64":
 								out.write("(__int64)")
 
-							if varTypeName == "float":
-								out.write(f"{enumCastStr}tolua_tonumber(L, 2, 0);\n")
+							if varTypeName in ("float", "double"):
+								out.write(f"{enumCastStr}tolua_setter_tonumber(L, \"{variableField.variableName}\");\n")
 							else:
-								out.write(f"{enumCastStr}tolua_setter_tointeger(L, 2, 0, \"")
-								out.write(variableField.variableName)
-								out.write("\");\n")
+								out.write(f"{enumCastStr}tolua_setter_tointeger(L, \"{variableField.variableName}\");\n")
 
 							return True
 
 						elif varTypeName == "bool":
-							out.write(f"\t{selfStr}{varNameHeader} = tolua_toboolean(L, 2, false);\n")
+							out.write(f"\t{selfStr}{varNameHeader} = ")
+							out.write(f"{enumCastStr}tolua_setter_toboolean(L, \"{variableField.variableName}\");\n")
 							return True
 
 						return False

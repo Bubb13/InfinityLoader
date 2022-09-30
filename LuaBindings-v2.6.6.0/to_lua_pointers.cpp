@@ -252,16 +252,47 @@ double p_tolua_tonumber(lua_State* L, int narg, double def) {
 }
 
 // Custom
-lua_Integer tolua_setter_tointeger(lua_State* L, int narg, lua_Integer def, const char* variableName) {
-	if (p_lua_gettop(L) < abs(narg)) {
-		return def;
+lua_Number tolua_setter_tonumber(lua_State* L, const char* variableName) {
+	constexpr int narg = 2;
+	if (p_lua_gettop(L) < narg) {
+		return luaL_error(L, "argument missing in number variable setter '%s'; 'number' expected.", variableName);
+	}
+	return p_lua_type(L, narg) == LUA_TNUMBER
+		? p_lua_tonumber(L, narg)
+		: luaL_error(L, "invalid type '%s' in number variable setter '%s'; 'number' expected.", p_tolua_typename(L, narg), variableName);
+}
+
+// Custom
+lua_Integer tolua_setter_tointeger(lua_State* L, const char* variableName) {
+	constexpr int narg = 2;
+	if (p_lua_gettop(L) < narg) {
+		return luaL_error(L, "argument missing in integer variable setter '%s'; 'number' or 'boolean' expected.", variableName);
 	}
 	switch (p_lua_type(L, narg)) {
 		case LUA_TBOOLEAN: return p_lua_toboolean(L, narg);
 		case LUA_TNUMBER: return p_lua_tointeger(L, narg);
-		case LUA_TNIL: return def;
 	}
-	return luaL_error(L, "invalid type '%s' in setting variable '%s'; 'boolean', 'number', or 'nil' expected.", p_tolua_typename(L, narg), variableName);
+	return luaL_error(L, "invalid type '%s' in integer variable setter '%s'; 'number' or 'boolean' expected.", p_tolua_typename(L, narg), variableName);
+}
+
+// Custom
+bool tolua_setter_toboolean(lua_State* L, const char* variableName) {
+	constexpr int narg = 2;
+	if (p_lua_gettop(L) < narg) {
+		return luaL_error(L, "argument missing in boolean variable setter '%s'; 'boolean' or 'number' expected.", variableName);
+	}
+	switch (p_lua_type(L, narg)) {
+		case LUA_TBOOLEAN: return p_lua_toboolean(L, narg);
+		case LUA_TNUMBER: {
+			const lua_Integer arg = p_lua_tointeger(L, narg);
+			switch (arg) {
+				case 0: return false;
+				case 1: return true;
+			}
+			return luaL_error(L, "invalid integer argument '%d' in boolean variable setter '%s'; '0' or '1' expected.", arg, variableName);
+		}
+	}
+	return luaL_error(L, "invalid type '%s' in boolean variable setter '%s'; 'boolean' or 'number' expected.", p_tolua_typename(L, narg), variableName);
 }
 
 // Expects   [ ..., key, value ]

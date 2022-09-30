@@ -136,7 +136,9 @@ void p_tolua_cclass_translate(lua_State* L, const char* lname, const char* name,
 // Custom //
 ////////////
 
-lua_Integer tolua_setter_tointeger(lua_State* L, int narg, lua_Integer def, const char* variableName);
+lua_Number tolua_setter_tonumber(lua_State* L, const char* variableName);
+lua_Integer tolua_setter_tointeger(lua_State* L, const char* variableName);
+bool tolua_setter_toboolean(lua_State* L, const char* variableName);
 
 /////////////////////////////////////////////
 // Redefine certain functions so that they //
