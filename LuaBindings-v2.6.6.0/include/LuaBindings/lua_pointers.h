@@ -22,6 +22,9 @@ extern type_lua_getglobal* p_lua_getglobal;
 typedef int type_lua_getmetatable(lua_State* L, int objindex);
 extern type_lua_getmetatable* p_lua_getmetatable;
 
+typedef void type_lua_gettable(lua_State* L, int index);
+extern type_lua_gettable* p_lua_gettable;
+
 typedef int type_lua_gettop(lua_State* L);
 extern type_lua_gettop* p_lua_gettop;
 
@@ -118,14 +121,14 @@ extern type_lua_touserdata* p_lua_touserdata;
 typedef int type_lua_type(lua_State* L, int index);
 extern type_lua_type* p_lua_type;
 
+typedef int type_luaL_error (lua_State* L, const char* fmt, ...);
+extern type_luaL_error* p_luaL_error;
+
 typedef int type_luaL_loadfilex(lua_State* L, const char* fileName, const char* mode);
 extern type_luaL_loadfilex* p_luaL_loadfilex;
 
 typedef int type_luaL_loadstring(lua_State* L, const char* s);
 extern type_luaL_loadstring* p_luaL_loadstring;
-
-typedef void type_lua_gettable(lua_State* L, int index);
-extern type_lua_gettable* p_lua_gettable;
 
 ///////////////////////
 // Reimplementations //
@@ -137,14 +140,13 @@ extern int p_lua_absindex(lua_State* L, int idx);
 // Defines //
 /////////////
 
+#define p_lua_call(L, n, r) p_lua_callk(L, (n), (r), 0, NULL)
 #define p_lua_cast(t, exp) ((t)(exp))
 #define p_lua_cast_int(i) p_lua_cast(int, (i))
-#define p_lua_ispseudo(i) ((i) <= LUA_REGISTRYINDEX)
-
-#define p_lua_call(L, n, r) p_lua_callk(L, (n), (r), 0, NULL)
+#define p_lua_isboolean(L, n) (p_lua_type(L, (n)) == LUA_TBOOLEAN)
 #define p_lua_isfunction(L, n) (p_lua_type(L, (n)) == LUA_TFUNCTION)
 #define p_lua_isnil(L, n) (p_lua_type(L, (n)) == LUA_TNIL)
-#define p_lua_isboolean(L, n) (p_lua_type(L, (n)) == LUA_TBOOLEAN)
+#define p_lua_ispseudo(i) ((i) <= LUA_REGISTRYINDEX)
 #define p_lua_istable(L, n) (p_lua_type(L, (n)) == LUA_TTABLE)
 #define p_lua_newtable(L) p_lua_createtable(L, 0, 0)
 #define p_lua_pop(L, n) p_lua_settop(L, -(n) - 1)

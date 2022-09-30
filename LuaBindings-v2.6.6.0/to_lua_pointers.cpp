@@ -11,6 +11,11 @@
 type_free* p_free;
 type_malloc* p_malloc;
 type_tolua_beginmodule* p_tolua_beginmodule;
+type_tolua_bnd_cast* p_tolua_bnd_cast;
+type_tolua_bnd_release* p_tolua_bnd_release;
+type_tolua_bnd_releaseownership* p_tolua_bnd_releaseownership;
+type_tolua_bnd_takeownership* p_tolua_bnd_takeownership;
+type_tolua_bnd_type* p_tolua_bnd_type;
 //type_tolua_cclass* p_tolua_cclass;
 type_tolua_constant* p_tolua_constant;
 type_tolua_endmodule* p_tolua_endmodule;
@@ -22,6 +27,7 @@ type_tolua_isnumber* p_tolua_isnumber;
 type_tolua_isstring* p_tolua_isstring;
 type_tolua_isusertype* p_tolua_isusertype;
 type_tolua_module* p_tolua_module;
+type_tolua_newmetatable* p_tolua_newmetatable;
 //type_tolua_open* p_tolua_open;
 type_tolua_pushboolean* p_tolua_pushboolean;
 type_tolua_pushnumber* p_tolua_pushnumber;
@@ -29,15 +35,9 @@ type_tolua_pushstring* p_tolua_pushstring;
 //type_tolua_tonumber* p_tolua_tonumber;
 type_tolua_tostring* p_tolua_tostring;
 type_tolua_tousertype* p_tolua_tousertype;
+type_tolua_typename* p_tolua_typename;
 type_tolua_usertype* p_tolua_usertype;
 type_tolua_variable* p_tolua_variable;
-
-type_tolua_newmetatable* p_tolua_newmetatable;
-type_tolua_bnd_type* p_tolua_bnd_type;
-type_tolua_bnd_takeownership* p_tolua_bnd_takeownership;
-type_tolua_bnd_releaseownership* p_tolua_bnd_releaseownership;
-type_tolua_bnd_cast* p_tolua_bnd_cast;
-type_tolua_bnd_release* p_tolua_bnd_release;
 
 //////////////////////////////////////////////////////
 // Reimplementations (engine doesn't include these) //
@@ -249,6 +249,19 @@ double p_tolua_tonumber(lua_State* L, int narg, double def) {
 		return p_lua_toboolean(L, narg);
 	}
 	return p_lua_tonumber(L, narg);
+}
+
+// Custom
+lua_Integer tolua_setter_tointeger(lua_State* L, int narg, lua_Integer def, const char* variableName) {
+	if (p_lua_gettop(L) < abs(narg)) {
+		return def;
+	}
+	switch (p_lua_type(L, narg)) {
+		case LUA_TBOOLEAN: return p_lua_toboolean(L, narg);
+		case LUA_TNUMBER: return p_lua_tointeger(L, narg);
+		case LUA_TNIL: return def;
+	}
+	return luaL_error(L, "invalid type '%s' in setting variable '%s'; 'boolean', 'number', or 'nil' expected.", p_tolua_typename(L, narg), variableName);
 }
 
 // Expects   [ ..., key, value ]

@@ -10,6 +10,7 @@ type_lua_createtable* p_lua_createtable;
 type_lua_getfield* p_lua_getfield;
 type_lua_getglobal* p_lua_getglobal;
 type_lua_getmetatable* p_lua_getmetatable;
+type_lua_gettable* p_lua_gettable;
 type_lua_gettop* p_lua_gettop;
 type_lua_insert* p_lua_insert;
 type_lua_iscfunction* p_lua_iscfunction;
@@ -42,9 +43,9 @@ type_lua_tolstring* p_lua_tolstring;
 type_lua_tonumberx* p_lua_tonumberx;
 type_lua_touserdata* p_lua_touserdata;
 type_lua_type* p_lua_type;
+type_luaL_error* p_luaL_error;
 type_luaL_loadfilex* p_luaL_loadfilex;
 type_luaL_loadstring* p_luaL_loadstring;
-type_lua_gettable* p_lua_gettable;
 
 ///////////////////////
 // Reimplementations //

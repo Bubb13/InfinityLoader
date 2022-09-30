@@ -88,6 +88,9 @@ type_lua_tolstring p_lua_tolstring;
 typedef int(__cdecl* type_lua_type)(lua_State* L, int index);
 type_lua_type p_lua_type;
 
+typedef int(__cdecl* type_luaL_error)(lua_State* L, const char* fmt, ...);
+type_luaL_error p_luaL_error;
+
 typedef int(__cdecl* type_luaL_loadfilex)(lua_State* L, const char* fileName, const char* mode);
 type_luaL_loadfilex p_luaL_loadfilex;
 
@@ -1380,6 +1383,7 @@ void internalLuaHook() {
 	hardcodedFuncLookup("Hardcoded_lua_tointegerx", lua_tointegerx);
 	hardcodedFuncLookup("Hardcoded_lua_tolstring", lua_tolstring);
 	hardcodedFuncLookup("Hardcoded_lua_type", lua_type);
+	hardcodedFuncLookup("Hardcoded_luaL_error", luaL_error);
 	hardcodedFuncLookup("Hardcoded_luaL_loadfilex", luaL_loadfilex);
 	hardcodedFuncLookup("Hardcoded_luaL_ref", luaL_ref);
 	hardcodedFuncLookup("Hardcoded_malloc", malloc);

@@ -147,6 +147,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_lua_getfield", lua_getfield);
     setLuaPointer("Hardcoded_lua_getglobal", lua_getglobal);
     setLuaPointer("Hardcoded_lua_getmetatable", lua_getmetatable);
+    setLuaPointer("Hardcoded_lua_gettable", lua_gettable);
     setLuaPointer("Hardcoded_lua_gettop", lua_gettop);
     setLuaPointer("Hardcoded_lua_insert", lua_insert);
     setLuaPointer("Hardcoded_lua_iscfunction", lua_iscfunction);
@@ -179,10 +180,16 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_lua_tonumberx", lua_tonumberx);
     setLuaPointer("Hardcoded_lua_touserdata", lua_touserdata);
     setLuaPointer("Hardcoded_lua_type", lua_type);
+    setLuaPointer("Hardcoded_luaL_error", luaL_error);
     setLuaPointer("Hardcoded_luaL_loadfilex", luaL_loadfilex);
     setLuaPointer("Hardcoded_luaL_loadstring", luaL_loadstring);
     setLuaPointer("Hardcoded_malloc", malloc);
     setLuaPointer("Hardcoded_tolua_beginmodule", tolua_beginmodule);
+    setLuaPointer("Hardcoded_tolua_bnd_cast", tolua_bnd_cast);
+    setLuaPointer("Hardcoded_tolua_bnd_release", tolua_bnd_release);
+    setLuaPointer("Hardcoded_tolua_bnd_releaseownership", tolua_bnd_releaseownership);
+    setLuaPointer("Hardcoded_tolua_bnd_takeownership", tolua_bnd_takeownership);
+    setLuaPointer("Hardcoded_tolua_bnd_type", tolua_bnd_type);
     //setLuaPointer("Hardcoded_tolua_cclass", tolua_cclass);
     setLuaPointer("Hardcoded_tolua_constant", tolua_constant);
     setLuaPointer("Hardcoded_tolua_endmodule", tolua_endmodule);
@@ -194,14 +201,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_tolua_isstring", tolua_isstring);
     setLuaPointer("Hardcoded_tolua_isusertype", tolua_isusertype);
     setLuaPointer("Hardcoded_tolua_module", tolua_module);
-
     setLuaPointer("Hardcoded_tolua_newmetatable", tolua_newmetatable);
-    setLuaPointer("Hardcoded_tolua_bnd_type", tolua_bnd_type);
-    setLuaPointer("Hardcoded_tolua_bnd_takeownership", tolua_bnd_takeownership);
-    setLuaPointer("Hardcoded_tolua_bnd_releaseownership", tolua_bnd_releaseownership);
-    setLuaPointer("Hardcoded_tolua_bnd_cast", tolua_bnd_cast);
-    setLuaPointer("Hardcoded_tolua_bnd_release", tolua_bnd_release);
-
     //setLuaPointer("Hardcoded_tolua_open", tolua_open);
     setLuaPointer("Hardcoded_tolua_pushboolean", tolua_pushboolean);
     setLuaPointer("Hardcoded_tolua_pushnumber", tolua_pushnumber);
@@ -209,9 +209,9 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     //setLuaPointer("Hardcoded_tolua_tonumber", tolua_tonumber);
     setLuaPointer("Hardcoded_tolua_tostring", tolua_tostring);
     setLuaPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
+    setLuaPointer("Hardcoded_tolua_typename", tolua_typename);
     setLuaPointer("Hardcoded_tolua_usertype", tolua_usertype);
     setLuaPointer("Hardcoded_tolua_variable", tolua_variable);
-    setLuaPointer("Hardcoded_lua_gettable", lua_gettable);
 
     // Export Lua functions that deal with user data / user types
     exposeToLua(L, "EEex_CastUD", castUserDataLua);

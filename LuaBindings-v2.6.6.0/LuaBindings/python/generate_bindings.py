@@ -3045,14 +3045,16 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 								out.write("(__int64)")
 
 							if varTypeName == "float":
-								out.write(f"{enumCastStr}lua_tonumber(L, 2);\n")
+								out.write(f"{enumCastStr}tolua_tonumber(L, 2, 0);\n")
 							else:
-								out.write(f"{enumCastStr}lua_tointeger(L, 2);\n")
+								out.write(f"{enumCastStr}tolua_setter_tointeger(L, 2, 0, \"")
+								out.write(variableField.variableName)
+								out.write("\");\n")
 
 							return True
 
 						elif varTypeName == "bool":
-							out.write(f"\t{selfStr}{varNameHeader} = lua_toboolean(L, 2);\n")
+							out.write(f"\t{selfStr}{varNameHeader} = tolua_toboolean(L, 2, false);\n")
 							return True
 
 						return False
@@ -3137,21 +3139,21 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 				checkTypeName = checkType.getName()
 
 				if checkType.isPrimitiveNumber() and checkType.getUserTypePointerLevel() == 0:
-					callArgParts.append(f"{enumCastString}tolua_tonumber(L, {luaVarIndex}, NULL)")
+					callArgParts.append(f"{enumCastString}tolua_tonumber(L, {luaVarIndex}, 0)")
 					callArgParts.append(", ")
 					return True
 				elif checkTypeName == "bool" and checkType.getUserTypePointerLevel() == 0:
-					callArgParts.append(f"tolua_toboolean(L, {luaVarIndex}, NULL)")
+					callArgParts.append(f"tolua_toboolean(L, {luaVarIndex}, false)")
 					callArgParts.append(", ")
 					return True
 				elif checkTypeName == "char" and not checkType.unsigned:
 					if checkType.getUserTypePointerLevel() == 1:
 						nonConstCast = "(char*)" if not checkType.const else ""
-						callArgParts.append(f"{nonConstCast}tolua_tostring(L, {luaVarIndex}, NULL)")
+						callArgParts.append(f"{nonConstCast}tolua_tostring(L, {luaVarIndex}, nullptr)")
 						callArgParts.append(", ")
 						return True
 					elif checkType.getUserTypePointerLevel() == 0:
-						callArgParts.append(f"*tolua_tostring(L, {luaVarIndex}, NULL)")
+						callArgParts.append(f"*tolua_tostring(L, {luaVarIndex}, \"\\0\")")
 						callArgParts.append(", ")
 						return True
 
