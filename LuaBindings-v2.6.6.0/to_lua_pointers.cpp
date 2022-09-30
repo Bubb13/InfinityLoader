@@ -252,7 +252,7 @@ double p_tolua_tonumber(lua_State* L, int narg, double def) {
 }
 
 // Custom
-lua_Number tolua_setter_tonumber(lua_State* L, const char* variableName) {
+lua_Number tolua_setter_tonumber(lua_State *const L, const char *const variableName) {
 	constexpr int narg = 2;
 	if (p_lua_gettop(L) < narg) {
 		return luaL_error(L, "argument missing in number variable setter '%s'; 'number' expected.", variableName);
@@ -263,7 +263,7 @@ lua_Number tolua_setter_tonumber(lua_State* L, const char* variableName) {
 }
 
 // Custom
-lua_Integer tolua_setter_tointeger(lua_State* L, const char* variableName) {
+lua_Integer tolua_setter_tointeger(lua_State *const L, const char *const variableName) {
 	constexpr int narg = 2;
 	if (p_lua_gettop(L) < narg) {
 		return luaL_error(L, "argument missing in integer variable setter '%s'; 'number' or 'boolean' expected.", variableName);
@@ -276,7 +276,7 @@ lua_Integer tolua_setter_tointeger(lua_State* L, const char* variableName) {
 }
 
 // Custom
-bool tolua_setter_toboolean(lua_State* L, const char* variableName) {
+bool tolua_setter_toboolean(lua_State *const L, const char *const variableName) {
 	constexpr int narg = 2;
 	if (p_lua_gettop(L) < narg) {
 		return luaL_error(L, "argument missing in boolean variable setter '%s'; 'boolean' or 'number' expected.", variableName);
@@ -293,6 +293,47 @@ bool tolua_setter_toboolean(lua_State* L, const char* variableName) {
 		}
 	}
 	return luaL_error(L, "invalid type '%s' in boolean variable setter '%s'; 'boolean' or 'number' expected.", p_tolua_typename(L, narg), variableName);
+}
+
+// Custom
+lua_Number tolua_function_tonumber(lua_State *const L, const int narg, const char *const functionName) {
+	if (p_lua_gettop(L) < narg) {
+		return luaL_error(L, "number argument #%d missing in function '%s'; 'number' expected.", narg, functionName);
+	}
+	return p_lua_type(L, narg) == LUA_TNUMBER
+		? p_lua_tonumber(L, narg)
+		: luaL_error(L, "invalid type '%s' for number argument #%d in function '%s'; 'number' expected.", p_tolua_typename(L, narg), narg, functionName);
+}
+
+// Custom
+lua_Integer tolua_function_tointeger(lua_State *const L, const int narg, const char *const functionName) {
+	if (p_lua_gettop(L) < narg) {
+		return luaL_error(L, "integer argument #%d missing in function '%s'; 'number' or 'boolean' expected.", narg, functionName);
+	}
+	switch (p_lua_type(L, narg)) {
+		case LUA_TBOOLEAN: return p_lua_toboolean(L, narg);
+		case LUA_TNUMBER: return p_lua_tointeger(L, narg);
+	}
+	return luaL_error(L, "invalid type '%s' for integer argument #%d in function '%s'; 'number' or 'boolean' expected.", p_tolua_typename(L, narg), narg, functionName);
+}
+
+// Custom
+bool tolua_function_toboolean(lua_State *const L, const int narg, const char *const functionName) {
+	if (p_lua_gettop(L) < narg) {
+		return luaL_error(L, "boolean argument #%d missing in function '%s'; 'boolean' or 'number' expected.", narg, functionName);
+	}
+	switch (p_lua_type(L, narg)) {
+		case LUA_TBOOLEAN: return p_lua_toboolean(L, narg);
+		case LUA_TNUMBER: {
+			const lua_Integer arg = p_lua_tointeger(L, narg);
+			switch (arg) {
+				case 0: return false;
+				case 1: return true;
+			}
+			return luaL_error(L, "invalid integer '%d' for boolean argument #%d in function '%s'; '0' or '1' expected.", arg, narg, functionName);
+		}
+	}
+	return luaL_error(L, "invalid type '%s' for boolean argument #%d in function '%s'; 'boolean' or 'number' expected.", p_tolua_typename(L, narg), narg, functionName);
 }
 
 // Expects   [ ..., key, value ]

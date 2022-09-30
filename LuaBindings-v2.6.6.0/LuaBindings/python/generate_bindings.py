@@ -3139,11 +3139,14 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 				checkTypeName = checkType.getName()
 
 				if checkType.isPrimitiveNumber() and checkType.getUserTypePointerLevel() == 0:
-					callArgParts.append(f"{enumCastString}tolua_tonumber(L, {luaVarIndex}, 0)")
+					if paramType.getName() in ("float", "double"):
+						callArgParts.append(f"{enumCastString}tolua_function_tonumber(L, {luaVarIndex}, \"{functionImplementation.name}\")")
+					else:
+						callArgParts.append(f"{enumCastString}tolua_function_tointeger(L, {luaVarIndex}, \"{functionImplementation.name}\")")
 					callArgParts.append(", ")
 					return True
 				elif checkTypeName == "bool" and checkType.getUserTypePointerLevel() == 0:
-					callArgParts.append(f"tolua_toboolean(L, {luaVarIndex}, false)")
+					callArgParts.append(f"tolua_function_toboolean(L, {luaVarIndex}, \"{functionImplementation.name}\")")
 					callArgParts.append(", ")
 					return True
 				elif checkTypeName == "char" and not checkType.unsigned:

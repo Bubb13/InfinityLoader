@@ -66,6 +66,7 @@ type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
 type_CInfGame_SetState p_CInfGame_SetState;
 type_CInfGame_SetIconIndex p_CInfGame_SetIconIndex;
 type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
+type_CDerivedStats_GetAtOffset p_CDerivedStats_GetAtOffset;
 type_CDerivedStats_GetSpellState p_CDerivedStats_GetSpellState;
 type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
 type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
@@ -166,6 +167,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&p_CInfGame_SetState)},
 	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&p_CInfGame_SetIconIndex)},
 	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&p_CGameEffect_DecodeEffect)},
+	std::pair{TEXT("CDerivedStats::GetAtOffset"), reinterpret_cast<void**>(&p_CDerivedStats_GetAtOffset)},
 	std::pair{TEXT("CDerivedStats::GetSpellState"), reinterpret_cast<void**>(&p_CDerivedStats_GetSpellState)},
 	std::pair{TEXT("CGameArea::GetNearest2"), reinterpret_cast<void**>(&p_CGameArea_GetNearest2)},
 	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&p_CGameArea_AdjustTarget)},

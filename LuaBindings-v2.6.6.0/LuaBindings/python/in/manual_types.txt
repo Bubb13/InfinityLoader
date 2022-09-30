@@ -942,6 +942,7 @@ struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 
 struct CDerivedStats : CDerivedStatsTemplate
 {
+	long GetAtOffset(short offset);
 	int GetSpellState(uint bit);
 };
 

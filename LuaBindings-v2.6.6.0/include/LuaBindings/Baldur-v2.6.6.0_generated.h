@@ -11082,6 +11082,9 @@ struct CDerivedStatsTemplate
 	CDerivedStatsTemplate() = delete;
 };
 
+typedef long (__thiscall *type_CDerivedStats_GetAtOffset)(CDerivedStats* pThis, short offset);
+extern type_CDerivedStats_GetAtOffset p_CDerivedStats_GetAtOffset;
+
 typedef int (__thiscall *type_CDerivedStats_GetSpellState)(CDerivedStats* pThis, uint bit);
 extern type_CDerivedStats_GetSpellState p_CDerivedStats_GetSpellState;
 
@@ -11132,6 +11135,11 @@ struct CDerivedStats : CDerivedStatsTemplate
 	Array<unsigned int,8> m_spellStates;
 
 	CDerivedStats() = delete;
+
+	long GetAtOffset(short offset)
+	{
+		return p_CDerivedStats_GetAtOffset(this, offset);
+	}
 
 	int GetSpellState(uint bit)
 	{
