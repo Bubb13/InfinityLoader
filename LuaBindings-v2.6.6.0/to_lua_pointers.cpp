@@ -362,7 +362,7 @@ const char* tolua_function_tostring(lua_State *const L, const int narg, const ch
 // Custom
 char tolua_function_tochar(lua_State *const L, const int narg, const char *const functionName) {
 	if (p_lua_gettop(L) < narg) {
-		luaL_error(L, "character argument #%d missing in function '%s'; 'string' expected.", narg, functionName);
+		return luaL_error(L, "character argument #%d missing in function '%s'; 'string' expected.", narg, functionName);
 	}
 	switch (p_lua_type(L, narg)) {
 		case LUA_TSTRING: {
@@ -370,7 +370,7 @@ char tolua_function_tochar(lua_State *const L, const int narg, const char *const
 			if (arg[0] != '\0' && arg[1] == '\0') {
 				return arg[0];
 			}
-			luaL_error(L, "invalid string '%s' for character argument #%d in function '%s'; 'string' of length 1 expected.", arg, narg, functionName);
+			return luaL_error(L, "invalid string '%s' for character argument #%d in function '%s'; 'string' of length 1 expected.", arg, narg, functionName);
 		}
 		case LUA_TNUMBER: {
 			const lua_Integer arg = p_lua_tointeger(L, narg);
@@ -380,7 +380,7 @@ char tolua_function_tochar(lua_State *const L, const int narg, const char *const
 			return luaL_error(L, "invalid integer '%d' for character argument #%d in function '%s'; '[-128-127]' expected.", arg, narg, functionName);
 		}
 	}
-	luaL_error(L, "invalid type '%s' for character argument #%d in function '%s'; 'string' expected.", p_tolua_typename(L, narg), narg, functionName);
+	return luaL_error(L, "invalid type '%s' for character argument #%d in function '%s'; 'string' expected.", p_tolua_typename(L, narg), narg, functionName);
 }
 
 // Expects   [ ..., key, value ]
