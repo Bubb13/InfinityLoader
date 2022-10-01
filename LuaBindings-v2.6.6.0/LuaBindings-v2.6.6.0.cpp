@@ -232,6 +232,12 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     exposeToLua(L, "EEex_UserDataToLightUserData", userDataToLightUserDataLua);
     exposeToLua(L, "EEex_UserDataToPointer", userDataToPointerLua);
 
+    // Special
+    p_lua_pushlightuserdata(L, &NULL_POINTER);
+    p_lua_setglobal(L, "NULL_PTR");
+    p_lua_pushlightuserdata(L, &NULL_POINTER);
+    p_lua_setglobal(L, "NULL_POINTER");
+
     // Populate internal engine pointers from patterns
     for (auto& pair : internalPointersMap) {
         if (auto node = patterns.find(pair.first); node != patterns.end()) {

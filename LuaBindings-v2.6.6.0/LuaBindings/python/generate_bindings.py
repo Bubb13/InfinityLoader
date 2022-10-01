@@ -3152,11 +3152,11 @@ def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWr
 				elif checkTypeName == "char" and not checkType.unsigned:
 					if checkType.getUserTypePointerLevel() == 1:
 						nonConstCast = "(char*)" if not checkType.const else ""
-						callArgParts.append(f"{nonConstCast}tolua_tostring(L, {luaVarIndex}, nullptr)")
+						callArgParts.append(f"{nonConstCast}tolua_function_tostring(L, {luaVarIndex}, \"{functionImplementation.name}\")")
 						callArgParts.append(", ")
 						return True
 					elif checkType.getUserTypePointerLevel() == 0:
-						callArgParts.append(f"*tolua_tostring(L, {luaVarIndex}, \"\\0\")")
+						callArgParts.append(f"tolua_function_tochar(L, {luaVarIndex}, \"{functionImplementation.name}\")")
 						callArgParts.append(", ")
 						return True
 

@@ -4,6 +4,14 @@
 
 #include "EEexLua_generated_baseclass_offsets.h"
 
+/////////////
+// Special //
+/////////////
+
+// The address of this variable is used as the pointer of a special
+// light userdata object in the bindings that signifies "nullptr."
+bool NULL_POINTER;
+
 //////////////
 // Pointers //
 //////////////
@@ -334,6 +342,45 @@ bool tolua_function_toboolean(lua_State *const L, const int narg, const char *co
 		}
 	}
 	return luaL_error(L, "invalid type '%s' for boolean argument #%d in function '%s'; 'boolean' or 'number' expected.", p_tolua_typename(L, narg), narg, functionName);
+}
+
+// Custom
+const char* tolua_function_tostring(lua_State *const L, const int narg, const char *const functionName) {
+	if (p_lua_gettop(L) < narg) {
+		luaL_error(L, "string argument #%d missing in function '%s'; 'string' expected.", narg, functionName);
+	}
+	switch (p_lua_type(L, narg)) {
+		case LUA_TSTRING: return p_lua_tostring(L, narg);
+		case LUA_TLIGHTUSERDATA:
+			if (p_lua_touserdata(L, narg) == &NULL_POINTER) {
+				return nullptr;
+			}
+	}
+	luaL_error(L, "invalid type '%s' for string argument #%d in function '%s'; 'string' expected.", p_tolua_typename(L, narg), narg, functionName);
+}
+
+// Custom
+char tolua_function_tochar(lua_State *const L, const int narg, const char *const functionName) {
+	if (p_lua_gettop(L) < narg) {
+		luaL_error(L, "character argument #%d missing in function '%s'; 'string' expected.", narg, functionName);
+	}
+	switch (p_lua_type(L, narg)) {
+		case LUA_TSTRING: {
+			const char *const arg = p_lua_tostring(L, narg);
+			if (arg[0] != '\0' && arg[1] == '\0') {
+				return arg[0];
+			}
+			luaL_error(L, "invalid string '%s' for character argument #%d in function '%s'; 'string' of length 1 expected.", arg, narg, functionName);
+		}
+		case LUA_TNUMBER: {
+			const lua_Integer arg = p_lua_tointeger(L, narg);
+			if (arg >= -128 && arg <= 127) {
+				return arg;
+			}
+			return luaL_error(L, "invalid integer '%d' for character argument #%d in function '%s'; '[-128-127]' expected.", arg, narg, functionName);
+		}
+	}
+	luaL_error(L, "invalid type '%s' for character argument #%d in function '%s'; 'string' expected.", p_tolua_typename(L, narg), narg, functionName);
 }
 
 // Expects   [ ..., key, value ]
