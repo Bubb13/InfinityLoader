@@ -36,7 +36,7 @@ void EEex_PushGameObjectUserData(lua_State *const L, CGameObject *const pObject)
 		case CGameObjectType::FIREBALL:      pUserTypeName = "CGameFireball3d";  break;
 		case CGameObjectType::GAME_AI:       pUserTypeName = "CGameAIGame";      break;
 	}
-	p_tolua_pushusertype_nocast(L, pObject, pUserTypeName);
+	tolua_pushusertype_nocast(L, pObject, pUserTypeName);
 }
 
 // 3 [ ..., matchFunc, debug, traceback ]

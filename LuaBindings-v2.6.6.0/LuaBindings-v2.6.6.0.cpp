@@ -41,7 +41,7 @@ int castUserDataLua(lua_State* g_lua) {
         p_lua_pushnil(g_lua);
         return 1;
     }
-    p_tolua_pushusertype_nocast(g_lua, *ptr, p_lua_tostring(g_lua, 2));
+    tolua_pushusertype_nocast(g_lua, *ptr, p_lua_tostring(g_lua, 2));
     return 1;
 }
 
@@ -69,7 +69,7 @@ int newUserDataLua(lua_State* L) {
     const char* userTypeStr = p_lua_tostring(L, 1);
     p_lua_getglobal(L, userTypeStr);
     p_lua_getfield(L, -1, "sizeof");
-    p_tolua_pushusertype_nocast(L, p_malloc(p_lua_tointeger(L, -1)), userTypeStr);
+    tolua_pushusertype_nocast(L, p_malloc(p_lua_tointeger(L, -1)), userTypeStr);
     return 1;
 }
 
@@ -79,7 +79,7 @@ int pointerToUserDataLua(lua_State * g_lua) {
         p_lua_pushnil(g_lua);
         return 1;
     }
-    p_tolua_pushusertype_nocast(g_lua, ptr, p_lua_tostring(g_lua, 2));
+    tolua_pushusertype_nocast(g_lua, ptr, p_lua_tostring(g_lua, 2));
     return 1;
 }
 
@@ -190,7 +190,6 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_tolua_bnd_releaseownership", tolua_bnd_releaseownership);
     setLuaPointer("Hardcoded_tolua_bnd_takeownership", tolua_bnd_takeownership);
     setLuaPointer("Hardcoded_tolua_bnd_type", tolua_bnd_type);
-    //setLuaPointer("Hardcoded_tolua_cclass", tolua_cclass);
     setLuaPointer("Hardcoded_tolua_constant", tolua_constant);
     setLuaPointer("Hardcoded_tolua_endmodule", tolua_endmodule);
     setLuaPointer("Hardcoded_tolua_error", tolua_error);
@@ -202,11 +201,9 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     setLuaPointer("Hardcoded_tolua_isusertype", tolua_isusertype);
     setLuaPointer("Hardcoded_tolua_module", tolua_module);
     setLuaPointer("Hardcoded_tolua_newmetatable", tolua_newmetatable);
-    //setLuaPointer("Hardcoded_tolua_open", tolua_open);
     setLuaPointer("Hardcoded_tolua_pushboolean", tolua_pushboolean);
     setLuaPointer("Hardcoded_tolua_pushnumber", tolua_pushnumber);
     setLuaPointer("Hardcoded_tolua_pushstring", tolua_pushstring);
-    //setLuaPointer("Hardcoded_tolua_tonumber", tolua_tonumber);
     setLuaPointer("Hardcoded_tolua_tostring", tolua_tostring);
     setLuaPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
     setLuaPointer("Hardcoded_tolua_typename", tolua_typename);
@@ -250,16 +247,13 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     }
 
     // Export tolua overrides (the versions in-engine aren't sufficient)
-    addPattern(patterns, "override_tolua_open", p_tolua_open);
-    addPattern(patterns, "override_tolua_cclass", p_tolua_cclass_translate);
-
-    addPattern(patterns, "override_module_newindex_event", p_module_newindex_event);
-    addPattern(patterns, "override_class_newindex_event", p_class_newindex_event);
-
-    addPattern(patterns, "override_module_index_event", p_module_index_event);
+    addPattern(patterns, "Hardcoded_tolua_pushusertype", tolua_pushusertype_nocast);
     addPattern(patterns, "override_class_index_event", p_class_index_event);
-
-    addPattern(patterns, "Hardcoded_tolua_pushusertype", p_tolua_pushusertype_nocast);
+    addPattern(patterns, "override_class_newindex_event", p_class_newindex_event);
+    addPattern(patterns, "override_module_index_event", p_module_index_event);
+    addPattern(patterns, "override_module_newindex_event", p_module_newindex_event);
+    addPattern(patterns, "override_tolua_cclass", tolua_cclass_translate);
+    addPattern(patterns, "override_tolua_open", p_tolua_open);
 
     // The Lua environment needs to grab the pattern map and execute any
     // patches relating to tolua before the Lua bindings are exported
