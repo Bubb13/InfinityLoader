@@ -1303,8 +1303,8 @@ DWORD writeReplaceLogFunction() {
 	return 0;
 }
 
-DWORD attachToConsole() {
-	if (!AttachConsole(parentProcess)) {
+DWORD attachToConsole(bool onlyBind = false) {
+	if (!onlyBind && !AttachConsole(parentProcess)) {
 		const DWORD lastError = GetLastError();
 		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("AttachConsole failed (%d)."), lastError);
 		return lastError;
@@ -1315,7 +1315,9 @@ DWORD attachToConsole() {
 
 void winMainHook() {
 
-	if (attachToConsole() != ERROR_SUCCESS) {
+	// SDL_LogOutput() calls AttachConsole() later in the engine, if I do that now output
+	// will be duplicated on Windows 10, (not on Windows 11 for some reason).
+	if (attachToConsole(true) != ERROR_SUCCESS) {
 		return;
 	}
 
