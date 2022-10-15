@@ -270,11 +270,15 @@ String getMyPath() {
 }
 
 String getWorkingFolder() {
-	return String{ std::filesystem::current_path() }.append(TEXT("\\"));
+#ifndef UNICODE  
+	return std::filesystem::current_path().string().append(TEXT("\\"));
+#else
+	return std::filesystem::current_path().wstring().append(TEXT("\\"));
+#endif
 }
 
 StringA getWorkingFolderA() {
-	return StringA{ std::filesystem::current_path().string() }.append("\\");
+	return std::filesystem::current_path().string().append("\\");
 }
 
 void initPaths() {
