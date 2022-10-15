@@ -21,6 +21,9 @@
     <ClCompile Include="InfinityLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1">

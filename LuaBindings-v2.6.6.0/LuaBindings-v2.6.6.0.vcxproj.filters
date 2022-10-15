@@ -95,6 +95,9 @@
     <ClCompile Include="tolua_reference\tolua_to.c">
       <Filter>Source Files\References\tolua\source</Filter>
     </ClCompile>
+    <ClCompile Include="common.cpp">
+      <Filter>Source Files\Lua Bindings</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\LuaBindings\to_lua_pointers.h">

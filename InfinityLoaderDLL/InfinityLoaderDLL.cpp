@@ -434,7 +434,7 @@ bool tryOperationsConvertToDecimal(const String& iniCategoryName, const String& 
 								   const std::vector<String>& parts, const int argI, intptr_t& out)
 {
 	String arg = parts[argI];
-	if (!decimalStrToNumber(arg, out)) {
+	if (!decimalStrToInteger(arg, out)) {
 		printfT(TEXT("[!] Failed to convert %s argument to decimal for [%s].Operations: \"%s\"\n"),
 				operationStr.c_str(), iniCategoryName.c_str(), arg.c_str());
 		return false;
@@ -635,10 +635,30 @@ void forEveryINISectionName(const String iniPath, const Func action) {
 	delete[] buffer;
 }
 
+bool attemptUseCached = false;
+
 DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, String iniCategoryName, intptr_t& addressOut) {
 
+	bool noCache;
+	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, iniCategoryName.c_str(), TEXT("NoCache"), false, noCache)) {
+		return lastError;
+	}
+
+	if (!noCache && attemptUseCached) {
+
+		intptr_t cachedAddress;
+		if (DWORD lastError = GetINIIntegerDef<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), 0, cachedAddress)) {
+			return lastError;
+		}
+
+		if (cachedAddress != 0) {
+			addressOut = cachedAddress;
+			return 0;
+		}
+	}
+
 	intptr_t bExeSwitch;
-	if (DWORD lastError = GetININumber(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
+	if (DWORD lastError = GetINIIntegerDef<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
 		return lastError;
 	}
 
@@ -714,10 +734,43 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 		handlePatternOperations(iniCategoryName, operations, addressOut);
 	}
 
+	if (!noCache) {
+		SetINIInteger<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), addressOut);
+	}
 	return 0;
 }
 
+long long getFileLastModifiedTime(String filePath) {
+	const auto fileTime = std::filesystem::last_write_time(filePath);
+	const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileTime);
+	return std::chrono::duration_cast<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
+}
+
 DWORD findPatterns(ImageSectionInfo& sectionInfo) {
+
+	bool alreadyCached;
+	long long cachedExeTime;
+
+	if (DWORD lastError = GetINIInteger<long long>(iniPath, TEXT("General"), TEXT("CachedExeTime"), cachedExeTime, alreadyCached)) {
+		return lastError;
+	}
+
+	String exePath;
+	getExePath(nullptr, exePath);
+	long long exeLastModifiedTime = getFileLastModifiedTime(exePath);
+
+	if (alreadyCached) {
+
+		if (exeLastModifiedTime == cachedExeTime) {
+			attemptUseCached = true;
+		}
+		else {
+			SetINIInteger<long long>(iniPath, TEXT("General"), TEXT("CachedExeTime"), exeLastModifiedTime);
+		}
+	}
+	else {
+		SetINIInteger<long long>(iniPath, TEXT("General"), TEXT("CachedExeTime"), exeLastModifiedTime);
+	}
 
 	DWORD returnVal = 0;
 	forEveryINISectionName(dbPath, [&](const String section) {
@@ -1343,13 +1396,6 @@ void winMainHook() {
 
 void internalLuaHook() {
 
-#define hardcodedLookup(name, type, outName) \
-	if (findINICategoryPattern(textInfo, iniPath, TEXT(name), lookupTemp)) { \
-		return; \
-	} \
-	patternEntries.emplace(TEXT(name), PatternEntry{ TEXT(name), lookupTemp }); \
-	outName = reinterpret_cast<type>(lookupTemp);
-
 #define hardcodedFuncLookup(name, outName) \
 	if (findINICategoryPattern(textInfo, iniPath, TEXT(name), lookupTemp)) { \
 		return; \
@@ -1364,7 +1410,15 @@ void internalLuaHook() {
 	/////////////////////////////
 
 	intptr_t lookupTemp;
-	hardcodedLookup("Hardcoded_InternalLuaState", lua_State*, L);
+
+	const TCHAR *const lPatternName { TEXT("Hardcoded_InternalLuaState") };
+	if (findINICategoryPattern(textInfo, iniPath, lPatternName, lookupTemp)) {
+		return;
+	}
+	L = *reinterpret_cast<lua_State**>(lookupTemp);
+	patternEntries.emplace(lPatternName,
+		PatternEntry{ lPatternName, reinterpret_cast<intptr_t>(L) });
+
 	hardcodedFuncLookup("Hardcoded_free", free);
 	hardcodedFuncLookup("Hardcoded_lua_createtable", lua_createtable);
 	hardcodedFuncLookup("Hardcoded_lua_getfield", lua_getfield);

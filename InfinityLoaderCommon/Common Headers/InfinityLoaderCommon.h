@@ -72,9 +72,22 @@ void forEveryCharSplit(const String& buffer, const TCHAR splitChar, const Func a
 	}
 }
 
+template<typename IntegerType>
+extern bool decimalStrToInteger(const String decimalStr, IntegerType& accumulator);
+
+template<typename IntegerType>
+extern String integerToDecimalStr(IntegerType integer);
+
 extern DWORD GetINIString(String iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr);
-extern bool decimalStrToNumber(const String decimalStr, intptr_t& accumulator);
-extern DWORD GetININumber(String iniPath, const TCHAR* section, const TCHAR* key, intptr_t def, intptr_t& outNumber);
+
+template<typename IntegerType>
+extern DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType& outInteger, bool& filled);
+
+template<typename IntegerType>
+extern DWORD GetINIIntegerDef(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType def, IntegerType& outInteger);
+
+template<typename IntegerType>
+extern DWORD SetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType toSet);
 
 ///////////
 // Paths //

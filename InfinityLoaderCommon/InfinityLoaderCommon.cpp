@@ -1,5 +1,5 @@
 
-#include "Common Headers/InfinityLoaderCommon.h"
+#include "InfinityLoaderCommon.h"
 
 /////////////
 // Globals //
@@ -62,7 +62,8 @@ DWORD GetINIString(String iniPath, const TCHAR* section, const TCHAR* key, const
 }
 
 // TODO: Suboptimal
-bool decimalStrToNumber(const String decimalStr, intptr_t& accumulator) {
+template<typename IntegerType>
+bool decimalStrToInteger(const String decimalStr, IntegerType& accumulator) {
 
 	size_t strLen = decimalStr.length();
 	if (strLen == 0) {
@@ -105,7 +106,11 @@ bool decimalStrToNumber(const String decimalStr, intptr_t& accumulator) {
 	return true;
 }
 
-DWORD GetININumber(String iniPath, const TCHAR* section, const TCHAR* key, intptr_t def, intptr_t& outNumber) {
+
+template<typename IntegerType>
+DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType& outInteger, bool& filled) {
+
+	filled = false;
 
 	TCHAR buffer[1024];
 	const std::size_t bufferSize = sizeof(buffer) / sizeof(buffer[0]);
@@ -119,16 +124,109 @@ DWORD GetININumber(String iniPath, const TCHAR* section, const TCHAR* key, intpt
 	}
 
 	if (numRead > 0) {
-		if (!decimalStrToNumber(buffer, outNumber)) {
+		if (!decimalStrToInteger(buffer, outInteger)) {
 			printfT(TEXT("[!] Invalid decimal for [%s].%s: \"%s\".\n"), section, key, buffer);
 			return -1;
 		}
-	}
-	else {
-		outNumber = def;
+		filled = true;
 	}
 
 	return 0;
+}
+
+template<typename IntegerType>
+DWORD GetINIIntegerDef(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType def, IntegerType& outInteger) {
+	bool filled;
+	DWORD error = GetINIInteger(iniPath, section, key, outInteger, filled);
+	if (!filled) {
+		outInteger = def;
+	}
+	return error;
+}
+
+DWORD SetINIString(String iniPath, const TCHAR* section, const TCHAR* key, intptr_t def, String toSet) {
+	WritePrivateProfileString(section, key, toSet.c_str(), iniPath.c_str());
+}
+
+template<typename IntegerType>
+constexpr std::make_unsigned<IntegerType>::type maxIntegerTypeValue() {
+	using UnsignedType = typename std::make_unsigned<IntegerType>::type;
+	return std::is_unsigned<IntegerType>::value
+		? ~static_cast<UnsignedType>(0)
+		: static_cast<UnsignedType>(~static_cast<IntegerType>(0)) >> 1;
+}
+
+template<typename IntegerType>
+struct DivisorInformation {
+	IntegerType divisor;
+	IntegerType nNumberChars;
+};
+
+template<typename IntegerType>
+constexpr DivisorInformation<IntegerType> calculateDivisorInformation() {
+
+	constexpr auto maxPossible = maxIntegerTypeValue<IntegerType>() / 10;
+
+	IntegerType multiple = 1;
+	IntegerType numChars = 1;
+
+	while (multiple <= maxPossible) {
+		++numChars;
+		multiple *= 10;
+	}
+
+	return { multiple, numChars };
+}
+
+const TCHAR decDigitToChar[10]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+
+template<typename IntegerType>
+String integerToDecimalStr(IntegerType integer) {
+
+	if (integer == 0) {
+		return String { '0' };
+	}
+
+	DivisorInformation divisorInformation = calculateDivisorInformation<IntegerType>();
+	auto divisor = divisorInformation.divisor;
+
+	TCHAR* buffer = reinterpret_cast<TCHAR*>(alloca(sizeof(TCHAR) * (divisorInformation.nNumberChars + 1)));
+	size_t writeI = 0;
+	char sign;
+
+	if (integer < 0) {
+		buffer[writeI++] = '-';
+		sign = -1;
+	}
+	else {
+		sign = 1;
+	}
+
+	while (divisor > 1) {
+		const char character = integer / divisor;
+		if (character != 0) {
+			buffer[writeI++] = decDigitToChar[sign * character];
+			integer -= character * divisor;
+			divisor /= 10;
+			break;
+		}
+		divisor /= 10;
+	}
+
+	while (divisor > 1) {
+		const char character = integer / divisor;
+		buffer[writeI++] = decDigitToChar[sign * character];
+		integer -= character * divisor;
+		divisor /= 10;
+	}
+
+	buffer[writeI++] = decDigitToChar[sign * integer];
+	return String { buffer, writeI };
+}
+
+template<typename IntegerType>
+DWORD SetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType toSet) {
+	WritePrivateProfileString(section, key, integerToDecimalStr(toSet).c_str(), iniPath.c_str());
 }
 
 ///////////
@@ -176,7 +274,7 @@ String getWorkingFolder() {
 }
 
 StringA getWorkingFolderA() {
-	return StringA{ std::filesystem::current_path().u8string() }.append("\\");
+	return StringA{ std::filesystem::current_path().string() }.append("\\");
 }
 
 void initPaths() {

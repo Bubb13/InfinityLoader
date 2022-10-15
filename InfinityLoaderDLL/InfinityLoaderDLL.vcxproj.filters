@@ -413,6 +413,9 @@
     <ClCompile Include="asmtk\asmtokenizer.cpp">
       <Filter>Source Files\asmtk</Filter>
     </ClCompile>
+    <ClCompile Include="common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="InfinityLoaderDLL.def">

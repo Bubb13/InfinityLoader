@@ -217,7 +217,7 @@ DWORD startGame() {
 	}
 
 	intptr_t bPause;
-	if (lastError = GetININumber(iniPath, TEXT("General"), TEXT("Pause"), 0, bPause)) {
+	if (lastError = GetINIIntegerDef<intptr_t>(iniPath, TEXT("General"), TEXT("Pause"), 0, bPause)) {
 		goto errorFinally;
 	}
 
