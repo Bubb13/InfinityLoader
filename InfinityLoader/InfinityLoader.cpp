@@ -272,17 +272,28 @@ errorFinally:;
 	return lastError;
 }
 
+int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers)
+{
+	String dmpLocation = writeDump(pointers);
+	MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, TEXT("Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
+	exit(code);
+}
+
 int main(int argc, char* argv[]) {
 	
-	if (!inheritedConsole()) {
-		hideConsole();
-	}
+	__try {
 
-	if (startGame()) {
-		showConsole();
-		std::cout << "Press any key to continue . . .";
-		std::cin.get();
+		if (!inheritedConsole()) {
+			hideConsole();
+		}
+
+		if (startGame()) {
+			showConsole();
+			std::cout << "Press any key to continue . . .";
+			std::cin.get();
+		}
 	}
+	__except (exceptionFilter(GetExceptionCode(), GetExceptionInformation())) {}
 
 	return 0;
 }

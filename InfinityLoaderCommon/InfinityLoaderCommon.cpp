@@ -500,3 +500,77 @@ String ToString(const char* str) {
 	return String{ s2ws(str) };
 #endif
 }
+
+////////////////////////
+// Exception Handling //
+////////////////////////
+
+String writeDump(EXCEPTION_POINTERS* pointers)
+{
+	//const MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(
+	//      MiniDumpWithFullMemory
+	//    | MiniDumpWithHandleData
+	//    | MiniDumpWithUnloadedModules
+	//    | MiniDumpWithProcessThreadData
+	//    | MiniDumpWithFullMemoryInfo
+	//    | MiniDumpWithThreadInfo
+	//    | MiniDumpWithFullAuxiliaryState
+	//    | MiniDumpIgnoreInaccessibleMemory
+	//    | MiniDumpWithTokenInformation
+	//);
+
+	const MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(MiniDumpWithDataSegs | MiniDumpWithIndirectlyReferencedMemory);
+
+	MINIDUMP_EXCEPTION_INFORMATION exceptionInfo{};
+	exceptionInfo.ThreadId = GetCurrentThreadId();
+	exceptionInfo.ExceptionPointers = pointers;
+	exceptionInfo.ClientPointers = FALSE;
+
+	bool exists;
+	size_t attemptI = 0;
+
+	OStringStream dmpNameStream{ TEXT("./InfinityLoader_Crash") };
+	String builtDmpName = dmpNameStream.str();
+
+	if (!std::filesystem::exists(builtDmpName)) {
+		std::filesystem::create_directory(builtDmpName);
+	}
+
+	while (true) {
+
+		dmpNameStream << "./InfinityLoader_Crash/InfinityLoader_Crash_";
+		dmpNameStream << attemptI++;
+		dmpNameStream << ".dmp";
+		builtDmpName = dmpNameStream.str();
+
+		if (!std::filesystem::exists(builtDmpName)) {
+			break;
+		}
+
+		dmpNameStream.str(TEXT(""));
+		dmpNameStream.clear();
+	}
+
+	HANDLE hFile = CreateFile(
+		builtDmpName.c_str(),
+		GENERIC_WRITE,
+		NULL,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
+
+	MiniDumpWriteDump(
+		GetCurrentProcess(),
+		GetCurrentProcessId(),
+		hFile,
+		dumpType,
+		&exceptionInfo,
+		NULL,
+		NULL
+	);
+
+	CloseHandle(hFile);
+	return builtDmpName;
+}

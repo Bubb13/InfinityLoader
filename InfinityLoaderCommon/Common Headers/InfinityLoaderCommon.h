@@ -1,10 +1,13 @@
 
 #pragma once
 
-#include <windows.h>
 #include <codecvt>
 #include <filesystem>
 #include <string>
+#include <sstream>
+
+#include <windows.h>
+#include <dbghelp.h>
 
 ///////////////////////////
 // Type Defs and Defines //
@@ -12,12 +15,14 @@
 
 #ifndef UNICODE  
 typedef std::string String;
+typedef std::ostringstream OStringStream;
 #define printfT printf
 #define strcmpT strcmp
 #define strlenT strlen
 #define _vsnprintfT_s _vsnprintf_s
 #else
 typedef std::wstring String;
+typedef std::wostringstream OStringStream;
 #define printfT wprintf
 #define strcmpT wcscmp
 #define strlenT wcslen
@@ -150,3 +155,9 @@ extern DWORD allocateNear(intptr_t address, size_t size, size_t dwAllocationGran
 extern std::string ws2s(const std::wstring& wstr);
 extern std::wstring s2ws(const std::string& str);
 extern String ToString(const char* str);
+
+////////////////////////
+// Exception Handling //
+////////////////////////
+
+extern String writeDump(EXCEPTION_POINTERS* pointers);
