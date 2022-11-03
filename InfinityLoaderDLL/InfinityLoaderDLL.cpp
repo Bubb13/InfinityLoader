@@ -125,7 +125,7 @@ struct PatternByteEntry {
 /////////////
 
 bool debug;
-bool protonCompatability;
+bool protonCompatibility;
 
 String exeName;
 LuaMode luaMode;
@@ -745,7 +745,7 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 
 long long getFileLastModifiedTime(String filePath) {
 	const auto fileTime = std::filesystem::last_write_time(filePath);
-	if (!protonCompatability) {
+	if (!protonCompatibility) {
 		const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileTime);
 		return std::chrono::duration_cast<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
 	}
@@ -1289,7 +1289,7 @@ void BindCrtHandlesToStdHandles(DWORD parentProcess, HANDLE parentStdIn, HANDLE 
 #undef fprintf
 
 int logShim(FILE* stream, const char* format, const char* level, const char* message) {
-	if (!protonCompatability) {
+	if (!protonCompatibility) {
 		return fprintf(stderr, format, level, message); // Intentionally not FPrint
 	}
 	else {
@@ -1356,7 +1356,7 @@ void winMainHook() {
 	}
 	
 	// This function runs before the console has been attached, temporarily attach it for error output
-	if (!protonCompatability && attachToConsole() != ERROR_SUCCESS) {
+	if (!protonCompatibility && attachToConsole() != ERROR_SUCCESS) {
 		return;
 	}
 	
@@ -1388,7 +1388,7 @@ void winMainHook() {
 
 		installLogRedirect = true;
 	}
-	else if (protonCompatability) {
+	else if (protonCompatibility) {
 		installLogRedirect = true;
 		disable_fprintf = true;
 	}
@@ -1404,7 +1404,7 @@ void winMainHook() {
 		}
 	}
 
-	if (!protonCompatability) {
+	if (!protonCompatibility) {
 		FreeConsole();
 	}
 }
@@ -1416,7 +1416,7 @@ void internalLuaHook() {
 	}
 
 	// This function runs before the console has been attached, temporarily attach it for error output
-	if (!protonCompatability && attachToConsole() != ERROR_SUCCESS) {
+	if (!protonCompatibility && attachToConsole() != ERROR_SUCCESS) {
 		return;
 	}
 	
@@ -1546,7 +1546,7 @@ void internalLuaHook() {
 
 	callOverrideFile(L, "EEex_Main");
 
-	if (!protonCompatability) {
+	if (!protonCompatibility) {
 		FreeConsole();
 	}
 }
@@ -1660,7 +1660,7 @@ void Init(DWORD argParentProcess, HANDLE argParentStdIn, HANDLE argParentStdOut,
 		return;
 	}
 
-	if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatability"), false, protonCompatability)) {
+	if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility)) {
 		return;
 	}
 
@@ -1669,11 +1669,11 @@ void Init(DWORD argParentProcess, HANDLE argParentStdIn, HANDLE argParentStdOut,
 	}
 
 	// This function runs before the console has been attached, temporarily attach it for error output
-	if (!protonCompatability && attachToConsole() != ERROR_SUCCESS) {
+	if (!protonCompatibility && attachToConsole() != ERROR_SUCCESS) {
 		return;
 	}
 
-	if (int error = InitFPrint(protonCompatability)) {
+	if (int error = InitFPrint(protonCompatibility)) {
 		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("InitFPrint failed (%d)."), error);
 		return;
 	}
@@ -1689,7 +1689,7 @@ void Init(DWORD argParentProcess, HANDLE argParentStdIn, HANDLE argParentStdOut,
 
 	patchExe();
 
-	if (!protonCompatability) {
+	if (!protonCompatibility) {
 		// Free the attached console so that the game doesn't inherit it
 		FreeConsole();
 	}

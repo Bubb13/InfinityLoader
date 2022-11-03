@@ -204,12 +204,12 @@ DWORD startGame() {
 		return lastError;
 	}
 
-	bool protonCompatability;
-	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatability"), false, protonCompatability)) {
+	bool protonCompatibility;
+	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility)) {
 		return lastError;
 	}
 
-	if (int error = InitFPrint(protonCompatability)) {
+	if (int error = InitFPrint(protonCompatibility)) {
 		Print("[!] InitFPrint failed (%d).", error);
 		return error;
 	}
