@@ -125,11 +125,13 @@ struct PatternByteEntry {
 /////////////
 
 bool debug;
+LuaMode luaMode;
 bool protonCompatibility;
 
-String exeName;
-LuaMode luaMode;
+String exePath;
+String exeNameForPatterns;
 ImageSectionInfo textInfo;
+bool attemptUseCached = false;
 std::map<String, PatternEntry> patternEntries;
 asmjit::JitRuntime rt;
 
@@ -638,7 +640,42 @@ void forEveryINISectionName(const String iniPath, const Func action) {
 	delete[] buffer;
 }
 
-bool attemptUseCached = false;
+DWORD resolveAliasTarget(const String aliasList, String& toTransform) {
+
+	if (aliasList == TEXT("")) {
+		return 0;
+	}
+
+	DWORD result = 0;
+	forEveryCharSplit(aliasList, TCHAR{','}, [&](const String str) {
+
+		const size_t colonI = str.find(TCHAR{':'});
+
+		if (colonI == std::string::npos) {
+			PrintT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
+			result = -1;
+			return true;
+		}
+
+		const String alias = str.substr(0, colonI);
+		const String target = str.substr(colonI + 1);
+
+		if (target.find(TCHAR{':'}) != std::string::npos) {
+			PrintT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
+			result = -1;
+			return true;
+		}
+
+		if (alias == toTransform) {
+			toTransform = target;
+			return true;
+		}
+
+		return false;
+	});
+
+	return result;
+}
 
 DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, String iniCategoryName, intptr_t& addressOut) {
 
@@ -672,40 +709,9 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 			return lastError;
 		}
 
-		String exeSwitchName { exeName };
-		if (exeAlias != TEXT("")) {
-
-			bool error { false };
-			forEveryCharSplit(exeAlias, TCHAR{ ',' }, [&](const String str) {
-
-				size_t colonI { str.find(TCHAR{ ':' }) };
-
-				if (colonI == std::string::npos) {
-					PrintT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
-					error = true;
-					return true;
-				}
-
-				String alias { str.substr(0, colonI) };
-				String target { str.substr(colonI + 1) };
-
-				if (target.find(TCHAR{ ':' }) != std::string::npos) {
-					PrintT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
-					error = true;
-					return true;
-				}
-
-				if (alias == exeName) {
-					exeSwitchName = target;
-					return true;
-				}
-
-				return false;
-			});
-
-			if (error) {
-				return -1;
-			}
+		String exeSwitchName { exeNameForPatterns };
+		if (DWORD lastError = resolveAliasTarget(exeAlias, exeSwitchName)) {
+			return lastError;
 		}
 
 		iniCategoryName.insert(0, String{ TEXT("!ExeSwitch-") }.append(exeSwitchName).append(TEXT("-")));
@@ -760,13 +766,11 @@ DWORD findPatterns(ImageSectionInfo& sectionInfo) {
 	bool alreadyCached;
 	long long cachedExeTime;
 
-	if (DWORD lastError = GetINIInteger<long long>(iniPath, TEXT("General"), TEXT("CachedExeTime"), cachedExeTime, alreadyCached)) {
+	if (DWORD lastError = GetINIInteger<long long>(iniPath, TEXT("Auto-Generated"), TEXT("CachedExeTime"), cachedExeTime, alreadyCached)) {
 		return lastError;
 	}
 
-	String exePath;
-	getExePath(nullptr, exePath);
-	long long exeLastModifiedTime = getFileLastModifiedTime(exePath);
+	const long long exeLastModifiedTime = getFileLastModifiedTime(exePath);
 
 	if (alreadyCached) {
 
@@ -774,18 +778,23 @@ DWORD findPatterns(ImageSectionInfo& sectionInfo) {
 			attemptUseCached = true;
 		}
 		else {
-			SetINIInteger<long long>(iniPath, TEXT("General"), TEXT("CachedExeTime"), exeLastModifiedTime);
+			SetINIInteger<long long>(iniPath, TEXT("Auto-Generated"), TEXT("CachedExeTime"), exeLastModifiedTime);
 		}
 	}
 	else {
-		SetINIInteger<long long>(iniPath, TEXT("General"), TEXT("CachedExeTime"), exeLastModifiedTime);
+		SetINIInteger<long long>(iniPath, TEXT("Auto-Generated"), TEXT("CachedExeTime"), exeLastModifiedTime);
+	}
+
+	if (debug) {
+		Print("[?] Using cached pattern addresses: %s\n", attemptUseCached ? "true" : "false");
 	}
 
 	DWORD returnVal = 0;
 	forEveryINISectionName(dbPath, [&](const String section) {
 
-		if (section.rfind(TEXT("!"), 0) != std::string::npos)
+		if (section.rfind(TEXT("!"), 0) != std::string::npos) {
 			return false;
+		}
 
 		intptr_t address;
 		if (returnVal = findINICategoryPattern(sectionInfo, dbPath, section.c_str(), address)) {
@@ -1338,9 +1347,8 @@ DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 	return 0;
 }
 
-DWORD attachToConsole(bool onlyBind = false) {
-
-	if (!onlyBind && !AttachConsole(parentProcess)) {
+DWORD attachToConsole() {
+	if (!AttachConsole(parentProcess)) {
 		const DWORD lastError = GetLastError();
 		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("AttachConsole failed (%d)."), lastError);
 		return lastError;
@@ -1401,9 +1409,11 @@ void winMainHook() {
 
 		if (DWORD redirectResult = writeReplaceLogFunction(disable_fprintf)) {
 			Print("[!] Console redirection failed (%d).\n", redirectResult);
+			goto cleanup;
 		}
 	}
 
+cleanup:;
 	if (!protonCompatibility) {
 		FreeConsole();
 	}
@@ -1426,7 +1436,7 @@ void internalLuaHook() {
 
 #define hardcodedFuncLookup(name, outName) \
 	if (findINICategoryPattern(textInfo, iniPath, TEXT(name), lookupTemp)) { \
-		return; \
+		goto cleanup; \
 	} \
 	patternEntries.emplace(TEXT(name), PatternEntry{ TEXT(name), lookupTemp }); \
 	p_##outName = reinterpret_cast<type_##outName>(lookupTemp);
@@ -1441,7 +1451,7 @@ void internalLuaHook() {
 
 	const TCHAR *const lPatternName { TEXT("Hardcoded_InternalLuaState") };
 	if (findINICategoryPattern(textInfo, iniPath, lPatternName, lookupTemp)) {
-		return;
+		goto cleanup;
 	}
 	L = *reinterpret_cast<lua_State**>(lookupTemp);
 	patternEntries.emplace(lPatternName,
@@ -1546,6 +1556,7 @@ void internalLuaHook() {
 
 	callOverrideFile(L, "EEex_Main");
 
+cleanup:;
 	if (!protonCompatibility) {
 		FreeConsole();
 	}
@@ -1620,11 +1631,24 @@ DWORD writeInternalLuaHook(ImageSectionInfo& textInfo) {
 	return 0;
 }
 
+DWORD loadExePathAndName() {
+
+	if (getExePath(exePath, &exeNameForPatterns)) {
+		return -1;
+	}
+
+	String globalExeAlias;
+	if (DWORD lastError = GetINIString(iniPath, TEXT("General"), TEXT("ExeSwitchAlias"), TEXT(""), globalExeAlias)) {
+		return lastError;
+	}
+
+	return resolveAliasTarget(globalExeAlias, exeNameForPatterns);
+}
+
 DWORD patchExe() {
 
-	String exePath;
-	if (getExePath(&exeName, exePath)) {
-		return -1;
+	if (DWORD lastError = loadExePathAndName()) {
+		return lastError;
 	}
 
 	HMODULE foundModule;
@@ -1634,6 +1658,7 @@ DWORD patchExe() {
 
 	if (!findSectionInfo(foundModule, ".text", textInfo)) {
 		Print("[!] Failed to locate .text segment.\n");
+		return -1;
 	}
 
 	if (DWORD lastError = findPatterns(textInfo)) {
@@ -1675,7 +1700,7 @@ void Init(DWORD argParentProcess, HANDLE argParentStdIn, HANDLE argParentStdOut,
 
 	if (int error = InitFPrint(protonCompatibility)) {
 		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("InitFPrint failed (%d)."), error);
-		return;
+		goto cleanup;
 	}
 
 	if (debug) {
@@ -1687,8 +1712,11 @@ void Init(DWORD argParentProcess, HANDLE argParentStdIn, HANDLE argParentStdOut,
 		Print("[?] DLL hStdError: %d\n", GetStdHandle(STD_ERROR_HANDLE));
 	}
 
-	patchExe();
+	if (patchExe()) {
+		goto cleanup;
+	}
 
+cleanup:;
 	if (!protonCompatibility) {
 		// Free the attached console so that the game doesn't inherit it
 		FreeConsole();

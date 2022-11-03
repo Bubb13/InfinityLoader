@@ -124,7 +124,7 @@ extern DWORD SetINIInteger(String iniPath, const TCHAR* section, const TCHAR* ke
 // Paths //
 ///////////
 
-extern DWORD getExePath(String* exeNameOut, String& exePathOut);
+extern DWORD getExePath(String& exePathOut, String* exeNameOut = nullptr);
 extern String getMyFolder();
 extern String getMyPath();
 extern String getWorkingFolder();

@@ -425,16 +425,17 @@ DWORD SetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, Inte
 // Paths //
 ///////////
 
-DWORD getExePath(String* exeNameOut, String& exePathOut) {
+DWORD getExePath(String& exePathOut, String* exeNameOut) {
 
 	String exeNames;
 	if (DWORD lastError = GetINIString(iniPath, TEXT("General"), TEXT("ExeNames"), TEXT(""), exeNames)) {
 		return lastError;
 	}
 
-	forEveryCharSplit(exeNames, TCHAR{ ',' }, [&](const String str) {
+	DWORD result = -1;
+	forEveryCharSplit(exeNames, TCHAR{','}, [&](const String str) {
 
-		String checkingFor = String{ workingFolder }.append(str);
+		const String checkingFor = String{ workingFolder }.append(str);
 		if (std::filesystem::exists(checkingFor)) {
 
 			if (exeNameOut) {
@@ -442,12 +443,17 @@ DWORD getExePath(String* exeNameOut, String& exePathOut) {
 			}
 
 			exePathOut = checkingFor;
+			result = 0;
 			return true;
 		}
 		return false;
 	});
 
-	return 0;
+	if (result) {
+		Print("[!] Failed to find any of the executables defined by [General].ExeNames.\n");
+	}
+
+	return result;
 }
 
 String getMyFolder() {

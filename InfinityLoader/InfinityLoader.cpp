@@ -215,7 +215,7 @@ DWORD startGame() {
 	}
 
 	String exePath;
-	if (DWORD lastError = getExePath(nullptr, exePath)) {
+	if (DWORD lastError = getExePath(exePath)) {
 		return lastError;
 	}
 
