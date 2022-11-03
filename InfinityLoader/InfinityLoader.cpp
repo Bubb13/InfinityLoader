@@ -47,7 +47,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	context.ContextFlags = CONTEXT_INTEGER;
 	if (!GetThreadContext(hThread, &context)) {
 		DWORD lastError = GetLastError();
-		printf("[!] GetThreadContext failed (%d).\n", lastError);
+		Print("[!] GetThreadContext failed (%d).\n", lastError);
 		return lastError;
 	}
 
@@ -73,7 +73,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	LPVOID codeMem = VirtualAllocEx(hProcess, NULL, 1024, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (!codeMem) {
 		DWORD lastError = GetLastError();
-		printf("[!] VirtualAllocEx failed (%d).\n", lastError);
+		Print("[!] VirtualAllocEx failed (%d).\n", lastError);
 		return lastError;
 	}
 
@@ -134,7 +134,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	//writer.printBuffer();
 	if (!WriteProcessMemory(hProcess, codeMem, codeBuff, sizeof(codeBuff), NULL)) {
 		DWORD lastError = GetLastError();
-		printf("[!] WriteProcessMemory failed (%d).\n", lastError);
+		Print("[!] WriteProcessMemory failed (%d).\n", lastError);
 		return lastError;
 	}
 
@@ -150,7 +150,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 
 	if (!SetThreadContext(hThread, &context)) {
 		DWORD lastError = GetLastError();
-		printf("[!] SetThreadContext failed (%d).\n", lastError);
+		Print("[!] SetThreadContext failed (%d).\n", lastError);
 		return lastError;
 	}
 
@@ -198,6 +198,21 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 DWORD startGame() {
 
 	initPaths();
+	
+	bool debug;
+	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug)) {
+		return lastError;
+	}
+
+	bool protonCompatability;
+	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatability"), false, protonCompatability)) {
+		return lastError;
+	}
+
+	if (int error = InitFPrint(protonCompatability)) {
+		Print("[!] InitFPrint failed (%d).", error);
+		return error;
+	}
 
 	String exePath;
 	if (DWORD lastError = getExePath(nullptr, exePath)) {
@@ -210,9 +225,19 @@ DWORD startGame() {
 	PROCESS_INFORMATION processInfo{};
 	DWORD lastError = ERROR_SUCCESS;
 
-	if (!CreateProcess(exePath.c_str(), NULL, NULL, NULL, false, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
+	HANDLE hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+	HANDLE hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE hStdError = GetStdHandle(STD_ERROR_HANDLE);
+
+	if (debug) {
+		Print("[?] Parent hStdInput: %d\n", hStdInput);
+		Print("[?] Parent hStdOutput: %d\n", hStdOutput);
+		Print("[?] Parent hStdError: %d\n", hStdError);
+	}
+
+	if (!CreateProcess(exePath.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
 		lastError = GetLastError();
-		printfT(TEXT("[!] CreateProcess failed attempting to start \"%s\" (%d).\n"), exePath.c_str(), lastError);
+		PrintT(TEXT("[!] CreateProcess failed attempting to start \"%s\" (%d).\n"), exePath.c_str(), lastError);
 		return lastError;
 	}
 
@@ -235,24 +260,24 @@ DWORD startGame() {
 
 	if (ResumeThread(processInfo.hThread) == -1) {
 		lastError = GetLastError();
-		printf("[!] ResumeThread failed (%d).\n", lastError);
+		Print("[!] ResumeThread failed (%d).\n", lastError);
 		goto errorFinally;
 	}
 
 	if (WaitForSingleObject(processInfo.hProcess, INFINITE) == WAIT_FAILED) {
 		lastError = GetLastError();
-		printf("[!] WaitForSingleObject failed (%d).\n", lastError);
+		Print("[!] WaitForSingleObject failed (%d).\n", lastError);
 		goto errorFinally;
 	}
 
 	if (!CloseHandle(processInfo.hProcess)) {
 		lastError = GetLastError();
-		printf("[!] CloseHandle failed (%d).\n", lastError);
+		Print("[!] CloseHandle failed (%d).\n", lastError);
 	}
 
 	if (!CloseHandle(processInfo.hThread)) {
 		lastError = GetLastError();
-		printf("[!] CloseHandle failed (%d).\n", lastError);
+		Print("[!] CloseHandle failed (%d).\n", lastError);
 	}
 
 	return lastError;
@@ -272,8 +297,7 @@ errorFinally:;
 	return lastError;
 }
 
-int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers)
-{
+int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
 	String dmpLocation = writeDump(pointers);
 	MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, TEXT("Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
 	exit(code);

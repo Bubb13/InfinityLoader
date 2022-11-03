@@ -49,7 +49,7 @@ bool EEex_RunMatchFunction(lua_State *const L, CGameObject *const pObject)
     if (p_lua_pcallk(L, 0, 1, -2, 0, nullptr) != LUA_OK)
 	{
                                                                                      // 4 [ ..., matchFunc, debug, traceback, error ]
-        printf("[!] [EEex_MatchObject] Runtime error: %s\n", p_lua_tostring(L, -1));
+        Print("[!] [EEex_MatchObject] Runtime error: %s\n", p_lua_tostring(L, -1));
         p_lua_pop(L, 1);                                                             // 3 [ ..., matchFunc, debug, traceback ]
 		return false;
     }
@@ -191,7 +191,7 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 
 	if (nth < 0 || nth >= MAXBYTE)
 	{
-		printf("[!] [EEex_MatchObject] nth %d invalid, must be [0-255]!\n", nth);
+		Print("[!] [EEex_MatchObject] nth %d invalid, must be [0-255]!\n", nth);
 		return -1;
 	}
 
@@ -210,7 +210,7 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 		}
 		else
 		{
-			printf("[!] [EEex_MatchObject] range %d invalid, use -1 to ignore!\n", range);
+			Print("[!] [EEex_MatchObject] range %d invalid, use -1 to ignore!\n", range);
 			return -1;
 		}
 	}
@@ -228,13 +228,13 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 	}
 	else
 	{
-		printf("[!] [EEex_MatchObject] range %d too large, use -1 to ignore!\n", range);
+		Print("[!] [EEex_MatchObject] range %d too large, use -1 to ignore!\n", range);
 		return -1;
 	}
 
 	if (p_luaL_loadstring(L, matchChunk) != LUA_OK)
 	{                                                                                // 1 [ ..., error ]
-		printf("[!] [EEex_MatchObject] Compile error: %s\n", p_lua_tostring(L, -1));
+		Print("[!] [EEex_MatchObject] Compile error: %s\n", p_lua_tostring(L, -1));
 		p_lua_pop(L, 1);                                                             // 0 [ ... ]
 		return -1;
 	}

@@ -59,7 +59,7 @@ void dumpStackIndex(lua_State* L, const char* label, int index) {
 
 	if (p_lua_pcallk(L, 2, 0, -4, 0, nullptr) != LUA_OK) {
 		                                // [ debug, traceback, errorMessage ]
-		printf("[!] %s\n", p_lua_tostring(L, -1));
+		Print("[!] %s\n", p_lua_tostring(L, -1));
 		p_lua_pop(L, 3);                // [ ]
 	}
 	else {

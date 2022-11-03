@@ -124,6 +124,9 @@ struct PatternByteEntry {
 // Globals //
 /////////////
 
+bool debug;
+bool protonCompatability;
+
 String exeName;
 LuaMode luaMode;
 ImageSectionInfo textInfo;
@@ -167,7 +170,7 @@ DWORD loadLuaMode() {
 		luaMode = LuaMode::EXTERNAL;
 	}
 	else {
-		printf("[!] [General].LuaPatchMode must be either \"INTERNAL\" or \"EXTERNAL\".\n");
+		Print("[!] [General].LuaPatchMode must be either \"INTERNAL\" or \"EXTERNAL\".\n");
 		return -1;
 	}
 
@@ -189,7 +192,7 @@ DWORD findModuleWithPath(HANDLE process, String& path, HMODULE& foundModule) {
 			HMODULE module = modules[i];
 			if (!GetModuleFileName(module, nameBuffer, MAX_PATH)) {
 				DWORD lastError = GetLastError();
-				printf("[!] GetModuleFileName failed (%d).\n", lastError);
+				Print("[!] GetModuleFileName failed (%d).\n", lastError);
 				return lastError;
 			}
 
@@ -201,7 +204,7 @@ DWORD findModuleWithPath(HANDLE process, String& path, HMODULE& foundModule) {
 	}
 	else {
 		DWORD lastError = GetLastError();
-		printf("[!] EnumProcessModules failed (%d).\n", lastError);
+		Print("[!] EnumProcessModules failed (%d).\n", lastError);
 		return lastError;
 	}
 	return 0;
@@ -255,19 +258,19 @@ void callOverrideFile(lua_State* L, const char* name) {
 		p_lua_pushvalue(L, -2);         // [ debug, traceback, errorMessage, traceback, errorMessage ]
 		if (p_lua_pcallk(L, 1, 1, 0, 0, nullptr) != LUA_OK) {
 			                            // [ debug, traceback, errorMessage, errorErrorMessage  ]
-			printf("[!] Error in error handling calling debug.traceback()\n");
+			Print("[!] Error in error handling calling debug.traceback()\n");
 			p_lua_pop(L, 4);            // [ ]
 			return;
 		}
 		                                // [ debug, traceback, errorMessage, errorMessageTraceback ]
-		printf("[!] %s\n", p_lua_tostring(L, -1));
+		Print("[!] %s\n", p_lua_tostring(L, -1));
 		p_lua_pop(L, 4);                // [ ]
 		return;
 	}
 	                                    // [ debug, traceback, chunk ]
 	if (p_lua_pcallk(L, 0, 0, -2, 0, nullptr) != LUA_OK) {
 		                                // [ debug, traceback, errorMessage ]
-		printf("[!] %s\n", p_lua_tostring(L, -1));
+		Print("[!] %s\n", p_lua_tostring(L, -1));
 		p_lua_pop(L, 3);                // [ ]
 	}
 	else {
@@ -411,7 +414,7 @@ bool checkOperationsArgCount(const String& iniCategoryName, const String& operat
 {
 	size_t numArgs = parts.size() - 1;
 	if (!condition(numArgs)) {
-		printfT(TEXT("[!] Invalid number of arguments in %s operation for [%s].Operations: %d\n"), iniCategoryName.c_str(),
+		PrintT(TEXT("[!] Invalid number of arguments in %s operation for [%s].Operations: %d\n"), iniCategoryName.c_str(),
 				operationStr.c_str(), static_cast<int>(numArgs));
 		return false;
 	}
@@ -423,7 +426,7 @@ bool checkOperationsStackCount(const String& iniCategoryName, const String& oper
 {
 	size_t stackSize = stack.size();
 	if (stackSize < neededStackSize) {
-		printfT(TEXT("[!] Not enough values pushed onto stack in %s operation for [%s].Operations: %d < %d\n"),
+		PrintT(TEXT("[!] Not enough values pushed onto stack in %s operation for [%s].Operations: %d < %d\n"),
 				operationStr.c_str(), iniCategoryName.c_str(), static_cast<int>(stackSize), static_cast<int>(neededStackSize));
 		return false;
 	}
@@ -435,7 +438,7 @@ bool tryOperationsConvertToDecimal(const String& iniCategoryName, const String& 
 {
 	String arg = parts[argI];
 	if (!decimalStrToInteger(arg, out)) {
-		printfT(TEXT("[!] Failed to convert %s argument to decimal for [%s].Operations: \"%s\"\n"),
+		PrintT(TEXT("[!] Failed to convert %s argument to decimal for [%s].Operations: \"%s\"\n"),
 				operationStr.c_str(), iniCategoryName.c_str(), arg.c_str());
 		return false;
 	}
@@ -476,7 +479,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, intpt
 		});
 
 		if (curParts.size() == 0) {
-			printfT(TEXT("[!] Operation missing for [%s].Operations\n"), iniCategoryName.c_str());
+			PrintT(TEXT("[!] Operation missing for [%s].Operations\n"), iniCategoryName.c_str());
 			result = false;
 			return true;
 		}
@@ -526,7 +529,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, intpt
 			}
 #endif
 			else {
-				printfT(TEXT("[!] Invalid READ argument for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), arg1.c_str());
+				PrintT(TEXT("[!] Invalid READ argument for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), arg1.c_str());
 				result = false;
 				return true;
 			}
@@ -545,7 +548,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, intpt
 				std::list<PatternByteEntry> byteList;
 				String errorStr;
 				if (!decodeByteString(arg2, byteList, errorStr)) {
-					printfT(TEXT("[!] Failed to decode BYTES value for [%s].Operations: \"%s\", %s\n"), iniCategoryName.c_str(), arg2.c_str(), errorStr.c_str());
+					PrintT(TEXT("[!] Failed to decode BYTES value for [%s].Operations: \"%s\", %s\n"), iniCategoryName.c_str(), arg2.c_str(), errorStr.c_str());
 					return true;
 				}
 
@@ -578,7 +581,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, intpt
 				}
 #endif
 				else {
-					printfT(TEXT("[!] Invalid WRITE argument for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), arg1.c_str());
+					PrintT(TEXT("[!] Invalid WRITE argument for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), arg1.c_str());
 					result = false;
 					return true;
 				}
@@ -595,7 +598,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, intpt
 			enableCodeProtection();
 		}
 		else {
-			printfT(TEXT("[!] Invalid operation for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), operationName.c_str());
+			PrintT(TEXT("[!] Invalid operation for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), operationName.c_str());
 			result = false;
 			return true;
 		}
@@ -678,7 +681,7 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 				size_t colonI { str.find(TCHAR{ ':' }) };
 
 				if (colonI == std::string::npos) {
-					printfT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
+					PrintT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
 					error = true;
 					return true;
 				}
@@ -687,7 +690,7 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 				String target { str.substr(colonI + 1) };
 
 				if (target.find(TCHAR{ ':' }) != std::string::npos) {
-					printfT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
+					PrintT(TEXT("[!] Invalid ExeSwitchAlias: \"%s\".\n"), str.c_str());
 					error = true;
 					return true;
 				}
@@ -716,12 +719,12 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 	std::list<PatternByteEntry> byteList;
 	String errorStr;
 	if (!decodeByteString(hardcodedPatchPattern, byteList, errorStr)) {
-		printfT(TEXT("[!] Failed to decode [%s].Pattern: \"%s\".\n"), iniCategoryName.c_str(), errorStr.c_str());
+		PrintT(TEXT("[!] Failed to decode [%s].Pattern: \"%s\".\n"), iniCategoryName.c_str(), errorStr.c_str());
 		return -1;
 	}
 
 	if (!findByteList(sectionInfo, byteList, addressOut)) {
-		printfT(TEXT("[!] Could not find [%s].Pattern.\n"), iniCategoryName.c_str());
+		PrintT(TEXT("[!] Could not find [%s].Pattern.\n"), iniCategoryName.c_str());
 		return -1;
 	}
 
@@ -742,8 +745,14 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 
 long long getFileLastModifiedTime(String filePath) {
 	const auto fileTime = std::filesystem::last_write_time(filePath);
-	const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileTime);
-	return std::chrono::duration_cast<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
+	if (!protonCompatability) {
+		const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileTime);
+		return std::chrono::duration_cast<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
+	}
+	else {
+		const auto systemTime = fileTime;
+		return std::chrono::duration_cast<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
+	}
 }
 
 DWORD findPatterns(ImageSectionInfo& sectionInfo) {
@@ -915,7 +924,7 @@ int iterateRegexLua(lua_State* L) {
 
 		if (p_lua_pcallk(L, 4, 1, -6, 0, nullptr) != LUA_OK) {
 			                                                     // [ debug, traceback, errorMessage ]
-			printf("[!] %s\n", p_lua_tostring(L, -1));
+			Print("[!] %s\n", p_lua_tostring(L, -1));
 			p_lua_pop(L, 1);                                     // [ debug, traceback ]
 			break;
 		}
@@ -942,13 +951,13 @@ int jitLua(lua_State* L) {
 	asmtk::AsmParser p(&a);
 
 	if (asmjit::Error err = p.parse(p_lua_tostring(L, 1))) {
-		printf("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
+		Print("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
 	void* ptr;
 	if (asmjit::Error err = rt.add(&ptr, &code)) {
-		printf("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
+		Print("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
@@ -965,7 +974,7 @@ int jitAtInternalLua(lua_State* L) {
 	asmtk::AsmParser p(&a);
 
 	if (asmjit::Error err = p.parse(p_lua_tostring(L, 3))) {
-		printf("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
+		Print("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
@@ -978,7 +987,7 @@ int jitAtInternalLua(lua_State* L) {
 		p_lua_pushinteger(L, size);         // [ debug, traceback, func, size ]
 		if (p_lua_pcallk(L, 1, 1, -3, 0, nullptr) != LUA_OK) {
 			                                // [ debug, traceback, errorMessage ]
-			printf("[!] AsmJit failed: %s\n", p_lua_tostring(L, -1));
+			Print("[!] AsmJit failed: %s\n", p_lua_tostring(L, -1));
 			p_lua_pop(L, 3);                // [ ]
 			return reinterpret_cast<uint8_t*>(-1);
 		}
@@ -989,7 +998,7 @@ int jitAtInternalLua(lua_State* L) {
 	};
 
 	if (asmjit::Error err = jitAt(reinterpret_cast<uint8_t*>(p_lua_tointeger(L, 1)), &code, checkFunc)) {
-		printf("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
+		Print("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
@@ -1003,13 +1012,13 @@ int loadLuaBindingsLua(lua_State* L) {
 
 	HMODULE bindingsHandle;
 	if (bindingsHandle = LoadLibraryA(bindingsPath.c_str()); !bindingsHandle) {
-		printf("[!] LoadLibraryA failed (%d).\n", GetLastError());
+		Print("[!] LoadLibraryA failed (%d).\n", GetLastError());
 		return 0;
 	}
 
 	FARPROC proc;
 	if (proc = GetProcAddress(bindingsHandle, "Init"); !proc) {
-		printf("[!] GetProcAddress failed (%d).\n", GetLastError());
+		Print("[!] GetProcAddress failed (%d).\n", GetLastError());
 		return 0;
 	}
 
@@ -1047,12 +1056,12 @@ int messageBoxInternalLua(lua_State* L) {
 }
 
 int printLua(lua_State* L) {
-	printf("%s\n", p_lua_tostring(L, 1));
+	Print("%s\n", p_lua_tostring(L, 1));
 	return 0;
 }
 
 int printErrLua(lua_State* L) {
-	fprintf(stderr, "%s\n", p_lua_tostring(L, 1));
+	PrintErr("%s\n", p_lua_tostring(L, 1));
 	return 0;
 }
 
@@ -1143,7 +1152,7 @@ int runWithStackLua(lua_State* L) {
 
 	if (p_lua_pcallk(L, 1, 0, -3, 0, nullptr) != LUA_OK) {
 		                                                      // [ debug, traceback, errorMessage ]
-		printf("[!] %s\n", p_lua_tostring(L, -1));
+		Print("[!] %s\n", p_lua_tostring(L, -1));
 		p_lua_pop(L, 3);                                      // [ ]
 	}
 	else {
@@ -1236,10 +1245,7 @@ HANDLE parentStdIn;
 HANDLE parentStdOut;
 HANDLE parentStdErr;
 
-void BindCrtHandlesToStdHandles(DWORD parentProcess, HANDLE parentStdIn, HANDLE parentStdOut, HANDLE parentStdErr) {
-
 #define DupHandle(srcProcess,srcHandle,targetProcess,targetHandle)\
-	HANDLE targetHandle;\
 	DuplicateHandle(\
 		srcProcess,\
 		srcHandle,\
@@ -1250,75 +1256,55 @@ void BindCrtHandlesToStdHandles(DWORD parentProcess, HANDLE parentStdIn, HANDLE 
 		DUPLICATE_SAME_ACCESS\
 	);
 
+void BindCrtHandlesToStdHandles(DWORD parentProcess, HANDLE parentStdIn, HANDLE parentStdOut, HANDLE parentStdErr) {
+
 	HANDLE parentProcessHandle = OpenProcess(PROCESS_DUP_HANDLE, false, parentProcess);
 
+	HANDLE dupStdInHandle = INVALID_HANDLE_VALUE;
+	HANDLE dupStdOutHandle = INVALID_HANDLE_VALUE;
+	HANDLE dupStdErrHandle = INVALID_HANDLE_VALUE;
+
 	if (parentStdIn != INVALID_HANDLE_VALUE) {
-
-		DupHandle(parentProcessHandle, parentStdIn, GetCurrentProcess(), myHandle);
+		DupHandle(parentProcessHandle, parentStdIn, GetCurrentProcess(), dupStdInHandle);
 		CloseHandle(GetStdHandle(STD_INPUT_HANDLE));
-		SetStdHandle(STD_INPUT_HANDLE, myHandle);
-
-		FILE* dummyFile;
-		freopen_s(&dummyFile, "nul", "r", stdin);
-
-		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
-		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
-			if (_dup2(fd, _fileno(stdin)) == 0) {
-				setvbuf(stdin, NULL, _IONBF, 0);
-			}
-			_close(fd);
-		}
-
-		std::wcin.clear();
-		std::cin.clear();
+		SetStdHandle(STD_INPUT_HANDLE, dupStdInHandle);
 	}
 
 	if (parentStdOut != INVALID_HANDLE_VALUE) {
-
-		DupHandle(parentProcessHandle, parentStdOut, GetCurrentProcess(), myHandle);
+		DupHandle(parentProcessHandle, parentStdOut, GetCurrentProcess(), dupStdOutHandle);
 		CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
-		SetStdHandle(STD_OUTPUT_HANDLE, myHandle);
-
-		FILE* dummyFile;
-		freopen_s(&dummyFile, "nul", "w", stdout);
-
-		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
-		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
-			if (_dup2(fd, _fileno(stdout)) == 0) {
-				setvbuf(stdout, NULL, _IONBF, 0);
-			}
-			_close(fd);
-		}
-
-		std::wcout.clear();
-		std::cout.clear();
+		SetStdHandle(STD_OUTPUT_HANDLE, dupStdOutHandle);
 	}
 
 	if (parentStdErr != INVALID_HANDLE_VALUE) {
-
-		DupHandle(parentProcessHandle, parentStdErr, GetCurrentProcess(), myHandle);
+		DupHandle(parentProcessHandle, parentStdErr, GetCurrentProcess(), dupStdErrHandle);
 		CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
-		SetStdHandle(STD_ERROR_HANDLE, myHandle);
-
-		FILE* dummyFile;
-		freopen_s(&dummyFile, "nul", "w", stderr);
-
-		DupHandle(GetCurrentProcess(), myHandle, GetCurrentProcess(), myHandle2);
-		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
-			if (_dup2(fd, _fileno(stderr)) == 0) {
-				setvbuf(stderr, NULL, _IONBF, 0);
-			}
-			_close(fd);
-		}
-
-		std::wcerr.clear();
-		std::cerr.clear();
+		SetStdHandle(STD_ERROR_HANDLE, dupStdErrHandle);
 	}
 
+	ResetCrtHandles(dupStdInHandle, dupStdOutHandle, dupStdErrHandle);
 	CloseHandle(parentProcessHandle);
 }
 
-DWORD writeReplaceLogFunction() {
+#undef fprintf
+
+int logShim(FILE* stream, const char* format, const char* level, const char* message) {
+	if (!protonCompatability) {
+		return fprintf(stderr, format, level, message); // Intentionally not FPrint
+	}
+	else {
+		FPrint(stderr, format, level, message);
+		return 0;
+	}
+}
+
+#define fprintf error
+
+int logShimDisable(FILE* stream, const char* format, const char* level, const char* message) {
+	return 0;
+}
+
+DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 
 	intptr_t patchAddress;
 	if (DWORD lastError = findINICategoryPattern(textInfo, iniPath, TEXT("Hardcoded_SDL_LogOutput()_fprintf"), patchAddress)) {
@@ -1343,12 +1329,8 @@ DWORD writeReplaceLogFunction() {
 	disableCodeProtection();
 	writer.flush();
 	enableCodeProtection();
-
 	writer.setLocation(curAllocatedPtr);
-	writer.writeArgImmediate32(2, 0);
-	writer.callToAddressFar(reinterpret_cast<intptr_t>(__acrt_iob_func));
-	writer.writeBytesToBuffer(3, 0x48, 0x8B, 0xC8); // mov rcx,rax
-	writer.callToAddressFar(reinterpret_cast<intptr_t>(fprintf));
+	writer.callToAddressFar(reinterpret_cast<intptr_t>(!disable_fprintf ? logShim : logShimDisable));
 	writer.jmpToAddress(patchAddress + 5);
 	writer.flush();
 	curAllocatedPtr = writer.getLocation();
@@ -1357,6 +1339,7 @@ DWORD writeReplaceLogFunction() {
 }
 
 DWORD attachToConsole(bool onlyBind = false) {
+
 	if (!onlyBind && !AttachConsole(parentProcess)) {
 		const DWORD lastError = GetLastError();
 		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("AttachConsole failed (%d)."), lastError);
@@ -1368,11 +1351,26 @@ DWORD attachToConsole(bool onlyBind = false) {
 
 void winMainHook() {
 
-	// SDL_LogOutput() calls AttachConsole() later in the engine, if I do that now output
-	// will be duplicated on Windows 10, (not on Windows 11 for some reason).
-	if (attachToConsole(true) != ERROR_SUCCESS) {
+	if (debug) {
+		Print("[?] Debug output 2 (Windows: No, Proton: Yes)...\n");
+	}
+	
+	// This function runs before the console has been attached, temporarily attach it for error output
+	if (!protonCompatability && attachToConsole() != ERROR_SUCCESS) {
 		return;
 	}
+	
+	if (debug) {
+
+		Print("[?] Debug output 3 (Windows: Yes, Proton: Yes)...\n");
+
+		Print("[?] Game hStdInput: %d\n", GetStdHandle(STD_INPUT_HANDLE));
+		Print("[?] Game hStdOutput: %d\n", GetStdHandle(STD_OUTPUT_HANDLE));
+		Print("[?] Game hStdError: %d\n", GetStdHandle(STD_ERROR_HANDLE));
+	}
+
+	bool installLogRedirect = false;
+	bool disable_fprintf = false;
 
 	if (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_CHAR) {
 
@@ -1388,13 +1386,43 @@ void winMainHook() {
 		// goes through this function, and stdin, stdout, and stderr aren't normally
 		// hooked up to the console anyway.
 
-		if (writeReplaceLogFunction() != 0) {
-			printf("[!] Console redirection failed.\n");
+		installLogRedirect = true;
+	}
+	else if (protonCompatability) {
+		installLogRedirect = true;
+		disable_fprintf = true;
+	}
+
+	if (installLogRedirect) {
+
+		if (debug) {
+			Print("[?] Redirecting output, disable_fprintf: %s\n", disable_fprintf ? "true" : "false");
 		}
+
+		if (DWORD redirectResult = writeReplaceLogFunction(disable_fprintf)) {
+			Print("[!] Console redirection failed (%d).\n", redirectResult);
+		}
+	}
+
+	if (!protonCompatability) {
+		FreeConsole();
 	}
 }
 
 void internalLuaHook() {
+
+	if (debug) {
+		Print("[?] Debug output 4 (Windows: No, Proton: Yes)...\n");
+	}
+
+	// This function runs before the console has been attached, temporarily attach it for error output
+	if (!protonCompatability && attachToConsole() != ERROR_SUCCESS) {
+		return;
+	}
+	
+	if (debug) {
+		Print("[?] Debug output 5 (Windows: Yes, Proton: Yes)...\n");
+	}
 
 #define hardcodedFuncLookup(name, outName) \
 	if (findINICategoryPattern(textInfo, iniPath, TEXT(name), lookupTemp)) { \
@@ -1517,6 +1545,10 @@ void internalLuaHook() {
 	///////////////////////
 
 	callOverrideFile(L, "EEex_Main");
+
+	if (!protonCompatability) {
+		FreeConsole();
+	}
 }
 
 void writeCallHookProcAfterCall(AssemblyWriter& writer, intptr_t& curAllocatedPtr, intptr_t patchAddress, void* targetProc) {
@@ -1581,7 +1613,7 @@ DWORD writeInternalLuaHook(ImageSectionInfo& textInfo) {
 		writeCallHookProcAfterCall(writer, curAllocatedPtr, patchAddress, internalLuaHook);
 	}
 	else {
-		printf("[!] LuaPatchMode::EXTERNAL unimplemented.\n");
+		Print("[!] LuaPatchMode::EXTERNAL unimplemented.\n");
 		return -1;
 	}
 
@@ -1601,7 +1633,7 @@ DWORD patchExe() {
 	}
 
 	if (!findSectionInfo(foundModule, ".text", textInfo)) {
-		printf("[!] Failed to locate .text segment.\n");
+		Print("[!] Failed to locate .text segment.\n");
 	}
 
 	if (DWORD lastError = findPatterns(textInfo)) {
@@ -1622,14 +1654,43 @@ void Init(DWORD argParentProcess, HANDLE argParentStdIn, HANDLE argParentStdOut,
 	parentStdOut = argParentStdOut;
 	parentStdErr = argParentStdErr;
 
-	// This function runs before the console has been attached, temporarily attach it for error output
-	if (attachToConsole() != ERROR_SUCCESS) {
+	initPaths();
+
+	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug)) {
 		return;
 	}
 
-	initPaths();
+	if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatability"), false, protonCompatability)) {
+		return;
+	}
+
+	if (debug) {
+		Print("[?] Debug output 0 (Windows: No, Proton: Yes)...\n");
+	}
+
+	// This function runs before the console has been attached, temporarily attach it for error output
+	if (!protonCompatability && attachToConsole() != ERROR_SUCCESS) {
+		return;
+	}
+
+	if (int error = InitFPrint(protonCompatability)) {
+		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("InitFPrint failed (%d)."), error);
+		return;
+	}
+
+	if (debug) {
+
+		Print("[?] Debug output 1 (Windows: Yes, Proton: Yes)...\n");
+
+		Print("[?] DLL hStdInput: %d\n", GetStdHandle(STD_INPUT_HANDLE));
+		Print("[?] DLL hStdOutput: %d\n", GetStdHandle(STD_OUTPUT_HANDLE));
+		Print("[?] DLL hStdError: %d\n", GetStdHandle(STD_ERROR_HANDLE));
+	}
+
 	patchExe();
 
-	// Free the attached console so that the game doesn't inherit it
-	FreeConsole();
+	if (!protonCompatability) {
+		// Free the attached console so that the game doesn't inherit it
+		FreeConsole();
+	}
 }

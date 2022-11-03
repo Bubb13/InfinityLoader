@@ -17,6 +17,7 @@
 typedef std::string String;
 typedef std::ostringstream OStringStream;
 #define printfT printf
+#define fprintfT fprintf
 #define strcmpT strcmp
 #define strlenT strlen
 #define _vsnprintfT_s _vsnprintf_s
@@ -24,10 +25,21 @@ typedef std::ostringstream OStringStream;
 typedef std::wstring String;
 typedef std::wostringstream OStringStream;
 #define printfT wprintf
+#define fprintfT fwprintf
 #define strcmpT wcscmp
 #define strlenT wcslen
 #define _vsnprintfT_s _vsnwprintf_s
 #endif
+
+#define Print(...) FPrint(stdout, ##__VA_ARGS__)
+#define PrintErr(...) FPrint(stderr, ##__VA_ARGS__)
+#define PrintT(...) FPrintT(stdout, ##__VA_ARGS__)
+#define PrintTErr(...) FPrintT(stderr, ##__VA_ARGS__)
+
+#define printf error
+#define printfT error
+#define fprintf error
+#define fprintfT error
 
 typedef std::string StringA;
 typedef std::wstring StringW;
@@ -41,10 +53,24 @@ extern String iniPath;
 extern String workingFolder;
 
 /////////////
+// Logging //
+/////////////
+
+typedef void(*type_FPrint)(FILE* file, const char* formatText, ...);
+extern type_FPrint FPrint;
+
+typedef void(*type_FPrintT)(FILE* file, const TCHAR* formatText, ...);
+extern type_FPrintT FPrintT;
+
+extern int InitFPrint(bool protonCompatibility);
+
+/////////////
 // Utility //
 /////////////
 
 extern void MessageBoxFormat(String caption, UINT uType, String formatText, ...);
+extern void MessageBoxFormatA(StringA caption, UINT uType, StringA formatText, ...);
+extern void ResetCrtHandles(HANDLE stdInHandle, HANDLE stdOutHandle, HANDLE stdErrHandle);
 
 //////////////////
 // INI Handling //

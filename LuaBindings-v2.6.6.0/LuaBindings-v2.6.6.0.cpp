@@ -114,7 +114,7 @@ void runCallback(lua_State* L) {
 
     if (p_lua_pcallk(L, 0, 0, -2, 0, nullptr) != LUA_OK) {
                                         // [ debug, traceback, errorMessage ]
-        printf("[!] %s\n", p_lua_tostring(L, -1));
+        Print("[!] %s\n", p_lua_tostring(L, -1));
         p_lua_pop(L, 3);                // [ ]
     }
     else {
@@ -136,7 +136,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
         p_##pointerGlobal = (type_##pointerGlobal*)(itr->second.value); \
     } \
     else { \
-        printf("[!] Lua pattern not defined: \"%s\"; binding failed!\n", patternName); \
+        Print("[!] Lua pattern not defined: \"%s\"; binding failed!\n", patternName); \
         return; \
     }
 
@@ -242,7 +242,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
             *pair.second = reinterpret_cast<void*>(pattern.value);
         }
         else {
-            printfT(TEXT("[!] Function pattern [%s] not present for bindings; calling this function will crash the game!\n"), pair.first);
+            PrintT(TEXT("[!] Function pattern [%s] not present for bindings; calling this function will crash the game!\n"), pair.first);
         }
     }
 

@@ -1,6 +1,10 @@
 
 #include "InfinityLoaderCommon.h"
 
+#include <fcntl.h>
+#include <io.h>
+#include <iostream>
+
 /////////////
 // Globals //
 /////////////
@@ -23,6 +27,114 @@ const std::pair<const TCHAR, const unsigned char> aDecimalDigitToByte[] = {
 };
 
 /////////////
+// Logging //
+/////////////
+
+#undef fprintf
+
+#ifndef UNICODE  
+#define fprintfT fprintf
+#else
+#define fprintfT fwprintf
+#endif
+
+constexpr size_t printBufferCount = 4096;
+
+FILE* consoleOut;
+type_FPrint FPrint = reinterpret_cast<type_FPrint>(fprintf);
+type_FPrintT FPrintT = reinterpret_cast<type_FPrintT>(fprintfT);
+
+void FPrintT_NoConsole(FILE* file, const TCHAR* formatText, ...) {
+
+	va_list args;
+	TCHAR buffer[printBufferCount];
+
+	va_start(args, formatText);
+	int bytesWritten = _vsnprintfT_s(buffer, _countof(buffer), _TRUNCATE, formatText, args);
+	va_end(args);
+
+	fprintfT(file, TEXT("%s"), buffer);
+}
+
+void FPrintT_Console(FILE* file, const TCHAR* formatText, ...) {
+
+	va_list args;
+	TCHAR buffer[printBufferCount];
+	constexpr DWORD count = _countof(buffer);
+
+	va_start(args, formatText);
+	int bytesWritten = _vsnprintfT_s(buffer, count, _TRUNCATE, formatText, args);
+	va_end(args);
+
+	fprintfT(consoleOut, TEXT("%s"), buffer);
+	fprintfT(file, TEXT("%s"), buffer);
+}
+
+void FPrint_NoConsole(FILE* file, const char* formatText, ...) {
+
+	va_list args;
+	char buffer[printBufferCount];
+
+	va_start(args, formatText);
+	int bytesWritten = _vsnprintf_s(buffer, _countof(buffer), _TRUNCATE, formatText, args);
+	va_end(args);
+
+	fprintf(file, "%s", buffer);
+}
+
+void FPrint_Console(FILE* file, const char* formatText, ...) {
+
+	va_list args;
+	char buffer[printBufferCount];
+	constexpr DWORD count = _countof(buffer);
+
+	va_start(args, formatText);
+	int bytesWritten = _vsnprintf_s(buffer, count, _TRUNCATE, formatText, args);
+	va_end(args);
+
+	fprintf(consoleOut, "%s", buffer);
+	fprintf(file, "%s", buffer);
+}
+
+#define fprintf error
+#define fprintfT error
+
+int InitFPrint(bool protonCompatibility) {
+
+	if (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_CHAR) {
+
+		FPrint = FPrint_Console;
+		FPrintT = FPrintT_Console;
+
+		if (errno_t error = fopen_s(&consoleOut, "CONOUT$", "w")) {
+			return error;
+		}
+
+		if (int error = setvbuf(consoleOut, NULL, _IONBF, 0)) {
+			return error;
+		}
+
+		if (protonCompatibility) {
+			if (int error = setvbuf(stdin, NULL, _IONBF, 0)) {
+				return error;
+			}
+			if (int error = setvbuf(stdout, NULL, _IONBF, 0)) {
+				return error;
+			}
+			if (int error = setvbuf(stderr, NULL, _IONBF, 0)) {
+				return error;
+			}
+		}
+	}
+	else {
+		FPrint = FPrint_NoConsole;
+		FPrintT = FPrintT_NoConsole;
+	}
+
+	return 0;
+}
+
+/////////////
 // Utility //
 /////////////
 
@@ -39,6 +151,86 @@ void MessageBoxFormat(String caption, UINT uType, String formatText, ...) {
 	MessageBox(NULL, buffer, caption.c_str(), uType);
 }
 
+void MessageBoxFormatA(StringA caption, UINT uType, StringA formatText, ...) {
+
+	va_list args;
+	char buffer[1024];
+	constexpr size_t count = _countof(buffer);
+
+	va_start(args, formatText);
+	int bytesWritten = _vsnprintf_s(buffer, count, _TRUNCATE, formatText.c_str(), args);
+	va_end(args);
+
+	MessageBoxA(NULL, buffer, caption.c_str(), uType);
+}
+
+#define DupHandle(srcProcess,srcHandle,targetProcess,targetHandle)\
+	DuplicateHandle(\
+		srcProcess,\
+		srcHandle,\
+		targetProcess,\
+		&targetHandle,\
+		NULL,\
+		false,\
+		DUPLICATE_SAME_ACCESS\
+	);
+
+void ResetCrtHandles(HANDLE stdInHandle, HANDLE stdOutHandle, HANDLE stdErrHandle) {
+
+	HANDLE myHandle2;
+
+	if (stdInHandle != INVALID_HANDLE_VALUE) {
+
+		FILE* dummyFile;
+		freopen_s(&dummyFile, "nul", "r", stdin);
+
+		DupHandle(GetCurrentProcess(), stdInHandle, GetCurrentProcess(), myHandle2);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+			if (_dup2(fd, _fileno(stdin)) == 0) {
+				setvbuf(stdin, NULL, _IONBF, 0);
+			}
+			_close(fd);
+		}
+
+		std::wcin.clear();
+		std::cin.clear();
+	}
+
+	if (stdOutHandle != INVALID_HANDLE_VALUE) {
+
+		FILE* dummyFile;
+		freopen_s(&dummyFile, "nul", "w", stdout);
+
+		DupHandle(GetCurrentProcess(), stdOutHandle, GetCurrentProcess(), myHandle2);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+			if (_dup2(fd, _fileno(stdout)) == 0) {
+				setvbuf(stdout, NULL, _IONBF, 0);
+			}
+			_close(fd);
+		}
+
+		std::wcout.clear();
+		std::cout.clear();
+	}
+
+	if (stdErrHandle != INVALID_HANDLE_VALUE) {
+
+		FILE* dummyFile;
+		freopen_s(&dummyFile, "nul", "w", stderr);
+
+		DupHandle(GetCurrentProcess(), stdErrHandle, GetCurrentProcess(), myHandle2);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+			if (_dup2(fd, _fileno(stderr)) == 0) {
+				setvbuf(stderr, NULL, _IONBF, 0);
+			}
+			_close(fd);
+		}
+
+		std::wcerr.clear();
+		std::cerr.clear();
+	}
+}
+
 //////////////////
 // INI Handling //
 //////////////////
@@ -53,7 +245,7 @@ DWORD GetINIString(String iniPath, const TCHAR* section, const TCHAR* key, const
 		(TCHAR*)&buffer, bufferSize, iniPath.c_str());
 
 	if (DWORD lastError = GetLastError(); lastError != ERROR_SUCCESS && lastError != ERROR_FILE_NOT_FOUND) {
-		printf("[!] GetPrivateProfileString failed (%d).\n", lastError);
+		Print("[!] GetPrivateProfileString failed (%d).\n", lastError);
 		return lastError;
 	}
 
@@ -119,13 +311,13 @@ DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, Inte
 		(TCHAR*)&buffer, bufferSize, iniPath.c_str());
 
 	if (DWORD lastError = GetLastError(); lastError != ERROR_SUCCESS && lastError != ERROR_FILE_NOT_FOUND) {
-		printf("[!] GetPrivateProfileString failed (%d).\n", lastError);
+		Print("[!] GetPrivateProfileString failed (%d).\n", lastError);
 		return lastError;
 	}
 
 	if (numRead > 0) {
 		if (!decimalStrToInteger(buffer, outInteger)) {
-			printfT(TEXT("[!] Invalid decimal for [%s].%s: \"%s\".\n"), section, key, buffer);
+			PrintT(TEXT("[!] Invalid decimal for [%s].%s: \"%s\".\n"), section, key, buffer);
 			return -1;
 		}
 		filled = true;
@@ -384,6 +576,9 @@ void AssemblyWriter::callToAddress(intptr_t address) {
 
 void AssemblyWriter::alignStackAndMakeShadowSpace() {
 #if defined(_WIN64)
+	// push rsp
+	// and rsp, 0xFFFFFFFFFFFFFFF0
+	// sub rsp, 0x20
 	writeBytesToBuffer(9, 0x54, 0x48, 0x83, 0xE4, 0xF0, 0x48, 0x83, 0xEC, 0x20);
 #endif
 }
@@ -411,11 +606,11 @@ void AssemblyWriter::popVolatileRegisters() {
 }
 
 void AssemblyWriter::printBuffer() {
-	printf("[!] Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(startMemAddress));
+	Print("[!] Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(startMemAddress));
 	for (size_t i = 0; i < curI; ++i) {
-		printf("%02X ", buffer[i]);
+		Print("%02X ", buffer[i]);
 	}
-	printf("\n");
+	Print("\n");
 }
 
 void AssemblyWriter::flush() {
@@ -430,13 +625,13 @@ DWORD writeProcessString(HANDLE hProcess, const TCHAR* str, intptr_t& memoryPtr)
 	LPVOID allocPtr = VirtualAllocEx(hProcess, NULL, strSizeBytes, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	if (!allocPtr) {
 		DWORD lastError = GetLastError();
-		printf("[!] VirtualAllocEx failed (%d).\n", lastError);
+		Print("[!] VirtualAllocEx failed (%d).\n", lastError);
 		return lastError;
 	}
 
 	if (!WriteProcessMemory(hProcess, allocPtr, str, strSizeBytes, NULL)) {
 		DWORD lastError = GetLastError();
-		printf("[!] WriteProcessMemory failed (%d).\n", lastError);
+		Print("[!] WriteProcessMemory failed (%d).\n", lastError);
 		return lastError;
 	}
 
@@ -451,13 +646,13 @@ DWORD writeProcessStringA(HANDLE hProcess, const char* str, intptr_t& memoryPtr)
 	LPVOID allocPtr = VirtualAllocEx(hProcess, NULL, strSizeBytes, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	if (!allocPtr) {
 		DWORD lastError = GetLastError();
-		printf("[!] VirtualAllocEx failed (%d).\n", lastError);
+		Print("[!] VirtualAllocEx failed (%d).\n", lastError);
 		return lastError;
 	}
 
 	if (!WriteProcessMemory(hProcess, allocPtr, str, strSizeBytes, NULL)) {
 		DWORD lastError = GetLastError();
-		printf("[!] WriteProcessMemory failed (%d).\n", lastError);
+		Print("[!] WriteProcessMemory failed (%d).\n", lastError);
 		return lastError;
 	}
 
@@ -470,7 +665,7 @@ DWORD allocateNear(intptr_t address, size_t size, size_t dwAllocationGranularity
 	while (!allocatedOut) {
 		DWORD lastError = GetLastError();
 		if (lastError != ERROR_INVALID_ADDRESS) {
-			printf("[!] VirtualAlloc failed (%d).\n", lastError);
+			Print("[!] VirtualAlloc failed (%d).\n", lastError);
 			return lastError;
 		}
 		address -= dwAllocationGranularity;
@@ -526,15 +721,14 @@ String writeDump(EXCEPTION_POINTERS* pointers)
 	exceptionInfo.ExceptionPointers = pointers;
 	exceptionInfo.ClientPointers = FALSE;
 
-	bool exists;
-	size_t attemptI = 0;
-
 	OStringStream dmpNameStream{ TEXT("./InfinityLoader_Crash") };
 	String builtDmpName = dmpNameStream.str();
 
 	if (!std::filesystem::exists(builtDmpName)) {
 		std::filesystem::create_directory(builtDmpName);
 	}
+
+	size_t attemptI = 0;
 
 	while (true) {
 
