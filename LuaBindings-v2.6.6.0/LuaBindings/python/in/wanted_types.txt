@@ -12,4 +12,5 @@ CGameStatic
 CGameTemporal
 CGameTiledObject
 CGameTrigger
+CMessageSetDirection
 EEex

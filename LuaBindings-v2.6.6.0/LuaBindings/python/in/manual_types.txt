@@ -951,6 +951,24 @@ struct CAIScript
 	$constructor_fake Construct1(CResRef cNewResRef, int playerscript);
 };
 
+struct CMessageSetDirection : CMessage
+{
+	nobinding nopointer static void* VFTable;
+
+	$constructor_fake Construct(CPoint face, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_face = face;
+	}
+};
+
+struct CMessageHandler
+{
+	short AddMessage(CMessage* message, int bForcePassThrough);
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////

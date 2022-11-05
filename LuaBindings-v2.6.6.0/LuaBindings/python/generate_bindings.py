@@ -2083,10 +2083,10 @@ class Group:
 						if field.type == FieldType.VARIABLE:
 							varField: VariableField = field
 							if varField.static:
-								varNameP = f"{self.name}::p_{varField.variableName}"
+								varName = f"{self.name}::{'' if varField.nopointer else 'p_'}{varField.variableName}"
 								pointerLevelAdjust: int = 0 if varField.nopointer else 1
-								internalPointersOut.write(f"{varField.variableType.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)} {varNameP};\n")
-								internalPointersListOut.append((f"{self.name}::{varField.variableName}", varNameP))
+								internalPointersOut.write(f"{varField.variableType.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)} {varName};\n")
+								internalPointersListOut.append((f"{self.name}::{varField.variableName}", varName))
 			else:
 				for field in group.fields:
 					if field.type == FieldType.VARIABLE:
@@ -2456,7 +2456,7 @@ class VariableField(Field):
 			parts.append(f"{self.variableType.getHeaderName(pointerLevelAdjust)}")
 			parts.append(" ")
 			namespaceStr = f"{self.group.name}::" if includeNamespace else ""
-			parts.append(f"{'p_' if self.static else ''}{namespaceStr}{self.variableName}")
+			parts.append(f"{'p_' if self.static and not self.nopointer else ''}{namespaceStr}{self.variableName}")
 		else:
 			#TODO: Staticify
 			assert isinstance(self.variableType, PointerReference), f"Array not wrapped in PointerReference ({type(self.variableType).__name__})"

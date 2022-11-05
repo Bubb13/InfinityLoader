@@ -9,12 +9,14 @@ type_CString_Destruct p_CString_Destruct;
 type_CRes_Construct p_CRes_Construct;
 type_CRes_Destruct p_CRes_Destruct;
 type_CRes_Demand p_CRes_Demand;
+type_CMessageHandler_AddMessage p_CMessageHandler_AddMessage;
 type_CAICondition_Hold p_CAICondition_Hold;
 type_CObList_Construct p_CObList_Construct;
 type_CObList_RemoveHead p_CObList_RemoveHead;
 type_CObList_RemoveAt p_CObList_RemoveAt;
 type_CObList_Destruct p_CObList_Destruct;
 type_CObList_AddTail p_CObList_AddTail;
+void* CMessageSetDirection::VFTable;
 type_CImmunitiesAIType_OnList p_CImmunitiesAIType_OnList;
 type_CAIGroup_FollowLeader p_CAIGroup_FollowLeader;
 type_CAIGroup_RemoveFromSearch p_CAIGroup_RemoveFromSearch;
@@ -110,12 +112,14 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CRes::Construct"), reinterpret_cast<void**>(&p_CRes_Construct)},
 	std::pair{TEXT("CRes::Destruct"), reinterpret_cast<void**>(&p_CRes_Destruct)},
 	std::pair{TEXT("CRes::Demand"), reinterpret_cast<void**>(&p_CRes_Demand)},
+	std::pair{TEXT("CMessageHandler::AddMessage"), reinterpret_cast<void**>(&p_CMessageHandler_AddMessage)},
 	std::pair{TEXT("CAICondition::Hold"), reinterpret_cast<void**>(&p_CAICondition_Hold)},
 	std::pair{TEXT("CObList::Construct"), reinterpret_cast<void**>(&p_CObList_Construct)},
 	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&p_CObList_RemoveHead)},
 	std::pair{TEXT("CObList::RemoveAt"), reinterpret_cast<void**>(&p_CObList_RemoveAt)},
 	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&p_CObList_Destruct)},
 	std::pair{TEXT("CObList::AddTail"), reinterpret_cast<void**>(&p_CObList_AddTail)},
+	std::pair{TEXT("CMessageSetDirection::VFTable"), reinterpret_cast<void**>(&CMessageSetDirection::VFTable)},
 	std::pair{TEXT("CImmunitiesAIType::OnList"), reinterpret_cast<void**>(&p_CImmunitiesAIType_OnList)},
 	std::pair{TEXT("CAIGroup::FollowLeader"), reinterpret_cast<void**>(&p_CAIGroup_FollowLeader)},
 	std::pair{TEXT("CAIGroup::RemoveFromSearch"), reinterpret_cast<void**>(&p_CAIGroup_RemoveFromSearch)},

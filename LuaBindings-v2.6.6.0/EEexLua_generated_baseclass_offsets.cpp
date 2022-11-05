@@ -211,6 +211,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CAIConditionResponse*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIConditionResponse*>, CObject>()},
 	}},
+	{"CTypedPtrList<CPtrList,CMessage*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMessage*>, CObject>()},
+	}},
 	{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>, CObject>()},
 	}},
@@ -294,9 +297,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CTypedPtrList<CPtrList,CString*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CString*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CMessage*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMessage*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,CBounceEntry*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CBounceEntry*>, CObject>()},
@@ -405,6 +405,12 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CMoveList", {
 		{"CTypedPtrList<CPtrList,CMoveListEntry*>", offsetofbase<CMoveList, CTypedPtrList<CPtrList,CMoveListEntry*>>()},
+	}},
+	{"CMessageSetDirection", {
+		{"CMessage", offsetofbase<CMessageSetDirection, CMessage>()},
+	}},
+	{"CMessageSetDirection::vtbl", {
+		{"CMessage::vtbl", offsetofbase<CMessageSetDirection::vtbl, CMessage::vtbl>()},
 	}},
 	{"CMemINISection", {
 		{"CTypedPtrList<CPtrList,CMemINIValue*>", offsetofbase<CMemINISection, CTypedPtrList<CPtrList,CMemINIValue*>>()},

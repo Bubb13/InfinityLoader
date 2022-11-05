@@ -83,6 +83,7 @@ struct CInfGame;
 struct CInfTileSet;
 struct CItem;
 struct CMessage;
+struct CMessageHandler;
 struct CMoveListEntry;
 struct CObList;
 struct CObjectMarker;
@@ -5049,6 +5050,22 @@ struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffe
 	CPersistantEffectListRegenerated() = delete;
 };
 
+typedef short (__thiscall *type_CMessageHandler_AddMessage)(CMessageHandler* pThis, CMessage* message, int bForcePassThrough);
+extern type_CMessageHandler_AddMessage p_CMessageHandler_AddMessage;
+
+struct CMessageHandler
+{
+	CTypedPtrList<CPtrList,CMessage*> m_messageList;
+	unsigned __int8 m_bLastArbitrationLockStatus;
+
+	CMessageHandler() = delete;
+
+	short AddMessage(CMessage* message, int bForcePassThrough)
+	{
+		return p_CMessageHandler_AddMessage(this, message, bForcePassThrough);
+	}
+};
+
 typedef int (__thiscall *type_CAICondition_Hold)(CAICondition* pThis, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
 extern type_CAICondition_Hold p_CAICondition_Hold;
 
@@ -5088,14 +5105,6 @@ struct CChatBuffer
 	int m_nDisplayCount;
 
 	CChatBuffer() = delete;
-};
-
-struct CMessageHandler
-{
-	CTypedPtrList<CPtrList,CMessage*> m_messageList;
-	unsigned __int8 m_bLastArbitrationLockStatus;
-
-	CMessageHandler() = delete;
 };
 
 struct CAIResponse
@@ -5674,6 +5683,27 @@ struct CMessage
 
 	virtual void virtual_Run()
 	{
+	}
+};
+
+struct CMessageSetDirection : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	CPoint m_face;
+
+	CMessageSetDirection() = delete;
+
+	void Construct(CPoint face, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_face = face;
 	}
 };
 
