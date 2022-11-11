@@ -22,6 +22,12 @@
     <Filter Include="Source Files\asmtk">
       <UniqueIdentifier>{2d7d86e3-d51f-4b17-b239-5565b7278476}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\InfinityLoaderDLL">
+      <UniqueIdentifier>{89ca99de-b49a-4fe9-8b7a-60061e4d4442}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Module Definition">
+      <UniqueIdentifier>{b82af7c7-e612-47af-9772-b7a396c08070}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asmjit\core\api-build_p.h">
@@ -260,9 +266,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="InfinityLoaderDLL.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="asmjit\core\archtraits.cpp">
       <Filter>Source Files\asmjit</Filter>
     </ClCompile>
@@ -413,16 +416,19 @@
     <ClCompile Include="asmtk\asmtokenizer.cpp">
       <Filter>Source Files\asmtk</Filter>
     </ClCompile>
-    <ClCompile Include="common.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\InfinityLoaderDLL.cpp">
+      <Filter>Source Files\InfinityLoaderDLL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common.cpp">
+      <Filter>Source Files\InfinityLoaderDLL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="InfinityLoaderDLL.def">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="COPY_TO_GAME.ps1">
       <Filter>Build Tasks</Filter>
+    </None>
+    <None Include="InfinityLoaderDLL.def">
+      <Filter>Module Definition</Filter>
     </None>
   </ItemGroup>
 </Project>

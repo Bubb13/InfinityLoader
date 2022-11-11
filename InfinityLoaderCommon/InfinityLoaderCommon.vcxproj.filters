@@ -12,23 +12,32 @@
     <Filter Include="Build Tasks">
       <UniqueIdentifier>{285d6aa1-ff55-41fc-8a03-c8df628a24c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Common Headers">
-      <UniqueIdentifier>{d38f76c1-5aef-49f1-8824-c85e0d9fcd17}</UniqueIdentifier>
+    <Filter Include="Source Files\common">
+      <UniqueIdentifier>{a711a2b2-f154-4ebf-81ea-480961790bd5}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="InfinityLoaderCommon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Common Headers\InfinityLoaderCommon.h">
-      <Filter>Common Headers</Filter>
-    </ClInclude>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{2b901957-cfa5-4594-8983-ca6140ca1349}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{c7c42c05-cde2-474b-a28b-b8855686f7e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\common\InfinityLoaderCommon">
+      <UniqueIdentifier>{e4111e5f-9c9c-48da-b436-0e5d4c9544a5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_COMMON.ps1">
       <Filter>Build Tasks</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="common\InfinityLoaderCommon.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\InfinityLoaderCommon\InfinityLoaderCommon.h">
+      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

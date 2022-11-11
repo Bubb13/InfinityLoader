@@ -53,7 +53,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)common/include;$(ProjectDir)include;$(ProjectDir)include/LuaBindings;$(ProjectDir)include/lua;$(ProjectDir)include/tolua</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(SolutionDir)LuaBindingsCommon/headers/common;$(SolutionDir)LuaBindingsCommon/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindings-v2.6.6.0</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -71,10 +71,13 @@
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
     </Link>
+    <PostBuildEvent>
+      <Command>powershell.exe -ExecutionPolicy Unrestricted -file COPY_TO_GAME.ps1 -OutDir "$(OutDir)." -GamePath "$(DEBUGGER_WORKING_DIRECTORY)."</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)common/include;$(ProjectDir)include;$(ProjectDir)include/LuaBindings;$(ProjectDir)include/lua;$(ProjectDir)include/tolua</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(SolutionDir)LuaBindingsCommon/headers/common;$(SolutionDir)LuaBindingsCommon/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindings-v2.6.6.0</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -97,77 +100,72 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
-    <ClCompile Include="common.cpp" />
-    <ClCompile Include="EEex.cpp" />
-    <ClCompile Include="EEexLua_generated.cpp" />
-    <ClCompile Include="EEexLua_generated_baseclass_offsets.cpp" />
-    <ClCompile Include="engine_reimplementations.cpp" />
-    <ClCompile Include="LuaBindings-v2.6.6.0.cpp" />
-    <ClCompile Include="lua_pointers.cpp" />
-    <ClCompile Include="tolua_reference\tolua_event.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    <ClCompile Include="References\engine_reimplementations.cpp" />
+    <ClCompile Include="References\tolua_reference\tolua_event.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="tolua_reference\tolua_is.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="tolua_reference\tolua_map.c">
+    <ClCompile Include="References\tolua_reference\tolua_is.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="tolua_reference\tolua_push.c">
+    <ClCompile Include="References\tolua_reference\tolua_map.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="tolua_reference\tolua_to.c">
+    <ClCompile Include="References\tolua_reference\tolua_push.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="to_lua_pointers.cpp" />
-    <ClCompile Include="util.cpp" />
+    <ClCompile Include="References\tolua_reference\tolua_to.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\common.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\EEex\EEex.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\LuaBindings-v2.6.6.0.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_generated.h" />
-    <ClInclude Include="include\LuaBindings\Baldur-v2.6.6.0_lua_generated.h" />
-    <ClInclude Include="include\LuaBindings\EEexLua_generated.h" />
-    <ClInclude Include="include\LuaBindings\EEexLua_generated_baseclass_offsets.h" />
-    <ClInclude Include="include\LuaBindings\lua_pointers.h" />
-    <ClInclude Include="include\LuaBindings\to_lua_pointers.h" />
-    <ClInclude Include="include\lua\lauxlib.h" />
-    <ClInclude Include="include\lua\lua.h" />
-    <ClInclude Include="include\lua\luaconf.h" />
-    <ClInclude Include="include\tolua\tolua.h" />
-    <ClInclude Include="include\tolua_reference\lauxlib.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    <ClInclude Include="headers\include\lua\lauxlib.h" />
+    <ClInclude Include="headers\include\lua\lua.h" />
+    <ClInclude Include="headers\include\lua\luaconf.h" />
+    <ClInclude Include="headers\include\tolua_reference\lauxlib.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="include\tolua_reference\lua.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="include\tolua_reference\lua.hpp">
+    <ClInclude Include="headers\include\tolua_reference\lua.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="include\tolua_reference\luaconf.h">
+    <ClInclude Include="headers\include\tolua_reference\lua.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="include\tolua_reference\lualib.h">
+    <ClInclude Include="headers\include\tolua_reference\luaconf.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="include\tolua_reference\tolua.h">
+    <ClInclude Include="headers\include\tolua_reference\lualib.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="include\tolua_reference\tolua_event.h">
+    <ClInclude Include="headers\include\tolua_reference\tolua.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="util.hpp" />
+    <ClInclude Include="headers\include\tolua_reference\tolua_event.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0\Baldur-v2.6.6.0_generated.h" />
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0\Baldur-v2.6.6.0_lua_generated.h" />
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0\EEexLua_generated.h" />
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0\EEexLua_generated_baseclass_offsets.h" />
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0\util.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />
