@@ -21,9 +21,6 @@
     <Filter Include="Header Files\common">
       <UniqueIdentifier>{c7c42c05-cde2-474b-a28b-b8855686f7e2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\common\InfinityLoaderCommon">
-      <UniqueIdentifier>{e4111e5f-9c9c-48da-b436-0e5d4c9544a5}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_COMMON.ps1">
@@ -36,8 +33,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\InfinityLoaderCommon\InfinityLoaderCommon.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+    <ClInclude Include="headers\common\InfinityLoaderCommon.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

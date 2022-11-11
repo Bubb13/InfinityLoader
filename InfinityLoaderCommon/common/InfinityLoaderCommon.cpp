@@ -2,8 +2,10 @@
 #include "InfinityLoaderCommon.h"
 
 #include <fcntl.h>
+#include <fstream>
 #include <io.h>
 #include <iostream>
+#include <ranges>
 
 /////////////
 // Globals //
@@ -32,7 +34,7 @@ const std::pair<const TCHAR, const unsigned char> aDecimalDigitToByte[] = {
 
 #undef fprintf
 
-#ifndef UNICODE  
+#ifndef UNICODE
 #define fprintfT fprintf
 #else
 #define fprintfT fwprintf
@@ -231,13 +233,113 @@ void ResetCrtHandles(HANDLE stdInHandle, HANDLE stdOutHandle, HANDLE stdErrHandl
 	}
 }
 
+void TrimString(String& str) {
+
+	const size_t strSize = str.size();
+
+	if (strSize == 0) {
+		return;
+	}
+
+	const TCHAR *const cStr = str.c_str();
+	size_t startIndex;
+	size_t curIndex = 0;
+	TCHAR curChar;
+
+	for (; curIndex < strSize; ++curIndex) {
+		curChar = cStr[curIndex];
+		if (curChar != TCHAR{' '} && curChar != TCHAR{'\t'}) {
+			break;
+		}
+	}
+
+	startIndex = curIndex;
+	curIndex = strSize;
+
+	for (curIndex = strSize; curIndex > 0; --curIndex) {
+		curChar = cStr[curIndex - 1];
+		if (curChar != TCHAR{' '} && curChar != TCHAR{'\t'}) {
+			break;
+		}
+	}
+
+	str.erase(0, startIndex);
+	str.erase(curIndex - startIndex, strSize - startIndex);
+}
+
+bool CaseInsensitiveEquals(const StringView& lhs, const StringView& rhs) {
+	auto toLowerTransform{ std::ranges::views::transform(toLowerT) };
+	return std::ranges::equal(lhs | toLowerTransform, rhs | toLowerTransform);
+}
+
 //////////////////
 // INI Handling //
 //////////////////
 
 PatternEntry::PatternEntry(const String str, const intptr_t val) : name(str), value(val) {};
 
+bool INISectionExists(const String iniPath, const TCHAR *const section) {
+
+	const StringView sectionView{ section };
+
+	IFStream inputStream{};
+	inputStream.open(iniPath);
+
+	if (inputStream.good()) {
+
+		// 0 = Searching for '['
+		// 1 = Found '[', searching for ']'
+		// 2 = Ignoring line
+		byte state = 0;
+
+		String currentSectionName{};
+		TCHAR newChar;
+
+		while (!inputStream.eof()) {
+
+			inputStream.read(&newChar, 1);
+
+			if (inputStream.bad()) {
+				break;
+			}
+
+			if (newChar == TCHAR{'\n'}) {
+				if (state == 1) {
+					currentSectionName.clear();
+				}
+				state = 0;
+			}
+			else {
+				if (state == 0) {
+					if (newChar == TCHAR{'['}) {
+						state = 1;
+					}
+					else if (newChar != TCHAR{' '} && newChar != TCHAR{'\t'}) {
+						state = 2;
+					}
+				}
+				else if (state == 1) {
+					if (newChar == TCHAR{']'}) {
+						TrimString(currentSectionName);
+						if (CaseInsensitiveEquals(currentSectionName, sectionView)) {
+							return true;
+						}
+						currentSectionName.clear();
+						state = 2;
+					}
+					else {
+						currentSectionName.push_back(newChar);
+					}
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
 DWORD GetINIString(String iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr) {
+
 	TCHAR buffer[1024];
 	const std::size_t bufferSize = sizeof(buffer) / sizeof(buffer[0]);
 
@@ -468,7 +570,7 @@ String getMyPath() {
 }
 
 String getWorkingFolder() {
-#ifndef UNICODE  
+#ifndef UNICODE
 	return std::filesystem::current_path().string().append(TEXT("\\"));
 #else
 	return std::filesystem::current_path().wstring().append(TEXT("\\"));
@@ -695,7 +797,7 @@ std::wstring s2ws(const std::string& str) {
 }
 
 String ToString(const char* str) {
-#ifndef UNICODE  
+#ifndef UNICODE
 	return String{ str };
 #else
 	return String{ s2ws(str) };

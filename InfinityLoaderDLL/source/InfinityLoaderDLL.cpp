@@ -13,17 +13,6 @@
 #include "asmtk/asmtk.h"
 #include "lua/lua.h"
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved) {
-    switch (ul_reason_for_call) {
-		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
-		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH:
-			break;
-    }
-    return TRUE;
-}
-
 //////////////
 // Pointers //
 //////////////
@@ -1362,12 +1351,12 @@ void winMainHook() {
 	if (debug) {
 		Print("[?] Debug output 2 (Windows: No, Proton: Yes)...\n");
 	}
-	
+
 	// This function runs before the console has been attached, temporarily attach it for error output
 	if (!protonCompatibility && attachToConsole() != ERROR_SUCCESS) {
 		return;
 	}
-	
+
 	if (debug) {
 
 		Print("[?] Debug output 3 (Windows: Yes, Proton: Yes)...\n");
@@ -1429,7 +1418,7 @@ void internalLuaHook() {
 	if (!protonCompatibility && attachToConsole() != ERROR_SUCCESS) {
 		return;
 	}
-	
+
 	if (debug) {
 		Print("[?] Debug output 5 (Windows: Yes, Proton: Yes)...\n");
 	}
@@ -1558,6 +1547,15 @@ void internalLuaHook() {
 
 cleanup:;
 	if (!protonCompatibility) {
+
+		// Fixes output being broken if EEex_Main.lua prompted the engine to call SDL_LogOutput,
+		// usually by calling Lua's print().
+		if (INISectionExists(iniPath, TEXT("Hardcoded_EngineConsoleAttachedPtr"))
+			&& findINICategoryPattern(textInfo, iniPath, TEXT("Hardcoded_EngineConsoleAttachedPtr"), lookupTemp) == 0)
+		{
+			*reinterpret_cast<int*>(lookupTemp) = 0;
+		}
+
 		FreeConsole();
 	}
 }

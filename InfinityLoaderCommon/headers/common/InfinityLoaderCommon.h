@@ -13,22 +13,28 @@
 // Type Defs and Defines //
 ///////////////////////////
 
-#ifndef UNICODE  
+#ifndef UNICODE
 typedef std::string String;
+typedef std::string_view StringView;
 typedef std::ostringstream OStringStream;
+typedef std::ifstream IFStream;
 #define printfT printf
 #define fprintfT fprintf
 #define strcmpT strcmp
 #define strlenT strlen
 #define _vsnprintfT_s _vsnprintf_s
+#define toLowerT tolower
 #else
 typedef std::wstring String;
+typedef std::wstring_view StringView;
 typedef std::wostringstream OStringStream;
+typedef std::wifstream IFStream;
 #define printfT wprintf
 #define fprintfT fwprintf
 #define strcmpT wcscmp
 #define strlenT wcslen
 #define _vsnprintfT_s _vsnwprintf_s
+#define toLowerT towlower
 #endif
 
 #define Print(...) FPrint(stdout, ##__VA_ARGS__)
@@ -108,6 +114,8 @@ extern bool decimalStrToInteger(const String decimalStr, IntegerType& accumulato
 
 template<typename IntegerType>
 extern String integerToDecimalStr(IntegerType integer);
+
+extern bool INISectionExists(String iniPath, const TCHAR* section);
 
 extern DWORD GetINIString(String iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr);
 
