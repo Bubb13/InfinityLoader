@@ -70,6 +70,18 @@ int pointerToUserDataLua(lua_State * g_lua) {
     return 1;
 }
 
+// Expects [ ..., ud, func ]
+int setUserDataGarbageCollectionFunctionLua(lua_State* L) {
+    void* ptr = *reinterpret_cast<void**>(p_lua_touserdata(L, -2));
+    p_lua_pushstring(L, "tolua_gc");    // 3 [ ..., ud, func, "tolua_gc" ]
+    p_lua_rawget(L, LUA_REGISTRYINDEX); // 3 [ ..., ud, func, registry["tolua_gc"] ]
+    p_lua_pushlightuserdata(L, ptr);    // 4 [ ..., ud, func, registry["tolua_gc"], lud(value) ]
+    p_lua_pushvalue(L, -3);             // 5 [ ..., ud, func, registry["tolua_gc"], lud(value), func ]
+    p_lua_rawset(L, -3);                // 3 [ ..., ud, func, registry["tolua_gc"] ]
+    p_lua_pop(L, 1);                    // 2 [ ..., ud, func ]
+    return 0;
+}
+
 int userDataToLightUserDataLua(lua_State* L) {
     p_lua_pushlightuserdata(L, p_tolua_tousertype(L, 1, 0));
     return 1;
@@ -118,6 +130,8 @@ constexpr void* GetMemberPtr(T func) {
 }
 
 void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo) {
+
+    InitFPrint(false);
 
 #define setLuaPointer(patternName, pointerGlobal) \
     if (auto itr = patterns.find(TEXT(patternName)); itr != patterns.end()) { \
@@ -192,6 +206,7 @@ void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& pattern
     setLuaPointer("Hardcoded_tolua_pushboolean", tolua_pushboolean);
     setLuaPointer("Hardcoded_tolua_pushnumber", tolua_pushnumber);
     setLuaPointer("Hardcoded_tolua_pushstring", tolua_pushstring);
+    //setLuaPointer("Hardcoded_tolua_release", tolua_release);
     setLuaPointer("Hardcoded_tolua_tostring", tolua_tostring);
     setLuaPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
     setLuaPointer("Hardcoded_tolua_typename", tolua_typename);
@@ -208,10 +223,12 @@ void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& pattern
     exposeToLua(L, "EEex_GetUT", getUserTypeLua);
     exposeToLua(L, "EEex_MemsetUD", memsetUserDataLua);
     exposeToLua(L, "EEex_MemsetUserData", memsetUserDataLua);
-    exposeToLua(L, "EEex_NewUserData", newUserDataLua);
     exposeToLua(L, "EEex_NewUD", newUserDataLua);
+    exposeToLua(L, "EEex_NewUserData", newUserDataLua);
     exposeToLua(L, "EEex_PointerToUserData", pointerToUserDataLua);
     exposeToLua(L, "EEex_PtrToUD", pointerToUserDataLua);
+    exposeToLua(L, "EEex_SetUDGCFunc", setUserDataGarbageCollectionFunctionLua);
+    exposeToLua(L, "EEex_SetUserDataGarbageCollectionFunction", setUserDataGarbageCollectionFunctionLua);
     exposeToLua(L, "EEex_UDToLightUD", userDataToLightUserDataLua);
     exposeToLua(L, "EEex_UDToPtr", userDataToPointerLua);
     exposeToLua(L, "EEex_UserDataToLightUserData", userDataToLightUserDataLua);

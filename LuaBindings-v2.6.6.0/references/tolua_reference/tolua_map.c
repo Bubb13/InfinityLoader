@@ -117,15 +117,16 @@ static int tolua_bnd_type(lua_State* L)
 	return 1;
 }
 
+// Expects [ t ]
 int tolua_bnd_takeownership(lua_State* L) {
 	lua_CFunction func = 0;
 	if (lua_isuserdata(L, 1)) {
-		if (lua_getmetatable(L, 1)) { // TODO: Metatable
-			void* u;
-			lua_pushstring(L, ".collector");
-			lua_rawget(L, -2);
+		if (lua_getmetatable(L, 1)) {
+			void* u;                         // 2 [ t, mt ]
+			lua_pushstring(L, ".collector"); // 3 [ t, mt, ".collector" ]
+			lua_rawget(L, -2);               // 2 [ t, mt[".collector"] ]
 			func = lua_iscfunction(L, -1) ? lua_tocfunction(L, -1) : NULL;
-			lua_pop(L, 2);
+			lua_pop(L, 2);                   // 0 [ ]
 			u = *((void**)lua_touserdata(L, 1));
 			tolua_clone(L, u, func);
 		}
@@ -136,19 +137,20 @@ int tolua_bnd_takeownership(lua_State* L) {
 
 /* Release ownership
  */
+// Expects [ t ]
 static int tolua_bnd_releaseownership(lua_State* L)
 {
 	int done = 0;
 	if (lua_isuserdata(L, 1))
 	{
 		void* u = *((void**)lua_touserdata(L, 1));
-		lua_pushstring(L, "tolua_gc");
-		lua_rawget(L, LUA_REGISTRYINDEX);
-		lua_pushlightuserdata(L, u);
-		lua_rawget(L, -2);
-		lua_pushlightuserdata(L, u);
-		lua_pushnil(L);
-		lua_rawset(L, -4);
+		lua_pushstring(L, "tolua_gc");    // 2 [ t, "tolua_gc" ]
+		lua_rawget(L, LUA_REGISTRYINDEX); // 2 [ t, registry["tolua_gc"] ]
+		lua_pushlightuserdata(L, u);      // 3 [ t, registry["tolua_gc"], lud(ptr) ]
+		lua_rawget(L, -2);                // 3 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
+		lua_pushlightuserdata(L, u);      // 4 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr) ]
+		lua_pushnil(L);                   // 5 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr), nil ]
+		lua_rawset(L, -4);                // 3 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
 		done = 1;
 	}
 	lua_pushboolean(L, done != 0);

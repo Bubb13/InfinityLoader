@@ -1,29 +1,29 @@
 
 #include "Baldur-v2.6.6.0_generated.h"
 
-type_CVariableHash_FindKey p_CVariableHash_FindKey;
-type_CVariableHash_AddKey p_CVariableHash_AddKey;
-type_CGameObjectArray_GetShare p_CGameObjectArray_GetShare;
-type_CString_ConstructFromChars p_CString_ConstructFromChars;
-type_CString_Destruct p_CString_Destruct;
-type_CRes_Construct p_CRes_Construct;
-type_CRes_Destruct p_CRes_Destruct;
-type_CRes_Demand p_CRes_Demand;
-type_CMessageHandler_AddMessage p_CMessageHandler_AddMessage;
-type_CAICondition_Hold p_CAICondition_Hold;
-type_CObList_Construct p_CObList_Construct;
-type_CObList_RemoveHead p_CObList_RemoveHead;
-type_CObList_RemoveAt p_CObList_RemoveAt;
-type_CObList_Destruct p_CObList_Destruct;
-type_CObList_AddTail p_CObList_AddTail;
+CVariableHash::type_FindKey CVariableHash::p_FindKey;
+CVariableHash::type_AddKey CVariableHash::p_AddKey;
+CGameObjectArray::type_GetShare CGameObjectArray::p_GetShare;
+CString::type_ConstructFromChars CString::p_ConstructFromChars;
+CString::type_Destruct CString::p_Destruct;
+CRes::type_Construct CRes::p_Construct;
+CRes::type_Destruct CRes::p_Destruct;
+CRes::type_Demand CRes::p_Demand;
+CMessageHandler::type_AddMessage CMessageHandler::p_AddMessage;
+CAICondition::type_Hold CAICondition::p_Hold;
+CObList::type_Construct CObList::p_Construct;
+CObList::type_RemoveHead CObList::p_RemoveHead;
+CObList::type_RemoveAt CObList::p_RemoveAt;
+CObList::type_Destruct CObList::p_Destruct;
+CObList::type_AddTail CObList::p_AddTail;
 void* CMessageSetDirection::VFTable;
-type_CImmunitiesAIType_OnList p_CImmunitiesAIType_OnList;
-type_CAIGroup_FollowLeader p_CAIGroup_FollowLeader;
-type_CAIGroup_RemoveFromSearch p_CAIGroup_RemoveFromSearch;
-type_CAIGroup_AddToSearch p_CAIGroup_AddToSearch;
-type_CAIGroup_GetFacings p_CAIGroup_GetFacings;
-type_CAIGroup_GetOffsets p_CAIGroup_GetOffsets;
-type_CVariable_Construct p_CVariable_Construct;
+CImmunitiesAIType::type_OnList CImmunitiesAIType::p_OnList;
+CAIGroup::type_FollowLeader CAIGroup::p_FollowLeader;
+CAIGroup::type_RemoveFromSearch CAIGroup::p_RemoveFromSearch;
+CAIGroup::type_AddToSearch CAIGroup::p_AddToSearch;
+CAIGroup::type_GetFacings CAIGroup::p_GetFacings;
+CAIGroup::type_GetOffsets CAIGroup::p_GetOffsets;
+CVariable::type_Construct CVariable::p_Construct;
 type_findMenu p_findMenu;
 type_saveMenuStack p_saveMenuStack;
 type_uiLoadMenu p_uiLoadMenu;
@@ -43,90 +43,90 @@ _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 CBaldurChitin** p_g_pBaldurChitin;
 lua_State** p_g_lua;
 char** p_afxPchNil;
-type_CAIScript_Construct1 p_CAIScript_Construct1;
-type_CAbilityId_Construct p_CAbilityId_Construct;
-type_C2DArray_Construct p_C2DArray_Construct;
-type_C2DArray_Load p_C2DArray_Load;
-type_C2DArray_GetAtLabels p_C2DArray_GetAtLabels;
-type_C2DArray_Destruct p_C2DArray_Destruct;
-type_CAIIdList_Construct1 p_CAIIdList_Construct1;
-type_CAIIdList_Destruct p_CAIIdList_Destruct;
-type_CAIIdList_LoadList2 p_CAIIdList_LoadList2;
-type_CAIIdList_Find1 p_CAIIdList_Find1;
-type_CAIScriptFile_Construct p_CAIScriptFile_Construct;
-type_CAIScriptFile_Destruct p_CAIScriptFile_Destruct;
-type_CAIScriptFile_ParseConditionalString p_CAIScriptFile_ParseConditionalString;
-type_CAIScriptFile_ParseObjectType p_CAIScriptFile_ParseObjectType;
-type_CAIScriptFile_ParseResponseString p_CAIScriptFile_ParseResponseString;
-type_CSearchBitmap_GetCost p_CSearchBitmap_GetCost;
+CAIScript::type_Construct1 CAIScript::p_Construct1;
+CAbilityId::type_Construct CAbilityId::p_Construct;
+C2DArray::type_Construct C2DArray::p_Construct;
+C2DArray::type_Load C2DArray::p_Load;
+C2DArray::type_GetAtLabels C2DArray::p_GetAtLabels;
+C2DArray::type_Destruct C2DArray::p_Destruct;
+CAIIdList::type_Construct1 CAIIdList::p_Construct1;
+CAIIdList::type_Destruct CAIIdList::p_Destruct;
+CAIIdList::type_LoadList2 CAIIdList::p_LoadList2;
+CAIIdList::type_Find1 CAIIdList::p_Find1;
+CAIScriptFile::type_Construct CAIScriptFile::p_Construct;
+CAIScriptFile::type_Destruct CAIScriptFile::p_Destruct;
+CAIScriptFile::type_ParseConditionalString CAIScriptFile::p_ParseConditionalString;
+CAIScriptFile::type_ParseObjectType CAIScriptFile::p_ParseObjectType;
+CAIScriptFile::type_ParseResponseString CAIScriptFile::p_ParseResponseString;
+CSearchBitmap::type_GetCost CSearchBitmap::p_GetCost;
 ushort* CVidMode::p_SCREENWIDTH;
 ushort* CVidMode::p_SCREENHEIGHT;
-type_CSpell_Construct p_CSpell_Construct;
-type_CChitin_OnResizeWindow p_CChitin_OnResizeWindow;
-type_CInfButtonArray_SetState p_CInfButtonArray_SetState;
-type_CInfButtonArray_SetQuickSlot p_CInfButtonArray_SetQuickSlot;
-type_CInfGame_SetState p_CInfGame_SetState;
-type_CInfGame_SetIconIndex p_CInfGame_SetIconIndex;
-type_CGameEffect_DecodeEffect p_CGameEffect_DecodeEffect;
-type_CDerivedStats_GetAtOffset p_CDerivedStats_GetAtOffset;
-type_CDerivedStats_GetSpellState p_CDerivedStats_GetSpellState;
-type_CGameArea_GetNearest2 p_CGameArea_GetNearest2;
-type_CGameArea_AdjustTarget p_CGameArea_AdjustTarget;
-type_CGameArea_CheckWalkable p_CGameArea_CheckWalkable;
-type_CGameArea_CheckLOS p_CGameArea_CheckLOS;
-type_CGameArea_GetAllInRange1 p_CGameArea_GetAllInRange1;
-type_CGameArea_GetAllInRange2 p_CGameArea_GetAllInRange2;
-type_CAIObjectType_Construct1 p_CAIObjectType_Construct1;
-type_CAIObjectType_Decode p_CAIObjectType_Decode;
-type_CAIObjectType_GetShare p_CAIObjectType_GetShare;
-type_CAIObjectType_OfType p_CAIObjectType_OfType;
-type_CAIObjectType_Set p_CAIObjectType_Set;
+CSpell::type_Construct CSpell::p_Construct;
+CChitin::type_OnResizeWindow CChitin::p_OnResizeWindow;
+CInfButtonArray::type_SetState CInfButtonArray::p_SetState;
+CInfButtonArray::type_SetQuickSlot CInfButtonArray::p_SetQuickSlot;
+CInfGame::type_SetState CInfGame::p_SetState;
+CInfGame::type_SetIconIndex CInfGame::p_SetIconIndex;
+CGameEffect::type_DecodeEffect CGameEffect::p_DecodeEffect;
+CDerivedStats::type_GetAtOffset CDerivedStats::p_GetAtOffset;
+CDerivedStats::type_GetSpellState CDerivedStats::p_GetSpellState;
+CGameArea::type_GetNearest2 CGameArea::p_GetNearest2;
+CGameArea::type_AdjustTarget CGameArea::p_AdjustTarget;
+CGameArea::type_CheckWalkable CGameArea::p_CheckWalkable;
+CGameArea::type_CheckLOS CGameArea::p_CheckLOS;
+CGameArea::type_GetAllInRange1 CGameArea::p_GetAllInRange1;
+CGameArea::type_GetAllInRange2 CGameArea::p_GetAllInRange2;
+CAIObjectType::type_Construct1 CAIObjectType::p_Construct1;
+CAIObjectType::type_Decode CAIObjectType::p_Decode;
+CAIObjectType::type_GetShare CAIObjectType::p_GetShare;
+CAIObjectType::type_OfType CAIObjectType::p_OfType;
+CAIObjectType::type_Set CAIObjectType::p_Set;
 CAIObjectType* CAIObjectType::p_NOONE;
-type_CAIAction_Construct1 p_CAIAction_Construct1;
-type_CAIAction_ConstructCopy p_CAIAction_ConstructCopy;
-type_CAIAction_Destruct p_CAIAction_Destruct;
-type_CAIAction_operator_equ p_CAIAction_operator_equ;
-type_CAIAction_Decode p_CAIAction_Decode;
+CAIAction::type_Construct1 CAIAction::p_Construct1;
+CAIAction::type_ConstructCopy CAIAction::p_ConstructCopy;
+CAIAction::type_Destruct CAIAction::p_Destruct;
+CAIAction::type_operator_equ CAIAction::p_operator_equ;
+CAIAction::type_Decode CAIAction::p_Decode;
 Array<byte,16>* CGameObject::p_DEFAULT_VISIBLE_TERRAIN_TABLE;
 Array<byte,16>* CGameObject::p_DEFAULT_TERRAIN_TABLE;
-type_CGameAIBase_GetTargetShare p_CGameAIBase_GetTargetShare;
-type_CGameSprite_GetCasterLevel p_CGameSprite_GetCasterLevel;
-type_CGameSprite_CheckQuickLists p_CGameSprite_CheckQuickLists;
-type_CGameSprite_GetKitMask p_CGameSprite_GetKitMask;
-type_CGameSprite_GetLauncherSlot p_CGameSprite_GetLauncherSlot;
-type_CGameSprite_GetQuickButtons p_CGameSprite_GetQuickButtons;
-type_CGameSprite_ReadySpell p_CGameSprite_ReadySpell;
-type_CGameSprite_ReadyOffInternalList p_CGameSprite_ReadyOffInternalList;
-type_CGameSprite_GetInternalButtonList p_CGameSprite_GetInternalButtonList;
-type_CGameSprite_GetActiveStats p_CGameSprite_GetActiveStats;
-type_CGameSprite_FeedBack p_CGameSprite_FeedBack;
-type_CGameSprite_PlaySound p_CGameSprite_PlaySound;
-type_CGameSprite_UpdateTarget p_CGameSprite_UpdateTarget;
+CGameAIBase::type_GetTargetShare CGameAIBase::p_GetTargetShare;
+CGameSprite::type_GetCasterLevel CGameSprite::p_GetCasterLevel;
+CGameSprite::type_CheckQuickLists CGameSprite::p_CheckQuickLists;
+CGameSprite::type_GetKitMask CGameSprite::p_GetKitMask;
+CGameSprite::type_GetLauncherSlot CGameSprite::p_GetLauncherSlot;
+CGameSprite::type_GetQuickButtons CGameSprite::p_GetQuickButtons;
+CGameSprite::type_ReadySpell CGameSprite::p_ReadySpell;
+CGameSprite::type_ReadyOffInternalList CGameSprite::p_ReadyOffInternalList;
+CGameSprite::type_GetInternalButtonList CGameSprite::p_GetInternalButtonList;
+CGameSprite::type_GetActiveStats CGameSprite::p_GetActiveStats;
+CGameSprite::type_FeedBack CGameSprite::p_FeedBack;
+CGameSprite::type_PlaySound CGameSprite::p_PlaySound;
+CGameSprite::type_UpdateTarget CGameSprite::p_UpdateTarget;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
-	std::pair{TEXT("CVariableHash::FindKey"), reinterpret_cast<void**>(&p_CVariableHash_FindKey)},
-	std::pair{TEXT("CVariableHash::AddKey"), reinterpret_cast<void**>(&p_CVariableHash_AddKey)},
-	std::pair{TEXT("CGameObjectArray::GetShare"), reinterpret_cast<void**>(&p_CGameObjectArray_GetShare)},
-	std::pair{TEXT("CString::ConstructFromChars"), reinterpret_cast<void**>(&p_CString_ConstructFromChars)},
-	std::pair{TEXT("CString::Destruct"), reinterpret_cast<void**>(&p_CString_Destruct)},
-	std::pair{TEXT("CRes::Construct"), reinterpret_cast<void**>(&p_CRes_Construct)},
-	std::pair{TEXT("CRes::Destruct"), reinterpret_cast<void**>(&p_CRes_Destruct)},
-	std::pair{TEXT("CRes::Demand"), reinterpret_cast<void**>(&p_CRes_Demand)},
-	std::pair{TEXT("CMessageHandler::AddMessage"), reinterpret_cast<void**>(&p_CMessageHandler_AddMessage)},
-	std::pair{TEXT("CAICondition::Hold"), reinterpret_cast<void**>(&p_CAICondition_Hold)},
-	std::pair{TEXT("CObList::Construct"), reinterpret_cast<void**>(&p_CObList_Construct)},
-	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&p_CObList_RemoveHead)},
-	std::pair{TEXT("CObList::RemoveAt"), reinterpret_cast<void**>(&p_CObList_RemoveAt)},
-	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&p_CObList_Destruct)},
-	std::pair{TEXT("CObList::AddTail"), reinterpret_cast<void**>(&p_CObList_AddTail)},
+	std::pair{TEXT("CVariableHash::FindKey"), reinterpret_cast<void**>(&CVariableHash::p_FindKey)},
+	std::pair{TEXT("CVariableHash::AddKey"), reinterpret_cast<void**>(&CVariableHash::p_AddKey)},
+	std::pair{TEXT("CGameObjectArray::GetShare"), reinterpret_cast<void**>(&CGameObjectArray::p_GetShare)},
+	std::pair{TEXT("CString::ConstructFromChars"), reinterpret_cast<void**>(&CString::p_ConstructFromChars)},
+	std::pair{TEXT("CString::Destruct"), reinterpret_cast<void**>(&CString::p_Destruct)},
+	std::pair{TEXT("CRes::Construct"), reinterpret_cast<void**>(&CRes::p_Construct)},
+	std::pair{TEXT("CRes::Destruct"), reinterpret_cast<void**>(&CRes::p_Destruct)},
+	std::pair{TEXT("CRes::Demand"), reinterpret_cast<void**>(&CRes::p_Demand)},
+	std::pair{TEXT("CMessageHandler::AddMessage"), reinterpret_cast<void**>(&CMessageHandler::p_AddMessage)},
+	std::pair{TEXT("CAICondition::Hold"), reinterpret_cast<void**>(&CAICondition::p_Hold)},
+	std::pair{TEXT("CObList::Construct"), reinterpret_cast<void**>(&CObList::p_Construct)},
+	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&CObList::p_RemoveHead)},
+	std::pair{TEXT("CObList::RemoveAt"), reinterpret_cast<void**>(&CObList::p_RemoveAt)},
+	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&CObList::p_Destruct)},
+	std::pair{TEXT("CObList::AddTail"), reinterpret_cast<void**>(&CObList::p_AddTail)},
 	std::pair{TEXT("CMessageSetDirection::VFTable"), reinterpret_cast<void**>(&CMessageSetDirection::VFTable)},
-	std::pair{TEXT("CImmunitiesAIType::OnList"), reinterpret_cast<void**>(&p_CImmunitiesAIType_OnList)},
-	std::pair{TEXT("CAIGroup::FollowLeader"), reinterpret_cast<void**>(&p_CAIGroup_FollowLeader)},
-	std::pair{TEXT("CAIGroup::RemoveFromSearch"), reinterpret_cast<void**>(&p_CAIGroup_RemoveFromSearch)},
-	std::pair{TEXT("CAIGroup::AddToSearch"), reinterpret_cast<void**>(&p_CAIGroup_AddToSearch)},
-	std::pair{TEXT("CAIGroup::GetFacings"), reinterpret_cast<void**>(&p_CAIGroup_GetFacings)},
-	std::pair{TEXT("CAIGroup::GetOffsets"), reinterpret_cast<void**>(&p_CAIGroup_GetOffsets)},
-	std::pair{TEXT("CVariable::Construct"), reinterpret_cast<void**>(&p_CVariable_Construct)},
+	std::pair{TEXT("CImmunitiesAIType::OnList"), reinterpret_cast<void**>(&CImmunitiesAIType::p_OnList)},
+	std::pair{TEXT("CAIGroup::FollowLeader"), reinterpret_cast<void**>(&CAIGroup::p_FollowLeader)},
+	std::pair{TEXT("CAIGroup::RemoveFromSearch"), reinterpret_cast<void**>(&CAIGroup::p_RemoveFromSearch)},
+	std::pair{TEXT("CAIGroup::AddToSearch"), reinterpret_cast<void**>(&CAIGroup::p_AddToSearch)},
+	std::pair{TEXT("CAIGroup::GetFacings"), reinterpret_cast<void**>(&CAIGroup::p_GetFacings)},
+	std::pair{TEXT("CAIGroup::GetOffsets"), reinterpret_cast<void**>(&CAIGroup::p_GetOffsets)},
+	std::pair{TEXT("CVariable::Construct"), reinterpret_cast<void**>(&CVariable::p_Construct)},
 	std::pair{TEXT("findMenu"), reinterpret_cast<void**>(&p_findMenu)},
 	std::pair{TEXT("saveMenuStack"), reinterpret_cast<void**>(&p_saveMenuStack)},
 	std::pair{TEXT("uiLoadMenu"), reinterpret_cast<void**>(&p_uiLoadMenu)},
@@ -146,63 +146,63 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("g_pBaldurChitin"), reinterpret_cast<void**>(&p_g_pBaldurChitin)},
 	std::pair{TEXT("g_lua"), reinterpret_cast<void**>(&p_g_lua)},
 	std::pair{TEXT("afxPchNil"), reinterpret_cast<void**>(&p_afxPchNil)},
-	std::pair{TEXT("CAIScript::Construct1"), reinterpret_cast<void**>(&p_CAIScript_Construct1)},
-	std::pair{TEXT("CAbilityId::Construct"), reinterpret_cast<void**>(&p_CAbilityId_Construct)},
-	std::pair{TEXT("C2DArray::Construct"), reinterpret_cast<void**>(&p_C2DArray_Construct)},
-	std::pair{TEXT("C2DArray::Load"), reinterpret_cast<void**>(&p_C2DArray_Load)},
-	std::pair{TEXT("C2DArray::GetAtLabels"), reinterpret_cast<void**>(&p_C2DArray_GetAtLabels)},
-	std::pair{TEXT("C2DArray::Destruct"), reinterpret_cast<void**>(&p_C2DArray_Destruct)},
-	std::pair{TEXT("CAIIdList::Construct1"), reinterpret_cast<void**>(&p_CAIIdList_Construct1)},
-	std::pair{TEXT("CAIIdList::Destruct"), reinterpret_cast<void**>(&p_CAIIdList_Destruct)},
-	std::pair{TEXT("CAIIdList::LoadList2"), reinterpret_cast<void**>(&p_CAIIdList_LoadList2)},
-	std::pair{TEXT("CAIIdList::Find1"), reinterpret_cast<void**>(&p_CAIIdList_Find1)},
-	std::pair{TEXT("CAIScriptFile::Construct"), reinterpret_cast<void**>(&p_CAIScriptFile_Construct)},
-	std::pair{TEXT("CAIScriptFile::Destruct"), reinterpret_cast<void**>(&p_CAIScriptFile_Destruct)},
-	std::pair{TEXT("CAIScriptFile::ParseConditionalString"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseConditionalString)},
-	std::pair{TEXT("CAIScriptFile::ParseObjectType"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseObjectType)},
-	std::pair{TEXT("CAIScriptFile::ParseResponseString"), reinterpret_cast<void**>(&p_CAIScriptFile_ParseResponseString)},
-	std::pair{TEXT("CSearchBitmap::GetCost"), reinterpret_cast<void**>(&p_CSearchBitmap_GetCost)},
+	std::pair{TEXT("CAIScript::Construct1"), reinterpret_cast<void**>(&CAIScript::p_Construct1)},
+	std::pair{TEXT("CAbilityId::Construct"), reinterpret_cast<void**>(&CAbilityId::p_Construct)},
+	std::pair{TEXT("C2DArray::Construct"), reinterpret_cast<void**>(&C2DArray::p_Construct)},
+	std::pair{TEXT("C2DArray::Load"), reinterpret_cast<void**>(&C2DArray::p_Load)},
+	std::pair{TEXT("C2DArray::GetAtLabels"), reinterpret_cast<void**>(&C2DArray::p_GetAtLabels)},
+	std::pair{TEXT("C2DArray::Destruct"), reinterpret_cast<void**>(&C2DArray::p_Destruct)},
+	std::pair{TEXT("CAIIdList::Construct1"), reinterpret_cast<void**>(&CAIIdList::p_Construct1)},
+	std::pair{TEXT("CAIIdList::Destruct"), reinterpret_cast<void**>(&CAIIdList::p_Destruct)},
+	std::pair{TEXT("CAIIdList::LoadList2"), reinterpret_cast<void**>(&CAIIdList::p_LoadList2)},
+	std::pair{TEXT("CAIIdList::Find1"), reinterpret_cast<void**>(&CAIIdList::p_Find1)},
+	std::pair{TEXT("CAIScriptFile::Construct"), reinterpret_cast<void**>(&CAIScriptFile::p_Construct)},
+	std::pair{TEXT("CAIScriptFile::Destruct"), reinterpret_cast<void**>(&CAIScriptFile::p_Destruct)},
+	std::pair{TEXT("CAIScriptFile::ParseConditionalString"), reinterpret_cast<void**>(&CAIScriptFile::p_ParseConditionalString)},
+	std::pair{TEXT("CAIScriptFile::ParseObjectType"), reinterpret_cast<void**>(&CAIScriptFile::p_ParseObjectType)},
+	std::pair{TEXT("CAIScriptFile::ParseResponseString"), reinterpret_cast<void**>(&CAIScriptFile::p_ParseResponseString)},
+	std::pair{TEXT("CSearchBitmap::GetCost"), reinterpret_cast<void**>(&CSearchBitmap::p_GetCost)},
 	std::pair{TEXT("CVidMode::SCREENWIDTH"), reinterpret_cast<void**>(&CVidMode::p_SCREENWIDTH)},
 	std::pair{TEXT("CVidMode::SCREENHEIGHT"), reinterpret_cast<void**>(&CVidMode::p_SCREENHEIGHT)},
-	std::pair{TEXT("CSpell::Construct"), reinterpret_cast<void**>(&p_CSpell_Construct)},
-	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&p_CChitin_OnResizeWindow)},
-	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&p_CInfButtonArray_SetState)},
-	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&p_CInfButtonArray_SetQuickSlot)},
-	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&p_CInfGame_SetState)},
-	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&p_CInfGame_SetIconIndex)},
-	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&p_CGameEffect_DecodeEffect)},
-	std::pair{TEXT("CDerivedStats::GetAtOffset"), reinterpret_cast<void**>(&p_CDerivedStats_GetAtOffset)},
-	std::pair{TEXT("CDerivedStats::GetSpellState"), reinterpret_cast<void**>(&p_CDerivedStats_GetSpellState)},
-	std::pair{TEXT("CGameArea::GetNearest2"), reinterpret_cast<void**>(&p_CGameArea_GetNearest2)},
-	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&p_CGameArea_AdjustTarget)},
-	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&p_CGameArea_CheckWalkable)},
-	std::pair{TEXT("CGameArea::CheckLOS"), reinterpret_cast<void**>(&p_CGameArea_CheckLOS)},
-	std::pair{TEXT("CGameArea::GetAllInRange1"), reinterpret_cast<void**>(&p_CGameArea_GetAllInRange1)},
-	std::pair{TEXT("CGameArea::GetAllInRange2"), reinterpret_cast<void**>(&p_CGameArea_GetAllInRange2)},
-	std::pair{TEXT("CAIObjectType::Construct1"), reinterpret_cast<void**>(&p_CAIObjectType_Construct1)},
-	std::pair{TEXT("CAIObjectType::Decode"), reinterpret_cast<void**>(&p_CAIObjectType_Decode)},
-	std::pair{TEXT("CAIObjectType::GetShare"), reinterpret_cast<void**>(&p_CAIObjectType_GetShare)},
-	std::pair{TEXT("CAIObjectType::OfType"), reinterpret_cast<void**>(&p_CAIObjectType_OfType)},
-	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&p_CAIObjectType_Set)},
+	std::pair{TEXT("CSpell::Construct"), reinterpret_cast<void**>(&CSpell::p_Construct)},
+	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&CChitin::p_OnResizeWindow)},
+	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&CInfButtonArray::p_SetState)},
+	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&CInfButtonArray::p_SetQuickSlot)},
+	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&CInfGame::p_SetState)},
+	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&CInfGame::p_SetIconIndex)},
+	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&CGameEffect::p_DecodeEffect)},
+	std::pair{TEXT("CDerivedStats::GetAtOffset"), reinterpret_cast<void**>(&CDerivedStats::p_GetAtOffset)},
+	std::pair{TEXT("CDerivedStats::GetSpellState"), reinterpret_cast<void**>(&CDerivedStats::p_GetSpellState)},
+	std::pair{TEXT("CGameArea::GetNearest2"), reinterpret_cast<void**>(&CGameArea::p_GetNearest2)},
+	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&CGameArea::p_AdjustTarget)},
+	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&CGameArea::p_CheckWalkable)},
+	std::pair{TEXT("CGameArea::CheckLOS"), reinterpret_cast<void**>(&CGameArea::p_CheckLOS)},
+	std::pair{TEXT("CGameArea::GetAllInRange1"), reinterpret_cast<void**>(&CGameArea::p_GetAllInRange1)},
+	std::pair{TEXT("CGameArea::GetAllInRange2"), reinterpret_cast<void**>(&CGameArea::p_GetAllInRange2)},
+	std::pair{TEXT("CAIObjectType::Construct1"), reinterpret_cast<void**>(&CAIObjectType::p_Construct1)},
+	std::pair{TEXT("CAIObjectType::Decode"), reinterpret_cast<void**>(&CAIObjectType::p_Decode)},
+	std::pair{TEXT("CAIObjectType::GetShare"), reinterpret_cast<void**>(&CAIObjectType::p_GetShare)},
+	std::pair{TEXT("CAIObjectType::OfType"), reinterpret_cast<void**>(&CAIObjectType::p_OfType)},
+	std::pair{TEXT("CAIObjectType::Set"), reinterpret_cast<void**>(&CAIObjectType::p_Set)},
 	std::pair{TEXT("CAIObjectType::NOONE"), reinterpret_cast<void**>(&CAIObjectType::p_NOONE)},
-	std::pair{TEXT("CAIAction::Construct1"), reinterpret_cast<void**>(&p_CAIAction_Construct1)},
-	std::pair{TEXT("CAIAction::ConstructCopy"), reinterpret_cast<void**>(&p_CAIAction_ConstructCopy)},
-	std::pair{TEXT("CAIAction::Destruct"), reinterpret_cast<void**>(&p_CAIAction_Destruct)},
-	std::pair{TEXT("CAIAction::operator_equ"), reinterpret_cast<void**>(&p_CAIAction_operator_equ)},
-	std::pair{TEXT("CAIAction::Decode"), reinterpret_cast<void**>(&p_CAIAction_Decode)},
+	std::pair{TEXT("CAIAction::Construct1"), reinterpret_cast<void**>(&CAIAction::p_Construct1)},
+	std::pair{TEXT("CAIAction::ConstructCopy"), reinterpret_cast<void**>(&CAIAction::p_ConstructCopy)},
+	std::pair{TEXT("CAIAction::Destruct"), reinterpret_cast<void**>(&CAIAction::p_Destruct)},
+	std::pair{TEXT("CAIAction::operator_equ"), reinterpret_cast<void**>(&CAIAction::p_operator_equ)},
+	std::pair{TEXT("CAIAction::Decode"), reinterpret_cast<void**>(&CAIAction::p_Decode)},
 	std::pair{TEXT("CGameObject::DEFAULT_VISIBLE_TERRAIN_TABLE"), reinterpret_cast<void**>(&CGameObject::p_DEFAULT_VISIBLE_TERRAIN_TABLE)},
 	std::pair{TEXT("CGameObject::DEFAULT_TERRAIN_TABLE"), reinterpret_cast<void**>(&CGameObject::p_DEFAULT_TERRAIN_TABLE)},
-	std::pair{TEXT("CGameAIBase::GetTargetShare"), reinterpret_cast<void**>(&p_CGameAIBase_GetTargetShare)},
-	std::pair{TEXT("CGameSprite::GetCasterLevel"), reinterpret_cast<void**>(&p_CGameSprite_GetCasterLevel)},
-	std::pair{TEXT("CGameSprite::CheckQuickLists"), reinterpret_cast<void**>(&p_CGameSprite_CheckQuickLists)},
-	std::pair{TEXT("CGameSprite::GetKitMask"), reinterpret_cast<void**>(&p_CGameSprite_GetKitMask)},
-	std::pair{TEXT("CGameSprite::GetLauncherSlot"), reinterpret_cast<void**>(&p_CGameSprite_GetLauncherSlot)},
-	std::pair{TEXT("CGameSprite::GetQuickButtons"), reinterpret_cast<void**>(&p_CGameSprite_GetQuickButtons)},
-	std::pair{TEXT("CGameSprite::ReadySpell"), reinterpret_cast<void**>(&p_CGameSprite_ReadySpell)},
-	std::pair{TEXT("CGameSprite::ReadyOffInternalList"), reinterpret_cast<void**>(&p_CGameSprite_ReadyOffInternalList)},
-	std::pair{TEXT("CGameSprite::GetInternalButtonList"), reinterpret_cast<void**>(&p_CGameSprite_GetInternalButtonList)},
-	std::pair{TEXT("CGameSprite::GetActiveStats"), reinterpret_cast<void**>(&p_CGameSprite_GetActiveStats)},
-	std::pair{TEXT("CGameSprite::FeedBack"), reinterpret_cast<void**>(&p_CGameSprite_FeedBack)},
-	std::pair{TEXT("CGameSprite::PlaySound"), reinterpret_cast<void**>(&p_CGameSprite_PlaySound)},
-	std::pair{TEXT("CGameSprite::UpdateTarget"), reinterpret_cast<void**>(&p_CGameSprite_UpdateTarget)},
+	std::pair{TEXT("CGameAIBase::GetTargetShare"), reinterpret_cast<void**>(&CGameAIBase::p_GetTargetShare)},
+	std::pair{TEXT("CGameSprite::GetCasterLevel"), reinterpret_cast<void**>(&CGameSprite::p_GetCasterLevel)},
+	std::pair{TEXT("CGameSprite::CheckQuickLists"), reinterpret_cast<void**>(&CGameSprite::p_CheckQuickLists)},
+	std::pair{TEXT("CGameSprite::GetKitMask"), reinterpret_cast<void**>(&CGameSprite::p_GetKitMask)},
+	std::pair{TEXT("CGameSprite::GetLauncherSlot"), reinterpret_cast<void**>(&CGameSprite::p_GetLauncherSlot)},
+	std::pair{TEXT("CGameSprite::GetQuickButtons"), reinterpret_cast<void**>(&CGameSprite::p_GetQuickButtons)},
+	std::pair{TEXT("CGameSprite::ReadySpell"), reinterpret_cast<void**>(&CGameSprite::p_ReadySpell)},
+	std::pair{TEXT("CGameSprite::ReadyOffInternalList"), reinterpret_cast<void**>(&CGameSprite::p_ReadyOffInternalList)},
+	std::pair{TEXT("CGameSprite::GetInternalButtonList"), reinterpret_cast<void**>(&CGameSprite::p_GetInternalButtonList)},
+	std::pair{TEXT("CGameSprite::GetActiveStats"), reinterpret_cast<void**>(&CGameSprite::p_GetActiveStats)},
+	std::pair{TEXT("CGameSprite::FeedBack"), reinterpret_cast<void**>(&CGameSprite::p_FeedBack)},
+	std::pair{TEXT("CGameSprite::PlaySound"), reinterpret_cast<void**>(&CGameSprite::p_PlaySound)},
+	std::pair{TEXT("CGameSprite::UpdateTarget"), reinterpret_cast<void**>(&CGameSprite::p_UpdateTarget)},
 };

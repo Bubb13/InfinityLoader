@@ -1128,6 +1128,7 @@ class FunctionImplementation:
 		self.returnType: TypeReference = None
 		self.callingConvention: str = None
 		self.name: str = None
+		self.removedThisType: TypeReference = None
 		self.parameters: list[FunctionImplementationParameter] = []
 		self.body: list[str] = []
 		self.noBody: bool = None
@@ -1149,6 +1150,9 @@ class FunctionImplementation:
 
 		if self.returnType != None:
 			refs.append(self.returnType)
+
+		if self.removedThisType != None:
+			refs.append(self.removedThisType)
 
 		for param in self.parameters:
 			for paramRef in param.type.getAllTypeReferences(mainState):
@@ -1226,7 +1230,7 @@ class FunctionImplementation:
 			if not self.returnType.isVoid():
 				parts.append("return ")
 
-			parts.append(f"{indent}p_{self.group.name}_{self.name}(")
+			parts.append(f"{indent}p_{self.name}(")
 
 			if not self.isStatic:
 				parts.append("this")
@@ -2019,7 +2023,7 @@ class Group:
 			if thisType and thisType.getGroup() != self:
 				continue
 
-			impl: FunctionImplementation = functionField.toImplementation(self)
+			impl: FunctionImplementation = functionField.toImplementation(self, fromVFTable=True)
 			impl.name = f"virtual_{functionField.functionName}"
 			impl.virtual = True
 			self.functionImplementations.append(impl)
@@ -2031,7 +2035,7 @@ class Group:
 
 		parts = [indent]
 
-		def writeGroupInternalFunctionPointers(group: Group):
+		def writeGroupInternalFunctionPointers(group: Group, indent: str = ""):
 
 			isNormal: bool = group != mainState.globalGroup
 			wroteSomething = False
@@ -2040,13 +2044,14 @@ class Group:
 
 				if functionImp.noBody and not functionImp.externalImplementation:
 
-					identifier1: str = f"{group.name}_{functionImp.name}" if isNormal else functionImp.name
-					identifier2: str = f"{group.name}::{functionImp.name}" if isNormal else functionImp.name
+					realVariableName: str = f"{group.name}::{functionImp.name}" if isNormal else functionImp.name
+					pointerVariableName: str = f"{group.name}::p_{functionImp.name}" if isNormal else f"p_{functionImp.name}"
 
-					bindingPtrTypeName = f"type_{identifier1}"
+					pointerVariableTypeName: str = f"type_{functionImp.name}"
+					pointerVariableFullTypeName: str = f"{group.name}::{pointerVariableTypeName}" if isNormal else pointerVariableTypeName
 
-					internalPointersOut.write(f"{bindingPtrTypeName} p_{identifier1};\n")
-					internalPointersListOut.append((f"{identifier2}", f"p_{identifier1}"))
+					internalPointersOut.write(f"{pointerVariableFullTypeName} {pointerVariableName};\n")
+					internalPointersListOut.append((f"{realVariableName}", f"{pointerVariableName}"))
 
 					if not functionImp.noDeclaration:
 
@@ -2054,7 +2059,7 @@ class Group:
 						if conventionStr == "" and isNormal and not functionImp.isStatic:
 							conventionStr = "__thiscall "
 
-						parts.append(f"typedef {functionImp.returnType.getHeaderName()} ({conventionStr}*{bindingPtrTypeName})(")
+						parts.append(f"{indent}typedef {functionImp.returnType.getHeaderName()} ({conventionStr}*{pointerVariableTypeName})(")
 
 						if isNormal and not functionImp.isStatic:
 							constStr: str = "const " if functionImp.isConst else ""
@@ -2069,7 +2074,8 @@ class Group:
 							del parts[-1]
 
 						parts.append(");\n")
-						parts.append(f"{indent}extern {bindingPtrTypeName} p_{identifier1};")
+						modifierStr: str = "static" if isNormal else "extern"
+						parts.append(f"{indent}{modifierStr} {pointerVariableTypeName} p_{functionImp.name};")
 						parts.append("\n\n")
 						wroteSomething = True
 
@@ -2101,18 +2107,10 @@ class Group:
 					else:
 						print("BAD FIELD TYPE")
 
-
-			for subGroup in group.subGroups:
-				if writeGroupInternalFunctionPointers(subGroup):
-					wroteSomething = True
-
 			return wroteSomething
 
 
 		wroteSomething = False
-		if not self.isSubgroup():
-			wroteSomething = writeGroupInternalFunctionPointers(self)
-
 		isNormal: bool = self != mainState.globalGroup
 
 		if isNormal:
@@ -2192,11 +2190,17 @@ class Group:
 				parts.append("\n")
 
 		if isNormal:
+
+			writeGroupInternalFunctionPointers(self, nextIndent)
+
 			for functionImplementation in self.functionImplementations:
 				parts.append(functionImplementation.toString(mainState, indent))
 				parts.append("\n")
 				wroteSomething = True
 		else:
+
+			writeGroupInternalFunctionPointers(self)
+
 			globalLineBetweenPointers = True
 			for functionImplementation in self.functionImplementations:
 				if not functionImplementation.noBody or functionImplementation.externalImplementation:
@@ -2336,7 +2340,7 @@ class FunctionField(Field):
 		self.parameterTypes: list[TypeReference] = []
 
 
-	def toImplementation(self, group: Group) -> FunctionImplementation:
+	def toImplementation(self, group: Group, fromVFTable: bool = False) -> FunctionImplementation:
 
 		impl = FunctionImplementation()
 
@@ -2344,9 +2348,15 @@ class FunctionField(Field):
 		impl.callingConvention = self.callConvention
 		impl.name = self.functionName
 
-		for i in range(len(self.parameterTypes)):
+		enumerateStartI = 0
+
+		if fromVFTable and self.callConvention == "__thiscall":
+			impl.removedThisType = self.parameterTypes[0]
+			enumerateStartI = 1
+
+		for i in range(enumerateStartI, len(self.parameterTypes)):
 			implParam = FunctionImplementationParameter()
-			implParam.name = f"_{i}"
+			implParam.name = f"_{i - enumerateStartI}"
 			implParam.type = self.parameterTypes[i]
 			impl.parameters.append(implParam)
 
@@ -2712,11 +2722,11 @@ def tryResolveDependencyOrder(groups: UniqueList[Group]):
 
 
 
-def writeBindings(mainState: MainState, groups: UniqueList[Group], out: TextIOWrapper, baseclassHeaderOut: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
+def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[Group], out: TextIOWrapper, baseclassHeaderOut: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
 
 	baseclassHeaderOut.write("\n#pragma once\n\n")
 	baseclassHeaderOut.write("#include <unordered_map>\n\n")
-	baseclassHeaderOut.write("#include \"Baldur-v2.6.6.0_generated.h\"\n\n")
+	baseclassHeaderOut.write(f"#include \"{pathToFileNameNoExt(outputFileName)}.h\"\n\n")
 	baseclassHeaderOut.write("extern std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> baseclassOffsets;\n")
 
 	baseclassOut.write("\n#include \"EEexLua_generated_baseclass_offsets.h\"\n\n")
@@ -3651,8 +3661,8 @@ def checkRename(mainState: MainState, alreadyDefinedUsertypesFile: str):
 		with open(alreadyDefinedUsertypesFile) as fileIn:
 			for line in fileIn:
 				groupName = line.strip()
-				group = mainState.getGroup(groupName)
-				group.overrideUsertypeSingleName = "EEex_" + groupName
+				if group := mainState.tryGetGroup(groupName):
+					group.overrideUsertypeSingleName = "EEex_" + groupName
 
 
 def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
@@ -3964,7 +3974,7 @@ struct ConstCharString
 			open(f"{outBindingsPath}{outBindingsBase}_baseclass_offsets.h", "w") as baseclassHeaderOut, \
 			open(f"{outBindingsPath}{outBindingsBase}_baseclass_offsets.cpp", "w") as baseclassOut:
 				outputFile(bindingsPreludeFile, bindingsOut)
-				writeBindings(mainState, mainState.filteredGroups, bindingsOut, baseclassHeaderOut, baseclassOut)
+				writeBindings(mainState, outputFileName, mainState.filteredGroups, bindingsOut, baseclassHeaderOut, baseclassOut)
 
 		# Write header prelude
 		outputFile(preludeFile, out)

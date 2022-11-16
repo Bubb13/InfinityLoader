@@ -22,6 +22,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LuaBindings-v2.6.6.0", "Lua
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LuaBindingsCommon", "LuaBindingsCommon\LuaBindingsCommon.vcxproj", "{C156710D-C213-4788-969A-25F76EF95354}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LuaBindings-PSTEE", "LuaBindings-PSTEE\LuaBindings-PSTEE.vcxproj", "{4C905F36-8ACB-42AE-AFC7-DCD7492C3BEE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|x64 = Release|x64
@@ -48,6 +50,10 @@ Global
 		{C156710D-C213-4788-969A-25F76EF95354}.Release|x64.Build.0 = Release|x64
 		{C156710D-C213-4788-969A-25F76EF95354}.Release|x86.ActiveCfg = Release|Win32
 		{C156710D-C213-4788-969A-25F76EF95354}.Release|x86.Build.0 = Release|Win32
+		{4C905F36-8ACB-42AE-AFC7-DCD7492C3BEE}.Release|x64.ActiveCfg = Release|x64
+		{4C905F36-8ACB-42AE-AFC7-DCD7492C3BEE}.Release|x64.Build.0 = Release|x64
+		{4C905F36-8ACB-42AE-AFC7-DCD7492C3BEE}.Release|x86.ActiveCfg = Release|Win32
+		{4C905F36-8ACB-42AE-AFC7-DCD7492C3BEE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

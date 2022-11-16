@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Generated">
+      <UniqueIdentifier>{7ad1b29e-44f4-4b00-b87e-2012669ef17d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\lua">
+      <UniqueIdentifier>{b2192057-f5ed-4aac-b67a-86dbef954b6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\LuaBindings-PSTEE">
+      <UniqueIdentifier>{32299088-6fc5-472d-a3ea-00be8c006207}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\LuaBindings-PSTEE\Generated">
+      <UniqueIdentifier>{24118d6e-8879-49fa-ba7f-86fc85297a66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Build Tasks">
+      <UniqueIdentifier>{a56d4fe5-d193-4edd-b7a2-d361bf3dbfc5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\LuaBindings-PSTEE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\generated\EEexLua_generated_baseclass_offsets.cpp">
+      <Filter>Source Files\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\generated\engine_structs_internal_pointers.cpp">
+      <Filter>Source Files\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\generated\EEexLua_generated.cpp">
+      <Filter>Source Files\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\include\lua\lua.h">
+      <Filter>Header Files\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\include\lua\luaconf.h">
+      <Filter>Header Files\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\include\lua\lauxlib.h">
+      <Filter>Header Files\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\LuaBindings-PSTEE\EEexLua_generated_baseclass_offsets.h">
+      <Filter>Header Files\LuaBindings-PSTEE\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\LuaBindings-PSTEE\Baldur-v2.5.17.0_lua_generated.h">
+      <Filter>Header Files\LuaBindings-PSTEE\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\LuaBindings-PSTEE\EEexLua_generated.h">
+      <Filter>Header Files\LuaBindings-PSTEE\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\LuaBindings-PSTEE\engine_structs.h">
+      <Filter>Header Files\LuaBindings-PSTEE\Generated</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="COPY_TO_GAME.ps1">
+      <Filter>Build Tasks</Filter>
+    </None>
+  </ItemGroup>
+</Project>

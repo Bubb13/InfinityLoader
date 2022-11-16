@@ -3,16 +3,16 @@ if not exist "./out" mkdir "./out"
 
 python generate_bindings.py^
  -alreadyDefinedUsertypesFile=./in/already_defined_usertypes.txt^
+ -bindingsOutFile=./out/EEexLua_generated.cpp^
  -bindingsPreludeFile=./in/bindings_prelude.txt^
- -ignoreHeaderFile=./in/ignore_header_types.txt^
  -fixupFile=in.fixup^
+ -ignoreHeaderFile=./in/ignore_header_types.txt^
  -inFile=./in/Baldur-v2.6.6.0.h^
  -manualTypesFile=./in/manual_types.txt^
+ -outFile=./out/Baldur-v2.6.6.0_generated.h^
+ -packingFile=./in/packing.txt^
  -preludeFile=./in/prelude.txt^
  -wantedFile=./in/wanted_types.txt^
- -packingFile=./in/packing.txt^
- -bindingsOutFile=./out/EEexLua_generated.cpp^
- -outFile=./out/Baldur-v2.6.6.0_generated.h^
  > log.txt 2>&1
  
 copy /Y .\out\Baldur-v2.6.6.0_generated.h ..\..\headers\LuaBindings-v2.6.6.0\
@@ -23,12 +23,13 @@ copy /Y .\out\EEexLua_generated_baseclass_offsets.cpp ..\..\source\LuaBindings-v
 copy /Y .\out\EEexLua_generated.cpp ..\..\source\LuaBindings-v2.6.6.0\Generated
 
 python generate_bindings.py^
+ -ignoreHeaderFile=./in_lua/ignore_header_types.txt^
  -inFile=./in/Baldur-v2.6.6.0.h^
  -noCustomTypes^
- -wantedFile=./in_lua/wanted_types.txt^
- -preludeFile=./in_lua/prelude.txt^
- -packingFile=./in/packing.txt^
  -outFile=./out/Baldur-v2.6.6.0_lua_generated.h^
+ -packingFile=./in/packing.txt^
+ -preludeFile=./in_lua/prelude.txt^
+ -wantedFile=./in_lua/wanted_types.txt^
  > log_lua.txt
 
 copy /Y .\out\Baldur-v2.6.6.0_lua_generated.h ..\..\headers\LuaBindings-v2.6.6.0\

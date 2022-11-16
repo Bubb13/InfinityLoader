@@ -17,6 +17,7 @@ def fixup(mainState):
 	mainState.getGroup("CGameArea").retypeField(mainState, "m_lVertSortBack", "CTypedPtrList<CPtrList,long>")
 	mainState.getGroup("CGameArea").retypeField(mainState, "m_lVertSortFlight", "CTypedPtrList<CPtrList,long>")
 	mainState.getGroup("CGameArea").retypeField(mainState, "m_lVertSortUnder", "CTypedPtrList<CPtrList,long>")
+	mainState.getGroup("CGameEffect_vtbl").addFunctionFieldParameter(mainState, "Destruct", "unsigned int")
 	mainState.getGroup("CGameEffectBase").retypeField(mainState, "m_scriptName", "LCharString<32>")
 	mainState.getGroup("CGameObject").retypeField(mainState, "m_listType", "VertListType")
 	mainState.getGroup("CGameObject").retypeField(mainState, "m_objectType", "CGameObjectType")
