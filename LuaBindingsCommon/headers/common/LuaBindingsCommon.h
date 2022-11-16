@@ -13,4 +13,4 @@
 extern std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> baseclassOffsets;
 extern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;
 
-void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo);
+void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo, bool protonCompatibility);

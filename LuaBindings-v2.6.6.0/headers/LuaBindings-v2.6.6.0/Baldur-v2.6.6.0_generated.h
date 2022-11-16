@@ -2108,16 +2108,16 @@ struct CWeaponIdentification
 
 struct CVariableHash
 {
+	CVariable* m_hashEntries;
+	int m_nTableEntries;
+
+	CVariableHash() = delete;
+
 	typedef CVariable* (__thiscall *type_FindKey)(CVariableHash* pThis, CString* inVarName);
 	static type_FindKey p_FindKey;
 
 	typedef int (__thiscall *type_AddKey)(CVariableHash* pThis, CVariable* var);
 	static type_AddKey p_AddKey;
-
-	CVariable* m_hashEntries;
-	int m_nTableEntries;
-
-	CVariableHash() = delete;
 
 	CVariable* FindKey(CString* inVarName)
 	{
@@ -2506,10 +2506,10 @@ struct CGameOptions
 
 struct CGameObjectArray
 {
+	CGameObjectArray() = delete;
+
 	typedef byte (__cdecl *type_GetShare)(int index, CGameObject** ptr);
 	static type_GetShare p_GetShare;
-
-	CGameObjectArray() = delete;
 
 	static byte GetShare(int index, CGameObject** ptr)
 	{
@@ -4251,15 +4251,15 @@ struct CVidPoly
 
 struct CString
 {
+	char* m_pchData;
+
+	CString() = delete;
+
 	typedef void (__thiscall *type_ConstructFromChars)(CString* pThis, const char* lpsz);
 	static type_ConstructFromChars p_ConstructFromChars;
 
 	typedef void (__thiscall *type_Destruct)(CString* pThis);
 	static type_Destruct p_Destruct;
-
-	char* m_pchData;
-
-	CString() = delete;
 
 	void Construct(const char* lpsz)
 	{
@@ -4327,15 +4327,6 @@ struct CRes
 		vtbl() = delete;
 	};
 
-	typedef void (__thiscall *type_Construct)(CRes* pThis);
-	static type_Construct p_Construct;
-
-	typedef void (__thiscall *type_Destruct)(CRes* pThis);
-	static type_Destruct p_Destruct;
-
-	typedef void* (__thiscall *type_Demand)(CRes* pThis);
-	static type_Demand p_Demand;
-
 	const char* resref;
 	int type;
 	view_t view;
@@ -4349,6 +4340,15 @@ struct CRes
 	bool bLoaded;
 
 	CRes() = delete;
+
+	typedef void (__thiscall *type_Construct)(CRes* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Destruct)(CRes* pThis);
+	static type_Destruct p_Destruct;
+
+	typedef void* (__thiscall *type_Demand)(CRes* pThis);
+	static type_Demand p_Demand;
 
 	void Construct()
 	{
@@ -5052,13 +5052,13 @@ struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffe
 
 struct CMessageHandler
 {
-	typedef short (__thiscall *type_AddMessage)(CMessageHandler* pThis, CMessage* message, int bForcePassThrough);
-	static type_AddMessage p_AddMessage;
-
 	CTypedPtrList<CPtrList,CMessage*> m_messageList;
 	unsigned __int8 m_bLastArbitrationLockStatus;
 
 	CMessageHandler() = delete;
+
+	typedef short (__thiscall *type_AddMessage)(CMessageHandler* pThis, CMessage* message, int bForcePassThrough);
+	static type_AddMessage p_AddMessage;
 
 	short AddMessage(CMessage* message, int bForcePassThrough)
 	{
@@ -5068,12 +5068,12 @@ struct CMessageHandler
 
 struct CAICondition
 {
-	typedef int (__thiscall *type_Hold)(CAICondition* pThis, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
-	static type_Hold p_Hold;
-
 	CTypedPtrList<CPtrList,CAITrigger*> m_triggerList;
 
 	CAICondition() = delete;
+
+	typedef int (__thiscall *type_Hold)(CAICondition* pThis, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+	static type_Hold p_Hold;
 
 	int Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller)
 	{
@@ -5264,6 +5264,15 @@ struct CObList : CObject
 		vtbl() = delete;
 	};
 
+	CObList::CNode* m_pNodeHead;
+	CObList::CNode* m_pNodeTail;
+	int m_nCount;
+	CObList::CNode* m_pNodeFree;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+
+	CObList() = delete;
+
 	typedef void (__thiscall *type_Construct)(CObList* pThis, int size);
 	static type_Construct p_Construct;
 
@@ -5278,15 +5287,6 @@ struct CObList : CObject
 
 	typedef __POSITION* (__thiscall *type_AddTail)(CObList* pThis, void* newElement);
 	static type_AddTail p_AddTail;
-
-	CObList::CNode* m_pNodeHead;
-	CObList::CNode* m_pNodeTail;
-	int m_nCount;
-	CObList::CNode* m_pNodeFree;
-	CPlex* m_pBlocks;
-	int m_nBlockSize;
-
-	CObList() = delete;
 
 	void Construct(int size)
 	{
@@ -5860,10 +5860,10 @@ struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 		vtbl() = delete;
 	};
 
+	CImmunitiesAIType() = delete;
+
 	typedef int (__thiscall *type_OnList)(CImmunitiesAIType* pThis, const CAIObjectType* type);
 	static type_OnList p_OnList;
-
-	CImmunitiesAIType() = delete;
 
 	int OnList(const CAIObjectType* type)
 	{
@@ -6286,6 +6286,12 @@ struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 
 struct CAIGroup
 {
+	__int16 m_groupId;
+	int m_groupChanged;
+	CTypedPtrList<CPtrList,long> m_memberList;
+
+	CAIGroup() = delete;
+
 	typedef void (__thiscall *type_FollowLeader)(CAIGroup* pThis, CPoint target, int additive);
 	static type_FollowLeader p_FollowLeader;
 
@@ -6300,12 +6306,6 @@ struct CAIGroup
 
 	typedef CPoint* (__thiscall *type_GetOffsets)(CAIGroup* pThis, short formationType, short direction, byte bFullParty);
 	static type_GetOffsets p_GetOffsets;
-
-	__int16 m_groupId;
-	int m_groupChanged;
-	CTypedPtrList<CPtrList,long> m_memberList;
-
-	CAIGroup() = delete;
 
 	void Override_GroupSetTarget(CPoint target, int additive, ushort formationType, CPoint cursor);
 
@@ -6901,10 +6901,10 @@ struct CAreaVariable
 
 struct CVariable : CAreaVariable
 {
+	CVariable() = delete;
+
 	typedef void (__thiscall *type_Construct)(CVariable* pThis);
 	static type_Construct p_Construct;
-
-	CVariable() = delete;
 
 	void Construct()
 	{
@@ -7516,13 +7516,13 @@ struct CResRef
 
 struct CAIScript
 {
-	typedef void (__thiscall *type_Construct1)(CAIScript* pThis, CResRef cNewResRef, int playerscript);
-	static type_Construct1 p_Construct1;
-
 	CResRef cResRef;
 	CTypedPtrList<CPtrList,CAIConditionResponse*> m_caList;
 
 	CAIScript() = delete;
+
+	typedef void (__thiscall *type_Construct1)(CAIScript* pThis, CResRef cNewResRef, int playerscript);
+	static type_Construct1 p_Construct1;
 
 	void Construct(CResRef cNewResRef, int playerscript)
 	{
@@ -7532,9 +7532,6 @@ struct CAIScript
 
 struct CAbilityId
 {
-	typedef void (__thiscall *type_Construct)(CAbilityId* pThis);
-	static type_Construct p_Construct;
-
 	__int16 m_itemType;
 	__int16 m_itemNum;
 	__int16 m_abilityNum;
@@ -7544,6 +7541,9 @@ struct CAbilityId
 	unsigned int m_toolTip;
 
 	CAbilityId() = delete;
+
+	typedef void (__thiscall *type_Construct)(CAbilityId* pThis);
+	static type_Construct p_Construct;
 
 	void Construct()
 	{
@@ -7919,6 +7919,15 @@ struct CResHelper
 
 struct C2DArray : CResHelper<CResText,1012>
 {
+	ArrayPointer<CString> m_pNamesX;
+	ArrayPointer<CString> m_pNamesY;
+	ArrayPointer<CString> m_pArray;
+	CString m_default;
+	__int16 m_nSizeX;
+	__int16 m_nSizeY;
+
+	C2DArray() = delete;
+
 	typedef void (__thiscall *type_Construct)(C2DArray* pThis);
 	static type_Construct p_Construct;
 
@@ -7930,15 +7939,6 @@ struct C2DArray : CResHelper<CResText,1012>
 
 	typedef void (__thiscall *type_Destruct)(C2DArray* pThis);
 	static type_Destruct p_Destruct;
-
-	ArrayPointer<CString> m_pNamesX;
-	ArrayPointer<CString> m_pNamesY;
-	ArrayPointer<CString> m_pArray;
-	CString m_default;
-	__int16 m_nSizeX;
-	__int16 m_nSizeY;
-
-	C2DArray() = delete;
 
 	void Construct()
 	{
@@ -7970,6 +7970,14 @@ struct CAIIdList : CResHelper<CResText,1008>
 		vtbl() = delete;
 	};
 
+	CString m_fileName;
+	CTypedPtrList<CPtrList,CAIId*> m_idList;
+	int m_faster;
+	ArrayPointer<CAIId*> m_pIdArray;
+	int m_nArray;
+
+	CAIIdList() = delete;
+
 	typedef void (__thiscall *type_Construct1)(CAIIdList* pThis);
 	static type_Construct1 p_Construct1;
 
@@ -7981,14 +7989,6 @@ struct CAIIdList : CResHelper<CResText,1008>
 
 	typedef CAIId* (__thiscall *type_Find1)(CAIIdList* pThis, int id);
 	static type_Find1 p_Find1;
-
-	CString m_fileName;
-	CTypedPtrList<CPtrList,CAIId*> m_idList;
-	int m_faster;
-	ArrayPointer<CAIId*> m_pIdArray;
-	int m_nArray;
-
-	CAIIdList() = delete;
 
 	void Construct1()
 	{
@@ -8266,21 +8266,6 @@ struct CRuleTables
 
 struct CAIScriptFile
 {
-	typedef void (__thiscall *type_Construct)(CAIScriptFile* pThis);
-	static type_Construct p_Construct;
-
-	typedef void (__thiscall *type_Destruct)(CAIScriptFile* pThis);
-	static type_Destruct p_Destruct;
-
-	typedef void (__thiscall *type_ParseConditionalString)(CAIScriptFile* pThis, CString* data);
-	static type_ParseConditionalString p_ParseConditionalString;
-
-	typedef CAIObjectType* (__thiscall *type_ParseObjectType)(CAIScriptFile* pThis, CAIObjectType* result, CString* input);
-	static type_ParseObjectType p_ParseObjectType;
-
-	typedef void (__thiscall *type_ParseResponseString)(CAIScriptFile* pThis, CString* data);
-	static type_ParseResponseString p_ParseResponseString;
-
 	__int16 m_parseMode;
 	int m_lineNumber;
 	CAIScript* m_curScript;
@@ -8296,6 +8281,21 @@ struct CAIScriptFile
 	CAIIdList m_objects;
 
 	CAIScriptFile() = delete;
+
+	typedef void (__thiscall *type_Construct)(CAIScriptFile* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Destruct)(CAIScriptFile* pThis);
+	static type_Destruct p_Destruct;
+
+	typedef void (__thiscall *type_ParseConditionalString)(CAIScriptFile* pThis, CString* data);
+	static type_ParseConditionalString p_ParseConditionalString;
+
+	typedef CAIObjectType* (__thiscall *type_ParseObjectType)(CAIScriptFile* pThis, CAIObjectType* result, CString* input);
+	static type_ParseObjectType p_ParseObjectType;
+
+	typedef void (__thiscall *type_ParseResponseString)(CAIScriptFile* pThis, CString* data);
+	static type_ParseResponseString p_ParseResponseString;
 
 	void Construct()
 	{
@@ -8965,9 +8965,6 @@ struct CScreenAI : CBaldurEngine
 
 struct CSearchBitmap
 {
-	typedef byte (__thiscall *type_GetCost)(CSearchBitmap* pThis, CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump);
-	static type_GetCost p_GetCost;
-
 	CVidBitmap m_resSearch;
 	unsigned __int8* m_pDynamicCost;
 	unsigned __int8* m_snapshotDynamicCost;
@@ -8978,6 +8975,9 @@ struct CSearchBitmap
 	unsigned __int8 m_snapshotPersonalSpace;
 
 	CSearchBitmap() = delete;
+
+	typedef byte (__thiscall *type_GetCost)(CSearchBitmap* pThis, CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump);
+	static type_GetCost p_GetCost;
 
 	byte GetCost(CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump)
 	{
@@ -9037,10 +9037,10 @@ struct CVidMode
 
 struct CSpell : CResHelper<CResSpell,1006>
 {
+	CSpell() = delete;
+
 	typedef void (__thiscall *type_Construct)(CSpell* pThis, CResRef res);
 	static type_Construct p_Construct;
-
-	CSpell() = delete;
 
 	void Construct(CResRef res)
 	{
@@ -9546,9 +9546,6 @@ struct CChitin
 		vtbl() = delete;
 	};
 
-	typedef void (__thiscall *type_OnResizeWindow)(CChitin* pThis, int w, int h);
-	static type_OnResizeWindow p_OnResizeWindow;
-
 	int m_mouseLButton;
 	int m_mouseRButton;
 	int m_bMouseLButtonDown;
@@ -9655,6 +9652,9 @@ struct CChitin
 	int m_bReverseMouseWheelZoom;
 
 	CChitin() = delete;
+
+	typedef void (__thiscall *type_OnResizeWindow)(CChitin* pThis, int w, int h);
+	static type_OnResizeWindow p_OnResizeWindow;
 
 	void OnResizeWindow(int w, int h)
 	{
@@ -10034,12 +10034,6 @@ struct CInfTileSet
 
 struct CInfButtonArray
 {
-	typedef int (__thiscall *type_SetState)(CInfButtonArray* pThis, int nState);
-	static type_SetState p_SetState;
-
-	typedef void (*type_SetQuickSlot)(CButtonData* pButtonData, int nButton, int nType);
-	static type_SetQuickSlot p_SetQuickSlot;
-
 	Array<CInfButtonSettings,12> m_buttonArray;
 	Array<int,12> m_configIcons;
 	Array<int,12> m_buttonTypes;
@@ -10056,6 +10050,12 @@ struct CInfButtonArray
 	int m_bToggleButtonCleric;
 
 	CInfButtonArray() = delete;
+
+	typedef int (__thiscall *type_SetState)(CInfButtonArray* pThis, int nState);
+	static type_SetState p_SetState;
+
+	typedef void (*type_SetQuickSlot)(CButtonData* pButtonData, int nButton, int nType);
+	static type_SetQuickSlot p_SetQuickSlot;
 
 	int SetState(int nState)
 	{
@@ -10235,12 +10235,6 @@ struct CMultiplayerSettings
 
 struct CInfGame
 {
-	typedef void (__thiscall *type_SetState)(CInfGame* pThis, __int16 state, bool allowDead);
-	static type_SetState p_SetState;
-
-	typedef void (__thiscall *type_SetIconIndex)(CInfGame* pThis, unsigned __int8 iconIndex);
-	static type_SetIconIndex p_SetIconIndex;
-
 	CRuleTables m_ruleTables;
 	CTimerWorld m_worldTime;
 	int m_bGameLoaded;
@@ -10372,6 +10366,12 @@ struct CInfGame
 
 	CInfGame() = delete;
 
+	typedef void (__thiscall *type_SetState)(CInfGame* pThis, __int16 state, bool allowDead);
+	static type_SetState p_SetState;
+
+	typedef void (__thiscall *type_SetIconIndex)(CInfGame* pThis, unsigned __int8 iconIndex);
+	static type_SetIconIndex p_SetIconIndex;
+
 	void SetState(__int16 state, bool allowDead)
 	{
 		p_SetState(this, state, allowDead);
@@ -10447,9 +10447,6 @@ struct CGameEffect : CGameEffectBase
 		vtbl() = delete;
 	};
 
-	typedef CGameEffect* (*type_DecodeEffect)(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
-	static type_DecodeEffect p_DecodeEffect;
-
 	int m_sourceId;
 	int m_done;
 	int m_forceRepass;
@@ -10462,6 +10459,9 @@ struct CGameEffect : CGameEffectBase
 	int m_sourceTarget;
 
 	CGameEffect() = delete;
+
+	typedef CGameEffect* (*type_DecodeEffect)(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
+	static type_DecodeEffect p_DecodeEffect;
 
 	static CGameEffect* DecodeEffect(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget)
 	{
@@ -11115,12 +11115,6 @@ struct CDerivedStatsTemplate
 
 struct CDerivedStats : CDerivedStatsTemplate
 {
-	typedef long (__thiscall *type_GetAtOffset)(CDerivedStats* pThis, short offset);
-	static type_GetAtOffset p_GetAtOffset;
-
-	typedef int (__thiscall *type_GetSpellState)(CDerivedStats* pThis, uint bit);
-	static type_GetSpellState p_GetSpellState;
-
 	CImmunitiesProjectile m_cImmunitiesProjectile;
 	CImmunitiesEffect m_cImmunitiesEffect;
 	CImmunitiesAIType m_cImmunitiesAIType;
@@ -11166,6 +11160,12 @@ struct CDerivedStats : CDerivedStatsTemplate
 	Array<unsigned int,8> m_spellStates;
 
 	CDerivedStats() = delete;
+
+	typedef long (__thiscall *type_GetAtOffset)(CDerivedStats* pThis, short offset);
+	static type_GetAtOffset p_GetAtOffset;
+
+	typedef int (__thiscall *type_GetSpellState)(CDerivedStats* pThis, uint bit);
+	static type_GetSpellState p_GetSpellState;
 
 	long GetAtOffset(short offset)
 	{
@@ -11659,24 +11659,6 @@ struct CGameArea
 		m_cWalkableRenderCache_t() = delete;
 	};
 
-	typedef int (__thiscall *type_GetNearest2)(CGameArea* pThis, CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
-	static type_GetNearest2 p_GetNearest2;
-
-	typedef int (__thiscall *type_AdjustTarget)(CGameArea* pThis, CPoint start, CPoint* goal, byte personalSpace, short tolerance);
-	static type_AdjustTarget p_AdjustTarget;
-
-	typedef int (__thiscall *type_CheckWalkable)(CGameArea* pThis, CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
-	static type_CheckWalkable p_CheckWalkable;
-
-	typedef int (__thiscall *type_CheckLOS)(CGameArea* pThis, const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
-	static type_CheckLOS p_CheckLOS;
-
-	typedef void (__thiscall *type_GetAllInRange1)(CGameArea* pThis, const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
-	static type_GetAllInRange1 p_GetAllInRange1;
-
-	typedef void (__thiscall *type_GetAllInRange2)(CGameArea* pThis, __POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
-	static type_GetAllInRange2 p_GetAllInRange2;
-
 	CAreaFileHeader m_header;
 	int m_bHeaderExtendedNight;
 	CAreaSoundsAndMusic m_headerSound;
@@ -11785,6 +11767,24 @@ struct CGameArea
 
 	CGameArea() = delete;
 
+	typedef int (__thiscall *type_GetNearest2)(CGameArea* pThis, CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
+	static type_GetNearest2 p_GetNearest2;
+
+	typedef int (__thiscall *type_AdjustTarget)(CGameArea* pThis, CPoint start, CPoint* goal, byte personalSpace, short tolerance);
+	static type_AdjustTarget p_AdjustTarget;
+
+	typedef int (__thiscall *type_CheckWalkable)(CGameArea* pThis, CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
+	static type_CheckWalkable p_CheckWalkable;
+
+	typedef int (__thiscall *type_CheckLOS)(CGameArea* pThis, const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
+	static type_CheckLOS p_CheckLOS;
+
+	typedef void (__thiscall *type_GetAllInRange1)(CGameArea* pThis, const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+	static type_GetAllInRange1 p_GetAllInRange1;
+
+	typedef void (__thiscall *type_GetAllInRange2)(CGameArea* pThis, __POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+	static type_GetAllInRange2 p_GetAllInRange2;
+
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 
 	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
@@ -11868,6 +11868,20 @@ struct CAreaFileCharacterEntryPoint
 
 struct CAIObjectType
 {
+	static CAIObjectType* p_NOONE;
+	CString m_name;
+	unsigned __int8 m_EnemyAlly;
+	unsigned __int8 m_General;
+	unsigned __int8 m_Race;
+	unsigned __int8 m_Class;
+	int m_Instance;
+	Array<unsigned __int8,5> m_SpecialCase;
+	unsigned __int8 m_Specifics;
+	unsigned __int8 m_Gender;
+	unsigned __int8 m_Alignment;
+
+	CAIObjectType() = delete;
+
 	typedef void (__thiscall *type_Construct1)(CAIObjectType* pThis, byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
 	static type_Construct1 p_Construct1;
 
@@ -11882,20 +11896,6 @@ struct CAIObjectType
 
 	typedef void (__thiscall *type_Set)(CAIObjectType* pThis, const CAIObjectType* that);
 	static type_Set p_Set;
-
-	static CAIObjectType* p_NOONE;
-	CString m_name;
-	unsigned __int8 m_EnemyAlly;
-	unsigned __int8 m_General;
-	unsigned __int8 m_Race;
-	unsigned __int8 m_Class;
-	int m_Instance;
-	Array<unsigned __int8,5> m_SpecialCase;
-	unsigned __int8 m_Specifics;
-	unsigned __int8 m_Gender;
-	unsigned __int8 m_Alignment;
-
-	CAIObjectType() = delete;
 
 	void Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name)
 	{
@@ -11936,21 +11936,6 @@ struct CAIObjectType
 
 struct CAIAction
 {
-	typedef void (__thiscall *type_Construct1)(CAIAction* pThis, short actionID, CPoint* dest, int specificID, int sp2);
-	static type_Construct1 p_Construct1;
-
-	typedef void (__thiscall *type_ConstructCopy)(CAIAction* pThis, const CAIAction* that);
-	static type_ConstructCopy p_ConstructCopy;
-
-	typedef void (__thiscall *type_Destruct)(CAIAction* pThis);
-	static type_Destruct p_Destruct;
-
-	typedef CAIAction* (__thiscall *type_operator_equ)(CAIAction* pThis, const CAIAction* y);
-	static type_operator_equ p_operator_equ;
-
-	typedef void (__thiscall *type_Decode)(CAIAction* pThis, CGameAIBase* caller);
-	static type_Decode p_Decode;
-
 	__int16 m_actionID;
 	CAIObjectType m_actorID;
 	CAIObjectType m_acteeID;
@@ -11965,6 +11950,21 @@ struct CAIAction
 	CString m_source;
 
 	CAIAction() = delete;
+
+	typedef void (__thiscall *type_Construct1)(CAIAction* pThis, short actionID, CPoint* dest, int specificID, int sp2);
+	static type_Construct1 p_Construct1;
+
+	typedef void (__thiscall *type_ConstructCopy)(CAIAction* pThis, const CAIAction* that);
+	static type_ConstructCopy p_ConstructCopy;
+
+	typedef void (__thiscall *type_Destruct)(CAIAction* pThis);
+	static type_Destruct p_Destruct;
+
+	typedef CAIAction* (__thiscall *type_operator_equ)(CAIAction* pThis, const CAIAction* y);
+	static type_operator_equ p_operator_equ;
+
+	typedef void (__thiscall *type_Decode)(CAIAction* pThis, CGameAIBase* caller);
+	static type_Decode p_Decode;
 
 	void Construct(short actionID, CPoint* dest, int specificID, int sp2)
 	{
@@ -12619,9 +12619,6 @@ struct CGameAIBase : CGameObject
 		vtbl() = delete;
 	};
 
-	typedef CGameObject* (__thiscall *type_GetTargetShare)(CGameAIBase* pThis);
-	static type_GetTargetShare p_GetTargetShare;
-
 	CAIObjectType m_lAttacker;
 	int m_lAttackStyle;
 	CAIObjectType m_lOrderedBy;
@@ -12692,6 +12689,9 @@ struct CGameAIBase : CGameObject
 	CAITrigger triggerOverride;
 
 	CGameAIBase() = delete;
+
+	typedef CGameObject* (__thiscall *type_GetTargetShare)(CGameAIBase* pThis);
+	static type_GetTargetShare p_GetTargetShare;
 
 	CGameObject* GetTargetShare()
 	{
@@ -12878,42 +12878,6 @@ struct CGameSprite : CGameAIBase
 
 		vtbl() = delete;
 	};
-
-	typedef short (__thiscall *type_GetCasterLevel)(CGameSprite* pThis, CSpell* pSpell, int includeWildMage);
-	static type_GetCasterLevel p_GetCasterLevel;
-
-	typedef void (__thiscall *type_CheckQuickLists)(CGameSprite* pThis, CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
-	static type_CheckQuickLists p_CheckQuickLists;
-
-	typedef __int32 (__thiscall *type_GetKitMask)(CGameSprite* pThis);
-	static type_GetKitMask p_GetKitMask;
-
-	typedef short (__thiscall *type_GetLauncherSlot)(CGameSprite* pThis, short slotNum, short abilityNum);
-	static type_GetLauncherSlot p_GetLauncherSlot;
-
-	typedef CGameButtonList* (__thiscall *type_GetQuickButtons)(CGameSprite* pThis, unsigned __int16 buttonType, unsigned __int8 existanceCheck);
-	static type_GetQuickButtons p_GetQuickButtons;
-
-	typedef void (__thiscall *type_ReadySpell)(CGameSprite* pThis, CButtonData* button, bool firstCall);
-	static type_ReadySpell p_ReadySpell;
-
-	typedef void (__thiscall *type_ReadyOffInternalList)(CGameSprite* pThis, CButtonData* button, bool firstCall);
-	static type_ReadyOffInternalList p_ReadyOffInternalList;
-
-	typedef CGameButtonList* (__thiscall *type_GetInternalButtonList)(CGameSprite* pThis);
-	static type_GetInternalButtonList p_GetInternalButtonList;
-
-	typedef CDerivedStats* (__thiscall *type_GetActiveStats)(CGameSprite* pThis);
-	static type_GetActiveStats p_GetActiveStats;
-
-	typedef void (__thiscall *type_FeedBack)(CGameSprite* pThis, uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
-	static type_FeedBack p_FeedBack;
-
-	typedef void (__thiscall *type_PlaySound)(CGameSprite* pThis, byte soundID, int showText, int showCircle, int overrideOption);
-	static type_PlaySound p_PlaySound;
-
-	typedef void (__thiscall *type_UpdateTarget)(CGameSprite* pThis, CGameObject* target);
-	static type_UpdateTarget p_UpdateTarget;
 
 	CResRef m_resref;
 	unsigned __int16 m_type;
@@ -13255,6 +13219,42 @@ struct CGameSprite : CGameAIBase
 	bool m_bOutline;
 
 	CGameSprite() = delete;
+
+	typedef short (__thiscall *type_GetCasterLevel)(CGameSprite* pThis, CSpell* pSpell, int includeWildMage);
+	static type_GetCasterLevel p_GetCasterLevel;
+
+	typedef void (__thiscall *type_CheckQuickLists)(CGameSprite* pThis, CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
+	static type_CheckQuickLists p_CheckQuickLists;
+
+	typedef __int32 (__thiscall *type_GetKitMask)(CGameSprite* pThis);
+	static type_GetKitMask p_GetKitMask;
+
+	typedef short (__thiscall *type_GetLauncherSlot)(CGameSprite* pThis, short slotNum, short abilityNum);
+	static type_GetLauncherSlot p_GetLauncherSlot;
+
+	typedef CGameButtonList* (__thiscall *type_GetQuickButtons)(CGameSprite* pThis, unsigned __int16 buttonType, unsigned __int8 existanceCheck);
+	static type_GetQuickButtons p_GetQuickButtons;
+
+	typedef void (__thiscall *type_ReadySpell)(CGameSprite* pThis, CButtonData* button, bool firstCall);
+	static type_ReadySpell p_ReadySpell;
+
+	typedef void (__thiscall *type_ReadyOffInternalList)(CGameSprite* pThis, CButtonData* button, bool firstCall);
+	static type_ReadyOffInternalList p_ReadyOffInternalList;
+
+	typedef CGameButtonList* (__thiscall *type_GetInternalButtonList)(CGameSprite* pThis);
+	static type_GetInternalButtonList p_GetInternalButtonList;
+
+	typedef CDerivedStats* (__thiscall *type_GetActiveStats)(CGameSprite* pThis);
+	static type_GetActiveStats p_GetActiveStats;
+
+	typedef void (__thiscall *type_FeedBack)(CGameSprite* pThis, uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
+	static type_FeedBack p_FeedBack;
+
+	typedef void (__thiscall *type_PlaySound)(CGameSprite* pThis, byte soundID, int showText, int showCircle, int overrideOption);
+	static type_PlaySound p_PlaySound;
+
+	typedef void (__thiscall *type_UpdateTarget)(CGameSprite* pThis, CGameObject* target);
+	static type_UpdateTarget p_UpdateTarget;
 
 	short GetCasterLevel(CSpell* pSpell, int includeWildMage)
 	{

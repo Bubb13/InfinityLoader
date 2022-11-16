@@ -18,11 +18,19 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LuaBindings-v2.6.6.0", "LuaBindings-v2.6.6.0\LuaBindings-v2.6.6.0.vcxproj", "{CB4ABBED-DC69-4BB4-B62E-E92085D3C529}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1B74771C-B80B-4AD1-93FB-B98EAC266372} = {1B74771C-B80B-4AD1-93FB-B98EAC266372}
+		{C156710D-C213-4788-969A-25F76EF95354} = {C156710D-C213-4788-969A-25F76EF95354}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LuaBindingsCommon", "LuaBindingsCommon\LuaBindingsCommon.vcxproj", "{C156710D-C213-4788-969A-25F76EF95354}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1B74771C-B80B-4AD1-93FB-B98EAC266372} = {1B74771C-B80B-4AD1-93FB-B98EAC266372}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LuaBindings-PSTEE", "LuaBindings-PSTEE\LuaBindings-PSTEE.vcxproj", "{4C905F36-8ACB-42AE-AFC7-DCD7492C3BEE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1B74771C-B80B-4AD1-93FB-B98EAC266372} = {1B74771C-B80B-4AD1-93FB-B98EAC266372}
+		{C156710D-C213-4788-969A-25F76EF95354} = {C156710D-C213-4788-969A-25F76EF95354}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

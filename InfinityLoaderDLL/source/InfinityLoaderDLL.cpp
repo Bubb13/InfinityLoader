@@ -1020,9 +1020,9 @@ int loadLuaBindingsLua(lua_State* L) {
 		return 0;
 	}
 
-	typedef void(__stdcall* type_Init)(void* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo&);
+	typedef void(__stdcall* type_Init)(void*, std::map<String, PatternEntry>&, ImageSectionInfo&, bool);
 	type_Init initProc = reinterpret_cast<type_Init>(proc);
-	initProc(L, patternEntries, textInfo);
+	initProc(L, patternEntries, textInfo, protonCompatibility);
 
 	return 0;
 }

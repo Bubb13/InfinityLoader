@@ -1,0 +1,55 @@
+
+#pragma once
+
+#include <queue>
+#include <vector>
+
+#include "InfinityLoaderCommon.h"
+#include "to_lua_pointers.h"
+
+typedef __int8 sbyte;
+typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+typedef unsigned long ulong;
+
+typedef ushort word;
+typedef uint dword;
+
+typedef __int8 undefined;
+typedef __int8 undefined1;
+typedef __int16 undefined2;
+typedef __int32 undefined4;
+
+template<typename A>
+struct W
+{
+
+private:
+
+	union {
+		A val;
+	};
+
+public:
+
+	A* operator->() {
+		return &val;
+	}
+
+	A& operator*() {
+		return val;
+	}
+
+	template<typename... Args>
+	W(Args&&... args) {
+		val.Construct(std::forward<Args>(args)...);
+	}
+
+	~W() {
+		val.Destruct();
+	}
+};
+
+#pragma pack(push, 1)
+

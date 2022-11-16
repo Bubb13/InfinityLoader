@@ -129,9 +129,9 @@ constexpr void* GetMemberPtr(T func) {
     return reinterpret_cast<void*&>(func);
 }
 
-void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo) {
+void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo, bool protonCompatibility) {
 
-    InitFPrint(false);
+    InitFPrint(protonCompatibility);
 
 #define setLuaPointer(patternName, pointerGlobal) \
     if (auto itr = patterns.find(TEXT(patternName)); itr != patterns.end()) { \
@@ -206,7 +206,6 @@ void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& pattern
     setLuaPointer("Hardcoded_tolua_pushboolean", tolua_pushboolean);
     setLuaPointer("Hardcoded_tolua_pushnumber", tolua_pushnumber);
     setLuaPointer("Hardcoded_tolua_pushstring", tolua_pushstring);
-    //setLuaPointer("Hardcoded_tolua_release", tolua_release);
     setLuaPointer("Hardcoded_tolua_tostring", tolua_tostring);
     setLuaPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
     setLuaPointer("Hardcoded_tolua_typename", tolua_typename);
