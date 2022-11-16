@@ -2928,7 +2928,10 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 					checkTypeName = checkType.getName()
 
 					if checkType.isPrimitiveNumber():
-						out.write(f"\ttolua_pushnumber(L, (lua_Number){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
+						if checkTypeName in ("float", "double"):
+							out.write(f"\ttolua_pushnumber(L, (lua_Number){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
+						else:
+							out.write(f"\tlua_pushinteger(L, (lua_Integer){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
 						return True
 					elif checkTypeName == "bool":
 						out.write(f"\ttolua_pushboolean(L, (bool){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
@@ -3248,7 +3251,10 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 					varTypeName = varType.getName()
 
 					if varType.isPrimitiveNumber() and varType.getUserTypePointerLevel() == 0:
-						out.write("tolua_pushnumber(L, (lua_Number)returnVal);\n")
+						if varTypeName in ("float", "double"):
+							out.write("tolua_pushnumber(L, (lua_Number)returnVal);\n")
+						else:
+							out.write(f"lua_pushinteger(L, (lua_Integer)returnVal);\n")
 						return True
 					elif varTypeName == "bool" and varType.getUserTypePointerLevel() == 0:
 						out.write("tolua_pushboolean(L, (bool)returnVal);\n")

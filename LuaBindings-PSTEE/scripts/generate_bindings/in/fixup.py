@@ -5,9 +5,6 @@ from generate_bindings import defineTypeRef
 
 def fixup(mainState):
 
-	ref = defineTypeRef(mainState, None, "CGameObject", TypeRefSourceType.VARIABLE)
-	mainState.getGroup("Pointer").addTemplateUse( (ref,), 0 )
-
 	group = mainState.getGroup("CGameObjectType")
 	group.isDirectlyWanted = True
 	mainState.filteredGroups.addUnique(group)

@@ -132,6 +132,7 @@ void p_tolua_open(lua_State* L);
 // point to the in-exe versions.           //
 /////////////////////////////////////////////
 
+#define lua_pushinteger p_lua_pushinteger
 #define lua_pushlstring p_lua_pushlstring
 #define lua_toboolean p_lua_toboolean
 #define lua_tointeger p_lua_tointeger
