@@ -739,15 +739,23 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, String iniPath, Stri
 }
 
 long long getFileLastModifiedTime(String filePath) {
+
+	// IMPORTANT: std::chrono::clock_cast() loads icu.dll, which is only present
+	// on Windows versions >= 1903 (May 2019 Update). Using it breaks compatibility
+	// with older Windows versions and Wine / Proton!
+
+	//const auto fileTime = std::filesystem::last_write_time(filePath);
+	//if (!protonCompatibility) {
+	//	const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileTime);
+	//	return std::chrono::duration_cast<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
+	//}
+	//else {
+	//	const auto systemTime = fileTime;
+	//	return std::chrono::duration_cast<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
+	//}
+
 	const auto fileTime = std::filesystem::last_write_time(filePath);
-	if (!protonCompatibility) {
-		const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileTime);
-		return std::chrono::duration_cast<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
-	}
-	else {
-		const auto systemTime = fileTime;
-		return std::chrono::duration_cast<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
-	}
+	return std::chrono::duration_cast<std::chrono::milliseconds>(fileTime.time_since_epoch()).count();
 }
 
 DWORD findPatterns(ImageSectionInfo& sectionInfo) {
