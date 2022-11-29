@@ -338,21 +338,36 @@ bool INISectionExists(const String iniPath, const TCHAR *const section) {
 	return false;
 }
 
-DWORD GetINIString(String iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr) {
+DWORD GetINIString(const String& iniPath, const TCHAR* section, const TCHAR* key, String& outStr, bool& filled) {
+
+	filled = false;
 
 	TCHAR buffer[1024];
 	const std::size_t bufferSize = sizeof(buffer) / sizeof(buffer[0]);
 
-	DWORD numRead = GetPrivateProfileString(section, key, def,
-		(TCHAR*)&buffer, bufferSize, iniPath.c_str());
+	DWORD numRead = GetPrivateProfileString(section, key, nullptr,
+		buffer, bufferSize, iniPath.c_str());
 
 	if (DWORD lastError = GetLastError(); lastError != ERROR_SUCCESS && lastError != ERROR_FILE_NOT_FOUND) {
 		Print("[!] GetPrivateProfileString failed (%d).\n", lastError);
 		return lastError;
 	}
 
-	outStr = buffer;
+	if (numRead > 0) {
+		outStr = buffer;
+		filled = true;
+	}
+	
 	return 0;
+}
+
+DWORD GetINIStringDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr) {
+	bool filled;
+	DWORD error = GetINIString(iniPath, section, key, outStr, filled);
+	if (!filled) {
+		outStr = def;
+	}
+	return error;
 }
 
 // TODO: Suboptimal
@@ -400,7 +415,6 @@ bool decimalStrToInteger(const String decimalStr, IntegerType& accumulator) {
 	return true;
 }
 
-
 template<typename IntegerType>
 DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType& outInteger, bool& filled) {
 
@@ -410,7 +424,7 @@ DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, Inte
 	const std::size_t bufferSize = sizeof(buffer) / sizeof(buffer[0]);
 
 	DWORD numRead = GetPrivateProfileString(section, key, nullptr,
-		(TCHAR*)&buffer, bufferSize, iniPath.c_str());
+		buffer, bufferSize, iniPath.c_str());
 
 	if (DWORD lastError = GetLastError(); lastError != ERROR_SUCCESS && lastError != ERROR_FILE_NOT_FOUND) {
 		Print("[!] GetPrivateProfileString failed (%d).\n", lastError);
@@ -530,7 +544,7 @@ DWORD SetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, Inte
 DWORD getExePath(String& exePathOut, String* exeNameOut) {
 
 	String exeNames;
-	if (DWORD lastError = GetINIString(iniPath, TEXT("General"), TEXT("ExeNames"), TEXT(""), exeNames)) {
+	if (DWORD lastError = GetINIStringDef(iniPath, TEXT("General"), TEXT("ExeNames"), TEXT(""), exeNames)) {
 		return lastError;
 	}
 
@@ -804,6 +818,14 @@ String ToString(const char* str) {
 #endif
 }
 
+StringA StringToStringA(const String& string) {
+#ifndef UNICODE
+	return string;
+#else
+	return ws2s(string);
+#endif
+}
+
 ////////////////////////
 // Exception Handling //
 ////////////////////////
@@ -829,7 +851,7 @@ String writeDump(EXCEPTION_POINTERS* pointers)
 	exceptionInfo.ExceptionPointers = pointers;
 	exceptionInfo.ClientPointers = FALSE;
 
-	OStringStream dmpNameStream{ TEXT("./InfinityLoader_Crash") };
+	OStringStream dmpNameStream{ String{ workingFolder }.append(TEXT("InfinityLoader_Crash")) };
 	String builtDmpName = dmpNameStream.str();
 
 	if (!std::filesystem::exists(builtDmpName)) {
@@ -840,7 +862,8 @@ String writeDump(EXCEPTION_POINTERS* pointers)
 
 	while (true) {
 
-		dmpNameStream << "./InfinityLoader_Crash/InfinityLoader_Crash_";
+		dmpNameStream << workingFolder;
+		dmpNameStream << "InfinityLoader_Crash\\InfinityLoader_Crash_";
 		dmpNameStream << attemptI++;
 		dmpNameStream << ".dmp";
 		builtDmpName = dmpNameStream.str();

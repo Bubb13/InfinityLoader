@@ -117,7 +117,8 @@ extern String integerToDecimalStr(IntegerType integer);
 
 extern bool INISectionExists(String iniPath, const TCHAR* section);
 
-extern DWORD GetINIString(String iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr);
+extern DWORD GetINIString(const String& iniPath, const TCHAR* section, const TCHAR* key, String& outStr, bool& filled);
+extern DWORD GetINIStringDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr);
 
 template<typename IntegerType>
 extern DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType& outInteger, bool& filled);
@@ -189,6 +190,7 @@ extern DWORD allocateNear(intptr_t address, size_t size, size_t dwAllocationGran
 extern std::string ws2s(const std::wstring& wstr);
 extern std::wstring s2ws(const std::string& str);
 extern String ToString(const char* str);
+extern StringA StringToStringA(const String& string);
 
 ////////////////////////
 // Exception Handling //

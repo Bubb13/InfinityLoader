@@ -197,21 +197,9 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 
 DWORD startGame() {
 
-	initPaths();
-	
 	bool debug;
 	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug)) {
 		return lastError;
-	}
-
-	bool protonCompatibility;
-	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility)) {
-		return lastError;
-	}
-
-	if (int error = InitFPrint(protonCompatibility)) {
-		Print("[!] InitFPrint failed (%d).", error);
-		return error;
 	}
 
 	String exePath;
@@ -297,6 +285,21 @@ errorFinally:;
 	return lastError;
 }
 
+DWORD initOutput() {
+
+	bool protonCompatibility;
+	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility)) {
+		return lastError;
+	}
+
+	if (int error = InitFPrint(protonCompatibility)) {
+		Print("[!] InitFPrint failed (%d).", error);
+		return error;
+	}
+
+	return 0;
+}
+
 int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
 	String dmpLocation = writeDump(pointers);
 	MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, TEXT("Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
@@ -311,9 +314,16 @@ int main(int argc, char* argv[]) {
 			hideConsole();
 		}
 
+		initPaths();
+
+		if (DWORD lastError = initOutput()) {
+			goto error;
+		}
+
 		if (startGame()) {
+		error:;
 			showConsole();
-			std::cout << "Press any key to continue . . .";
+			Print("Press any key to continue . . .\n");
 			std::cin.get();
 		}
 	}
