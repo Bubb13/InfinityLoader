@@ -1365,13 +1365,54 @@ DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 	return 0;
 }
 
-DWORD attachToConsole() {
+bool attachedToConsole = false;
+
+DWORD attachToConsole(bool force = false) {
+
+	if (protonCompatibility) {
+		return ERROR_SUCCESS;
+	}
+
+	if (!force && attachedToConsole) {
+		return ERROR_SUCCESS;
+	}
+
 	if (!AttachConsole(parentProcess)) {
 		const DWORD lastError = GetLastError();
 		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("AttachConsole failed (%d)."), lastError);
 		return lastError;
 	}
 	BindCrtHandlesToStdHandles(parentProcess, parentStdIn, parentStdOut, parentStdErr);
+	attachedToConsole = true;
+	return ERROR_SUCCESS;
+}
+
+DWORD detatchFromConsole(bool force = false) {
+
+	if (protonCompatibility) {
+		return ERROR_SUCCESS;
+	}
+
+	if (!force) {
+
+		if (!attachedToConsole) {
+			return ERROR_SUCCESS;
+		}
+
+		bool keepConsoleAttached;
+		if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("KeepConsoleAttached"), false, keepConsoleAttached) == ERROR_SUCCESS
+			&& keepConsoleAttached)
+		{
+			return ERROR_SUCCESS;
+		}
+	}
+
+	if (!FreeConsole()) {
+		const DWORD lastError = GetLastError();
+		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("FreeConsole failed (%d)."), lastError);
+		return lastError;
+	}
+	attachedToConsole = false;
 	return ERROR_SUCCESS;
 }
 
@@ -1382,7 +1423,7 @@ void winMainHook() {
 	}
 
 	// This function runs before the console has been attached, temporarily attach it for error output
-	if (!protonCompatibility && attachToConsole() != ERROR_SUCCESS) {
+	if (attachToConsole() != ERROR_SUCCESS) {
 		return;
 	}
 
@@ -1432,30 +1473,36 @@ void winMainHook() {
 	}
 
 cleanup:;
-	if (!protonCompatibility) {
-		FreeConsole();
-	}
+	detatchFromConsole();
+}
+
+template<typename pointer_type>
+void fillExportedPointer(const String& name, pointer_type& pointer, intptr_t address) {
+	patternEntries.emplace(name, PatternEntry{ name, address });
+	pointer = reinterpret_cast<pointer_type>(address);
+}
+
+template<typename pointer_type>
+void fillExportedPointer(const String& name, pointer_type& pointer, void* address) {
+	fillExportedPointer(name, pointer, reinterpret_cast<intptr_t>(address));
 }
 
 template<typename pointer_type, typename operations_type>
-bool fillPointer(const String& name, pointer_type& pointer, const operations_type& operations) {
+bool fillPatternPointer(const String& name, pointer_type& pointer, const operations_type& operations) {
 
 	intptr_t address;
-
 	if (findINICategoryPattern(textInfo, iniPath, name, address)) {
 		return true;
 	}
 
 	operations(address);
-
-	patternEntries.emplace(name, PatternEntry{ name, address });
-	pointer = reinterpret_cast<pointer_type>(address);
+	fillExportedPointer(name, pointer, address);
 	return false;
 }
 
 template<typename pointer_type>
-bool fillPointer(const String& name, pointer_type& pointer) {
-	return fillPointer(name, pointer, [](intptr_t& address){});
+bool fillPatternPointer(const String& name, pointer_type& pointer) {
+	return fillPatternPointer(name, pointer, [](intptr_t& address){});
 }
 
 template<typename out_type>
@@ -1486,8 +1533,7 @@ DWORD fillLuaPointer(const String& name, pointer_type& pointer, const operations
 		operations(address);
 	}
 
-	patternEntries.emplace(hardcodedName, PatternEntry{ hardcodedName, address });
-	pointer = reinterpret_cast<pointer_type>(address);
+	fillExportedPointer(hardcodedName, pointer, address);
 	return 0;
 }
 
@@ -1496,14 +1542,14 @@ bool fillLuaPointer(const String& name, pointer_type& pointer) {
 	return fillLuaPointer(name, pointer, [](intptr_t& address) {});
 }
 
-void initLua(bool consoleAlreadyAttached = false) {
+void initLua() {
 
 	if (debug) {
 		Print("[?] Debug output 4 (Windows: No, Proton: Yes)...\n");
 	}
 
 	// This function runs before the console has been attached, temporarily attach it for error output
-	if (!consoleAlreadyAttached && !protonCompatibility && attachToConsole() != ERROR_SUCCESS) {
+	if (attachToConsole() != ERROR_SUCCESS) {
 		return;
 	}
 
@@ -1511,12 +1557,12 @@ void initLua(bool consoleAlreadyAttached = false) {
 		Print("[?] Debug output 5 (Windows: Yes, Proton: Yes)...\n");
 	}
 
-#define hardcodedFuncLookup(name, outName) \
-	if (fillPointer(TEXT(name), p_##outName)) { \
+#define fillPatternPointerLookup(name, outName) \
+	if (fillPatternPointer(TEXT(name), p_##outName)) { \
 		goto cleanup; \
 	}
 
-#define hardcodedLuaFuncLookup(name, outName) \
+#define fillLuaPointerLookup(name, outName) \
 	if (fillLuaPointer(TEXT(name), p_##outName)) { \
 		goto cleanup; \
 	}
@@ -1525,36 +1571,33 @@ void initLua(bool consoleAlreadyAttached = false) {
 	// Find Hardcoded Patterns //
 	/////////////////////////////
 
-	hardcodedFuncLookup("Hardcoded_free", free);
-	hardcodedFuncLookup("Hardcoded_malloc", malloc);
-
-	hardcodedLuaFuncLookup("lua_createtable", lua_createtable);
-	hardcodedLuaFuncLookup("lua_getfield", lua_getfield);
-	hardcodedLuaFuncLookup("lua_getglobal", lua_getglobal);
-	hardcodedLuaFuncLookup("lua_gettop", lua_gettop);
-	hardcodedLuaFuncLookup("lua_pcallk", lua_pcallk);
-	hardcodedLuaFuncLookup("lua_pushcclosure", lua_pushcclosure);
-	hardcodedLuaFuncLookup("lua_pushinteger", lua_pushinteger);
-	hardcodedLuaFuncLookup("lua_pushnil", lua_pushnil);
-	hardcodedLuaFuncLookup("lua_pushstring", lua_pushstring);
-	hardcodedLuaFuncLookup("lua_pushvalue", lua_pushvalue);
-	hardcodedLuaFuncLookup("lua_rawgeti", lua_rawgeti);
-	hardcodedLuaFuncLookup("lua_rawset", lua_rawset);
-	hardcodedLuaFuncLookup("lua_rawseti", lua_rawseti);
-	hardcodedLuaFuncLookup("lua_setglobal", lua_setglobal);
-	hardcodedLuaFuncLookup("lua_settop", lua_settop);
-	hardcodedLuaFuncLookup("lua_toboolean", lua_toboolean);
-	hardcodedLuaFuncLookup("lua_tointegerx", lua_tointegerx);
-	hardcodedLuaFuncLookup("lua_tolstring", lua_tolstring);
-	hardcodedLuaFuncLookup("lua_type", lua_type);
-	hardcodedLuaFuncLookup("luaL_error", luaL_error);
-	hardcodedLuaFuncLookup("luaL_loadfilex", luaL_loadfilex);
-	hardcodedLuaFuncLookup("luaL_ref", luaL_ref);
+	fillLuaPointerLookup("lua_createtable", lua_createtable);
+	fillLuaPointerLookup("lua_getfield", lua_getfield);
+	fillLuaPointerLookup("lua_getglobal", lua_getglobal);
+	fillLuaPointerLookup("lua_gettop", lua_gettop);
+	fillLuaPointerLookup("lua_pcallk", lua_pcallk);
+	fillLuaPointerLookup("lua_pushcclosure", lua_pushcclosure);
+	fillLuaPointerLookup("lua_pushinteger", lua_pushinteger);
+	fillLuaPointerLookup("lua_pushnil", lua_pushnil);
+	fillLuaPointerLookup("lua_pushstring", lua_pushstring);
+	fillLuaPointerLookup("lua_pushvalue", lua_pushvalue);
+	fillLuaPointerLookup("lua_rawgeti", lua_rawgeti);
+	fillLuaPointerLookup("lua_rawset", lua_rawset);
+	fillLuaPointerLookup("lua_rawseti", lua_rawseti);
+	fillLuaPointerLookup("lua_setglobal", lua_setglobal);
+	fillLuaPointerLookup("lua_settop", lua_settop);
+	fillLuaPointerLookup("lua_toboolean", lua_toboolean);
+	fillLuaPointerLookup("lua_tointegerx", lua_tointegerx);
+	fillLuaPointerLookup("lua_tolstring", lua_tolstring);
+	fillLuaPointerLookup("lua_type", lua_type);
+	fillLuaPointerLookup("luaL_error", luaL_error);
+	fillLuaPointerLookup("luaL_loadfilex", luaL_loadfilex);
+	fillLuaPointerLookup("luaL_ref", luaL_ref);
 
 	lua_State* L;
 
 	if (luaMode == LuaMode::INTERNAL) {
-		if (fillPointer(TEXT("Hardcoded_InternalLuaState"), L, [](intptr_t& address) {
+		if (fillPatternPointer(TEXT("Hardcoded_InternalLuaState"), L, [](intptr_t& address) {
 			address = *reinterpret_cast<intptr_t*>(address);
 		})) {
 			goto cleanup;
@@ -1576,7 +1619,7 @@ void initLua(bool consoleAlreadyAttached = false) {
 			goto cleanup;
 		}
 
-		L = p_luaL_newstate();
+		fillExportedPointer(TEXT("Hardcoded_InternalLuaState"), L, p_luaL_newstate());
 		p_luaL_openlibs(L);
 	}
 
@@ -1652,22 +1695,31 @@ void initLua(bool consoleAlreadyAttached = false) {
 	// Run Main Lua File //
 	///////////////////////
 
-	callOverrideFile(L, "EEex_Main");
+	if (luaMode == LuaMode::INTERNAL) {
+		fillPatternPointerLookup("Hardcoded_free", free);
+		fillPatternPointerLookup("Hardcoded_malloc", malloc);
+		callOverrideFile(L, "EEex_Main");
+	}
+	else {
+
+		// LuaMode::EXTERNAL calls EEex_Main.lua before __tmainCRTStartup() has
+		// been called to initialize the game's heap. Let EEex_Main.lua use the
+		// DLL's heap for initialization.
+		// 
+		// Note: Memory allocated during initialization should NEVER be freed.
+		// Since free() is swapped out after EEex_Main.lua, attempting to free
+		// memory allocated during initialization results in the wrong heap
+		// being modified.
+
+		fillExportedPointer(TEXT("Hardcoded_free"), p_free, free);
+		fillExportedPointer(TEXT("Hardcoded_malloc"), p_malloc, malloc);
+		callOverrideFile(L, "EEex_Main");
+		fillPatternPointerLookup("Hardcoded_free", free);
+		fillPatternPointerLookup("Hardcoded_malloc", malloc);
+	}
 
 cleanup:;
-	if (!consoleAlreadyAttached && !protonCompatibility) {
-
-		// Fixes output being broken if EEex_Main.lua prompted the engine to call SDL_LogOutput,
-		// usually by calling Lua's print().
-		intptr_t address;
-		if (INISectionExists(iniPath, TEXT("Hardcoded_EngineConsoleAttachedPtr"))
-			&& findINICategoryPattern(textInfo, iniPath, TEXT("Hardcoded_EngineConsoleAttachedPtr"), address) == 0)
-		{
-			*reinterpret_cast<int*>(address) = 0;
-		}
-
-		FreeConsole();
-	}
+	detatchFromConsole();
 }
 
 void writeCallHookProcAfterCall(AssemblyWriter& writer, intptr_t& curAllocatedPtr, intptr_t patchAddress, void* targetProc) {
@@ -1693,7 +1745,7 @@ void writeCallHookProcAfterCall(AssemblyWriter& writer, intptr_t& curAllocatedPt
 	curAllocatedPtr = writer.getLocation();
 }
 
-DWORD writeInternalLuaHook(ImageSectionInfo& textInfo) {
+DWORD setUpLuaInitialization(ImageSectionInfo& textInfo) {
 
 	intptr_t curAllocatedPtr;
 	SYSTEM_INFO info;
@@ -1734,7 +1786,7 @@ DWORD writeInternalLuaHook(ImageSectionInfo& textInfo) {
 		writeCallHookProcAfterCall(writer, curAllocatedPtr, patchAddress, initLua);
 	}
 	else {
-		initLua(true);
+		initLua();
 	}
 
 	return 0;
@@ -1774,7 +1826,7 @@ DWORD patchExe() {
 		return lastError;
 	}
 
-	if (DWORD lastError = writeInternalLuaHook(textInfo)) {
+	if (DWORD lastError = setUpLuaInitialization(textInfo)) {
 		return lastError;
 	}
 
@@ -1789,7 +1841,7 @@ DWORD patchExe() {
 byte initOutput() {
 
 	// This function runs before the console has been attached, temporarily attach it for error output
-	if (!protonCompatibility && attachToConsole() != ERROR_SUCCESS) {
+	if (attachToConsole() != ERROR_SUCCESS) {
 		return 1;
 	}
 
@@ -1874,10 +1926,7 @@ errorLogged:;
 cleanup:;
 
 	__try {
-		if (!protonCompatibility) {
-			// Free the attached console so that the game doesn't inherit it
-			FreeConsole();
-		}
+		detatchFromConsole();
 	}
 	__except (exceptionFilterIgnoreIfSubsequent(GetExceptionCode(), GetExceptionInformation(), exitCode)) {}
 
