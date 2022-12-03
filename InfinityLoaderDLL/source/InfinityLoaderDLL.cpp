@@ -1049,9 +1049,9 @@ int loadLuaBindingsLua(lua_State* L) {
 		return 0;
 	}
 
-	typedef void(__stdcall* type_Init)(void*, std::map<String, PatternEntry>&, ImageSectionInfo&, bool);
+	typedef void(__stdcall* type_Init)(void*, std::map<String, PatternEntry>&, ImageSectionInfo&, bool, bool);
 	type_Init initProc = reinterpret_cast<type_Init>(proc);
-	initProc(L, patternEntries, textInfo, protonCompatibility);
+	initProc(L, patternEntries, textInfo, debug, protonCompatibility);
 
 	return 0;
 }
@@ -1267,51 +1267,10 @@ int writeStringAutoLua(lua_State* L) {
 // Initialization //
 ////////////////////
 
-DWORD parentProcess;
+DWORD parentProcessId;
 HANDLE parentStdIn;
 HANDLE parentStdOut;
 HANDLE parentStdErr;
-
-#define DupHandle(srcProcess,srcHandle,targetProcess,targetHandle)\
-	DuplicateHandle(\
-		srcProcess,\
-		srcHandle,\
-		targetProcess,\
-		&targetHandle,\
-		NULL,\
-		false,\
-		DUPLICATE_SAME_ACCESS\
-	);
-
-void BindCrtHandlesToStdHandles(DWORD parentProcess, HANDLE parentStdIn, HANDLE parentStdOut, HANDLE parentStdErr) {
-
-	HANDLE parentProcessHandle = OpenProcess(PROCESS_DUP_HANDLE, false, parentProcess);
-
-	HANDLE dupStdInHandle = INVALID_HANDLE_VALUE;
-	HANDLE dupStdOutHandle = INVALID_HANDLE_VALUE;
-	HANDLE dupStdErrHandle = INVALID_HANDLE_VALUE;
-
-	if (parentStdIn != INVALID_HANDLE_VALUE) {
-		DupHandle(parentProcessHandle, parentStdIn, GetCurrentProcess(), dupStdInHandle);
-		CloseHandle(GetStdHandle(STD_INPUT_HANDLE));
-		SetStdHandle(STD_INPUT_HANDLE, dupStdInHandle);
-	}
-
-	if (parentStdOut != INVALID_HANDLE_VALUE) {
-		DupHandle(parentProcessHandle, parentStdOut, GetCurrentProcess(), dupStdOutHandle);
-		CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
-		SetStdHandle(STD_OUTPUT_HANDLE, dupStdOutHandle);
-	}
-
-	if (parentStdErr != INVALID_HANDLE_VALUE) {
-		DupHandle(parentProcessHandle, parentStdErr, GetCurrentProcess(), dupStdErrHandle);
-		CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
-		SetStdHandle(STD_ERROR_HANDLE, dupStdErrHandle);
-	}
-
-	ResetCrtHandles(dupStdInHandle, dupStdOutHandle, dupStdErrHandle);
-	CloseHandle(parentProcessHandle);
-}
 
 #undef fprintf
 
@@ -1365,6 +1324,42 @@ DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 	return 0;
 }
 
+void bindToParentOSHandles() {
+
+	// The strategy:
+	// 
+	//   1) AttachConsole(), (which should have been called before this), attaches to the target console
+	//      and sets STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/STD_ERROR_HANDLE to new HANDLEs. However, since
+	//      these handles are newly-created, they do not inherit any of the OS handle redirections of the
+	//      parent process.
+	//
+	//   2) The console must be attached for IO to work, though (duplicates) of the parent handles
+	//      must be used to maintain redirection.
+	//
+	//   3) Calling DuplicateHandle() and SetStdHandle() for every parent handle to make this process
+	//      maintain parent redirection. Note: While this replaces the STD_INPUT_HANDLE/
+	//      STD_OUTPUT_HANDLE/STD_ERROR_HANDLE values set by AttachConsole(), those handles are still
+	//      cached by the crt, and are eventually closed by FreeConsole(). They MUST stay open to
+	//      avoid INVALID_HANDLE_VALUE exceptions on console cleanup. This is why CloseHandle() is
+	//      omitted before replacing STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/STD_ERROR_HANDLE via SetStdHandle().
+
+	HANDLE parentProcessHandle = OpenProcess(PROCESS_DUP_HANDLE, false, parentProcessId);
+	HANDLE currentProcessHandle = GetCurrentProcess();
+	HANDLE duplicatedHandle;
+
+	DuplicateHandle(parentProcessHandle, parentStdIn, currentProcessHandle, &duplicatedHandle, 0, false, DUPLICATE_SAME_ACCESS);
+	SetStdHandle(STD_INPUT_HANDLE, duplicatedHandle);
+
+	DuplicateHandle(parentProcessHandle, parentStdOut, currentProcessHandle, &duplicatedHandle, 0, false, DUPLICATE_SAME_ACCESS);
+	SetStdHandle(STD_OUTPUT_HANDLE, duplicatedHandle);
+
+	DuplicateHandle(parentProcessHandle, parentStdErr, currentProcessHandle, &duplicatedHandle, 0, false, DUPLICATE_SAME_ACCESS);
+	SetStdHandle(STD_ERROR_HANDLE, duplicatedHandle);
+
+	BindCrtStreamsToOSHandles();
+	CloseHandle(parentProcessHandle);
+}
+
 bool attachedToConsole = false;
 
 DWORD attachToConsole(bool force = false) {
@@ -1377,13 +1372,19 @@ DWORD attachToConsole(bool force = false) {
 		return ERROR_SUCCESS;
 	}
 
-	if (!AttachConsole(parentProcess)) {
+	if (!AttachConsole(parentProcessId)) {
 		const DWORD lastError = GetLastError();
 		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("AttachConsole failed (%d)."), lastError);
 		return lastError;
 	}
-	BindCrtHandlesToStdHandles(parentProcess, parentStdIn, parentStdOut, parentStdErr);
+
+	bindToParentOSHandles();
 	attachedToConsole = true;
+
+	if (debug) {
+		Print("[?] attachToConsole(force = %s)\n", force ? "true" : "false");
+	}
+
 	return ERROR_SUCCESS;
 }
 
@@ -1407,11 +1408,47 @@ DWORD detatchFromConsole(bool force = false) {
 		}
 	}
 
+	if (debug) {
+		Print("[?] detatchFromConsole(force = %s)\n", force ? "true" : "false");
+	}
+
 	if (!FreeConsole()) {
 		const DWORD lastError = GetLastError();
 		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("FreeConsole failed (%d)."), lastError);
 		return lastError;
 	}
+
+	// FreeConsole() NtClose()'s all of the cached OS handles, though the duplicated
+	// OS handles in the file descriptors still need to be closed.
+
+	bool keepCrtStreamsAttached;
+	if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("KeepCrtStreamsAttached"), false, keepCrtStreamsAttached) == ERROR_SUCCESS
+		&& !keepCrtStreamsAttached)
+	{
+		NulCrtStreams();
+	}
+
+	// Close the duplicated parent handles so they don't leak, (crt may still hold
+	// a duplicate of the duplicate if KeepCrtStreamsAttached=1, which is fine,
+	// since they will be closed on the next attachToConsole()).
+	// 
+	// Note: KeepCrtStreamsAttached=1 keeps the crt handles valid, while also closing
+	// STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/STD_ERROR_HANDLE. This may cause side effects
+	// if the loader code / child processes expect GetStdHandle() to be valid.
+	//
+	// Note: SetStdHandle()'ing STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/STD_ERROR_HANDLE
+	// prevents the game from inheriting them, which is assumed by the rest of the
+	// loader code. This prevents duplicate output for a non-patched SDL_LogOuput(),
+	// because that function WriteConsole()'s and fprintf()'s, the latter is assumed
+	// to be going to nul.
+
+	CloseHandle(GetStdHandle(STD_INPUT_HANDLE));
+	CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+	CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
+	SetStdHandle(STD_INPUT_HANDLE, INVALID_HANDLE_VALUE);
+	SetStdHandle(STD_OUTPUT_HANDLE, INVALID_HANDLE_VALUE);
+	SetStdHandle(STD_ERROR_HANDLE, INVALID_HANDLE_VALUE);
+
 	attachedToConsole = false;
 	return ERROR_SUCCESS;
 }
@@ -1840,12 +1877,37 @@ DWORD patchExe() {
 
 byte initOutput() {
 
+	intptr_t bPause;
+	if (GetINIIntegerDef<intptr_t>(iniPath, TEXT("General"), TEXT("Pause"), 0, bPause, LogMessageBox)) {
+		return 1;
+	}
+
+	if (bPause) {
+		MessageBox(NULL, TEXT("Pause"), TEXT("InfinityLoaderDLL"), MB_ICONINFORMATION);
+	}
+
+	if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug, LogMessageBox)) {
+		return 1;
+	}
+
+	if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility, LogMessageBox)) {
+		return 1;
+	}
+
 	// This function runs before the console has been attached, temporarily attach it for error output
 	if (attachToConsole() != ERROR_SUCCESS) {
 		return 1;
 	}
 
-	if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug)) {
+	if (protonCompatibility) {
+		if (int error = UnbufferCrtStreams()) {
+			Print("[!] UnbufferCrtStreams failed (%d).\n", error);
+			return 2;
+		}
+	}
+
+	if (int error = InitFPrint(debug, protonCompatibility)) {
+		Print("InitFPrint failed (%d).\n", error);
 		return 2;
 	}
 
@@ -1856,15 +1918,6 @@ byte initOutput() {
 		Print("[?] DLL hStdInput: %d\n", GetStdHandle(STD_INPUT_HANDLE));
 		Print("[?] DLL hStdOutput: %d\n", GetStdHandle(STD_OUTPUT_HANDLE));
 		Print("[?] DLL hStdError: %d\n", GetStdHandle(STD_ERROR_HANDLE));
-	}
-
-	if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility)) {
-		return 2;
-	}
-
-	if (int error = InitFPrint(protonCompatibility)) {
-		Print("InitFPrint failed (%d).\n", error);
-		return 2;
 	}
 
 	return 0;
@@ -1886,13 +1939,13 @@ int exceptionFilterIgnoreIfSubsequent(unsigned int code, _EXCEPTION_POINTERS* po
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-void Init(DWORD argParentProcess, HANDLE argParentStdIn, HANDLE argParentStdOut, HANDLE argParentStdErr) {
+void Init(DWORD argParentProcessId, HANDLE argParentStdIn, HANDLE argParentStdOut, HANDLE argParentStdErr) {
 
 	unsigned int exitCode = 0;
 
 	__try {
 
-		parentProcess = argParentProcess;
+		parentProcessId = argParentProcessId;
 		parentStdIn = argParentStdIn;
 		parentStdOut = argParentStdOut;
 		parentStdErr = argParentStdErr;

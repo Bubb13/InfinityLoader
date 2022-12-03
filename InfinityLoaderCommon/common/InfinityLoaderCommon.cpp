@@ -101,7 +101,7 @@ void FPrint_Console(FILE* file, const char* formatText, ...) {
 #define fprintf error
 #define fprintfT error
 
-int InitFPrint(bool protonCompatibility) {
+int InitFPrint(bool debug, bool protonCompatibility) {
 
 	if (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_CHAR) {
 
@@ -109,31 +109,52 @@ int InitFPrint(bool protonCompatibility) {
 		FPrintT = FPrintT_Console;
 
 		if (errno_t error = fopen_s(&consoleOut, "CONOUT$", "w")) {
+			Print("[!] fopen_s failed (%d).\n", error);
 			return error;
 		}
 
 		if (int error = setvbuf(consoleOut, NULL, _IONBF, 0)) {
+			Print("[!] setvbuf failed (%d).\n", error);
 			return error;
 		}
 
-		if (protonCompatibility) {
-			if (int error = setvbuf(stdin, NULL, _IONBF, 0)) {
-				return error;
-			}
-			if (int error = setvbuf(stdout, NULL, _IONBF, 0)) {
-				return error;
-			}
-			if (int error = setvbuf(stderr, NULL, _IONBF, 0)) {
-				return error;
-			}
+		if (debug) {
+			Print("[?] InitFPrint() - Console\n");
 		}
 	}
 	else {
+
 		FPrint = FPrint_NoConsole;
 		FPrintT = FPrintT_NoConsole;
+
+		if (debug) {
+			Print("[?] InitFPrint() - NoConsole\n");
+		}
 	}
 
 	return 0;
+}
+
+void LogMessageBox(const TCHAR* toLog) {
+	MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, toLog);
+}
+
+void LogPrint(const TCHAR* toLog) {
+	PrintT(toLog);
+	Print("\n");
+}
+
+void LogUsingFuncT(LogFuncT logFunc, const TCHAR* formatText, ...) {
+
+	va_list args;
+	TCHAR buffer[printBufferCount];
+	constexpr DWORD count = _countof(buffer);
+
+	va_start(args, formatText);
+	int bytesWritten = _vsnprintfT_s(buffer, count, _TRUNCATE, formatText, args);
+	va_end(args);
+
+	logFunc(buffer);
 }
 
 /////////////
@@ -166,6 +187,84 @@ void MessageBoxFormatA(StringA caption, UINT uType, StringA formatText, ...) {
 	MessageBoxA(NULL, buffer, caption.c_str(), uType);
 }
 
+int UnbufferCrtStreams() {
+
+	if (int error = setvbuf(stdin, NULL, _IONBF, 0)) {
+		Print("[!] setvbuf failed (%d).\n", error);
+		return error;
+	}
+
+	if (int error = setvbuf(stdout, NULL, _IONBF, 0)) {
+		Print("[!] setvbuf failed (%d).\n", error);
+		return error;
+	}
+
+	if (int error = setvbuf(stderr, NULL, _IONBF, 0)) {
+		Print("[!] setvbuf failed (%d).\n", error);
+		return error;
+	}
+
+	return 0;
+}
+
+void NulCrtStreams() {
+	FILE* dummyFile;
+	freopen_s(&dummyFile, "nul", "r", stdin);
+	setvbuf(stdin, NULL, _IONBF, 0);
+	std::wcin.clear();
+	std::cin.clear();
+	freopen_s(&dummyFile, "nul", "w", stdout);
+	setvbuf(stdout, NULL, _IONBF, 0);
+	std::wcout.clear();
+	std::cout.clear();
+	freopen_s(&dummyFile, "nul", "w", stderr);
+	setvbuf(stderr, NULL, _IONBF, 0);
+	std::wcerr.clear();
+	std::cerr.clear();
+}
+
+void BindCrtStreamsToOSHandles() {
+
+	// The below info has been determined via reversing ucrtbase.dll and KernelBase.dll.
+	//
+	// AttachConsole(): Attaches a console and sets STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, and STD_ERROR_HANDLE
+	//                  (as if through SetStdHandle()). Note: KernelBase.dll caches STD_INPUT_HANDLE,
+	//                  STD_OUTPUT_HANDLE, and STD_ERROR_HANDLE at the time of console initialization,
+	//                  meaning those exact handles MUST stay valid for when the console is eventually cleaned
+	//                  up, else INVALID_HANDLE_VALUE will be thrown on FreeConsole() or equivalent.
+	//
+	// _open_osfhandle(): Creates and assigns a new file descriptor that points to the OS handle.
+	//
+	// _dup2(): _close()'s the dst file descriptor, (which also CloseHandle()'s the dst fd's OS handle), and
+	//          copies the src fd to the dst fd, (including DuplicateHandle()'ing the contained OS handle).
+	//
+	// The strategy:
+	//
+	//   1) _dup2() only works when the dst file descriptor exists. Specifically, invalid FILE* streams return
+	//      -2 when _fileno() is called on them. Calling freopen_s() to ensure stdin/stdout/stderr are
+	//      initialized to valid file descriptors.
+	//
+	//   2) Calling DuplicateHandle() for the current STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/STD_ERROR_HANDLE.
+	//      The OS handle used by _dup2() to initialize stdin/stdout/stderr, (which itself is duplicated
+	//      internally by _dup2()), is closed later as a side effect of _close()'ing the temporarily-allocated
+	//      src file descriptor for _dup2(). Since AttachConsole() caches STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/
+	//      STD_ERROR_HANDLE, the current OS file handle MUST stay open.
+	//
+	//   3) _open_osfhandle() allocates and creates a file descriptor that contains the OS handle we want to
+	//      assign to stdin/stdout/stderr. Since there is no direct way to update a file descriptor to use a
+	//      new OS handle, a new file descriptor has to be created for use with _dup2().
+	//
+	//   4) _dup2() is used to actually assign the OS handle to the dst file descriptor.
+	//
+	//   5) setvbuf() updates the stream's buffering mode to be unbuffered.
+	//
+	//   6) _close() the temporarily-allocated src file descriptor as to not leak objects. Note that this
+	//      also closes the contained OS handle, which is why it had to be duplicated above.
+	//
+	//   7) Clear any error states from the C++ stream objects so they start working with the new file descriptor.
+
+	NulCrtStreams();
+
 #define DupHandle(srcProcess,srcHandle,targetProcess,targetHandle)\
 	DuplicateHandle(\
 		srcProcess,\
@@ -177,59 +276,39 @@ void MessageBoxFormatA(StringA caption, UINT uType, StringA formatText, ...) {
 		DUPLICATE_SAME_ACCESS\
 	);
 
-void ResetCrtHandles(HANDLE stdInHandle, HANDLE stdOutHandle, HANDLE stdErrHandle) {
+	HANDLE handleDuplicate;
 
-	HANDLE myHandle2;
-
+	HANDLE stdInHandle = GetStdHandle(STD_INPUT_HANDLE);
 	if (stdInHandle != INVALID_HANDLE_VALUE) {
-
-		FILE* dummyFile;
-		freopen_s(&dummyFile, "nul", "r", stdin);
-
-		DupHandle(GetCurrentProcess(), stdInHandle, GetCurrentProcess(), myHandle2);
-		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+		DupHandle(GetCurrentProcess(), stdInHandle, GetCurrentProcess(), handleDuplicate);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handleDuplicate), _O_TEXT); fd != -1) {
 			if (_dup2(fd, _fileno(stdin)) == 0) {
 				setvbuf(stdin, NULL, _IONBF, 0);
 			}
 			_close(fd);
 		}
-
-		std::wcin.clear();
-		std::cin.clear();
 	}
 
+	HANDLE stdOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (stdOutHandle != INVALID_HANDLE_VALUE) {
-
-		FILE* dummyFile;
-		freopen_s(&dummyFile, "nul", "w", stdout);
-
-		DupHandle(GetCurrentProcess(), stdOutHandle, GetCurrentProcess(), myHandle2);
-		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+		DupHandle(GetCurrentProcess(), stdOutHandle, GetCurrentProcess(), handleDuplicate);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handleDuplicate), _O_TEXT); fd != -1) {
 			if (_dup2(fd, _fileno(stdout)) == 0) {
 				setvbuf(stdout, NULL, _IONBF, 0);
 			}
 			_close(fd);
 		}
-
-		std::wcout.clear();
-		std::cout.clear();
 	}
 
+	HANDLE stdErrHandle = GetStdHandle(STD_ERROR_HANDLE);
 	if (stdErrHandle != INVALID_HANDLE_VALUE) {
-
-		FILE* dummyFile;
-		freopen_s(&dummyFile, "nul", "w", stderr);
-
-		DupHandle(GetCurrentProcess(), stdErrHandle, GetCurrentProcess(), myHandle2);
-		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(myHandle2), _O_TEXT); fd != -1) {
+		DupHandle(GetCurrentProcess(), stdErrHandle, GetCurrentProcess(), handleDuplicate);
+		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handleDuplicate), _O_TEXT); fd != -1) {
 			if (_dup2(fd, _fileno(stderr)) == 0) {
 				setvbuf(stderr, NULL, _IONBF, 0);
 			}
 			_close(fd);
 		}
-
-		std::wcerr.clear();
-		std::cerr.clear();
 	}
 }
 
@@ -357,7 +436,7 @@ DWORD GetINIString(const String& iniPath, const TCHAR* section, const TCHAR* key
 		outStr = buffer;
 		filled = true;
 	}
-	
+
 	return 0;
 }
 
@@ -416,8 +495,9 @@ bool decimalStrToInteger(const String decimalStr, IntegerType& accumulator) {
 }
 
 template<typename IntegerType>
-DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType& outInteger, bool& filled) {
-
+DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key,
+	IntegerType& outInteger, bool& filled, LogFuncT logFunc)
+{
 	filled = false;
 
 	TCHAR buffer[1024];
@@ -427,13 +507,13 @@ DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, Inte
 		buffer, bufferSize, iniPath.c_str());
 
 	if (DWORD lastError = GetLastError(); lastError != ERROR_SUCCESS && lastError != ERROR_FILE_NOT_FOUND) {
-		Print("[!] GetPrivateProfileString failed (%d).\n", lastError);
+		LogUsingFuncT(logFunc, TEXT("[!] GetPrivateProfileString failed (%d)."), lastError);
 		return lastError;
 	}
 
 	if (numRead > 0) {
 		if (!decimalStrToInteger(buffer, outInteger)) {
-			PrintT(TEXT("[!] Invalid decimal for [%s].%s: \"%s\".\n"), section, key, buffer);
+			LogUsingFuncT(logFunc, TEXT("[!] Invalid decimal for [%s].%s: \"%s\"."), section, key, buffer);
 			return -1;
 		}
 		filled = true;
@@ -443,13 +523,25 @@ DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, Inte
 }
 
 template<typename IntegerType>
-DWORD GetINIIntegerDef(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType def, IntegerType& outInteger) {
+DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType& outInteger, bool& filled) {
+	return GetINIInteger<IntegerType>(iniPath, section, key, outInteger, filled, LogPrint);
+}
+
+template<typename IntegerType>
+DWORD GetINIIntegerDef(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType def, IntegerType& outInteger,
+	LogFuncT errorFunc)
+{
 	bool filled;
-	DWORD error = GetINIInteger(iniPath, section, key, outInteger, filled);
+	DWORD error = GetINIInteger(iniPath, section, key, outInteger, filled, errorFunc);
 	if (!filled) {
 		outInteger = def;
 	}
 	return error;
+}
+
+template<typename IntegerType>
+DWORD GetINIIntegerDef(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType def, IntegerType& outInteger) {
+	return GetINIIntegerDef(iniPath, section, key, def, outInteger, LogPrint);
 }
 
 DWORD SetINIString(String iniPath, const TCHAR* section, const TCHAR* key, intptr_t def, String toSet) {

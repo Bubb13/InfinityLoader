@@ -195,12 +195,9 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	return 0;
 }*/
 
-DWORD startGame() {
+bool debug;
 
-	bool debug;
-	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug)) {
-		return lastError;
-	}
+DWORD startGame() {
 
 	String exePath;
 	if (DWORD lastError = getExePath(exePath)) {
@@ -235,7 +232,7 @@ DWORD startGame() {
 	}
 
 	if (bPause) {
-		MessageBox(NULL, TEXT("Pause"), TEXT("Infinity Loader"), MB_ICONINFORMATION);
+		MessageBox(NULL, TEXT("Pause"), TEXT("InfinityLoader"), MB_ICONINFORMATION);
 	}
 
 	if (lastError = patchMainThread(processInfo.hProcess, processInfo.hThread)) {
@@ -287,13 +284,22 @@ errorFinally:;
 
 DWORD initOutput() {
 
+	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug)) {
+		return lastError;
+	}
+
 	bool protonCompatibility;
 	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility)) {
 		return lastError;
 	}
 
-	if (int error = InitFPrint(protonCompatibility)) {
-		Print("[!] InitFPrint failed (%d).", error);
+	if (int error = UnbufferCrtStreams()) {
+		Print("[!] UnbufferCrtStreams failed (%d).\n", error);
+		return error;
+	}
+
+	if (int error = InitFPrint(debug, protonCompatibility)) {
+		Print("[!] InitFPrint failed (%d).\n", error);
 		return error;
 	}
 

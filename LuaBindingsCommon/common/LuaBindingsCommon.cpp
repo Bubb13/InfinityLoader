@@ -129,9 +129,12 @@ constexpr void* GetMemberPtr(T func) {
     return reinterpret_cast<void*&>(func);
 }
 
-void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo, bool protonCompatibility) {
+void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo, bool debug, bool protonCompatibility) {
 
-    InitFPrint(protonCompatibility);
+    if (int error = InitFPrint(debug, protonCompatibility)) {
+        Print("[!] InitFPrint failed (%d).", error);
+        return;
+    }
 
 #define setLuaPointer(patternName, pointerGlobal) \
     if (auto itr = patterns.find(TEXT(patternName)); itr != patterns.end()) { \

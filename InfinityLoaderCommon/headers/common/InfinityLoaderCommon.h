@@ -68,7 +68,12 @@ extern type_FPrint FPrint;
 typedef void(*type_FPrintT)(FILE* file, const TCHAR* formatText, ...);
 extern type_FPrintT FPrintT;
 
-extern int InitFPrint(bool protonCompatibility);
+extern int InitFPrint(bool debug, bool protonCompatibility);
+
+typedef void (LogFuncT)(const TCHAR* toLog);
+
+extern void LogMessageBox(const TCHAR* toLog);
+extern void LogPrint(const TCHAR* toLog);
 
 /////////////
 // Utility //
@@ -76,7 +81,9 @@ extern int InitFPrint(bool protonCompatibility);
 
 extern void MessageBoxFormat(String caption, UINT uType, String formatText, ...);
 extern void MessageBoxFormatA(StringA caption, UINT uType, StringA formatText, ...);
-extern void ResetCrtHandles(HANDLE stdInHandle, HANDLE stdOutHandle, HANDLE stdErrHandle);
+extern int UnbufferCrtStreams();
+extern void NulCrtStreams();
+extern void BindCrtStreamsToOSHandles();
 
 //////////////////
 // INI Handling //
@@ -125,6 +132,10 @@ extern DWORD GetINIInteger(String iniPath, const TCHAR* section, const TCHAR* ke
 
 template<typename IntegerType>
 extern DWORD GetINIIntegerDef(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType def, IntegerType& outInteger);
+
+template<typename IntegerType>
+extern DWORD GetINIIntegerDef(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType def, IntegerType& outInteger,
+	LogFuncT errorFunc);
 
 template<typename IntegerType>
 extern DWORD SetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType toSet);
