@@ -316,6 +316,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CVidCell*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CVidCell*>, CObject>()},
 	}},
+	{"CTypedPtrList<CPtrList,CProjectile*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CProjectile*>, CObject>()},
+	}},
 	{"CTypedPtrArray<CPtrArray,CRes*>", {
 		{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CRes*>, CObject>()},
 	}},
@@ -731,6 +734,162 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CProjectile::vtbl", {
 		{"CGameObject::vtbl", offsetofbase<CProjectile::vtbl, CGameObject::vtbl>()},
+	}},
+	{"CProjectileTravelDoor", {
+		{"CProjectile", offsetofbase<CProjectileTravelDoor, CProjectile>()},
+	}},
+	{"CProjectileTravelDoor::vtbl", {
+		{"CProjectile::vtbl", offsetofbase<CProjectileTravelDoor::vtbl, CProjectile::vtbl>()},
+	}},
+	{"CProjectileSpellHit", {
+		{"CProjectile", offsetofbase<CProjectileSpellHit, CProjectile>()},
+	}},
+	{"CProjectileSpellHit::vtbl", {
+		{"CProjectile::vtbl", offsetofbase<CProjectileSpellHit::vtbl, CProjectile::vtbl>()},
+	}},
+	{"CProjectileAmbiant", {
+		{"CProjectileSpellHit", offsetofbase<CProjectileAmbiant, CProjectileSpellHit>()},
+	}},
+	{"CProjectileAmbiant::vtbl", {
+		{"CProjectileSpellHit::vtbl", offsetofbase<CProjectileAmbiant::vtbl, CProjectileSpellHit::vtbl>()},
+	}},
+	{"CProjectileSkyStrike", {
+		{"CProjectile", offsetofbase<CProjectileSkyStrike, CProjectile>()},
+	}},
+	{"CProjectileSkyStrike::vtbl", {
+		{"CProjectile::vtbl", offsetofbase<CProjectileSkyStrike::vtbl, CProjectile::vtbl>()},
+	}},
+	{"CProjectileInstant", {
+		{"CProjectile", offsetofbase<CProjectileInstant, CProjectile>()},
+	}},
+	{"CProjectileInstant::vtbl", {
+		{"CProjectile::vtbl", offsetofbase<CProjectileInstant::vtbl, CProjectile::vtbl>()},
+	}},
+	{"CProjectileCallLightning", {
+		{"CProjectileInstant", offsetofbase<CProjectileCallLightning, CProjectileInstant>()},
+	}},
+	{"CProjectileCallLightning::vtbl", {
+		{"CProjectileInstant::vtbl", offsetofbase<CProjectileCallLightning::vtbl, CProjectileInstant::vtbl>()},
+	}},
+	{"CProjectileCastingGlow", {
+		{"CProjectile", offsetofbase<CProjectileCastingGlow, CProjectile>()},
+	}},
+	{"CProjectileCastingGlow::vtbl", {
+		{"CProjectile::vtbl", offsetofbase<CProjectileCastingGlow::vtbl, CProjectile::vtbl>()},
+	}},
+	{"CProjectileBAM", {
+		{"CProjectile", offsetofbase<CProjectileBAM, CProjectile>()},
+	}},
+	{"CProjectileBAM::vtbl", {
+		{"CProjectile::vtbl", offsetofbase<CProjectileBAM::vtbl, CProjectile::vtbl>()},
+	}},
+	{"CProjectileArea", {
+		{"CProjectileBAM", offsetofbase<CProjectileArea, CProjectileBAM>()},
+	}},
+	{"CProjectileArea::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileArea::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileSkyStrikeBAM", {
+		{"CProjectileBAM", offsetofbase<CProjectileSkyStrikeBAM, CProjectileBAM>()},
+	}},
+	{"CProjectileSkyStrikeBAM::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileSkyStrikeBAM::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileSegment", {
+		{"CProjectileBAM", offsetofbase<CProjectileSegment, CProjectileBAM>()},
+	}},
+	{"CProjectileSegment::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileSegment::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileScorcher", {
+		{"CProjectileBAM", offsetofbase<CProjectileScorcher, CProjectileBAM>()},
+	}},
+	{"CProjectileScorcher::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileScorcher::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileNewScorcher", {
+		{"CProjectileBAM", offsetofbase<CProjectileNewScorcher, CProjectileBAM>()},
+	}},
+	{"CProjectileNewScorcher::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileNewScorcher::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileMushroom", {
+		{"CProjectileBAM", offsetofbase<CProjectileMushroom, CProjectileBAM>()},
+	}},
+	{"CProjectileMushroom::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileMushroom::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileMulti", {
+		{"CProjectileBAM", offsetofbase<CProjectileMulti, CProjectileBAM>()},
+	}},
+	{"CProjectileMulti::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileMulti::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileMagicMissileMulti", {
+		{"CProjectileMulti", offsetofbase<CProjectileMagicMissileMulti, CProjectileMulti>()},
+	}},
+	{"CProjectileMagicMissileMulti::vtbl", {
+		{"CProjectileMulti::vtbl", offsetofbase<CProjectileMagicMissileMulti::vtbl, CProjectileMulti::vtbl>()},
+	}},
+	{"CProjectileLightningBounce", {
+		{"CProjectileBAM", offsetofbase<CProjectileLightningBounce, CProjectileBAM>()},
+	}},
+	{"CProjectileLightningBounce::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileLightningBounce::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileLightningBoltGround", {
+		{"CProjectileBAM", offsetofbase<CProjectileLightningBoltGround, CProjectileBAM>()},
+	}},
+	{"CProjectileLightningBoltGround::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileLightningBoltGround::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileLightningBolt", {
+		{"CProjectileBAM", offsetofbase<CProjectileLightningBolt, CProjectileBAM>()},
+	}},
+	{"CProjectileLightningBolt::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileLightningBolt::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileInvisibleTravelling", {
+		{"CProjectileBAM", offsetofbase<CProjectileInvisibleTravelling, CProjectileBAM>()},
+	}},
+	{"CProjectileInvisibleTravelling::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileInvisibleTravelling::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileFireHands", {
+		{"CProjectileBAM", offsetofbase<CProjectileFireHands, CProjectileBAM>()},
+	}},
+	{"CProjectileFireHands::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileFireHands::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileFall", {
+		{"CProjectileBAM", offsetofbase<CProjectileFall, CProjectileBAM>()},
+	}},
+	{"CProjectileFall::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileFall::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileConeOfCold", {
+		{"CProjectileBAM", offsetofbase<CProjectileConeOfCold, CProjectileBAM>()},
+	}},
+	{"CProjectileConeOfCold::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileConeOfCold::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileColorSpray", {
+		{"CProjectileBAM", offsetofbase<CProjectileColorSpray, CProjectileBAM>()},
+	}},
+	{"CProjectileColorSpray::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileColorSpray::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileChain", {
+		{"CProjectileBAM", offsetofbase<CProjectileChain, CProjectileBAM>()},
+	}},
+	{"CProjectileChain::vtbl", {
+		{"CProjectileBAM::vtbl", offsetofbase<CProjectileChain::vtbl, CProjectileBAM::vtbl>()},
+	}},
+	{"CProjectileLightningStorm", {
+		{"CProjectileChain", offsetofbase<CProjectileLightningStorm, CProjectileChain>()},
+	}},
+	{"CProjectileLightningStorm::vtbl", {
+		{"CProjectileChain::vtbl", offsetofbase<CProjectileLightningStorm::vtbl, CProjectileChain::vtbl>()},
 	}},
 	{"CObjectMarker", {
 		{"CGameObject", offsetofbase<CObjectMarker, CGameObject>()},

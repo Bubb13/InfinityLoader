@@ -778,6 +778,11 @@ struct CGameEffect : CGameEffectBase
 	static CGameEffect* DecodeEffect(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
 };
 
+struct CProjectile : CGameObject
+{
+	static CProjectile* DecodeProjectile(ushort wProjectileType, CGameAIBase* pAIBase, uint nUnknown);
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////

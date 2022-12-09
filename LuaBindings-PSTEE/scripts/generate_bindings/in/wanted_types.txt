@@ -9,6 +9,8 @@ CProjectileUnknownBase
 CProjectileUnknownPST
 CGameEffectBase
 CGameObject
+CTypedPtrList<CPtrList,CGameEffect*>_CNode
+CPlanescape
 CString
 CMessage
 CAITrigger
@@ -21,6 +23,7 @@ CAreaVariable
 CPtrList_CNode
 CVariable
 CTypedPtrList<CPtrList,int>_CNode
+CTypedPtrList<CPtrList,CGameEffect*>
 CTimerWorld
 CInfGame
 CVideo
@@ -36,8 +39,10 @@ CProjectileUnknownPST2
 CAreaTintOverride
 CRect
 CMessageSetTrigger
+DrawFeature
 CAIObjectType
 CGameAnimationType
+CMessageAddEffect
 CVidCell
 CGameArea
 CVidMode

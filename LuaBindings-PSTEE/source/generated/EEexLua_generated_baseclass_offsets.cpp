@@ -7,20 +7,26 @@ constexpr uintptr_t offsetofbase() {
 }
 
 std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> baseclassOffsets {
-	{"CGameEffectList", {
-		{"CPtrList", offsetofbase<CGameEffectList, CPtrList>()},
-	}},
 	{"CMessageVisualEffect", {
 		{"CMessage", offsetofbase<CMessageVisualEffect, CMessage>()},
 	}},
+	{"CMessageAddEffect", {
+		{"CMessage", offsetofbase<CMessageAddEffect, CMessage>()},
+	}},
 	{"CTypedPtrList<CPtrList,long>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,long>, CObject>()},
+	}},
+	{"CTypedPtrList<CPtrList,CGameEffect*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameEffect*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,int*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,int*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,int>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,int>, CObject>()},
+	}},
+	{"CGameEffectList", {
+		{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CGameEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
 	}},
 	{"CGameEffect", {
 		{"CGameEffectBase", offsetofbase<CGameEffect, CGameEffectBase>()},

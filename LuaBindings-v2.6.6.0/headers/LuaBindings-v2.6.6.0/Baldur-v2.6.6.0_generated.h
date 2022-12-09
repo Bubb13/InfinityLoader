@@ -12485,6 +12485,445 @@ struct CProjectile : CGameObject
 	}
 };
 
+struct CProjectileTravelDoor : CProjectile
+{
+	struct vtbl : CProjectile::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CVidCell m_animation;
+	CVidBitmap m_newPalette;
+	unsigned int m_dwRenderFlags;
+	unsigned __int8 m_bNewPalette;
+	unsigned __int8 m_transparency;
+	CString m_animationStr;
+	unsigned __int8 m_nState;
+
+	CProjectileTravelDoor() = delete;
+};
+
+struct CProjectileSpellHit : CProjectile
+{
+	struct vtbl : CProjectile::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CVidCell m_animation;
+	CVidBitmap m_newPalette;
+	unsigned int m_dwRenderFlags;
+	unsigned __int8 m_bNewPalette;
+	unsigned __int8 m_transparency;
+
+	CProjectileSpellHit() = delete;
+};
+
+struct CProjectileAmbiant : CProjectileSpellHit
+{
+	struct vtbl : CProjectileSpellHit::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CProjectileAmbiant() = delete;
+};
+
+struct CProjectileSkyStrike : CProjectile
+{
+	struct vtbl : CProjectile::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CVidCell m_animation;
+	CVidPalette m_palette;
+	int m_bGlow;
+	unsigned __int16 m_duration;
+
+	CProjectileSkyStrike() = delete;
+};
+
+struct CProjectileInstant : CProjectile
+{
+	struct vtbl : CProjectile::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CProjectileInstant() = delete;
+};
+
+struct CProjectileCallLightning : CProjectileInstant
+{
+	struct vtbl : CProjectileInstant::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CProjectileCallLightning() = delete;
+};
+
+struct CProjectileCastingGlow : CProjectile
+{
+	struct vtbl : CProjectile::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CVidCell m_animation;
+	CVidBitmap m_newPalette;
+	unsigned int m_dwRenderFlags;
+	unsigned __int8 m_bNewPalette;
+	unsigned __int8 m_transparency;
+	unsigned __int8 m_duration;
+	unsigned __int8 m_delay;
+
+	CProjectileCastingGlow() = delete;
+};
+
+struct CProjectileBAM : CProjectile
+{
+	struct vtbl : CProjectile::vtbl
+	{
+		void (__fastcall *Move)(CProjectileBAM*, CPoint);
+
+		vtbl() = delete;
+	};
+
+	CVidCell* m_currentVidCell;
+	CVidCell* m_shadowVidCell;
+	CVidPalette m_palette;
+	int m_tint;
+	int m_height;
+	int m_glow;
+	CSize m_glowSize;
+	__int16 m_glowIntensity;
+	int m_shadow;
+	__int16 m_numDirections;
+	__int16 m_direction;
+	__int16 m_newDirection;
+	int m_render;
+	CVidBitmap m_newPalette;
+	unsigned __int8 m_bNewPalette;
+	unsigned __int8 m_bDuration;
+	int m_bSmoke;
+	unsigned __int8 m_smokePeriod;
+	Array<unsigned __int8,7> m_smokeColorRange;
+	unsigned __int8 m_smokeCount;
+	unsigned __int16 m_smokeAnimationCode;
+	CResRef m_cPuffEffect1;
+	CResRef m_cPuffEffect2;
+	CResRef m_cPuffEffect3;
+	unsigned __int16 m_nPuff1Spacing;
+	unsigned __int16 m_nPuff2Spacing;
+	unsigned __int16 m_nPuff3Spacing;
+	unsigned int m_dwPuffFlags;
+	int m_puffCounter;
+	CList<long,long> m_lstTargets;
+
+	CProjectileBAM() = delete;
+
+	virtual void virtual_Move(CPoint _0)
+	{
+	}
+};
+
+struct CProjectileArea : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_resref;
+	__int16 m_explosionRange;
+	__int16 m_triggerRange;
+	unsigned __int16 m_secondaryProjectile;
+	__int16 m_nRepetitionCount;
+	int m_bReachedDestination;
+	__int16 m_nDelay;
+	__int16 m_nDelayCount;
+	int m_bDetonateOnlyIfTargets;
+	CAIObjectType m_targetType;
+	unsigned __int8 m_fireBallType;
+	int m_bSparkleExplosion;
+	unsigned __int16 m_sparkleExplosionProjectile;
+	int m_bDelayedTrigger;
+	int m_bChunksExplosion;
+	int m_checkForNonSprites;
+	int m_centerBam;
+	unsigned __int16 m_explodeId;
+	CResRef m_explosionSound;
+	unsigned __int8 m_ringColor;
+	int m_bVVCAtCenter;
+	CResRef m_centerVVC;
+	int m_bConeFromCaster;
+	unsigned __int16 m_coneSize;
+	int m_bIgnoreLOS;
+	char m_portraitNum;
+	int m_bResolvePortraitNum;
+	int m_centerBamWait;
+	int m_forceInitialWait;
+	int m_oneTargetOnly;
+	unsigned int m_targetCount;
+	unsigned int m_hpLimit;
+	unsigned int m_animationID;
+	unsigned int m_animationIDStatic;
+	CResRef m_fireBallSound;
+	CResRef m_fireBallArea;
+	CResRef m_fireBallRing;
+	unsigned int m_fireBallFlags;
+	unsigned __int16 m_granularity;
+	unsigned __int16 m_granDivider;
+	unsigned __int16 m_childCount;
+	int m_bPointsInited;
+	Array<CPoint,4> m_points;
+	CPoint m_initialVector;
+	unsigned __int16 m_startingAngle;
+
+	CProjectileArea() = delete;
+};
+
+struct CProjectileSkyStrikeBAM : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CProjectileSkyStrikeBAM() = delete;
+};
+
+struct CProjectileSegment : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		void (__fastcall *Fire_2)(CProjectileSegment*, CGameArea*, const CPoint*, int);
+
+		vtbl() = delete;
+	};
+
+	__int16 m_counter;
+
+	CProjectileSegment() = delete;
+
+	virtual void virtual_Fire_2(CGameArea* _0, const CPoint* _1, int _2)
+	{
+	}
+};
+
+struct CProjectileScorcher : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_lifeSpan;
+	unsigned __int8 m_nSegments;
+	int m_deltaZ;
+	unsigned __int8 m_bGlow;
+
+	CProjectileScorcher() = delete;
+};
+
+struct CProjectileNewScorcher : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		void (__fastcall *ApplyEffectsToArea)(CProjectileNewScorcher*);
+		void (__fastcall *ApplyEffectsToTarget)(CProjectileNewScorcher*, int*, bool);
+
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_nSegments;
+	int m_deltaZ;
+	Array<int,64> itsAffectedCreatures;
+	int itsNumAffectedCreatures;
+	int itsAIUpdateCounter;
+	int itsApplyEffectsInterval;
+	int itsClearAffectedCreaturesInterval;
+	int itsTargetID;
+
+	CProjectileNewScorcher() = delete;
+
+	virtual void virtual_ApplyEffectsToArea()
+	{
+	}
+
+	virtual void virtual_ApplyEffectsToTarget(int* _0, bool _1)
+	{
+	}
+};
+
+struct CProjectileMushroom : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		void (__fastcall *Fire_2)(CProjectileMushroom*, CGameArea*, CPoint);
+
+		vtbl() = delete;
+	};
+
+	CProjectileMushroom() = delete;
+
+	virtual void virtual_Fire_2(CGameArea* _0, CPoint _1)
+	{
+	}
+};
+
+struct CProjectileMulti : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CTypedPtrList<CPtrList,CProjectile*> m_projectiles;
+
+	CProjectileMulti() = delete;
+};
+
+struct CProjectileMagicMissileMulti : CProjectileMulti
+{
+	struct vtbl : CProjectileMulti::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CProjectileMagicMissileMulti() = delete;
+};
+
+struct CProjectileLightningBounce : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_lifeSpan;
+
+	CProjectileLightningBounce() = delete;
+};
+
+struct CProjectileLightningBoltGround : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_maxBounces;
+
+	CProjectileLightningBoltGround() = delete;
+};
+
+struct CProjectileLightningBolt : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CProjectileLightningBolt() = delete;
+};
+
+struct CProjectileInvisibleTravelling : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CProjectileInvisibleTravelling() = delete;
+};
+
+struct CProjectileFireHands : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_counter;
+
+	CProjectileFireHands() = delete;
+};
+
+struct CProjectileFall : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_sideMove;
+	int m_nSideSpeed;
+	int m_bAreaEffect;
+	__int16 m_nAreaRange;
+	CAIObjectType m_targetType;
+
+	CProjectileFall() = delete;
+};
+
+struct CProjectileConeOfCold : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_counter;
+
+	CProjectileConeOfCold() = delete;
+};
+
+struct CProjectileColorSpray : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_counter;
+
+	CProjectileColorSpray() = delete;
+};
+
+struct CProjectileChain : CProjectileBAM
+{
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_numProjectile;
+	__int16 m_nDelay;
+	int m_bOriginCaster;
+	unsigned __int16 m_secondaryProjectileType;
+	CProjectile* m_carrierProjectile;
+	int m_carrierArrived;
+	CAIObjectType m_targetType;
+	int m_nHeight;
+	__int16 m_nType;
+	int m_bUseLineOfSight;
+	__int16 m_nDelayCount;
+
+	CProjectileChain() = delete;
+};
+
+struct CProjectileLightningStorm : CProjectileChain
+{
+	struct vtbl : CProjectileChain::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CProjectileLightningStorm() = delete;
+};
+
 struct CObjectMarker : CGameObject
 {
 	struct vtbl : CGameObject::vtbl
