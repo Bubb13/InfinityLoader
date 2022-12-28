@@ -97,6 +97,7 @@ struct CResRef;
 struct CResTileSet;
 struct CSavedGamePartyCreature;
 struct CScreenStore;
+struct CScreenWorld;
 struct CSearchBitmap;
 struct CSelectiveBonus;
 struct CSelectiveWeaponType;
@@ -9362,6 +9363,14 @@ struct CScreenWorld : CBaldurEngine
 	int m_nStoredGroupMembers;
 
 	CScreenWorld() = delete;
+
+	typedef int (__thiscall *type_TogglePauseGame)(CScreenWorld* pThis, byte visualPause, byte bSendMessage, int idPlayerPause, byte bLogPause, byte bRequireHostUnpause);
+	static type_TogglePauseGame p_TogglePauseGame;
+
+	int TogglePauseGame(byte visualPause, byte bSendMessage, int idPlayerPause, byte bLogPause, byte bRequireHostUnpause)
+	{
+		return p_TogglePauseGame(this, visualPause, bSendMessage, idPlayerPause, bLogPause, bRequireHostUnpause);
+	}
 };
 
 struct CProgressBar

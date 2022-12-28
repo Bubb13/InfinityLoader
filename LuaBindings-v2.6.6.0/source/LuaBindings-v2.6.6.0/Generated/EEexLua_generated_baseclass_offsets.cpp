@@ -214,6 +214,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrList<CPtrList,CMessage*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMessage*>, CObject>()},
 	}},
+	{"CTypedPtrList<CPtrList,CDeathSound*>", {
+		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CDeathSound*>, CObject>()},
+	}},
 	{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>, CObject>()},
 	}},
@@ -291,9 +294,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CTypedPtrList<CPtrList,EEex_CGameOptions*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameOptions*>, CObject>()},
-	}},
-	{"CTypedPtrList<CPtrList,CDeathSound*>", {
-		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CDeathSound*>, CObject>()},
 	}},
 	{"CTypedPtrList<CPtrList,CString*>", {
 		{"CObject", offsetofbase<CTypedPtrList<CPtrList,CString*>, CObject>()},

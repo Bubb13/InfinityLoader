@@ -62,6 +62,7 @@ CSearchBitmap::type_GetCost CSearchBitmap::p_GetCost;
 ushort* CVidMode::p_SCREENWIDTH;
 ushort* CVidMode::p_SCREENHEIGHT;
 CSpell::type_Construct CSpell::p_Construct;
+CScreenWorld::type_TogglePauseGame CScreenWorld::p_TogglePauseGame;
 CChitin::type_OnResizeWindow CChitin::p_OnResizeWindow;
 CInfButtonArray::type_SetState CInfButtonArray::p_SetState;
 CInfButtonArray::type_SetQuickSlot CInfButtonArray::p_SetQuickSlot;
@@ -165,6 +166,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CVidMode::SCREENWIDTH"), reinterpret_cast<void**>(&CVidMode::p_SCREENWIDTH)},
 	std::pair{TEXT("CVidMode::SCREENHEIGHT"), reinterpret_cast<void**>(&CVidMode::p_SCREENHEIGHT)},
 	std::pair{TEXT("CSpell::Construct"), reinterpret_cast<void**>(&CSpell::p_Construct)},
+	std::pair{TEXT("CScreenWorld::TogglePauseGame"), reinterpret_cast<void**>(&CScreenWorld::p_TogglePauseGame)},
 	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&CChitin::p_OnResizeWindow)},
 	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&CInfButtonArray::p_SetState)},
 	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&CInfButtonArray::p_SetQuickSlot)},

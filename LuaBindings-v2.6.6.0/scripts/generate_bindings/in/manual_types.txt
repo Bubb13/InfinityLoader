@@ -969,6 +969,11 @@ struct CMessageHandler
 	short AddMessage(CMessage* message, int bForcePassThrough);
 };
 
+struct CScreenWorld : CBaldurEngine
+{
+	int TogglePauseGame(byte visualPause, byte bSendMessage, int idPlayerPause, byte bLogPause, byte bRequireHostUnpause);
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////
