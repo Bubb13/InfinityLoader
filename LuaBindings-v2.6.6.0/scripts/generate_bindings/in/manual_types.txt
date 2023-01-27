@@ -783,6 +783,7 @@ struct CGameObjectArray
 
 struct CGameAIBase : CGameObject
 {
+	void ApplyEffectToParty(CGameEffect* effect);
 	CGameObject* GetTargetShare();
 };
 
@@ -800,6 +801,12 @@ struct CGameSprite : CGameAIBase
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
 	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption);
 	void UpdateTarget(CGameObject* target);
+};
+
+struct CProjectile : CGameObject
+{
+	void AddEffect(CGameEffect* effect);
+	void ClearEffects();
 };
 
 struct CRes
@@ -854,6 +861,7 @@ struct CGameArea
 	int CheckLOS(const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
 	void GetAllInRange1(const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
 	void GetAllInRange2(__POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+	void ApplyEffect(CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore);
 };
 
 struct CAIGroup
@@ -964,6 +972,21 @@ struct CMessageSetDirection : CMessage
 	}
 };
 
+struct CMessageAddEffect : CMessage
+{
+	nobinding nopointer static void* VFTable;
+
+	$constructor_fake Construct(CGameEffect* effect, bool noSave, short commType, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_effect = effect;
+		m_noSave = noSave;
+		m_CommType = commType;
+	}
+};
+
 struct CMessageHandler
 {
 	short AddMessage(CMessage* message, int bForcePassThrough);
@@ -1024,4 +1047,6 @@ enum EEex_MatchObjectFlags : __int32
 namespace EEex
 {
 	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+	$external_implementation $pass_lua_state $nobinding void DestroyUDAux(void* ptr);
+	$external_implementation $pass_lua_state $nobinding void CopyUDAux(void* sourcePtr, void* targetPtr);
 };

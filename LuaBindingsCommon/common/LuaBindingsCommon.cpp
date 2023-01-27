@@ -129,8 +129,9 @@ constexpr void* GetMemberPtr(T func) {
     return reinterpret_cast<void*&>(func);
 }
 
-void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo, bool debug, bool protonCompatibility) {
-
+void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo, bool debug,
+    bool protonCompatibility, std::function<void()> specificBindingsCallback)
+{
     if (int error = InitFPrint(debug, protonCompatibility)) {
         Print("[!] InitFPrint failed (%d).", error);
         return;
@@ -261,6 +262,10 @@ void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& pattern
     addPattern(patterns, "override_module_newindex_event", p_module_newindex_event);
     addPattern(patterns, "override_tolua_cclass", tolua_cclass_translate);
     addPattern(patterns, "override_tolua_open", p_tolua_open);
+
+    if (specificBindingsCallback != nullptr) {
+        specificBindingsCallback();
+    }
 
     // The Lua environment needs to grab the pattern map and execute any
     // patches relating to tolua before the Lua bindings are exported

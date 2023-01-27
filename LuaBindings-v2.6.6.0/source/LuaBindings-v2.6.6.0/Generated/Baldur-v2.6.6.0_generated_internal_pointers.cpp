@@ -17,6 +17,7 @@ CObList::type_RemoveAt CObList::p_RemoveAt;
 CObList::type_Destruct CObList::p_Destruct;
 CObList::type_AddTail CObList::p_AddTail;
 void* CMessageSetDirection::VFTable;
+void* CMessageAddEffect::VFTable;
 CImmunitiesAIType::type_OnList CImmunitiesAIType::p_OnList;
 CAIGroup::type_FollowLeader CAIGroup::p_FollowLeader;
 CAIGroup::type_RemoveFromSearch CAIGroup::p_RemoveFromSearch;
@@ -77,6 +78,7 @@ CGameArea::type_CheckWalkable CGameArea::p_CheckWalkable;
 CGameArea::type_CheckLOS CGameArea::p_CheckLOS;
 CGameArea::type_GetAllInRange1 CGameArea::p_GetAllInRange1;
 CGameArea::type_GetAllInRange2 CGameArea::p_GetAllInRange2;
+CGameArea::type_ApplyEffect CGameArea::p_ApplyEffect;
 CAIObjectType::type_Construct1 CAIObjectType::p_Construct1;
 CAIObjectType::type_Decode CAIObjectType::p_Decode;
 CAIObjectType::type_GetShare CAIObjectType::p_GetShare;
@@ -90,6 +92,9 @@ CAIAction::type_operator_equ CAIAction::p_operator_equ;
 CAIAction::type_Decode CAIAction::p_Decode;
 Array<byte,16>* CGameObject::p_DEFAULT_VISIBLE_TERRAIN_TABLE;
 Array<byte,16>* CGameObject::p_DEFAULT_TERRAIN_TABLE;
+CProjectile::type_AddEffect CProjectile::p_AddEffect;
+CProjectile::type_ClearEffects CProjectile::p_ClearEffects;
+CGameAIBase::type_ApplyEffectToParty CGameAIBase::p_ApplyEffectToParty;
 CGameAIBase::type_GetTargetShare CGameAIBase::p_GetTargetShare;
 CGameSprite::type_GetCasterLevel CGameSprite::p_GetCasterLevel;
 CGameSprite::type_CheckQuickLists CGameSprite::p_CheckQuickLists;
@@ -121,6 +126,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CObList::Destruct"), reinterpret_cast<void**>(&CObList::p_Destruct)},
 	std::pair{TEXT("CObList::AddTail"), reinterpret_cast<void**>(&CObList::p_AddTail)},
 	std::pair{TEXT("CMessageSetDirection::VFTable"), reinterpret_cast<void**>(&CMessageSetDirection::VFTable)},
+	std::pair{TEXT("CMessageAddEffect::VFTable"), reinterpret_cast<void**>(&CMessageAddEffect::VFTable)},
 	std::pair{TEXT("CImmunitiesAIType::OnList"), reinterpret_cast<void**>(&CImmunitiesAIType::p_OnList)},
 	std::pair{TEXT("CAIGroup::FollowLeader"), reinterpret_cast<void**>(&CAIGroup::p_FollowLeader)},
 	std::pair{TEXT("CAIGroup::RemoveFromSearch"), reinterpret_cast<void**>(&CAIGroup::p_RemoveFromSearch)},
@@ -181,6 +187,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameArea::CheckLOS"), reinterpret_cast<void**>(&CGameArea::p_CheckLOS)},
 	std::pair{TEXT("CGameArea::GetAllInRange1"), reinterpret_cast<void**>(&CGameArea::p_GetAllInRange1)},
 	std::pair{TEXT("CGameArea::GetAllInRange2"), reinterpret_cast<void**>(&CGameArea::p_GetAllInRange2)},
+	std::pair{TEXT("CGameArea::ApplyEffect"), reinterpret_cast<void**>(&CGameArea::p_ApplyEffect)},
 	std::pair{TEXT("CAIObjectType::Construct1"), reinterpret_cast<void**>(&CAIObjectType::p_Construct1)},
 	std::pair{TEXT("CAIObjectType::Decode"), reinterpret_cast<void**>(&CAIObjectType::p_Decode)},
 	std::pair{TEXT("CAIObjectType::GetShare"), reinterpret_cast<void**>(&CAIObjectType::p_GetShare)},
@@ -194,6 +201,9 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CAIAction::Decode"), reinterpret_cast<void**>(&CAIAction::p_Decode)},
 	std::pair{TEXT("CGameObject::DEFAULT_VISIBLE_TERRAIN_TABLE"), reinterpret_cast<void**>(&CGameObject::p_DEFAULT_VISIBLE_TERRAIN_TABLE)},
 	std::pair{TEXT("CGameObject::DEFAULT_TERRAIN_TABLE"), reinterpret_cast<void**>(&CGameObject::p_DEFAULT_TERRAIN_TABLE)},
+	std::pair{TEXT("CProjectile::AddEffect"), reinterpret_cast<void**>(&CProjectile::p_AddEffect)},
+	std::pair{TEXT("CProjectile::ClearEffects"), reinterpret_cast<void**>(&CProjectile::p_ClearEffects)},
+	std::pair{TEXT("CGameAIBase::ApplyEffectToParty"), reinterpret_cast<void**>(&CGameAIBase::p_ApplyEffectToParty)},
 	std::pair{TEXT("CGameAIBase::GetTargetShare"), reinterpret_cast<void**>(&CGameAIBase::p_GetTargetShare)},
 	std::pair{TEXT("CGameSprite::GetCasterLevel"), reinterpret_cast<void**>(&CGameSprite::p_GetCasterLevel)},
 	std::pair{TEXT("CGameSprite::CheckQuickLists"), reinterpret_cast<void**>(&CGameSprite::p_CheckQuickLists)},

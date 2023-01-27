@@ -2639,11 +2639,6 @@ struct UnmappedUserType
 	}
 };
 
-namespace EEex
-{
-	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
-};
-
 struct mosHeader_st
 {
 	unsigned int nFileType;
@@ -2777,6 +2772,15 @@ struct Pointer
 	{
 		*reference = val;
 	}
+};
+
+namespace EEex
+{
+	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+
+	void DestroyUDAux(lua_State* L, void* ptr);
+
+	void CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr);
 };
 
 struct ConstCharString
@@ -5705,6 +5709,31 @@ struct CMessageSetDirection : CMessage
 		m_sourceId = caller;
 		m_targetId = target;
 		m_face = face;
+	}
+};
+
+struct CMessageAddEffect : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	CGameEffect* m_effect;
+	__int16 m_CommType;
+	unsigned __int8 m_noSave;
+
+	CMessageAddEffect() = delete;
+
+	void Construct(CGameEffect* effect, bool noSave, short commType, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_effect = effect;
+		m_noSave = noSave;
+		m_CommType = commType;
 	}
 };
 
@@ -11794,6 +11823,9 @@ struct CGameArea
 	typedef void (__thiscall *type_GetAllInRange2)(CGameArea* pThis, __POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
 	static type_GetAllInRange2 p_GetAllInRange2;
 
+	typedef void (__thiscall *type_ApplyEffect)(CGameArea* pThis, CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore);
+	static type_ApplyEffect p_ApplyEffect;
+
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 
 	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
@@ -11828,6 +11860,11 @@ struct CGameArea
 	void GetAllInRange2(__POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites)
 	{
 		p_GetAllInRange2(this, posVertList, ptStart, type, range, terrainTable, targets, lineOfSight, checkForNonSprites);
+	}
+
+	void ApplyEffect(CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore)
+	{
+		p_ApplyEffect(this, effect, ignoreParty, useSpecifics, specifics, pIgnore);
 	}
 };
 
@@ -12441,6 +12478,22 @@ struct CProjectile : CGameObject
 	int m_ignoreDamage;
 
 	CProjectile() = delete;
+
+	typedef void (__thiscall *type_AddEffect)(CProjectile* pThis, CGameEffect* effect);
+	static type_AddEffect p_AddEffect;
+
+	typedef void (__thiscall *type_ClearEffects)(CProjectile* pThis);
+	static type_ClearEffects p_ClearEffects;
+
+	void AddEffect(CGameEffect* effect)
+	{
+		p_AddEffect(this, effect);
+	}
+
+	void ClearEffects()
+	{
+		p_ClearEffects(this);
+	}
 
 	virtual void virtual_Fire(CGameArea* _0, int _1, int _2, CPoint _3, int _4, __int16 _5)
 	{
@@ -13138,8 +13191,16 @@ struct CGameAIBase : CGameObject
 
 	CGameAIBase() = delete;
 
+	typedef void (__thiscall *type_ApplyEffectToParty)(CGameAIBase* pThis, CGameEffect* effect);
+	static type_ApplyEffectToParty p_ApplyEffectToParty;
+
 	typedef CGameObject* (__thiscall *type_GetTargetShare)(CGameAIBase* pThis);
 	static type_GetTargetShare p_GetTargetShare;
+
+	void ApplyEffectToParty(CGameEffect* effect)
+	{
+		p_ApplyEffectToParty(this, effect);
+	}
 
 	CGameObject* GetTargetShare()
 	{

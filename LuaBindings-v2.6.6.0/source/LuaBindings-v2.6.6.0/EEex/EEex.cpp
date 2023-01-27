@@ -348,3 +348,41 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 	p_lua_pop(L, 3);                                                                 // 0 [ ... ]
 	return toReturn;
 }
+
+// This is written in C++ for the scenario in which EEex hooks an object's destructor to clean up auxiliary values,
+// with the caveat that the destructor is called frequently enough that calling out to Lua is impractical.
+// An example would be cleaning up CGameEffect auxiliaries.
+void EEex::DestroyUDAux(lua_State* L, void* ptr) {
+	p_lua_getglobal(L, "EEex_UserDataAuxiliary"); // 1 [ EEex_UserDataAuxiliary ]
+	p_lua_pushlightuserdata(L, ptr);              // 2 [ EEex_UserDataAuxiliary, lud(ptr) ]
+	p_lua_pushnil(L);                             // 3 [ EEex_UserDataAuxiliary, lud(ptr), nil ]
+	p_lua_rawset(L, -3);                          // 1 [ EEex_UserDataAuxiliary ]
+	p_lua_pop(L, 1);                              // 0 [ ]
+}
+
+// This should be entirely in C++, though a deepcopy is non-trivial.
+// Cheating by calling EEex_Utility_DeepCopy().
+void EEex::CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr) {
+
+	p_lua_getglobal(L, "debug");                  // 1 [ debug ]
+	p_lua_getfield(L, -1, "traceback");           // 2 [ debug, traceback ]
+
+	p_lua_getglobal(L, "EEex_UserDataAuxiliary"); // 3 [ debug, traceback, EEex_UserDataAuxiliary ]
+	p_lua_pushlightuserdata(L, targetPtr);        // 4 [ debug, traceback, EEex_UserDataAuxiliary, lud(targetPtr) ]
+
+	p_lua_getglobal(L, "EEex_Utility_DeepCopy");  // 5 [ debug, traceback, EEex_UserDataAuxiliary, lud(targetPtr), EEex_Utility_DeepCopy ]
+
+	p_lua_pushlightuserdata(L, sourcePtr);        // 6 [ debug, traceback, EEex_UserDataAuxiliary, lud(targetPtr), EEex_Utility_DeepCopy, lud(sourcePtr) ]
+	p_lua_rawget(L, -4);                          // 6 [ debug, traceback, EEex_UserDataAuxiliary, lud(targetPtr), EEex_Utility_DeepCopy, EEex_UserDataAuxiliary[lud(sourcePtr)] ]
+ 
+	if (p_lua_pcallk(L, 1, 1, -5, 0, nullptr) != LUA_OK) {
+		                                          // 5 [ debug, traceback, EEex_UserDataAuxiliary, lud(targetPtr), errorMessage ]
+		Print("[!] %s\n", p_lua_tostring(L, -1));
+		p_lua_pop(L, 5);                          // 0 [ ]
+	}
+	else {
+		                                          // 5 [ debug, traceback, EEex_UserDataAuxiliary, lud(targetPtr), copyT ]
+		p_lua_rawset(L, -3);                      // 3 [ debug, traceback, EEex_UserDataAuxiliary ]
+		p_lua_pop(L, 3);                          // 0 [ ]
+	}
+}
