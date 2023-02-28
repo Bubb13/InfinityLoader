@@ -67,8 +67,12 @@ CScreenWorld::type_TogglePauseGame CScreenWorld::p_TogglePauseGame;
 CChitin::type_OnResizeWindow CChitin::p_OnResizeWindow;
 CInfButtonArray::type_SetState CInfButtonArray::p_SetState;
 CInfButtonArray::type_SetQuickSlot CInfButtonArray::p_SetQuickSlot;
+CInfGame::type_OnPortraitLDblClick CInfGame::p_OnPortraitLDblClick;
+CInfGame::type_SelectCharacter CInfGame::p_SelectCharacter;
+CInfGame::type_SelectToolbar CInfGame::p_SelectToolbar;
 CInfGame::type_SetState CInfGame::p_SetState;
 CInfGame::type_SetIconIndex CInfGame::p_SetIconIndex;
+CInfGame::type_UnselectAll CInfGame::p_UnselectAll;
 CGameEffect::type_DecodeEffect CGameEffect::p_DecodeEffect;
 CDerivedStats::type_GetAtOffset CDerivedStats::p_GetAtOffset;
 CDerivedStats::type_GetSpellState CDerivedStats::p_GetSpellState;
@@ -79,6 +83,7 @@ CGameArea::type_CheckLOS CGameArea::p_CheckLOS;
 CGameArea::type_GetAllInRange1 CGameArea::p_GetAllInRange1;
 CGameArea::type_GetAllInRange2 CGameArea::p_GetAllInRange2;
 CGameArea::type_ApplyEffect CGameArea::p_ApplyEffect;
+CGameArea::type_OnActionButtonClickGround CGameArea::p_OnActionButtonClickGround;
 CAIObjectType::type_Construct1 CAIObjectType::p_Construct1;
 CAIObjectType::type_Decode CAIObjectType::p_Decode;
 CAIObjectType::type_GetShare CAIObjectType::p_GetShare;
@@ -176,8 +181,12 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&CChitin::p_OnResizeWindow)},
 	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&CInfButtonArray::p_SetState)},
 	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&CInfButtonArray::p_SetQuickSlot)},
+	std::pair{TEXT("CInfGame::OnPortraitLDblClick"), reinterpret_cast<void**>(&CInfGame::p_OnPortraitLDblClick)},
+	std::pair{TEXT("CInfGame::SelectCharacter"), reinterpret_cast<void**>(&CInfGame::p_SelectCharacter)},
+	std::pair{TEXT("CInfGame::SelectToolbar"), reinterpret_cast<void**>(&CInfGame::p_SelectToolbar)},
 	std::pair{TEXT("CInfGame::SetState"), reinterpret_cast<void**>(&CInfGame::p_SetState)},
 	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&CInfGame::p_SetIconIndex)},
+	std::pair{TEXT("CInfGame::UnselectAll"), reinterpret_cast<void**>(&CInfGame::p_UnselectAll)},
 	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&CGameEffect::p_DecodeEffect)},
 	std::pair{TEXT("CDerivedStats::GetAtOffset"), reinterpret_cast<void**>(&CDerivedStats::p_GetAtOffset)},
 	std::pair{TEXT("CDerivedStats::GetSpellState"), reinterpret_cast<void**>(&CDerivedStats::p_GetSpellState)},
@@ -188,6 +197,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameArea::GetAllInRange1"), reinterpret_cast<void**>(&CGameArea::p_GetAllInRange1)},
 	std::pair{TEXT("CGameArea::GetAllInRange2"), reinterpret_cast<void**>(&CGameArea::p_GetAllInRange2)},
 	std::pair{TEXT("CGameArea::ApplyEffect"), reinterpret_cast<void**>(&CGameArea::p_ApplyEffect)},
+	std::pair{TEXT("CGameArea::OnActionButtonClickGround"), reinterpret_cast<void**>(&CGameArea::p_OnActionButtonClickGround)},
 	std::pair{TEXT("CAIObjectType::Construct1"), reinterpret_cast<void**>(&CAIObjectType::p_Construct1)},
 	std::pair{TEXT("CAIObjectType::Decode"), reinterpret_cast<void**>(&CAIObjectType::p_Decode)},
 	std::pair{TEXT("CAIObjectType::GetShare"), reinterpret_cast<void**>(&CAIObjectType::p_GetShare)},

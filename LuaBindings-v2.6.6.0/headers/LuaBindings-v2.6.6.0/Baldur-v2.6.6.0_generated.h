@@ -10404,11 +10404,38 @@ struct CInfGame
 
 	CInfGame() = delete;
 
+	typedef void (__thiscall *type_OnPortraitLDblClick)(CInfGame* pThis, int index);
+	static type_OnPortraitLDblClick p_OnPortraitLDblClick;
+
+	typedef bool (__thiscall *type_SelectCharacter)(CInfGame* pThis, int characterId, bool bPlaySelectSound);
+	static type_SelectCharacter p_SelectCharacter;
+
+	typedef void (__thiscall *type_SelectToolbar)(CInfGame* pThis);
+	static type_SelectToolbar p_SelectToolbar;
+
 	typedef void (__thiscall *type_SetState)(CInfGame* pThis, __int16 state, bool allowDead);
 	static type_SetState p_SetState;
 
 	typedef void (__thiscall *type_SetIconIndex)(CInfGame* pThis, unsigned __int8 iconIndex);
 	static type_SetIconIndex p_SetIconIndex;
+
+	typedef void (__thiscall *type_UnselectAll)(CInfGame* pThis);
+	static type_UnselectAll p_UnselectAll;
+
+	void OnPortraitLDblClick(int index)
+	{
+		p_OnPortraitLDblClick(this, index);
+	}
+
+	bool SelectCharacter(int characterId, bool bPlaySelectSound)
+	{
+		return p_SelectCharacter(this, characterId, bPlaySelectSound);
+	}
+
+	void SelectToolbar()
+	{
+		p_SelectToolbar(this);
+	}
 
 	void SetState(__int16 state, bool allowDead)
 	{
@@ -10418,6 +10445,11 @@ struct CInfGame
 	void SetIconIndex(unsigned __int8 iconIndex)
 	{
 		p_SetIconIndex(this, iconIndex);
+	}
+
+	void UnselectAll()
+	{
+		p_UnselectAll(this);
 	}
 };
 
@@ -11826,6 +11858,9 @@ struct CGameArea
 	typedef void (__thiscall *type_ApplyEffect)(CGameArea* pThis, CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore);
 	static type_ApplyEffect p_ApplyEffect;
 
+	typedef void (__thiscall *type_OnActionButtonClickGround)(CGameArea* pThis, CPoint* pt);
+	static type_OnActionButtonClickGround p_OnActionButtonClickGround;
+
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 
 	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
@@ -11865,6 +11900,11 @@ struct CGameArea
 	void ApplyEffect(CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore)
 	{
 		p_ApplyEffect(this, effect, ignoreParty, useSpecifics, specifics, pIgnore);
+	}
+
+	void OnActionButtonClickGround(CPoint* pt)
+	{
+		p_OnActionButtonClickGround(this, pt);
 	}
 };
 

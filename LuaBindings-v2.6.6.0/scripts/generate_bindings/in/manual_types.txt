@@ -824,8 +824,12 @@ struct CInfButtonArray
 
 struct CInfGame
 {
+	void OnPortraitLDblClick(int index);
+	bool SelectCharacter(int characterId, bool bPlaySelectSound);
+	void SelectToolbar();
 	void SetState(__int16 state, bool allowDead);
 	void SetIconIndex(unsigned __int8 iconIndex);
+	void UnselectAll();
 };
 
 struct CSpell : CResHelper<CResSpell,1006>
@@ -862,6 +866,7 @@ struct CGameArea
 	void GetAllInRange1(const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
 	void GetAllInRange2(__POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
 	void ApplyEffect(CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore);
+	void OnActionButtonClickGround(CPoint* pt);
 };
 
 struct CAIGroup
