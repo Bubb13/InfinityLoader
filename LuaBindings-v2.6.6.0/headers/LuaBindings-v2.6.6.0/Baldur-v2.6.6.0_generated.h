@@ -7,8 +7,22 @@
 #include "InfinityLoaderCommon.h"
 #include "to_lua_pointers.h"
 
+typedef char sbyte;
 typedef unsigned short ushort;
 typedef unsigned int uint;
+
+template<typename T>
+struct hasDestruct {
+    template<typename U>
+    static constexpr auto check(U*) -> decltype(std::declval<U>().Destruct(), false) {
+        return true;
+    }
+    template<typename>
+    static constexpr bool check(...) {
+        return false;
+    }
+    static constexpr bool value = check<T>(nullptr);
+};
 
 template<typename A>
 struct W
@@ -36,9 +50,18 @@ public:
 	}
 
 	~W() {
-		val.Destruct();
+		if constexpr (hasDestruct<decltype(val)>::value) {
+			val.Destruct();
+		}
 	}
 };
+
+template<typename T, typename... Args>
+T* newEngineObj(Args&&... args) {
+	T* ptr = reinterpret_cast<T*>(p_malloc(sizeof(T)));
+	ptr->Construct(std::forward<Args>(args)...);
+	return ptr;
+}
 
 struct ALCcontext_struct;
 struct ALCdevice_struct;
@@ -95,6 +118,7 @@ struct CRes;
 struct CResPVR;
 struct CResRef;
 struct CResTileSet;
+struct CRuleTables;
 struct CSavedGamePartyCreature;
 struct CScreenStore;
 struct CScreenWorld;
@@ -107,6 +131,7 @@ struct CSoundMixerImp;
 struct CSpawn;
 struct CSpell;
 struct CString;
+struct CTlkTable;
 struct CUIControlTextDisplay;
 struct CVVCHashEntry;
 struct CVariable;
@@ -123,6 +148,7 @@ struct SDL_BlitMap;
 union SDL_Event;
 struct SDL_PixelFormat;
 struct SDL_Window;
+struct STR_RES;
 struct Spell_Header_st;
 struct Spell_ability_st;
 struct SteamUGCDetails_t;
@@ -2781,6 +2807,8 @@ namespace EEex
 	void DestroyUDAux(lua_State* L, void* ptr);
 
 	void CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr);
+
+	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
 };
 
 struct ConstCharString
@@ -4263,17 +4291,43 @@ struct CString
 	typedef void (__thiscall *type_ConstructFromChars)(CString* pThis, const char* lpsz);
 	static type_ConstructFromChars p_ConstructFromChars;
 
+	typedef void (__thiscall *type_ConstructFromCString)(CString* pThis, const CString* other);
+	static type_ConstructFromCString p_ConstructFromCString;
+
 	typedef void (__thiscall *type_Destruct)(CString* pThis);
 	static type_Destruct p_Destruct;
+
+	typedef void (__thiscall *type_SetFromChars)(const CString* pThis, const char* lpsz);
+	static type_SetFromChars p_SetFromChars;
+
+	typedef void (__thiscall *type_SetFromCString)(const CString* pThis, const CString* other);
+	static type_SetFromCString p_SetFromCString;
 
 	void Construct(const char* lpsz)
 	{
 		p_ConstructFromChars(this, lpsz);
 	}
 
+	void Construct(const CString* other)
+	{
+		p_ConstructFromCString(this, other);
+	}
+
 	void Destruct()
 	{
 		p_Destruct(this);
+	}
+
+	void Construct();
+
+	void operator=(const char* lpsz) const
+	{
+		p_SetFromChars(this, lpsz);
+	}
+
+	void operator=(const CString* other) const
+	{
+		p_SetFromCString(this, other);
 	}
 };
 
@@ -4602,20 +4656,20 @@ struct CPoint
 
 	CPoint()
 	{
-		this->x = 0;
-		this->y = 0;
+		x = 0;
+		y = 0;
 	}
 
 	CPoint(int x, int y)
 	{
-		this->x = x;
-		this->y = y;
+		x = x;
+		y = y;
 	}
 
 	CPoint(CPoint* point)
 	{
-		this->x = point->x;
-		this->y = point->y;
+		x = point->x;
+		y = point->y;
 	}
 };
 
@@ -5709,6 +5763,78 @@ struct CMessageSetDirection : CMessage
 		m_sourceId = caller;
 		m_targetId = target;
 		m_face = face;
+	}
+};
+
+struct CMessageDisplayTextRef : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	unsigned int m_name;
+	unsigned int m_text;
+	unsigned int m_nameColor;
+	unsigned int m_textColor;
+	int m_marker;
+	unsigned __int8 m_moveToTop;
+	unsigned int m_overHead;
+	unsigned __int8 m_overrideDialogMode;
+	unsigned __int8 m_bPlaySound;
+
+	CMessageDisplayTextRef() = delete;
+
+	void Construct(uint name, uint text, uint nameColor, uint textColor, int marker, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_targetId = target;
+		m_sourceId = caller;
+		m_name = name;
+		m_text = text;
+		m_nameColor = nameColor;
+		m_textColor = textColor;
+		m_marker = marker;
+		m_moveToTop = 0;
+		m_overHead = 0;
+		m_overrideDialogMode = 0;
+		m_bPlaySound = 1;
+	}
+};
+
+struct CMessageDisplayText : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	CString m_name;
+	CString m_text;
+	unsigned int m_nameColor;
+	unsigned int m_textColor;
+	int m_marker;
+	unsigned __int8 m_moveToTop;
+	unsigned __int8 m_overHead;
+	unsigned __int8 m_overrideDialogMode;
+
+	CMessageDisplayText() = delete;
+
+	void Construct(CString* name, CString* text, uint nameColor, uint textColor, int marker, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_targetId = target;
+		m_sourceId = caller;
+		m_name.Construct(name);
+		m_text.Construct(text);
+		m_nameColor = nameColor;
+		m_textColor = textColor;
+		m_marker = marker;
+		m_moveToTop = 0;
+		m_overHead = 0;
+		m_overrideDialogMode = 0;
 	}
 };
 
@@ -7215,6 +7341,14 @@ struct CTlkTable
 	unsigned int m_nEngineStringBase;
 
 	CTlkTable() = delete;
+
+	typedef byte (__thiscall *type_Fetch)(CTlkTable* pThis, uint strId, STR_RES* strRes, int ignoreSTRREFON);
+	static type_Fetch p_Fetch;
+
+	byte Fetch(uint strId, STR_RES* strRes, int ignoreSTRREFON)
+	{
+		return p_Fetch(this, strId, strRes, ignoreSTRREFON);
+	}
 };
 
 struct CStoreFileSpell
@@ -8292,6 +8426,14 @@ struct CRuleTables
 	Array<int,56> m_speechNums;
 
 	CRuleTables() = delete;
+
+	typedef byte (__thiscall *type_MapCharacterSpecializationToSchool)(CRuleTables* pThis, ushort nSpecialistMage);
+	static type_MapCharacterSpecializationToSchool p_MapCharacterSpecializationToSchool;
+
+	byte MapCharacterSpecializationToSchool(ushort nSpecialistMage)
+	{
+		return p_MapCharacterSpecializationToSchool(this, nSpecialistMage);
+	}
 };
 
 struct CAIScriptFile
@@ -9128,6 +9270,22 @@ struct CSound : CObject, CResHelper<CResWave,4>
 	CSoundImp* pimpl;
 
 	CSound() = delete;
+
+	typedef void (__thiscall *type_Construct)(CSound* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Destruct)(CSound* pThis);
+	static type_Destruct p_Destruct;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
 };
 
 struct CScreenChapter : CBaldurEngine
@@ -9202,6 +9360,18 @@ struct STR_RES
 	CSound cSound;
 
 	STR_RES() = delete;
+
+	void Construct()
+	{
+		szText.Construct();
+		cSound.Construct();
+	}
+
+	void Destruct()
+	{
+		cSound.Destruct();
+		szText.Destruct();
+	}
 };
 
 struct CWeather
@@ -9956,6 +10126,14 @@ struct CItem : CResHelper<CResItem,1005>
 	CGameEffectUsabilityList m_Usability;
 
 	CItem() = delete;
+
+	typedef void (__thiscall *type_Construct3)(CItem* pThis, CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
+	static type_Construct3 p_Construct3;
+
+	void Construct(CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags)
+	{
+		p_Construct3(this, id, useCount1, useCount2, useCount3, wear, flags);
+	}
 
 	virtual void virtual_Destruct()
 	{
@@ -12010,13 +12188,13 @@ struct CAIObjectType
 
 	void Construct(const CAIObjectType* toCopy)
 	{
-		this->m_name.m_pchData = *p_afxPchNil;
-		this->Set(toCopy);
+		m_name.Construct();
+		Set(toCopy);
 	}
 
 	void Destruct()
 	{
-		this->m_name.Destruct();
+		m_name.Destruct();
 	}
 };
 
@@ -13805,6 +13983,12 @@ struct CGameSprite : CGameAIBase
 	typedef void (__thiscall *type_UpdateTarget)(CGameSprite* pThis, CGameObject* target);
 	static type_UpdateTarget p_UpdateTarget;
 
+	typedef uint (__thiscall *type_GetNameRef)(CGameSprite* pThis);
+	static type_GetNameRef p_GetNameRef;
+
+	typedef CString* (__thiscall *type_GetName)(CGameSprite* pThis, int ignoreSTRREFON);
+	static type_GetName p_GetName;
+
 	short GetCasterLevel(CSpell* pSpell, int includeWildMage)
 	{
 		return p_GetCasterLevel(this, pSpell, includeWildMage);
@@ -13863,6 +14047,16 @@ struct CGameSprite : CGameAIBase
 	void UpdateTarget(CGameObject* target)
 	{
 		p_UpdateTarget(this, target);
+	}
+
+	uint GetNameRef()
+	{
+		return p_GetNameRef(this);
+	}
+
+	CString* GetName(int ignoreSTRREFON)
+	{
+		return p_GetName(this, ignoreSTRREFON);
 	}
 
 	virtual void virtual_SetTarget_2(const CPoint* _0, int _1)
@@ -14022,5 +14216,9 @@ struct CContingency
 	CContingency() = delete;
 };
 
+inline void CString::Construct()
+{
+	m_pchData = *p_afxPchNil;
+}
 
 extern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;

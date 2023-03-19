@@ -49,6 +49,7 @@ typedef std::wifstream IFStream;
 
 typedef std::string StringA;
 typedef std::wstring StringW;
+typedef std::ostringstream OStringStreamA;
 
 /////////////
 // Globals //

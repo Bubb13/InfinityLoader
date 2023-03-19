@@ -9,6 +9,7 @@ void __stdcall Init(lua_State* L, std::map<String, PatternEntry>& patterns, Imag
     InitLuaBindingsCommon(L, patterns, pTextInfo, debug, protonCompatibility, [&]() {
         addPattern(patterns, "EEex::DestroyUDAux", EEex::DestroyUDAux);
         addPattern(patterns, "EEex::CopyUDAux", EEex::CopyUDAux);
+        addPattern(patterns, "EEex::Override_CGameEffect_CheckSave", EEex::Override_CGameEffect_CheckSave);
     });
 
     // Export lua bindings

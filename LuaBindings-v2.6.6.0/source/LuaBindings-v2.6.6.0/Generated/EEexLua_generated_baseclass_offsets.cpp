@@ -415,6 +415,18 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CMessageSetDirection::vtbl", {
 		{"CMessage::vtbl", offsetofbase<CMessageSetDirection::vtbl, CMessage::vtbl>()},
 	}},
+	{"CMessageDisplayTextRef", {
+		{"CMessage", offsetofbase<CMessageDisplayTextRef, CMessage>()},
+	}},
+	{"CMessageDisplayTextRef::vtbl", {
+		{"CMessage::vtbl", offsetofbase<CMessageDisplayTextRef::vtbl, CMessage::vtbl>()},
+	}},
+	{"CMessageDisplayText", {
+		{"CMessage", offsetofbase<CMessageDisplayText, CMessage>()},
+	}},
+	{"CMessageDisplayText::vtbl", {
+		{"CMessage::vtbl", offsetofbase<CMessageDisplayText::vtbl, CMessage::vtbl>()},
+	}},
 	{"CMessageAddEffect", {
 		{"CMessage", offsetofbase<CMessageAddEffect, CMessage>()},
 	}},

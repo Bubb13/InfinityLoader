@@ -117,7 +117,7 @@ bool EEex_CheckMatch(lua_State* L,
 				return false;
 			}
 		}
-		
+
 		if (distanceSquared > rangeSquared) {
 			return false;
 		}
@@ -169,7 +169,7 @@ bool EEex_CheckMatch(lua_State* L,
 	return false;
 }
 
-long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, const char *const matchChunk, 
+long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, const char *const matchChunk,
 	const int nth, int range, const EEex_MatchObjectFlags flags)
 {
 	if (pStartObject == nullptr || !isAIBase(pStartObject->virtual_GetObjectType())) {
@@ -374,7 +374,7 @@ void EEex::CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr) {
 
 	p_lua_pushlightuserdata(L, sourcePtr);        // 6 [ debug, traceback, EEex_UserDataAuxiliary, lud(targetPtr), EEex_Utility_DeepCopy, lud(sourcePtr) ]
 	p_lua_rawget(L, -4);                          // 6 [ debug, traceback, EEex_UserDataAuxiliary, lud(targetPtr), EEex_Utility_DeepCopy, EEex_UserDataAuxiliary[lud(sourcePtr)] ]
- 
+
 	if (p_lua_pcallk(L, 1, 1, -5, 0, nullptr) != LUA_OK) {
 		                                          // 5 [ debug, traceback, EEex_UserDataAuxiliary, lud(targetPtr), errorMessage ]
 		Print("[!] %s\n", p_lua_tostring(L, -1));
@@ -385,4 +385,459 @@ void EEex::CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr) {
 		p_lua_rawset(L, -3);                      // 3 [ debug, traceback, EEex_UserDataAuxiliary ]
 		p_lua_pop(L, 3);                          // 0 [ ]
 	}
+}
+
+W<CString> fetchStrRef(uint strref) {
+	W<STR_RES> res;
+	(*p_g_pBaldurChitin)->m_cTlkTable.Fetch(strref, &*res, false);
+	return W<CString>(&res->szText);
+}
+
+W<CString> getEffectSourceName(CGameEffect* pEffect) {
+	if (pEffect->m_sourceType == 1) {
+		// Spell
+		W<CSpell> spell{ pEffect->m_sourceRes };
+		CResSpell* res = spell->pRes;
+		if (res->Demand()) {
+			return fetchStrRef(res->pHeader->genericName);
+		}
+	}
+	else if (pEffect->m_sourceType == 2) {
+		// Item
+		W<CItem> item{ pEffect->m_sourceRes, 0, 0, 0, 0, 0 };
+		CResItem* res = item->pRes;
+		if (res->Demand()) {
+			if ((pEffect->m_flags & 0x80000000) != 0) {
+				return fetchStrRef(res->pHeader->identifiedName);
+			}
+			else {
+				return fetchStrRef(res->pHeader->genericName);
+			}
+		}
+	}
+	return "Unknown";
+}
+
+void displaySpriteMessage(CGameSprite* pTarget, W<CString> message) {
+
+	CMessageDisplayText* const pMessageDisplayText = newEngineObj<CMessageDisplayText>(
+		pTarget->GetName(false), &*message, 0xBED7D7, 0xBED7D7, -1, pTarget->m_id, pTarget->m_id);
+
+	(*p_g_pBaldurChitin)->m_cMessageHandler.AddMessage(pMessageDisplayText, false);
+}
+
+int checkNoSavingThrowsAndEvasion(CGameEffect *const pEffect, CGameSprite *const pTarget) {
+
+	if ((pEffect->m_savingThrow & 0x1F) == 0) {
+
+		// .EFF [+0x5C] BIT2
+		// Automatically set by:
+		//   Targeting modes 3, 4, 5, 6, 7, and 8
+		//   Secondary AoE projectiles
+
+		if ((pEffect->m_flags & 4) != 0) {
+
+			for (auto pNode = pTarget->m_equipedEffectList.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+				// CGameEffectEvadeAreaOfEffect
+				if (pNode->data->m_effectId == 0x142) {
+					pEffect->m_savingThrow >>= 5;
+					goto checkStillNoSavingThrow;
+				}
+			}
+
+			for (auto pNode = pTarget->m_timedEffectList.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+				// CGameEffectEvadeAreaOfEffect
+				if (pNode->data->m_effectId == 0x142) {
+					pEffect->m_savingThrow >>= 5;
+				}
+			}
+		}
+
+	checkStillNoSavingThrow:;
+		if ((pEffect->m_savingThrow & 0x1F) == 0) {
+			return true; // No saving throws defined or evaded
+		}
+	}
+
+	return false; // Not evaded
+}
+
+int EEex::Override_CGameEffect_CheckSave(CGameEffect *const pEffect, CGameSprite *const pTarget,
+	byte *const saveVSDeathRollRaw, byte *const saveVSWandsRollRaw, byte *const saveVSPolyRollRaw,
+	byte *const saveVSBreathRollRaw, byte *const saveVSSpellRollRaw, byte *const resistMagicRollRaw)
+{
+	bool extraFeedback = true;
+
+	CBaldurChitin& chitin = **p_g_pBaldurChitin;
+	CInfGame& game = *chitin.m_pObjectGame;
+	CDerivedStats& targetStats = *pTarget->GetActiveStats();
+
+	// State: Poison || Graphics: Display Special Effect Icon - Poisoned
+	if (const uint nEffectId = pEffect->m_effectId;
+		(nEffectId == 25 || (nEffectId == 142 && pEffect->m_dWFlags == 6))
+		&& ((pTarget->m_nMirrorImages != 0 && (pEffect->m_savingThrow & 0x1000000) == 0) // Bypass mirror image
+			|| targetStats.m_nStoneSkins > 0
+			|| targetStats.m_nStoneSkinsGolem > 0
+		))
+	{
+		if (extraFeedback) {
+			displaySpriteMessage(pTarget, "Poison blocked.");
+		}
+
+		return false; // SAVE SUCCEEDED (EFFECT BLOCKED)
+	}
+
+	// v2.5
+	//if (uint nResistFlags = pEffect->m_flags; (nResistFlags & 1) != 0 && (nResistFlags & 2) == 0) {
+	//
+	//	sbyte resistMagicRoll = *resistMagicRollRaw & 0x7F;
+	//	short nMagicResistance = targetStats.m_nResistMagic;
+	//
+	//	if (resistMagicRoll < nMagicResistance) {
+	//
+	//		if ((*resistMagicRollRaw & 0x80) == 0) {
+	//
+	//			CMessageDisplayTextRef* pMessageDisplayTextRef = newEngineObj<CMessageDisplayTextRef>(
+	//				pTarget->GetNameRef(), 0xF00519, 0xBED7D7, 0xBED7D7, -1, pTarget->m_id, pTarget->m_id);
+	//
+	//			chitin.m_cMessageHandler.AddMessage(pMessageDisplayTextRef, false);
+	//			*resistMagicRollRaw = *resistMagicRollRaw | 0x80;
+	//		}
+	//
+	//		return false;
+	//	}
+	//}
+
+	const uint nResistFlags = pEffect->m_flags;
+	const sbyte nResistMagicRoll = *resistMagicRollRaw & 0x7F;
+	const short nResistMagic = targetStats.m_nResistMagic;
+	const bool bMagicResisted = nResistMagicRoll < nResistMagic;
+
+	// .EFF [+0x5C] BIT3
+	// Automatically set by:
+	//   Targeting modes 1, 2 (sometimes), and 9
+
+	if ((nResistFlags & 8) != 0 && pEffect->m_sourceId == pTarget->m_id && bMagicResisted
+		&& checkNoSavingThrowsAndEvasion(pEffect, pTarget))
+	{
+		return true; // SAVE FAILED (EFFECT ADDED)
+	}
+
+	if ((nResistFlags & 1) != 0 && (nResistFlags & 2) == 0 && bMagicResisted) {
+
+		if ((*resistMagicRollRaw & 0x80) == 0) {
+
+			if (extraFeedback) {
+				W<CString> magicResStr = fetchStrRef(0xF00519);
+				displaySpriteMessage(pTarget, std::format("{} ({:d} < {})",
+					magicResStr->m_pchData, nResistMagicRoll, nResistMagic).c_str());
+			}
+			else {
+				CMessageDisplayTextRef* const pMessageDisplayTextRef = newEngineObj<CMessageDisplayTextRef>(
+					pTarget->GetNameRef(), 0xF00519, 0xBED7D7, 0xBED7D7, -1, pTarget->m_id, pTarget->m_id);
+
+				chitin.m_cMessageHandler.AddMessage(pMessageDisplayTextRef, false);
+			}
+
+			*resistMagicRollRaw = *resistMagicRollRaw | 0x80;
+		}
+
+		return false; // SAVE SUCCEEDED (EFFECT BLOCKED)
+	}
+
+	// .EFF [0x50]
+	// Automatically set by:
+	//   CProjectileNewScorcher::ApplyEffectsToTarget()
+	//     1 -> Target
+	//     2 -> Bystander (standing in projectile path)
+
+	if (const uint nJeremyIsAnIdiot = pEffect->m_JeremyIsAnIdiot;
+		   (nJeremyIsAnIdiot == 1 && (pEffect->m_savingThrow & 0x400) != 0)  // Ignore primary target
+		|| (nJeremyIsAnIdiot == 2 && (pEffect->m_savingThrow & 0x800) != 0)) // Ignore secondary target
+	{
+		return false; // SAVE SUCCEEDED (EFFECT BLOCKED)
+	}
+
+	if (checkNoSavingThrowsAndEvasion(pEffect, pTarget)) {
+		return true; // SAVE FAILED (EFFECT ADDED)
+	}
+
+	short nBestSaveStat = 20;
+	int nBestSavesRoll = 0;
+	uint saveFeedbackStrRef = 0;
+
+	// Save vs. Death
+	if ((pEffect->m_savingThrow & 4) != 0 && targetStats.m_nSaveVSDeath < nBestSaveStat) {
+
+		nBestSaveStat = targetStats.m_nSaveVSDeath;
+		nBestSavesRoll = *saveVSDeathRollRaw & 0x7F;
+
+		// BUGFIX: The engine normally checks whether it should output "Save vs. Type" here
+		//         via (nBestSaveStat <= nBestSavesRoll). This breaks when the modifiers
+		//         later in the function change an initially failed save into a success.
+		//
+		if ((*saveVSDeathRollRaw & 0x80) == 0) {
+			saveFeedbackStrRef = 0xF00517;
+			*saveVSWandsRollRaw = *saveVSWandsRollRaw & 0x7F;
+			*saveVSPolyRollRaw = *saveVSPolyRollRaw & 0x7F;
+			*saveVSBreathRollRaw = *saveVSBreathRollRaw & 0x7F;
+			*saveVSSpellRollRaw = *saveVSSpellRollRaw & 0x7F;
+			*saveVSDeathRollRaw = *saveVSDeathRollRaw | 0x80;
+		}
+	}
+
+	// Save vs. Wands
+	if ((pEffect->m_savingThrow & 8) != 0 && targetStats.m_nSaveVSWands < nBestSaveStat) {
+
+		nBestSaveStat = targetStats.m_nSaveVSWands;
+		nBestSavesRoll = *saveVSWandsRollRaw & 0x7F;
+
+		// BUGFIX: The engine normally checks whether it should output "Save vs. Type" here
+		//         via (nBestSaveStat <= nBestSavesRoll). This breaks when the modifiers
+		//         later in the function change an initially failed save into a success.
+		//
+		if ((*saveVSWandsRollRaw & 0x80) == 0) {
+			saveFeedbackStrRef = 0xF0051B;
+			*saveVSDeathRollRaw = *saveVSDeathRollRaw & 0x7F;
+			*saveVSPolyRollRaw = *saveVSPolyRollRaw & 0x7F;
+			*saveVSBreathRollRaw = *saveVSBreathRollRaw & 0x7F;
+			*saveVSSpellRollRaw = *saveVSSpellRollRaw & 0x7F;
+			*saveVSWandsRollRaw = *saveVSWandsRollRaw | 0x80;
+		}
+	}
+
+	// Save vs. Poly
+	if ((pEffect->m_savingThrow & 0x10) != 0 && targetStats.m_nSaveVSPoly < nBestSaveStat) {
+
+		nBestSaveStat = targetStats.m_nSaveVSPoly;
+		nBestSavesRoll = *saveVSPolyRollRaw & 0x7F;
+
+		// BUGFIX: The engine normally checks whether it should output "Save vs. Type" here
+		//         via (nBestSaveStat <= nBestSavesRoll). This breaks when the modifiers
+		//         later in the function change an initially failed save into a success.
+		//
+		if ((*saveVSPolyRollRaw & 0x80) == 0) {
+			saveFeedbackStrRef = 0xF00518;
+			*saveVSDeathRollRaw = *saveVSDeathRollRaw & 0x7F;
+			*saveVSWandsRollRaw = *saveVSWandsRollRaw & 0x7F;
+			*saveVSBreathRollRaw = *saveVSBreathRollRaw & 0x7F;
+			*saveVSSpellRollRaw = *saveVSSpellRollRaw & 0x7F;
+			*saveVSPolyRollRaw = *saveVSPolyRollRaw | 0x80;
+		}
+	}
+
+	// Save vs. Breath
+	if ((pEffect->m_savingThrow & 2) != 0 && targetStats.m_nSaveVSBreath < nBestSaveStat) {
+
+		nBestSaveStat = targetStats.m_nSaveVSBreath;
+		nBestSavesRoll = *saveVSBreathRollRaw & 0x7F;
+
+		// BUGFIX: The engine normally checks whether it should output "Save vs. Type" here
+		//         via (nBestSaveStat <= nBestSavesRoll). This breaks when the modifiers
+		//         later in the function change an initially failed save into a success.
+		//
+		if ((*saveVSBreathRollRaw & 0x80) == 0) {
+			saveFeedbackStrRef = 0xF00516;
+			*saveVSDeathRollRaw = *saveVSDeathRollRaw & 0x7F;
+			*saveVSWandsRollRaw = *saveVSWandsRollRaw & 0x7F;
+			*saveVSPolyRollRaw = *saveVSPolyRollRaw & 0x7F;
+			*saveVSSpellRollRaw = *saveVSSpellRollRaw & 0x7F;
+			*saveVSBreathRollRaw = *saveVSBreathRollRaw | 0x80;
+		}
+	}
+
+	// Save vs. Spell
+	if ((pEffect->m_savingThrow & 1) != 0 && targetStats.m_nSaveVSSpell < nBestSaveStat) {
+
+		nBestSaveStat = targetStats.m_nSaveVSSpell;
+		nBestSavesRoll = *saveVSSpellRollRaw & 0x7F;
+
+		// BUGFIX: The engine normally checks whether it should output "Save vs. Type" here
+		//         via (nBestSaveStat <= nBestSavesRoll). This breaks when the modifiers
+		//         later in the function change an initially failed save into a success.
+		//
+		if ((*saveVSSpellRollRaw & 0x80) == 0) {
+			saveFeedbackStrRef = 0xF0051A;
+			*saveVSDeathRollRaw = *saveVSDeathRollRaw & 0x7F;
+			*saveVSWandsRollRaw = *saveVSWandsRollRaw & 0x7F;
+			*saveVSPolyRollRaw = *saveVSPolyRollRaw & 0x7F;
+			*saveVSBreathRollRaw = *saveVSBreathRollRaw & 0x7F;
+			*saveVSSpellRollRaw = *saveVSSpellRollRaw | 0x80;
+		}
+	}
+
+	int nBestSavesRollTotal = nBestSavesRoll;
+	OStringStreamA extraFeedbackStream{};
+	bool alreadyOutputRoll = false;
+	const char* feedbackSeparator = "";
+
+	#define outputBonus(name, val)                                \
+		if (!alreadyOutputRoll) {                                 \
+			alreadyOutputRoll = true;                             \
+			extraFeedbackStream << "Roll: " << nBestSavesRoll;    \
+			feedbackSeparator = ", ";                             \
+		}                                                         \
+		extraFeedbackStream << feedbackSeparator << name << ": "; \
+		if (val > 0) {                                            \
+			extraFeedbackStream << "+";                           \
+		}                                                         \
+		extraFeedbackStream << val;                               \
+		feedbackSeparator = ", ";
+
+	// Improved Invisibility
+	//
+	// BUGFIX: The engine normally subtracts 4 from nBestSaveStat in the blocks above,
+	//         however, this causes a bug when multiple saving throw types are
+	//         selected, where a better saving throw stat must be better than or equal
+	//         to the improved invisibility bonus (-4) to be used. This really doesn't
+	//         matter since no vanilla spells use the mechanic, but fix it anyway in
+	//         case some mod uses it.
+	//
+	if ((targetStats.m_generalState & 0x400000) != 0) {
+		nBestSavesRollTotal += 4;
+		outputBonus("Improved Invisibility", 4);
+	}
+
+	// .EFF [+0x44] - Effect save bonus
+	const int nSaveMod = pEffect->m_saveMod;
+	nBestSavesRollTotal += nSaveMod;
+	if (nSaveMod != 0) {
+		outputBonus("Spell Bonus", nSaveMod);
+	}
+
+	// Legacy of Bhaal - Removed in v2.6 as part of bugfix
+	//if (game.m_options.m_bNightmareMode
+	//	&& pTarget->virtual_GetAIType()->m_EnemyAlly >= 30) // GOODCUTOFF
+	//{
+	//	nBestSavesRoll += 5;
+	//}
+
+	// Mage specialist bonus vs. incoming spells
+	const uint school = pEffect->m_school;
+	if (school != 0 && school == game.m_ruleTables.MapCharacterSpecializationToSchool(
+		pTarget->m_baseStats.m_mageSpecialization))
+	{
+		nBestSavesRollTotal += 2;
+		outputBonus("Specialist vs. School", 2);
+	}
+
+	// op346
+	if (school < 12) {
+		const short nSchoolSaveBonus = targetStats.m_nSchoolSaveBonus[school];
+		nBestSavesRollTotal += nSchoolSaveBonus;
+		if (nSchoolSaveBonus != 0) {
+			outputBonus("Creature vs. School", nSchoolSaveBonus);
+		}
+	}
+
+	CGameSprite* pSourceSprite = nullptr;
+
+	// op219
+	if (CGameObject* pSourceObject;
+		pEffect->m_sourceId != -1 && CGameObjectArray::GetShare(pEffect->m_sourceId, &pSourceObject) == 0
+		&& pSourceObject->virtual_GetObjectType() == CGameObjectType::SPRITE)
+	{
+		pSourceSprite = reinterpret_cast<CGameSprite*>(pSourceObject);
+		const CAIObjectType* pSourceAIType = pSourceObject->virtual_GetAIType();
+		const CSelectiveBonus* pFoundBonus = nullptr;
+
+		for (auto pNode = targetStats.m_cProtectionList.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+
+			const CSelectiveBonus* pBonus = pNode->data;
+
+			// type, checkForNonSprites, noNonSprites, deathMatchAllowance
+			if (pSourceAIType->OfType(&pBonus->m_type, false, false, false)) {
+				pFoundBonus = pBonus;
+				break;
+			}
+		}
+
+		const short nAITypeBonus = pFoundBonus != nullptr ? static_cast<short>(pFoundBonus->m_bonus) : 0;
+		nBestSavesRollTotal += nAITypeBonus;
+		if (nAITypeBonus != 0) {
+			const CAIObjectType& type = pFoundBonus->m_type;
+			const char* bonusName;
+			if (type.m_EnemyAlly != 0) {
+				bonusName = "Creature vs. Allegiance";
+			}
+			else if (type.m_General != 0) {
+				bonusName = "Creature vs. General";
+			}
+			else if (type.m_Race != 0) {
+				bonusName = "Creature vs. Race";
+			}
+			else if (type.m_Class != 0) {
+				bonusName = "Creature vs. Class";
+			}
+			else if (type.m_Specifics != 0) {
+				bonusName = "Creature vs. Specifics";
+			}
+			else if (type.m_Gender != 0) {
+				bonusName = "Creature vs. Gender";
+			}
+			else if (type.m_Alignment != 0) {
+				bonusName = "Creature vs. Alignment";
+			}
+			else {
+				bonusName = "Creature vs. Everyone";
+			}
+			outputBonus(bonusName, nAITypeBonus);
+		}
+	}
+
+	if (nBestSaveStat <= nBestSavesRollTotal) {
+
+		if (saveFeedbackStrRef != 0 && (targetStats.m_generalState & 0x800) == 0) {
+
+			if (extraFeedback) {
+
+				W<CString> saveStr = fetchStrRef(saveFeedbackStrRef);
+				const std::string extraFeedbackStr = extraFeedbackStream.str();
+
+				W<CString> sourceName = getEffectSourceName(pEffect);
+				W<CString> name = "Unknown";
+
+				if (pSourceSprite != nullptr) {
+					*name = pSourceSprite->GetName(true);
+				}
+
+				if (extraFeedbackStr.empty()) {
+					displaySpriteMessage(pTarget, std::format("{} ({}: {}) : {} <= {}", saveStr->m_pchData,
+						sourceName->m_pchData, name->m_pchData, nBestSaveStat, nBestSavesRollTotal).c_str());
+				}
+				else {
+					displaySpriteMessage(pTarget, std::format("{} ({}: {}) : {} <= {} ({})", saveStr->m_pchData,
+						sourceName->m_pchData, name->m_pchData, nBestSaveStat, nBestSavesRollTotal, extraFeedbackStr).c_str());
+				}
+			}
+			else {
+
+				if (const uint nTextLevel = game.m_options.m_nEffectTextLevel; (nTextLevel & 1) == 0)
+				{
+					if ((nTextLevel & 8) != 0) {
+
+						//     Options->Gameplay->Feedback->To-Hit Rolls  [Disabled]
+						// and Options->Gameplay->Feedback->State Changes [Enabled]
+						// (default config)
+
+						CMessageDisplayTextRef* const pMessageDisplayTextRef = newEngineObj<CMessageDisplayTextRef>(
+							pTarget->GetNameRef(), saveFeedbackStrRef, 0xBED7D7, 0xBED7D7, -1, pTarget->m_id, pTarget->m_id);
+
+						chitin.m_cMessageHandler.AddMessage(pMessageDisplayTextRef, false);
+					}
+				}
+				else {
+
+					// Options->Gameplay->Feedback->To-Hit Rolls [Enabled]
+
+					displaySpriteMessage(pTarget, std::format("{} : {}",
+						fetchStrRef(saveFeedbackStrRef)->m_pchData, nBestSavesRollTotal).c_str());
+				}
+			}
+		}
+
+		return false; // SAVE SUCCEEDED (EFFECT BLOCKED)
+	}
+
+	return true; // SAVE FAILED (EFFECT ADDED)
 }

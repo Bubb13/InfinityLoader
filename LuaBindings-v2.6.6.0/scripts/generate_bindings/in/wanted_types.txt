@@ -13,6 +13,8 @@ CGameTemporal
 CGameTiledObject
 CGameTrigger
 CMessageAddEffect
+CMessageDisplayText
+CMessageDisplayTextRef
 CMessageSetDirection
 CProjectile
 CProjectileAmbiant

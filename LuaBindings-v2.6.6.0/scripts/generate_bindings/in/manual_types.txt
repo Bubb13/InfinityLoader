@@ -752,13 +752,13 @@ struct CAIObjectType
 
 	$constructor_fake ConstructCopy(const CAIObjectType* toCopy)
 	{
-		this->m_name.m_pchData = *p_afxPchNil;
-		this->Set(toCopy);
+		m_name.Construct();
+		Set(toCopy);
 	}
 
 	void Destruct()
 	{
-		this->m_name.Destruct();
+		m_name.Destruct();
 	}
 };
 
@@ -801,6 +801,8 @@ struct CGameSprite : CGameAIBase
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
 	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption);
 	void UpdateTarget(CGameObject* target);
+	uint GetNameRef();
+	CString* GetName(int ignoreSTRREFON);
 };
 
 struct CProjectile : CGameObject
@@ -837,10 +839,24 @@ struct CSpell : CResHelper<CResSpell,1006>
 	$constructor_fake Construct(CResRef res);
 };
 
+struct CItem : CResHelper<CResItem,1005>
+{
+	$constructor_fake Construct3(CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
+};
+
 struct CString
 {
 	$constructor_fake ConstructFromChars(primitive const char* lpsz);
+	$constructor_fake ConstructFromCString(const CString* other);
 	void Destruct();
+
+	$eof_body $constructor_fake Construct()
+	{
+		m_pchData = *p_afxPchNil;
+	}
+
+	$binding_name(SetFromChars) void operator=(primitive const char* lpsz) const;
+	$binding_name(SetFromCString) void operator=(const CString* other) const;
 };
 
 struct CSearchBitmap
@@ -886,20 +902,20 @@ struct CPoint
 
 	$nobinding $constructor Construct()
 	{
-		this->x = 0;
-		this->y = 0;
+		x = 0;
+		y = 0;
 	}
 
 	$nobinding $constructor ConstructFromXY(int x, int y)
 	{
-		this->x = x;
-		this->y = y;
+		x = x;
+		y = y;
 	}
 
 	$nobinding $constructor ConstructFromPoint(CPoint* point)
 	{
-		this->x = point->x;
-		this->y = point->y;
+		x = point->x;
+		y = point->y;
 	}
 };
 
@@ -992,14 +1008,86 @@ struct CMessageAddEffect : CMessage
 	}
 };
 
+struct CMessageDisplayTextRef : CMessage
+{
+	nobinding nopointer static void* VFTable;
+
+	$constructor_fake Construct(uint name, uint text, uint nameColor, uint textColor, int marker, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_targetId = target;
+		m_sourceId = caller;
+		m_name = name;
+		m_text = text;
+		m_nameColor = nameColor;
+		m_textColor = textColor;
+		m_marker = marker;
+		m_moveToTop = 0;
+		m_overHead = 0;
+		m_overrideDialogMode = 0;
+		m_bPlaySound = 1;
+	}
+};
+
+struct CMessageDisplayText : CMessage
+{
+	nobinding nopointer static void* VFTable;
+
+	$constructor_fake Construct(CString* name, CString* text, uint nameColor, uint textColor, int marker, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_targetId = target;
+		m_sourceId = caller;
+		m_name.Construct(name);
+		m_text.Construct(text);
+		m_nameColor = nameColor;
+		m_textColor = textColor;
+		m_marker = marker;
+		m_moveToTop = 0;
+		m_overHead = 0;
+		m_overrideDialogMode = 0;
+	}
+};
+
 struct CMessageHandler
 {
 	short AddMessage(CMessage* message, int bForcePassThrough);
 };
 
+struct CRuleTables
+{
+	byte MapCharacterSpecializationToSchool(ushort nSpecialistMage);
+};
+
+struct CSound : CObject, CResHelper<CResWave,4>
+{
+	$constructor_fake Construct();
+	void Destruct();
+};
+
 struct CScreenWorld : CBaldurEngine
 {
 	int TogglePauseGame(byte visualPause, byte bSendMessage, int idPlayerPause, byte bLogPause, byte bRequireHostUnpause);
+};
+
+struct CTlkTable
+{
+	byte Fetch(uint strId, STR_RES* strRes, int ignoreSTRREFON);
+};
+
+struct STR_RES
+{
+	$constructor_fake Construct()
+	{
+		szText.Construct();
+		cSound.Construct();
+	}
+
+	void Destruct()
+	{
+		cSound.Destruct();
+		szText.Destruct();
+	}
 };
 
 //////////////////////////////
@@ -1054,4 +1142,5 @@ namespace EEex
 	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 	$external_implementation $pass_lua_state $nobinding void DestroyUDAux(void* ptr);
 	$external_implementation $pass_lua_state $nobinding void CopyUDAux(void* sourcePtr, void* targetPtr);
+	$external_implementation $nobinding int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
 };

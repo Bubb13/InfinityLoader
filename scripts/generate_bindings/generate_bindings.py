@@ -1128,6 +1128,7 @@ class FunctionImplementation:
 		self.returnType: TypeReference = None
 		self.callingConvention: str = None
 		self.name: str = None
+		self.funcPtrName: str = None
 		self.removedThisType: TypeReference = None
 		self.parameters: list[FunctionImplementationParameter] = []
 		self.body: list[str] = []
@@ -1142,7 +1143,21 @@ class FunctionImplementation:
 		self.virtual: bool = False
 		self.externalImplementation: bool = False
 		self.passLuaState: bool = False
+		self.eofBody: bool = False
+		self.bindingName: str = None
 
+
+	def setName(self, name: str):
+		self.name = name
+		# This is normally called after setBindingName().
+		# Only replace funcPtrName if it wasn't set by
+		# setBindingName().
+		if self.funcPtrName == None:
+			self.funcPtrName = name.replace("=", "_equ")
+
+	def setBindingName(self, bindingName: str):
+		self.bindingName = bindingName
+		self.funcPtrName = bindingName
 
 	def getAllTypeReferences(self, mainState: MainState):
 
@@ -1161,11 +1176,14 @@ class FunctionImplementation:
 		return refs
 
 
-	def toString(self, mainState: MainState, indent=""):
+	def toString(self, mainState: MainState, indent="", eof: bool = False):
 
 		parts: list[str] = [indent]
 		if self.group != mainState.globalGroup:
-			parts.append("\t")
+			if not eof:
+				parts.append("\t")
+			else:
+				parts.append("inline ")
 
 		if self.virtual:
 			parts.append("virtual ")
@@ -1173,13 +1191,17 @@ class FunctionImplementation:
 		if self.isStatic:
 			parts.append("static ")
 
+		namespace = f"{self.group.name}::" if self.eofBody and eof else ""
+
 		if self.isFakeConstructor:
-			parts.append(f"{self.returnType.getHeaderName()} Construct")
+			parts.append(f"{self.returnType.getHeaderName()} {namespace}Construct")
 		elif not self.isConstructor and not self.isDestructor:
 			parts.append(self.returnType.getHeaderName())
 			parts.append(" ")
+			parts.append(namespace)
 			parts.append(self.name)
 		else:
+			parts.append(namespace)
 			if self.isDestructor: parts.append("~")
 			parts.append(self.group.singleName)
 
@@ -1215,11 +1237,14 @@ class FunctionImplementation:
 
 		elif not self.noBody:
 			assert not self.externalImplementation, "Function cannot be header-defined and externally-defined"
-			parts.append("\n")
-			for bodyLine in self.body:
-				parts.append(indent)
-				parts.append(bodyLine)
+			if not self.eofBody or eof:
 				parts.append("\n")
+				for bodyLine in self.body:
+					parts.append(indent)
+					parts.append(bodyLine if not eof else bodyLine[1:])
+					parts.append("\n")
+			else:
+				parts.append(";\n")
 
 		elif not self.externalImplementation:
 
@@ -1230,7 +1255,7 @@ class FunctionImplementation:
 			if not self.returnType.isVoid():
 				parts.append("return ")
 
-			parts.append(f"{indent}p_{self.name}(")
+			parts.append(f"{indent}p_{self.funcPtrName}(")
 
 			if not self.isStatic:
 				parts.append("this")
@@ -1274,7 +1299,7 @@ variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\s+)*)(?:__unaligne
 
 def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
-	functionImplementationMatch: Match = re.match("^\s*(?!typedef)((?:(?:\$nobinding|\$nodeclaration|\$external_implementation|\$pass_lua_state)\s+)*)(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)\s*(const){0,1}\s*(?:(;)){0,1}$", line)
+	functionImplementationMatch: Match = re.match("^\s*(?!typedef)((?:(?:\$nobinding|\$nodeclaration|\$external_implementation|\$pass_lua_state|\$eof_body|\$binding_name\(\S+\))\s+)*)(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]=]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)\s*(const){0,1}\s*(?:(;)){0,1}$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1294,6 +1319,14 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 				elif keyword == "$pass_lua_state":
 					assert not state.currentFunctionImplementation.passLuaState, "pass_lua_state already defined"
 					state.currentFunctionImplementation.passLuaState = True
+				elif keyword == "$eof_body":
+					assert not state.currentFunctionImplementation.eofBody, "eof_body already defined"
+					state.currentFunctionImplementation.eofBody = True
+				elif bindingNameMatch := re.match("^\$binding_name\((\S+)\)$", keyword):
+					assert not state.currentFunctionImplementation.bindingName, "bindingName already defined"
+					state.currentFunctionImplementation.setBindingName(bindingNameMatch.group(1))
+				else:
+					assert False, "Bad bindings directive"
 
 		state.currentFunctionImplementation.isStatic = functionImplementationMatch.group(2) != None
 
@@ -1319,7 +1352,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 		state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, debugLine=f"processCommonGroupLines()-1 {line}")
 		state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(4)
 
-		state.currentFunctionImplementation.name = functionImplementationMatch.group(5)
+		state.currentFunctionImplementation.setName(functionImplementationMatch.group(5))
 
 		parameterStr = functionImplementationMatch.group(6)
 		if parameterStr != None and parameterStr != "":
@@ -2044,10 +2077,11 @@ class Group:
 
 				if functionImp.noBody and not functionImp.externalImplementation:
 
-					realVariableName: str = f"{group.name}::{functionImp.name}" if isNormal else functionImp.name
-					pointerVariableName: str = f"{group.name}::p_{functionImp.name}" if isNormal else f"p_{functionImp.name}"
+					funcName: str = functionImp.name if not functionImp.bindingName else functionImp.bindingName
+					realVariableName: str = f"{group.name}::{funcName}" if isNormal else functionImp.name
+					pointerVariableName: str = f"{group.name}::p_{functionImp.funcPtrName}" if isNormal else f"p_{functionImp.funcPtrName}"
 
-					pointerVariableTypeName: str = f"type_{functionImp.name}"
+					pointerVariableTypeName: str = f"type_{functionImp.funcPtrName}"
 					pointerVariableFullTypeName: str = f"{group.name}::{pointerVariableTypeName}" if isNormal else pointerVariableTypeName
 
 					internalPointersOut.write(f"{pointerVariableFullTypeName} {pointerVariableName};\n")
@@ -2075,7 +2109,7 @@ class Group:
 
 						parts.append(");\n")
 						modifierStr: str = "static" if isNormal else "extern"
-						parts.append(f"{indent}{modifierStr} {pointerVariableTypeName} p_{functionImp.name};")
+						parts.append(f"{indent}{modifierStr} {pointerVariableTypeName} p_{functionImp.funcPtrName};")
 						parts.append("\n\n")
 						wroteSomething = True
 
@@ -3126,9 +3160,13 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			isNormal: bool = group != mainState.globalGroup
 			functionOpenData = OpenFunctionData()
 
-			functionOpenData.functionName = functionImplementation.name
+			funcImpBindingName: str = functionImplementation.name \
+				if not functionImplementation.bindingName \
+				else functionImplementation.bindingName
+
+			functionOpenData.functionName = funcImpBindingName
 			groupIden = f"{groupNameStrIden}_" if isNormal else ""
-			functionOpenData.functionBindingName = resolveIdentifer(f"tolua_function_{groupIden}{functionImplementation.name}")
+			functionOpenData.functionBindingName = resolveIdentifer(f"tolua_function_{groupIden}{funcImpBindingName}")
 
 			groupOpenData.functionBindings.append(functionOpenData)
 
@@ -3136,7 +3174,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			out.write("{\n")
 
 			if isNormal and group.groupType != "namespace" and not functionImplementation.isStatic:
-				writeAccessSelf(f"invalid 'self' in calling function '{functionImplementation.name}'")
+				writeAccessSelf(f"invalid 'self' in calling function '{funcImpBindingName}'")
 
 			callArgParts: list[str] = []
 			def checkPrimitiveHandling(paramType: TypeReference, luaVarIndex: int):
@@ -3153,23 +3191,23 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 				if checkType.isPrimitiveNumber() and checkType.getUserTypePointerLevel() == 0:
 					if paramType.getName() in ("float", "double"):
-						callArgParts.append(f"{enumCastString}tolua_function_tonumber(L, {luaVarIndex}, \"{functionImplementation.name}\")")
+						callArgParts.append(f"{enumCastString}tolua_function_tonumber(L, {luaVarIndex}, \"{funcImpBindingName}\")")
 					else:
-						callArgParts.append(f"{enumCastString}tolua_function_tointeger(L, {luaVarIndex}, \"{functionImplementation.name}\")")
+						callArgParts.append(f"{enumCastString}tolua_function_tointeger(L, {luaVarIndex}, \"{funcImpBindingName}\")")
 					callArgParts.append(", ")
 					return True
 				elif checkTypeName == "bool" and checkType.getUserTypePointerLevel() == 0:
-					callArgParts.append(f"tolua_function_toboolean(L, {luaVarIndex}, \"{functionImplementation.name}\")")
+					callArgParts.append(f"tolua_function_toboolean(L, {luaVarIndex}, \"{funcImpBindingName}\")")
 					callArgParts.append(", ")
 					return True
 				elif checkTypeName == "char" and not checkType.unsigned:
 					if checkType.getUserTypePointerLevel() == 1:
 						nonConstCast = "(char*)" if not checkType.const else ""
-						callArgParts.append(f"{nonConstCast}tolua_function_tostring(L, {luaVarIndex}, \"{functionImplementation.name}\")")
+						callArgParts.append(f"{nonConstCast}tolua_function_tostring(L, {luaVarIndex}, \"{funcImpBindingName}\")")
 						callArgParts.append(", ")
 						return True
 					elif checkType.getUserTypePointerLevel() == 0:
-						callArgParts.append(f"tolua_function_tochar(L, {luaVarIndex}, \"{functionImplementation.name}\")")
+						callArgParts.append(f"tolua_function_tochar(L, {luaVarIndex}, \"{funcImpBindingName}\")")
 						callArgParts.append(", ")
 						return True
 
@@ -3178,7 +3216,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			out.write("\t")
 
 			parameterIMod: int = None
-			functionNameHeader = f"p_{functionImplementation.name}" \
+			functionNameHeader = f"p_{functionImplementation.funcPtrName}" \
 				if (not isNormal and functionImplementation.noBody and not functionImplementation.externalImplementation) \
 				else functionImplementation.name
 
@@ -3737,9 +3775,24 @@ def outputHeader(mainState: MainState, outputFileName: str, out: TextIOWrapper):
 
 		out.write("\n")
 
+		def doEOFFuncOutput(group: Group):
+
+			for subgroup in group.subGroups:
+				doEOFFuncOutput(subgroup)
+
+			for functionImp in group.functionImplementations:
+				if functionImp.eofBody:
+					out.write(functionImp.toString(mainState, eof=True))
+					out.write("\n")
+
+		# Output eof body functions
+		for group in mainState.filteredGroups:
+			if group.isSubgroup() or group.ignoreHeader or group.groupType == "undefined": continue
+			doEOFFuncOutput(group)
+
 		if internalPointersOut:
 
-			out.write("\nextern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;\n")
+			out.write("extern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;\n")
 
 			if len(internalPointersList) > 0:
 				internalPointersOut.write("\n")
