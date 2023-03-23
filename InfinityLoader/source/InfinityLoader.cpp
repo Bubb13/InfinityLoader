@@ -112,12 +112,13 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 #endif
 
 	writer.callToAddressFar(reinterpret_cast<intptr_t>(GetProcAddress));
-
-	writer.writeArgImmediate32(reinterpret_cast<int>(GetStdHandle(STD_ERROR_HANDLE)), 3);
-	writer.writeArgImmediate32(reinterpret_cast<int>(GetStdHandle(STD_OUTPUT_HANDLE)), 2);
-	writer.writeArgImmediate32(reinterpret_cast<int>(GetStdHandle(STD_INPUT_HANDLE)), 1);
+	// Only the lower 32 bits of a HANDLE are significant
+	// https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
+	writer.writeArgImmediate32(static_cast<int>(reinterpret_cast<intptr_t>(GetStdHandle(STD_ERROR_HANDLE))), 3);
+	writer.writeArgImmediate32(static_cast<int>(reinterpret_cast<intptr_t>(GetStdHandle(STD_OUTPUT_HANDLE))), 2);
+	writer.writeArgImmediate32(static_cast<int>(reinterpret_cast<intptr_t>(GetStdHandle(STD_INPUT_HANDLE))), 1);
 	writer.writeArgImmediate32(GetCurrentProcessId(), 0);
-	writer.writeBytesToBuffer(2, 0xFF, 0xD0);
+	writer.writeBytesToBuffer(2, 0xFF, 0xD0); // call eax/rax
 
 	///////////////////
 	// Pop Alignment //
@@ -313,7 +314,7 @@ int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
 }
 
 int main(int argc, char* argv[]) {
-	
+
 	__try {
 
 		if (!inheritedConsole()) {

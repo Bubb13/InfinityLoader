@@ -689,6 +689,26 @@ DWORD resolveAliasTarget(const String aliasList, String& toTransform) {
 DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPath,
 	String iniCategoryName, intptr_t& addressOut)
 {
+	intptr_t bExeSwitch;
+	if (DWORD lastError = GetINIIntegerDef<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
+		return lastError;
+	}
+
+	if (bExeSwitch) {
+
+		String exeAlias;
+		if (DWORD lastError{ GetINIStringDef(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitchAlias"), TEXT(""), exeAlias) }) {
+			return lastError;
+		}
+
+		String exeSwitchName{ exeNameForPatterns };
+		if (DWORD lastError = resolveAliasTarget(exeAlias, exeSwitchName)) {
+			return lastError;
+		}
+
+		iniCategoryName.insert(0, String{ TEXT("!ExeSwitch-") }.append(exeSwitchName).append(TEXT("-")));
+	}
+
 	bool noCache;
 	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, iniCategoryName.c_str(), TEXT("NoCache"), false, noCache)) {
 		return lastError;
@@ -705,26 +725,6 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPat
 			addressOut = cachedAddress;
 			return 0;
 		}
-	}
-
-	intptr_t bExeSwitch;
-	if (DWORD lastError = GetINIIntegerDef<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
-		return lastError;
-	}
-
-	if (bExeSwitch) {
-
-		String exeAlias;
-		if (DWORD lastError { GetINIStringDef(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitchAlias"), TEXT(""), exeAlias) }) {
-			return lastError;
-		}
-
-		String exeSwitchName { exeNameForPatterns };
-		if (DWORD lastError = resolveAliasTarget(exeAlias, exeSwitchName)) {
-			return lastError;
-		}
-
-		iniCategoryName.insert(0, String{ TEXT("!ExeSwitch-") }.append(exeSwitchName).append(TEXT("-")));
 	}
 
 	String hardcodedPatchPattern;
@@ -754,7 +754,9 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPat
 	}
 
 	if (!noCache) {
-		SetINIInteger<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), addressOut);
+		if (DWORD lastError = SetINIInteger<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), addressOut)) {
+			return lastError;
+		}
 	}
 	return 0;
 }
@@ -790,17 +792,14 @@ DWORD findPatterns(ImageSectionInfo& sectionInfo) {
 
 	const long long exeLastModifiedTime = getFileLastModifiedTime(exePath);
 
-	if (alreadyCached) {
-
-		if (exeLastModifiedTime == cachedExeTime) {
-			attemptUseCached = true;
-		}
-		else {
-			SetINIInteger<long long>(iniPath, TEXT("Auto-Generated"), TEXT("CachedExeTime"), exeLastModifiedTime);
-		}
+	if (alreadyCached && exeLastModifiedTime == cachedExeTime) {
+		attemptUseCached = true;
 	}
-	else {
-		SetINIInteger<long long>(iniPath, TEXT("Auto-Generated"), TEXT("CachedExeTime"), exeLastModifiedTime);
+
+	if (!attemptUseCached) {
+		if (DWORD lastError = SetINIInteger<long long>(iniPath, TEXT("Auto-Generated"), TEXT("CachedExeTime"), exeLastModifiedTime)) {
+			return lastError;
+		}
 	}
 
 	if (debug) {
@@ -830,6 +829,36 @@ DWORD findPatterns(ImageSectionInfo& sectionInfo) {
 // Lua Functions //
 ///////////////////
 
+template<typename IntegerType>
+bool boundsExceeded(lua_State *const L, const int argI, IntegerType& resultVal, std::string& error) {
+
+	const lua_Integer val = p_lua_tointeger(L, argI);
+
+	constexpr auto min = minIntegerTypeValue<IntegerType>();
+	if (val < min) {
+		// Error: Too small
+		error = std::format("arg #{} ({}) too small (min: {})", argI, val, min);
+		return true;
+	}
+
+	constexpr auto max = maxIntegerTypeValue<IntegerType>();
+	if (val > max) {
+		// Error: Too large
+		error = std::format("arg #{} ({}) too large (max: {})", argI, val, max);
+		return true;
+	}
+
+	resultVal = static_cast<IntegerType>(val);
+	return false;
+}
+
+#define castLuaIntArg(argI, typeName, varName) \
+	typeName varName; \
+	if (std::string error; boundsExceeded<typeName>(L, argI, varName, error)) { \
+		p_luaL_error(L, "%s", error.c_str()); \
+		return 0; \
+	}
+
 int addToLuaRegistryLua(lua_State* L) {
 	p_lua_pushvalue(L, 1);
 	p_lua_pushinteger(L, p_luaL_ref(L, LUA_REGISTRYINDEX));
@@ -843,7 +872,7 @@ int allocCodePageInternalLua(lua_State* L) {
 
 	intptr_t allocated;
 	if (DWORD lastError = allocateNear(textInfo.ImageBase, info.dwAllocationGranularity,
-									   info.dwAllocationGranularity, allocated))
+		info.dwAllocationGranularity, allocated))
 	{
 		return 0;
 	}
@@ -853,18 +882,20 @@ int allocCodePageInternalLua(lua_State* L) {
 	return 2;
 }
 
+typedef std::make_unsigned<lua_Integer>::type UnsignedLuaInt;
+
 int bandLua(lua_State* L) {
-	p_lua_pushinteger(L, static_cast<uintptr_t>(p_lua_tointeger(L, 1)) & static_cast<uintptr_t>(p_lua_tointeger(L, 2)));
+	p_lua_pushinteger(L, static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)) & static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 2)));
 	return 1;
 }
 
 int bnotLua(lua_State* L) {
-	p_lua_pushinteger(L, ~static_cast<uintptr_t>(p_lua_tointeger(L, 1)));
+	p_lua_pushinteger(L, ~static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)));
 	return 1;
 }
 
 int borLua(lua_State* L) {
-	p_lua_pushinteger(L, static_cast<uintptr_t>(p_lua_tointeger(L, 1)) | static_cast<uintptr_t>(p_lua_tointeger(L, 2)));
+	p_lua_pushinteger(L, static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)) | static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 2)));
 	return 1;
 }
 
@@ -884,11 +915,11 @@ int enableCodeProtectionLua(lua_State* L) {
 }
 
 int extractLua(lua_State* L) {
-	uintptr_t num = p_lua_tointeger(L, 1);
-	uintptr_t start = p_lua_tointeger(L, 2);
-	uintptr_t len = p_lua_tointeger(L, 3);
-	uintptr_t mask = 0x0;
-	for (uintptr_t i = 0; i < len; ++i) {
+	UnsignedLuaInt num = p_lua_tointeger(L, 1);
+	UnsignedLuaInt start = p_lua_tointeger(L, 2);
+	UnsignedLuaInt len = p_lua_tointeger(L, 3);
+	UnsignedLuaInt mask = 0x0;
+	for (UnsignedLuaInt i = 0; i < len; ++i) {
 		mask = (mask << 1) | 1;
 	}
 	p_lua_pushinteger(L, (num >> start) & mask);
@@ -896,13 +927,14 @@ int extractLua(lua_State* L) {
 }
 
 int freeLua(lua_State* L) {
-	void* ptr = reinterpret_cast<void*>(p_lua_tointegerx(L, 1, nullptr));
+	void* ptr = reinterpret_cast<void*>(p_lua_tointeger(L, 1));
 	p_free(ptr);
 	return 0;
 }
 
 int getLuaRegistryIndexLua(lua_State* L) {
-	p_lua_rawgeti(L, LUA_REGISTRYINDEX, p_lua_tointeger(L, 1));
+	castLuaIntArg(1, int, n)
+	p_lua_rawgeti(L, LUA_REGISTRYINDEX, n);
 	return 1;
 }
 
@@ -1057,28 +1089,32 @@ int loadLuaBindingsLua(lua_State* L) {
 }
 
 int lshiftLua(lua_State* L) {
-	p_lua_pushinteger(L, static_cast<uintptr_t>(p_lua_tointeger(L, 1)) << static_cast<uintptr_t>(p_lua_tointeger(L, 2)));
+	p_lua_pushinteger(L, static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)) << static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 2)));
 	return 1;
 }
 
 int mallocLua(lua_State* L) {
-	ptrdiff_t size = p_lua_tointegerx(L, 1, nullptr);
-	p_lua_pushinteger(L, reinterpret_cast<ptrdiff_t>(p_malloc(size)));
+	castLuaIntArg(1, size_t, size)
+	p_lua_pushinteger(L, reinterpret_cast<lua_Integer>(p_malloc(size)));
 	return 1;
 }
 
 int memcpyLua(lua_State* L) {
-	memcpy(reinterpret_cast<void*>(p_lua_tointeger(L, 1)), reinterpret_cast<void*>(p_lua_tointeger(L, 2)), p_lua_tointeger(L, 3));
+	castLuaIntArg(3, size_t, size)
+	memcpy(reinterpret_cast<void*>(p_lua_tointeger(L, 1)), reinterpret_cast<void*>(p_lua_tointeger(L, 2)), size);
 	return 0;
 }
 
 int memsetLua(lua_State* L) {
-	memset(reinterpret_cast<void*>(p_lua_tointeger(L, 1)), p_lua_tointeger(L, 2), p_lua_tointeger(L, 3));
+	castLuaIntArg(2, int, val)
+	castLuaIntArg(3, size_t, size)
+	memset(reinterpret_cast<void*>(p_lua_tointeger(L, 1)), val, size);
 	return 0;
 }
 
 int messageBoxInternalLua(lua_State* L) {
-	MessageBoxA(NULL, p_lua_tostring(L, 1), "EEex", p_lua_tointeger(L, 2));
+	castLuaIntArg(2, UINT, uType)
+	MessageBoxA(NULL, p_lua_tostring(L, 1), "EEex", uType);
 	return 0;
 }
 
@@ -1143,9 +1179,9 @@ int readU8Lua(lua_State* L) {
 
 int readLString(lua_State* L) {
 	const char *const data { reinterpret_cast<char*>(p_lua_tointeger(L, 1)) };
-	const lua_Integer length { p_lua_tointeger(L, 2) };
+	castLuaIntArg(2, size_t, length)
 	char *const localCopy { reinterpret_cast<char*>(alloca(length + 1)) };
-	lua_Integer i { 0 };
+	size_t i { 0 };
 	for (; i < length; ++i) {
 		const char readVal { data[i] };
 		if (readVal == '\0') {
@@ -1164,26 +1200,28 @@ int readString(lua_State* L) {
 }
 
 int rshiftLua(lua_State* L) {
-	p_lua_pushinteger(L, static_cast<uintptr_t>(p_lua_tointeger(L, 1)) >> static_cast<uintptr_t>(p_lua_tointeger(L, 2)));
+	p_lua_pushinteger(L, static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)) >> static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 2)));
 	return 1;
 }
 
 int runWithStackLua(lua_State* L) {
 
+	castLuaIntArg(1, size_t, size)
+
 	p_lua_getglobal(L, "debug");                              // [ debug ]
 	p_lua_getfield(L, -1, "traceback");                       // [ debug, traceback ]
 	p_lua_pushvalue(L, 2);                                    // [ debug, traceback, func ]
 
-	void* mem = alloca(p_lua_tointeger(L, 1));
+	void* mem = alloca(size);
 	p_lua_pushinteger(L, reinterpret_cast<lua_Integer>(mem)); // [ debug, traceback, func, stackPtr ]
 
 	if (p_lua_pcallk(L, 1, 0, -3, 0, nullptr) != LUA_OK) {
-		                                                      // [ debug, traceback, errorMessage ]
+															  // [ debug, traceback, errorMessage ]
 		Print("[!] %s\n", p_lua_tostring(L, -1));
 		p_lua_pop(L, 3);                                      // [ ]
 	}
 	else {
-		                                                      // [ debug, traceback ]
+															  // [ debug, traceback ]
 		p_lua_pop(L, 2);                                      // [ ]
 	}
 
@@ -1191,30 +1229,35 @@ int runWithStackLua(lua_State* L) {
 }
 
 int setLuaRegistryIndexLua(lua_State* L) {
+	castLuaIntArg(1, int, n)
 	p_lua_pushvalue(L, 2);
-	p_lua_rawseti(L, LUA_REGISTRYINDEX, p_lua_tointeger(L, 1));
+	p_lua_rawseti(L, LUA_REGISTRYINDEX, n);
 	return 0;
 }
 
 int write16Lua(lua_State* L) {
-	*reinterpret_cast<__int16*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
+	castLuaIntArg(2, __int16, val)
+	*reinterpret_cast<__int16*>(p_lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int write32Lua(lua_State* L) {
-	*reinterpret_cast<__int32*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
+	castLuaIntArg(2, __int32, val)
+	*reinterpret_cast<__int32*>(p_lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 #if defined(_WIN64)
 int write64Lua(lua_State* L) {
-	*reinterpret_cast<__int64*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
+	castLuaIntArg(2, __int64, val)
+	*reinterpret_cast<__int64*>(p_lua_tointeger(L, 1)) = val;
 	return 0;
 }
 #endif
 
 int write8Lua(lua_State* L) {
-	*reinterpret_cast<__int8*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
+	castLuaIntArg(2, __int8, val)
+	*reinterpret_cast<__int8*>(p_lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
@@ -1226,7 +1269,7 @@ int writePointerLua(lua_State* L) {
 int writeLStringLua(lua_State* L) {
 	char* dest = reinterpret_cast<char*>(p_lua_tointeger(L, 1));
 	const char* src = p_lua_tostring(L, 2);
-	size_t limit = p_lua_tointeger(L, 3);
+	castLuaIntArg(3, size_t, limit)
 	size_t i = 0;
 	for (; i < limit; ++i) {
 		*dest++ = *src++;
@@ -1327,7 +1370,7 @@ DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 void bindToParentOSHandles() {
 
 	// The strategy:
-	// 
+	//
 	//   1) AttachConsole(), (which should have been called before this), attaches to the target console
 	//      and sets STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/STD_ERROR_HANDLE to new HANDLEs. However, since
 	//      these handles are newly-created, they do not inherit any of the OS handle redirections of the
@@ -1431,7 +1474,7 @@ DWORD detatchFromConsole(bool force = false) {
 	// Close the duplicated parent handles so they don't leak, (crt may still hold
 	// a duplicate of the duplicate if KeepCrtStreamsAttached=1, which is fine,
 	// since they will be closed on the next attachToConsole()).
-	// 
+	//
 	// Note: KeepCrtStreamsAttached=1 keeps the crt handles valid, while also closing
 	// STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/STD_ERROR_HANDLE. This may cause side effects
 	// if the loader code / child processes expect GetStdHandle() to be valid.
@@ -1742,7 +1785,7 @@ void initLua() {
 		// LuaMode::EXTERNAL calls EEex_Main.lua before __tmainCRTStartup() has
 		// been called to initialize the game's heap. Let EEex_Main.lua use the
 		// DLL's heap for initialization.
-		// 
+		//
 		// Note: Memory allocated during initialization should NEVER be freed.
 		// Since free() is swapped out after EEex_Main.lua, attempting to free
 		// memory allocated during initialization results in the wrong heap

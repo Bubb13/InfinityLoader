@@ -18,8 +18,8 @@ typedef std::string String;
 typedef std::string_view StringView;
 typedef std::ostringstream OStringStream;
 typedef std::ifstream IFStream;
-#define printfT printf
-#define fprintfT fprintf
+//#define printfT printf
+//#define fprintfT fprintf
 #define strcmpT strcmp
 #define strlenT strlen
 #define _vsnprintfT_s _vsnprintf_s
@@ -29,8 +29,8 @@ typedef std::wstring String;
 typedef std::wstring_view StringView;
 typedef std::wostringstream OStringStream;
 typedef std::wifstream IFStream;
-#define printfT wprintf
-#define fprintfT fwprintf
+//#define printfT wprintf
+//#define fprintfT fwprintf
 #define strcmpT wcscmp
 #define strlenT wcslen
 #define _vsnprintfT_s _vsnwprintf_s
@@ -86,6 +86,27 @@ extern int UnbufferCrtStreams();
 extern void NulCrtStreams();
 extern void BindCrtStreamsToOSHandles();
 
+template<typename IntegerType>
+constexpr IntegerType maxIntegerTypeValue() {
+	if constexpr (std::is_unsigned<IntegerType>::value) {
+		return ~0;
+	}
+	else {
+		using UnsignedType = typename std::make_unsigned<IntegerType>::type;
+		return static_cast<UnsignedType>(~0) >> 1;
+	}
+}
+
+template<typename IntegerType>
+constexpr std::make_signed<IntegerType>::type minIntegerTypeValue() {
+	if constexpr (std::is_unsigned<IntegerType>::value) {
+		return 0;
+	}
+	else {
+		return -maxIntegerTypeValue<IntegerType>() - 1;
+	}
+}
+
 //////////////////
 // INI Handling //
 //////////////////
@@ -117,6 +138,8 @@ void forEveryCharSplit(const String& buffer, const TCHAR splitChar, const Func a
 	}
 }
 
+extern bool decimalStrToInteger(const String decimalStr, bool& accumulator);
+
 template<typename IntegerType>
 extern bool decimalStrToInteger(const String decimalStr, IntegerType& accumulator);
 
@@ -139,7 +162,7 @@ extern DWORD GetINIIntegerDef(String iniPath, const TCHAR* section, const TCHAR*
 	LogFuncT errorFunc);
 
 template<typename IntegerType>
-extern DWORD SetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType toSet);
+extern DWORD SetINIInteger(const String& iniPath, const TCHAR* section, const TCHAR* key, IntegerType toSet);
 
 ///////////
 // Paths //

@@ -33,6 +33,7 @@ const std::pair<const TCHAR, const unsigned char> aDecimalDigitToByte[] = {
 /////////////
 
 #undef fprintf
+#undef fprintfT
 
 #ifndef UNICODE
 #define fprintfT fprintf
@@ -99,6 +100,7 @@ void FPrint_Console(FILE* file, const char* formatText, ...) {
 }
 
 #define fprintf error
+#undef fprintfT
 #define fprintfT error
 
 int InitFPrint(bool debug, bool protonCompatibility) {
@@ -449,6 +451,34 @@ DWORD GetINIStringDef(const String& iniPath, const TCHAR* section, const TCHAR* 
 	return error;
 }
 
+bool decimalStrToInteger(const String decimalStr, bool& accumulator) {
+
+	size_t strLen = decimalStr.length();
+	if (strLen == 0) {
+		return false;
+	}
+
+	const TCHAR* characters = decimalStr.c_str();
+	size_t minimumI = 0;
+
+	if (characters[0] == TCHAR{ '-' }) {
+		if (strLen == 1) {
+			return false;
+		}
+		minimumI = 1;
+	}
+
+	const TCHAR firstChar = characters[minimumI];
+	for (const auto& entry : aDecimalDigitToByte) {
+		if (firstChar == entry.first) {
+			accumulator = entry.second != 0;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 // TODO: Suboptimal
 template<typename IntegerType>
 bool decimalStrToInteger(const String decimalStr, IntegerType& accumulator) {
@@ -544,18 +574,6 @@ DWORD GetINIIntegerDef(String iniPath, const TCHAR* section, const TCHAR* key, I
 	return GetINIIntegerDef(iniPath, section, key, def, outInteger, LogPrint);
 }
 
-DWORD SetINIString(String iniPath, const TCHAR* section, const TCHAR* key, intptr_t def, String toSet) {
-	WritePrivateProfileString(section, key, toSet.c_str(), iniPath.c_str());
-}
-
-template<typename IntegerType>
-constexpr std::make_unsigned<IntegerType>::type maxIntegerTypeValue() {
-	using UnsignedType = typename std::make_unsigned<IntegerType>::type;
-	return std::is_unsigned<IntegerType>::value
-		? ~static_cast<UnsignedType>(0)
-		: static_cast<UnsignedType>(~static_cast<IntegerType>(0)) >> 1;
-}
-
 template<typename IntegerType>
 struct DivisorInformation {
 	IntegerType divisor;
@@ -603,7 +621,8 @@ String integerToDecimalStr(IntegerType integer) {
 	}
 
 	while (divisor > 1) {
-		const char character = integer / divisor;
+		// Cannot lose data here because of the large divisor
+		const char character = static_cast<char>(integer / divisor);
 		if (character != 0) {
 			buffer[writeI++] = decDigitToChar[sign * character];
 			integer -= character * divisor;
@@ -614,7 +633,8 @@ String integerToDecimalStr(IntegerType integer) {
 	}
 
 	while (divisor > 1) {
-		const char character = integer / divisor;
+		// Cannot lose data here because of the large divisor
+		const char character = static_cast<char>(integer / divisor);
 		buffer[writeI++] = decDigitToChar[sign * character];
 		integer -= character * divisor;
 		divisor /= 10;
@@ -625,8 +645,13 @@ String integerToDecimalStr(IntegerType integer) {
 }
 
 template<typename IntegerType>
-DWORD SetINIInteger(String iniPath, const TCHAR* section, const TCHAR* key, IntegerType toSet) {
-	WritePrivateProfileString(section, key, integerToDecimalStr(toSet).c_str(), iniPath.c_str());
+DWORD SetINIInteger(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const IntegerType toSet) {
+	const String toSetStr = integerToDecimalStr(toSet);
+	if (!WritePrivateProfileString(section, key, toSetStr.c_str(), iniPath.c_str())) {
+		PrintT(TEXT("[!] Failed to set [%s].%s = %s\n"), section, key, toSetStr.c_str());
+		return GetLastError();
+	}
+	return ERROR_SUCCESS;
 }
 
 ///////////
