@@ -31,9 +31,18 @@
     <ClCompile Include="common\InfinityLoaderCommon.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="common\bounds_exceeded.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\common\InfinityLoaderCommon.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\dummy_lua_generated.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\bounds_exceeded.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>

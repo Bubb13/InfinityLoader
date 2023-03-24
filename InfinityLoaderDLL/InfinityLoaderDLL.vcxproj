@@ -53,7 +53,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/headers/include;$(SolutionDir)InfinityLoaderCommon/common;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/headers/include;$(SolutionDir)InfinityLoaderCommon/common;$(ProjectDir);$(ProjectDir)headers/InfinityLoaderDLL</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -62,6 +62,7 @@
       <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;ASMJIT_STATIC;ASMTK_STATIC;WIN32;NDEBUG;INFINITYLOADERDLL_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <AdditionalDependencies>dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
@@ -77,7 +78,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/headers/include;$(SolutionDir)InfinityLoaderCommon/common;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/headers/include;$(SolutionDir)InfinityLoaderCommon/common;$(ProjectDir);$(ProjectDir)headers/InfinityLoaderDLL</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -86,6 +87,7 @@
       <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;ASMJIT_STATIC;ASMTK_STATIC;NDEBUG;INFINITYLOADERDLL_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <AdditionalDependencies>dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
@@ -178,6 +180,7 @@
     <ClInclude Include="asmtk\globals.h" />
     <ClInclude Include="asmtk\parserutils.h" />
     <ClInclude Include="asmtk\strtod.h" />
+    <ClInclude Include="headers\InfinityLoaderDLL\pointers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asmjit\core\archtraits.cpp" />
@@ -232,6 +235,7 @@
     <ClCompile Include="asmtk\asmtokenizer.cpp" />
     <ClCompile Include="source\common.cpp" />
     <ClCompile Include="source\InfinityLoaderDLL.cpp" />
+    <ClCompile Include="source\pointers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />

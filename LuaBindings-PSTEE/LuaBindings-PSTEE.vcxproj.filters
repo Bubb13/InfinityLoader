@@ -28,6 +28,9 @@
     <Filter Include="Build Tasks">
       <UniqueIdentifier>{a56d4fe5-d193-4edd-b7a2-d361bf3dbfc5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Module Definition">
+      <UniqueIdentifier>{bac4dfc2-ec68-4ed2-b1e5-75874d7732dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\LuaBindings-PSTEE.cpp">
@@ -72,6 +75,9 @@
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1">
       <Filter>Build Tasks</Filter>
+    </None>
+    <None Include="LuaBindings-PSTEE.def">
+      <Filter>Module Definition</Filter>
     </None>
   </ItemGroup>
 </Project>

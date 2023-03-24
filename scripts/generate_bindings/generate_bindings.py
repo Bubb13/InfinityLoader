@@ -518,8 +518,8 @@ class TemplateTypeMode(Enum):
 
 
 
-primitives = {"byte", "short", "ushort", "uint", "intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "wchar_t", "double", "long double"}
-primitiveNumbers = {"byte", "short", "ushort", "uint", "intptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "float", "double", "long double"}
+primitives = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "wchar_t", "double", "long double"}
+primitiveNumbers = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "float", "double", "long double"}
 
 class TypeReference:
 
@@ -3074,6 +3074,8 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 							enumCastStr = f"({varType.group.name})"
 							checkType = varType.group.extends[0]
 
+						checkTypeName: str = checkType.getName()
+
 						selfStr: str = None
 						if isNormal:
 							if group.groupType == "namespace":
@@ -3089,20 +3091,20 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 							out.write(f"\t{selfStr}{varNameHeader} = ")
 
-							if (not enumCastStr) and varTypeName == "__int64":
-								out.write("(__int64)")
-
-							if varTypeName in ("float", "double"):
-								out.write(f"{enumCastStr}tolua_setter_tonumber(L, \"{variableField.variableName}\");\n")
+							if checkTypeName in ("float", "double"):
+								out.write(f"{enumCastStr}tolua_setter_tonumber<{checkTypeName}>(L, \"{variableField.variableName}\");\n")
 							else:
-								out.write(f"{enumCastStr}tolua_setter_tointeger(L, \"{variableField.variableName}\");\n")
+								out.write(f"{enumCastStr}tolua_setter_tointeger<{checkTypeName}>(L, \"{variableField.variableName}\");\n")
 
 							return True
 
-						elif varTypeName == "bool":
-							out.write(f"\t{selfStr}{varNameHeader} = ")
-							out.write(f"{enumCastStr}tolua_setter_toboolean(L, \"{variableField.variableName}\");\n")
+						elif checkTypeName == "bool":
+							out.write(f"\t{selfStr}{varNameHeader} = {enumCastStr}tolua_setter_toboolean(L, \"{variableField.variableName}\");\n")
 							return True
+						elif checkTypeName == "char":
+							if not checkType.unsigned and checkType.getUserTypePointerLevel() == 0:
+								out.write(f"\t{selfStr}{varNameHeader} = {enumCastStr}tolua_setter_tochar(L, \"{variableField.variableName}\");\n")
+								return True
 
 						return False
 
@@ -3190,10 +3192,10 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				checkTypeName = checkType.getName()
 
 				if checkType.isPrimitiveNumber() and checkType.getUserTypePointerLevel() == 0:
-					if paramType.getName() in ("float", "double"):
-						callArgParts.append(f"{enumCastString}tolua_function_tonumber(L, {luaVarIndex}, \"{funcImpBindingName}\")")
+					if checkTypeName in ("float", "double"):
+						callArgParts.append(f"{enumCastString}tolua_function_tonumber<{checkTypeName}>(L, {luaVarIndex}, \"{funcImpBindingName}\")")
 					else:
-						callArgParts.append(f"{enumCastString}tolua_function_tointeger(L, {luaVarIndex}, \"{funcImpBindingName}\")")
+						callArgParts.append(f"{enumCastString}tolua_function_tointeger<{checkTypeName}>(L, {luaVarIndex}, \"{funcImpBindingName}\")")
 					callArgParts.append(", ")
 					return True
 				elif checkTypeName == "bool" and checkType.getUserTypePointerLevel() == 0:

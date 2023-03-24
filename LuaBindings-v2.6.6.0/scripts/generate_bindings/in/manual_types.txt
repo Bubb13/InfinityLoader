@@ -8,12 +8,12 @@ struct CharString
 {
 	nobinding primitive char* data;
 
-	char getChar(int index)
+	char getChar(size_t index)
 	{
 		return data[index];
 	}
 
-	void setChar(int index, char toSet)
+	void setChar(size_t index, char toSet)
 	{
 		data[index] = toSet;
 	}
@@ -29,12 +29,14 @@ struct CharString
 	void setL(primitive const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > neededLen)
+		if (cpyLen > neededLen) {
 			cpyLen = neededLen;
+		}
 		char* newStr = (char*)p_malloc(neededLen);
 		memcpy((void*)newStr, toSet, cpyLen);
-		if (cpyLen < neededLen)
+		if (cpyLen < neededLen) {
 			memset((void*)(newStr + cpyLen), 0, neededLen - cpyLen);
+		}
 		data = newStr;
 	}
 
@@ -46,11 +48,13 @@ struct CharString
 	void writeL(primitive const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > neededLen)
+		if (cpyLen > neededLen) {
 			cpyLen = neededLen;
+		}
 		memcpy((void*)data, toSet, cpyLen);
-		if (cpyLen < neededLen)
+		if (cpyLen < neededLen) {
 			memset((void*)(data + cpyLen), 0, neededLen - cpyLen);
+		}
 	}
 
 	void setReference(CharString* other)
@@ -58,7 +62,7 @@ struct CharString
 		data = other->data;
 	}
 
-	void pointTo(intptr_t toSet)
+	void pointTo(uintptr_t toSet)
 	{
 		data = (char*)toSet;
 	}
@@ -71,11 +75,12 @@ struct CharString
 	$custom_return_1 getL(size_t length)
 	{
 		char* localCopy = (char*)alloca(length + 1);
-		int i = 0;
+		size_t i = 0;
 		for (; i < length; ++i) {
 			char readVal = data[i];
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
@@ -94,7 +99,7 @@ struct ConstCharString
 {
 	nobinding primitive const char* data;
 
-	char getChar(int index)
+	char getChar(size_t index)
 	{
 		return data[index];
 	}
@@ -110,12 +115,14 @@ struct ConstCharString
 	void setL(primitive const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > neededLen)
+		if (cpyLen > neededLen) {
 			cpyLen = neededLen;
+		}
 		char* newStr = (char*)p_malloc(neededLen);
 		memcpy((void*)newStr, toSet, cpyLen);
-		if (cpyLen < neededLen)
+		if (cpyLen < neededLen) {
 			memset((void*)(newStr + cpyLen), 0, neededLen - cpyLen);
+		}
 		data = newStr;
 	}
 
@@ -124,7 +131,7 @@ struct ConstCharString
 		data = other->data;
 	}
 
-	void pointTo(intptr_t toSet)
+	void pointTo(uintptr_t toSet)
 	{
 		data = (const char*)toSet;
 	}
@@ -140,24 +147,22 @@ struct ConstCharString
 	}
 };
 
-template<int length>
+template<size_t length>
 struct LCharString
 {
 	nobinding Array<primitive char, length> data;
 
-	char getChar(int index)
+	char getChar(size_t index)
 	{
-		if (index < 0 || index >= length)
-		{
+		if (index >= length) {
 			return NULL;
 		}
 		return data[index];
 	}
 
-	void setChar(int index, char toSet)
+	void setChar(size_t index, char toSet)
 	{
-		if (index < 0 || index >= length)
-		{
+		if (index >= length) {
 			return;
 		}
 		data[index] = toSet;
@@ -166,21 +171,24 @@ struct LCharString
 	void set(primitive const char* toSet)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > length)
+		if (cpyLen > length) {
 			cpyLen = length;
+		}
 		memcpy((void*)&data, toSet, cpyLen);
-		if (cpyLen < length)
+		if (cpyLen < length) {
 			memset((void*)&data[cpyLen], 0, length - cpyLen);
+		}
 	}
 
 	$custom_return_1 get()
 	{
 		char* localCopy = (char*)alloca(length + 1);
-		int i = 0;
+		size_t i = 0;
 		for (; i < length; ++i) {
 			char readVal = data[i];
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
@@ -209,39 +217,36 @@ struct VoidPointer
 	void* reference;
 };
 
-template<class T, int size>
+template<class T, size_t size>
 struct Array
 {
 	nobinding T data[size];
 
-	T get(int index)
+	T get(size_t index)
 	{
-		if (index < 0 || index >= size)
-		{
+		if (index >= size) {
 			return (T)NULL;
 		}
 		return data[index];
 	}
 
-	T* getReference(int index)
+	T* getReference(size_t index)
 	{
-		if (index < 0 || index >= size)
-		{
+		if (index >= size) {
 			return NULL;
 		}
 		return &data[index];
 	}
 
-	void set(int index, T value)
+	void set(size_t index, T value)
 	{
-		if (index < 0 || index >= size)
-		{
+		if (index >= size) {
 			return;
 		}
 		data[index] = value;
 	}
 
-	$nobinding T& operator[](int index)
+	$nobinding T& operator[](size_t index)
 	{
 		return data[index];
 	}
@@ -252,22 +257,22 @@ struct ArrayPointer
 {
 	nobinding T* data;
 
-	T get(int index)
+	T get(size_t index)
 	{
 		return data[index];
 	}
 
-	T* getReference(int index)
+	T* getReference(size_t index)
 	{
 		return &data[index];
 	}
 
-	void set(int index, T value)
+	void set(size_t index, T value)
 	{
 		data[index] = value;
 	}
 
-	$nobinding T& operator[](int index)
+	$nobinding T& operator[](size_t index)
 	{
 		return data[index];
 	}
@@ -275,9 +280,9 @@ struct ArrayPointer
 
 struct UnmappedUserType
 {
-	intptr_t toPointer()
+	uintptr_t toPointer()
 	{
-		return (intptr_t)this;
+		return (uintptr_t)this;
 	}
 };
 
@@ -360,12 +365,16 @@ struct CTypedPtrList : CObject
 
 	CTypedPtrList::CNode* AddTail(T newElement)
 	{
+		#pragma warning(disable:4312)
 		return (CTypedPtrList::CNode*)((CObList*)this)->AddTail((void*)newElement);
+		#pragma warning(default:4312)
 	}
 
 	T RemoveHead()
 	{
+		#pragma warning(disable:4302 4311)
 		return (T)((CObList*)this)->RemoveHead();
+		#pragma warning(default:4302 4311)
 	}
 
 	void RemoveAt(__POSITION* position)
@@ -682,11 +691,12 @@ struct CResRef
 	$custom_return_1 get()
 	{
 		char* localCopy = (char*)alloca(sizeof(m_resRef) + 1);
-		int i = 0;
+		size_t i = 0;
 		for (; i < sizeof(m_resRef); ++i) {
 			char readVal = m_resRef[i];
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
@@ -695,15 +705,16 @@ struct CResRef
 
 	void set(primitive const char* newVal)
 	{
-		int i = 0;
+		size_t i = 0;
 		for (; i < sizeof(m_resRef); ++i) {
 			char readVal = newVal[i];
 			if (readVal >= 97 && readVal <= 122) {
 				readVal -= 32;
 			}
 			m_resRef[i] = readVal;
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 		}
 		for (; i < sizeof(m_resRef); ++i) {
 			m_resRef[i] = '\0';

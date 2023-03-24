@@ -28,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />
+    <None Include="LuaBindings-PSTEE.def" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -75,6 +76,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(SolutionDir)LuaBindingsCommon/headers/common;$(SolutionDir)LuaBindingsCommon/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindings-PSTEE</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -99,6 +101,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(SolutionDir)LuaBindingsCommon/headers/common;$(SolutionDir)LuaBindingsCommon/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindings-PSTEE</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

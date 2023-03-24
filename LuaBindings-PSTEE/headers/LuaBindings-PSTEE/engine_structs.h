@@ -21238,16 +21238,6 @@ struct CBaldurChitin
 	CBaldurChitin() = delete;
 };
 
-struct UnmappedUserType
-{
-	UnmappedUserType() = delete;
-
-	intptr_t toPointer()
-	{
-		return (intptr_t)this;
-	}
-};
-
 struct CMessage
 {
 	dword __vftable;
@@ -22279,6 +22269,16 @@ struct CInfinity
 	undefined _0x31B;
 
 	CInfinity() = delete;
+};
+
+struct UnmappedUserType
+{
+	UnmappedUserType() = delete;
+
+	uintptr_t toPointer()
+	{
+		return (uintptr_t)this;
+	}
 };
 
 struct CGameTrigger
@@ -27205,12 +27205,12 @@ struct CharString
 
 	CharString() = delete;
 
-	char getChar(int index)
+	char getChar(size_t index)
 	{
 		return data[index];
 	}
 
-	void setChar(int index, char toSet)
+	void setChar(size_t index, char toSet)
 	{
 		data[index] = toSet;
 	}
@@ -27226,12 +27226,14 @@ struct CharString
 	void setL(const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > neededLen)
+		if (cpyLen > neededLen) {
 			cpyLen = neededLen;
+		}
 		char* newStr = (char*)p_malloc(neededLen);
 		memcpy((void*)newStr, toSet, cpyLen);
-		if (cpyLen < neededLen)
+		if (cpyLen < neededLen) {
 			memset((void*)(newStr + cpyLen), 0, neededLen - cpyLen);
+		}
 		data = newStr;
 	}
 
@@ -27243,11 +27245,13 @@ struct CharString
 	void writeL(const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > neededLen)
+		if (cpyLen > neededLen) {
 			cpyLen = neededLen;
+		}
 		memcpy((void*)data, toSet, cpyLen);
-		if (cpyLen < neededLen)
+		if (cpyLen < neededLen) {
 			memset((void*)(data + cpyLen), 0, neededLen - cpyLen);
+		}
 	}
 
 	void setReference(CharString* other)
@@ -27255,7 +27259,7 @@ struct CharString
 		data = other->data;
 	}
 
-	void pointTo(intptr_t toSet)
+	void pointTo(uintptr_t toSet)
 	{
 		data = (char*)toSet;
 	}
@@ -27268,11 +27272,12 @@ struct CharString
 	void getL(lua_State* L, size_t length)
 	{
 		char* localCopy = (char*)alloca(length + 1);
-		int i = 0;
+		size_t i = 0;
 		for (; i < length; ++i) {
 			char readVal = data[i];
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
@@ -29551,66 +29556,61 @@ struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 	CGameEffectList() = delete;
 };
 
-template<class T, int size>
+template<class T, size_t size>
 struct Array
 {
 	T data[size];
 
 	Array() = delete;
 
-	T get(int index)
+	T get(size_t index)
 	{
-		if (index < 0 || index >= size)
-		{
+		if (index >= size) {
 			return (T)NULL;
 		}
 		return data[index];
 	}
 
-	T* getReference(int index)
+	T* getReference(size_t index)
 	{
-		if (index < 0 || index >= size)
-		{
+		if (index >= size) {
 			return NULL;
 		}
 		return &data[index];
 	}
 
-	void set(int index, T value)
+	void set(size_t index, T value)
 	{
-		if (index < 0 || index >= size)
-		{
+		if (index >= size) {
 			return;
 		}
 		data[index] = value;
 	}
 
-	T& operator[](int index)
+	T& operator[](size_t index)
 	{
 		return data[index];
 	}
 };
 
-template<int length>
+template<size_t length>
 struct LCharString
 {
 	Array<char,length> data;
 
 	LCharString() = delete;
 
-	char getChar(int index)
+	char getChar(size_t index)
 	{
-		if (index < 0 || index >= length)
-		{
+		if (index >= length) {
 			return NULL;
 		}
 		return data[index];
 	}
 
-	void setChar(int index, char toSet)
+	void setChar(size_t index, char toSet)
 	{
-		if (index < 0 || index >= length)
-		{
+		if (index >= length) {
 			return;
 		}
 		data[index] = toSet;
@@ -29619,21 +29619,24 @@ struct LCharString
 	void set(const char* toSet)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > length)
+		if (cpyLen > length) {
 			cpyLen = length;
+		}
 		memcpy((void*)&data, toSet, cpyLen);
-		if (cpyLen < length)
+		if (cpyLen < length) {
 			memset((void*)&data[cpyLen], 0, length - cpyLen);
+		}
 	}
 
 	void get(lua_State* L)
 	{
 		char* localCopy = (char*)alloca(length + 1);
-		int i = 0;
+		size_t i = 0;
 		for (; i < length; ++i) {
 			char readVal = data[i];
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
@@ -29650,11 +29653,12 @@ struct CResRef
 	void get(lua_State* L)
 	{
 		char* localCopy = (char*)alloca(sizeof(m_resRef) + 1);
-		int i = 0;
+		size_t i = 0;
 		for (; i < sizeof(m_resRef); ++i) {
 			char readVal = m_resRef[i];
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
@@ -29663,15 +29667,16 @@ struct CResRef
 
 	void set(const char* newVal)
 	{
-		int i = 0;
+		size_t i = 0;
 		for (; i < sizeof(m_resRef); ++i) {
 			char readVal = newVal[i];
 			if (readVal >= 97 && readVal <= 122) {
 				readVal -= 32;
 			}
 			m_resRef[i] = readVal;
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 		}
 		for (; i < sizeof(m_resRef); ++i) {
 			m_resRef[i] = '\0';
@@ -84747,7 +84752,6 @@ struct CGameSprite : CGameAIBase
 
 	CGameSprite() = delete;
 };
-
 
 extern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;
 

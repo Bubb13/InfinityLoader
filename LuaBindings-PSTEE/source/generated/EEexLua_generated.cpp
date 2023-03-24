@@ -304,7 +304,7 @@ static int tolua_set_CTimerWorld_m_active(lua_State* L)
 {
 	CTimerWorld* self = (CTimerWorld*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CTimerWorld");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_active'", NULL);
-	self->m_active = tolua_setter_tointeger(L, "m_active");
+	self->m_active = tolua_setter_tointeger<byte>(L, "m_active");
 	return 0;
 }
 
@@ -328,7 +328,7 @@ static int tolua_set_CTimerWorld_m_nLastPercentage(lua_State* L)
 {
 	CTimerWorld* self = (CTimerWorld*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CTimerWorld");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nLastPercentage'", NULL);
-	self->m_nLastPercentage = tolua_setter_tointeger(L, "m_nLastPercentage");
+	self->m_nLastPercentage = tolua_setter_tointeger<byte>(L, "m_nLastPercentage");
 	return 0;
 }
 
@@ -387,7 +387,7 @@ static int tolua_set_CRect_left(lua_State* L)
 {
 	CRect* self = (CRect*)tolua_tousertype_dynamic(L, 1, 0, "CRect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'left'", NULL);
-	self->left = tolua_setter_tointeger(L, "left");
+	self->left = tolua_setter_tointeger<int>(L, "left");
 	return 0;
 }
 
@@ -411,7 +411,7 @@ static int tolua_set_CRect_top(lua_State* L)
 {
 	CRect* self = (CRect*)tolua_tousertype_dynamic(L, 1, 0, "CRect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'top'", NULL);
-	self->top = tolua_setter_tointeger(L, "top");
+	self->top = tolua_setter_tointeger<int>(L, "top");
 	return 0;
 }
 
@@ -435,7 +435,7 @@ static int tolua_set_CRect_right(lua_State* L)
 {
 	CRect* self = (CRect*)tolua_tousertype_dynamic(L, 1, 0, "CRect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'right'", NULL);
-	self->right = tolua_setter_tointeger(L, "right");
+	self->right = tolua_setter_tointeger<int>(L, "right");
 	return 0;
 }
 
@@ -459,7 +459,7 @@ static int tolua_set_CRect_bottom(lua_State* L)
 {
 	CRect* self = (CRect*)tolua_tousertype_dynamic(L, 1, 0, "CRect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'bottom'", NULL);
-	self->bottom = tolua_setter_tointeger(L, "bottom");
+	self->bottom = tolua_setter_tointeger<int>(L, "bottom");
 	return 0;
 }
 
@@ -538,7 +538,7 @@ static int tolua_set_CPtrList_m_nCount(lua_State* L)
 {
 	CPtrList* self = (CPtrList*)tolua_tousertype_dynamic(L, 1, 0, "CPtrList");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCount'", NULL);
-	self->m_nCount = tolua_setter_tointeger(L, "m_nCount");
+	self->m_nCount = tolua_setter_tointeger<int>(L, "m_nCount");
 	return 0;
 }
 
@@ -610,7 +610,7 @@ static int tolua_set_CPtrList_m_nBlockSize(lua_State* L)
 {
 	CPtrList* self = (CPtrList*)tolua_tousertype_dynamic(L, 1, 0, "CPtrList");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nBlockSize'", NULL);
-	self->m_nBlockSize = tolua_setter_tointeger(L, "m_nBlockSize");
+	self->m_nBlockSize = tolua_setter_tointeger<int>(L, "m_nBlockSize");
 	return 0;
 }
 
@@ -641,7 +641,7 @@ static int tolua_set_CPoint_x(lua_State* L)
 {
 	CPoint* self = (CPoint*)tolua_tousertype_dynamic(L, 1, 0, "CPoint");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'x'", NULL);
-	self->x = tolua_setter_tointeger(L, "x");
+	self->x = tolua_setter_tointeger<int>(L, "x");
 	return 0;
 }
 
@@ -665,7 +665,7 @@ static int tolua_set_CPoint_y(lua_State* L)
 {
 	CPoint* self = (CPoint*)tolua_tousertype_dynamic(L, 1, 0, "CPoint");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'y'", NULL);
-	self->y = tolua_setter_tointeger(L, "y");
+	self->y = tolua_setter_tointeger<int>(L, "y");
 	return 0;
 }
 
@@ -686,7 +686,7 @@ static int tolua_function_CGameObjectArray_getInternalReference(lua_State* L)
 
 static int tolua_function_CGameObjectArray_GetShare(lua_State* L)
 {
-	byte returnVal = CGameObjectArray::GetShare(tolua_function_tointeger(L, 1, "GetShare"), (CGameObject**)tolua_tousertype_dynamic(L, 2, 0, "Pointer<CGameObject*>"));
+	byte returnVal = CGameObjectArray::GetShare(tolua_function_tointeger<int>(L, 1, "GetShare"), (CGameObject**)tolua_tousertype_dynamic(L, 2, 0, "Pointer<CGameObject*>"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
@@ -748,7 +748,7 @@ static int tolua_set_CBaldurChitin_m_bConnectionEstablished(lua_State* L)
 {
 	CBaldurChitin* self = (CBaldurChitin*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CBaldurChitin");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bConnectionEstablished'", NULL);
-	self->m_bConnectionEstablished = tolua_setter_tointeger(L, "m_bConnectionEstablished");
+	self->m_bConnectionEstablished = tolua_setter_tointeger<byte>(L, "m_bConnectionEstablished");
 	return 0;
 }
 
@@ -772,7 +772,7 @@ static int tolua_set_CBaldurChitin_m_idLocalPlayer(lua_State* L)
 {
 	CBaldurChitin* self = (CBaldurChitin*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CBaldurChitin");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_idLocalPlayer'", NULL);
-	self->m_idLocalPlayer = tolua_setter_tointeger(L, "m_idLocalPlayer");
+	self->m_idLocalPlayer = tolua_setter_tointeger<int>(L, "m_idLocalPlayer");
 	return 0;
 }
 
@@ -868,7 +868,7 @@ static int tolua_set_CBaldurChitin_m_cMessageHandler(lua_State* L)
 {
 	CBaldurChitin* self = (CBaldurChitin*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CBaldurChitin");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_cMessageHandler'", NULL);
-	self->m_cMessageHandler = tolua_setter_tointeger(L, "m_cMessageHandler");
+	self->m_cMessageHandler = tolua_setter_tointeger<byte>(L, "m_cMessageHandler");
 	return 0;
 }
 
@@ -877,29 +877,6 @@ static int tolua_get_CBaldurChitin_reference_m_cMessageHandler(lua_State* L)
 	CBaldurChitin* self = (CBaldurChitin*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CBaldurChitin");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_cMessageHandler'", NULL);
 	tolua_pushusertypepointer(L, (void*)&self->m_cMessageHandler, "Pointer<byte>");
-	return 1;
-}
-
-static int tolua_function_intptr_t_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<intptr_t>");
-	return 1;
-}
-
-static int tolua_function_UnmappedUserType_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<UnmappedUserType>");
-	return 1;
-}
-
-static int tolua_function_UnmappedUserType_toPointer(lua_State* L)
-{
-	UnmappedUserType* self = (UnmappedUserType*)tolua_tousertype_dynamic(L, 1, 0, "UnmappedUserType");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'toPointer'", NULL);
-	intptr_t returnVal = self->toPointer();
-	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
 
@@ -929,7 +906,7 @@ static int tolua_set_CMessage_m_targetId(lua_State* L)
 {
 	CMessage* self = (CMessage*)tolua_tousertype_dynamic(L, 1, 0, "CMessage");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_targetId'", NULL);
-	self->m_targetId = tolua_setter_tointeger(L, "m_targetId");
+	self->m_targetId = tolua_setter_tointeger<long>(L, "m_targetId");
 	return 0;
 }
 
@@ -953,7 +930,7 @@ static int tolua_set_CMessage_m_sourceId(lua_State* L)
 {
 	CMessage* self = (CMessage*)tolua_tousertype_dynamic(L, 1, 0, "CMessage");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_sourceId'", NULL);
-	self->m_sourceId = tolua_setter_tointeger(L, "m_sourceId");
+	self->m_sourceId = tolua_setter_tointeger<long>(L, "m_sourceId");
 	return 0;
 }
 
@@ -984,7 +961,7 @@ static int tolua_set_CMessageVisualEffect_m_nEffectType(lua_State* L)
 {
 	CMessageVisualEffect* self = (CMessageVisualEffect*)tolua_tousertype_dynamic(L, 1, 0, "CMessageVisualEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nEffectType'", NULL);
-	self->m_nEffectType = tolua_setter_tointeger(L, "m_nEffectType");
+	self->m_nEffectType = tolua_setter_tointeger<byte>(L, "m_nEffectType");
 	return 0;
 }
 
@@ -1008,7 +985,7 @@ static int tolua_set_CMessageVisualEffect_m_nEffectProperty(lua_State* L)
 {
 	CMessageVisualEffect* self = (CMessageVisualEffect*)tolua_tousertype_dynamic(L, 1, 0, "CMessageVisualEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nEffectProperty'", NULL);
-	self->m_nEffectProperty = tolua_setter_tointeger(L, "m_nEffectProperty");
+	self->m_nEffectProperty = tolua_setter_tointeger<byte>(L, "m_nEffectProperty");
 	return 0;
 }
 
@@ -1063,7 +1040,7 @@ static int tolua_set_CMessageAddEffect_m_noSave(lua_State* L)
 {
 	CMessageAddEffect* self = (CMessageAddEffect*)tolua_tousertype_dynamic(L, 1, 0, "CMessageAddEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_noSave'", NULL);
-	self->m_noSave = tolua_setter_tointeger(L, "m_noSave");
+	self->m_noSave = tolua_setter_tointeger<byte>(L, "m_noSave");
 	return 0;
 }
 
@@ -1162,7 +1139,7 @@ static int tolua_set_CInfinity_m_rgbAreaTintGlobalLightingOverride(lua_State* L)
 {
 	CInfinity* self = (CInfinity*)tolua_tousertype_dynamic(L, 1, 0, "CInfinity");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_rgbAreaTintGlobalLightingOverride'", NULL);
-	self->m_rgbAreaTintGlobalLightingOverride = tolua_setter_tointeger(L, "m_rgbAreaTintGlobalLightingOverride");
+	self->m_rgbAreaTintGlobalLightingOverride = tolua_setter_tointeger<int>(L, "m_rgbAreaTintGlobalLightingOverride");
 	return 0;
 }
 
@@ -1186,7 +1163,7 @@ static int tolua_set_CInfinity_unknownPSTGlobalTint(lua_State* L)
 {
 	CInfinity* self = (CInfinity*)tolua_tousertype_dynamic(L, 1, 0, "CInfinity");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'unknownPSTGlobalTint'", NULL);
-	self->unknownPSTGlobalTint = tolua_setter_tointeger(L, "unknownPSTGlobalTint");
+	self->unknownPSTGlobalTint = tolua_setter_tointeger<uint>(L, "unknownPSTGlobalTint");
 	return 0;
 }
 
@@ -1210,7 +1187,7 @@ static int tolua_set_CInfinity_nFlashViewportWhiteCounter(lua_State* L)
 {
 	CInfinity* self = (CInfinity*)tolua_tousertype_dynamic(L, 1, 0, "CInfinity");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nFlashViewportWhiteCounter'", NULL);
-	self->nFlashViewportWhiteCounter = tolua_setter_tointeger(L, "nFlashViewportWhiteCounter");
+	self->nFlashViewportWhiteCounter = tolua_setter_tointeger<int>(L, "nFlashViewportWhiteCounter");
 	return 0;
 }
 
@@ -1234,7 +1211,7 @@ static int tolua_set_CInfinity_m_renderDayNightCode(lua_State* L)
 {
 	CInfinity* self = (CInfinity*)tolua_tousertype_dynamic(L, 1, 0, "CInfinity");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_renderDayNightCode'", NULL);
-	self->m_renderDayNightCode = tolua_setter_tointeger(L, "m_renderDayNightCode");
+	self->m_renderDayNightCode = tolua_setter_tointeger<byte>(L, "m_renderDayNightCode");
 	return 0;
 }
 
@@ -1258,7 +1235,7 @@ static int tolua_set_CInfinity_m_rgbLightningGlobalLighting(lua_State* L)
 {
 	CInfinity* self = (CInfinity*)tolua_tousertype_dynamic(L, 1, 0, "CInfinity");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_rgbLightningGlobalLighting'", NULL);
-	self->m_rgbLightningGlobalLighting = tolua_setter_tointeger(L, "m_rgbLightningGlobalLighting");
+	self->m_rgbLightningGlobalLighting = tolua_setter_tointeger<uint>(L, "m_rgbLightningGlobalLighting");
 	return 0;
 }
 
@@ -1282,7 +1259,7 @@ static int tolua_set_CInfinity_m_rgbOverCastGlobalLighting(lua_State* L)
 {
 	CInfinity* self = (CInfinity*)tolua_tousertype_dynamic(L, 1, 0, "CInfinity");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_rgbOverCastGlobalLighting'", NULL);
-	self->m_rgbOverCastGlobalLighting = tolua_setter_tointeger(L, "m_rgbOverCastGlobalLighting");
+	self->m_rgbOverCastGlobalLighting = tolua_setter_tointeger<uint>(L, "m_rgbOverCastGlobalLighting");
 	return 0;
 }
 
@@ -1306,7 +1283,7 @@ static int tolua_set_CInfinity_m_rgbTimeOfDayGlobalLighting(lua_State* L)
 {
 	CInfinity* self = (CInfinity*)tolua_tousertype_dynamic(L, 1, 0, "CInfinity");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_rgbTimeOfDayGlobalLighting'", NULL);
-	self->m_rgbTimeOfDayGlobalLighting = tolua_setter_tointeger(L, "m_rgbTimeOfDayGlobalLighting");
+	self->m_rgbTimeOfDayGlobalLighting = tolua_setter_tointeger<uint>(L, "m_rgbTimeOfDayGlobalLighting");
 	return 0;
 }
 
@@ -1339,6 +1316,29 @@ static int tolua_get_CInfinity_reference_m_pArea(lua_State* L)
 	CInfinity* self = (CInfinity*)tolua_tousertype_dynamic(L, 1, 0, "CInfinity");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_pArea'", NULL);
 	tolua_pushusertypepointer(L, (void*)&self->m_pArea, "Pointer<CGameArea*>");
+	return 1;
+}
+
+static int tolua_function_uintptr_t_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<uintptr_t>");
+	return 1;
+}
+
+static int tolua_function_UnmappedUserType_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<UnmappedUserType>");
+	return 1;
+}
+
+static int tolua_function_UnmappedUserType_toPointer(lua_State* L)
+{
+	UnmappedUserType* self = (UnmappedUserType*)tolua_tousertype_dynamic(L, 1, 0, "UnmappedUserType");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'toPointer'", NULL);
+	uintptr_t returnVal = self->toPointer();
+	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
 
@@ -1424,7 +1424,7 @@ static int tolua_set_CGameTrigger_m_id(lua_State* L)
 {
 	CGameTrigger* self = (CGameTrigger*)tolua_tousertype_dynamic(L, 1, 0, "CGameTrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_id'", NULL);
-	self->m_id = tolua_setter_tointeger(L, "m_id");
+	self->m_id = tolua_setter_tointeger<long>(L, "m_id");
 	return 0;
 }
 
@@ -1448,7 +1448,7 @@ static int tolua_set_CGameTrigger_m_remotePlayerID(lua_State* L)
 {
 	CGameTrigger* self = (CGameTrigger*)tolua_tousertype_dynamic(L, 1, 0, "CGameTrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_remotePlayerID'", NULL);
-	self->m_remotePlayerID = tolua_setter_tointeger(L, "m_remotePlayerID");
+	self->m_remotePlayerID = tolua_setter_tointeger<int>(L, "m_remotePlayerID");
 	return 0;
 }
 
@@ -1472,7 +1472,7 @@ static int tolua_set_CGameTrigger_m_triggerType(lua_State* L)
 {
 	CGameTrigger* self = (CGameTrigger*)tolua_tousertype_dynamic(L, 1, 0, "CGameTrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_triggerType'", NULL);
-	self->m_triggerType = tolua_setter_tointeger(L, "m_triggerType");
+	self->m_triggerType = tolua_setter_tointeger<ushort>(L, "m_triggerType");
 	return 0;
 }
 
@@ -1504,7 +1504,7 @@ static int tolua_set_CGameTrigger_m_boundingRange(lua_State* L)
 {
 	CGameTrigger* self = (CGameTrigger*)tolua_tousertype_dynamic(L, 1, 0, "CGameTrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_boundingRange'", NULL);
-	self->m_boundingRange = tolua_setter_tointeger(L, "m_boundingRange");
+	self->m_boundingRange = tolua_setter_tointeger<ushort>(L, "m_boundingRange");
 	return 0;
 }
 
@@ -1528,7 +1528,7 @@ static int tolua_set_CGameTrigger_m_trapActivated(lua_State* L)
 {
 	CGameTrigger* self = (CGameTrigger*)tolua_tousertype_dynamic(L, 1, 0, "CGameTrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_trapActivated'", NULL);
-	self->m_trapActivated = tolua_setter_tointeger(L, "m_trapActivated");
+	self->m_trapActivated = tolua_setter_tointeger<ushort>(L, "m_trapActivated");
 	return 0;
 }
 
@@ -1567,7 +1567,7 @@ static int tolua_set_CGameDoor_m_trapActivated(lua_State* L)
 {
 	CGameDoor* self = (CGameDoor*)tolua_tousertype_dynamic(L, 1, 0, "CGameDoor");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_trapActivated'", NULL);
-	self->m_trapActivated = tolua_setter_tointeger(L, "m_trapActivated");
+	self->m_trapActivated = tolua_setter_tointeger<ushort>(L, "m_trapActivated");
 	return 0;
 }
 
@@ -1598,7 +1598,7 @@ static int tolua_set_CGameContainer_m_trapActivated(lua_State* L)
 {
 	CGameContainer* self = (CGameContainer*)tolua_tousertype_dynamic(L, 1, 0, "CGameContainer");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_trapActivated'", NULL);
-	self->m_trapActivated = tolua_setter_tointeger(L, "m_trapActivated");
+	self->m_trapActivated = tolua_setter_tointeger<ushort>(L, "m_trapActivated");
 	return 0;
 }
 
@@ -1885,7 +1885,7 @@ static int tolua_function_Pointer_unsigned_int__setValue(lua_State* L)
 {
 	Pointer<unsigned int>* self = (Pointer<unsigned int>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<unsigned int>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<int>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -2468,7 +2468,7 @@ static int tolua_function_Pointer_int__setValue(lua_State* L)
 {
 	Pointer<int>* self = (Pointer<int>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<int>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<int>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -3666,7 +3666,7 @@ static int tolua_function_Pointer___int32__setValue(lua_State* L)
 {
 	Pointer<__int32>* self = (Pointer<__int32>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<__int32>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<__int32>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -3699,7 +3699,7 @@ static int tolua_function_Pointer_unsigned___int8__setValue(lua_State* L)
 {
 	Pointer<unsigned __int8>* self = (Pointer<unsigned __int8>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<unsigned __int8>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<__int8>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -3732,7 +3732,7 @@ static int tolua_function_Pointer___int8__setValue(lua_State* L)
 {
 	Pointer<__int8>* self = (Pointer<__int8>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<__int8>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<__int8>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -3765,7 +3765,7 @@ static int tolua_function_Pointer_VertListType__setValue(lua_State* L)
 {
 	Pointer<VertListType>* self = (Pointer<VertListType>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<VertListType>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue((VertListType)tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue((VertListType)tolua_function_tointeger<__int8>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -3798,7 +3798,7 @@ static int tolua_function_Pointer_CGameObjectType__setValue(lua_State* L)
 {
 	Pointer<CGameObjectType>* self = (Pointer<CGameObjectType>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<CGameObjectType>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue((CGameObjectType)tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue((CGameObjectType)tolua_function_tointeger<__int8>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -3831,7 +3831,7 @@ static int tolua_function_Pointer_byte__setValue(lua_State* L)
 {
 	Pointer<byte>* self = (Pointer<byte>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<byte>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<byte>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -3986,7 +3986,7 @@ static int tolua_function_Pointer_double__setValue(lua_State* L)
 {
 	Pointer<double>* self = (Pointer<double>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<double>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tonumber(L, 2, "setValue"));
+	self->setValue(tolua_function_tonumber<double>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -4019,7 +4019,7 @@ static int tolua_function_Pointer_float__setValue(lua_State* L)
 {
 	Pointer<float>* self = (Pointer<float>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<float>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tonumber(L, 2, "setValue"));
+	self->setValue(tolua_function_tonumber<float>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -4071,39 +4071,6 @@ static int tolua_function_Pointer_CPtrList__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_get_Pointer_intptr_t__reference(lua_State* L)
-{
-	Pointer<intptr_t>* self = (Pointer<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<intptr_t>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	lua_pushinteger(L, (lua_Integer)*self->reference);
-	return 1;
-}
-
-static int tolua_set_Pointer_intptr_t__reference(lua_State* L)
-{
-	Pointer<intptr_t>* self = (Pointer<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<intptr_t>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (intptr_t*)tolua_tousertype_dynamic(L, 2, 0, "Pointer<intptr_t>");
-	return 0;
-}
-
-static int tolua_function_Pointer_intptr_t__getValue(lua_State* L)
-{
-	Pointer<intptr_t>* self = (Pointer<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<intptr_t>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'getValue'", NULL);
-	intptr_t returnVal = self->getValue();
-	lua_pushinteger(L, (lua_Integer)returnVal);
-	return 1;
-}
-
-static int tolua_function_Pointer_intptr_t__setValue(lua_State* L)
-{
-	Pointer<intptr_t>* self = (Pointer<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<intptr_t>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
-	return 0;
-}
-
 static int tolua_get_Pointer_long__reference(lua_State* L)
 {
 	Pointer<long>* self = (Pointer<long>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<long>");
@@ -4133,7 +4100,7 @@ static int tolua_function_Pointer_long__setValue(lua_State* L)
 {
 	Pointer<long>* self = (Pointer<long>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<long>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<long>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -4223,7 +4190,7 @@ static int tolua_function_Pointer_short__setValue(lua_State* L)
 {
 	Pointer<short>* self = (Pointer<short>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<short>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<short>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -4256,7 +4223,7 @@ static int tolua_function_Pointer_size_t__setValue(lua_State* L)
 {
 	Pointer<size_t>* self = (Pointer<size_t>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<size_t>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<size_t>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -4289,7 +4256,40 @@ static int tolua_function_Pointer_uint__setValue(lua_State* L)
 {
 	Pointer<uint>* self = (Pointer<uint>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<uint>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<uint>(L, 2, "setValue"));
+	return 0;
+}
+
+static int tolua_get_Pointer_uintptr_t__reference(lua_State* L)
+{
+	Pointer<uintptr_t>* self = (Pointer<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<uintptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	lua_pushinteger(L, (lua_Integer)*self->reference);
+	return 1;
+}
+
+static int tolua_set_Pointer_uintptr_t__reference(lua_State* L)
+{
+	Pointer<uintptr_t>* self = (Pointer<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<uintptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (uintptr_t*)tolua_tousertype_dynamic(L, 2, 0, "Pointer<uintptr_t>");
+	return 0;
+}
+
+static int tolua_function_Pointer_uintptr_t__getValue(lua_State* L)
+{
+	Pointer<uintptr_t>* self = (Pointer<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<uintptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'getValue'", NULL);
+	uintptr_t returnVal = self->getValue();
+	lua_pushinteger(L, (lua_Integer)returnVal);
+	return 1;
+}
+
+static int tolua_function_Pointer_uintptr_t__setValue(lua_State* L)
+{
+	Pointer<uintptr_t>* self = (Pointer<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<uintptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(tolua_function_tointeger<uintptr_t>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -4322,7 +4322,7 @@ static int tolua_function_Pointer_ushort__setValue(lua_State* L)
 {
 	Pointer<ushort>* self = (Pointer<ushort>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<ushort>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<ushort>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -4861,7 +4861,7 @@ static int tolua_function_CharString_getChar(lua_State* L)
 {
 	CharString* self = (CharString*)tolua_tousertype_dynamic(L, 1, 0, "CharString");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getChar'", NULL);
-	char returnVal = self->getChar(tolua_function_tointeger(L, 2, "getChar"));
+	char returnVal = self->getChar(tolua_function_tointeger<size_t>(L, 2, "getChar"));
 	lua_pushlstring(L, (const char*)&returnVal, 1);
 	return 1;
 }
@@ -4870,7 +4870,7 @@ static int tolua_function_CharString_setChar(lua_State* L)
 {
 	CharString* self = (CharString*)tolua_tousertype_dynamic(L, 1, 0, "CharString");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setChar'", NULL);
-	self->setChar(tolua_function_tointeger(L, 2, "setChar"), tolua_function_tochar(L, 3, "setChar"));
+	self->setChar(tolua_function_tointeger<size_t>(L, 2, "setChar"), tolua_function_tochar(L, 3, "setChar"));
 	return 0;
 }
 
@@ -4886,7 +4886,7 @@ static int tolua_function_CharString_setL(lua_State* L)
 {
 	CharString* self = (CharString*)tolua_tousertype_dynamic(L, 1, 0, "CharString");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setL'", NULL);
-	self->setL(tolua_function_tostring(L, 2, "setL"), tolua_function_tointeger(L, 3, "setL"));
+	self->setL(tolua_function_tostring(L, 2, "setL"), tolua_function_tointeger<size_t>(L, 3, "setL"));
 	return 0;
 }
 
@@ -4902,7 +4902,7 @@ static int tolua_function_CharString_writeL(lua_State* L)
 {
 	CharString* self = (CharString*)tolua_tousertype_dynamic(L, 1, 0, "CharString");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'writeL'", NULL);
-	self->writeL(tolua_function_tostring(L, 2, "writeL"), tolua_function_tointeger(L, 3, "writeL"));
+	self->writeL(tolua_function_tostring(L, 2, "writeL"), tolua_function_tointeger<size_t>(L, 3, "writeL"));
 	return 0;
 }
 
@@ -4918,7 +4918,7 @@ static int tolua_function_CharString_pointTo(lua_State* L)
 {
 	CharString* self = (CharString*)tolua_tousertype_dynamic(L, 1, 0, "CharString");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'pointTo'", NULL);
-	self->pointTo(tolua_function_tointeger(L, 2, "pointTo"));
+	self->pointTo(tolua_function_tointeger<uintptr_t>(L, 2, "pointTo"));
 	return 0;
 }
 
@@ -4935,7 +4935,7 @@ static int tolua_function_CharString_getL(lua_State* L)
 {
 	CharString* self = (CharString*)tolua_tousertype_dynamic(L, 1, 0, "CharString");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getL'", NULL);
-	self->getL(L, tolua_function_tointeger(L, 2, "getL"));
+	self->getL(L, tolua_function_tointeger<size_t>(L, 2, "getL"));
 	return 1;
 }
 
@@ -5061,7 +5061,7 @@ static int tolua_set_CTypedPtrList_CPtrList_long__m_nCount(lua_State* L)
 {
 	CTypedPtrList<CPtrList,long>* self = (CTypedPtrList<CPtrList,long>*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,long>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCount'", NULL);
-	self->m_nCount = tolua_setter_tointeger(L, "m_nCount");
+	self->m_nCount = tolua_setter_tointeger<int>(L, "m_nCount");
 	return 0;
 }
 
@@ -5133,7 +5133,7 @@ static int tolua_set_CTypedPtrList_CPtrList_long__m_nBlockSize(lua_State* L)
 {
 	CTypedPtrList<CPtrList,long>* self = (CTypedPtrList<CPtrList,long>*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,long>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nBlockSize'", NULL);
-	self->m_nBlockSize = tolua_setter_tointeger(L, "m_nBlockSize");
+	self->m_nBlockSize = tolua_setter_tointeger<int>(L, "m_nBlockSize");
 	return 0;
 }
 
@@ -5212,7 +5212,7 @@ static int tolua_set_CTypedPtrList_CPtrList_long___CNode_data(lua_State* L)
 {
 	CTypedPtrList<CPtrList,long>::CNode* self = (CTypedPtrList<CPtrList,long>::CNode*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,long>::CNode");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'data'", NULL);
-	self->data = tolua_setter_tointeger(L, "data");
+	self->data = tolua_setter_tointeger<long>(L, "data");
 	return 0;
 }
 
@@ -5291,7 +5291,7 @@ static int tolua_set_CTypedPtrList_CPtrList_CGameEffect___m_nCount(lua_State* L)
 {
 	CTypedPtrList<CPtrList,CGameEffect*>* self = (CTypedPtrList<CPtrList,CGameEffect*>*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,CGameEffect*>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCount'", NULL);
-	self->m_nCount = tolua_setter_tointeger(L, "m_nCount");
+	self->m_nCount = tolua_setter_tointeger<int>(L, "m_nCount");
 	return 0;
 }
 
@@ -5363,7 +5363,7 @@ static int tolua_set_CTypedPtrList_CPtrList_CGameEffect___m_nBlockSize(lua_State
 {
 	CTypedPtrList<CPtrList,CGameEffect*>* self = (CTypedPtrList<CPtrList,CGameEffect*>*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,CGameEffect*>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nBlockSize'", NULL);
-	self->m_nBlockSize = tolua_setter_tointeger(L, "m_nBlockSize");
+	self->m_nBlockSize = tolua_setter_tointeger<int>(L, "m_nBlockSize");
 	return 0;
 }
 
@@ -5521,7 +5521,7 @@ static int tolua_set_CTypedPtrList_CPtrList_int___m_nCount(lua_State* L)
 {
 	CTypedPtrList<CPtrList,int*>* self = (CTypedPtrList<CPtrList,int*>*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,int*>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCount'", NULL);
-	self->m_nCount = tolua_setter_tointeger(L, "m_nCount");
+	self->m_nCount = tolua_setter_tointeger<int>(L, "m_nCount");
 	return 0;
 }
 
@@ -5593,7 +5593,7 @@ static int tolua_set_CTypedPtrList_CPtrList_int___m_nBlockSize(lua_State* L)
 {
 	CTypedPtrList<CPtrList,int*>* self = (CTypedPtrList<CPtrList,int*>*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,int*>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nBlockSize'", NULL);
-	self->m_nBlockSize = tolua_setter_tointeger(L, "m_nBlockSize");
+	self->m_nBlockSize = tolua_setter_tointeger<int>(L, "m_nBlockSize");
 	return 0;
 }
 
@@ -5751,7 +5751,7 @@ static int tolua_set_CTypedPtrList_CPtrList_int__m_nCount(lua_State* L)
 {
 	CTypedPtrList<CPtrList,int>* self = (CTypedPtrList<CPtrList,int>*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,int>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCount'", NULL);
-	self->m_nCount = tolua_setter_tointeger(L, "m_nCount");
+	self->m_nCount = tolua_setter_tointeger<int>(L, "m_nCount");
 	return 0;
 }
 
@@ -5823,7 +5823,7 @@ static int tolua_set_CTypedPtrList_CPtrList_int__m_nBlockSize(lua_State* L)
 {
 	CTypedPtrList<CPtrList,int>* self = (CTypedPtrList<CPtrList,int>*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,int>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nBlockSize'", NULL);
-	self->m_nBlockSize = tolua_setter_tointeger(L, "m_nBlockSize");
+	self->m_nBlockSize = tolua_setter_tointeger<int>(L, "m_nBlockSize");
 	return 0;
 }
 
@@ -5902,7 +5902,7 @@ static int tolua_set_CTypedPtrList_CPtrList_int___CNode_data(lua_State* L)
 {
 	CTypedPtrList<CPtrList,int>::CNode* self = (CTypedPtrList<CPtrList,int>::CNode*)tolua_tousertype_dynamic(L, 1, 0, "CTypedPtrList<CPtrList,int>::CNode");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'data'", NULL);
-	self->data = tolua_setter_tointeger(L, "data");
+	self->data = tolua_setter_tointeger<int>(L, "data");
 	return 0;
 }
 
@@ -5989,7 +5989,7 @@ static int tolua_set_CAreaTintOverride_nMode(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nMode'", NULL);
-	self->nMode = tolua_setter_tointeger(L, "nMode");
+	self->nMode = tolua_setter_tointeger<byte>(L, "nMode");
 	return 0;
 }
 
@@ -6013,7 +6013,7 @@ static int tolua_set_CAreaTintOverride_nBoundsInfringeCounter(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nBoundsInfringeCounter'", NULL);
-	self->nBoundsInfringeCounter = tolua_setter_tointeger(L, "nBoundsInfringeCounter");
+	self->nBoundsInfringeCounter = tolua_setter_tointeger<uint>(L, "nBoundsInfringeCounter");
 	return 0;
 }
 
@@ -6037,7 +6037,7 @@ static int tolua_set_CAreaTintOverride_nDuration(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nDuration'", NULL);
-	self->nDuration = tolua_setter_tointeger(L, "nDuration");
+	self->nDuration = tolua_setter_tointeger<uint>(L, "nDuration");
 	return 0;
 }
 
@@ -6061,7 +6061,7 @@ static int tolua_set_CAreaTintOverride_tintMin(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'tintMin'", NULL);
-	self->tintMin = tolua_setter_tointeger(L, "tintMin");
+	self->tintMin = tolua_setter_tointeger<uint>(L, "tintMin");
 	return 0;
 }
 
@@ -6085,7 +6085,7 @@ static int tolua_set_CAreaTintOverride_redMin(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'redMin'", NULL);
-	self->redMin = tolua_setter_tointeger(L, "redMin");
+	self->redMin = tolua_setter_tointeger<byte>(L, "redMin");
 	return 0;
 }
 
@@ -6109,7 +6109,7 @@ static int tolua_set_CAreaTintOverride_greenMin(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'greenMin'", NULL);
-	self->greenMin = tolua_setter_tointeger(L, "greenMin");
+	self->greenMin = tolua_setter_tointeger<byte>(L, "greenMin");
 	return 0;
 }
 
@@ -6133,7 +6133,7 @@ static int tolua_set_CAreaTintOverride_blueMin(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'blueMin'", NULL);
-	self->blueMin = tolua_setter_tointeger(L, "blueMin");
+	self->blueMin = tolua_setter_tointeger<byte>(L, "blueMin");
 	return 0;
 }
 
@@ -6157,7 +6157,7 @@ static int tolua_set_CAreaTintOverride_tintMax(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'tintMax'", NULL);
-	self->tintMax = tolua_setter_tointeger(L, "tintMax");
+	self->tintMax = tolua_setter_tointeger<uint>(L, "tintMax");
 	return 0;
 }
 
@@ -6181,7 +6181,7 @@ static int tolua_set_CAreaTintOverride_redMax(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'redMax'", NULL);
-	self->redMax = tolua_setter_tointeger(L, "redMax");
+	self->redMax = tolua_setter_tointeger<byte>(L, "redMax");
 	return 0;
 }
 
@@ -6205,7 +6205,7 @@ static int tolua_set_CAreaTintOverride_greenMax(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'greenMax'", NULL);
-	self->greenMax = tolua_setter_tointeger(L, "greenMax");
+	self->greenMax = tolua_setter_tointeger<byte>(L, "greenMax");
 	return 0;
 }
 
@@ -6229,7 +6229,7 @@ static int tolua_set_CAreaTintOverride_blueMax(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'blueMax'", NULL);
-	self->blueMax = tolua_setter_tointeger(L, "blueMax");
+	self->blueMax = tolua_setter_tointeger<byte>(L, "blueMax");
 	return 0;
 }
 
@@ -6253,7 +6253,7 @@ static int tolua_set_CAreaTintOverride_redStep(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'redStep'", NULL);
-	self->redStep = tolua_setter_tointeger(L, "redStep");
+	self->redStep = tolua_setter_tointeger<int>(L, "redStep");
 	return 0;
 }
 
@@ -6277,7 +6277,7 @@ static int tolua_set_CAreaTintOverride_greenStep(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'greenStep'", NULL);
-	self->greenStep = tolua_setter_tointeger(L, "greenStep");
+	self->greenStep = tolua_setter_tointeger<int>(L, "greenStep");
 	return 0;
 }
 
@@ -6301,7 +6301,7 @@ static int tolua_set_CAreaTintOverride_blueStep(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'blueStep'", NULL);
-	self->blueStep = tolua_setter_tointeger(L, "blueStep");
+	self->blueStep = tolua_setter_tointeger<int>(L, "blueStep");
 	return 0;
 }
 
@@ -6325,7 +6325,7 @@ static int tolua_set_CAreaTintOverride_nStartingGlobalLighting(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nStartingGlobalLighting'", NULL);
-	self->nStartingGlobalLighting = tolua_setter_tointeger(L, "nStartingGlobalLighting");
+	self->nStartingGlobalLighting = tolua_setter_tointeger<uint>(L, "nStartingGlobalLighting");
 	return 0;
 }
 
@@ -6349,7 +6349,7 @@ static int tolua_set_CAreaTintOverride_curGlobalTintOverrideStep(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'curGlobalTintOverrideStep'", NULL);
-	self->curGlobalTintOverrideStep = tolua_setter_tointeger(L, "curGlobalTintOverrideStep");
+	self->curGlobalTintOverrideStep = tolua_setter_tointeger<uint>(L, "curGlobalTintOverrideStep");
 	return 0;
 }
 
@@ -6373,7 +6373,7 @@ static int tolua_set_CAreaTintOverride_curGlobalTintRed(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'curGlobalTintRed'", NULL);
-	self->curGlobalTintRed = tolua_setter_tointeger(L, "curGlobalTintRed");
+	self->curGlobalTintRed = tolua_setter_tointeger<uint>(L, "curGlobalTintRed");
 	return 0;
 }
 
@@ -6397,7 +6397,7 @@ static int tolua_set_CAreaTintOverride_curGlobalTintGreen(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'curGlobalTintGreen'", NULL);
-	self->curGlobalTintGreen = tolua_setter_tointeger(L, "curGlobalTintGreen");
+	self->curGlobalTintGreen = tolua_setter_tointeger<uint>(L, "curGlobalTintGreen");
 	return 0;
 }
 
@@ -6421,7 +6421,7 @@ static int tolua_set_CAreaTintOverride_curGlobalTintBlue(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'curGlobalTintBlue'", NULL);
-	self->curGlobalTintBlue = tolua_setter_tointeger(L, "curGlobalTintBlue");
+	self->curGlobalTintBlue = tolua_setter_tointeger<uint>(L, "curGlobalTintBlue");
 	return 0;
 }
 
@@ -6445,7 +6445,7 @@ static int tolua_set_CAreaTintOverride_targetType(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'targetType'", NULL);
-	self->targetType = tolua_setter_tointeger(L, "targetType");
+	self->targetType = tolua_setter_tointeger<byte>(L, "targetType");
 	return 0;
 }
 
@@ -6469,7 +6469,7 @@ static int tolua_set_CAreaTintOverride_nSourceId(lua_State* L)
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nSourceId'", NULL);
-	self->nSourceId = tolua_setter_tointeger(L, "nSourceId");
+	self->nSourceId = tolua_setter_tointeger<int>(L, "nSourceId");
 	return 0;
 }
 
@@ -6493,7 +6493,7 @@ static int tolua_set_CAreaTintOverride_bIgnoreMode0ResetOnBoundsInfringement(lua
 {
 	CAreaTintOverride* self = (CAreaTintOverride*)tolua_tousertype_dynamic(L, 1, 0, "CAreaTintOverride");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'bIgnoreMode0ResetOnBoundsInfringement'", NULL);
-	self->bIgnoreMode0ResetOnBoundsInfringement = tolua_setter_tointeger(L, "bIgnoreMode0ResetOnBoundsInfringement");
+	self->bIgnoreMode0ResetOnBoundsInfringement = tolua_setter_tointeger<int>(L, "bIgnoreMode0ResetOnBoundsInfringement");
 	return 0;
 }
 
@@ -6532,7 +6532,7 @@ static int tolua_set_CGameArea_m_nCharacters(lua_State* L)
 {
 	CGameArea* self = (CGameArea*)tolua_tousertype_dynamic(L, 1, 0, "CGameArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCharacters'", NULL);
-	self->m_nCharacters = tolua_setter_tointeger(L, "m_nCharacters");
+	self->m_nCharacters = tolua_setter_tointeger<byte>(L, "m_nCharacters");
 	return 0;
 }
 
@@ -6556,7 +6556,7 @@ static int tolua_set_CGameArea_m_nInfravision(lua_State* L)
 {
 	CGameArea* self = (CGameArea*)tolua_tousertype_dynamic(L, 1, 0, "CGameArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nInfravision'", NULL);
-	self->m_nInfravision = tolua_setter_tointeger(L, "m_nInfravision");
+	self->m_nInfravision = tolua_setter_tointeger<byte>(L, "m_nInfravision");
 	return 0;
 }
 
@@ -6580,7 +6580,7 @@ static int tolua_set_CGameArea_m_bAreaLoaded(lua_State* L)
 {
 	CGameArea* self = (CGameArea*)tolua_tousertype_dynamic(L, 1, 0, "CGameArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bAreaLoaded'", NULL);
-	self->m_bAreaLoaded = tolua_setter_tointeger(L, "m_bAreaLoaded");
+	self->m_bAreaLoaded = tolua_setter_tointeger<byte>(L, "m_bAreaLoaded");
 	return 0;
 }
 
@@ -6604,7 +6604,7 @@ static int tolua_set_CGameArea_m_iPicked(lua_State* L)
 {
 	CGameArea* self = (CGameArea*)tolua_tousertype_dynamic(L, 1, 0, "CGameArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_iPicked'", NULL);
-	self->m_iPicked = tolua_setter_tointeger(L, "m_iPicked");
+	self->m_iPicked = tolua_setter_tointeger<int>(L, "m_iPicked");
 	return 0;
 }
 
@@ -6628,7 +6628,7 @@ static int tolua_set_CGameArea_m_bPicked(lua_State* L)
 {
 	CGameArea* self = (CGameArea*)tolua_tousertype_dynamic(L, 1, 0, "CGameArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bPicked'", NULL);
-	self->m_bPicked = tolua_setter_tointeger(L, "m_bPicked");
+	self->m_bPicked = tolua_setter_tointeger<int>(L, "m_bPicked");
 	return 0;
 }
 
@@ -6652,7 +6652,7 @@ static int tolua_set_CGameArea_m_nToolTip(lua_State* L)
 {
 	CGameArea* self = (CGameArea*)tolua_tousertype_dynamic(L, 1, 0, "CGameArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nToolTip'", NULL);
-	self->m_nToolTip = tolua_setter_tointeger(L, "m_nToolTip");
+	self->m_nToolTip = tolua_setter_tointeger<int>(L, "m_nToolTip");
 	return 0;
 }
 
@@ -6676,7 +6676,7 @@ static int tolua_set_CGameArea_m_firstRender(lua_State* L)
 {
 	CGameArea* self = (CGameArea*)tolua_tousertype_dynamic(L, 1, 0, "CGameArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_firstRender'", NULL);
-	self->m_firstRender = tolua_setter_tointeger(L, "m_firstRender");
+	self->m_firstRender = tolua_setter_tointeger<byte>(L, "m_firstRender");
 	return 0;
 }
 
@@ -6700,7 +6700,7 @@ static int tolua_set_CGameArea_m_nAIIndex(lua_State* L)
 {
 	CGameArea* self = (CGameArea*)tolua_tousertype_dynamic(L, 1, 0, "CGameArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nAIIndex'", NULL);
-	self->m_nAIIndex = tolua_setter_tointeger(L, "m_nAIIndex");
+	self->m_nAIIndex = tolua_setter_tointeger<long>(L, "m_nAIIndex");
 	return 0;
 }
 
@@ -6740,7 +6740,7 @@ static int tolua_set_CGameArea_m_nScreenFlash(lua_State* L)
 {
 	CGameArea* self = (CGameArea*)tolua_tousertype_dynamic(L, 1, 0, "CGameArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nScreenFlash'", NULL);
-	self->m_nScreenFlash = tolua_setter_tointeger(L, "m_nScreenFlash");
+	self->m_nScreenFlash = tolua_setter_tointeger<short>(L, "m_nScreenFlash");
 	return 0;
 }
 
@@ -6843,7 +6843,7 @@ static int tolua_set_CGameEffectList_m_newEffect(lua_State* L)
 {
 	CGameEffectList* self = (CGameEffectList*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectList");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_newEffect'", NULL);
-	self->m_newEffect = tolua_setter_tointeger(L, "m_newEffect");
+	self->m_newEffect = tolua_setter_tointeger<int>(L, "m_newEffect");
 	return 0;
 }
 
@@ -6867,7 +6867,7 @@ static int tolua_set_CGameEffectList_m_retry(lua_State* L)
 {
 	CGameEffectList* self = (CGameEffectList*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectList");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_retry'", NULL);
-	self->m_retry = tolua_setter_tointeger(L, "m_retry");
+	self->m_retry = tolua_setter_tointeger<int>(L, "m_retry");
 	return 0;
 }
 
@@ -6883,7 +6883,7 @@ static int tolua_function_Array_uchar_8__getReference(lua_State* L)
 {
 	Array<uchar,8>* self = (Array<uchar,8>*)tolua_tousertype_dynamic(L, 1, 0, "Array<uchar,8>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getReference'", NULL);
-	uchar* returnVal = self->getReference(tolua_function_tointeger(L, 2, "getReference"));
+	uchar* returnVal = self->getReference(tolua_function_tointeger<size_t>(L, 2, "getReference"));
 	tolua_pushusertype(L, (void*)returnVal, "uchar");
 	return 1;
 }
@@ -6892,7 +6892,7 @@ static int tolua_function_Array_uchar_8__set(lua_State* L)
 {
 	Array<uchar,8>* self = (Array<uchar,8>*)tolua_tousertype_dynamic(L, 1, 0, "Array<uchar,8>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'set'", NULL);
-	self->set(tolua_function_tointeger(L, 2, "set"), *(uchar*)tolua_tousertype_dynamic(L, 3, 0, "uchar"));
+	self->set(tolua_function_tointeger<size_t>(L, 2, "set"), *(uchar*)tolua_tousertype_dynamic(L, 3, 0, "uchar"));
 	return 0;
 }
 
@@ -6900,7 +6900,7 @@ static int tolua_function_Array_CProjectileUnknownPST2__10__get(lua_State* L)
 {
 	Array<CProjectileUnknownPST2*,10>* self = (Array<CProjectileUnknownPST2*,10>*)tolua_tousertype_dynamic(L, 1, 0, "Array<CProjectileUnknownPST2*,10>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'get'", NULL);
-	CProjectileUnknownPST2* returnVal = self->get(tolua_function_tointeger(L, 2, "get"));
+	CProjectileUnknownPST2* returnVal = self->get(tolua_function_tointeger<size_t>(L, 2, "get"));
 	tolua_pushusertype(L, (void*)returnVal, "CProjectileUnknownPST2");
 	return 1;
 }
@@ -6909,7 +6909,7 @@ static int tolua_function_Array_CProjectileUnknownPST2__10__getReference(lua_Sta
 {
 	Array<CProjectileUnknownPST2*,10>* self = (Array<CProjectileUnknownPST2*,10>*)tolua_tousertype_dynamic(L, 1, 0, "Array<CProjectileUnknownPST2*,10>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getReference'", NULL);
-	CProjectileUnknownPST2** returnVal = self->getReference(tolua_function_tointeger(L, 2, "getReference"));
+	CProjectileUnknownPST2** returnVal = self->getReference(tolua_function_tointeger<size_t>(L, 2, "getReference"));
 	tolua_pushusertype(L, (void*)returnVal, "Pointer<CProjectileUnknownPST2*>");
 	return 1;
 }
@@ -6918,7 +6918,7 @@ static int tolua_function_Array_CProjectileUnknownPST2__10__set(lua_State* L)
 {
 	Array<CProjectileUnknownPST2*,10>* self = (Array<CProjectileUnknownPST2*,10>*)tolua_tousertype_dynamic(L, 1, 0, "Array<CProjectileUnknownPST2*,10>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'set'", NULL);
-	self->set(tolua_function_tointeger(L, 2, "set"), (CProjectileUnknownPST2*)tolua_tousertype_dynamic(L, 3, 0, "CProjectileUnknownPST2"));
+	self->set(tolua_function_tointeger<size_t>(L, 2, "set"), (CProjectileUnknownPST2*)tolua_tousertype_dynamic(L, 3, 0, "CProjectileUnknownPST2"));
 	return 0;
 }
 
@@ -6926,7 +6926,7 @@ static int tolua_function_Array_ulong_15__getReference(lua_State* L)
 {
 	Array<ulong,15>* self = (Array<ulong,15>*)tolua_tousertype_dynamic(L, 1, 0, "Array<ulong,15>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getReference'", NULL);
-	ulong* returnVal = self->getReference(tolua_function_tointeger(L, 2, "getReference"));
+	ulong* returnVal = self->getReference(tolua_function_tointeger<size_t>(L, 2, "getReference"));
 	tolua_pushusertype(L, (void*)returnVal, "ulong");
 	return 1;
 }
@@ -6935,7 +6935,7 @@ static int tolua_function_Array_ulong_15__set(lua_State* L)
 {
 	Array<ulong,15>* self = (Array<ulong,15>*)tolua_tousertype_dynamic(L, 1, 0, "Array<ulong,15>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'set'", NULL);
-	self->set(tolua_function_tointeger(L, 2, "set"), *(ulong*)tolua_tousertype_dynamic(L, 3, 0, "ulong"));
+	self->set(tolua_function_tointeger<size_t>(L, 2, "set"), *(ulong*)tolua_tousertype_dynamic(L, 3, 0, "ulong"));
 	return 0;
 }
 
@@ -6943,7 +6943,7 @@ static int tolua_function_Array_char_32__get(lua_State* L)
 {
 	Array<char,32>* self = (Array<char,32>*)tolua_tousertype_dynamic(L, 1, 0, "Array<char,32>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'get'", NULL);
-	char returnVal = self->get(tolua_function_tointeger(L, 2, "get"));
+	char returnVal = self->get(tolua_function_tointeger<size_t>(L, 2, "get"));
 	lua_pushlstring(L, (const char*)&returnVal, 1);
 	return 1;
 }
@@ -6952,7 +6952,7 @@ static int tolua_function_Array_char_32__set(lua_State* L)
 {
 	Array<char,32>* self = (Array<char,32>*)tolua_tousertype_dynamic(L, 1, 0, "Array<char,32>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'set'", NULL);
-	self->set(tolua_function_tointeger(L, 2, "set"), tolua_function_tochar(L, 3, "set"));
+	self->set(tolua_function_tointeger<size_t>(L, 2, "set"), tolua_function_tochar(L, 3, "set"));
 	return 0;
 }
 
@@ -6960,7 +6960,7 @@ static int tolua_function_Array_CGameArea__12__get(lua_State* L)
 {
 	Array<CGameArea*,12>* self = (Array<CGameArea*,12>*)tolua_tousertype_dynamic(L, 1, 0, "Array<CGameArea*,12>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'get'", NULL);
-	CGameArea* returnVal = self->get(tolua_function_tointeger(L, 2, "get"));
+	CGameArea* returnVal = self->get(tolua_function_tointeger<size_t>(L, 2, "get"));
 	tolua_pushusertype(L, (void*)returnVal, "CGameArea");
 	return 1;
 }
@@ -6969,7 +6969,7 @@ static int tolua_function_Array_CGameArea__12__getReference(lua_State* L)
 {
 	Array<CGameArea*,12>* self = (Array<CGameArea*,12>*)tolua_tousertype_dynamic(L, 1, 0, "Array<CGameArea*,12>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getReference'", NULL);
-	CGameArea** returnVal = self->getReference(tolua_function_tointeger(L, 2, "getReference"));
+	CGameArea** returnVal = self->getReference(tolua_function_tointeger<size_t>(L, 2, "getReference"));
 	tolua_pushusertype(L, (void*)returnVal, "Pointer<CGameArea*>");
 	return 1;
 }
@@ -6978,7 +6978,7 @@ static int tolua_function_Array_CGameArea__12__set(lua_State* L)
 {
 	Array<CGameArea*,12>* self = (Array<CGameArea*,12>*)tolua_tousertype_dynamic(L, 1, 0, "Array<CGameArea*,12>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'set'", NULL);
-	self->set(tolua_function_tointeger(L, 2, "set"), (CGameArea*)tolua_tousertype_dynamic(L, 3, 0, "CGameArea"));
+	self->set(tolua_function_tointeger<size_t>(L, 2, "set"), (CGameArea*)tolua_tousertype_dynamic(L, 3, 0, "CGameArea"));
 	return 0;
 }
 
@@ -6986,7 +6986,7 @@ static int tolua_function_Array_long_6__get(lua_State* L)
 {
 	Array<long,6>* self = (Array<long,6>*)tolua_tousertype_dynamic(L, 1, 0, "Array<long,6>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'get'", NULL);
-	long returnVal = self->get(tolua_function_tointeger(L, 2, "get"));
+	long returnVal = self->get(tolua_function_tointeger<size_t>(L, 2, "get"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
@@ -6995,7 +6995,7 @@ static int tolua_function_Array_long_6__getReference(lua_State* L)
 {
 	Array<long,6>* self = (Array<long,6>*)tolua_tousertype_dynamic(L, 1, 0, "Array<long,6>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getReference'", NULL);
-	long* returnVal = self->getReference(tolua_function_tointeger(L, 2, "getReference"));
+	long* returnVal = self->getReference(tolua_function_tointeger<size_t>(L, 2, "getReference"));
 	tolua_pushusertype(L, (void*)returnVal, "Pointer<long>");
 	return 1;
 }
@@ -7004,7 +7004,7 @@ static int tolua_function_Array_long_6__set(lua_State* L)
 {
 	Array<long,6>* self = (Array<long,6>*)tolua_tousertype_dynamic(L, 1, 0, "Array<long,6>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'set'", NULL);
-	self->set(tolua_function_tointeger(L, 2, "set"), tolua_function_tointeger(L, 3, "set"));
+	self->set(tolua_function_tointeger<size_t>(L, 2, "set"), tolua_function_tointeger<long>(L, 3, "set"));
 	return 0;
 }
 
@@ -7012,7 +7012,7 @@ static int tolua_function_Array_ulong_8__getReference(lua_State* L)
 {
 	Array<ulong,8>* self = (Array<ulong,8>*)tolua_tousertype_dynamic(L, 1, 0, "Array<ulong,8>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getReference'", NULL);
-	ulong* returnVal = self->getReference(tolua_function_tointeger(L, 2, "getReference"));
+	ulong* returnVal = self->getReference(tolua_function_tointeger<size_t>(L, 2, "getReference"));
 	tolua_pushusertype(L, (void*)returnVal, "ulong");
 	return 1;
 }
@@ -7021,7 +7021,7 @@ static int tolua_function_Array_ulong_8__set(lua_State* L)
 {
 	Array<ulong,8>* self = (Array<ulong,8>*)tolua_tousertype_dynamic(L, 1, 0, "Array<ulong,8>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'set'", NULL);
-	self->set(tolua_function_tointeger(L, 2, "set"), *(ulong*)tolua_tousertype_dynamic(L, 3, 0, "ulong"));
+	self->set(tolua_function_tointeger<size_t>(L, 2, "set"), *(ulong*)tolua_tousertype_dynamic(L, 3, 0, "ulong"));
 	return 0;
 }
 
@@ -7029,7 +7029,7 @@ static int tolua_function_Array_byte_5__get(lua_State* L)
 {
 	Array<byte,5>* self = (Array<byte,5>*)tolua_tousertype_dynamic(L, 1, 0, "Array<byte,5>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'get'", NULL);
-	byte returnVal = self->get(tolua_function_tointeger(L, 2, "get"));
+	byte returnVal = self->get(tolua_function_tointeger<size_t>(L, 2, "get"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
@@ -7038,7 +7038,7 @@ static int tolua_function_Array_byte_5__getReference(lua_State* L)
 {
 	Array<byte,5>* self = (Array<byte,5>*)tolua_tousertype_dynamic(L, 1, 0, "Array<byte,5>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getReference'", NULL);
-	byte* returnVal = self->getReference(tolua_function_tointeger(L, 2, "getReference"));
+	byte* returnVal = self->getReference(tolua_function_tointeger<size_t>(L, 2, "getReference"));
 	tolua_pushusertype(L, (void*)returnVal, "Pointer<byte>");
 	return 1;
 }
@@ -7047,7 +7047,7 @@ static int tolua_function_Array_byte_5__set(lua_State* L)
 {
 	Array<byte,5>* self = (Array<byte,5>*)tolua_tousertype_dynamic(L, 1, 0, "Array<byte,5>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'set'", NULL);
-	self->set(tolua_function_tointeger(L, 2, "set"), tolua_function_tointeger(L, 3, "set"));
+	self->set(tolua_function_tointeger<size_t>(L, 2, "set"), tolua_function_tointeger<byte>(L, 3, "set"));
 	return 0;
 }
 
@@ -7062,7 +7062,7 @@ static int tolua_function_LCharString_32__getChar(lua_State* L)
 {
 	LCharString<32>* self = (LCharString<32>*)tolua_tousertype_dynamic(L, 1, 0, "LCharString<32>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getChar'", NULL);
-	char returnVal = self->getChar(tolua_function_tointeger(L, 2, "getChar"));
+	char returnVal = self->getChar(tolua_function_tointeger<size_t>(L, 2, "getChar"));
 	lua_pushlstring(L, (const char*)&returnVal, 1);
 	return 1;
 }
@@ -7071,7 +7071,7 @@ static int tolua_function_LCharString_32__setChar(lua_State* L)
 {
 	LCharString<32>* self = (LCharString<32>*)tolua_tousertype_dynamic(L, 1, 0, "LCharString<32>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setChar'", NULL);
-	self->setChar(tolua_function_tointeger(L, 2, "setChar"), tolua_function_tochar(L, 3, "setChar"));
+	self->setChar(tolua_function_tointeger<size_t>(L, 2, "setChar"), tolua_function_tochar(L, 3, "setChar"));
 	return 0;
 }
 
@@ -7149,7 +7149,7 @@ static int tolua_set_Item_effect_st_effectID(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'effectID'", NULL);
-	self->effectID = tolua_setter_tointeger(L, "effectID");
+	self->effectID = tolua_setter_tointeger<ushort>(L, "effectID");
 	return 0;
 }
 
@@ -7173,7 +7173,7 @@ static int tolua_set_Item_effect_st_targetType(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'targetType'", NULL);
-	self->targetType = tolua_setter_tointeger(L, "targetType");
+	self->targetType = tolua_setter_tointeger<byte>(L, "targetType");
 	return 0;
 }
 
@@ -7197,7 +7197,7 @@ static int tolua_set_Item_effect_st_spellLevel(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'spellLevel'", NULL);
-	self->spellLevel = tolua_setter_tointeger(L, "spellLevel");
+	self->spellLevel = tolua_setter_tointeger<byte>(L, "spellLevel");
 	return 0;
 }
 
@@ -7221,7 +7221,7 @@ static int tolua_set_Item_effect_st_effectAmount(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'effectAmount'", NULL);
-	self->effectAmount = tolua_setter_tointeger(L, "effectAmount");
+	self->effectAmount = tolua_setter_tointeger<int>(L, "effectAmount");
 	return 0;
 }
 
@@ -7245,7 +7245,7 @@ static int tolua_set_Item_effect_st_dwFlags(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'dwFlags'", NULL);
-	self->dwFlags = tolua_setter_tointeger(L, "dwFlags");
+	self->dwFlags = tolua_setter_tointeger<uint>(L, "dwFlags");
 	return 0;
 }
 
@@ -7269,7 +7269,7 @@ static int tolua_set_Item_effect_st_durationType(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'durationType'", NULL);
-	self->durationType = tolua_setter_tointeger(L, "durationType");
+	self->durationType = tolua_setter_tointeger<ushort>(L, "durationType");
 	return 0;
 }
 
@@ -7293,7 +7293,7 @@ static int tolua_set_Item_effect_st_duration(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'duration'", NULL);
-	self->duration = tolua_setter_tointeger(L, "duration");
+	self->duration = tolua_setter_tointeger<uint>(L, "duration");
 	return 0;
 }
 
@@ -7317,7 +7317,7 @@ static int tolua_set_Item_effect_st_probabilityUpper(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'probabilityUpper'", NULL);
-	self->probabilityUpper = tolua_setter_tointeger(L, "probabilityUpper");
+	self->probabilityUpper = tolua_setter_tointeger<byte>(L, "probabilityUpper");
 	return 0;
 }
 
@@ -7341,7 +7341,7 @@ static int tolua_set_Item_effect_st_probabilityLower(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'probabilityLower'", NULL);
-	self->probabilityLower = tolua_setter_tointeger(L, "probabilityLower");
+	self->probabilityLower = tolua_setter_tointeger<byte>(L, "probabilityLower");
 	return 0;
 }
 
@@ -7373,7 +7373,7 @@ static int tolua_set_Item_effect_st_numDice(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'numDice'", NULL);
-	self->numDice = tolua_setter_tointeger(L, "numDice");
+	self->numDice = tolua_setter_tointeger<uint>(L, "numDice");
 	return 0;
 }
 
@@ -7397,7 +7397,7 @@ static int tolua_set_Item_effect_st_diceSize(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'diceSize'", NULL);
-	self->diceSize = tolua_setter_tointeger(L, "diceSize");
+	self->diceSize = tolua_setter_tointeger<uint>(L, "diceSize");
 	return 0;
 }
 
@@ -7421,7 +7421,7 @@ static int tolua_set_Item_effect_st_savingThrow(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'savingThrow'", NULL);
-	self->savingThrow = tolua_setter_tointeger(L, "savingThrow");
+	self->savingThrow = tolua_setter_tointeger<uint>(L, "savingThrow");
 	return 0;
 }
 
@@ -7445,7 +7445,7 @@ static int tolua_set_Item_effect_st_saveMod(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'saveMod'", NULL);
-	self->saveMod = tolua_setter_tointeger(L, "saveMod");
+	self->saveMod = tolua_setter_tointeger<int>(L, "saveMod");
 	return 0;
 }
 
@@ -7469,7 +7469,7 @@ static int tolua_set_Item_effect_st_special(lua_State* L)
 {
 	Item_effect_st* self = (Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'special'", NULL);
-	self->special = tolua_setter_tointeger(L, "special");
+	self->special = tolua_setter_tointeger<uint>(L, "special");
 	return 0;
 }
 
@@ -7555,7 +7555,7 @@ static int tolua_set_CVidCell_m_nCurrentFrame(lua_State* L)
 {
 	CVidCell* self = (CVidCell*)tolua_tousertype_dynamic(L, 1, 0, "CVidCell");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCurrentFrame'", NULL);
-	self->m_nCurrentFrame = tolua_setter_tointeger(L, "m_nCurrentFrame");
+	self->m_nCurrentFrame = tolua_setter_tointeger<short>(L, "m_nCurrentFrame");
 	return 0;
 }
 
@@ -7579,7 +7579,7 @@ static int tolua_set_CVidCell_m_nCurrentSequence(lua_State* L)
 {
 	CVidCell* self = (CVidCell*)tolua_tousertype_dynamic(L, 1, 0, "CVidCell");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCurrentSequence'", NULL);
-	self->m_nCurrentSequence = tolua_setter_tointeger(L, "m_nCurrentSequence");
+	self->m_nCurrentSequence = tolua_setter_tointeger<ushort>(L, "m_nCurrentSequence");
 	return 0;
 }
 
@@ -7603,7 +7603,7 @@ static int tolua_set_CVidCell_m_nAnimType(lua_State* L)
 {
 	CVidCell* self = (CVidCell*)tolua_tousertype_dynamic(L, 1, 0, "CVidCell");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nAnimType'", NULL);
-	self->m_nAnimType = tolua_setter_tointeger(L, "m_nAnimType");
+	self->m_nAnimType = tolua_setter_tointeger<int>(L, "m_nAnimType");
 	return 0;
 }
 
@@ -7627,7 +7627,7 @@ static int tolua_set_CVidCell_m_bPaletteChanged(lua_State* L)
 {
 	CVidCell* self = (CVidCell*)tolua_tousertype_dynamic(L, 1, 0, "CVidCell");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bPaletteChanged'", NULL);
-	self->m_bPaletteChanged = tolua_setter_tointeger(L, "m_bPaletteChanged");
+	self->m_bPaletteChanged = tolua_setter_tointeger<int>(L, "m_bPaletteChanged");
 	return 0;
 }
 
@@ -7675,7 +7675,7 @@ static int tolua_set_CVidCell_m_bShadowOn(lua_State* L)
 {
 	CVidCell* self = (CVidCell*)tolua_tousertype_dynamic(L, 1, 0, "CVidCell");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bShadowOn'", NULL);
-	self->m_bShadowOn = tolua_setter_tointeger(L, "m_bShadowOn");
+	self->m_bShadowOn = tolua_setter_tointeger<byte>(L, "m_bShadowOn");
 	return 0;
 }
 
@@ -7714,7 +7714,7 @@ static int tolua_set_CInfGame_m_bGameLoaded(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bGameLoaded'", NULL);
-	self->m_bGameLoaded = tolua_setter_tointeger(L, "m_bGameLoaded");
+	self->m_bGameLoaded = tolua_setter_tointeger<int>(L, "m_bGameLoaded");
 	return 0;
 }
 
@@ -7738,7 +7738,7 @@ static int tolua_set_CInfGame_m_bInDestroyGame(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bInDestroyGame'", NULL);
-	self->m_bInDestroyGame = tolua_setter_tointeger(L, "m_bInDestroyGame");
+	self->m_bInDestroyGame = tolua_setter_tointeger<byte>(L, "m_bInDestroyGame");
 	return 0;
 }
 
@@ -7762,7 +7762,7 @@ static int tolua_set_CInfGame_m_nState(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nState'", NULL);
-	self->m_nState = tolua_setter_tointeger(L, "m_nState");
+	self->m_nState = tolua_setter_tointeger<short>(L, "m_nState");
 	return 0;
 }
 
@@ -7786,7 +7786,7 @@ static int tolua_set_CInfGame_m_iconCount(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_iconCount'", NULL);
-	self->m_iconCount = tolua_setter_tointeger(L, "m_iconCount");
+	self->m_iconCount = tolua_setter_tointeger<int>(L, "m_iconCount");
 	return 0;
 }
 
@@ -7810,7 +7810,7 @@ static int tolua_set_CInfGame_m_iconIndex(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_iconIndex'", NULL);
-	self->m_iconIndex = tolua_setter_tointeger(L, "m_iconIndex");
+	self->m_iconIndex = tolua_setter_tointeger<byte>(L, "m_iconIndex");
 	return 0;
 }
 
@@ -7834,7 +7834,7 @@ static int tolua_set_CInfGame_m_tempCursor(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_tempCursor'", NULL);
-	self->m_tempCursor = tolua_setter_tointeger(L, "m_tempCursor");
+	self->m_tempCursor = tolua_setter_tointeger<byte>(L, "m_tempCursor");
 	return 0;
 }
 
@@ -7858,7 +7858,7 @@ static int tolua_set_CInfGame_m_visibleArea(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_visibleArea'", NULL);
-	self->m_visibleArea = tolua_setter_tointeger(L, "m_visibleArea");
+	self->m_visibleArea = tolua_setter_tointeger<byte>(L, "m_visibleArea");
 	return 0;
 }
 
@@ -7930,7 +7930,7 @@ static int tolua_set_CInfGame_m_nCharacters(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCharacters'", NULL);
-	self->m_nCharacters = tolua_setter_tointeger(L, "m_nCharacters");
+	self->m_nCharacters = tolua_setter_tointeger<short>(L, "m_nCharacters");
 	return 0;
 }
 
@@ -7962,7 +7962,7 @@ static int tolua_set_CInfGame_m_searchRequestListEmpty(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_searchRequestListEmpty'", NULL);
-	self->m_searchRequestListEmpty = tolua_setter_tointeger(L, "m_searchRequestListEmpty");
+	self->m_searchRequestListEmpty = tolua_setter_tointeger<int>(L, "m_searchRequestListEmpty");
 	return 0;
 }
 
@@ -7986,7 +7986,7 @@ static int tolua_set_CInfGame_m_currArmor(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_currArmor'", NULL);
-	self->m_currArmor = tolua_setter_tointeger(L, "m_currArmor");
+	self->m_currArmor = tolua_setter_tointeger<short>(L, "m_currArmor");
 	return 0;
 }
 
@@ -8010,7 +8010,7 @@ static int tolua_set_CInfGame_m_currAnimation(lua_State* L)
 {
 	CInfGame* self = (CInfGame*)tolua_tousertype_dynamic(L, 1, 0, "EEex_CInfGame");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_currAnimation'", NULL);
-	self->m_currAnimation = tolua_setter_tointeger(L, "m_currAnimation");
+	self->m_currAnimation = tolua_setter_tointeger<short>(L, "m_currAnimation");
 	return 0;
 }
 
@@ -8073,7 +8073,7 @@ static int tolua_set_CGameEffectBase_m_effectAmount(lua_State* L)
 {
 	CGameEffectBase* self = (CGameEffectBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_effectAmount'", NULL);
-	self->m_effectAmount = tolua_setter_tointeger(L, "m_effectAmount");
+	self->m_effectAmount = tolua_setter_tointeger<long>(L, "m_effectAmount");
 	return 0;
 }
 
@@ -8121,7 +8121,7 @@ static int tolua_set_CGameEffectBase_m_probabilityUpper(lua_State* L)
 {
 	CGameEffectBase* self = (CGameEffectBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_probabilityUpper'", NULL);
-	self->m_probabilityUpper = tolua_setter_tointeger(L, "m_probabilityUpper");
+	self->m_probabilityUpper = tolua_setter_tointeger<ushort>(L, "m_probabilityUpper");
 	return 0;
 }
 
@@ -8145,7 +8145,7 @@ static int tolua_set_CGameEffectBase_m_probabilityLower(lua_State* L)
 {
 	CGameEffectBase* self = (CGameEffectBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_probabilityLower'", NULL);
-	self->m_probabilityLower = tolua_setter_tointeger(L, "m_probabilityLower");
+	self->m_probabilityLower = tolua_setter_tointeger<ushort>(L, "m_probabilityLower");
 	return 0;
 }
 
@@ -8201,7 +8201,7 @@ static int tolua_set_CGameEffectBase_m_saveMod(lua_State* L)
 {
 	CGameEffectBase* self = (CGameEffectBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_saveMod'", NULL);
-	self->m_saveMod = tolua_setter_tointeger(L, "m_saveMod");
+	self->m_saveMod = tolua_setter_tointeger<long>(L, "m_saveMod");
 	return 0;
 }
 
@@ -8273,7 +8273,7 @@ static int tolua_set_CGameEffectBase_m_effectAmount2(lua_State* L)
 {
 	CGameEffectBase* self = (CGameEffectBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_effectAmount2'", NULL);
-	self->m_effectAmount2 = tolua_setter_tointeger(L, "m_effectAmount2");
+	self->m_effectAmount2 = tolua_setter_tointeger<long>(L, "m_effectAmount2");
 	return 0;
 }
 
@@ -8297,7 +8297,7 @@ static int tolua_set_CGameEffectBase_m_effectAmount3(lua_State* L)
 {
 	CGameEffectBase* self = (CGameEffectBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_effectAmount3'", NULL);
-	self->m_effectAmount3 = tolua_setter_tointeger(L, "m_effectAmount3");
+	self->m_effectAmount3 = tolua_setter_tointeger<long>(L, "m_effectAmount3");
 	return 0;
 }
 
@@ -8321,7 +8321,7 @@ static int tolua_set_CGameEffectBase_m_effectAmount4(lua_State* L)
 {
 	CGameEffectBase* self = (CGameEffectBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_effectAmount4'", NULL);
-	self->m_effectAmount4 = tolua_setter_tointeger(L, "m_effectAmount4");
+	self->m_effectAmount4 = tolua_setter_tointeger<long>(L, "m_effectAmount4");
 	return 0;
 }
 
@@ -8345,7 +8345,7 @@ static int tolua_set_CGameEffectBase_m_effectAmount5(lua_State* L)
 {
 	CGameEffectBase* self = (CGameEffectBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_effectAmount5'", NULL);
-	self->m_effectAmount5 = tolua_setter_tointeger(L, "m_effectAmount5");
+	self->m_effectAmount5 = tolua_setter_tointeger<long>(L, "m_effectAmount5");
 	return 0;
 }
 
@@ -8433,7 +8433,7 @@ static int tolua_set_CGameEffectBase_m_slotNum(lua_State* L)
 {
 	CGameEffectBase* self = (CGameEffectBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_slotNum'", NULL);
-	self->m_slotNum = tolua_setter_tointeger(L, "m_slotNum");
+	self->m_slotNum = tolua_setter_tointeger<long>(L, "m_slotNum");
 	return 0;
 }
 
@@ -8504,7 +8504,7 @@ static int tolua_set_CGameEffect_m_sourceId(lua_State* L)
 {
 	CGameEffect* self = (CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_sourceId'", NULL);
-	self->m_sourceId = tolua_setter_tointeger(L, "m_sourceId");
+	self->m_sourceId = tolua_setter_tointeger<long>(L, "m_sourceId");
 	return 0;
 }
 
@@ -8528,7 +8528,7 @@ static int tolua_set_CGameEffect_m_done(lua_State* L)
 {
 	CGameEffect* self = (CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_done'", NULL);
-	self->m_done = tolua_setter_tointeger(L, "m_done");
+	self->m_done = tolua_setter_tointeger<int>(L, "m_done");
 	return 0;
 }
 
@@ -8552,7 +8552,7 @@ static int tolua_set_CGameEffect_m_forceRepass(lua_State* L)
 {
 	CGameEffect* self = (CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_forceRepass'", NULL);
-	self->m_forceRepass = tolua_setter_tointeger(L, "m_forceRepass");
+	self->m_forceRepass = tolua_setter_tointeger<int>(L, "m_forceRepass");
 	return 0;
 }
 
@@ -8584,7 +8584,7 @@ static int tolua_set_CGameEffect_m_compareIdOnly(lua_State* L)
 {
 	CGameEffect* self = (CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_compareIdOnly'", NULL);
-	self->m_compareIdOnly = tolua_setter_tointeger(L, "m_compareIdOnly");
+	self->m_compareIdOnly = tolua_setter_tointeger<int>(L, "m_compareIdOnly");
 	return 0;
 }
 
@@ -8608,7 +8608,7 @@ static int tolua_set_CGameEffect_m_compareIdAndFlagsOnly(lua_State* L)
 {
 	CGameEffect* self = (CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_compareIdAndFlagsOnly'", NULL);
-	self->m_compareIdAndFlagsOnly = tolua_setter_tointeger(L, "m_compareIdAndFlagsOnly");
+	self->m_compareIdAndFlagsOnly = tolua_setter_tointeger<int>(L, "m_compareIdAndFlagsOnly");
 	return 0;
 }
 
@@ -8632,7 +8632,7 @@ static int tolua_set_CGameEffect_m_compareIdAndEffectAmountOnly(lua_State* L)
 {
 	CGameEffect* self = (CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_compareIdAndEffectAmountOnly'", NULL);
-	self->m_compareIdAndEffectAmountOnly = tolua_setter_tointeger(L, "m_compareIdAndEffectAmountOnly");
+	self->m_compareIdAndEffectAmountOnly = tolua_setter_tointeger<int>(L, "m_compareIdAndEffectAmountOnly");
 	return 0;
 }
 
@@ -8656,7 +8656,7 @@ static int tolua_set_CGameEffect_m_compareIdAndResrefOnly(lua_State* L)
 {
 	CGameEffect* self = (CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_compareIdAndResrefOnly'", NULL);
-	self->m_compareIdAndResrefOnly = tolua_setter_tointeger(L, "m_compareIdAndResrefOnly");
+	self->m_compareIdAndResrefOnly = tolua_setter_tointeger<int>(L, "m_compareIdAndResrefOnly");
 	return 0;
 }
 
@@ -8688,7 +8688,7 @@ static int tolua_set_CGameEffect_m_sourceTarget(lua_State* L)
 {
 	CGameEffect* self = (CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_sourceTarget'", NULL);
-	self->m_sourceTarget = tolua_setter_tointeger(L, "m_sourceTarget");
+	self->m_sourceTarget = tolua_setter_tointeger<long>(L, "m_sourceTarget");
 	return 0;
 }
 
@@ -8710,7 +8710,7 @@ static int tolua_get_CGameEffect_unknownResRef(lua_State* L)
 
 static int tolua_function_CGameEffect_DecodeEffect(lua_State* L)
 {
-	CGameEffect* returnVal = CGameEffect::DecodeEffect((Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st"), (const CPoint*)tolua_tousertype_dynamic(L, 2, 0, "CPoint"), tolua_function_tointeger(L, 3, "DecodeEffect"), (const CPoint*)tolua_tousertype_dynamic(L, 4, 0, "CPoint"), tolua_function_tointeger(L, 5, "DecodeEffect"));
+	CGameEffect* returnVal = CGameEffect::DecodeEffect((Item_effect_st*)tolua_tousertype_dynamic(L, 1, 0, "Item_effect_st"), (const CPoint*)tolua_tousertype_dynamic(L, 2, 0, "CPoint"), tolua_function_tointeger<int>(L, 3, "DecodeEffect"), (const CPoint*)tolua_tousertype_dynamic(L, 4, 0, "CPoint"), tolua_function_tointeger<int>(L, 5, "DecodeEffect"));
 	tolua_pushusertype(L, (void*)returnVal, "CGameEffect");
 	return 1;
 }
@@ -8740,7 +8740,7 @@ static int tolua_set_CDerivedStats_m_generalState(lua_State* L)
 {
 	CDerivedStats* self = (CDerivedStats*)tolua_tousertype_dynamic(L, 1, 0, "CDerivedStats");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_generalState'", NULL);
-	self->m_generalState = tolua_setter_tointeger(L, "m_generalState");
+	self->m_generalState = tolua_setter_tointeger<uint>(L, "m_generalState");
 	return 0;
 }
 
@@ -8764,7 +8764,7 @@ static int tolua_set_CDerivedStats_m_nLuck(lua_State* L)
 {
 	CDerivedStats* self = (CDerivedStats*)tolua_tousertype_dynamic(L, 1, 0, "CDerivedStats");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nLuck'", NULL);
-	self->m_nLuck = tolua_setter_tointeger(L, "m_nLuck");
+	self->m_nLuck = tolua_setter_tointeger<short>(L, "m_nLuck");
 	return 0;
 }
 
@@ -8788,7 +8788,7 @@ static int tolua_set_CDerivedStats_m_nTurnUndeadLevel(lua_State* L)
 {
 	CDerivedStats* self = (CDerivedStats*)tolua_tousertype_dynamic(L, 1, 0, "CDerivedStats");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nTurnUndeadLevel'", NULL);
-	self->m_nTurnUndeadLevel = tolua_setter_tointeger(L, "m_nTurnUndeadLevel");
+	self->m_nTurnUndeadLevel = tolua_setter_tointeger<short>(L, "m_nTurnUndeadLevel");
 	return 0;
 }
 
@@ -8812,7 +8812,7 @@ static int tolua_set_CDerivedStats_m_nBackstabDamageMultiplier(lua_State* L)
 {
 	CDerivedStats* self = (CDerivedStats*)tolua_tousertype_dynamic(L, 1, 0, "CDerivedStats");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nBackstabDamageMultiplier'", NULL);
-	self->m_nBackstabDamageMultiplier = tolua_setter_tointeger(L, "m_nBackstabDamageMultiplier");
+	self->m_nBackstabDamageMultiplier = tolua_setter_tointeger<short>(L, "m_nBackstabDamageMultiplier");
 	return 0;
 }
 
@@ -8836,7 +8836,7 @@ static int tolua_set_CDerivedStats_m_nLayOnHandsAmount(lua_State* L)
 {
 	CDerivedStats* self = (CDerivedStats*)tolua_tousertype_dynamic(L, 1, 0, "CDerivedStats");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nLayOnHandsAmount'", NULL);
-	self->m_nLayOnHandsAmount = tolua_setter_tointeger(L, "m_nLayOnHandsAmount");
+	self->m_nLayOnHandsAmount = tolua_setter_tointeger<short>(L, "m_nLayOnHandsAmount");
 	return 0;
 }
 
@@ -8891,7 +8891,7 @@ static int tolua_set_CAreaVariable_m_type(lua_State* L)
 {
 	CAreaVariable* self = (CAreaVariable*)tolua_tousertype_dynamic(L, 1, 0, "CAreaVariable");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_type'", NULL);
-	self->m_type = tolua_setter_tointeger(L, "m_type");
+	self->m_type = tolua_setter_tointeger<ushort>(L, "m_type");
 	return 0;
 }
 
@@ -8915,7 +8915,7 @@ static int tolua_set_CAreaVariable_m_resRefType(lua_State* L)
 {
 	CAreaVariable* self = (CAreaVariable*)tolua_tousertype_dynamic(L, 1, 0, "CAreaVariable");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_resRefType'", NULL);
-	self->m_resRefType = tolua_setter_tointeger(L, "m_resRefType");
+	self->m_resRefType = tolua_setter_tointeger<ushort>(L, "m_resRefType");
 	return 0;
 }
 
@@ -8947,7 +8947,7 @@ static int tolua_set_CAreaVariable_m_intValue(lua_State* L)
 {
 	CAreaVariable* self = (CAreaVariable*)tolua_tousertype_dynamic(L, 1, 0, "CAreaVariable");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_intValue'", NULL);
-	self->m_intValue = tolua_setter_tointeger(L, "m_intValue");
+	self->m_intValue = tolua_setter_tointeger<long>(L, "m_intValue");
 	return 0;
 }
 
@@ -8971,7 +8971,7 @@ static int tolua_set_CAreaVariable_m_floatValue(lua_State* L)
 {
 	CAreaVariable* self = (CAreaVariable*)tolua_tousertype_dynamic(L, 1, 0, "CAreaVariable");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_floatValue'", NULL);
-	self->m_floatValue = tolua_setter_tonumber(L, "m_floatValue");
+	self->m_floatValue = tolua_setter_tonumber<double>(L, "m_floatValue");
 	return 0;
 }
 
@@ -9025,7 +9025,7 @@ static int tolua_set_CAIObjectType_m_EnemyAlly(lua_State* L)
 {
 	CAIObjectType* self = (CAIObjectType*)tolua_tousertype_dynamic(L, 1, 0, "CAIObjectType");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_EnemyAlly'", NULL);
-	self->m_EnemyAlly = tolua_setter_tointeger(L, "m_EnemyAlly");
+	self->m_EnemyAlly = tolua_setter_tointeger<byte>(L, "m_EnemyAlly");
 	return 0;
 }
 
@@ -9049,7 +9049,7 @@ static int tolua_set_CAIObjectType_m_General(lua_State* L)
 {
 	CAIObjectType* self = (CAIObjectType*)tolua_tousertype_dynamic(L, 1, 0, "CAIObjectType");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_General'", NULL);
-	self->m_General = tolua_setter_tointeger(L, "m_General");
+	self->m_General = tolua_setter_tointeger<byte>(L, "m_General");
 	return 0;
 }
 
@@ -9073,7 +9073,7 @@ static int tolua_set_CAIObjectType_m_Race(lua_State* L)
 {
 	CAIObjectType* self = (CAIObjectType*)tolua_tousertype_dynamic(L, 1, 0, "CAIObjectType");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_Race'", NULL);
-	self->m_Race = tolua_setter_tointeger(L, "m_Race");
+	self->m_Race = tolua_setter_tointeger<byte>(L, "m_Race");
 	return 0;
 }
 
@@ -9097,7 +9097,7 @@ static int tolua_set_CAIObjectType_m_Class(lua_State* L)
 {
 	CAIObjectType* self = (CAIObjectType*)tolua_tousertype_dynamic(L, 1, 0, "CAIObjectType");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_Class'", NULL);
-	self->m_Class = tolua_setter_tointeger(L, "m_Class");
+	self->m_Class = tolua_setter_tointeger<byte>(L, "m_Class");
 	return 0;
 }
 
@@ -9121,7 +9121,7 @@ static int tolua_set_CAIObjectType_m_Instance(lua_State* L)
 {
 	CAIObjectType* self = (CAIObjectType*)tolua_tousertype_dynamic(L, 1, 0, "CAIObjectType");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_Instance'", NULL);
-	self->m_Instance = tolua_setter_tointeger(L, "m_Instance");
+	self->m_Instance = tolua_setter_tointeger<int>(L, "m_Instance");
 	return 0;
 }
 
@@ -9153,7 +9153,7 @@ static int tolua_set_CAIObjectType_m_Specifics(lua_State* L)
 {
 	CAIObjectType* self = (CAIObjectType*)tolua_tousertype_dynamic(L, 1, 0, "CAIObjectType");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_Specifics'", NULL);
-	self->m_Specifics = tolua_setter_tointeger(L, "m_Specifics");
+	self->m_Specifics = tolua_setter_tointeger<byte>(L, "m_Specifics");
 	return 0;
 }
 
@@ -9177,7 +9177,7 @@ static int tolua_set_CAIObjectType_m_Gender(lua_State* L)
 {
 	CAIObjectType* self = (CAIObjectType*)tolua_tousertype_dynamic(L, 1, 0, "CAIObjectType");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_Gender'", NULL);
-	self->m_Gender = tolua_setter_tointeger(L, "m_Gender");
+	self->m_Gender = tolua_setter_tointeger<byte>(L, "m_Gender");
 	return 0;
 }
 
@@ -9201,7 +9201,7 @@ static int tolua_set_CAIObjectType_m_Alignment(lua_State* L)
 {
 	CAIObjectType* self = (CAIObjectType*)tolua_tousertype_dynamic(L, 1, 0, "CAIObjectType");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_Alignment'", NULL);
-	self->m_Alignment = tolua_setter_tointeger(L, "m_Alignment");
+	self->m_Alignment = tolua_setter_tointeger<byte>(L, "m_Alignment");
 	return 0;
 }
 
@@ -9232,7 +9232,7 @@ static int tolua_set_CGameObject_m_objectType(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_objectType'", NULL);
-	self->m_objectType = tolua_setter_tointeger(L, "m_objectType");
+	self->m_objectType = tolua_setter_tointeger<byte>(L, "m_objectType");
 	return 0;
 }
 
@@ -9264,7 +9264,7 @@ static int tolua_set_CGameObject_m_posZ(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_posZ'", NULL);
-	self->m_posZ = tolua_setter_tointeger(L, "m_posZ");
+	self->m_posZ = tolua_setter_tointeger<int>(L, "m_posZ");
 	return 0;
 }
 
@@ -9336,7 +9336,7 @@ static int tolua_set_CGameObject_m_listType(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_listType'", NULL);
-	self->m_listType = tolua_setter_tointeger(L, "m_listType");
+	self->m_listType = tolua_setter_tointeger<byte>(L, "m_listType");
 	return 0;
 }
 
@@ -9368,7 +9368,7 @@ static int tolua_set_CGameObject_m_id(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_id'", NULL);
-	self->m_id = tolua_setter_tointeger(L, "m_id");
+	self->m_id = tolua_setter_tointeger<int>(L, "m_id");
 	return 0;
 }
 
@@ -9392,7 +9392,7 @@ static int tolua_set_CGameObject_m_canBeSeen(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_canBeSeen'", NULL);
-	self->m_canBeSeen = tolua_setter_tointeger(L, "m_canBeSeen");
+	self->m_canBeSeen = tolua_setter_tointeger<short>(L, "m_canBeSeen");
 	return 0;
 }
 
@@ -9416,7 +9416,7 @@ static int tolua_set_CGameObject_m_remotePlayerID(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_remotePlayerID'", NULL);
-	self->m_remotePlayerID = tolua_setter_tointeger(L, "m_remotePlayerID");
+	self->m_remotePlayerID = tolua_setter_tointeger<int>(L, "m_remotePlayerID");
 	return 0;
 }
 
@@ -9440,7 +9440,7 @@ static int tolua_set_CGameObject_m_remoteObjectID(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_remoteObjectID'", NULL);
-	self->m_remoteObjectID = tolua_setter_tointeger(L, "m_remoteObjectID");
+	self->m_remoteObjectID = tolua_setter_tointeger<int>(L, "m_remoteObjectID");
 	return 0;
 }
 
@@ -9464,7 +9464,7 @@ static int tolua_set_CGameObject_m_AISpeed(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_AISpeed'", NULL);
-	self->m_AISpeed = tolua_setter_tointeger(L, "m_AISpeed");
+	self->m_AISpeed = tolua_setter_tointeger<byte>(L, "m_AISpeed");
 	return 0;
 }
 
@@ -9488,7 +9488,7 @@ static int tolua_set_CGameObject_m_bLocalControl(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bLocalControl'", NULL);
-	self->m_bLocalControl = tolua_setter_tointeger(L, "m_bLocalControl");
+	self->m_bLocalControl = tolua_setter_tointeger<byte>(L, "m_bLocalControl");
 	return 0;
 }
 
@@ -9512,7 +9512,7 @@ static int tolua_set_CGameObject_m_AIInhibitor(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_AIInhibitor'", NULL);
-	self->m_AIInhibitor = tolua_setter_tointeger(L, "m_AIInhibitor");
+	self->m_AIInhibitor = tolua_setter_tointeger<byte>(L, "m_AIInhibitor");
 	return 0;
 }
 
@@ -9537,7 +9537,7 @@ static int tolua_function_CGameObject_virtual_AddToArea(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_AddToArea'", NULL);
-	self->virtual_AddToArea((CGameArea*)tolua_tousertype_dynamic(L, 2, 0, "CGameArea"), (const CPoint*)tolua_tousertype_dynamic(L, 3, 0, "CPoint"), tolua_function_tointeger(L, 4, "virtual_AddToArea"), tolua_function_tointeger(L, 5, "virtual_AddToArea"));
+	self->virtual_AddToArea((CGameArea*)tolua_tousertype_dynamic(L, 2, 0, "CGameArea"), (const CPoint*)tolua_tousertype_dynamic(L, 3, 0, "CPoint"), tolua_function_tointeger<int>(L, 4, "virtual_AddToArea"), tolua_function_tointeger<__int8>(L, 5, "virtual_AddToArea"));
 	return 0;
 }
 
@@ -9597,7 +9597,7 @@ static int tolua_function_CGameObject_virtual_CanSaveGame(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_CanSaveGame'", NULL);
-	unsigned __int8 returnVal = self->virtual_CanSaveGame((unsigned int*)tolua_tousertype_dynamic(L, 2, 0, "Pointer<unsigned int>"), tolua_function_tointeger(L, 3, "virtual_CanSaveGame"), tolua_function_tointeger(L, 4, "virtual_CanSaveGame"));
+	unsigned __int8 returnVal = self->virtual_CanSaveGame((unsigned int*)tolua_tousertype_dynamic(L, 2, 0, "Pointer<unsigned int>"), tolua_function_tointeger<int>(L, 3, "virtual_CanSaveGame"), tolua_function_tointeger<int>(L, 4, "virtual_CanSaveGame"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
@@ -9606,7 +9606,7 @@ static int tolua_function_CGameObject_virtual_CompressTime(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_CompressTime'", NULL);
-	unsigned __int8 returnVal = self->virtual_CompressTime(tolua_function_tointeger(L, 2, "virtual_CompressTime"));
+	unsigned __int8 returnVal = self->virtual_CompressTime(tolua_function_tointeger<int>(L, 2, "virtual_CompressTime"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
@@ -9615,7 +9615,7 @@ static int tolua_function_CGameObject_virtual_DebugDump(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_DebugDump'", NULL);
-	self->virtual_DebugDump((const CString*)tolua_tousertype_dynamic(L, 2, 0, "CString"), tolua_function_tointeger(L, 3, "virtual_DebugDump"));
+	self->virtual_DebugDump((const CString*)tolua_tousertype_dynamic(L, 2, 0, "CString"), tolua_function_tointeger<__int8>(L, 3, "virtual_DebugDump"));
 	return 0;
 }
 
@@ -9682,7 +9682,7 @@ static int tolua_function_CGameObject_virtual_DoAIUpdate(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_DoAIUpdate'", NULL);
-	unsigned __int8 returnVal = self->virtual_DoAIUpdate(tolua_function_tointeger(L, 2, "virtual_DoAIUpdate"), tolua_function_tointeger(L, 3, "virtual_DoAIUpdate"));
+	unsigned __int8 returnVal = self->virtual_DoAIUpdate(tolua_function_tointeger<__int8>(L, 2, "virtual_DoAIUpdate"), tolua_function_tointeger<int>(L, 3, "virtual_DoAIUpdate"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
@@ -9691,7 +9691,7 @@ static int tolua_function_CGameObject_virtual_SetAIType(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_SetAIType'", NULL);
-	self->virtual_SetAIType((const CAIObjectType*)tolua_tousertype_dynamic(L, 2, 0, "CAIObjectType"), tolua_function_tointeger(L, 3, "virtual_SetAIType"));
+	self->virtual_SetAIType((const CAIObjectType*)tolua_tousertype_dynamic(L, 2, 0, "CAIObjectType"), tolua_function_tointeger<int>(L, 3, "virtual_SetAIType"));
 	return 0;
 }
 
@@ -9699,7 +9699,7 @@ static int tolua_function_CGameObject_virtual_SetCursor(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_SetCursor'", NULL);
-	self->virtual_SetCursor(tolua_function_tointeger(L, 2, "virtual_SetCursor"));
+	self->virtual_SetCursor(tolua_function_tointeger<int>(L, 2, "virtual_SetCursor"));
 	return 0;
 }
 
@@ -9707,7 +9707,7 @@ static int tolua_function_CGameObject_virtual_SetTarget(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_SetTarget'", NULL);
-	self->virtual_SetTarget(*(CPoint*)tolua_tousertype_dynamic(L, 2, 0, "CPoint"), tolua_function_tointeger(L, 3, "virtual_SetTarget"));
+	self->virtual_SetTarget(*(CPoint*)tolua_tousertype_dynamic(L, 2, 0, "CPoint"), tolua_function_tointeger<int>(L, 3, "virtual_SetTarget"));
 	return 0;
 }
 
@@ -9994,7 +9994,7 @@ static int tolua_set_CProjectile_m_projectileType(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_projectileType'", NULL);
-	self->m_projectileType = tolua_setter_tointeger(L, "m_projectileType");
+	self->m_projectileType = tolua_setter_tointeger<short>(L, "m_projectileType");
 	return 0;
 }
 
@@ -10018,7 +10018,7 @@ static int tolua_set_CProjectile_m_speed(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_speed'", NULL);
-	self->m_speed = tolua_setter_tointeger(L, "m_speed");
+	self->m_speed = tolua_setter_tointeger<short>(L, "m_speed");
 	return 0;
 }
 
@@ -10042,7 +10042,7 @@ static int tolua_set_CProjectile_m_sourceId(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_sourceId'", NULL);
-	self->m_sourceId = tolua_setter_tointeger(L, "m_sourceId");
+	self->m_sourceId = tolua_setter_tointeger<int>(L, "m_sourceId");
 	return 0;
 }
 
@@ -10066,7 +10066,7 @@ static int tolua_set_CProjectile_m_targetId(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_targetId'", NULL);
-	self->m_targetId = tolua_setter_tointeger(L, "m_targetId");
+	self->m_targetId = tolua_setter_tointeger<int>(L, "m_targetId");
 	return 0;
 }
 
@@ -10090,7 +10090,7 @@ static int tolua_set_CProjectile_m_callBackProjectile(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_callBackProjectile'", NULL);
-	self->m_callBackProjectile = tolua_setter_tointeger(L, "m_callBackProjectile");
+	self->m_callBackProjectile = tolua_setter_tointeger<int>(L, "m_callBackProjectile");
 	return 0;
 }
 
@@ -10122,7 +10122,7 @@ static int tolua_set_CProjectile_m_nType(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nType'", NULL);
-	self->m_nType = tolua_setter_tointeger(L, "m_nType");
+	self->m_nType = tolua_setter_tointeger<short>(L, "m_nType");
 	return 0;
 }
 
@@ -10162,7 +10162,7 @@ static int tolua_set_CProjectile_m_decAmmount(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_decAmmount'", NULL);
-	self->m_decAmmount = tolua_setter_tointeger(L, "m_decAmmount");
+	self->m_decAmmount = tolua_setter_tointeger<ushort>(L, "m_decAmmount");
 	return 0;
 }
 
@@ -10186,7 +10186,7 @@ static int tolua_set_CProjectile_m_bSparkleTrail(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bSparkleTrail'", NULL);
-	self->m_bSparkleTrail = tolua_setter_tointeger(L, "m_bSparkleTrail");
+	self->m_bSparkleTrail = tolua_setter_tointeger<int>(L, "m_bSparkleTrail");
 	return 0;
 }
 
@@ -10210,7 +10210,7 @@ static int tolua_set_CProjectile_m_defaultRenderFlags(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_defaultRenderFlags'", NULL);
-	self->m_defaultRenderFlags = tolua_setter_tointeger(L, "m_defaultRenderFlags");
+	self->m_defaultRenderFlags = tolua_setter_tointeger<uint>(L, "m_defaultRenderFlags");
 	return 0;
 }
 
@@ -10234,7 +10234,7 @@ static int tolua_set_CProjectile_m_bIgnoreTarget(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bIgnoreTarget'", NULL);
-	self->m_bIgnoreTarget = tolua_setter_tointeger(L, "m_bIgnoreTarget");
+	self->m_bIgnoreTarget = tolua_setter_tointeger<int>(L, "m_bIgnoreTarget");
 	return 0;
 }
 
@@ -10266,7 +10266,7 @@ static int tolua_set_CProjectile_m_loopFireSound(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_loopFireSound'", NULL);
-	self->m_loopFireSound = tolua_setter_tointeger(L, "m_loopFireSound");
+	self->m_loopFireSound = tolua_setter_tointeger<int>(L, "m_loopFireSound");
 	return 0;
 }
 
@@ -10298,7 +10298,7 @@ static int tolua_set_CProjectile_m_loopArrivalSound(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_loopArrivalSound'", NULL);
-	self->m_loopArrivalSound = tolua_setter_tointeger(L, "m_loopArrivalSound");
+	self->m_loopArrivalSound = tolua_setter_tointeger<int>(L, "m_loopArrivalSound");
 	return 0;
 }
 
@@ -10330,7 +10330,7 @@ static int tolua_set_CProjectile_m_visualEffect(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_visualEffect'", NULL);
-	self->m_visualEffect = tolua_setter_tointeger(L, "m_visualEffect");
+	self->m_visualEffect = tolua_setter_tointeger<int>(L, "m_visualEffect");
 	return 0;
 }
 
@@ -10354,7 +10354,7 @@ static int tolua_set_CProjectile_m_maxDuration(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_maxDuration'", NULL);
-	self->m_maxDuration = tolua_setter_tointeger(L, "m_maxDuration");
+	self->m_maxDuration = tolua_setter_tointeger<short>(L, "m_maxDuration");
 	return 0;
 }
 
@@ -10378,7 +10378,7 @@ static int tolua_set_CProjectile_m_strRef(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_strRef'", NULL);
-	self->m_strRef = tolua_setter_tointeger(L, "m_strRef");
+	self->m_strRef = tolua_setter_tointeger<uint>(L, "m_strRef");
 	return 0;
 }
 
@@ -10418,7 +10418,7 @@ static int tolua_set_CProjectile_unknown(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'unknown'", NULL);
-	self->unknown = tolua_setter_tointeger(L, "unknown");
+	self->unknown = tolua_setter_tointeger<int>(L, "unknown");
 	return 0;
 }
 
@@ -10442,7 +10442,7 @@ static int tolua_set_CProjectile_unknown2(lua_State* L)
 {
 	CProjectile* self = (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'unknown2'", NULL);
-	self->unknown2 = tolua_setter_tointeger(L, "unknown2");
+	self->unknown2 = tolua_setter_tointeger<int>(L, "unknown2");
 	return 0;
 }
 
@@ -10456,7 +10456,7 @@ static int tolua_get_CProjectile_reference_unknown2(lua_State* L)
 
 static int tolua_function_CProjectile_DecodeProjectile(lua_State* L)
 {
-	CProjectile* returnVal = CProjectile::DecodeProjectile(tolua_function_tointeger(L, 1, "DecodeProjectile"), (CGameAIBase*)tolua_tousertype_dynamic(L, 2, 0, "CGameAIBase"), tolua_function_tointeger(L, 3, "DecodeProjectile"));
+	CProjectile* returnVal = CProjectile::DecodeProjectile(tolua_function_tointeger<ushort>(L, 1, "DecodeProjectile"), (CGameAIBase*)tolua_tousertype_dynamic(L, 2, 0, "CGameAIBase"), tolua_function_tointeger<uint>(L, 3, "DecodeProjectile"));
 	tolua_pushusertype(L, (void*)returnVal, "CProjectile");
 	return 1;
 }
@@ -10534,7 +10534,7 @@ static int tolua_set_CProjectileBAM_bUseAreaTint(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'bUseAreaTint'", NULL);
-	self->bUseAreaTint = tolua_setter_tointeger(L, "bUseAreaTint");
+	self->bUseAreaTint = tolua_setter_tointeger<int>(L, "bUseAreaTint");
 	return 0;
 }
 
@@ -10558,7 +10558,7 @@ static int tolua_set_CProjectileBAM_m_numDirections(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_numDirections'", NULL);
-	self->m_numDirections = tolua_setter_tointeger(L, "m_numDirections");
+	self->m_numDirections = tolua_setter_tointeger<short>(L, "m_numDirections");
 	return 0;
 }
 
@@ -10582,7 +10582,7 @@ static int tolua_set_CProjectileBAM_m_direction(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_direction'", NULL);
-	self->m_direction = tolua_setter_tointeger(L, "m_direction");
+	self->m_direction = tolua_setter_tointeger<short>(L, "m_direction");
 	return 0;
 }
 
@@ -10606,7 +10606,7 @@ static int tolua_set_CProjectileBAM_unknown3(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'unknown3'", NULL);
-	self->unknown3 = tolua_setter_tointeger(L, "unknown3");
+	self->unknown3 = tolua_setter_tointeger<ushort>(L, "unknown3");
 	return 0;
 }
 
@@ -10630,7 +10630,7 @@ static int tolua_set_CProjectileBAM_m_render(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_render'", NULL);
-	self->m_render = tolua_setter_tointeger(L, "m_render");
+	self->m_render = tolua_setter_tointeger<int>(L, "m_render");
 	return 0;
 }
 
@@ -10654,7 +10654,7 @@ static int tolua_set_CProjectileBAM_unknown4(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'unknown4'", NULL);
-	self->unknown4 = tolua_setter_tointeger(L, "unknown4");
+	self->unknown4 = tolua_setter_tointeger<int>(L, "unknown4");
 	return 0;
 }
 
@@ -10702,7 +10702,7 @@ static int tolua_set_CProjectileBAM_m_nPuff1Spacing(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nPuff1Spacing'", NULL);
-	self->m_nPuff1Spacing = tolua_setter_tointeger(L, "m_nPuff1Spacing");
+	self->m_nPuff1Spacing = tolua_setter_tointeger<ushort>(L, "m_nPuff1Spacing");
 	return 0;
 }
 
@@ -10726,7 +10726,7 @@ static int tolua_set_CProjectileBAM_m_nPuff2Spacing(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nPuff2Spacing'", NULL);
-	self->m_nPuff2Spacing = tolua_setter_tointeger(L, "m_nPuff2Spacing");
+	self->m_nPuff2Spacing = tolua_setter_tointeger<ushort>(L, "m_nPuff2Spacing");
 	return 0;
 }
 
@@ -10750,7 +10750,7 @@ static int tolua_set_CProjectileBAM_m_nPuff3Spacing(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nPuff3Spacing'", NULL);
-	self->m_nPuff3Spacing = tolua_setter_tointeger(L, "m_nPuff3Spacing");
+	self->m_nPuff3Spacing = tolua_setter_tointeger<ushort>(L, "m_nPuff3Spacing");
 	return 0;
 }
 
@@ -10774,7 +10774,7 @@ static int tolua_set_CProjectileBAM_m_dwPuffFlags(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_dwPuffFlags'", NULL);
-	self->m_dwPuffFlags = tolua_setter_tointeger(L, "m_dwPuffFlags");
+	self->m_dwPuffFlags = tolua_setter_tointeger<uint>(L, "m_dwPuffFlags");
 	return 0;
 }
 
@@ -10798,7 +10798,7 @@ static int tolua_set_CProjectileBAM_m_puffCounter(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_puffCounter'", NULL);
-	self->m_puffCounter = tolua_setter_tointeger(L, "m_puffCounter");
+	self->m_puffCounter = tolua_setter_tointeger<int>(L, "m_puffCounter");
 	return 0;
 }
 
@@ -10822,7 +10822,7 @@ static int tolua_set_CProjectileBAM_m_unknownPSTFlags(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_unknownPSTFlags'", NULL);
-	self->m_unknownPSTFlags = tolua_setter_tointeger(L, "m_unknownPSTFlags");
+	self->m_unknownPSTFlags = tolua_setter_tointeger<uint>(L, "m_unknownPSTFlags");
 	return 0;
 }
 
@@ -10846,7 +10846,7 @@ static int tolua_set_CProjectileBAM_nDelayedRemoveCounter(lua_State* L)
 {
 	CProjectileBAM* self = (CProjectileBAM*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileBAM");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nDelayedRemoveCounter'", NULL);
-	self->nDelayedRemoveCounter = tolua_setter_tointeger(L, "nDelayedRemoveCounter");
+	self->nDelayedRemoveCounter = tolua_setter_tointeger<int>(L, "nDelayedRemoveCounter");
 	return 0;
 }
 
@@ -10877,7 +10877,7 @@ static int tolua_set_CProjectileArea_m_coneSize(lua_State* L)
 {
 	CProjectileArea* self = (CProjectileArea*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileArea");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_coneSize'", NULL);
-	self->m_coneSize = tolua_setter_tointeger(L, "m_coneSize");
+	self->m_coneSize = tolua_setter_tointeger<ushort>(L, "m_coneSize");
 	return 0;
 }
 
@@ -10932,7 +10932,7 @@ static int tolua_set_CProjectileUnknownPST_nUnknownMode(lua_State* L)
 {
 	CProjectileUnknownPST* self = (CProjectileUnknownPST*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileUnknownPST");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nUnknownMode'", NULL);
-	self->nUnknownMode = tolua_setter_tointeger(L, "nUnknownMode");
+	self->nUnknownMode = tolua_setter_tointeger<uint>(L, "nUnknownMode");
 	return 0;
 }
 
@@ -10956,7 +10956,7 @@ static int tolua_set_CProjectileUnknownPST_nExpirationTime(lua_State* L)
 {
 	CProjectileUnknownPST* self = (CProjectileUnknownPST*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileUnknownPST");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nExpirationTime'", NULL);
-	self->nExpirationTime = tolua_setter_tointeger(L, "nExpirationTime");
+	self->nExpirationTime = tolua_setter_tointeger<uint>(L, "nExpirationTime");
 	return 0;
 }
 
@@ -10980,7 +10980,7 @@ static int tolua_set_CProjectileUnknownPST_bSuppressFireSound(lua_State* L)
 {
 	CProjectileUnknownPST* self = (CProjectileUnknownPST*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileUnknownPST");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'bSuppressFireSound'", NULL);
-	self->bSuppressFireSound = tolua_setter_tointeger(L, "bSuppressFireSound");
+	self->bSuppressFireSound = tolua_setter_tointeger<int>(L, "bSuppressFireSound");
 	return 0;
 }
 
@@ -11004,7 +11004,7 @@ static int tolua_set_CProjectileUnknownPST_nDelayedRemoveSpeed(lua_State* L)
 {
 	CProjectileUnknownPST* self = (CProjectileUnknownPST*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileUnknownPST");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nDelayedRemoveSpeed'", NULL);
-	self->nDelayedRemoveSpeed = tolua_setter_tointeger(L, "nDelayedRemoveSpeed");
+	self->nDelayedRemoveSpeed = tolua_setter_tointeger<byte>(L, "nDelayedRemoveSpeed");
 	return 0;
 }
 
@@ -11028,7 +11028,7 @@ static int tolua_set_CProjectileUnknownPST_bDelayedRemoveScheduled(lua_State* L)
 {
 	CProjectileUnknownPST* self = (CProjectileUnknownPST*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileUnknownPST");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'bDelayedRemoveScheduled'", NULL);
-	self->bDelayedRemoveScheduled = tolua_setter_tointeger(L, "bDelayedRemoveScheduled");
+	self->bDelayedRemoveScheduled = tolua_setter_tointeger<int>(L, "bDelayedRemoveScheduled");
 	return 0;
 }
 
@@ -11059,7 +11059,7 @@ static int tolua_set_CProjectileUnknownPST2_bRemoveOnNextUpdate(lua_State* L)
 {
 	CProjectileUnknownPST2* self = (CProjectileUnknownPST2*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileUnknownPST2");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'bRemoveOnNextUpdate'", NULL);
-	self->bRemoveOnNextUpdate = tolua_setter_tointeger(L, "bRemoveOnNextUpdate");
+	self->bRemoveOnNextUpdate = tolua_setter_tointeger<int>(L, "bRemoveOnNextUpdate");
 	return 0;
 }
 
@@ -11083,7 +11083,7 @@ static int tolua_set_CProjectileUnknownPST2_nTypePST(lua_State* L)
 {
 	CProjectileUnknownPST2* self = (CProjectileUnknownPST2*)tolua_tousertype_dynamic(L, 1, 0, "CProjectileUnknownPST2");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nTypePST'", NULL);
-	self->nTypePST = tolua_setter_tointeger(L, "nTypePST");
+	self->nTypePST = tolua_setter_tointeger<byte>(L, "nTypePST");
 	return 0;
 }
 
@@ -11121,7 +11121,7 @@ static int tolua_set_CProjectile205_bHitTarget(lua_State* L)
 {
 	CProjectile205* self = (CProjectile205*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile205");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'bHitTarget'", NULL);
-	self->bHitTarget = tolua_setter_tointeger(L, "bHitTarget");
+	self->bHitTarget = tolua_setter_tointeger<int>(L, "bHitTarget");
 	return 0;
 }
 
@@ -11152,7 +11152,7 @@ static int tolua_set_CAITrigger_m_triggerID(lua_State* L)
 {
 	CAITrigger* self = (CAITrigger*)tolua_tousertype_dynamic(L, 1, 0, "CAITrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_triggerID'", NULL);
-	self->m_triggerID = tolua_setter_tointeger(L, "m_triggerID");
+	self->m_triggerID = tolua_setter_tointeger<short>(L, "m_triggerID");
 	return 0;
 }
 
@@ -11176,7 +11176,7 @@ static int tolua_set_CAITrigger_m_specificID(lua_State* L)
 {
 	CAITrigger* self = (CAITrigger*)tolua_tousertype_dynamic(L, 1, 0, "CAITrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_specificID'", NULL);
-	self->m_specificID = tolua_setter_tointeger(L, "m_specificID");
+	self->m_specificID = tolua_setter_tointeger<int>(L, "m_specificID");
 	return 0;
 }
 
@@ -11208,7 +11208,7 @@ static int tolua_set_CAITrigger_m_flags(lua_State* L)
 {
 	CAITrigger* self = (CAITrigger*)tolua_tousertype_dynamic(L, 1, 0, "CAITrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_flags'", NULL);
-	self->m_flags = tolua_setter_tointeger(L, "m_flags");
+	self->m_flags = tolua_setter_tointeger<int>(L, "m_flags");
 	return 0;
 }
 
@@ -11232,7 +11232,7 @@ static int tolua_set_CAITrigger_m_specific2(lua_State* L)
 {
 	CAITrigger* self = (CAITrigger*)tolua_tousertype_dynamic(L, 1, 0, "CAITrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_specific2'", NULL);
-	self->m_specific2 = tolua_setter_tointeger(L, "m_specific2");
+	self->m_specific2 = tolua_setter_tointeger<int>(L, "m_specific2");
 	return 0;
 }
 
@@ -11256,7 +11256,7 @@ static int tolua_set_CAITrigger_m_specific3(lua_State* L)
 {
 	CAITrigger* self = (CAITrigger*)tolua_tousertype_dynamic(L, 1, 0, "CAITrigger");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_specific3'", NULL);
-	self->m_specific3 = tolua_setter_tointeger(L, "m_specific3");
+	self->m_specific3 = tolua_setter_tointeger<int>(L, "m_specific3");
 	return 0;
 }
 
@@ -11326,7 +11326,7 @@ static int tolua_set_CGameAIBase_m_lAttackStyle(lua_State* L)
 {
 	CGameAIBase* self = (CGameAIBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameAIBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_lAttackStyle'", NULL);
-	self->m_lAttackStyle = tolua_setter_tointeger(L, "m_lAttackStyle");
+	self->m_lAttackStyle = tolua_setter_tointeger<int>(L, "m_lAttackStyle");
 	return 0;
 }
 
@@ -11398,7 +11398,7 @@ static int tolua_set_CGameAIBase_m_interrupt(lua_State* L)
 {
 	CGameAIBase* self = (CGameAIBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameAIBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_interrupt'", NULL);
-	self->m_interrupt = tolua_setter_tointeger(L, "m_interrupt");
+	self->m_interrupt = tolua_setter_tointeger<int>(L, "m_interrupt");
 	return 0;
 }
 
@@ -11422,7 +11422,7 @@ static int tolua_set_CGameAIBase_m_actionCount(lua_State* L)
 {
 	CGameAIBase* self = (CGameAIBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameAIBase");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_actionCount'", NULL);
-	self->m_actionCount = tolua_setter_tointeger(L, "m_actionCount");
+	self->m_actionCount = tolua_setter_tointeger<short>(L, "m_actionCount");
 	return 0;
 }
 
@@ -11446,7 +11446,7 @@ static int tolua_function_CGameAIBase_virtual_ClearActions(lua_State* L)
 {
 	CGameAIBase* self = (CGameAIBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameAIBase");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_ClearActions'", NULL);
-	self->virtual_ClearActions(tolua_function_tointeger(L, 2, "virtual_ClearActions"));
+	self->virtual_ClearActions(tolua_function_tointeger<int>(L, 2, "virtual_ClearActions"));
 	return 0;
 }
 
@@ -11488,7 +11488,7 @@ static int tolua_function_CGameAIBase_virtual_AddEffect(lua_State* L)
 {
 	CGameAIBase* self = (CGameAIBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameAIBase");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_AddEffect'", NULL);
-	self->virtual_AddEffect((CGameEffect*)tolua_tousertype_dynamic(L, 2, 0, "CGameEffect"), tolua_function_tointeger(L, 3, "virtual_AddEffect"), tolua_function_tointeger(L, 4, "virtual_AddEffect"), tolua_function_tointeger(L, 5, "virtual_AddEffect"));
+	self->virtual_AddEffect((CGameEffect*)tolua_tousertype_dynamic(L, 2, 0, "CGameEffect"), tolua_function_tointeger<__int8>(L, 3, "virtual_AddEffect"), tolua_function_tointeger<int>(L, 4, "virtual_AddEffect"), tolua_function_tointeger<int>(L, 5, "virtual_AddEffect"));
 	return 0;
 }
 
@@ -11618,7 +11618,7 @@ static int tolua_set_CGameSprite_bAllowGlobalOrAreaTintsWhenRendering(lua_State*
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'bAllowGlobalOrAreaTintsWhenRendering'", NULL);
-	self->bAllowGlobalOrAreaTintsWhenRendering = tolua_setter_tointeger(L, "bAllowGlobalOrAreaTintsWhenRendering");
+	self->bAllowGlobalOrAreaTintsWhenRendering = tolua_setter_tointeger<byte>(L, "bAllowGlobalOrAreaTintsWhenRendering");
 	return 0;
 }
 
@@ -11642,7 +11642,7 @@ static int tolua_set_CGameSprite_m_nMirrorImages(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nMirrorImages'", NULL);
-	self->m_nMirrorImages = tolua_setter_tointeger(L, "m_nMirrorImages");
+	self->m_nMirrorImages = tolua_setter_tointeger<byte>(L, "m_nMirrorImages");
 	return 0;
 }
 
@@ -11666,7 +11666,7 @@ static int tolua_set_CGameSprite_nPainMirrorCounter(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nPainMirrorCounter'", NULL);
-	self->nPainMirrorCounter = tolua_setter_tointeger(L, "nPainMirrorCounter");
+	self->nPainMirrorCounter = tolua_setter_tointeger<byte>(L, "nPainMirrorCounter");
 	return 0;
 }
 
@@ -11690,7 +11690,7 @@ static int tolua_set_CGameSprite_bGuardianMantle(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'bGuardianMantle'", NULL);
-	self->bGuardianMantle = tolua_setter_tointeger(L, "bGuardianMantle");
+	self->bGuardianMantle = tolua_setter_tointeger<byte>(L, "bGuardianMantle");
 	return 0;
 }
 
@@ -11714,7 +11714,7 @@ static int tolua_set_CGameSprite_nCloakOfWardingDamageAbsorption(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nCloakOfWardingDamageAbsorption'", NULL);
-	self->nCloakOfWardingDamageAbsorption = tolua_setter_tointeger(L, "nCloakOfWardingDamageAbsorption");
+	self->nCloakOfWardingDamageAbsorption = tolua_setter_tointeger<ushort>(L, "nCloakOfWardingDamageAbsorption");
 	return 0;
 }
 
@@ -11738,7 +11738,7 @@ static int tolua_set_CGameSprite_nArmorDamageCounter(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nArmorDamageCounter'", NULL);
-	self->nArmorDamageCounter = tolua_setter_tointeger(L, "nArmorDamageCounter");
+	self->nArmorDamageCounter = tolua_setter_tointeger<short>(L, "nArmorDamageCounter");
 	return 0;
 }
 
@@ -11762,7 +11762,7 @@ static int tolua_set_CGameSprite_m_bBlur(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bBlur'", NULL);
-	self->m_bBlur = tolua_setter_tointeger(L, "m_bBlur");
+	self->m_bBlur = tolua_setter_tointeger<byte>(L, "m_bBlur");
 	return 0;
 }
 
@@ -11786,7 +11786,7 @@ static int tolua_set_CGameSprite_m_bMinorGlobe(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bMinorGlobe'", NULL);
-	self->m_bMinorGlobe = tolua_setter_tointeger(L, "m_bMinorGlobe");
+	self->m_bMinorGlobe = tolua_setter_tointeger<byte>(L, "m_bMinorGlobe");
 	return 0;
 }
 
@@ -11810,7 +11810,7 @@ static int tolua_set_CGameSprite_m_bShieldGlobe(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bShieldGlobe'", NULL);
-	self->m_bShieldGlobe = tolua_setter_tointeger(L, "m_bShieldGlobe");
+	self->m_bShieldGlobe = tolua_setter_tointeger<byte>(L, "m_bShieldGlobe");
 	return 0;
 }
 
@@ -11858,7 +11858,7 @@ static int tolua_set_CGameSprite_m_bStartedCasting(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bStartedCasting'", NULL);
-	self->m_bStartedCasting = tolua_setter_tointeger(L, "m_bStartedCasting");
+	self->m_bStartedCasting = tolua_setter_tointeger<int>(L, "m_bStartedCasting");
 	return 0;
 }
 
@@ -11882,7 +11882,7 @@ static int tolua_set_CGameSprite_m_bInCasting(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bInCasting'", NULL);
-	self->m_bInCasting = tolua_setter_tointeger(L, "m_bInCasting");
+	self->m_bInCasting = tolua_setter_tointeger<int>(L, "m_bInCasting");
 	return 0;
 }
 
@@ -11906,7 +11906,7 @@ static int tolua_set_CGameSprite_m_moveCount(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_moveCount'", NULL);
-	self->m_moveCount = tolua_setter_tointeger(L, "m_moveCount");
+	self->m_moveCount = tolua_setter_tointeger<short>(L, "m_moveCount");
 	return 0;
 }
 
@@ -11954,7 +11954,7 @@ static int tolua_set_CGameSprite_m_bWaitingForAreaLoadInLeaveAreaLUA(lua_State* 
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bWaitingForAreaLoadInLeaveAreaLUA'", NULL);
-	self->m_bWaitingForAreaLoadInLeaveAreaLUA = tolua_setter_tointeger(L, "m_bWaitingForAreaLoadInLeaveAreaLUA");
+	self->m_bWaitingForAreaLoadInLeaveAreaLUA = tolua_setter_tointeger<int>(L, "m_bWaitingForAreaLoadInLeaveAreaLUA");
 	return 0;
 }
 
@@ -11978,7 +11978,7 @@ static int tolua_set_CGameSprite_m_lastActionID(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_lastActionID'", NULL);
-	self->m_lastActionID = tolua_setter_tointeger(L, "m_lastActionID");
+	self->m_lastActionID = tolua_setter_tointeger<short>(L, "m_lastActionID");
 	return 0;
 }
 
@@ -12002,7 +12002,7 @@ static int tolua_set_CGameSprite_m_searchPauseCount(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_searchPauseCount'", NULL);
-	self->m_searchPauseCount = tolua_setter_tointeger(L, "m_searchPauseCount");
+	self->m_searchPauseCount = tolua_setter_tointeger<short>(L, "m_searchPauseCount");
 	return 0;
 }
 
@@ -12026,7 +12026,7 @@ static int tolua_set_CGameSprite_m_attackFrame(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_attackFrame'", NULL);
-	self->m_attackFrame = tolua_setter_tointeger(L, "m_attackFrame");
+	self->m_attackFrame = tolua_setter_tointeger<short>(L, "m_attackFrame");
 	return 0;
 }
 
@@ -12050,7 +12050,7 @@ static int tolua_set_CGameSprite_m_newEffect(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_newEffect'", NULL);
-	self->m_newEffect = tolua_setter_tointeger(L, "m_newEffect");
+	self->m_newEffect = tolua_setter_tointeger<int>(L, "m_newEffect");
 	return 0;
 }
 
@@ -12074,7 +12074,7 @@ static int tolua_set_CGameSprite_m_canDamage(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_canDamage'", NULL);
-	self->m_canDamage = tolua_setter_tointeger(L, "m_canDamage");
+	self->m_canDamage = tolua_setter_tointeger<byte>(L, "m_canDamage");
 	return 0;
 }
 
@@ -12098,7 +12098,7 @@ static int tolua_set_CGameSprite_m_leftAttack(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_leftAttack'", NULL);
-	self->m_leftAttack = tolua_setter_tointeger(L, "m_leftAttack");
+	self->m_leftAttack = tolua_setter_tointeger<int>(L, "m_leftAttack");
 	return 0;
 }
 
@@ -12122,7 +12122,7 @@ static int tolua_set_CGameSprite_m_hasColorEffects(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_hasColorEffects'", NULL);
-	self->m_hasColorEffects = tolua_setter_tointeger(L, "m_hasColorEffects");
+	self->m_hasColorEffects = tolua_setter_tointeger<int>(L, "m_hasColorEffects");
 	return 0;
 }
 
@@ -12146,7 +12146,7 @@ static int tolua_set_CGameSprite_m_hasAnimationEffects(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_hasAnimationEffects'", NULL);
-	self->m_hasAnimationEffects = tolua_setter_tointeger(L, "m_hasAnimationEffects");
+	self->m_hasAnimationEffects = tolua_setter_tointeger<int>(L, "m_hasAnimationEffects");
 	return 0;
 }
 
@@ -12170,7 +12170,7 @@ static int tolua_set_CGameSprite_m_targetId(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_targetId'", NULL);
-	self->m_targetId = tolua_setter_tointeger(L, "m_targetId");
+	self->m_targetId = tolua_setter_tointeger<int>(L, "m_targetId");
 	return 0;
 }
 
@@ -12202,7 +12202,7 @@ static int tolua_set_CGameSprite_m_startedSwing(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_startedSwing'", NULL);
-	self->m_startedSwing = tolua_setter_tointeger(L, "m_startedSwing");
+	self->m_startedSwing = tolua_setter_tointeger<int>(L, "m_startedSwing");
 	return 0;
 }
 
@@ -12226,7 +12226,7 @@ static int tolua_set_CGameSprite_m_followCount(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_followCount'", NULL);
-	self->m_followCount = tolua_setter_tointeger(L, "m_followCount");
+	self->m_followCount = tolua_setter_tointeger<short>(L, "m_followCount");
 	return 0;
 }
 
@@ -12250,7 +12250,7 @@ static int tolua_set_CGameSprite_m_bForceVisualEffects(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_bForceVisualEffects'", NULL);
-	self->m_bForceVisualEffects = tolua_setter_tointeger(L, "m_bForceVisualEffects");
+	self->m_bForceVisualEffects = tolua_setter_tointeger<int>(L, "m_bForceVisualEffects");
 	return 0;
 }
 
@@ -12274,7 +12274,7 @@ static int tolua_set_CGameSprite_m_currentActionId(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_currentActionId'", NULL);
-	self->m_currentActionId = tolua_setter_tointeger(L, "m_currentActionId");
+	self->m_currentActionId = tolua_setter_tointeger<short>(L, "m_currentActionId");
 	return 0;
 }
 
@@ -12298,7 +12298,7 @@ static int tolua_set_CGameSprite_m_nWaitingOnDialog(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nWaitingOnDialog'", NULL);
-	self->m_nWaitingOnDialog = tolua_setter_tointeger(L, "m_nWaitingOnDialog");
+	self->m_nWaitingOnDialog = tolua_setter_tointeger<int>(L, "m_nWaitingOnDialog");
 	return 0;
 }
 
@@ -12322,7 +12322,7 @@ static int tolua_set_CGameSprite_m_nCrossAreaChaseCounter(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_nCrossAreaChaseCounter'", NULL);
-	self->m_nCrossAreaChaseCounter = tolua_setter_tointeger(L, "m_nCrossAreaChaseCounter");
+	self->m_nCrossAreaChaseCounter = tolua_setter_tointeger<int>(L, "m_nCrossAreaChaseCounter");
 	return 0;
 }
 
@@ -12354,7 +12354,7 @@ static int tolua_set_CGameSprite_nAttachedPSTVisualEffectProjectiles(lua_State* 
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nAttachedPSTVisualEffectProjectiles'", NULL);
-	self->nAttachedPSTVisualEffectProjectiles = tolua_setter_tointeger(L, "nAttachedPSTVisualEffectProjectiles");
+	self->nAttachedPSTVisualEffectProjectiles = tolua_setter_tointeger<byte>(L, "nAttachedPSTVisualEffectProjectiles");
 	return 0;
 }
 
@@ -12378,7 +12378,7 @@ static int tolua_set_CGameSprite_nPSTVisualEffectsSetToRender(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nPSTVisualEffectsSetToRender'", NULL);
-	self->nPSTVisualEffectsSetToRender = tolua_setter_tointeger(L, "nPSTVisualEffectsSetToRender");
+	self->nPSTVisualEffectsSetToRender = tolua_setter_tointeger<byte>(L, "nPSTVisualEffectsSetToRender");
 	return 0;
 }
 
@@ -12410,7 +12410,7 @@ static int tolua_set_CGameSprite_nOverTriggerId(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'nOverTriggerId'", NULL);
-	self->nOverTriggerId = tolua_setter_tointeger(L, "nOverTriggerId");
+	self->nOverTriggerId = tolua_setter_tointeger<long>(L, "nOverTriggerId");
 	return 0;
 }
 
@@ -12455,8 +12455,6 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CPoint");
 	tolua_usertype(L, "CGameObjectArray");
 	tolua_usertype(L, "EEex_CBaldurChitin");
-	tolua_usertype(L, "intptr_t");
-	tolua_usertype(L, "UnmappedUserType");
 	tolua_usertype(L, "long");
 	tolua_usertype(L, "CMessage");
 	tolua_usertype(L, "CMessageVisualEffect");
@@ -12466,6 +12464,8 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "uint");
 	tolua_usertype(L, "CVidMode");
 	tolua_usertype(L, "CInfinity");
+	tolua_usertype(L, "uintptr_t");
+	tolua_usertype(L, "UnmappedUserType");
 	tolua_usertype(L, "ushort");
 	tolua_usertype(L, "CGameTrigger");
 	tolua_usertype(L, "CGameDoor");
@@ -12552,13 +12552,13 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "Pointer<float>");
 	tolua_usertype(L, "Pointer<CRect>");
 	tolua_usertype(L, "Pointer<CPtrList>");
-	tolua_usertype(L, "Pointer<intptr_t>");
 	tolua_usertype(L, "Pointer<long>");
 	tolua_usertype(L, "Pointer<long*>");
 	tolua_usertype(L, "Pointer<CMessage>");
 	tolua_usertype(L, "Pointer<short>");
 	tolua_usertype(L, "Pointer<size_t>");
 	tolua_usertype(L, "Pointer<uint>");
+	tolua_usertype(L, "Pointer<uintptr_t>");
 	tolua_usertype(L, "Pointer<ushort>");
 	tolua_usertype(L, "Pointer<CharString*>");
 	tolua_usertype(L, "Pointer<CString>");
@@ -12867,17 +12867,6 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function_CBaldurChitin_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CBaldurChitin));
 	tolua_endmodule(L);
-	tolua_cclass(L, "intptr_t", "intptr_t", {}, NULL);
-	tolua_beginmodule(L, "intptr_t");
-		tolua_function(L, "getInternalReference", &tolua_function_intptr_t_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(intptr_t));
-	tolua_endmodule(L);
-	tolua_cclass(L, "UnmappedUserType", "UnmappedUserType", {}, NULL);
-	tolua_beginmodule(L, "UnmappedUserType");
-		tolua_function(L, "getInternalReference", &tolua_function_UnmappedUserType_getInternalReference);
-		tolua_function(L, "toPointer", &tolua_function_UnmappedUserType_toPointer);
-		tolua_constant(L, "sizeof", sizeof(UnmappedUserType));
-	tolua_endmodule(L);
 	tolua_cclass(L, "long", "long", {}, NULL);
 	tolua_beginmodule(L, "long");
 		tolua_function(L, "getInternalReference", &tolua_function_long_getInternalReference);
@@ -12954,6 +12943,17 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "reference_m_pArea", tolua_get_CInfinity_reference_m_pArea, NULL);
 		tolua_function(L, "getInternalReference", &tolua_function_CInfinity_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CInfinity));
+	tolua_endmodule(L);
+	tolua_cclass(L, "uintptr_t", "uintptr_t", {}, NULL);
+	tolua_beginmodule(L, "uintptr_t");
+		tolua_function(L, "getInternalReference", &tolua_function_uintptr_t_getInternalReference);
+		tolua_constant(L, "sizeof", sizeof(uintptr_t));
+	tolua_endmodule(L);
+	tolua_cclass(L, "UnmappedUserType", "UnmappedUserType", {}, NULL);
+	tolua_beginmodule(L, "UnmappedUserType");
+		tolua_function(L, "getInternalReference", &tolua_function_UnmappedUserType_getInternalReference);
+		tolua_function(L, "toPointer", &tolua_function_UnmappedUserType_toPointer);
+		tolua_constant(L, "sizeof", sizeof(UnmappedUserType));
 	tolua_endmodule(L);
 	tolua_cclass(L, "ushort", "ushort", {}, NULL);
 	tolua_beginmodule(L, "ushort");
@@ -13549,13 +13549,6 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "setValue", &tolua_function_Pointer_CPtrList__setValue);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CPtrList>));
 	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<intptr_t>", "Pointer<intptr_t>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<intptr_t>");
-		tolua_variable(L, "reference", tolua_get_Pointer_intptr_t__reference, tolua_set_Pointer_intptr_t__reference);
-		tolua_function(L, "getValue", &tolua_function_Pointer_intptr_t__getValue);
-		tolua_function(L, "setValue", &tolua_function_Pointer_intptr_t__setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<intptr_t>));
-	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<long>", "Pointer<long>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<long>");
 		tolua_variable(L, "reference", tolua_get_Pointer_long__reference, tolua_set_Pointer_long__reference);
@@ -13596,6 +13589,13 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getValue", &tolua_function_Pointer_uint__getValue);
 		tolua_function(L, "setValue", &tolua_function_Pointer_uint__setValue);
 		tolua_constant(L, "sizeof", sizeof(Pointer<uint>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<uintptr_t>", "Pointer<uintptr_t>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<uintptr_t>");
+		tolua_variable(L, "reference", tolua_get_Pointer_uintptr_t__reference, tolua_set_Pointer_uintptr_t__reference);
+		tolua_function(L, "getValue", &tolua_function_Pointer_uintptr_t__getValue);
+		tolua_function(L, "setValue", &tolua_function_Pointer_uintptr_t__setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<uintptr_t>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<ushort>", "Pointer<ushort>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<ushort>");

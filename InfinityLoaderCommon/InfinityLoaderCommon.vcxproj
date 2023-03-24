@@ -95,9 +95,12 @@
     <None Include="COPY_TO_COMMON.ps1" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="common\bounds_exceeded.cpp" />
     <ClCompile Include="common\InfinityLoaderCommon.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\common\bounds_exceeded.h" />
+    <ClInclude Include="headers\common\dummy_lua_generated.h" />
     <ClInclude Include="headers\common\InfinityLoaderCommon.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

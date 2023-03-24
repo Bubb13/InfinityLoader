@@ -25,21 +25,24 @@
     <Filter Include="Header Files\common\LuaBindingsCommon">
       <UniqueIdentifier>{4621f3e0-cc69-40a7-acbb-3d816147e85d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\common\LuaBindingsCommon\dummy">
-      <UniqueIdentifier>{a8ccdd50-43d7-43ef-adeb-f26b351ac249}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\lua">
       <UniqueIdentifier>{03648656-f8da-4467-88db-fcb92387706b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\LuaBindingsCommon">
+      <UniqueIdentifier>{a5925992-1012-404c-8d1c-a40f3046d7fe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\LuaBindingsCommon.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="common\lua_pointers.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
     <ClCompile Include="common\to_lua_pointers.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="common\lua_pointers.cpp">
+    <ClCompile Include="common\LuaBindingsCommon_common.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
   </ItemGroup>
@@ -52,9 +55,6 @@
     </ClInclude>
     <ClInclude Include="headers\include\lua\lauxlib.h">
       <Filter>Header Files\lua</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\LuaBindingsCommon\dummy_lua_generated.h">
-      <Filter>Header Files\common\LuaBindingsCommon\dummy</Filter>
     </ClInclude>
     <ClInclude Include="headers\common\LuaBindingsCommon.h">
       <Filter>Header Files\common\LuaBindingsCommon</Filter>

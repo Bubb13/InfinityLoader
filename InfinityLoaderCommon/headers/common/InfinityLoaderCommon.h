@@ -143,8 +143,8 @@ extern bool decimalStrToInteger(const String decimalStr, bool& accumulator);
 template<typename IntegerType>
 extern bool decimalStrToInteger(const String decimalStr, IntegerType& accumulator);
 
-template<typename IntegerType>
-extern String integerToDecimalStr(IntegerType integer);
+template<typename StringType, typename IntegerType>
+extern StringType integerToDecimalStr(IntegerType integer);
 
 extern bool INISectionExists(String iniPath, const TCHAR* section);
 
@@ -190,7 +190,7 @@ struct ImageSectionInfo
 class AssemblyWriter {
 private:
 	unsigned char* buffer;
-	int curI;
+	size_t curI;
 	intptr_t startMemAddress;
 	intptr_t curMemAddress;
 public:

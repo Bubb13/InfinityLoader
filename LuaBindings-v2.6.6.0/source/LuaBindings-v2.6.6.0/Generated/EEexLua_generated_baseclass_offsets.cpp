@@ -337,9 +337,6 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	{"CTypedPtrArray<CPtrArray,CAbilityData*>", {
 		{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CAbilityData*>, CObject>()},
 	}},
-	{"CTypedPtrArray<CPtrArray,char>", {
-		{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,char>, CObject>()},
-	}},
 	{"CTypedPtrArray<CPtrArray,CSaveGameSlot*>", {
 		{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CSaveGameSlot*>, CObject>()},
 	}},
@@ -351,6 +348,9 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 	}},
 	{"CTypedPtrArray<CPtrArray,CGameDialogReply*>", {
 		{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogReply*>, CObject>()},
+	}},
+	{"CTypedPtrArray<CPtrArray,__int8>", {
+		{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,__int8>, CObject>()},
 	}},
 	{"CStringList", {
 		{"CObject", offsetofbase<CStringList, CObject>()},

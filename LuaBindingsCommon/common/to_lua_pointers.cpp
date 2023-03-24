@@ -67,12 +67,13 @@ void dumpStackIndex(lua_State* L, const char* label, int index) {
 	}
 }
 
-void dumpStack(lua_State* L) {
-	size_t top = p_lua_gettop(L);
-	for (size_t i = 1; i <= top; ++i) {
-		char indexChar[2] = { i + 48, '\0' };
-		dumpStackIndex(L, indexChar, i);
+int dumpStack(lua_State* L) {
+	int top = p_lua_gettop(L);
+	for (int i = 1; i <= top; ++i) {
+		StringA label = integerToDecimalStr<StringA>(i);
+		dumpStackIndex(L, label.c_str(), i);
 	}
+	return 0;
 }
 
 ///////////////////////////////////////////////////////////
@@ -231,32 +232,12 @@ char tolua_function_tochar(lua_State *const L, const int narg, const char *const
 		case LUA_TNUMBER: {
 			const lua_Integer arg = p_lua_tointeger(L, narg);
 			if (arg >= -128 && arg <= 127) {
-				return arg;
+				return static_cast<char>(arg);
 			}
 			return luaL_error(L, "invalid integer '%d' for character argument #%d in function '%s'; '[-128-127]' expected.", arg, narg, functionName);
 		}
 	}
 	return luaL_error(L, "invalid type '%s' for character argument #%d in function '%s'; 'string' or 'number' expected.", p_tolua_typename(L, narg), narg, functionName);
-}
-
-lua_Integer tolua_function_tointeger(lua_State *const L, const int narg, const char *const functionName) {
-	if (p_lua_gettop(L) < narg) {
-		return luaL_error(L, "integer argument #%d missing in function '%s'; 'number' or 'boolean' expected.", narg, functionName);
-	}
-	switch (p_lua_type(L, narg)) {
-		case LUA_TBOOLEAN: return p_lua_toboolean(L, narg);
-		case LUA_TNUMBER: return p_lua_tointeger(L, narg);
-	}
-	return luaL_error(L, "invalid type '%s' for integer argument #%d in function '%s'; 'number' or 'boolean' expected.", p_tolua_typename(L, narg), narg, functionName);
-}
-
-lua_Number tolua_function_tonumber(lua_State *const L, const int narg, const char *const functionName) {
-	if (p_lua_gettop(L) < narg) {
-		return luaL_error(L, "number argument #%d missing in function '%s'; 'number' expected.", narg, functionName);
-	}
-	return p_lua_type(L, narg) == LUA_TNUMBER
-		? p_lua_tonumber(L, narg)
-		: luaL_error(L, "invalid type '%s' for number argument #%d in function '%s'; 'number' expected.", p_tolua_typename(L, narg), narg, functionName);
 }
 
 const char* tolua_function_tostring(lua_State *const L, const int narg, const char *const functionName) {
@@ -271,45 +252,7 @@ const char* tolua_function_tostring(lua_State *const L, const int narg, const ch
 			}
 	}
 	luaL_error(L, "invalid type '%s' for string argument #%d in function '%s'; 'string' expected.", p_tolua_typename(L, narg), narg, functionName);
-}
-
-void tolua_pushusertype_nocast(lua_State* L, void* value, const char* type) {
-	if (value == nullptr) {
-		p_lua_pushnil(L);
-	}
-	else {
-		*(void**)p_lua_newuserdata(L, sizeof(void*)) = value;
-		p_tolua_getmetatable(L, type);
-		p_lua_setmetatable(L, -2);
-	}
-}
-
-void tolua_pushusertypepointer(lua_State* L, void* value, const char* type) {
-	if (value == nullptr) {
-		p_lua_pushnil(L);
-	}
-	else {
-		void** block = (void**)p_lua_newuserdata(L, sizeof(void*) * 2);
-		block[0] = &block[1];
-		block[1] = value;
-		p_tolua_getmetatable(L, type);
-		p_lua_setmetatable(L, -2);
-	}
-}
-
-void tolua_pushusertypestring(lua_State* L, int index) {
-	int tag = p_lua_type(L, index);
-	if (tag == LUA_TUSERDATA && p_lua_getmetatable(L, index)) {
-		                                    // [ getmetatable(stack[index]) ]
-		p_lua_rawget(L, LUA_REGISTRYINDEX); // [ registry[getmetatable(stack[index])] ]
-		if (p_lua_type(L, -1) == LUA_TSTRING) {
-			return;
-		}
-		else {
-			p_lua_pop(L, 1);                // [ ]
-		}
-	}
-	p_lua_pushnil(L);                       // [ nil ]
+	return nullptr; // To silence warning, luaL_error() never returns
 }
 
 bool tolua_setter_toboolean(lua_State *const L, const char *const variableName) {
@@ -331,26 +274,28 @@ bool tolua_setter_toboolean(lua_State *const L, const char *const variableName) 
 	return luaL_error(L, "invalid type '%s' in boolean variable setter '%s'; 'boolean' or 'number' expected.", p_tolua_typename(L, narg), variableName);
 }
 
-lua_Integer tolua_setter_tointeger(lua_State *const L, const char *const variableName) {
+char tolua_setter_tochar(lua_State *const L, const char *const variableName) {
 	constexpr int narg = 2;
 	if (p_lua_gettop(L) < narg) {
-		return luaL_error(L, "argument missing in integer variable setter '%s'; 'number' or 'boolean' expected.", variableName);
+		return luaL_error(L, "argument missing in character variable setter '%s'; 'string' or 'number' expected.", variableName);
 	}
 	switch (p_lua_type(L, narg)) {
-		case LUA_TBOOLEAN: return p_lua_toboolean(L, narg);
-		case LUA_TNUMBER: return p_lua_tointeger(L, narg);
+		case LUA_TSTRING: {
+			const char *const arg = p_lua_tostring(L, narg);
+			if (arg[0] != '\0' && arg[1] == '\0') {
+				return arg[0];
+			}
+			return luaL_error(L, "invalid string argument '%s' in character variable setter '%s'; 'string' of length 1 expected.", arg, variableName);
+		}
+		case LUA_TNUMBER: {
+			const lua_Integer arg = p_lua_tointeger(L, narg);
+			if (arg >= -128 && arg <= 127) {
+				return static_cast<char>(arg);
+			}
+			return luaL_error(L, "invalid integer argument '%d' in character variable setter '%s'; '[-128-127]' expected.", arg, variableName);
+		}
 	}
-	return luaL_error(L, "invalid type '%s' in integer variable setter '%s'; 'number' or 'boolean' expected.", p_tolua_typename(L, narg), variableName);
-}
-
-lua_Number tolua_setter_tonumber(lua_State *const L, const char *const variableName) {
-	constexpr int narg = 2;
-	if (p_lua_gettop(L) < narg) {
-		return luaL_error(L, "argument missing in number variable setter '%s'; 'number' expected.", variableName);
-	}
-	return p_lua_type(L, narg) == LUA_TNUMBER
-		? p_lua_tonumber(L, narg)
-		: luaL_error(L, "invalid type '%s' in number variable setter '%s'; 'number' expected.", p_tolua_typename(L, narg), variableName);
+	return luaL_error(L, "invalid type '%s' in character variable setter '%s'; 'string' or 'number' expected.", p_tolua_typename(L, narg), variableName);
 }
 
 void* tolua_tousertype_dynamic(lua_State* L, int index, void* def, const char* targetUsertype) {
@@ -394,6 +339,45 @@ void* tolua_tousertype_dynamic(lua_State* L, int index, void* def, const char* t
 		p_lua_pop(L, 3);                       // 0 [ ... ]
 		return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + offset);
 	}
+}
+
+void tolua_pushusertype_nocast(lua_State* L, void* value, const char* type) {
+	if (value == nullptr) {
+		p_lua_pushnil(L);
+	}
+	else {
+		*(void**)p_lua_newuserdata(L, sizeof(void*)) = value;
+		p_tolua_getmetatable(L, type);
+		p_lua_setmetatable(L, -2);
+	}
+}
+
+void tolua_pushusertypepointer(lua_State* L, void* value, const char* type) {
+	if (value == nullptr) {
+		p_lua_pushnil(L);
+	}
+	else {
+		void** block = (void**)p_lua_newuserdata(L, sizeof(void*) * 2);
+		block[0] = &block[1];
+		block[1] = value;
+		p_tolua_getmetatable(L, type);
+		p_lua_setmetatable(L, -2);
+	}
+}
+
+void tolua_pushusertypestring(lua_State* L, int index) {
+	int tag = p_lua_type(L, index);
+	if (tag == LUA_TUSERDATA && p_lua_getmetatable(L, index)) {
+											// [ getmetatable(stack[index]) ]
+		p_lua_rawget(L, LUA_REGISTRYINDEX); // [ registry[getmetatable(stack[index])] ]
+		if (p_lua_type(L, -1) == LUA_TSTRING) {
+			return;
+		}
+		else {
+			p_lua_pop(L, 1);                // [ ]
+		}
+	}
+	p_lua_pushnil(L);                       // [ nil ]
 }
 
 ///////////////////////////////////////////////////
@@ -986,13 +970,13 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 	p_lua_rawget(L, LUA_REGISTRYINDEX);      // 1 [ ..., registry["tolua_base"] ]
 
 	p_tolua_getmetatable(L, name);           // 2 [ ..., registry["tolua_base"], mt(name) ]
-	getOrCreateTable(L, -2);           // 2 [ ..., registry["tolua_base"], registry["tolua_base"][mt(name)] -> baseT ]
+	getOrCreateTable(L, -2);                 // 2 [ ..., registry["tolua_base"], registry["tolua_base"][mt(name)] -> baseT ]
 
 	std::unordered_map<const char*, uintptr_t>& offsets = baseclassOffsets[name];
-	size_t i{ 0 };
+	int i{ 0 };
 	for (const char* base : bases) {
 
-		getOrCreateTableI(L, -1, ++i); // 3 [ ..., registry["tolua_base"], baseT, baseT[i] ]
+		getOrCreateTableI(L, -1, ++i);       // 3 [ ..., registry["tolua_base"], baseT, baseT[i] ]
 
 		p_lua_pushstring(L, "mt");           // 4 [ ..., registry["tolua_base"], baseT, baseT[i], "mt" ]
 		p_tolua_getmetatable(L, base);       // 5 [ ..., registry["tolua_base"], baseT, baseT[i], "mt", mt(base) ]
@@ -1005,7 +989,7 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 	p_lua_rawget(L, LUA_REGISTRYINDEX);      // 3 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"] ]
 
 	p_tolua_getmetatable(L, name);           // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], mt(name) ]
-	getOrCreateTable(L, -2);           // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], registry["tolua_base_map"][mt(name)] -> baseMapT ]
+	getOrCreateTable(L, -2);                 // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], registry["tolua_base_map"][mt(name)] -> baseMapT ]
 
 	// base, offset
 	std::vector<std::pair<const char*, uintptr_t>> toProcess{};

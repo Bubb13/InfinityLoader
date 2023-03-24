@@ -28,6 +28,9 @@
     <Filter Include="Module Definition">
       <UniqueIdentifier>{b82af7c7-e612-47af-9772-b7a396c08070}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\InfinityLoaderDLL">
+      <UniqueIdentifier>{1c6b5942-e718-49cd-8d6b-aff194d16e41}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asmjit\core\api-build_p.h">
@@ -264,6 +267,9 @@
     <ClInclude Include="asmtk\asmtokenizer.h">
       <Filter>Source Files\asmtk</Filter>
     </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderDLL\pointers.h">
+      <Filter>Header Files\InfinityLoaderDLL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asmjit\core\archtraits.cpp">
@@ -420,6 +426,9 @@
       <Filter>Source Files\InfinityLoaderDLL</Filter>
     </ClCompile>
     <ClCompile Include="source\common.cpp">
+      <Filter>Source Files\InfinityLoaderDLL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\pointers.cpp">
       <Filter>Source Files\InfinityLoaderDLL</Filter>
     </ClCompile>
   </ItemGroup>

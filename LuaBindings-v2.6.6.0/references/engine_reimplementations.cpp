@@ -139,7 +139,7 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 
 			int xDiff { curTargetPoint.x - origin.x };
 			int yDiff { curTargetPoint.y - origin.y };
-			double radians { acos(abs(xDiff) / (double)(int)sqrtf(xDiff * xDiff + yDiff * yDiff)) };
+			double radians { acos(abs(xDiff) / (double)(int)sqrtf((float)(xDiff * xDiff + yDiff * yDiff))) };
 
 			if (xDiff < 0)
 			{

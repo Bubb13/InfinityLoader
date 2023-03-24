@@ -596,19 +596,22 @@ constexpr DivisorInformation<IntegerType> calculateDivisorInformation() {
 	return { multiple, numChars };
 }
 
-const TCHAR decDigitToChar[10]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-
-template<typename IntegerType>
-String integerToDecimalStr(IntegerType integer) {
+template<typename StringType, typename IntegerType>
+StringType integerToDecimalStr(IntegerType integer) {
 
 	if (integer == 0) {
-		return String { '0' };
+		return StringType{ '0' };
 	}
 
-	DivisorInformation divisorInformation = calculateDivisorInformation<IntegerType>();
+	const StringType::value_type decDigitToChar[10]{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+	constexpr const DivisorInformation divisorInformation = calculateDivisorInformation<IntegerType>();
 	auto divisor = divisorInformation.divisor;
 
-	TCHAR* buffer = reinterpret_cast<TCHAR*>(alloca(sizeof(TCHAR) * (divisorInformation.nNumberChars + 1)));
+	using CharType = StringType::value_type;
+	CharType *const buffer = reinterpret_cast<CharType*>(alloca(static_cast<size_t>(
+		sizeof(CharType) * (divisorInformation.nNumberChars + 1)
+	)));
+
 	size_t writeI = 0;
 	char sign;
 
@@ -641,12 +644,12 @@ String integerToDecimalStr(IntegerType integer) {
 	}
 
 	buffer[writeI++] = decDigitToChar[sign * integer];
-	return String { buffer, writeI };
+	return StringType{ buffer, writeI };
 }
 
 template<typename IntegerType>
 DWORD SetINIInteger(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const IntegerType toSet) {
-	const String toSetStr = integerToDecimalStr(toSet);
+	const String toSetStr = integerToDecimalStr<String>(toSet);
 	if (!WritePrivateProfileString(section, key, toSetStr.c_str(), iniPath.c_str())) {
 		PrintT(TEXT("[!] Failed to set [%s].%s = %s\n"), section, key, toSetStr.c_str());
 		return GetLastError();

@@ -102,18 +102,23 @@ extern type_tolua_variable* p_tolua_variable;
 ////////////
 
 void tolua_cclass_translate(lua_State* L, const char* lname, const char* name, const char* base, lua_CFunction col);
-bool tolua_function_toboolean(lua_State *const L, const int narg, const char *const functionName);
-char tolua_function_tochar(lua_State *const L, const int narg, const char *const functionName);
-lua_Integer tolua_function_tointeger(lua_State *const L, const int narg, const char *const functionName);
-lua_Number tolua_function_tonumber(lua_State *const L, const int narg, const char *const functionName);
-const char* tolua_function_tostring(lua_State *const L, const int narg, const char *const functionName);
+
+bool tolua_function_toboolean(lua_State* L, int narg, const char* functionName);
+char tolua_function_tochar(lua_State* L, int narg, const char* functionName);
+template<typename IntegerType> IntegerType tolua_function_tointeger(lua_State* L, int narg, const char* functionName);
+template<typename FloatingType> FloatingType tolua_function_tonumber(lua_State* L, int narg, const char* functionName);
+const char* tolua_function_tostring(lua_State* L, int narg, const char* functionName);
+
+bool tolua_setter_toboolean(lua_State* L, const char* variableName);
+char tolua_setter_tochar(lua_State* L, const char* variableName);
+template<typename IntegerType> IntegerType tolua_setter_tointeger(lua_State* L, const char* variableName);
+template<typename FloatingType> FloatingType tolua_setter_tonumber(lua_State* L, const char* variableName);
+
+void* tolua_tousertype_dynamic(lua_State* L, int narg, void* def, const char* targetUsertype);
+
 void tolua_pushusertype_nocast(lua_State* L, void* value, const char* type);
 void tolua_pushusertypepointer(lua_State* L, void* value, const char* type);
 void tolua_pushusertypestring(lua_State* L, int lo);
-bool tolua_setter_toboolean(lua_State *const L, const char *const variableName);
-lua_Integer tolua_setter_tointeger(lua_State *const L, const char *const variableName);
-lua_Number tolua_setter_tonumber(lua_State *const L, const char *const variableName);
-void* tolua_tousertype_dynamic(lua_State* L, int narg, void* def, const char* targetUsertype);
 
 ///////////////////////////////////////////////////
 // Overrides (engine needs these to be replaced) //
@@ -159,3 +164,109 @@ void p_tolua_open(lua_State* L);
 #define tolua_tousertype p_tolua_tousertype
 #define tolua_usertype p_tolua_usertype
 #define tolua_variable p_tolua_variable
+
+//////////////////////////////
+// Template Implementations //
+//////////////////////////////
+
+template<typename IntegerType>
+IntegerType tolua_function_tointeger(lua_State* const L, const int narg, const char* const functionName) {
+
+	if (p_lua_gettop(L) < narg) {
+		return luaL_error(L, "integer argument #%d missing in function '%s'; 'number' or 'boolean' expected.", narg, functionName);
+	}
+
+	if (const int type = p_lua_type(L, narg); type == LUA_TBOOLEAN) {
+		return static_cast<IntegerType>(p_lua_toboolean(L, narg));
+	}
+	else if (type == LUA_TNUMBER) {
+
+		const lua_Integer val = p_lua_tointeger(L, narg);
+		constexpr auto min = minIntegerTypeValue<IntegerType>();
+		constexpr auto max = maxIntegerTypeValue<IntegerType>();
+
+		if (val < min || val > max) {
+			std::string error = std::format("invalid integer '{}' for integer argument #{} in function '{}'; '[{}-{}]' expected.", val, narg, functionName, min, max);
+			return luaL_error(L, "%s", error.c_str());
+		}
+
+		return static_cast<IntegerType>(val);
+	}
+	return luaL_error(L, "invalid type '%s' for integer argument #%d in function '%s'; 'number' or 'boolean' expected.", p_tolua_typename(L, narg), narg, functionName);
+}
+
+template<typename IntegerType>
+IntegerType tolua_setter_tointeger(lua_State* const L, const char* const variableName) {
+
+	constexpr int narg = 2;
+	if (p_lua_gettop(L) < narg) {
+		return luaL_error(L, "argument missing in integer variable setter '%s'; 'number' or 'boolean' expected.", variableName);
+	}
+
+	if (const int type = p_lua_type(L, narg); type == LUA_TBOOLEAN) {
+		return static_cast<IntegerType>(p_lua_toboolean(L, narg));
+	}
+	else if (type == LUA_TNUMBER) {
+
+		const lua_Integer val = p_lua_tointeger(L, narg);
+		constexpr auto min = minIntegerTypeValue<IntegerType>();
+		constexpr auto max = maxIntegerTypeValue<IntegerType>();
+
+		if (val < min || val > max) {
+			std::string error = std::format("invalid integer '{}' in integer variable setter '{}'; '[{}-{}]' expected.", val, variableName, min, max);
+			return luaL_error(L, "%s", error.c_str());
+		}
+
+		return static_cast<IntegerType>(val);
+	}
+	return luaL_error(L, "invalid type '%s' in integer variable setter '%s'; 'number' or 'boolean' expected.", p_tolua_typename(L, narg), variableName);
+}
+
+template<typename FloatingType>
+FloatingType tolua_function_tonumber(lua_State* const L, const int narg, const char* const functionName) {
+
+	if (p_lua_gettop(L) < narg) {
+		luaL_error(L, "number argument #%d missing in function '%s'; 'number' expected.", narg, functionName);
+	}
+
+	if (p_lua_type(L, narg) == LUA_TNUMBER) {
+
+		const lua_Number val = p_lua_tonumber(L, narg);
+		constexpr auto min = (std::numeric_limits<FloatingType>::lowest)();
+		constexpr auto max = (std::numeric_limits<FloatingType>::max)();
+
+		if (val < min || val > max) {
+			std::string error = std::format("invalid number '{}' for number argument #{} in function '{}'; '[{}-{}]' expected.", val, narg, functionName, min, max);
+			luaL_error(L, "%s", error.c_str());
+		}
+
+		return static_cast<FloatingType>(val);
+	}
+	luaL_error(L, "invalid type '%s' for number argument #%d in function '%s'; 'number' expected.", p_tolua_typename(L, narg), narg, functionName);
+	return static_cast<FloatingType>(0); // To silence warning, luaL_error() never returns
+}
+
+template<typename FloatingType>
+FloatingType tolua_setter_tonumber(lua_State* const L, const char* const variableName) {
+
+	constexpr int narg = 2;
+	if (p_lua_gettop(L) < narg) {
+		luaL_error(L, "argument missing in number variable setter '%s'; 'number' expected.", variableName);
+	}
+
+	if (p_lua_type(L, narg) == LUA_TNUMBER) {
+
+		const lua_Number val = p_lua_tonumber(L, narg);
+		constexpr auto min = (std::numeric_limits<FloatingType>::lowest)();
+		constexpr auto max = (std::numeric_limits<FloatingType>::max)();
+
+		if (val < min || val > max) {
+			std::string error = std::format("invalid number '{}' in number variable setter '{}'; '[{}-{}]' expected.", val, variableName, min, max);
+			luaL_error(L, "%s", error.c_str());
+		}
+
+		return static_cast<FloatingType>(val);
+	}
+	luaL_error(L, "invalid type '%s' in number variable setter '%s'; 'number' expected.", p_tolua_typename(L, narg), variableName);
+	return static_cast<FloatingType>(0); // To silence warning, luaL_error() never returns
+}

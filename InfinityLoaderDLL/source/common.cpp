@@ -1,5 +1,15 @@
 
-#include <InfinityLoaderCommon.cpp>
+#include "InfinityLoaderCommon.cpp"
+#include "pointers.h"
+#include "bounds_exceeded.cpp"
+
+instantiateBoundsExceeded(__int16)
+instantiateBoundsExceeded(__int32)
+instantiateBoundsExceeded(__int64)
+instantiateBoundsExceeded(__int8)
+instantiateBoundsExceeded(int)
+instantiateBoundsExceeded(size_t)
+instantiateBoundsExceeded(UINT)
 
 template DWORD GetINIIntegerDef<bool>(String, const TCHAR*, const TCHAR*, bool, bool&);
 

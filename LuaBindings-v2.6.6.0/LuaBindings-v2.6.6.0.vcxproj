@@ -62,6 +62,7 @@
       <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;LUABINDINGSV2660_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <AdditionalDependencies>dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
@@ -86,6 +87,7 @@
       <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;NDEBUG;LUABINDINGSV2660_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <AdditionalDependencies>dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>

@@ -11,88 +11,8 @@
 
 #include "asmjit/asmjit.h"
 #include "asmtk/asmtk.h"
-#include "lua/lua.h"
-
-//////////////
-// Pointers //
-//////////////
-
-typedef void(__cdecl* type_free)(void* memblock);
-type_free p_free;
-
-typedef void(__cdecl* type_lua_createtable)(lua_State* L, int narr, int nrec);
-type_lua_createtable p_lua_createtable;
-
-typedef void(__cdecl* type_lua_getfield)(lua_State* L, int index, const char* k);
-type_lua_getfield p_lua_getfield;
-
-typedef void(__cdecl* type_lua_getglobal)(lua_State* L, const char* name);
-type_lua_getglobal p_lua_getglobal;
-
-typedef int(__cdecl* type_lua_gettop)(lua_State* L);
-type_lua_gettop p_lua_gettop;
-
-typedef int(__cdecl* type_lua_pcallk)(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k);
-type_lua_pcallk p_lua_pcallk;
-
-typedef void(__cdecl* type_lua_pushcclosure)(lua_State* L, lua_CFunction fn, int n);
-type_lua_pushcclosure p_lua_pushcclosure;
-
-typedef void(__cdecl* type_lua_pushinteger)(lua_State* L, lua_Integer n);
-type_lua_pushinteger p_lua_pushinteger;
-
-typedef void(__cdecl* type_lua_pushnil)(lua_State* L);
-type_lua_pushnil p_lua_pushnil;
-
-typedef const char*(__cdecl* type_lua_pushstring)(lua_State* L, const char* s);
-type_lua_pushstring p_lua_pushstring;
-
-typedef void(__cdecl* type_lua_pushvalue)(lua_State* L, int index);
-type_lua_pushvalue p_lua_pushvalue;
-
-typedef void(__cdecl* type_lua_rawgeti)(lua_State* L, int index, int n);
-type_lua_rawgeti p_lua_rawgeti;
-
-typedef void(__cdecl* type_lua_rawset)(lua_State* L, int index);
-type_lua_rawset p_lua_rawset;
-
-typedef void(__cdecl* type_lua_rawseti)(lua_State* L, int index, int n);
-type_lua_rawseti p_lua_rawseti;
-
-typedef void(__cdecl* type_lua_setglobal)(lua_State* L, const char* name);
-type_lua_setglobal p_lua_setglobal;
-
-typedef void(__cdecl* type_lua_settop)(lua_State* L, int index);
-type_lua_settop p_lua_settop;
-
-typedef int(__cdecl* type_lua_toboolean)(lua_State* L, int index);
-type_lua_toboolean p_lua_toboolean;
-
-typedef lua_Integer(__cdecl* type_lua_tointegerx)(lua_State* L, int index, int* isnum);
-type_lua_tointegerx p_lua_tointegerx;
-
-typedef const char*(__cdecl* type_lua_tolstring)(lua_State* L, int index, size_t* len);
-type_lua_tolstring p_lua_tolstring;
-
-typedef int(__cdecl* type_lua_type)(lua_State* L, int index);
-type_lua_type p_lua_type;
-
-typedef int(__cdecl* type_luaL_error)(lua_State* L, const char* fmt, ...);
-type_luaL_error p_luaL_error;
-
-typedef int(__cdecl* type_luaL_loadfilex)(lua_State* L, const char* fileName, const char* mode);
-type_luaL_loadfilex p_luaL_loadfilex;
-
-typedef int(__cdecl* type_luaL_ref)(lua_State* L, int t);
-type_luaL_ref p_luaL_ref;
-
-typedef void*(__cdecl* type_malloc)(size_t size);
-type_malloc p_malloc;
-
-#define p_lua_newtable(L) p_lua_createtable(L, 0, 0)
-#define p_lua_pop(L, n) p_lua_settop(L, -(n) - 1)
-#define p_lua_tointeger(L, i) p_lua_tointegerx(L, (i), NULL)
-#define p_lua_tostring(L, i) p_lua_tolstring(L, (i), nullptr)
+#include "pointers.h"
+#include "bounds_exceeded.h"
 
 /////////////
 // Structs //
@@ -828,36 +748,6 @@ DWORD findPatterns(ImageSectionInfo& sectionInfo) {
 ///////////////////
 // Lua Functions //
 ///////////////////
-
-template<typename IntegerType>
-bool boundsExceeded(lua_State *const L, const int argI, IntegerType& resultVal, std::string& error) {
-
-	const lua_Integer val = p_lua_tointeger(L, argI);
-
-	constexpr auto min = minIntegerTypeValue<IntegerType>();
-	if (val < min) {
-		// Error: Too small
-		error = std::format("arg #{} ({}) too small (min: {})", argI, val, min);
-		return true;
-	}
-
-	constexpr auto max = maxIntegerTypeValue<IntegerType>();
-	if (val > max) {
-		// Error: Too large
-		error = std::format("arg #{} ({}) too large (max: {})", argI, val, max);
-		return true;
-	}
-
-	resultVal = static_cast<IntegerType>(val);
-	return false;
-}
-
-#define castLuaIntArg(argI, typeName, varName) \
-	typeName varName; \
-	if (std::string error; boundsExceeded<typeName>(L, argI, varName, error)) { \
-		p_luaL_error(L, "%s", error.c_str()); \
-		return 0; \
-	}
 
 int addToLuaRegistryLua(lua_State* L) {
 	p_lua_pushvalue(L, 1);

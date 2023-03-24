@@ -2655,16 +2655,6 @@ struct _9B9540D9920A90D57A3D80DDD1A70514
 	_9B9540D9920A90D57A3D80DDD1A70514() = delete;
 };
 
-struct UnmappedUserType
-{
-	UnmappedUserType() = delete;
-
-	intptr_t toPointer()
-	{
-		return (intptr_t)this;
-	}
-};
-
 struct mosHeader_st
 {
 	unsigned int nFileType;
@@ -2762,6 +2752,16 @@ enum class uiVariantType : __int32
 	UIVAR_FLOAT = 3,
 };
 
+struct UnmappedUserType
+{
+	UnmappedUserType() = delete;
+
+	uintptr_t toPointer()
+	{
+		return (uintptr_t)this;
+	}
+};
+
 struct view_t
 {
 	void* viewOfFile;
@@ -2817,7 +2817,7 @@ struct ConstCharString
 
 	ConstCharString() = delete;
 
-	char getChar(int index)
+	char getChar(size_t index)
 	{
 		return data[index];
 	}
@@ -2833,12 +2833,14 @@ struct ConstCharString
 	void setL(const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > neededLen)
+		if (cpyLen > neededLen) {
 			cpyLen = neededLen;
+		}
 		char* newStr = (char*)p_malloc(neededLen);
 		memcpy((void*)newStr, toSet, cpyLen);
-		if (cpyLen < neededLen)
+		if (cpyLen < neededLen) {
 			memset((void*)(newStr + cpyLen), 0, neededLen - cpyLen);
+		}
 		data = newStr;
 	}
 
@@ -2847,7 +2849,7 @@ struct ConstCharString
 		data = other->data;
 	}
 
-	void pointTo(intptr_t toSet)
+	void pointTo(uintptr_t toSet)
 	{
 		data = (const char*)toSet;
 	}
@@ -3324,12 +3326,12 @@ struct CharString
 
 	CharString() = delete;
 
-	char getChar(int index)
+	char getChar(size_t index)
 	{
 		return data[index];
 	}
 
-	void setChar(int index, char toSet)
+	void setChar(size_t index, char toSet)
 	{
 		data[index] = toSet;
 	}
@@ -3345,12 +3347,14 @@ struct CharString
 	void setL(const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > neededLen)
+		if (cpyLen > neededLen) {
 			cpyLen = neededLen;
+		}
 		char* newStr = (char*)p_malloc(neededLen);
 		memcpy((void*)newStr, toSet, cpyLen);
-		if (cpyLen < neededLen)
+		if (cpyLen < neededLen) {
 			memset((void*)(newStr + cpyLen), 0, neededLen - cpyLen);
+		}
 		data = newStr;
 	}
 
@@ -3362,11 +3366,13 @@ struct CharString
 	void writeL(const char* toSet, size_t neededLen)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > neededLen)
+		if (cpyLen > neededLen) {
 			cpyLen = neededLen;
+		}
 		memcpy((void*)data, toSet, cpyLen);
-		if (cpyLen < neededLen)
+		if (cpyLen < neededLen) {
 			memset((void*)(data + cpyLen), 0, neededLen - cpyLen);
+		}
 	}
 
 	void setReference(CharString* other)
@@ -3374,7 +3380,7 @@ struct CharString
 		data = other->data;
 	}
 
-	void pointTo(intptr_t toSet)
+	void pointTo(uintptr_t toSet)
 	{
 		data = (char*)toSet;
 	}
@@ -3387,11 +3393,12 @@ struct CharString
 	void getL(lua_State* L, size_t length)
 	{
 		char* localCopy = (char*)alloca(length + 1);
-		int i = 0;
+		size_t i = 0;
 		for (; i < length; ++i) {
 			char readVal = data[i];
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
@@ -5001,12 +5008,16 @@ struct CTypedPtrList : CObject
 
 	CTypedPtrList::CNode* AddTail(T newElement)
 	{
+		#pragma warning(disable:4312)
 		return (CTypedPtrList::CNode*)((CObList*)this)->AddTail((void*)newElement);
+		#pragma warning(default:4312)
 	}
 
 	T RemoveHead()
 	{
+		#pragma warning(disable:4302 4311)
 		return (T)((CObList*)this)->RemoveHead();
+		#pragma warning(default:4302 4311)
 	}
 
 	void RemoveAt(__POSITION* position)
@@ -6498,62 +6509,59 @@ struct ArrayPointer
 
 	ArrayPointer() = delete;
 
-	T get(int index)
+	T get(size_t index)
 	{
 		return data[index];
 	}
 
-	T* getReference(int index)
+	T* getReference(size_t index)
 	{
 		return &data[index];
 	}
 
-	void set(int index, T value)
+	void set(size_t index, T value)
 	{
 		data[index] = value;
 	}
 
-	T& operator[](int index)
+	T& operator[](size_t index)
 	{
 		return data[index];
 	}
 };
 
-template<class T, int size>
+template<class T, size_t size>
 struct Array
 {
 	T data[size];
 
 	Array() = delete;
 
-	T get(int index)
+	T get(size_t index)
 	{
-		if (index < 0 || index >= size)
-		{
+		if (index >= size) {
 			return (T)NULL;
 		}
 		return data[index];
 	}
 
-	T* getReference(int index)
+	T* getReference(size_t index)
 	{
-		if (index < 0 || index >= size)
-		{
+		if (index >= size) {
 			return NULL;
 		}
 		return &data[index];
 	}
 
-	void set(int index, T value)
+	void set(size_t index, T value)
 	{
-		if (index < 0 || index >= size)
-		{
+		if (index >= size) {
 			return;
 		}
 		data[index] = value;
 	}
 
-	T& operator[](int index)
+	T& operator[](size_t index)
 	{
 		return data[index];
 	}
@@ -6813,58 +6821,6 @@ struct WED_LayerHeader_st
 	WED_LayerHeader_st() = delete;
 };
 
-struct SteamUGCQueryCompleted_t
-{
-	unsigned __int64 m_handle;
-	EResult m_eResult;
-	unsigned int m_unNumResultsReturned;
-	unsigned int m_unTotalMatchingResults;
-	bool m_bCachedData;
-	Array<char,256> m_rgchNextCursor;
-
-	SteamUGCQueryCompleted_t() = delete;
-};
-
-struct SteamUGCDetails_t
-{
-	unsigned __int64 m_nPublishedFileId;
-	EResult m_eResult;
-	EWorkshopFileType m_eFileType;
-	unsigned int m_nCreatorAppID;
-	unsigned int m_nConsumerAppID;
-	Array<char,129> m_rgchTitle;
-	Array<char,8000> m_rgchDescription;
-	unsigned __int64 m_ulSteamIDOwner;
-	unsigned int m_rtimeCreated;
-	unsigned int m_rtimeUpdated;
-	unsigned int m_rtimeAddedToUserList;
-	ERemoteStoragePublishedFileVisibility m_eVisibility;
-	bool m_bBanned;
-	bool m_bAcceptedForUse;
-	bool m_bTagsTruncated;
-	Array<char,1025> m_rgchTags;
-	unsigned __int64 m_hFile;
-	unsigned __int64 m_hPreviewFile;
-	Array<char,260> m_pchFileName;
-	int m_nFileSize;
-	int m_nPreviewFileSize;
-	Array<char,256> m_rgchURL;
-	unsigned int m_unVotesUp;
-	unsigned int m_unVotesDown;
-	float m_flScore;
-	unsigned int m_unNumChildren;
-
-	SteamUGCDetails_t() = delete;
-};
-
-struct SteamUGCRequestUGCDetailsResult_t
-{
-	SteamUGCDetails_t m_details;
-	bool m_bCachedData;
-
-	SteamUGCRequestUGCDetailsResult_t() = delete;
-};
-
 #pragma pack(push, 1)
 struct Spell_Header_st
 {
@@ -6911,28 +6867,6 @@ struct Spell_Header_st
 };
 #pragma pack(pop)
 
-struct SDL_TextInputEvent
-{
-	unsigned int type;
-	unsigned int timestamp;
-	unsigned int windowID;
-	Array<char,32> text;
-
-	SDL_TextInputEvent() = delete;
-};
-
-struct SDL_TextEditingEvent
-{
-	unsigned int type;
-	unsigned int timestamp;
-	unsigned int windowID;
-	Array<char,32> text;
-	int start;
-	int length;
-
-	SDL_TextEditingEvent() = delete;
-};
-
 struct SDL_PixelFormat
 {
 	unsigned int format;
@@ -6958,58 +6892,24 @@ struct SDL_PixelFormat
 	SDL_PixelFormat() = delete;
 };
 
-union SDL_Event
-{
-	SDL_EventType type;
-	SDL_CommonEvent common;
-	SDL_WindowEvent window;
-	SDL_KeyboardEvent key;
-	SDL_TextEditingEvent edit;
-	SDL_TextInputEvent text;
-	SDL_MouseMotionEvent motion;
-	SDL_MouseButtonEvent button;
-	SDL_MouseWheelEvent wheel;
-	SDL_JoyAxisEvent jaxis;
-	SDL_JoyBallEvent jball;
-	SDL_JoyHatEvent jhat;
-	SDL_JoyButtonEvent jbutton;
-	SDL_JoyDeviceEvent jdevice;
-	SDL_ControllerAxisEvent caxis;
-	SDL_ControllerButtonEvent cbutton;
-	SDL_ControllerDeviceEvent cdevice;
-	SDL_AudioDeviceEvent adevice;
-	SDL_QuitEvent quit;
-	SDL_UserEvent user;
-	SDL_SysWMEvent syswm;
-	SDL_TouchFingerEvent tfinger;
-	SDL_MultiGestureEvent mgesture;
-	SDL_DollarGestureEvent dgesture;
-	SDL_DropEvent drop;
-	Array<unsigned __int8,56> padding;
-
-	SDL_Event() = delete;
-};
-
-template<int length>
+template<size_t length>
 struct LCharString
 {
 	Array<char,length> data;
 
 	LCharString() = delete;
 
-	char getChar(int index)
+	char getChar(size_t index)
 	{
-		if (index < 0 || index >= length)
-		{
+		if (index >= length) {
 			return NULL;
 		}
 		return data[index];
 	}
 
-	void setChar(int index, char toSet)
+	void setChar(size_t index, char toSet)
 	{
-		if (index < 0 || index >= length)
-		{
+		if (index >= length) {
 			return;
 		}
 		data[index] = toSet;
@@ -7018,21 +6918,24 @@ struct LCharString
 	void set(const char* toSet)
 	{
 		size_t cpyLen = strlen(toSet);
-		if (cpyLen > length)
+		if (cpyLen > length) {
 			cpyLen = length;
+		}
 		memcpy((void*)&data, toSet, cpyLen);
-		if (cpyLen < length)
+		if (cpyLen < length) {
 			memset((void*)&data[cpyLen], 0, length - cpyLen);
+		}
 	}
 
 	void get(lua_State* L)
 	{
 		char* localCopy = (char*)alloca(length + 1);
-		int i = 0;
+		size_t i = 0;
 		for (; i < length; ++i) {
 			char readVal = data[i];
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
@@ -7066,6 +6969,126 @@ struct CVariable : CAreaVariable
 	{
 		p_Construct(this);
 	}
+};
+
+struct DP_Player
+{
+	unsigned int id;
+	LCharString<32> name;
+	LCharString<32> remoteAddr;
+	int sessionId;
+	unsigned int flags;
+	void* batton;
+	IDPPeer* peer;
+	bool in_game;
+
+	DP_Player() = delete;
+};
+
+struct SteamUGCQueryCompleted_t
+{
+	unsigned __int64 m_handle;
+	EResult m_eResult;
+	unsigned int m_unNumResultsReturned;
+	unsigned int m_unTotalMatchingResults;
+	bool m_bCachedData;
+	LCharString<256> m_rgchNextCursor;
+
+	SteamUGCQueryCompleted_t() = delete;
+};
+
+struct SteamUGCDetails_t
+{
+	unsigned __int64 m_nPublishedFileId;
+	EResult m_eResult;
+	EWorkshopFileType m_eFileType;
+	unsigned int m_nCreatorAppID;
+	unsigned int m_nConsumerAppID;
+	LCharString<129> m_rgchTitle;
+	LCharString<8000> m_rgchDescription;
+	unsigned __int64 m_ulSteamIDOwner;
+	unsigned int m_rtimeCreated;
+	unsigned int m_rtimeUpdated;
+	unsigned int m_rtimeAddedToUserList;
+	ERemoteStoragePublishedFileVisibility m_eVisibility;
+	bool m_bBanned;
+	bool m_bAcceptedForUse;
+	bool m_bTagsTruncated;
+	LCharString<1025> m_rgchTags;
+	unsigned __int64 m_hFile;
+	unsigned __int64 m_hPreviewFile;
+	LCharString<260> m_pchFileName;
+	int m_nFileSize;
+	int m_nPreviewFileSize;
+	LCharString<256> m_rgchURL;
+	unsigned int m_unVotesUp;
+	unsigned int m_unVotesDown;
+	float m_flScore;
+	unsigned int m_unNumChildren;
+
+	SteamUGCDetails_t() = delete;
+};
+
+struct SteamUGCRequestUGCDetailsResult_t
+{
+	SteamUGCDetails_t m_details;
+	bool m_bCachedData;
+
+	SteamUGCRequestUGCDetailsResult_t() = delete;
+};
+
+struct SDL_TextInputEvent
+{
+	unsigned int type;
+	unsigned int timestamp;
+	unsigned int windowID;
+	LCharString<32> text;
+
+	SDL_TextInputEvent() = delete;
+};
+
+struct SDL_TextEditingEvent
+{
+	unsigned int type;
+	unsigned int timestamp;
+	unsigned int windowID;
+	LCharString<32> text;
+	int start;
+	int length;
+
+	SDL_TextEditingEvent() = delete;
+};
+
+union SDL_Event
+{
+	SDL_EventType type;
+	SDL_CommonEvent common;
+	SDL_WindowEvent window;
+	SDL_KeyboardEvent key;
+	SDL_TextEditingEvent edit;
+	SDL_TextInputEvent text;
+	SDL_MouseMotionEvent motion;
+	SDL_MouseButtonEvent button;
+	SDL_MouseWheelEvent wheel;
+	SDL_JoyAxisEvent jaxis;
+	SDL_JoyBallEvent jball;
+	SDL_JoyHatEvent jhat;
+	SDL_JoyButtonEvent jbutton;
+	SDL_JoyDeviceEvent jdevice;
+	SDL_ControllerAxisEvent caxis;
+	SDL_ControllerButtonEvent cbutton;
+	SDL_ControllerDeviceEvent cdevice;
+	SDL_AudioDeviceEvent adevice;
+	SDL_QuitEvent quit;
+	SDL_UserEvent user;
+	SDL_SysWMEvent syswm;
+	SDL_TouchFingerEvent tfinger;
+	SDL_MultiGestureEvent mgesture;
+	SDL_DollarGestureEvent dgesture;
+	SDL_DropEvent drop;
+	Array<unsigned __int8,56> padding;
+
+	SDL_Event() = delete;
 };
 
 #pragma pack(push, 1)
@@ -7182,24 +7205,10 @@ extern CBaldurChitin** p_g_pBaldurChitin;
 extern lua_State** p_g_lua;
 extern char** p_afxPchNil;
 
-struct DP_Player
-{
-	unsigned int id;
-	Array<char,32> name;
-	Array<char,32> remoteAddr;
-	int sessionId;
-	unsigned int flags;
-	void* batton;
-	IDPPeer* peer;
-	bool in_game;
-
-	DP_Player() = delete;
-};
-
 struct CWorldMapLinks
 {
 	unsigned int m_nArea;
-	Array<char,32> m_entryPoint;
+	LCharString<32> m_entryPoint;
 	unsigned int m_nDistanceScale;
 	unsigned int m_dwLinkFlags;
 	Array<unsigned __int8,8> m_resRandomEncounterArea0;
@@ -7237,7 +7246,7 @@ struct CWorldMapArea
 {
 	Array<unsigned __int8,8> m_resCurrentArea;
 	Array<unsigned __int8,8> m_resOriginalArea;
-	Array<char,32> m_strName;
+	LCharString<32> m_strName;
 	unsigned int m_dwFlags;
 	unsigned int m_sequence;
 	unsigned int m_mapLocationX;
@@ -7613,14 +7622,14 @@ struct CSavedGamePartyCreature
 	Array<Array<unsigned __int8,8>,3> m_quickSpellsSpellId;
 	Array<__int16,3> m_quickItemsItemNum;
 	Array<__int16,3> m_quickItemsAbilityNum;
-	Array<char,32> m_name;
+	LCharString<32> m_name;
 	unsigned int m_numberTimesTalkedTo;
 	unsigned int m_strStrongestKillName;
 	unsigned int m_nStrongestKillXPValue;
 	unsigned int m_nPreviousTimeWithParty;
 	unsigned int m_nJoinPartyTime;
 	unsigned __int8 m_bWithParty;
-	Array<char,2> m_pad1;
+	Array<__int8,2> m_pad1;
 	char m_cFirstResSlot;
 	unsigned int m_nChapterKillsXPValue;
 	unsigned int m_nChapterKillsNumber;
@@ -7644,11 +7653,12 @@ struct CResRef
 	void get(lua_State* L)
 	{
 		char* localCopy = (char*)alloca(sizeof(m_resRef) + 1);
-		int i = 0;
+		size_t i = 0;
 		for (; i < sizeof(m_resRef); ++i) {
 			char readVal = m_resRef[i];
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
@@ -7657,15 +7667,16 @@ struct CResRef
 
 	void set(const char* newVal)
 	{
-		int i = 0;
+		size_t i = 0;
 		for (; i < sizeof(m_resRef); ++i) {
 			char readVal = newVal[i];
 			if (readVal >= 97 && readVal <= 122) {
 				readVal -= 32;
 			}
 			m_resRef[i] = readVal;
-			if (readVal == '\0')
+			if (readVal == '\0') {
 				break;
+			}
 		}
 		for (; i < sizeof(m_resRef); ++i) {
 			m_resRef[i] = '\0';
@@ -8677,7 +8688,7 @@ struct CScreenCreateChar : CBaldurEngine
 	Array<unsigned int,3> m_strErrorButtonText;
 	Array<int,9> m_OldMageSpells;
 	Array<int,7> m_OldPriestSpells;
-	CTypedPtrArray<CPtrArray,char> m_aBaseProficiencySlots;
+	CTypedPtrArray<CPtrArray,__int8> m_aBaseProficiencySlots;
 	CCreatureFileHeader* m_pTempBaseStats;
 	CDerivedStats* m_pTempDerivedStats;
 	Array<int,7> m_storedSkillPoints;
@@ -11478,24 +11489,24 @@ struct CCreatureFileHeader
 	__int16 m_armorClassMissileAdjustment;
 	__int16 m_armorClassPiercingAdjustment;
 	__int16 m_armorClassSlashingAdjustment;
-	char m_toHitArmorClass0Base;
+	__int8 m_toHitArmorClass0Base;
 	unsigned __int8 m_numberOfAttacksBase;
 	unsigned __int8 m_saveVSDeathBase;
 	unsigned __int8 m_saveVSWandsBase;
 	unsigned __int8 m_saveVSPolyBase;
 	unsigned __int8 m_saveVSBreathBase;
 	unsigned __int8 m_saveVSSpellBase;
-	char m_resistFireBase;
-	char m_resistColdBase;
-	char m_resistElectricityBase;
-	char m_resistAcidBase;
-	char m_resistMagicBase;
-	char m_resistMagicFireBase;
-	char m_resistMagicColdBase;
-	char m_resistSlashingBase;
-	char m_resistCrushingBase;
-	char m_resistPiercingBase;
-	char m_resistMissileBase;
+	__int8 m_resistFireBase;
+	__int8 m_resistColdBase;
+	__int8 m_resistElectricityBase;
+	__int8 m_resistAcidBase;
+	__int8 m_resistMagicBase;
+	__int8 m_resistMagicFireBase;
+	__int8 m_resistMagicColdBase;
+	__int8 m_resistSlashingBase;
+	__int8 m_resistCrushingBase;
+	__int8 m_resistPiercingBase;
+	__int8 m_resistMissileBase;
 	unsigned __int8 m_detectIllusionBase;
 	unsigned __int8 m_setTrapsBase;
 	unsigned __int8 m_loreBase;
@@ -11505,16 +11516,16 @@ struct CCreatureFileHeader
 	unsigned __int8 m_pickPocketBase;
 	unsigned __int8 m_fatigue;
 	unsigned __int8 m_intoxication;
-	char m_luckBase;
-	Array<char,15> m_proficiencies;
+	__int8 m_luckBase;
+	LCharString<15> m_proficiencies;
 	unsigned __int8 m_bNightmare;
 	unsigned __int8 m_nTranslucent;
-	char m_repChangeKilled;
-	char m_repChangeJoined;
-	char m_repChangeKicked;
+	__int8 m_repChangeKilled;
+	__int8 m_repChangeJoined;
+	__int8 m_repChangeKicked;
 	unsigned __int8 m_undeadLevel;
 	unsigned __int8 m_trackingBase;
-	Array<char,32> m_trackingTarget;
+	LCharString<32> m_trackingTarget;
 	Array<unsigned int,100> m_speech;
 	unsigned __int8 m_level1;
 	unsigned __int8 m_level2;
@@ -11766,7 +11777,7 @@ struct CAreaSoundsAndMusic
 
 struct CAreaFileStaticObject
 {
-	Array<char,32> m_scriptName;
+	LCharString<32> m_scriptName;
 	unsigned __int16 m_posX;
 	unsigned __int16 m_posY;
 	unsigned int m_timeOfDayVisible;
@@ -11787,7 +11798,7 @@ struct CAreaFileStaticObject
 
 struct CAreaFileSoundObject
 {
-	Array<char,32> m_scriptName;
+	LCharString<32> m_scriptName;
 	unsigned __int16 m_posX;
 	unsigned __int16 m_posY;
 	unsigned __int16 m_range;
@@ -11809,7 +11820,7 @@ struct CAreaFileSoundObject
 
 struct CAreaFileRestEncounter
 {
-	Array<char,32> m_scriptName;
+	LCharString<32> m_scriptName;
 	Array<unsigned int,10> m_randomCreatureString;
 	Array<Array<unsigned __int8,8>,10> m_randomCreature;
 	unsigned __int16 m_randomCreatureNum;
@@ -11830,7 +11841,7 @@ struct CAreaFileRestEncounter
 
 struct CAreaFileRandomMonsterSpawningPoint
 {
-	Array<char,32> m_scriptName;
+	LCharString<32> m_scriptName;
 	unsigned __int16 m_posX;
 	unsigned __int16 m_posY;
 	Array<Array<unsigned __int8,8>,10> m_randomCreature;
@@ -11866,7 +11877,7 @@ struct CAreaFileProjectileObject
 	unsigned __int16 m_posY;
 	unsigned __int16 m_posZ;
 	unsigned __int8 m_targetType;
-	char m_portraitNum;
+	__int8 m_portraitNum;
 
 	CAreaFileProjectileObject() = delete;
 };
@@ -12088,7 +12099,7 @@ struct CGameArea
 
 struct CAreaFileContainer
 {
-	Array<char,32> m_scriptName;
+	LCharString<32> m_scriptName;
 	unsigned __int16 m_posX;
 	unsigned __int16 m_posY;
 	unsigned __int16 m_containerType;
@@ -12110,7 +12121,7 @@ struct CAreaFileContainer
 	unsigned int m_pickPointStart;
 	unsigned __int16 m_pickPointCount;
 	unsigned __int16 m_triggerRange;
-	Array<char,32> m_ownedBy;
+	LCharString<32> m_ownedBy;
 	Array<unsigned __int8,8> m_keyType;
 	unsigned int m_breakDifficulty;
 	unsigned int m_strNotPickable;
@@ -12121,7 +12132,7 @@ struct CAreaFileContainer
 
 struct CAreaFileCharacterEntryPoint
 {
-	Array<char,32> m_entryName;
+	LCharString<32> m_entryName;
 	unsigned __int16 m_startX;
 	unsigned __int16 m_startY;
 	unsigned int m_facing;
@@ -12941,7 +12952,7 @@ struct CProjectileArea : CProjectileBAM
 	int m_bConeFromCaster;
 	unsigned __int16 m_coneSize;
 	int m_bIgnoreLOS;
-	char m_portraitNum;
+	__int8 m_portraitNum;
 	int m_bResolvePortraitNum;
 	int m_centerBamWait;
 	int m_forceInitialWait;
@@ -13389,7 +13400,7 @@ struct CGameAIBase : CGameObject
 	int m_nExpectedProcessPendingTriggersCalls;
 	__int16 m_nMissedProcessPendingTriggerCalls;
 	__int16 m_nAlertnessPeriod;
-	Array<char,32> m_scriptName;
+	LCharString<32> m_scriptName;
 	int m_inCutScene;
 	int m_firstCall;
 	int m_forceActionPick;
@@ -13536,14 +13547,14 @@ struct CGameTrigger : CGameAIBase
 	CRect m_rBounding;
 	unsigned int m_cursorType;
 	Array<unsigned __int8,8> m_newArea;
-	Array<char,32> m_newEntryPoint;
+	LCharString<32> m_newEntryPoint;
 	unsigned int m_dwFlags;
 	unsigned int m_description;
 	CPoint* m_pPolygon;
 	unsigned __int16 m_nPolygon;
 	unsigned __int16 m_boundingRange;
 	Array<unsigned __int8,8> m_scriptRes;
-	Array<char,32> m_scriptName;
+	LCharString<32> m_scriptName;
 	unsigned __int16 m_trapDetectionDifficulty;
 	unsigned __int16 m_trapDisarmingDifficulty;
 	unsigned __int16 m_trapActivated;
@@ -13576,7 +13587,7 @@ struct CGameTiledObject : CGameAIBase
 	CPoint* m_pSecondarySearch;
 	unsigned __int16 m_nSecondarySearch;
 	CTiledObject m_tiledObject;
-	Array<char,32> m_scriptName;
+	LCharString<32> m_scriptName;
 
 	CGameTiledObject() = delete;
 };
@@ -13670,7 +13681,7 @@ struct CGameSprite : CGameAIBase
 	unsigned __int8 m_spriteEffectSequenceNumber;
 	unsigned __int8 m_spriteEffectDuration;
 	unsigned __int8 m_spriteEffectSequenceLength;
-	char m_spriteEffectBaseIntensity;
+	__int8 m_spriteEffectBaseIntensity;
 	unsigned __int8 m_spriteEffectRandomIntensity;
 	CVidCell m_spriteEffectVidCell;
 	CVidPalette m_spriteEffectPalette;
@@ -13703,7 +13714,7 @@ struct CGameSprite : CGameAIBase
 	long double m_fCircleChange;
 	long double m_fCurrCircleChange;
 	__int16 m_radius;
-	char m_circleFacing;
+	__int8 m_circleFacing;
 	unsigned __int8 m_bVisibilityUpdated;
 	long double m_fDirectionOffset;
 	__int16 m_nSequence;
@@ -14104,8 +14115,8 @@ struct CGameDoor : CGameAIBase
 	CPoint m_ptDest2;
 	Array<unsigned __int8,8> m_scriptRes;
 	CTiledObject m_tiledObject;
-	Array<char,32> m_scriptName;
-	Array<char,32> m_triggerName;
+	LCharString<32> m_scriptName;
+	LCharString<32> m_triggerName;
 	__int16 m_hitPoints;
 	__int16 m_armourClass;
 	CResRef m_openSound;
@@ -14158,7 +14169,7 @@ struct CGameContainer : CGameAIBase
 	unsigned __int16 m_trapDetected;
 	CPoint m_posTrapOrigin;
 	unsigned __int16 m_triggerRange;
-	Array<char,32> m_ownedBy;
+	LCharString<32> m_ownedBy;
 	CResRef m_keyType;
 	unsigned int m_breakDifficulty;
 	__int16 m_drawPoly;

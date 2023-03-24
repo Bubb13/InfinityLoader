@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\LuaBindingsCommon.cpp" />
+    <ClCompile Include="common\LuaBindingsCommon_common.cpp" />
     <ClCompile Include="common\lua_pointers.cpp" />
     <ClCompile Include="common\to_lua_pointers.cpp" />
   </ItemGroup>
@@ -23,7 +24,6 @@
     <ClInclude Include="headers\include\lua\lauxlib.h" />
     <ClInclude Include="headers\include\lua\lua.h" />
     <ClInclude Include="headers\include\lua\luaconf.h" />
-    <ClInclude Include="headers\LuaBindingsCommon\dummy_lua_generated.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -60,7 +60,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(ProjectDir)headers/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindingsCommon</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(ProjectDir)headers/common;$(ProjectDir)headers/include</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -79,7 +79,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(ProjectDir)headers/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindingsCommon</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(ProjectDir)headers/common;$(ProjectDir)headers/include</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>

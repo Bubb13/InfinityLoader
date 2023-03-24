@@ -3,6 +3,12 @@
 
 #include "LuaBindingsCommon.h"
 #include "to_lua_pointers.h"
+#include "bounds_exceeded.h"
+
+// So that LuaBindings DLLs don't have to include these
+#include "LuaBindingsCommon_common.cpp"
+#include "lua_pointers.cpp"
+#include "to_lua_pointers.cpp"
 
 ///////////////////////
 // General Functions //
@@ -48,7 +54,9 @@ int getUserTypeLua(lua_State* L) {
 }
 
 int memsetUserDataLua(lua_State* L) {
-    memset(p_tolua_tousertype(L, 1, 0), p_lua_tointeger(L, 2), p_lua_tointeger(L, 3));
+    castLuaIntArg(2, int, val)
+    castLuaIntArg(3, size_t, size)
+    memset(p_tolua_tousertype(L, 1, 0), val, size);
     return 0;
 }
 
@@ -88,12 +96,12 @@ int userDataToLightUserDataLua(lua_State* L) {
 }
 
 int userDataToPointerLua(lua_State * g_lua) {
-    ptrdiff_t* ptr = reinterpret_cast<ptrdiff_t*>(p_lua_touserdata(g_lua, 1));
+    uintptr_t* ptr = reinterpret_cast<uintptr_t*>(p_lua_touserdata(g_lua, 1));
     if (ptr == nullptr) {
         p_lua_pushnil(g_lua);
     }
     else {
-        p_lua_pushinteger(g_lua, *reinterpret_cast<ptrdiff_t*>(p_lua_touserdata(g_lua, 1)));
+        p_lua_pushinteger(g_lua, *ptr);
     }
     return 1;
 }
