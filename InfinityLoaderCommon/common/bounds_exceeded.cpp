@@ -9,14 +9,14 @@ bool boundsExceeded(lua_State *const L, const int argI, IntegerType& resultVal, 
 	constexpr auto min = minIntegerTypeValue<IntegerType>();
 	if (val < min) {
 		// Error: Too small
-		error = std::format("arg #{} ({}) too small (min: {})", argI, val, min);
+		error = std::format("arg #{:d} ({:d}) too small (min: {:d})", argI, val, min);
 		return true;
 	}
 
 	constexpr auto max = maxIntegerTypeValue<IntegerType>();
 	if (val > max) {
 		// Error: Too large
-		error = std::format("arg #{} ({}) too large (max: {})", argI, val, max);
+		error = std::format("arg #{:d} ({:d}) too large (max: {:d})", argI, val, max);
 		return true;
 	}
 

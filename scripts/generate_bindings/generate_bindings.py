@@ -567,6 +567,14 @@ class TypeReference:
 		return "".join(parts)
 
 
+	def getCastModifierStr(self):
+		parts: list[str] = []
+		if self.const:    parts.append("const ")
+		if self.unsigned: parts.append("unsigned ")
+		if self.long:     parts.append("long ")
+		return "".join(parts)
+
+
 	def removeFromGroupRefs(self):
 		if self.group:
 			self.group.inwardTypeRefs.removeUnique(self)
@@ -617,6 +625,10 @@ class TypeReference:
 
 	def getName(self):
 		return self.group and self.group.name or self.sourceString
+
+
+	def getCastName(self):
+		return f"{self.getCastModifierStr()}{self.getName()}"
 
 
 	def getSingleName(self):
@@ -3075,6 +3087,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 							checkType = varType.group.extends[0]
 
 						checkTypeName: str = checkType.getName()
+						checkTypeCastName = checkType.getCastName()
 
 						selfStr: str = None
 						if isNormal:
@@ -3092,9 +3105,9 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 							out.write(f"\t{selfStr}{varNameHeader} = ")
 
 							if checkTypeName in ("float", "double"):
-								out.write(f"{enumCastStr}tolua_setter_tonumber<{checkTypeName}>(L, \"{variableField.variableName}\");\n")
+								out.write(f"{enumCastStr}tolua_setter_tonumber<{checkTypeCastName}>(L, \"{variableField.variableName}\");\n")
 							else:
-								out.write(f"{enumCastStr}tolua_setter_tointeger<{checkTypeName}>(L, \"{variableField.variableName}\");\n")
+								out.write(f"{enumCastStr}tolua_setter_tointeger<{checkTypeCastName}>(L, \"{variableField.variableName}\");\n")
 
 							return True
 
@@ -3190,12 +3203,13 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 					enumCastString = f"({paramType.getName()})"
 
 				checkTypeName = checkType.getName()
+				checkTypeCastName = checkType.getCastName()
 
 				if checkType.isPrimitiveNumber() and checkType.getUserTypePointerLevel() == 0:
 					if checkTypeName in ("float", "double"):
-						callArgParts.append(f"{enumCastString}tolua_function_tonumber<{checkTypeName}>(L, {luaVarIndex}, \"{funcImpBindingName}\")")
+						callArgParts.append(f"{enumCastString}tolua_function_tonumber<{checkTypeCastName}>(L, {luaVarIndex}, \"{funcImpBindingName}\")")
 					else:
-						callArgParts.append(f"{enumCastString}tolua_function_tointeger<{checkTypeName}>(L, {luaVarIndex}, \"{funcImpBindingName}\")")
+						callArgParts.append(f"{enumCastString}tolua_function_tointeger<{checkTypeCastName}>(L, {luaVarIndex}, \"{funcImpBindingName}\")")
 					callArgParts.append(", ")
 					return True
 				elif checkTypeName == "bool" and checkType.getUserTypePointerLevel() == 0:

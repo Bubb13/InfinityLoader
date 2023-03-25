@@ -1885,7 +1885,7 @@ static int tolua_function_Pointer_unsigned_int__setValue(lua_State* L)
 {
 	Pointer<unsigned int>* self = (Pointer<unsigned int>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<unsigned int>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger<int>(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<unsigned int>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -3699,7 +3699,7 @@ static int tolua_function_Pointer_unsigned___int8__setValue(lua_State* L)
 {
 	Pointer<unsigned __int8>* self = (Pointer<unsigned __int8>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<unsigned __int8>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(tolua_function_tointeger<__int8>(L, 2, "setValue"));
+	self->setValue(tolua_function_tointeger<unsigned __int8>(L, 2, "setValue"));
 	return 0;
 }
 
@@ -9537,7 +9537,7 @@ static int tolua_function_CGameObject_virtual_AddToArea(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_AddToArea'", NULL);
-	self->virtual_AddToArea((CGameArea*)tolua_tousertype_dynamic(L, 2, 0, "CGameArea"), (const CPoint*)tolua_tousertype_dynamic(L, 3, 0, "CPoint"), tolua_function_tointeger<int>(L, 4, "virtual_AddToArea"), tolua_function_tointeger<__int8>(L, 5, "virtual_AddToArea"));
+	self->virtual_AddToArea((CGameArea*)tolua_tousertype_dynamic(L, 2, 0, "CGameArea"), (const CPoint*)tolua_tousertype_dynamic(L, 3, 0, "CPoint"), tolua_function_tointeger<int>(L, 4, "virtual_AddToArea"), tolua_function_tointeger<unsigned __int8>(L, 5, "virtual_AddToArea"));
 	return 0;
 }
 
@@ -9606,7 +9606,7 @@ static int tolua_function_CGameObject_virtual_CompressTime(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_CompressTime'", NULL);
-	unsigned __int8 returnVal = self->virtual_CompressTime(tolua_function_tointeger<int>(L, 2, "virtual_CompressTime"));
+	unsigned __int8 returnVal = self->virtual_CompressTime(tolua_function_tointeger<unsigned int>(L, 2, "virtual_CompressTime"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
@@ -9615,7 +9615,7 @@ static int tolua_function_CGameObject_virtual_DebugDump(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_DebugDump'", NULL);
-	self->virtual_DebugDump((const CString*)tolua_tousertype_dynamic(L, 2, 0, "CString"), tolua_function_tointeger<__int8>(L, 3, "virtual_DebugDump"));
+	self->virtual_DebugDump((const CString*)tolua_tousertype_dynamic(L, 2, 0, "CString"), tolua_function_tointeger<unsigned __int8>(L, 3, "virtual_DebugDump"));
 	return 0;
 }
 
@@ -9682,7 +9682,7 @@ static int tolua_function_CGameObject_virtual_DoAIUpdate(lua_State* L)
 {
 	CGameObject* self = (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_DoAIUpdate'", NULL);
-	unsigned __int8 returnVal = self->virtual_DoAIUpdate(tolua_function_tointeger<__int8>(L, 2, "virtual_DoAIUpdate"), tolua_function_tointeger<int>(L, 3, "virtual_DoAIUpdate"));
+	unsigned __int8 returnVal = self->virtual_DoAIUpdate(tolua_function_tointeger<unsigned __int8>(L, 2, "virtual_DoAIUpdate"), tolua_function_tointeger<int>(L, 3, "virtual_DoAIUpdate"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
@@ -11488,7 +11488,7 @@ static int tolua_function_CGameAIBase_virtual_AddEffect(lua_State* L)
 {
 	CGameAIBase* self = (CGameAIBase*)tolua_tousertype_dynamic(L, 1, 0, "CGameAIBase");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'virtual_AddEffect'", NULL);
-	self->virtual_AddEffect((CGameEffect*)tolua_tousertype_dynamic(L, 2, 0, "CGameEffect"), tolua_function_tointeger<__int8>(L, 3, "virtual_AddEffect"), tolua_function_tointeger<int>(L, 4, "virtual_AddEffect"), tolua_function_tointeger<int>(L, 5, "virtual_AddEffect"));
+	self->virtual_AddEffect((CGameEffect*)tolua_tousertype_dynamic(L, 2, 0, "CGameEffect"), tolua_function_tointeger<unsigned __int8>(L, 3, "virtual_AddEffect"), tolua_function_tointeger<int>(L, 4, "virtual_AddEffect"), tolua_function_tointeger<int>(L, 5, "virtual_AddEffect"));
 	return 0;
 }
 

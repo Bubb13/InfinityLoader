@@ -186,7 +186,7 @@ IntegerType tolua_function_tointeger(lua_State* const L, const int narg, const c
 		constexpr auto max = maxIntegerTypeValue<IntegerType>();
 
 		if (val < min || val > max) {
-			std::string error = std::format("invalid integer '{}' for integer argument #{} in function '{}'; '[{}-{}]' expected.", val, narg, functionName, min, max);
+			std::string error = std::format("invalid integer '{:d}' for integer argument #{:d} in function '{:s}'; '[{:d}-{:d}]' expected.", val, narg, functionName, min, max);
 			return luaL_error(L, "%s", error.c_str());
 		}
 
@@ -213,7 +213,7 @@ IntegerType tolua_setter_tointeger(lua_State* const L, const char* const variabl
 		constexpr auto max = maxIntegerTypeValue<IntegerType>();
 
 		if (val < min || val > max) {
-			std::string error = std::format("invalid integer '{}' in integer variable setter '{}'; '[{}-{}]' expected.", val, variableName, min, max);
+			std::string error = std::format("invalid integer '{:d}' in integer variable setter '{:s}'; '[{:d}-{:d}]' expected.", val, variableName, min, max);
 			return luaL_error(L, "%s", error.c_str());
 		}
 
@@ -236,7 +236,7 @@ FloatingType tolua_function_tonumber(lua_State* const L, const int narg, const c
 		constexpr auto max = (std::numeric_limits<FloatingType>::max)();
 
 		if (val < min || val > max) {
-			std::string error = std::format("invalid number '{}' for number argument #{} in function '{}'; '[{}-{}]' expected.", val, narg, functionName, min, max);
+			std::string error = std::format("invalid number '{:e}' for number argument #{:d} in function '{:s}'; '[{:e}-{:e}]' expected.", val, narg, functionName, min, max);
 			luaL_error(L, "%s", error.c_str());
 		}
 
@@ -261,7 +261,7 @@ FloatingType tolua_setter_tonumber(lua_State* const L, const char* const variabl
 		constexpr auto max = (std::numeric_limits<FloatingType>::max)();
 
 		if (val < min || val > max) {
-			std::string error = std::format("invalid number '{}' in number variable setter '{}'; '[{}-{}]' expected.", val, variableName, min, max);
+			std::string error = std::format("invalid number '{:e}' in number variable setter '{:s}'; '[{:e}-{:e}]' expected.", val, variableName, min, max);
 			luaL_error(L, "%s", error.c_str());
 		}
 
