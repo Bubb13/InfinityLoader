@@ -21,7 +21,7 @@ def fixup(mainState):
 	mainState.getGroup("CAreaVariable").retypeField(mainState, "m_name", "LCharString<32>")
 	mainState.getGroup("CAreaVariable").retypeField(mainState, "m_stringValue", "LCharString<32>")
 	mainState.getGroup("CCreatureFileHeader").retypeField(mainState, "m_luckBase", "__int8")
-	mainState.getGroup("CCreatureFileHeader").retypeField(mainState, "m_proficiencies", "LCharString<15>")
+	mainState.getGroup("CCreatureFileHeader").retypeField(mainState, "m_proficiencies", "Array<__int8,15>")
 	mainState.getGroup("CCreatureFileHeader").retypeField(mainState, "m_repChangeJoined", "__int8")
 	mainState.getGroup("CCreatureFileHeader").retypeField(mainState, "m_repChangeKicked", "__int8")
 	mainState.getGroup("CCreatureFileHeader").retypeField(mainState, "m_repChangeKilled", "__int8")

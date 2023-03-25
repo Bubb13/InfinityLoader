@@ -11517,7 +11517,7 @@ struct CCreatureFileHeader
 	unsigned __int8 m_fatigue;
 	unsigned __int8 m_intoxication;
 	__int8 m_luckBase;
-	LCharString<15> m_proficiencies;
+	Array<__int8,15> m_proficiencies;
 	unsigned __int8 m_bNightmare;
 	unsigned __int8 m_nTranslucent;
 	__int8 m_repChangeKilled;
