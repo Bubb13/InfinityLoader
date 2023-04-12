@@ -1,5 +1,6 @@
 
 #include "InfinityLoaderCommon.h"
+#include "shared_memory.h"
 
 #include <iostream>
 #include <thread>
@@ -94,6 +95,49 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	writer.writeArgImmediate32(static_cast<__int32>(dllStrMemory), 0);
 	writer.callToAddressFar(reinterpret_cast<intptr_t>(LoadLibrary));
 
+	///////////////////////////////
+	// Write SharedMemory struct //
+	///////////////////////////////
+
+	constexpr std::size_t sharedMemSize = sizeof(SharedMemory);
+	const HANDLE hSharedFile = CreateFileMapping(
+		INVALID_HANDLE_VALUE,
+		0,                    // Default security
+		PAGE_READWRITE,
+		sharedMemSize >> 32,
+		sharedMemSize & 0xFFFFFFFF,
+		nullptr               // No name
+	);
+
+	if (hSharedFile == NULL) {
+		const DWORD lastError = GetLastError();
+		Print("[!] CreateFileMapping failed (%d).\n", lastError);
+		return lastError;
+	}
+
+	SharedMemory *const sharedFilePtr = reinterpret_cast<SharedMemory*>(MapViewOfFile(
+		hSharedFile,
+		FILE_MAP_ALL_ACCESS,
+		0,                   // Offset to map (high)
+		0,                   // Offset to map (low)
+		0                    // Number of bytes to map (0 = to end of file)
+	));
+
+	if (sharedFilePtr == nullptr) {
+		const DWORD lastError = GetLastError();
+		Print("[!] MapViewOfFile failed (%d).\n", lastError);
+		return lastError;
+	}
+
+	HANDLE hChildSharedFile;
+	DuplicateHandle(GetCurrentProcess(), hSharedFile, hProcess, &hChildSharedFile, 0, false, DUPLICATE_SAME_ACCESS);
+
+	DllInitArguments& dllInitArguments = sharedFilePtr->dllInitArguments;
+	dllInitArguments.parentProcessId = GetCurrentProcessId();
+	dllInitArguments.hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+	dllInitArguments.hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	dllInitArguments.hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+
 	///////////////////////////////////////
 	// Call InfinityLoaderDLL.dll Init() //
 	///////////////////////////////////////
@@ -114,10 +158,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	writer.callToAddressFar(reinterpret_cast<intptr_t>(GetProcAddress));
 	// Only the lower 32 bits of a HANDLE are significant
 	// https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
-	writer.writeArgImmediate32(static_cast<int>(reinterpret_cast<intptr_t>(GetStdHandle(STD_ERROR_HANDLE))), 3);
-	writer.writeArgImmediate32(static_cast<int>(reinterpret_cast<intptr_t>(GetStdHandle(STD_OUTPUT_HANDLE))), 2);
-	writer.writeArgImmediate32(static_cast<int>(reinterpret_cast<intptr_t>(GetStdHandle(STD_INPUT_HANDLE))), 1);
-	writer.writeArgImmediate32(GetCurrentProcessId(), 0);
+	writer.writeArgImmediate32(static_cast<int>(reinterpret_cast<intptr_t>(hChildSharedFile)), 0);
 	writer.writeBytesToBuffer(2, 0xFF, 0xD0); // call eax/rax
 
 	///////////////////

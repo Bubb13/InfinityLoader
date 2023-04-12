@@ -45,5 +45,8 @@
     <ClInclude Include="headers\common\bounds_exceeded.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="headers\common\shared_memory.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

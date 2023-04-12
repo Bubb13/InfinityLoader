@@ -1,5 +1,6 @@
 
 #include "InfinityLoaderCommon.h"
+#include "shared_memory.h"
 
 #include <dbghelp.h>
 #include <fcntl.h>
@@ -1808,7 +1809,7 @@ DWORD patchExe() {
 //   1 -> Error (no console output)
 //   2 -> Error (console output)
 
-byte initOutput() {
+byte initOutput(HANDLE hSharedFile) {
 
 	intptr_t bPause;
 	if (GetINIIntegerDef<intptr_t>(iniPath, TEXT("General"), TEXT("Pause"), 0, bPause, LogMessageBox)) {
@@ -1818,6 +1819,25 @@ byte initOutput() {
 	if (bPause) {
 		MessageBox(NULL, TEXT("Pause"), TEXT("InfinityLoaderDLL"), MB_ICONINFORMATION);
 	}
+
+	SharedMemory *const sharedFilePtr = reinterpret_cast<SharedMemory*>(MapViewOfFile(hSharedFile,
+		FILE_MAP_ALL_ACCESS,
+		0,                   // Offset to map (high)
+		0,                   // Offset to map (low)
+		0                    // Number of bytes to map (0 = to end of file)
+	));
+
+	if (sharedFilePtr == nullptr) {
+		DWORD lastError = GetLastError();
+		MessageBoxFormatA("InfinityLoaderDLL", MB_ICONERROR, "[!] MapViewOfFile failed (%d).\n", lastError);
+		return 1;
+	}
+
+	DllInitArguments& dllInitArguments = sharedFilePtr->dllInitArguments;
+	parentProcessId = dllInitArguments.parentProcessId;
+	parentStdIn = dllInitArguments.hStdIn;
+	parentStdOut = dllInitArguments.hStdOut;
+	parentStdErr = dllInitArguments.hStdErr;
 
 	if (GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug, LogMessageBox)) {
 		return 1;
@@ -1872,20 +1892,15 @@ int exceptionFilterIgnoreIfSubsequent(unsigned int code, _EXCEPTION_POINTERS* po
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-void Init(DWORD argParentProcessId, HANDLE argParentStdIn, HANDLE argParentStdOut, HANDLE argParentStdErr) {
+void Init(HANDLE hSharedFile) {
 
 	unsigned int exitCode = 0;
 
 	__try {
 
-		parentProcessId = argParentProcessId;
-		parentStdIn = argParentStdIn;
-		parentStdOut = argParentStdOut;
-		parentStdErr = argParentStdErr;
-
 		initPaths();
 
-		if (byte result = initOutput()) {
+		if (byte result = initOutput(hSharedFile)) {
 			if (result == 2) {
 				goto errorLogged;
 			}

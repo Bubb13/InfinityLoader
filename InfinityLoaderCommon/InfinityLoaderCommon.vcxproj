@@ -99,6 +99,7 @@
     <ClCompile Include="common\InfinityLoaderCommon.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\common\shared_memory.h" />
     <ClInclude Include="headers\common\bounds_exceeded.h" />
     <ClInclude Include="headers\common\dummy_lua_generated.h" />
     <ClInclude Include="headers\common\InfinityLoaderCommon.h" />
