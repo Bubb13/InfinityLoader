@@ -35,6 +35,7 @@ struct PatternByteEntry {
 /////////////
 
 bool debug;
+long long initTime;
 LuaMode luaMode;
 HMODULE luaLibrary;
 bool protonCompatibility;
@@ -68,6 +69,10 @@ const std::tuple<const TCHAR*, const TCHAR*, const unsigned char> aHexLetterToBy
 ///////////////////////
 // General Functions //
 ///////////////////////
+
+long long currentMicroseconds() {
+	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
 
 DWORD loadLuaMode() {
 
@@ -826,6 +831,11 @@ int freeLua(lua_State* L) {
 int getLuaRegistryIndexLua(lua_State* L) {
 	castLuaIntArg(1, int, n)
 	p_lua_rawgeti(L, LUA_REGISTRYINDEX, n);
+	return 1;
+}
+
+int getMicrosecondsLua(lua_State* L) {
+	p_lua_pushinteger(L, currentMicroseconds() - initTime);
 	return 1;
 }
 
@@ -1619,6 +1629,7 @@ void initLua() {
 	exposeToLua(L, "EEex_Extract", extractLua);
 	exposeToLua(L, "EEex_Free", freeLua);
 	exposeToLua(L, "EEex_GetLuaRegistryIndex", getLuaRegistryIndexLua);
+	exposeToLua(L, "EEex_GetMicroseconds", getMicrosecondsLua);
 	exposeToLua(L, "EEex_GetPatternMap", getPatternMapLua);
 	exposeToLua(L, "EEex_IterateRegex", iterateRegexLua);
 	exposeToLua(L, "EEex_JIT", jitLua);
@@ -1898,6 +1909,7 @@ void Init(HANDLE hSharedFile) {
 
 	__try {
 
+		initTime = currentMicroseconds();
 		initPaths();
 
 		if (byte result = initOutput(hSharedFile)) {

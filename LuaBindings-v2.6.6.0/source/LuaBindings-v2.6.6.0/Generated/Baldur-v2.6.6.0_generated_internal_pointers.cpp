@@ -74,6 +74,7 @@ CSound::type_Construct CSound::p_Construct;
 CSound::type_Destruct CSound::p_Destruct;
 CScreenWorld::type_TogglePauseGame CScreenWorld::p_TogglePauseGame;
 CChitin::type_OnResizeWindow CChitin::p_OnResizeWindow;
+uint* CChitin::p_TIMER_UPDATES_PER_SECOND;
 CItem::type_Construct3 CItem::p_Construct3;
 CInfButtonArray::type_SetState CInfButtonArray::p_SetState;
 CInfButtonArray::type_SetQuickSlot CInfButtonArray::p_SetQuickSlot;
@@ -200,6 +201,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CSound::Destruct"), reinterpret_cast<void**>(&CSound::p_Destruct)},
 	std::pair{TEXT("CScreenWorld::TogglePauseGame"), reinterpret_cast<void**>(&CScreenWorld::p_TogglePauseGame)},
 	std::pair{TEXT("CChitin::OnResizeWindow"), reinterpret_cast<void**>(&CChitin::p_OnResizeWindow)},
+	std::pair{TEXT("CChitin::TIMER_UPDATES_PER_SECOND"), reinterpret_cast<void**>(&CChitin::p_TIMER_UPDATES_PER_SECOND)},
 	std::pair{TEXT("CItem::Construct3"), reinterpret_cast<void**>(&CItem::p_Construct3)},
 	std::pair{TEXT("CInfButtonArray::SetState"), reinterpret_cast<void**>(&CInfButtonArray::p_SetState)},
 	std::pair{TEXT("CInfButtonArray::SetQuickSlot"), reinterpret_cast<void**>(&CInfButtonArray::p_SetQuickSlot)},

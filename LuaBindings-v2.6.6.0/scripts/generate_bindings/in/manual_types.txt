@@ -952,6 +952,8 @@ struct CVidMode
 
 struct CChitin
 {
+	static uint TIMER_UPDATES_PER_SECOND;
+
 	void OnResizeWindow(int w, int h);
 };
 

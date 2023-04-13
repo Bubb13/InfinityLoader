@@ -9765,6 +9765,7 @@ struct CChitin
 		vtbl() = delete;
 	};
 
+	static uint* p_TIMER_UPDATES_PER_SECOND;
 	int m_mouseLButton;
 	int m_mouseRButton;
 	int m_bMouseLButtonDown;
