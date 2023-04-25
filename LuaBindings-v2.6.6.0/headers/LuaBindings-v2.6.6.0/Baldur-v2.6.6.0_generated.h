@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <map>
 #include <queue>
 #include <vector>
 
@@ -2802,6 +2803,30 @@ struct Pointer
 
 namespace EEex
 {
+	enum class ProjectileType : __int32
+	{
+		Unknown = 1,
+		CProjectile = 2,
+		CProjectileAmbiant = 4,
+		CProjectileArea = 8,
+		CProjectileBAM = 16,
+		CProjectileChain = 32,
+		CProjectileColorSpray = 64,
+		CProjectileConeOfCold = 128,
+		CProjectileFall = 256,
+		CProjectileFireHands = 512,
+		CProjectileInstant = 1024,
+		CProjectileMulti = 2048,
+		CProjectileMushroom = 4096,
+		CProjectileNewScorcher = 8192,
+		CProjectileScorcher = 16384,
+		CProjectileSegment = 32768,
+		CProjectileSkyStrike = 65536,
+		CProjectileSkyStrikeBAM = 131072,
+		CProjectileSpellHit = 262144,
+		CProjectileTravelDoor = 524288,
+	};
+
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 
 	void DestroyUDAux(lua_State* L, void* ptr);
@@ -2809,6 +2834,20 @@ namespace EEex
 	void CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr);
 
 	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
+
+	void Stats_Hook_OnEqu(lua_State* L, CDerivedStats* stats, CDerivedStats* otherStats);
+
+	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* effect);
+
+	int Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite* sprite);
+
+	void Projectile_Hook_BeforeAddEffect(lua_State* L, CProjectile* projectile, CGameAIBase* aiBase, CGameEffect* effect, uintptr_t retPtr);
+
+	void InitPatterns(std::map<String,PatternEntry>& patterns);
+
+	void DeepCopyIndex(lua_State* L, int index);
+
+	void DeepCopy(lua_State* L);
 };
 
 struct ConstCharString
@@ -7686,6 +7725,19 @@ struct CResRef
 	void copy(CResRef* newVal)
 	{
 		*reinterpret_cast<__int64*>(&m_resRef) = *reinterpret_cast<__int64*>(newVal);
+	}
+
+	void toNullTerminatedStr(char* nullTerminatedStr)
+	{
+		size_t i = 0;
+		for (; i < sizeof(m_resRef); ++i) {
+			const char readVal = m_resRef[i];
+			if (readVal == '\0') {
+				break;
+			}
+			nullTerminatedStr[i] = readVal;
+		}
+		nullTerminatedStr[i] = '\0';
 	}
 };
 

@@ -22,6 +22,9 @@ extern type_lua_getglobal p_lua_getglobal;
 typedef int(__cdecl* type_lua_gettop)(lua_State* L);
 extern type_lua_gettop p_lua_gettop;
 
+typedef int(__cdecl* type_lua_pcall)(lua_State* L, int nargs, int nresults, int msgh);
+extern type_lua_pcall p_lua_pcall;
+
 typedef int(__cdecl* type_lua_pcallk)(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k);
 extern type_lua_pcallk p_lua_pcallk;
 
@@ -48,6 +51,9 @@ extern type_lua_rawset p_lua_rawset;
 
 typedef void(__cdecl* type_lua_rawseti)(lua_State* L, int index, int n);
 extern type_lua_rawseti p_lua_rawseti;
+
+typedef void(__cdecl* type_lua_setfield)(lua_State* L, int index, const char* k);
+extern type_lua_setfield p_lua_setfield;
 
 typedef void(__cdecl* type_lua_setglobal)(lua_State* L, const char* name);
 extern type_lua_setglobal p_lua_setglobal;

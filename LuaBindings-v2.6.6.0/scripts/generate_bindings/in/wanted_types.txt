@@ -44,3 +44,4 @@ CProjectileSkyStrikeBAM
 CProjectileSpellHit
 CProjectileTravelDoor
 EEex
+EEex::ProjectileType

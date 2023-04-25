@@ -137,7 +137,17 @@ constexpr void* GetMemberPtr(T func) {
     return reinterpret_cast<void*&>(func);
 }
 
-void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo, bool debug,
+template<typename out_type>
+DWORD getLuaProc(HMODULE luaLibrary, const char* name, out_type& out) {
+    if (out = reinterpret_cast<out_type>(GetProcAddress(luaLibrary, name)); out == 0) {
+        DWORD lastError = GetLastError();
+        Print("[!] GetProcAddress failed (%d) to find Lua function \"%s\".\n", lastError, name);
+        return lastError;
+    }
+    return 0;
+}
+
+void InitLuaBindingsCommon(lua_State* L, HMODULE luaLibrary, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo, bool debug,
     bool protonCompatibility, std::function<void()> specificBindingsCallback)
 {
     if (int error = InitFPrint(debug, protonCompatibility)) {
@@ -145,84 +155,100 @@ void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& pattern
         return;
     }
 
-#define setLuaPointer(patternName, pointerGlobal) \
+#define setPointer(patternName, pointerGlobal) \
     if (auto itr = patterns.find(TEXT(patternName)); itr != patterns.end()) { \
         p_##pointerGlobal = (type_##pointerGlobal*)(itr->second.value); \
     } \
     else { \
         Print("[!] Lua pattern not defined: \"%s\"; binding failed!\n", patternName); \
         return; \
+    } \
+
+#define setLuaPointer(patternName, functionNameStr, functionName) \
+    if (reinterpret_cast<intptr_t>(luaLibrary) == -1) { \
+        if (auto itr = patterns.find(TEXT(patternName)); itr != patterns.end()) { \
+            p_##functionName = (type_##functionName*)(itr->second.value); \
+        } \
+        else { \
+            Print("[!] Lua pattern not defined: \"Hardcoded_%s\"; binding failed!\n", functionNameStr); \
+            return; \
+        } \
+    } \
+    else { \
+        if (getLuaProc(luaLibrary, functionNameStr, p_##functionName)) { \
+            return; \
+        } \
     }
 
     // Read required function pointers from the pattern map
-    setLuaPointer("Hardcoded_free", free);
-    setLuaPointer("Hardcoded_lua_callk", lua_callk);
-    setLuaPointer("Hardcoded_lua_createtable", lua_createtable);
-    setLuaPointer("Hardcoded_lua_getfield", lua_getfield);
-    setLuaPointer("Hardcoded_lua_getglobal", lua_getglobal);
-    setLuaPointer("Hardcoded_lua_getmetatable", lua_getmetatable);
-    setLuaPointer("Hardcoded_lua_gettable", lua_gettable);
-    setLuaPointer("Hardcoded_lua_gettop", lua_gettop);
-    setLuaPointer("Hardcoded_lua_insert", lua_insert);
-    setLuaPointer("Hardcoded_lua_iscfunction", lua_iscfunction);
-    setLuaPointer("Hardcoded_lua_isnumber", lua_isnumber);
-    setLuaPointer("Hardcoded_lua_isuserdata", lua_isuserdata);
-    setLuaPointer("Hardcoded_lua_newuserdata", lua_newuserdata);
-    setLuaPointer("Hardcoded_lua_next", lua_next);
-    setLuaPointer("Hardcoded_lua_pcallk", lua_pcallk);
-    setLuaPointer("Hardcoded_lua_pushboolean", lua_pushboolean);
-    setLuaPointer("Hardcoded_lua_pushcclosure", lua_pushcclosure);
-    setLuaPointer("Hardcoded_lua_pushinteger", lua_pushinteger);
-    setLuaPointer("Hardcoded_lua_pushlightuserdata", lua_pushlightuserdata);
-    setLuaPointer("Hardcoded_lua_pushlstring", lua_pushlstring);
-    setLuaPointer("Hardcoded_lua_pushnil", lua_pushnil);
-    setLuaPointer("Hardcoded_lua_pushstring", lua_pushstring);
-    setLuaPointer("Hardcoded_lua_pushvalue", lua_pushvalue);
-    setLuaPointer("Hardcoded_lua_rawget", lua_rawget);
-    setLuaPointer("Hardcoded_lua_rawgeti", lua_rawgeti);
-    setLuaPointer("Hardcoded_lua_rawset", lua_rawset);
-    setLuaPointer("Hardcoded_lua_rawseti", lua_rawseti);
-    setLuaPointer("Hardcoded_lua_remove", lua_remove);
-    setLuaPointer("Hardcoded_lua_setglobal", lua_setglobal);
-    setLuaPointer("Hardcoded_lua_setmetatable", lua_setmetatable);
-    setLuaPointer("Hardcoded_lua_settable", lua_settable);
-    setLuaPointer("Hardcoded_lua_settop", lua_settop);
-    setLuaPointer("Hardcoded_lua_toboolean", lua_toboolean);
-    setLuaPointer("Hardcoded_lua_tocfunction", lua_tocfunction);
-    setLuaPointer("Hardcoded_lua_tointegerx", lua_tointegerx);
-    setLuaPointer("Hardcoded_lua_tolstring", lua_tolstring);
-    setLuaPointer("Hardcoded_lua_tonumberx", lua_tonumberx);
-    setLuaPointer("Hardcoded_lua_touserdata", lua_touserdata);
-    setLuaPointer("Hardcoded_lua_type", lua_type);
-    setLuaPointer("Hardcoded_luaL_error", luaL_error);
-    setLuaPointer("Hardcoded_luaL_loadfilex", luaL_loadfilex);
-    setLuaPointer("Hardcoded_luaL_loadstring", luaL_loadstring);
-    setLuaPointer("Hardcoded_malloc", malloc);
-    setLuaPointer("Hardcoded_tolua_beginmodule", tolua_beginmodule);
-    setLuaPointer("Hardcoded_tolua_bnd_cast", tolua_bnd_cast);
-    setLuaPointer("Hardcoded_tolua_bnd_release", tolua_bnd_release);
-    setLuaPointer("Hardcoded_tolua_bnd_releaseownership", tolua_bnd_releaseownership);
-    setLuaPointer("Hardcoded_tolua_bnd_takeownership", tolua_bnd_takeownership);
-    setLuaPointer("Hardcoded_tolua_bnd_type", tolua_bnd_type);
-    setLuaPointer("Hardcoded_tolua_constant", tolua_constant);
-    setLuaPointer("Hardcoded_tolua_endmodule", tolua_endmodule);
-    setLuaPointer("Hardcoded_tolua_error", tolua_error);
-    setLuaPointer("Hardcoded_tolua_function", tolua_function);
-    setLuaPointer("Hardcoded_tolua_getmetatable", tolua_getmetatable);
-    setLuaPointer("Hardcoded_tolua_isboolean", tolua_isboolean);
-    setLuaPointer("Hardcoded_tolua_isnumber", tolua_isnumber);
-    setLuaPointer("Hardcoded_tolua_isstring", tolua_isstring);
-    setLuaPointer("Hardcoded_tolua_isusertype", tolua_isusertype);
-    setLuaPointer("Hardcoded_tolua_module", tolua_module);
-    setLuaPointer("Hardcoded_tolua_newmetatable", tolua_newmetatable);
-    setLuaPointer("Hardcoded_tolua_pushboolean", tolua_pushboolean);
-    setLuaPointer("Hardcoded_tolua_pushnumber", tolua_pushnumber);
-    setLuaPointer("Hardcoded_tolua_pushstring", tolua_pushstring);
-    setLuaPointer("Hardcoded_tolua_tostring", tolua_tostring);
-    setLuaPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
-    setLuaPointer("Hardcoded_tolua_typename", tolua_typename);
-    setLuaPointer("Hardcoded_tolua_usertype", tolua_usertype);
-    setLuaPointer("Hardcoded_tolua_variable", tolua_variable);
+    setPointer("Hardcoded_free", free);
+    setPointer("Hardcoded_lua_callk", lua_callk);
+    setLuaPointer("Hardcoded_lua_createtable", "lua_createtable", lua_createtable);
+    setLuaPointer("Hardcoded_lua_getfield", "lua_getfield", lua_getfield);
+    setLuaPointer("Hardcoded_lua_getglobal", "lua_getglobal", lua_getglobal);
+    setLuaPointer("Hardcoded_lua_getmetatable", "lua_getmetatable", lua_getmetatable);
+    setLuaPointer("Hardcoded_lua_gettable", "lua_gettable", lua_gettable);
+    setLuaPointer("Hardcoded_lua_gettop", "lua_gettop", lua_gettop);
+    setLuaPointer("Hardcoded_lua_insert", "lua_insert", lua_insert);
+    setLuaPointer("Hardcoded_lua_iscfunction", "lua_iscfunction", lua_iscfunction);
+    setLuaPointer("Hardcoded_lua_isnumber", "lua_isnumber", lua_isnumber);
+    setLuaPointer("Hardcoded_lua_isuserdata", "lua_isuserdata", lua_isuserdata);
+    setLuaPointer("Hardcoded_lua_newuserdata", "lua_newuserdata", lua_newuserdata);
+    setLuaPointer("Hardcoded_lua_next", "lua_next", lua_next);
+    setLuaPointer("Hardcoded_lua_pcallk", "lua_pcallk", lua_pcallk);
+    setLuaPointer("Hardcoded_lua_pushboolean", "lua_pushboolean", lua_pushboolean);
+    setLuaPointer("Hardcoded_lua_pushcclosure", "lua_pushcclosure", lua_pushcclosure);
+    setLuaPointer("Hardcoded_lua_pushinteger", "lua_pushinteger", lua_pushinteger);
+    setLuaPointer("Hardcoded_lua_pushlightuserdata", "lua_pushlightuserdata", lua_pushlightuserdata);
+    setLuaPointer("Hardcoded_lua_pushlstring", "lua_pushlstring", lua_pushlstring);
+    setLuaPointer("Hardcoded_lua_pushnil", "lua_pushnil", lua_pushnil);
+    setLuaPointer("Hardcoded_lua_pushstring", "lua_pushstring", lua_pushstring);
+    setLuaPointer("Hardcoded_lua_pushvalue", "lua_pushvalue", lua_pushvalue);
+    setLuaPointer("Hardcoded_lua_rawget", "lua_rawget", lua_rawget);
+    setLuaPointer("Hardcoded_lua_rawgeti", "lua_rawgeti", lua_rawgeti);
+    setLuaPointer("Hardcoded_lua_rawset", "lua_rawset", lua_rawset);
+    setLuaPointer("Hardcoded_lua_rawseti", "lua_rawseti", lua_rawseti);
+    setLuaPointer("Hardcoded_lua_remove", "lua_remove", lua_remove);
+    setLuaPointer("Hardcoded_lua_setglobal", "lua_setglobal", lua_setglobal);
+    setLuaPointer("Hardcoded_lua_setmetatable", "lua_setmetatable", lua_setmetatable);
+    setLuaPointer("Hardcoded_lua_settable", "lua_settable", lua_settable);
+    setLuaPointer("Hardcoded_lua_settop", "lua_settop", lua_settop);
+    setLuaPointer("Hardcoded_lua_toboolean", "lua_toboolean", lua_toboolean);
+    setLuaPointer("Hardcoded_lua_tocfunction", "lua_tocfunction", lua_tocfunction);
+    setLuaPointer("Hardcoded_lua_tointegerx", "lua_tointegerx", lua_tointegerx);
+    setLuaPointer("Hardcoded_lua_tolstring", "lua_tolstring", lua_tolstring);
+    setLuaPointer("Hardcoded_lua_tonumberx", "lua_tonumberx", lua_tonumberx);
+    setLuaPointer("Hardcoded_lua_touserdata", "lua_touserdata", lua_touserdata);
+    setLuaPointer("Hardcoded_lua_type", "lua_type", lua_type);
+    setLuaPointer("Hardcoded_luaL_error", "luaL_error", luaL_error);
+    setLuaPointer("Hardcoded_luaL_loadfilex", "luaL_loadfilex", luaL_loadfilex);
+    setLuaPointer("Hardcoded_luaL_loadstring", "luaL_loadstring", luaL_loadstring);
+    setPointer("Hardcoded_malloc", malloc);
+    setPointer("Hardcoded_tolua_bnd_cast", tolua_bnd_cast);
+    setPointer("Hardcoded_tolua_bnd_release", tolua_bnd_release);
+    setPointer("Hardcoded_tolua_bnd_releaseownership", tolua_bnd_releaseownership);
+    setPointer("Hardcoded_tolua_bnd_takeownership", tolua_bnd_takeownership);
+    setPointer("Hardcoded_tolua_bnd_type", tolua_bnd_type);
+    setPointer("Hardcoded_tolua_constant", tolua_constant);
+    setPointer("Hardcoded_tolua_endmodule", tolua_endmodule);
+    setPointer("Hardcoded_tolua_error", tolua_error);
+    setPointer("Hardcoded_tolua_function", tolua_function);
+    setPointer("Hardcoded_tolua_getmetatable", tolua_getmetatable);
+    setPointer("Hardcoded_tolua_isboolean", tolua_isboolean);
+    setPointer("Hardcoded_tolua_ismodulemetatable", tolua_ismodulemetatable);
+    setPointer("Hardcoded_tolua_isnumber", tolua_isnumber);
+    setPointer("Hardcoded_tolua_isstring", tolua_isstring);
+    setPointer("Hardcoded_tolua_isusertype", tolua_isusertype);
+    setPointer("Hardcoded_tolua_moduleevents", tolua_moduleevents);
+    setPointer("Hardcoded_tolua_newmetatable", tolua_newmetatable);
+    setPointer("Hardcoded_tolua_pushboolean", tolua_pushboolean);
+    setPointer("Hardcoded_tolua_pushnumber", tolua_pushnumber);
+    setPointer("Hardcoded_tolua_pushstring", tolua_pushstring);
+    setPointer("Hardcoded_tolua_tostring", tolua_tostring);
+    setPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
+    setPointer("Hardcoded_tolua_typename", tolua_typename);
+    setPointer("Hardcoded_tolua_usertype", tolua_usertype);
+    setPointer("Hardcoded_tolua_variable", tolua_variable);
 
     // Export Lua functions that deal with user data / user types
     exposeToLua(L, "EEex_CastUD", castUserDataLua);
@@ -270,6 +296,8 @@ void InitLuaBindingsCommon(lua_State* L, std::map<String, PatternEntry>& pattern
     addPattern(patterns, "override_module_newindex_event", p_module_newindex_event);
     addPattern(patterns, "override_tolua_cclass", tolua_cclass_translate);
     addPattern(patterns, "override_tolua_open", p_tolua_open);
+    addPattern(patterns, "override_tolua_beginmodule", p_tolua_beginmodule);
+    addPattern(patterns, "override_tolua_module", p_tolua_module);
 
     if (specificBindingsCallback != nullptr) {
         specificBindingsCallback();

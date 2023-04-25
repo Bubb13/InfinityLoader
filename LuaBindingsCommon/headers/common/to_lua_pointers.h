@@ -22,9 +22,6 @@ extern type_free* p_free;
 typedef void* (__cdecl type_malloc)(size_t size);
 extern type_malloc* p_malloc;
 
-typedef void type_tolua_beginmodule(lua_State* L, const char* name);
-extern type_tolua_beginmodule* p_tolua_beginmodule;
-
 typedef int type_tolua_bnd_cast(lua_State* L);
 extern type_tolua_bnd_cast* p_tolua_bnd_cast;
 
@@ -58,6 +55,9 @@ extern type_tolua_getmetatable* p_tolua_getmetatable;
 typedef int type_tolua_isboolean(lua_State* L, int lo, int def, tolua_Error* err);
 extern type_tolua_isboolean* p_tolua_isboolean;
 
+typedef int type_tolua_ismodulemetatable(lua_State* L);
+extern type_tolua_ismodulemetatable* p_tolua_ismodulemetatable;
+
 typedef int type_tolua_isnumber(lua_State* L, int lo, int def, tolua_Error* err);
 extern type_tolua_isnumber* p_tolua_isnumber;
 
@@ -67,8 +67,8 @@ extern type_tolua_isstring* p_tolua_isstring;
 typedef int type_tolua_isusertype(lua_State* L, int lo, const char* type, int def, tolua_Error* err);
 extern type_tolua_isusertype* p_tolua_isusertype;
 
-typedef void type_tolua_module(lua_State* L, const char* name, int hasvar);
-extern type_tolua_module* p_tolua_module;
+typedef void type_tolua_moduleevents(lua_State* L);
+extern type_tolua_moduleevents* p_tolua_moduleevents;
 
 typedef void type_tolua_newmetatable(lua_State* L, const char* name);
 extern type_tolua_newmetatable* p_tolua_newmetatable;
@@ -130,6 +130,8 @@ int p_module_index_event(lua_State* L);
 int p_module_newindex_event(lua_State* L);
 // tolua_cclass_translate() actually overrides the engine function, though this still needs a declaration for use in EEexLua_generated.cpp
 void p_tolua_cclass(lua_State* L, const char* lname, const char* name, std::initializer_list<const char*>&& bases, lua_CFunction col);
+void p_tolua_beginmodule(lua_State* L, const char* name);
+void p_tolua_module(lua_State* L, const char* name, int hasvar);
 void p_tolua_open(lua_State* L);
 
 /////////////////////////////////////////////

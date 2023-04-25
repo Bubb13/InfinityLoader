@@ -51,6 +51,40 @@ typedef std::string StringA;
 typedef std::wstring StringW;
 typedef std::ostringstream OStringStreamA;
 
+#define TryRetErr(expression) \
+	if (auto result = expression) { \
+		return result; \
+	}
+
+#define TryAssignRetErr(toAssign, expression) \
+	if (toAssign = expression) { \
+		return result; \
+	}
+
+#define TryAssignElseRetErr(toAssign, expression, errorStatement) \
+	if (toAssign = expression) { \
+		errorStatement \
+		return result; \
+	}
+
+#define TryAssignCondElseRetLastErr(toAssign, expression, condition, errorStatement) \
+	if (toAssign = expression; condition) { \
+		DWORD lastError = GetLastError(); \
+		errorStatement \
+		return lastError; \
+	}
+
+#define TryRet(expression) \
+	if (auto result = expression) { \
+		return; \
+	}
+
+#define TryElseRetErr(expression, errorStatement) \
+	if (auto result = expression) { \
+		errorStatement \
+		return result; \
+	}
+
 /////////////
 // Globals //
 /////////////

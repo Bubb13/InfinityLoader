@@ -17,7 +17,6 @@ bool NULL_POINTER;
 
 type_free* p_free;
 type_malloc* p_malloc;
-type_tolua_beginmodule* p_tolua_beginmodule;
 type_tolua_bnd_cast* p_tolua_bnd_cast;
 type_tolua_bnd_release* p_tolua_bnd_release;
 type_tolua_bnd_releaseownership* p_tolua_bnd_releaseownership;
@@ -29,10 +28,11 @@ type_tolua_error* p_tolua_error;
 type_tolua_function* p_tolua_function;
 type_tolua_getmetatable* p_tolua_getmetatable;
 type_tolua_isboolean* p_tolua_isboolean;
+type_tolua_ismodulemetatable* p_tolua_ismodulemetatable;
 type_tolua_isnumber* p_tolua_isnumber;
 type_tolua_isstring* p_tolua_isstring;
 type_tolua_isusertype* p_tolua_isusertype;
-type_tolua_module* p_tolua_module;
+type_tolua_moduleevents* p_tolua_moduleevents;
 type_tolua_newmetatable* p_tolua_newmetatable;
 type_tolua_pushboolean* p_tolua_pushboolean;
 type_tolua_pushnumber* p_tolua_pushnumber;
@@ -1045,6 +1045,59 @@ void p_tolua_cclass(lua_State* L, const char* lname, const char* name, std::init
 	p_lua_pushcfunction(L, col);       // [ ..., module, lname, getmetatable(name), ".collector", col ]
 	p_lua_rawset(L, -3);               // [ ..., module, lname, getmetatable(name) ]
 	p_lua_rawset(L, -3);               // [ ..., module ]
+}
+
+void p_tolua_push_globals_table(lua_State* L) {
+#if defined (LUA_VERSION_NUM) && LUA_VERSION_NUM >= 502
+	p_lua_pushvalue(L, LUA_REGISTRYINDEX);
+	p_lua_pushnumber(L, LUA_RIDX_GLOBALS);
+	p_lua_rawget(L, -2);
+	p_lua_remove(L, -2);
+#else
+	p_lua_pushvalue(L, LUA_GLOBALSINDEX);
+#endif
+}
+
+// Expects [ module ]
+void p_tolua_beginmodule(lua_State* L, const char* name) {
+	if (name) {
+		p_lua_pushstring(L, name);     // [ module, name ]
+		p_lua_rawget(L, -2);           // [ module[name] ]
+	}
+	else {
+		p_tolua_push_globals_table(L); // [ module, _G ]
+	}
+}
+
+// Expects [ table ]
+void p_tolua_module(lua_State* L, const char* name, int hasvar) {
+	if (name) {
+		p_lua_pushstring(L, name);         // [ table, name ]
+		p_lua_rawget(L, -2);               // [ table, table[name] -> module ]
+		if (!p_lua_istable(L, -1)) {
+			p_lua_pop(L, 1);               // [ table ]
+			p_lua_newtable(L);             // [ table, newT ]
+			p_lua_pushstring(L, name);     // [ table, newT, name ]
+			p_lua_pushvalue(L, -2);        // [ table, newT, name, newT ]
+			p_lua_rawset(L, -4);           // [ table, newT -> module ]
+		}
+	}
+	else {
+		p_tolua_push_globals_table(L);
+	}
+
+	if (hasvar) {
+		if (!p_tolua_ismodulemetatable(L)) {
+			p_lua_newtable(L);               // [ table, module, newMT ]
+			p_tolua_moduleevents(L);
+			if (p_lua_getmetatable(L, -2)) {
+				                             // [ table, module, newMT, mt(module) ]
+				p_lua_setmetatable(L, -2);   // [ table, module, newMT ]
+			}
+			p_lua_setmetatable(L, -2);       // [ table, module ]
+		}
+	}
+	p_lua_pop(L, 1);                         // [ table ]
 }
 
 void p_tolua_open(lua_State* L) {

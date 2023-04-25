@@ -4,8 +4,10 @@
 type_free p_free;
 type_lua_createtable p_lua_createtable;
 type_lua_getfield p_lua_getfield;
+type_lua_getfield p_lua_setfield;
 type_lua_getglobal p_lua_getglobal;
 type_lua_gettop p_lua_gettop;
+type_lua_pcall p_lua_pcall;
 type_lua_pcallk p_lua_pcallk;
 type_lua_pushcclosure p_lua_pushcclosure;
 type_lua_pushinteger p_lua_pushinteger;

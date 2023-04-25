@@ -8,7 +8,9 @@ typedef LUA_NUMBER lua_Number;
 typedef LUA_INTEGER lua_Integer;
 typedef int (*lua_CFunction) (lua_State* L);
 
-#define LUA_REGISTRYINDEX LUAI_FIRSTPSEUDOIDX
+//#define LUA_REGISTRYINDEX LUAI_FIRSTPSEUDOIDX
+#define LUA_REGISTRYINDEX (-10000)
+#define LUA_GLOBALSINDEX (-10002)
 
 #define LUA_TNONE (-1)
 #define LUA_TNIL 0

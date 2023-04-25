@@ -103,6 +103,11 @@
     <ClInclude Include="headers\common\bounds_exceeded.h" />
     <ClInclude Include="headers\common\dummy_lua_generated.h" />
     <ClInclude Include="headers\common\InfinityLoaderCommon.h" />
+    <ClInclude Include="headers\include\lua\lauxlib.h" />
+    <ClInclude Include="headers\include\lua\lua.h" />
+    <ClInclude Include="headers\include\lua\lua.hpp" />
+    <ClInclude Include="headers\include\lua\luaconf.h" />
+    <ClInclude Include="headers\include\lua\lualib.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

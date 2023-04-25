@@ -28,9 +28,6 @@
     <Filter Include="Header Files\lua">
       <UniqueIdentifier>{03648656-f8da-4467-88db-fcb92387706b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\LuaBindingsCommon">
-      <UniqueIdentifier>{a5925992-1012-404c-8d1c-a40f3046d7fe}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\LuaBindingsCommon.cpp">

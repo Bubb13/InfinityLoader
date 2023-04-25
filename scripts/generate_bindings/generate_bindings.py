@@ -1311,7 +1311,7 @@ variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\s+)*)(?:__unaligne
 
 def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
-	functionImplementationMatch: Match = re.match("^\s*(?!typedef)((?:(?:\$nobinding|\$nodeclaration|\$external_implementation|\$pass_lua_state|\$eof_body|\$binding_name\(\S+\))\s+)*)(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]=]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)\s*(const){0,1}\s*(?:(;)){0,1}$", line)
+	functionImplementationMatch: Match = re.match("^\s*(?!typedef)((?:(?:\$nobinding|\$nodeclaration|\$external_implementation|\$pass_lua_state|\$eof_body|\$binding_name\(\S+\))\s+)*)(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]=]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>&]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)\s*(const){0,1}\s*(?:(;)){0,1}$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1716,7 +1716,7 @@ class Group:
 
 			# Define certain enum values in group.enumTuples, else print to console
 			if self.groupType == "enum":
-				enumLineMatch: Match = re.match("^\t([_a-zA-Z0-9]+)\s*=\s*(.+?)\s*,\s*$", line)
+				enumLineMatch: Match = re.match("^\s*([_a-zA-Z0-9]+)\s*=\s*(.+?)\s*,\s*(?:\/\/.*){0,1}$", line)
 				if enumLineMatch:
 					firstExtendName = self.extends[0].getName() if len(self.extends) > 0 else "__int32"
 					if firstExtendName == "__int8":
@@ -2650,7 +2650,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 			# HACK: Array's operator[] needs to return a reference
 			# even though I usually convert them to pointers
-			if split == "&" and sourceGroup.name in ("Array", "ArrayPointer"):
+			if split == "&" and sourceGroup.name in ("Array", "ArrayPointer", "EEex"):
 				assert not typeRef.reference, "Cannot handle rvalue reference"
 				typeRef.reference = True
 

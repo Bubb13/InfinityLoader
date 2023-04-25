@@ -37,8 +37,9 @@
 /*
 ** pseudo-indices
 */
-#define LUA_REGISTRYINDEX	LUAI_FIRSTPSEUDOIDX
-#define lua_upvalueindex(i)	(LUA_REGISTRYINDEX - (i))
+//#define LUA_REGISTRYINDEX	LUAI_FIRSTPSEUDOIDX
+#define LUA_REGISTRYINDEX (-10000)
+//#define LUA_GLOBALSINDEX	(-10002)
 
 
 /* thread status */

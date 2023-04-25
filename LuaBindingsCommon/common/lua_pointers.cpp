@@ -51,8 +51,14 @@ type_luaL_loadstring* p_luaL_loadstring;
 // Reimplementations //
 ///////////////////////
 
+// LUA 5.2
+//int p_lua_absindex(lua_State* L, int idx) {
+//	return (idx > 0 || p_lua_ispseudo(idx))
+//		? idx
+//		: p_lua_cast_int(L->top - L->ci->func + idx);
+//}
+
+// LUA JIT
 int p_lua_absindex(lua_State* L, int idx) {
-	return (idx > 0 || p_lua_ispseudo(idx))
-		? idx
-		: p_lua_cast_int(L->top - L->ci->func + idx);
+	return idx > 0 || idx <= LUA_REGISTRYINDEX ? idx : p_lua_gettop(L) + idx + 1;
 }

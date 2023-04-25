@@ -22,6 +22,7 @@
 enum class LuaMode {
 	INTERNAL,
 	EXTERNAL,
+	REPLACE_INTERNAL_WITH_EXTERNAL,
 };
 
 struct PatternByteEntry {
@@ -36,8 +37,9 @@ struct PatternByteEntry {
 
 bool debug;
 long long initTime;
+lua_State* L;
+HMODULE luaLibrary = reinterpret_cast<HMODULE>(-1);
 LuaMode luaMode;
-HMODULE luaLibrary;
 bool protonCompatibility;
 
 String exePath;
@@ -74,44 +76,47 @@ long long currentMicroseconds() {
 	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
+DWORD loadLuaLibrary(const String& luaModeStr) {
+
+	String luaLibraryName;
+
+	bool filled;
+	TryRetErr( GetINIString(iniPath, TEXT("General"), TEXT("LuaLibrary"), luaLibraryName, filled) )
+
+	if (!filled) {
+		PrintT(TEXT("[!] [General].LuaLibrary must be defined when [General].LuaPatchMode == \"%s\".\n"), luaModeStr.c_str());
+		return -1;
+	}
+
+	TryAssignCondElseRetLastErr(luaLibrary, LoadLibrary(luaLibraryName.c_str()), luaLibrary == nullptr,
+		PrintT(TEXT("[!] LoadLibrary failed (%d) to load [General].LuaLibrary \"%s\".\n"), lastError, luaLibraryName.c_str());
+	)
+
+	return ERROR_SUCCESS;
+}
+
 DWORD loadLuaMode() {
 
 	String luaModeStr;
-	if (DWORD lastError = GetINIStringDef(iniPath, TEXT("General"), TEXT("LuaPatchMode"), TEXT(""), luaModeStr)) {
-		return lastError;
-	}
+	TryRetErr( GetINIStringDef(iniPath, TEXT("General"), TEXT("LuaPatchMode"), TEXT(""), luaModeStr) );
 
 	if (luaModeStr == TEXT("INTERNAL")) {
 		luaMode = LuaMode::INTERNAL;
 	}
 	else if (luaModeStr == TEXT("EXTERNAL")) {
-
 		luaMode = LuaMode::EXTERNAL;
-
-		String luaLibraryName;
-
-		bool filled;
-		if (DWORD lastError = GetINIString(iniPath, TEXT("General"), TEXT("LuaLibrary"), luaLibraryName, filled)) {
-			return lastError;
-		}
-
-		if (!filled) {
-			Print("[!] [General].LuaLibrary must be defined when [General].LuaPatchMode == \"EXTERNAL\".\n");
-			return -1;
-		}
-
-		if (luaLibrary = LoadLibrary(luaLibraryName.c_str()); luaLibrary == nullptr) {
-			DWORD lastError = GetLastError();
-			PrintT(TEXT("[!] LoadLibrary failed (%d) to load [General].LuaLibrary \"%s\".\n"), lastError, luaLibraryName.c_str());
-			return lastError;
-		}
+		TryRetErr( loadLuaLibrary(luaModeStr) );
+	}
+	else if (luaModeStr == TEXT("REPLACE_INTERNAL_WITH_EXTERNAL")) {
+		luaMode = LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL;
+		TryRetErr( loadLuaLibrary(luaModeStr) )
 	}
 	else {
-		Print("[!] [General].LuaPatchMode must be either \"INTERNAL\" or \"EXTERNAL\".\n");
+		Print("[!] [General].LuaPatchMode must be either \"INTERNAL\", \"EXTERNAL\", or \"REPLACE_INTERNAL_WITH_EXTERNAL\".\n");
 		return -1;
 	}
 
-	return 0;
+	return ERROR_SUCCESS;
 }
 
 DWORD findModuleWithPath(HANDLE process, String& path, HMODULE& foundModule) {
@@ -263,6 +268,16 @@ asmjit::Error jitAt(uint8_t* dst, asmjit::CodeHolder* code, const CheckFunc chec
 
 	rt.flush(dst, codeSize);
 	return asmjit::kErrorOk;
+}
+
+template<typename out_type>
+DWORD getLuaProc(const char* name, out_type& out) {
+	if (out = reinterpret_cast<out_type>(GetProcAddress(luaLibrary, name)); out == 0) {
+		DWORD lastError = GetLastError();
+		Print("[!] GetProcAddress failed (%d) to find Lua function \"%s\".\n", lastError, name);
+		return lastError;
+	}
+	return 0;
 }
 
 //////////////////////
@@ -834,6 +849,15 @@ int getLuaRegistryIndexLua(lua_State* L) {
 	return 1;
 }
 
+int getLuaLibraryProcLua(lua_State* L) {
+	intptr_t address;
+	if (getLuaProc(p_lua_tostring(L, 1), address)) {
+		return 0;
+	}
+	p_lua_pushinteger(L, address);
+	return 1;
+}
+
 int getMicrosecondsLua(lua_State* L) {
 	p_lua_pushinteger(L, currentMicroseconds() - initTime);
 	return 1;
@@ -982,9 +1006,9 @@ int loadLuaBindingsLua(lua_State* L) {
 		return 0;
 	}
 
-	typedef void(__stdcall* type_Init)(void*, std::map<String, PatternEntry>&, ImageSectionInfo&, bool, bool);
+	typedef void(__stdcall* type_Init)(void*, HMODULE, std::map<String, PatternEntry>&, ImageSectionInfo&, bool, bool);
 	type_Init initProc = reinterpret_cast<type_Init>(proc);
-	initProc(L, patternEntries, textInfo, debug, protonCompatibility);
+	initProc(L, luaLibrary, patternEntries, textInfo, debug, protonCompatibility);
 
 	return 0;
 }
@@ -1164,6 +1188,30 @@ int write8Lua(lua_State* L) {
 
 int writePointerLua(lua_State* L) {
 	*reinterpret_cast<uintptr_t*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
+	return 0;
+}
+
+int writeU16Lua(lua_State* L) {
+	castLuaIntArg(2, unsigned __int16, val)
+	*reinterpret_cast<unsigned __int16*>(p_lua_tointeger(L, 1)) = val;
+	return 0;
+}
+
+int writeU32Lua(lua_State* L) {
+	castLuaIntArg(2, unsigned __int32, val)
+	*reinterpret_cast<unsigned __int32*>(p_lua_tointeger(L, 1)) = val;
+	return 0;
+}
+
+int writeU64Lua(lua_State* L) {
+	castLuaIntArg(2, unsigned __int64, val)
+	*reinterpret_cast<unsigned __int64*>(p_lua_tointeger(L, 1)) = val;
+	return 0;
+}
+
+int writeU8Lua(lua_State* L) {
+	castLuaIntArg(2, unsigned __int8, val)
+	*reinterpret_cast<unsigned __int8*>(p_lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
@@ -1459,7 +1507,13 @@ cleanup:;
 
 template<typename pointer_type>
 void fillExportedPointer(const String& name, pointer_type& pointer, intptr_t address) {
-	patternEntries.emplace(name, PatternEntry{ name, address });
+	if (auto itr = patternEntries.find(name); itr != patternEntries.end()) {
+		PatternEntry& patternEntry = itr->second;
+		patternEntry.value = address;
+	}
+	else {
+		patternEntries.emplace(name, PatternEntry{ name, address });
+	}
 	pointer = reinterpret_cast<pointer_type>(address);
 }
 
@@ -1486,32 +1540,18 @@ bool fillPatternPointer(const String& name, pointer_type& pointer) {
 	return fillPatternPointer(name, pointer, [](intptr_t& address){});
 }
 
-template<typename out_type>
-DWORD getLuaProc(const StringA& name, out_type& out) {
-	if (out = reinterpret_cast<out_type>(GetProcAddress(luaLibrary, name.c_str())); out == 0) {
-		DWORD lastError = GetLastError();
-		Print("[!] GetProcAddress failed (%d) to find Lua function \"%s\".\n", lastError, name.c_str());
-		return lastError;
-	}
-	return 0;
-}
-
 template<typename pointer_type, typename operations_type>
 DWORD fillLuaPointer(const String& name, pointer_type& pointer, const operations_type& operations) {
 
 	const String hardcodedName = TEXT("Hardcoded_") + name;
 	intptr_t address;
 
-	if (luaMode == LuaMode::EXTERNAL) {
-		if (DWORD lastError = getLuaProc(StringToStringA(name), address)) {
-			return lastError;
-		}
+	if (luaMode == LuaMode::INTERNAL) {
+		TryRetErr( findINICategoryPattern(textInfo, iniPath, hardcodedName, address) )
+		operations(address);
 	}
 	else {
-		if (DWORD lastError = findINICategoryPattern(textInfo, iniPath, hardcodedName, address)) {
-			return lastError;
-		}
-		operations(address);
+		TryRetErr( getLuaProc(StringToStringA(name).c_str(), address) )
 	}
 
 	fillExportedPointer(hardcodedName, pointer, address);
@@ -1556,6 +1596,7 @@ void initLua() {
 	fillLuaPointerLookup("lua_getfield", lua_getfield);
 	fillLuaPointerLookup("lua_getglobal", lua_getglobal);
 	fillLuaPointerLookup("lua_gettop", lua_gettop);
+	fillLuaPointerLookup("lua_pcall", lua_pcall);
 	fillLuaPointerLookup("lua_pcallk", lua_pcallk);
 	fillLuaPointerLookup("lua_pushcclosure", lua_pushcclosure);
 	fillLuaPointerLookup("lua_pushinteger", lua_pushinteger);
@@ -1565,6 +1606,7 @@ void initLua() {
 	fillLuaPointerLookup("lua_rawgeti", lua_rawgeti);
 	fillLuaPointerLookup("lua_rawset", lua_rawset);
 	fillLuaPointerLookup("lua_rawseti", lua_rawseti);
+	fillLuaPointerLookup("lua_setfield", lua_setfield);
 	fillLuaPointerLookup("lua_setglobal", lua_setglobal);
 	fillLuaPointerLookup("lua_settop", lua_settop);
 	fillLuaPointerLookup("lua_toboolean", lua_toboolean);
@@ -1574,8 +1616,6 @@ void initLua() {
 	fillLuaPointerLookup("luaL_error", luaL_error);
 	fillLuaPointerLookup("luaL_loadfilex", luaL_loadfilex);
 	fillLuaPointerLookup("luaL_ref", luaL_ref);
-
-	lua_State* L;
 
 	if (luaMode == LuaMode::INTERNAL) {
 		if (fillPatternPointer(TEXT("Hardcoded_InternalLuaState"), L, [](intptr_t& address) {
@@ -1629,6 +1669,7 @@ void initLua() {
 	exposeToLua(L, "EEex_Extract", extractLua);
 	exposeToLua(L, "EEex_Free", freeLua);
 	exposeToLua(L, "EEex_GetLuaRegistryIndex", getLuaRegistryIndexLua);
+	exposeToLua(L, "EEex_GetLuaLibraryProc", getLuaLibraryProcLua);
 	exposeToLua(L, "EEex_GetMicroseconds", getMicrosecondsLua);
 	exposeToLua(L, "EEex_GetPatternMap", getPatternMapLua);
 	exposeToLua(L, "EEex_IterateRegex", iterateRegexLua);
@@ -1669,6 +1710,10 @@ void initLua() {
 	exposeToLua(L, "EEex_Write8", write8Lua);
 	exposeToLua(L, "EEex_WritePointer", writePointerLua);
 	exposeToLua(L, "EEex_WritePtr", writePointerLua);
+	exposeToLua(L, "EEex_WriteU16", writeU16Lua);
+	exposeToLua(L, "EEex_WriteU32", writeU32Lua);
+	exposeToLua(L, "EEex_WriteU64", writeU64Lua);
+	exposeToLua(L, "EEex_WriteU8", writeU8Lua);
 	exposeToLua(L, "EEex_WriteLString", writeLStringLua);
 	exposeToLua(L, "EEex_WriteString", writeStringLua);
 	exposeToLua(L, "EEex_WriteStringAuto", writeStringAutoLua);
@@ -1695,13 +1740,26 @@ void initLua() {
 
 		fillExportedPointer(TEXT("Hardcoded_free"), p_free, free);
 		fillExportedPointer(TEXT("Hardcoded_malloc"), p_malloc, malloc);
-		callOverrideFile(L, "EEex_Main");
+
+		if (luaMode == LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL) {
+			callOverrideFile(L, "EEex_EarlyMain");
+		}
+		else {
+			callOverrideFile(L, "EEex_Main");
+		}
+
 		fillPatternPointerLookup("Hardcoded_free", free);
 		fillPatternPointerLookup("Hardcoded_malloc", malloc);
 	}
 
 cleanup:;
 	detatchFromConsole();
+}
+
+void delayedMainCall() {
+	TryRet( attachToConsole() )
+	callOverrideFile(L, "EEex_Main");
+	TryRet( detatchFromConsole() )
 }
 
 void writeCallHookProcAfterCall(AssemblyWriter& writer, intptr_t& curAllocatedPtr, intptr_t patchAddress, void* targetProc) {
@@ -1727,17 +1785,20 @@ void writeCallHookProcAfterCall(AssemblyWriter& writer, intptr_t& curAllocatedPt
 	curAllocatedPtr = writer.getLocation();
 }
 
+DWORD writeInternalPatch(AssemblyWriter& writer, intptr_t& curAllocatedPtr, void(*funcPtr)()) {
+	intptr_t patchAddress;
+	TryRetErr( findINICategoryPattern(textInfo, iniPath, TEXT("Hardcoded_InternalPatchLocation"), patchAddress) )
+	writeCallHookProcAfterCall(writer, curAllocatedPtr, patchAddress, funcPtr);
+	return ERROR_SUCCESS;
+}
+
 DWORD setUpLuaInitialization(ImageSectionInfo& textInfo) {
 
 	intptr_t curAllocatedPtr;
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
 
-	if (DWORD lastError = allocateNear(textInfo.ImageBase, info.dwAllocationGranularity,
-		info.dwAllocationGranularity, curAllocatedPtr))
-	{
-		return lastError;
-	}
+	TryRetErr( allocateNear(textInfo.ImageBase, info.dwAllocationGranularity, info.dwAllocationGranularity, curAllocatedPtr) )
 
 	unsigned char codeBuff[1024];
 	AssemblyWriter writer{ codeBuff };
@@ -1745,33 +1806,27 @@ DWORD setUpLuaInitialization(ImageSectionInfo& textInfo) {
 	// Write hook early in WinMain to check for Console redirection
 
 	if (INISectionExists(iniPath, TEXT("Hardcoded_WinMainPatchLocation"))) {
-
 		intptr_t winMainPatchAddress;
-		if (DWORD lastError = findINICategoryPattern(textInfo, iniPath, TEXT("Hardcoded_WinMainPatchLocation"), winMainPatchAddress)) {
-			return lastError;
-		}
+		TryRetErr( findINICategoryPattern(textInfo, iniPath, TEXT("Hardcoded_WinMainPatchLocation"), winMainPatchAddress) )
 		writeCallHookProcAfterCall(writer, curAllocatedPtr, winMainPatchAddress, winMainHook);
 	}
 
 	// Write Lua initialization hook
 
-	if (DWORD lastError = loadLuaMode()) {
-		return lastError;
-	}
+	TryRetErr( loadLuaMode() )
 
 	if (luaMode == LuaMode::INTERNAL) {
-
-		intptr_t patchAddress;
-		if (DWORD lastError = findINICategoryPattern(textInfo, iniPath, TEXT("Hardcoded_InternalPatchLocation"), patchAddress)) {
-			return lastError;
-		}
-		writeCallHookProcAfterCall(writer, curAllocatedPtr, patchAddress, initLua);
+		TryRetErr( writeInternalPatch(writer, curAllocatedPtr, initLua) )
+	}
+	else if (luaMode == LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL) {
+		TryRetErr( writeInternalPatch(writer, curAllocatedPtr, delayedMainCall) )
+		initLua();
 	}
 	else {
 		initLua();
 	}
 
-	return 0;
+	return ERROR_SUCCESS;
 }
 
 DWORD loadExePathAndName() {
