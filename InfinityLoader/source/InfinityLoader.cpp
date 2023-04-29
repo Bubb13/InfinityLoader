@@ -1,9 +1,23 @@
 
-#include "InfinityLoaderCommon.h"
-#include "shared_memory.h"
-
+#include <filesystem>
 #include <iostream>
 #include <thread>
+
+#include "InfinityLoaderCommon.h"
+
+/////////////
+// Globals //
+/////////////
+
+String dbPath;
+String exePath;
+String exeName;
+String iniPath;
+String workingFolder;
+
+//////////
+// Code //
+//////////
 
 bool inheritedConsole() {
 	HWND consoleWnd = GetConsoleWindow();
@@ -40,6 +54,41 @@ void showConsole()
 
 	return dwStartAddress;
 }*/
+
+DWORD createSharedMemory() {
+
+	constexpr std::size_t sharedMemSize = sizeof(SharedMemory);
+	hSharedFile = CreateFileMapping(
+		INVALID_HANDLE_VALUE,
+		0,                    // Default security
+		PAGE_READWRITE,
+		sharedMemSize >> 32,
+		sharedMemSize & 0xFFFFFFFF,
+		nullptr               // No name
+	);
+
+	if (hSharedFile == NULL) {
+		const DWORD lastError = GetLastError();
+		Print("[!] CreateFileMapping failed (%d).\n", lastError);
+		return lastError;
+	}
+
+	shared = reinterpret_cast<SharedMemory*>(MapViewOfFile(
+		hSharedFile,
+		FILE_MAP_ALL_ACCESS,
+		0,                   // Offset to map (high)
+		0,                   // Offset to map (low)
+		0                    // Number of bytes to map (0 = to end of file)
+	));
+
+	if (shared == nullptr) {
+		const DWORD lastError = GetLastError();
+		Print("[!] MapViewOfFile failed (%d).\n", lastError);
+		return lastError;
+	}
+
+	return ERROR_SUCCESS;
+}
 
 DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 
@@ -132,11 +181,11 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	HANDLE hChildSharedFile;
 	DuplicateHandle(GetCurrentProcess(), hSharedFile, hProcess, &hChildSharedFile, 0, false, DUPLICATE_SAME_ACCESS);
 
-	DllInitArguments& dllInitArguments = sharedFilePtr->dllInitArguments;
-	dllInitArguments.parentProcessId = GetCurrentProcessId();
-	dllInitArguments.hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	dllInitArguments.hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	dllInitArguments.hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+	SharedIO& sharedIO = sharedFilePtr->io;
+	sharedIO.parentProcessId = GetCurrentProcessId();
+	sharedIO.hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+	sharedIO.hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	sharedIO.hStdErr = GetStdHandle(STD_ERROR_HANDLE);
 
 	///////////////////////////////////////
 	// Call InfinityLoaderDLL.dll Init() //
@@ -237,14 +286,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	return 0;
 }*/
 
-bool debug;
-
 DWORD startGame() {
-
-	String exePath;
-	if (DWORD lastError = getExePath(exePath)) {
-		return lastError;
-	}
 
 	STARTUPINFO startupInfo{};
 	startupInfo.cb = sizeof(STARTUPINFO);
@@ -256,7 +298,7 @@ DWORD startGame() {
 	HANDLE hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 	HANDLE hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
-	if (debug) {
+	if (debug()) {
 		Print("[?] Parent hStdInput: %d\n", hStdInput);
 		Print("[?] Parent hStdOutput: %d\n", hStdOutput);
 		Print("[?] Parent hStdError: %d\n", hStdError);
@@ -268,12 +310,11 @@ DWORD startGame() {
 		return lastError;
 	}
 
-	intptr_t bPause;
-	if (lastError = GetINIIntegerDef<intptr_t>(iniPath, TEXT("General"), TEXT("Pause"), 0, bPause)) {
+	if (lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Pause"), 0, bPause())) {
 		goto errorFinally;
 	}
 
-	if (bPause) {
+	if (bPause()) {
 		MessageBox(NULL, TEXT("Pause"), TEXT("InfinityLoader"), MB_ICONINFORMATION);
 	}
 
@@ -324,28 +365,14 @@ errorFinally:;
 	return lastError;
 }
 
-DWORD initOutput() {
-
-	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug)) {
-		return lastError;
-	}
-
-	bool protonCompatibility;
-	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility)) {
-		return lastError;
-	}
-
-	if (int error = UnbufferCrtStreams()) {
-		Print("[!] UnbufferCrtStreams failed (%d).\n", error);
-		return error;
-	}
-
-	if (int error = InitFPrint(debug, protonCompatibility)) {
-		Print("[!] InitFPrint failed (%d).\n", error);
-		return error;
-	}
-
-	return 0;
+DWORD init() {
+	TryRetErr( createSharedMemory() )
+	TryRetErr( initPaths(dbPath, exePath, exeName, iniPath, workingFolder) )
+	TryRetErr( GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
+	TryRetErr( GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility()) )
+	TryElseRetErr( UnbufferCrtStreams(), Print("[!] UnbufferCrtStreams failed (%d).\n", error) )
+	TryElseRetErr( InitFPrint(), Print("[!] InitFPrint failed (%d).\n", error) )
+	return ERROR_SUCCESS;
 }
 
 int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
@@ -362,9 +389,7 @@ int main(int argc, char* argv[]) {
 			hideConsole();
 		}
 
-		initPaths();
-
-		if (DWORD lastError = initOutput()) {
+		if (init()) {
 			goto error;
 		}
 

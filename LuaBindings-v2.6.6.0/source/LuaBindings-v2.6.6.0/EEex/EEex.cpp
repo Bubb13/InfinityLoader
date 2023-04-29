@@ -1,7 +1,10 @@
 
+#include <functional>
+#include <optional>
+#include <sstream>
+
 #include "Baldur-v2.6.6.0_generated.h"
 #include "util.hpp"
-#include <functional>
 
 long long currentMicroseconds() {
 	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();

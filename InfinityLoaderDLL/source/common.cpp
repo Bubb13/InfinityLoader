@@ -1,5 +1,6 @@
 
 #include "InfinityLoaderCommon.cpp"
+#include "InfinityLoaderCommonSharedDLLMemory.cpp"
 #include "pointers.h"
 #include "bounds_exceeded.cpp"
 

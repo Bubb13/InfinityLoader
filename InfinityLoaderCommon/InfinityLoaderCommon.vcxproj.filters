@@ -40,6 +40,12 @@
     <ClCompile Include="common\bounds_exceeded.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="common\InfinityLoaderCommonSharedDLLMemory.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\InfinityLoaderCommonSharedMemory.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\common\bounds_exceeded.h">
@@ -68,6 +74,15 @@
     </ClInclude>
     <ClInclude Include="headers\include\lua\lua.hpp">
       <Filter>Header Files\common\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\InfinityLoaderCommonTypes.h">
+      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\shared_memory_dll.h">
+      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\shared_memory_types.h">
+      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

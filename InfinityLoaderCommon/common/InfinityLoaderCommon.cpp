@@ -1,19 +1,19 @@
 
-#include "InfinityLoaderCommon.h"
-
+#include <codecvt>
 #include <fcntl.h>
+#include <filesystem>
 #include <fstream>
 #include <io.h>
 #include <iostream>
 #include <ranges>
 
+#include "InfinityLoaderCommon.h"
+
+#include <dbghelp.h>
+
 /////////////
 // Globals //
 /////////////
-
-String dbPath;
-String iniPath;
-String workingFolder;
 
 const std::pair<const TCHAR, const unsigned char> aDecimalDigitToByte[] = {
 	std::pair{TCHAR{'0'}, 0},
@@ -103,7 +103,7 @@ void FPrint_Console(FILE* file, const char* formatText, ...) {
 #undef fprintfT
 #define fprintfT error
 
-int InitFPrint(bool debug, bool protonCompatibility) {
+int InitFPrint() {
 
 	if (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_CHAR) {
 
@@ -120,7 +120,7 @@ int InitFPrint(bool debug, bool protonCompatibility) {
 			return error;
 		}
 
-		if (debug) {
+		if (debug()) {
 			Print("[?] InitFPrint() - Console\n");
 		}
 	}
@@ -129,7 +129,7 @@ int InitFPrint(bool debug, bool protonCompatibility) {
 		FPrint = FPrint_NoConsole;
 		FPrintT = FPrintT_NoConsole;
 
-		if (debug) {
+		if (debug()) {
 			Print("[?] InitFPrint() - NoConsole\n");
 		}
 	}
@@ -661,37 +661,6 @@ DWORD SetINIInteger(const String& iniPath, const TCHAR *const section, const TCH
 // Paths //
 ///////////
 
-DWORD getExePath(String& exePathOut, String* exeNameOut) {
-
-	String exeNames;
-	if (DWORD lastError = GetINIStringDef(iniPath, TEXT("General"), TEXT("ExeNames"), TEXT(""), exeNames)) {
-		return lastError;
-	}
-
-	DWORD result = -1;
-	forEveryCharSplit(exeNames, TCHAR{','}, [&](const String str) {
-
-		const String checkingFor = String{ workingFolder }.append(str);
-		if (std::filesystem::exists(checkingFor)) {
-
-			if (exeNameOut) {
-				*exeNameOut = str;
-			}
-
-			exePathOut = checkingFor;
-			result = 0;
-			return true;
-		}
-		return false;
-	});
-
-	if (result) {
-		Print("[!] Failed to find any of the executables defined by [General].ExeNames.\n");
-	}
-
-	return result;
-}
-
 String getMyFolder() {
 	String myPath = getMyPath();
 	return myPath.substr(0, myPath.length() - (myPath.length() - myPath.find_last_of('\\')) + 1);
@@ -715,10 +684,36 @@ StringA getWorkingFolderA() {
 	return std::filesystem::current_path().string().append("\\");
 }
 
-void initPaths() {
+DWORD initExePath(String& exePathOut, String& exeNameOut) {
+
+	String exeNames;
+	TryRetErr( GetINIStringDef(iniPath(), TEXT("General"), TEXT("ExeNames"), TEXT(""), exeNames) )
+
+	DWORD result = -1;
+	forEveryCharSplit(exeNames, TCHAR{ ',' }, [&](const String str) {
+
+		const String checkingFor = String{ workingFolder() }.append(str);
+		if (std::filesystem::exists(checkingFor)) {
+			exePathOut = checkingFor;
+			exeNameOut = str;
+			result = 0;
+			return true;
+		}
+		return false;
+	});
+
+	if (result) {
+		Print("[!] Failed to find any of the executables defined by [General].ExeNames.\n");
+	}
+
+	return result;
+}
+
+DWORD initPaths(String& dbPath, String& exePath, String& exeName, String& iniPath, String& workingFolder) {
 	workingFolder = getWorkingFolder();
-	iniPath = String{ workingFolder }.append(TEXT("InfinityLoader.ini"));
 	dbPath = String{ workingFolder }.append(TEXT("InfinityLoader.db"));
+	iniPath = String{ workingFolder }.append(TEXT("InfinityLoader.ini"));
+	return initExePath(exePath, exeName);
 }
 
 //////////////////////
@@ -971,7 +966,7 @@ String writeDump(EXCEPTION_POINTERS* pointers)
 	exceptionInfo.ExceptionPointers = pointers;
 	exceptionInfo.ClientPointers = FALSE;
 
-	OStringStream dmpNameStream{ String{ workingFolder }.append(TEXT("InfinityLoader_Crash")) };
+	OStringStream dmpNameStream{ String{ workingFolder() }.append(TEXT("InfinityLoader_Crash"))};
 	String builtDmpName = dmpNameStream.str();
 
 	if (!std::filesystem::exists(builtDmpName)) {
@@ -982,7 +977,7 @@ String writeDump(EXCEPTION_POINTERS* pointers)
 
 	while (true) {
 
-		dmpNameStream << workingFolder;
+		dmpNameStream << workingFolder();
 		dmpNameStream << "InfinityLoader_Crash\\InfinityLoader_Crash_";
 		dmpNameStream << attemptI++;
 		dmpNameStream << ".dmp";

@@ -147,16 +147,17 @@ DWORD getLuaProc(HMODULE luaLibrary, const char* name, out_type& out) {
     return 0;
 }
 
-void InitLuaBindingsCommon(lua_State* L, HMODULE luaLibrary, std::map<String, PatternEntry>& patterns, ImageSectionInfo& pTextInfo, bool debug,
-    bool protonCompatibility, std::function<void()> specificBindingsCallback)
-{
-    if (int error = InitFPrint(debug, protonCompatibility)) {
+void InitLuaBindingsCommon(SharedDLLMemory *const argSharedDLL, std::function<void()> specificBindingsCallback) {
+
+    sharedDLL = argSharedDLL;
+
+    if (int error = InitFPrint()) {
         Print("[!] InitFPrint failed (%d).", error);
         return;
     }
 
 #define setPointer(patternName, pointerGlobal) \
-    if (auto itr = patterns.find(TEXT(patternName)); itr != patterns.end()) { \
+    if (auto itr = patterns().find(TEXT(patternName)); itr != patterns().end()) { \
         p_##pointerGlobal = (type_##pointerGlobal*)(itr->second.value); \
     } \
     else { \
@@ -165,8 +166,8 @@ void InitLuaBindingsCommon(lua_State* L, HMODULE luaLibrary, std::map<String, Pa
     } \
 
 #define setLuaPointer(patternName, functionNameStr, functionName) \
-    if (reinterpret_cast<intptr_t>(luaLibrary) == -1) { \
-        if (auto itr = patterns.find(TEXT(patternName)); itr != patterns.end()) { \
+    if (reinterpret_cast<intptr_t>(luaLibrary()) == -1) { \
+        if (auto itr = patterns().find(TEXT(patternName)); itr != patterns().end()) { \
             p_##functionName = (type_##functionName*)(itr->second.value); \
         } \
         else { \
@@ -175,7 +176,7 @@ void InitLuaBindingsCommon(lua_State* L, HMODULE luaLibrary, std::map<String, Pa
         } \
     } \
     else { \
-        if (getLuaProc(luaLibrary, functionNameStr, p_##functionName)) { \
+        if (getLuaProc(luaLibrary(), functionNameStr, p_##functionName)) { \
             return; \
         } \
     }
@@ -251,35 +252,35 @@ void InitLuaBindingsCommon(lua_State* L, HMODULE luaLibrary, std::map<String, Pa
     setPointer("Hardcoded_tolua_variable", tolua_variable);
 
     // Export Lua functions that deal with user data / user types
-    exposeToLua(L, "EEex_CastUD", castUserDataLua);
-    exposeToLua(L, "EEex_CastUserData", castUserDataLua);
-    exposeToLua(L, "EEex_ExposeToLua", exposeToLuaLua);
-    exposeToLua(L, "EEex_FreeUD", freeUserDataLua);
-    exposeToLua(L, "EEex_FreeUserData", freeUserDataLua);
-    exposeToLua(L, "EEex_GetUserType", getUserTypeLua);
-    exposeToLua(L, "EEex_GetUT", getUserTypeLua);
-    exposeToLua(L, "EEex_MemsetUD", memsetUserDataLua);
-    exposeToLua(L, "EEex_MemsetUserData", memsetUserDataLua);
-    exposeToLua(L, "EEex_NewUD", newUserDataLua);
-    exposeToLua(L, "EEex_NewUserData", newUserDataLua);
-    exposeToLua(L, "EEex_PointerToUserData", pointerToUserDataLua);
-    exposeToLua(L, "EEex_PtrToUD", pointerToUserDataLua);
-    exposeToLua(L, "EEex_SetUDGCFunc", setUserDataGarbageCollectionFunctionLua);
-    exposeToLua(L, "EEex_SetUserDataGarbageCollectionFunction", setUserDataGarbageCollectionFunctionLua);
-    exposeToLua(L, "EEex_UDToLightUD", userDataToLightUserDataLua);
-    exposeToLua(L, "EEex_UDToPtr", userDataToPointerLua);
-    exposeToLua(L, "EEex_UserDataToLightUserData", userDataToLightUserDataLua);
-    exposeToLua(L, "EEex_UserDataToPointer", userDataToPointerLua);
+    exposeToLua(L(), "EEex_CastUD", castUserDataLua);
+    exposeToLua(L(), "EEex_CastUserData", castUserDataLua);
+    exposeToLua(L(), "EEex_ExposeToLua", exposeToLuaLua);
+    exposeToLua(L(), "EEex_FreeUD", freeUserDataLua);
+    exposeToLua(L(), "EEex_FreeUserData", freeUserDataLua);
+    exposeToLua(L(), "EEex_GetUserType", getUserTypeLua);
+    exposeToLua(L(), "EEex_GetUT", getUserTypeLua);
+    exposeToLua(L(), "EEex_MemsetUD", memsetUserDataLua);
+    exposeToLua(L(), "EEex_MemsetUserData", memsetUserDataLua);
+    exposeToLua(L(), "EEex_NewUD", newUserDataLua);
+    exposeToLua(L(), "EEex_NewUserData", newUserDataLua);
+    exposeToLua(L(), "EEex_PointerToUserData", pointerToUserDataLua);
+    exposeToLua(L(), "EEex_PtrToUD", pointerToUserDataLua);
+    exposeToLua(L(), "EEex_SetUDGCFunc", setUserDataGarbageCollectionFunctionLua);
+    exposeToLua(L(), "EEex_SetUserDataGarbageCollectionFunction", setUserDataGarbageCollectionFunctionLua);
+    exposeToLua(L(), "EEex_UDToLightUD", userDataToLightUserDataLua);
+    exposeToLua(L(), "EEex_UDToPtr", userDataToPointerLua);
+    exposeToLua(L(), "EEex_UserDataToLightUserData", userDataToLightUserDataLua);
+    exposeToLua(L(), "EEex_UserDataToPointer", userDataToPointerLua);
 
     // Special
-    p_lua_pushlightuserdata(L, &NULL_POINTER);
-    p_lua_setglobal(L, "NULL_PTR");
-    p_lua_pushlightuserdata(L, &NULL_POINTER);
-    p_lua_setglobal(L, "NULL_POINTER");
+    p_lua_pushlightuserdata(L(), &NULL_POINTER);
+    p_lua_setglobal(L(), "NULL_PTR");
+    p_lua_pushlightuserdata(L(), &NULL_POINTER);
+    p_lua_setglobal(L(), "NULL_POINTER");
 
     // Populate internal engine pointers from patterns
     for (auto& pair : internalPointersMap) {
-        if (auto node = patterns.find(pair.first); node != patterns.end()) {
+        if (auto node = patterns().find(pair.first); node != patterns().end()) {
             PatternEntry& pattern = node->second;
             *pair.second = reinterpret_cast<void*>(pattern.value);
         }
@@ -289,15 +290,15 @@ void InitLuaBindingsCommon(lua_State* L, HMODULE luaLibrary, std::map<String, Pa
     }
 
     // Export tolua overrides (the versions in-engine aren't sufficient)
-    addPattern(patterns, "Hardcoded_tolua_pushusertype", tolua_pushusertype_nocast);
-    addPattern(patterns, "override_class_index_event", p_class_index_event);
-    addPattern(patterns, "override_class_newindex_event", p_class_newindex_event);
-    addPattern(patterns, "override_module_index_event", p_module_index_event);
-    addPattern(patterns, "override_module_newindex_event", p_module_newindex_event);
-    addPattern(patterns, "override_tolua_cclass", tolua_cclass_translate);
-    addPattern(patterns, "override_tolua_open", p_tolua_open);
-    addPattern(patterns, "override_tolua_beginmodule", p_tolua_beginmodule);
-    addPattern(patterns, "override_tolua_module", p_tolua_module);
+    addPattern(patterns(), "Hardcoded_tolua_pushusertype", tolua_pushusertype_nocast);
+    addPattern(patterns(), "override_class_index_event", p_class_index_event);
+    addPattern(patterns(), "override_class_newindex_event", p_class_newindex_event);
+    addPattern(patterns(), "override_module_index_event", p_module_index_event);
+    addPattern(patterns(), "override_module_newindex_event", p_module_newindex_event);
+    addPattern(patterns(), "override_tolua_cclass", tolua_cclass_translate);
+    addPattern(patterns(), "override_tolua_open", p_tolua_open);
+    addPattern(patterns(), "override_tolua_beginmodule", p_tolua_beginmodule);
+    addPattern(patterns(), "override_tolua_module", p_tolua_module);
 
     if (specificBindingsCallback != nullptr) {
         specificBindingsCallback();
@@ -305,5 +306,5 @@ void InitLuaBindingsCommon(lua_State* L, HMODULE luaLibrary, std::map<String, Pa
 
     // The Lua environment needs to grab the pattern map and execute any
     // patches relating to tolua before the Lua bindings are exported
-    runCallback(L);
+    runCallback(L());
 }

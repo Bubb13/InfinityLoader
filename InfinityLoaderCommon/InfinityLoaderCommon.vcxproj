@@ -70,7 +70,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)headers/common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/include;$(ProjectDir)headers/common</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -97,12 +97,17 @@
   <ItemGroup>
     <ClCompile Include="common\bounds_exceeded.cpp" />
     <ClCompile Include="common\InfinityLoaderCommon.cpp" />
+    <ClCompile Include="common\InfinityLoaderCommonSharedDLLMemory.cpp" />
+    <ClCompile Include="common\InfinityLoaderCommonSharedMemory.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\common\InfinityLoaderCommonTypes.h" />
     <ClInclude Include="headers\common\shared_memory.h" />
     <ClInclude Include="headers\common\bounds_exceeded.h" />
     <ClInclude Include="headers\common\dummy_lua_generated.h" />
     <ClInclude Include="headers\common\InfinityLoaderCommon.h" />
+    <ClInclude Include="headers\common\shared_memory_dll.h" />
+    <ClInclude Include="headers\common\shared_memory_types.h" />
     <ClInclude Include="headers\include\lua\lauxlib.h" />
     <ClInclude Include="headers\include\lua\lua.h" />
     <ClInclude Include="headers\include\lua\lua.hpp" />
