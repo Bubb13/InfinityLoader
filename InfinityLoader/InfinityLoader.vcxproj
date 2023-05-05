@@ -110,8 +110,8 @@
     <Image Include="EEex.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\common.cpp" />
-    <ClCompile Include="source\InfinityLoader.cpp" />
+    <ClCompile Include="source\InfinityLoader\common.cpp" />
+    <ClCompile Include="source\InfinityLoader\InfinityLoader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

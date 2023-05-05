@@ -12,9 +12,6 @@
     <Filter Include="Build Tasks">
       <UniqueIdentifier>{fb352c1f-1edc-4298-a4ca-4318a65b789e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\lua">
-      <UniqueIdentifier>{3946674d-33b4-4350-8239-edf4104daa8c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Module Definition">
       <UniqueIdentifier>{85ff999f-0e47-419c-a3f5-f257da351b75}</UniqueIdentifier>
     </Filter>
@@ -30,23 +27,26 @@
     <Filter Include="Source Files\LuaBindings-v2.6.6.0\EEex">
       <UniqueIdentifier>{62065f07-dc22-4224-a50d-0ec2a85a1443}</UniqueIdentifier>
     </Filter>
-    <Filter Include="References\tolua_reference">
-      <UniqueIdentifier>{ac30c02a-25d7-4c84-9729-f61f7797985a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="References\tolua_reference\header">
-      <UniqueIdentifier>{935dcaf4-1d67-4897-a1dc-b4554dd757a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="References\tolua_reference\source">
-      <UniqueIdentifier>{e6e5946a-b3bb-4126-9c0f-1f4b9623a49f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\LuaBindings-v2.6.6.0">
       <UniqueIdentifier>{ff0b60f9-a2ab-4a5d-a811-3a21d0c37c63}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\LuaBindings-v2.6.6.0\Generated">
-      <UniqueIdentifier>{ba3b8235-31fd-49ca-86d1-19c30ceedff0}</UniqueIdentifier>
+    <Filter Include="References\source">
+      <UniqueIdentifier>{04cb918e-96a4-42b0-8a0c-3797e466fc8a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\common">
-      <UniqueIdentifier>{bcf768bf-5f55-4cf8-bc87-13b297a5d5b4}</UniqueIdentifier>
+    <Filter Include="References\source\tolua_reference">
+      <UniqueIdentifier>{1c6af74b-9dcb-4df4-88f0-67ff8e948f54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="References\header">
+      <UniqueIdentifier>{3036a3e0-8cf6-4fd9-96ef-8037f084cd8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="References\header\include">
+      <UniqueIdentifier>{c63e88ac-86c0-4040-a6c9-adf85e64869e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="References\header\include\tolua_reference">
+      <UniqueIdentifier>{cbb92a13-26ac-4675-af36-92162bd2ae3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\LuaBindings-v2.6.6.0_generated">
+      <UniqueIdentifier>{4725ab01-3c46-444c-8816-97c007130c17}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -62,24 +62,6 @@
     <ClCompile Include="source\LuaBindings-v2.6.6.0\common.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0</Filter>
     </ClCompile>
-    <ClCompile Include="References\engine_reimplementations.cpp">
-      <Filter>References</Filter>
-    </ClCompile>
-    <ClCompile Include="References\tolua_reference\tolua_event.c">
-      <Filter>References\tolua_reference\source</Filter>
-    </ClCompile>
-    <ClCompile Include="References\tolua_reference\tolua_is.c">
-      <Filter>References\tolua_reference\source</Filter>
-    </ClCompile>
-    <ClCompile Include="References\tolua_reference\tolua_map.c">
-      <Filter>References\tolua_reference\source</Filter>
-    </ClCompile>
-    <ClCompile Include="References\tolua_reference\tolua_push.c">
-      <Filter>References\tolua_reference\source</Filter>
-    </ClCompile>
-    <ClCompile Include="References\tolua_reference\tolua_to.c">
-      <Filter>References\tolua_reference\source</Filter>
-    </ClCompile>
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0\Generated</Filter>
     </ClCompile>
@@ -89,52 +71,58 @@
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0\Generated</Filter>
     </ClCompile>
+    <ClCompile Include="references\source\engine_reimplementations.cpp">
+      <Filter>References\source</Filter>
+    </ClCompile>
+    <ClCompile Include="references\source\tolua_reference\tolua_push.c">
+      <Filter>References\source\tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="references\source\tolua_reference\tolua_to.c">
+      <Filter>References\source\tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="references\source\tolua_reference\tolua_event.c">
+      <Filter>References\source\tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="references\source\tolua_reference\tolua_is.c">
+      <Filter>References\source\tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="references\source\tolua_reference\tolua_map.c">
+      <Filter>References\source\tolua_reference</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\include\lua\lua.h">
-      <Filter>Header Files\lua</Filter>
+    <ClInclude Include="references\header\include\tolua_reference\tolua_event.h">
+      <Filter>References\header\include\tolua_reference</Filter>
     </ClInclude>
-    <ClInclude Include="headers\include\lua\luaconf.h">
-      <Filter>Header Files\lua</Filter>
+    <ClInclude Include="references\header\include\tolua_reference\lauxlib.h">
+      <Filter>References\header\include\tolua_reference</Filter>
     </ClInclude>
-    <ClInclude Include="headers\include\lua\lauxlib.h">
-      <Filter>Header Files\lua</Filter>
+    <ClInclude Include="references\header\include\tolua_reference\lua.h">
+      <Filter>References\header\include\tolua_reference</Filter>
     </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\luaconf.h">
-      <Filter>References\tolua_reference\header</Filter>
+    <ClInclude Include="references\header\include\tolua_reference\lua.hpp">
+      <Filter>References\header\include\tolua_reference</Filter>
     </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\lualib.h">
-      <Filter>References\tolua_reference\header</Filter>
+    <ClInclude Include="references\header\include\tolua_reference\luaconf.h">
+      <Filter>References\header\include\tolua_reference</Filter>
     </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\tolua.h">
-      <Filter>References\tolua_reference\header</Filter>
+    <ClInclude Include="references\header\include\tolua_reference\lualib.h">
+      <Filter>References\header\include\tolua_reference</Filter>
     </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\tolua_event.h">
-      <Filter>References\tolua_reference\header</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\lauxlib.h">
-      <Filter>References\tolua_reference\header</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\lua.h">
-      <Filter>References\tolua_reference\header</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\lua.hpp">
-      <Filter>References\tolua_reference\header</Filter>
+    <ClInclude Include="references\header\include\tolua_reference\tolua.h">
+      <Filter>References\header\include\tolua_reference</Filter>
     </ClInclude>
     <ClInclude Include="headers\LuaBindings-v2.6.6.0\EEexLua_generated.h">
-      <Filter>Header Files\LuaBindings-v2.6.6.0\Generated</Filter>
+      <Filter>Header Files\LuaBindings-v2.6.6.0</Filter>
     </ClInclude>
-    <ClInclude Include="headers\common\EEexLua_generated_baseclass_offsets.h">
-      <Filter>Header Files\common</Filter>
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0\util.hpp">
+      <Filter>Header Files\LuaBindings-v2.6.6.0</Filter>
     </ClInclude>
-    <ClInclude Include="headers\common\util.hpp">
-      <Filter>Header Files\common</Filter>
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0_generated\Baldur-v2.6.6.0_generated.h">
+      <Filter>Header Files\LuaBindings-v2.6.6.0_generated</Filter>
     </ClInclude>
-    <ClInclude Include="headers\common\Baldur-v2.6.6.0_generated.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\Baldur-v2.6.6.0_lua_generated.h">
-      <Filter>Header Files\common</Filter>
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0_generated\Baldur-v2.6.6.0_lua_generated.h">
+      <Filter>Header Files\LuaBindings-v2.6.6.0_generated</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

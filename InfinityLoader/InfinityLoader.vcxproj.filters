@@ -16,6 +16,9 @@
     <Filter Include="Build Tasks">
       <UniqueIdentifier>{3afea471-9a7a-47c1-be59-d8c22c0c80d8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\InfinityLoader">
+      <UniqueIdentifier>{0da8035e-267e-4e8b-814a-2451db8ea978}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1">
@@ -38,11 +41,11 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\InfinityLoader.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\InfinityLoader\InfinityLoader.cpp">
+      <Filter>Source Files\InfinityLoader</Filter>
     </ClCompile>
-    <ClCompile Include="source\common.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\InfinityLoader\common.cpp">
+      <Filter>Source Files\InfinityLoader</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -21,12 +21,6 @@
     <Filter Include="Header Files\common">
       <UniqueIdentifier>{c7c42c05-cde2-474b-a28b-b8855686f7e2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\common\lua">
-      <UniqueIdentifier>{0c19a02c-1ca8-4956-9ed9-694922d6457d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\common\InfinityLoaderCommon">
-      <UniqueIdentifier>{833299e8-8ede-46b6-944e-b9fa6610030e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_COMMON.ps1">
@@ -34,50 +28,35 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\common\bounds_exceeded.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\dummy_lua_generated.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\InfinityLoaderCommon.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\shared_memory.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\include\lua\luaconf.h">
-      <Filter>Header Files\common\lua</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\include\lua\lualib.h">
-      <Filter>Header Files\common\lua</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\include\lua\lauxlib.h">
-      <Filter>Header Files\common\lua</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\include\lua\lua.h">
-      <Filter>Header Files\common\lua</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\include\lua\lua.hpp">
-      <Filter>Header Files\common\lua</Filter>
-    </ClInclude>
     <ClInclude Include="headers\common\InfinityLoaderCommonTypes.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\shared_memory_dll.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\shared_memory_types.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\lua_provider_api_core.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+      <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="headers\common\lua_provider_api.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\lua_provider_api_core.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\shared_memory.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\shared_memory_dll.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\shared_memory_types.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\bounds_exceeded.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="headers\common\dll_api.h">
-      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\dummy_lua_generated.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\InfinityLoaderCommon.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

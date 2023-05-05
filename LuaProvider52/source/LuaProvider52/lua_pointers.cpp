@@ -1,0 +1,77 @@
+
+#include "dll_api.h"
+#include "lua_pointers.h"
+#include "lua_implementation.h"
+
+/////////////
+// Defines //
+/////////////
+
+////////////////////
+// Config Globals //
+////////////////////
+
+EXPORT int LUA_VERSION_NUM = 502;
+EXPORT int LUA_REGISTRYINDEX = LUAI_FIRSTPSEUDOIDX;
+EXPORT int LUA_RIDX_GLOBALS = 2;
+// Invalid dummy value for code that supports both Lua 5.1 and Lua 5.2.
+// A Lua 5.1 LuaProvider should properly define this.
+EXPORT int LUA_GLOBALSINDEX;
+
+//////////////
+// Pointers //
+//////////////
+
+EXPORT type_lua_callk lua_callk;
+EXPORT type_lua_createtable lua_createtable;
+EXPORT type_lua_getfield lua_getfield;
+EXPORT type_lua_getglobal lua_getglobal;
+EXPORT type_lua_getmetatable lua_getmetatable;
+EXPORT type_lua_gettable lua_gettable;
+EXPORT type_lua_gettop lua_gettop;
+EXPORT type_lua_insert lua_insert;
+EXPORT type_lua_iscfunction lua_iscfunction;
+EXPORT type_lua_isnumber lua_isnumber;
+EXPORT type_lua_isuserdata lua_isuserdata;
+EXPORT type_lua_newuserdata lua_newuserdata;
+EXPORT type_lua_next lua_next;
+EXPORT type_lua_pcallk lua_pcallk;
+EXPORT type_lua_pushboolean lua_pushboolean;
+EXPORT type_lua_pushcclosure lua_pushcclosure;
+EXPORT type_lua_pushinteger lua_pushinteger;
+EXPORT type_lua_pushlightuserdata lua_pushlightuserdata;
+EXPORT type_lua_pushlstring lua_pushlstring;
+EXPORT type_lua_pushnil lua_pushnil;
+EXPORT type_lua_pushstring lua_pushstring;
+EXPORT type_lua_pushvalue lua_pushvalue;
+EXPORT type_lua_rawget lua_rawget;
+EXPORT type_lua_rawgeti lua_rawgeti;
+EXPORT type_lua_rawset lua_rawset;
+EXPORT type_lua_rawseti lua_rawseti;
+EXPORT type_lua_remove lua_remove;
+EXPORT type_lua_setglobal lua_setglobal;
+EXPORT type_lua_setmetatable lua_setmetatable;
+EXPORT type_lua_settable lua_settable;
+EXPORT type_lua_settop lua_settop;
+EXPORT type_lua_toboolean lua_toboolean;
+EXPORT type_lua_tocfunction lua_tocfunction;
+EXPORT type_lua_tointegerx lua_tointegerx;
+EXPORT type_lua_tolstring lua_tolstring;
+EXPORT type_lua_tonumberx lua_tonumberx;
+EXPORT type_lua_touserdata lua_touserdata;
+EXPORT type_lua_type lua_type;
+EXPORT type_luaL_error luaL_error;
+EXPORT type_luaL_loadfilex luaL_loadfilex;
+EXPORT type_luaL_loadstring luaL_loadstring;
+EXPORT type_luaL_ref luaL_ref;
+EXPORT type_lua_pushnumber lua_pushnumber;
+
+///////////////////////
+// Reimplementations //
+///////////////////////
+
+EXPORT int lua_absindex(lua_State* L, int idx) {
+	return (idx > 0 || lua_ispseudo(idx))
+		? idx
+		: lua_cast_int(L->top - L->ci->func + idx);
+}

@@ -95,21 +95,16 @@
     <None Include="COPY_TO_COMMON.ps1" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\common\bounds_exceeded.h" />
     <ClInclude Include="headers\common\dll_api.h" />
+    <ClInclude Include="headers\common\dummy_lua_generated.h" />
+    <ClInclude Include="headers\common\InfinityLoaderCommon.h" />
     <ClInclude Include="headers\common\InfinityLoaderCommonTypes.h" />
     <ClInclude Include="headers\common\lua_provider_api.h" />
     <ClInclude Include="headers\common\lua_provider_api_core.h" />
     <ClInclude Include="headers\common\shared_memory.h" />
-    <ClInclude Include="headers\common\bounds_exceeded.h" />
-    <ClInclude Include="headers\common\dummy_lua_generated.h" />
-    <ClInclude Include="headers\common\InfinityLoaderCommon.h" />
     <ClInclude Include="headers\common\shared_memory_dll.h" />
     <ClInclude Include="headers\common\shared_memory_types.h" />
-    <ClInclude Include="headers\include\lua\lauxlib.h" />
-    <ClInclude Include="headers\include\lua\lua.h" />
-    <ClInclude Include="headers\include\lua\lua.hpp" />
-    <ClInclude Include="headers\include\lua\luaconf.h" />
-    <ClInclude Include="headers\include\lua\lualib.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\common\bounds_exceeded.cpp" />

@@ -78,7 +78,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;$(ProjectDir)headers/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindings-v2.6.6.0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;$(ProjectDir)headers/LuaBindings-v2.6.6.0;$(ProjectDir)headers/LuaBindings-v2.6.6.0_generated;$(ProjectDir)references/header/include</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -102,25 +102,20 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="References\engine_reimplementations.cpp" />
-    <ClCompile Include="References\tolua_reference\tolua_event.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    <ClCompile Include="references\source\engine_reimplementations.cpp" />
+    <ClCompile Include="references\source\tolua_reference\tolua_event.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="References\tolua_reference\tolua_is.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    <ClCompile Include="references\source\tolua_reference\tolua_is.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="References\tolua_reference\tolua_map.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    <ClCompile Include="references\source\tolua_reference\tolua_map.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="References\tolua_reference\tolua_push.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    <ClCompile Include="references\source\tolua_reference\tolua_push.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="References\tolua_reference\tolua_to.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    <ClCompile Include="references\source\tolua_reference\tolua_to.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="source\LuaBindings-v2.6.6.0\common.cpp" />
@@ -132,42 +127,17 @@
     <ClCompile Include="source\LuaBindings-v2.6.6.0\util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\common\Baldur-v2.6.6.0_generated.h" />
-    <ClInclude Include="headers\common\Baldur-v2.6.6.0_lua_generated.h" />
-    <ClInclude Include="headers\common\EEexLua_generated_baseclass_offsets.h" />
-    <ClInclude Include="headers\common\util.hpp" />
-    <ClInclude Include="headers\include\lua\lauxlib.h" />
-    <ClInclude Include="headers\include\lua\lua.h" />
-    <ClInclude Include="headers\include\lua\luaconf.h" />
-    <ClInclude Include="headers\include\tolua_reference\lauxlib.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\lua.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\lua.hpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\luaconf.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\lualib.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\tolua.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="headers\include\tolua_reference\tolua_event.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="headers\LuaBindings-v2.6.6.0\EEexLua_generated.h" />
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0\util.hpp" />
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0_generated\Baldur-v2.6.6.0_generated.h" />
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0_generated\Baldur-v2.6.6.0_lua_generated.h" />
+    <ClInclude Include="references\header\include\tolua_reference\lauxlib.h" />
+    <ClInclude Include="references\header\include\tolua_reference\lua.h" />
+    <ClInclude Include="references\header\include\tolua_reference\lua.hpp" />
+    <ClInclude Include="references\header\include\tolua_reference\luaconf.h" />
+    <ClInclude Include="references\header\include\tolua_reference\lualib.h" />
+    <ClInclude Include="references\header\include\tolua_reference\tolua.h" />
+    <ClInclude Include="references\header\include\tolua_reference\tolua_event.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />

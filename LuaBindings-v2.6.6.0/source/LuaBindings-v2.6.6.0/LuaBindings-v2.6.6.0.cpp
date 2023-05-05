@@ -24,7 +24,7 @@ void __stdcall Init(SharedDLLMemory *const argSharedDLL) {
             *pair.second = reinterpret_cast<void*>(pattern.value);
         }
         else {
-            PrintT(TEXT("[!] Function pattern [%s] not present for bindings; calling this function will crash the game!\n"), pair.first);
+            PrintT(TEXT("[!][LuaBindings-v2.6.6.0] Function pattern [%s] not present for bindings; calling this function will crash the game!\n"), pair.first);
         }
     }
 
@@ -33,5 +33,5 @@ void __stdcall Init(SharedDLLMemory *const argSharedDLL) {
     EEex::InitPatterns(patterns());
 
     // Export lua bindings
-    tolua_EEexLua_open(L());
+    OpenBindings(L());
 }

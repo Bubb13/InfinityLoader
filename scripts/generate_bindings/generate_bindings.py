@@ -2768,7 +2768,7 @@ def tryResolveDependencyOrder(groups: UniqueList[Group]):
 
 
 
-def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[Group], out: TextIOWrapper, baseclassHeaderOut: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
+def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[Group], out: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
 
 	baseclassOut.write("\n#include \"lua_bindings_core_api.h\"\n")
 	baseclassOut.write(f"#include \"{pathToFileNameNoExt(outputFileName)}.h\"\n\n")
@@ -3415,7 +3415,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 	out.write("}\n\n")
 
-	out.write("int tolua_EEexLua_open(lua_State* L)\n")
+	out.write("int OpenBindings(lua_State* L)\n")
 	out.write("{\n")
 	out.write("\ttolua_open(L);\n")
 	out.write("\ttolua_reg_types(L);\n")
@@ -4057,10 +4057,9 @@ struct ConstCharString
 			outBindingsPath, outBindingsBase = separatePathNoExt(bindingsFileName)
 			with \
 			open(bindingsFileName, "w") as bindingsOut, \
-			open(f"{outBindingsPath}{outBindingsBase}_generated.h", "w") as baseclassHeaderOut, \
 			open(f"{outBindingsPath}{outBindingsBase}_baseclass_offsets.cpp", "w") as baseclassOut:
 				outputFile(bindingsPreludeFile, bindingsOut)
-				writeBindings(mainState, outputFileName, mainState.filteredGroups, bindingsOut, baseclassHeaderOut, baseclassOut)
+				writeBindings(mainState, outputFileName, mainState.filteredGroups, bindingsOut, baseclassOut)
 
 		# Write header prelude
 		outputFile(preludeFile, out)

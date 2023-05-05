@@ -130,16 +130,16 @@ bool EEex_RunMatchFunction(lua_State *const L, CGameObject *const pObject)
 	EEex_PushGameObjectUserData(L, pObject);                                       // 5 [ ..., matchFunc, debug, traceback, matchFunc, pObject ]
 	lua_setglobal(L, "EEex_MatchObject");                                          // 4 [ ..., matchFunc, debug, traceback, matchFunc ]
 
-    if (lua_pcallk(L, 0, 1, -2, 0, nullptr) != LUA_OK)
+	if (lua_pcallk(L, 0, 1, -2, 0, nullptr) != LUA_OK)
 	{
-                                                                                   // 4 [ ..., matchFunc, debug, traceback, error ]
-        Print("[!] [EEex_MatchObject] Runtime error: %s\n", lua_tostring(L, -1));
-        lua_pop(L, 1);                                                             // 3 [ ..., matchFunc, debug, traceback ]
+																				   // 4 [ ..., matchFunc, debug, traceback, error ]
+		Print("[!] [EEex_MatchObject] Runtime error: %s\n", lua_tostring(L, -1));
+		lua_pop(L, 1);                                                             // 3 [ ..., matchFunc, debug, traceback ]
 		return false;
-    }
-	                                                                               // 4 [ ..., matchFunc, debug, traceback, result ]
+	}
+																				   // 4 [ ..., matchFunc, debug, traceback, result ]
 	const bool toReturn { static_cast<bool>(lua_toboolean(L, -1)) };
-    lua_pop(L, 1);                                                                 // 3 [ ..., matchFunc, debug, traceback ]
+	lua_pop(L, 1);                                                                 // 3 [ ..., matchFunc, debug, traceback ]
 	return toReturn;
 }
 
@@ -324,7 +324,7 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 			lua_pop(L, 1);                                                             // 0 [ ... ]
 			return -1;
 		}
-		                                                                               // 1 [ ..., matchFunc ]
+																					   // 1 [ ..., matchFunc ]
 		lua_getglobal(L, "debug");                                                     // 2 [ ..., matchFunc, debug ]
 		lua_getfield(L, -1, "traceback");                                              // 3 [ ..., matchFunc, debug, traceback ]
 
@@ -990,7 +990,7 @@ void EEex::Stats_Hook_OnEqu(lua_State* L, CDerivedStats* stats, CDerivedStats* o
 		lua_getglobal(L, "EEex_Stats_Registered");                 //  5 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered" ]
 		lua_pushnil(L);                                            //  6 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", nil ]
 		while (lua_next(L, -2)) {
-			                                                       //  7 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v ]
+																   //  7 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v ]
 			lua_getfield(L, -1, "onEqu");                          //  8 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu ]
 			if (!lua_isnil(L, -1)) {
 				lua_pushvalue(L, -2);                              //  9 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v ]
@@ -1005,7 +1005,7 @@ void EEex::Stats_Hook_OnEqu(lua_State* L, CDerivedStats* stats, CDerivedStats* o
 				lua_pop(L, 2);                                     //  6 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k ]
 			}
 		}
-		                                                           //  5 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered" ]
+																   //  5 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered" ]
 		lua_pop(L, 5);                                             //  0 [ ]
 	});
 }
@@ -1043,7 +1043,7 @@ int EEex::Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite*
 
 		lua_pushnil(L);                                                    //  5 [ effectUD, spriteUD, statsAux, screenT, nil ]
 		while (lua_next(L, -2)) {
-			                                                               //  6 [ effectUD, spriteUD, statsAux, screenT, k, v -> screenEffectUD ]
+																		   //  6 [ effectUD, spriteUD, statsAux, screenT, k, v -> screenEffectUD ]
 			CGameEffect *const pEffect = *reinterpret_cast<CGameEffect**>(
 				lua_touserdata(L, -1));
 
@@ -1070,7 +1070,7 @@ int EEex::Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite*
 				lua_pop(L, 2);                                             //  5 [ effectUD, spriteUD, statsAux, screenT, k ]
 			}
 		}
-		                                                                   //  4 [ effectUD, spriteUD, statsAux, screenT ]
+																		   //  4 [ effectUD, spriteUD, statsAux, screenT ]
 		lua_pop(L, 4);                                                     //  0 [ ]
 		return 0;
 	});
@@ -1226,7 +1226,7 @@ LuaTypeContainer processMutatorFunctions(
 	lua_getglobal(L, "EEex_Projectile_Private_GlobalMutators");   // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
 	lua_pushnil(L);                                               // 2 [ ..., EEex_Projectile_Private_GlobalMutators, nil ]
 	while (lua_next(L, -2)) {
-		                                                          // 3 [ ..., EEex_Projectile_Private_GlobalMutators, k, v -> mutatorTableName ]
+																  // 3 [ ..., EEex_Projectile_Private_GlobalMutators, k, v -> mutatorTableName ]
 		LuaTypeContainer retType = func(lua_tostring(L, -1), {});
 		if (retType.valid && retType.type != LUA_TNIL) {
 			lua_pop(L, 3);                                        // 0 [ ... ]
@@ -1235,13 +1235,13 @@ LuaTypeContainer processMutatorFunctions(
 
 		lua_pop(L, 1);                                            // 2 [ ..., EEex_Projectile_Private_GlobalMutators, k ]
 	}
-	                                                              // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
+																  // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
 	lua_pop(L, 1);                                                // 0 [ ... ]
 
 	if (!lua_isnil(L, projectileMutatorEffectsIndex)) {
 		lua_pushnil(L);                                           // 1 [ ..., nil ]
 		while (lua_next(L, projectileMutatorEffectsIndex)) {
-			                                                      // 2 [ ..., k, v -> originatingEffect ]
+																  // 2 [ ..., k, v -> originatingEffect ]
 			CGameEffect *const pEffect = *reinterpret_cast<CGameEffect**>(lua_touserdata(L, -1));
 			char mutatorTableName[9];
 			pEffect->m_res.toNullTerminatedStr(mutatorTableName);
@@ -1291,7 +1291,7 @@ void EEex::Projectile_Hook_BeforeAddEffect(
 		tolua_pushusertype_nocast(L, effect, "CGameEffect");                                                        // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD ]
 
 		processMutatorFunctions(L, -2, [&](const char* mutatorTableName, std::optional<int> originatingEffectIndex) -> LuaTypeContainer {
-			                                                                                                        // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ... ]
+																													// 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ... ]
 			if (originatingEffectIndex.has_value()) {
 				originatingEffectIndex = lua_absindex(L, *originatingEffectIndex);
 			}
@@ -1336,7 +1336,7 @@ void EEex::Projectile_Hook_BeforeAddEffect(
 
 			return LuaTypeContainer{};
 		});
-		                                                                                                            // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD ]
+																													// 5 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD ]
 		lua_pop(L, 5);                                                                                              // 0 [ ... ]
 	});
 }
@@ -1383,7 +1383,7 @@ void EEex::DeepCopyIndex(lua_State* L, int tIndex) {
 			lua_rawgeti(L, -3, stackTop - 1);         // 5 [ ..., tCopy, processStack, toFillT, toProcessT, iterK ]
 
 			while (lua_next(L, -2)) {
-				                                      // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
+													  // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
 				if (lua_type(L, -1) == LUA_TTABLE) {
 
 					// Save iterK to resume later
@@ -1413,7 +1413,7 @@ void EEex::DeepCopyIndex(lua_State* L, int tIndex) {
 					lua_rawset(L, -5);                // 5 [ ..., tCopy, processStack, toFillT, toProcessT, k ]
 				}
 			}
-			                                          // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
+													  // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
 			if (stackTop == 4) {
 				// The top-level table doesn't have
 				// a parent to store its value on,

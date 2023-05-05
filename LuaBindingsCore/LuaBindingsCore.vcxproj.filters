@@ -19,26 +19,12 @@
     <Filter Include="Header Files\LuaBindingsCore">
       <UniqueIdentifier>{ad8fb75d-2a77-4696-8bf5-b01ac955d1b3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\includes">
-      <UniqueIdentifier>{6c877e59-d1cd-40e7-9fdc-dca723063b1c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\includes\tolua">
-      <UniqueIdentifier>{e61db606-6709-4994-a1d6-305362726e8a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\LuaBindingsCore">
       <UniqueIdentifier>{e3b2915c-2e79-4a0d-953a-199b3286a43c}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="source\LuaBindingsCore.cpp">
-      <Filter>Source Files\LuaBindingsCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\LuaBindingsCore_common.cpp">
-      <Filter>Source Files\LuaBindingsCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\to_lua_pointers.cpp">
-      <Filter>Source Files\LuaBindingsCore</Filter>
-    </ClCompile>
+    <Filter Include="Header Files\common\tolua">
+      <UniqueIdentifier>{d544ffd2-476d-40dc-bc0f-59d454077f65}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\LuaBindingsCore\LuaBindingsCommon.h">
@@ -50,8 +36,19 @@
     <ClInclude Include="headers\common\lua_bindings_core_api.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="headers\includes\tolua\tolua.h">
-      <Filter>Header Files\includes\tolua</Filter>
+    <ClInclude Include="headers\common\tolua\tolua.h">
+      <Filter>Header Files\common\tolua</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\LuaBindingsCore\to_lua_pointers.cpp">
+      <Filter>Source Files\LuaBindingsCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaBindingsCore\LuaBindingsCore.cpp">
+      <Filter>Source Files\LuaBindingsCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaBindingsCore\LuaBindingsCore_common.cpp">
+      <Filter>Source Files\LuaBindingsCore</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

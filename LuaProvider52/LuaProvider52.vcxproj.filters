@@ -22,14 +22,9 @@
     <Filter Include="Header Files\include\lua">
       <UniqueIdentifier>{85793b7a-967e-455d-92cd-4942db5fad5f}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="source\lua_pointers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <Filter Include="Source Files\LuaProvider52">
+      <UniqueIdentifier>{e785fadd-c5b6-42cc-9d82-f372b53dcbf9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="header\LuaProvider52\lua_pointers.h">
@@ -53,5 +48,13 @@
     <ClInclude Include="header\LuaProvider52\lua_implementation.h">
       <Filter>Header Files\LuaProvider52</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\LuaProvider52\main.cpp">
+      <Filter>Source Files\LuaProvider52</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaProvider52\lua_pointers.cpp">
+      <Filter>Source Files\LuaProvider52</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

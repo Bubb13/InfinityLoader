@@ -233,9 +233,9 @@
     <ClCompile Include="asmjit\x86\x86rapass.cpp" />
     <ClCompile Include="asmtk\asmparser.cpp" />
     <ClCompile Include="asmtk\asmtokenizer.cpp" />
-    <ClCompile Include="source\common.cpp" />
-    <ClCompile Include="source\InfinityLoaderDLL.cpp" />
-    <ClCompile Include="source\pointers.cpp" />
+    <ClCompile Include="source\InfinityLoaderDLL\common.cpp" />
+    <ClCompile Include="source\InfinityLoaderDLL\InfinityLoaderDLL.cpp" />
+    <ClCompile Include="source\InfinityLoaderDLL\pointers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />
