@@ -3441,7 +3441,7 @@ struct CharString
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
+		lua_pushstring(L, localCopy);
 	}
 
 	void free()
@@ -6978,7 +6978,7 @@ struct LCharString
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
+		lua_pushstring(L, localCopy);
 	}
 };
 
@@ -7701,7 +7701,7 @@ struct CResRef
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
+		lua_pushstring(L, localCopy);
 	}
 
 	void set(const char* newVal)

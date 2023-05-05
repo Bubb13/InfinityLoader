@@ -23,3 +23,5 @@ template DWORD SetINIInteger<intptr_t>(const String&, const TCHAR*, const TCHAR*
 
 template DWORD GetINIInteger<long long>(String, const TCHAR*, const TCHAR*, long long&, bool& filled);
 template DWORD SetINIInteger<long long>(const String&, const TCHAR*, const TCHAR*, long long);
+
+template StringA integerToDecimalStr(lua_Integer);

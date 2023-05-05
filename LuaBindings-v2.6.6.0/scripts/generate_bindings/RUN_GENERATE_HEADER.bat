@@ -22,7 +22,7 @@ copy /Y .\out\Baldur-v2.6.6.0_generated.h ..\..\headers\LuaBindings-v2.6.6.0\
 copy /Y .\out\Baldur-v2.6.6.0_generated_internal_pointers.cpp ..\..\source\LuaBindings-v2.6.6.0\Generated
 copy /Y .\out\EEexLua_generated.cpp ..\..\source\LuaBindings-v2.6.6.0\Generated
 copy /Y .\out\EEexLua_generated_baseclass_offsets.cpp ..\..\source\LuaBindings-v2.6.6.0\Generated
-copy /Y .\out\EEexLua_generated_baseclass_offsets.h ..\..\headers\LuaBindings-v2.6.6.0\
+REM copy /Y .\out\EEexLua_generated_baseclass_offsets.h ..\..\headers\LuaBindings-v2.6.6.0\
 
 python %script_path%^
  -ignoreHeaderFile=./in_lua/ignore_header_types.txt^

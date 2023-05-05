@@ -45,17 +45,11 @@
     <Filter Include="Header Files\LuaBindings-v2.6.6.0\Generated">
       <UniqueIdentifier>{ba3b8235-31fd-49ca-86d1-19c30ceedff0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{bcf768bf-5f55-4cf8-bc87-13b297a5d5b4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp">
-      <Filter>Source Files\LuaBindings-v2.6.6.0\Generated</Filter>
-    </ClCompile>
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp">
-      <Filter>Source Files\LuaBindings-v2.6.6.0\Generated</Filter>
-    </ClCompile>
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated.cpp">
-      <Filter>Source Files\LuaBindings-v2.6.6.0\Generated</Filter>
-    </ClCompile>
     <ClCompile Include="source\LuaBindings-v2.6.6.0\EEex\EEex.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0\EEex</Filter>
     </ClCompile>
@@ -85,6 +79,15 @@
     </ClCompile>
     <ClCompile Include="References\tolua_reference\tolua_to.c">
       <Filter>References\tolua_reference\source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp">
+      <Filter>Source Files\LuaBindings-v2.6.6.0\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp">
+      <Filter>Source Files\LuaBindings-v2.6.6.0\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated.cpp">
+      <Filter>Source Files\LuaBindings-v2.6.6.0\Generated</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -118,20 +121,20 @@
     <ClInclude Include="headers\include\tolua_reference\lua.hpp">
       <Filter>References\tolua_reference\header</Filter>
     </ClInclude>
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\util.hpp">
-      <Filter>Header Files\LuaBindings-v2.6.6.0</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\EEexLua_generated_baseclass_offsets.h">
-      <Filter>Header Files\LuaBindings-v2.6.6.0\Generated</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\Baldur-v2.6.6.0_generated.h">
-      <Filter>Header Files\LuaBindings-v2.6.6.0\Generated</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\Baldur-v2.6.6.0_lua_generated.h">
-      <Filter>Header Files\LuaBindings-v2.6.6.0\Generated</Filter>
-    </ClInclude>
     <ClInclude Include="headers\LuaBindings-v2.6.6.0\EEexLua_generated.h">
       <Filter>Header Files\LuaBindings-v2.6.6.0\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\EEexLua_generated_baseclass_offsets.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\util.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\Baldur-v2.6.6.0_generated.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\Baldur-v2.6.6.0_lua_generated.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

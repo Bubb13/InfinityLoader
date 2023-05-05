@@ -3,7 +3,7 @@
 
 #include "InfinityLoaderCommonTypes.h"
 #include "shared_memory_types.h"
-#include "lua/lua.h"
+#include "lua_provider_api_core.h"
 
 struct SharedDLLPaths {
 	String dbPath;

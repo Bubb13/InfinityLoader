@@ -12,6 +12,7 @@
 #include <filesystem>
 
 #include "pointers.h"
+#include "lua_provider_api.h"
 #include "InfinityLoaderCommon.h"
 #include "asmjit/asmjit.h"
 #include "asmtk/asmtk.h"
@@ -170,40 +171,40 @@ void enableCodeProtection() {
 }
 
 void exposeToLua(lua_State* L, const char* exposedName, lua_CFunction func) {
-	p_lua_pushcclosure(L, func, 0);
-	p_lua_setglobal(L, exposedName);
+	lua_pushcclosure(L, func, 0);
+	lua_setglobal(L, exposedName);
 }
 
 void callOverrideFile(lua_State* L, const char* name) {
 
-	p_lua_getglobal(L, "debug");        // [ debug ]
-	p_lua_getfield(L, -1, "traceback"); // [ debug, traceback ]
+	lua_getglobal(L, "debug");                                                              // [ debug ]
+	lua_getfield(L, -1, "traceback");                                                       // [ debug, traceback ]
 
 	StringA luaFile = getWorkingFolderA().append("override\\").append(name).append(".lua");
-	if (p_luaL_loadfilex(L, luaFile.c_str(), nullptr) != LUA_OK) {
-		                                // [ debug, traceback, errorMessage ]
-		p_lua_pushvalue(L, -2);         // [ debug, traceback, errorMessage, traceback ]
-		p_lua_pushvalue(L, -2);         // [ debug, traceback, errorMessage, traceback, errorMessage ]
-		if (p_lua_pcallk(L, 1, 1, 0, 0, nullptr) != LUA_OK) {
-			                            // [ debug, traceback, errorMessage, errorErrorMessage  ]
+	if (luaL_loadfilex(L, luaFile.c_str(), nullptr) != LUA_OK) {
+		                                                                                    // [ debug, traceback, errorMessage ]
+		lua_pushvalue(L, -2);                                                               // [ debug, traceback, errorMessage, traceback ]
+		lua_pushvalue(L, -2);                                                               // [ debug, traceback, errorMessage, traceback, errorMessage ]
+		if (lua_pcallk(L, 1, 1, 0, 0, nullptr) != LUA_OK) {
+			                                                                                // [ debug, traceback, errorMessage, errorErrorMessage  ]
 			Print("[!] Error in error handling calling debug.traceback()\n");
-			p_lua_pop(L, 4);            // [ ]
+			lua_pop(L, 4);                                                                  // [ ]
 			return;
 		}
-		                                // [ debug, traceback, errorMessage, errorMessageTraceback ]
-		Print("[!] %s\n", p_lua_tostring(L, -1));
-		p_lua_pop(L, 4);                // [ ]
+		                                                                                    // [ debug, traceback, errorMessage, errorMessageTraceback ]
+		Print("[!] %s\n", lua_tostring(L, -1));
+		lua_pop(L, 4);                                                                      // [ ]
 		return;
 	}
-	                                    // [ debug, traceback, chunk ]
-	if (p_lua_pcallk(L, 0, 0, -2, 0, nullptr) != LUA_OK) {
-		                                // [ debug, traceback, errorMessage ]
-		Print("[!] %s\n", p_lua_tostring(L, -1));
-		p_lua_pop(L, 3);                // [ ]
+	                                                                                        // [ debug, traceback, chunk ]
+	if (lua_pcallk(L, 0, 0, -2, 0, nullptr) != LUA_OK) {
+		                                                                                    // [ debug, traceback, errorMessage ]
+		Print("[!] %s\n", lua_tostring(L, -1));
+		lua_pop(L, 3);                                                                      // [ ]
 	}
 	else {
-		                                // [ debug, traceback ]
-		p_lua_pop(L, 2);                // [ ]
+		                                                                                    // [ debug, traceback ]
+		lua_pop(L, 2);                                                                      // [ ]
 	}
 }
 
@@ -757,8 +758,8 @@ DWORD findPatterns(ImageSectionInfo& sectionInfo) {
 ///////////////////
 
 int addToLuaRegistryLua(lua_State* L) {
-	p_lua_pushvalue(L, 1);
-	p_lua_pushinteger(L, p_luaL_ref(L, LUA_REGISTRYINDEX));
+	lua_pushvalue(L, 1);
+	lua_pushinteger(L, luaL_ref(L, LUA_REGISTRYINDEX));
 	return 1;
 }
 
@@ -774,25 +775,25 @@ int allocCodePageInternalLua(lua_State* L) {
 		return 0;
 	}
 
-	p_lua_pushinteger(L, allocated);                    // [ address ]
-	p_lua_pushinteger(L, info.dwAllocationGranularity); // [ address, size ]
+	lua_pushinteger(L, allocated);                    // [ address ]
+	lua_pushinteger(L, info.dwAllocationGranularity); // [ address, size ]
 	return 2;
 }
 
 typedef std::make_unsigned<lua_Integer>::type UnsignedLuaInt;
 
 int bandLua(lua_State* L) {
-	p_lua_pushinteger(L, static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)) & static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 2)));
+	lua_pushinteger(L, static_cast<UnsignedLuaInt>(lua_tointeger(L, 1)) & static_cast<UnsignedLuaInt>(lua_tointeger(L, 2)));
 	return 1;
 }
 
 int bnotLua(lua_State* L) {
-	p_lua_pushinteger(L, ~static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, ~static_cast<UnsignedLuaInt>(lua_tointeger(L, 1)));
 	return 1;
 }
 
 int borLua(lua_State* L) {
-	p_lua_pushinteger(L, static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)) | static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 2)));
+	lua_pushinteger(L, static_cast<UnsignedLuaInt>(lua_tointeger(L, 1)) | static_cast<UnsignedLuaInt>(lua_tointeger(L, 2)));
 	return 1;
 }
 
@@ -802,7 +803,7 @@ int disableCodeProtectionLua(lua_State* L) {
 }
 
 int doFileLua(lua_State* L) {
-	callOverrideFile(L, p_lua_tostring(L, 1));
+	callOverrideFile(L, lua_tostring(L, 1));
 	return 0;
 }
 
@@ -812,103 +813,103 @@ int enableCodeProtectionLua(lua_State* L) {
 }
 
 int extractLua(lua_State* L) {
-	UnsignedLuaInt num = p_lua_tointeger(L, 1);
-	UnsignedLuaInt start = p_lua_tointeger(L, 2);
-	UnsignedLuaInt len = p_lua_tointeger(L, 3);
+	UnsignedLuaInt num = lua_tointeger(L, 1);
+	UnsignedLuaInt start = lua_tointeger(L, 2);
+	UnsignedLuaInt len = lua_tointeger(L, 3);
 	UnsignedLuaInt mask = 0x0;
 	for (UnsignedLuaInt i = 0; i < len; ++i) {
 		mask = (mask << 1) | 1;
 	}
-	p_lua_pushinteger(L, (num >> start) & mask);
+	lua_pushinteger(L, (num >> start) & mask);
 	return 1;
 }
 
 int freeLua(lua_State* L) {
-	void* ptr = reinterpret_cast<void*>(p_lua_tointeger(L, 1));
+	void* ptr = reinterpret_cast<void*>(lua_tointeger(L, 1));
 	p_free(ptr);
 	return 0;
 }
 
 int getLuaRegistryIndexLua(lua_State* L) {
 	castLuaIntArg(1, int, n)
-	p_lua_rawgeti(L, LUA_REGISTRYINDEX, n);
+	lua_rawgeti(L, LUA_REGISTRYINDEX, n);
 	return 1;
 }
 
 int getLuaLibraryProcLua(lua_State* L) {
 	intptr_t address;
-	if (getLuaProc(p_lua_tostring(L, 1), address)) {
+	if (getLuaProc(lua_tostring(L, 1), address)) {
 		return 0;
 	}
-	p_lua_pushinteger(L, address);
+	lua_pushinteger(L, address);
 	return 1;
 }
 
 int getMicrosecondsLua(lua_State* L) {
-	p_lua_pushinteger(L, currentMicroseconds() - initTime());
+	lua_pushinteger(L, currentMicroseconds() - initTime());
 	return 1;
 }
 
 int getPatternMapLua(lua_State* L) {
-	p_lua_newtable(L);                                    // [ table ]
+	lua_newtable(L);                                    // [ table ]
 	for (auto& pattern : patterns()) {
-		p_lua_pushstring(L, ws2s(pattern.first).c_str()); // [ table, k ]
-		p_lua_pushinteger(L, pattern.second.value);       // [ table, k, v ]
-		p_lua_rawset(L, -3);                              // [ table ]
+		lua_pushstring(L, ws2s(pattern.first).c_str()); // [ table, k ]
+		lua_pushinteger(L, pattern.second.value);       // [ table, k, v ]
+		lua_rawset(L, -3);                              // [ table ]
 	}
 	return 1;
 }
 
 int iterateRegexLua(lua_State* L) {
 
-	const char* str = p_lua_tostring(L, 1);
+	const char* str = lua_tostring(L, 1);
 	const char* strEnd = str;
 	while (*strEnd) ++strEnd;
-	std::regex pattern{ p_lua_tostring(L, 2) };
+	std::regex pattern{ lua_tostring(L, 2) };
 	std::cregex_iterator foundBegin{ str, strEnd, pattern };
 	std::cregex_iterator foundEnd;
 
-	p_lua_getglobal(L, "debug");                                 // [ debug ]
-	p_lua_getfield(L, -1, "traceback");                          // [ debug, traceback ]
+	lua_getglobal(L, "debug");                                       // [ debug ]
+	lua_getfield(L, -1, "traceback");                                // [ debug, traceback ]
 
 	for (std::cregex_iterator& i = foundBegin; i != foundEnd; ++i) {
 
 		const std::cmatch& match = *i;
-		p_lua_pushvalue(L, 3);                                   // [ debug, traceback, func ]
-		p_lua_pushinteger(L, match.position() + 1);              // [ debug, traceback, func, pos ]
-		p_lua_pushinteger(L, match.position() + match.length()); // [ debug, traceback, func, pos, endPos ]
-		p_lua_pushstring(L, match.str().c_str());                // [ debug, traceback, func, pos, endPos, str ]
+		lua_pushvalue(L, 3);                                         // [ debug, traceback, func ]
+		lua_pushinteger(L, match.position() + 1);                    // [ debug, traceback, func, pos ]
+		lua_pushinteger(L, match.position() + match.length());       // [ debug, traceback, func, pos, endPos ]
+		lua_pushstring(L, match.str().c_str());                      // [ debug, traceback, func, pos, endPos, str ]
 
-		p_lua_newtable(L);                                       // [ debug, traceback, func, pos, endPos, str, groups ]
+		lua_newtable(L);                                             // [ debug, traceback, func, pos, endPos, str, groups ]
 		for (size_t i = 1; i < match.size(); ++i) {
 			const std::csub_match& subMatch = match[i];
-			p_lua_pushinteger(L, i);                             // [ debug, traceback, func, pos, endPos, str, groups, k ]
+			lua_pushinteger(L, i);                                   // [ debug, traceback, func, pos, endPos, str, groups, k ]
 			if (!subMatch.length()) {
-				p_lua_pushnil(L);                                // [ debug, traceback, func, pos, endPos, str, groups, k, nil ]
+				lua_pushnil(L);                                      // [ debug, traceback, func, pos, endPos, str, groups, k, nil ]
 			}
 			else {
-				p_lua_pushstring(L, subMatch.str().c_str());     // [ debug, traceback, func, pos, endPos, str, groups, k, v ]
+				lua_pushstring(L, subMatch.str().c_str());           // [ debug, traceback, func, pos, endPos, str, groups, k, v ]
 			}
-			p_lua_rawset(L, -3);                                 // [ debug, traceback, func, pos, endPos, str, groups ]
+			lua_rawset(L, -3);                                       // [ debug, traceback, func, pos, endPos, str, groups ]
 		}
 
-		if (p_lua_pcallk(L, 4, 1, -6, 0, nullptr) != LUA_OK) {
-			                                                     // [ debug, traceback, errorMessage ]
-			Print("[!] %s\n", p_lua_tostring(L, -1));
-			p_lua_pop(L, 1);                                     // [ debug, traceback ]
+		if (lua_pcallk(L, 4, 1, -6, 0, nullptr) != LUA_OK) {
+			                                                         // [ debug, traceback, errorMessage ]
+			Print("[!] %s\n", lua_tostring(L, -1));
+			lua_pop(L, 1);                                           // [ debug, traceback ]
 			break;
 		}
 		else {
-			                                                     // [ debug, traceback, ret ]
-			int retVal = p_lua_toboolean(L, -1);
-			p_lua_pop(L, 1);                                     // [ debug, traceback ]
+			                                                         // [ debug, traceback, ret ]
+			int retVal = lua_toboolean(L, -1);
+			lua_pop(L, 1);                                           // [ debug, traceback ]
 			if (retVal) {
 				break;
 			}
 		}
 	}
 
-	p_lua_pop(L, 2);                                             // [ ]
+	lua_pop(L, 2);                                                   // [ ]
 	return 0;
 }
 
@@ -920,7 +921,7 @@ int jitLua(lua_State* L) {
 	asmjit::x86::Assembler a(&code);
 	asmtk::AsmParser p(&a);
 
-	if (asmjit::Error err = p.parse(p_lua_tostring(L, 1))) {
+	if (asmjit::Error err = p.parse(lua_tostring(L, 1))) {
 		Print("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
@@ -931,7 +932,7 @@ int jitLua(lua_State* L) {
 		return 0;
 	}
 
-	p_lua_pushinteger(L, reinterpret_cast<intptr_t>(ptr));
+	lua_pushinteger(L, reinterpret_cast<intptr_t>(ptr));
 	return 1;
 }
 
@@ -943,31 +944,31 @@ int jitAtInternalLua(lua_State* L) {
 	asmjit::x86::Assembler a(&code);
 	asmtk::AsmParser p(&a);
 
-	if (asmjit::Error err = p.parse(p_lua_tostring(L, 3))) {
+	if (asmjit::Error err = p.parse(lua_tostring(L, 3))) {
 		Print("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
 	auto checkFunc = [&](size_t size) {
 
-		p_lua_getglobal(L, "debug");        // [ debug ]
-		p_lua_getfield(L, -1, "traceback"); // [ debug, traceback ]
+		lua_getglobal(L, "debug");                                          // [ debug ]
+		lua_getfield(L, -1, "traceback");                                   // [ debug, traceback ]
 
-		p_lua_pushvalue(L, 2);              // [ debug, traceback, func ]
-		p_lua_pushinteger(L, size);         // [ debug, traceback, func, size ]
-		if (p_lua_pcallk(L, 1, 1, -3, 0, nullptr) != LUA_OK) {
-			                                // [ debug, traceback, errorMessage ]
-			Print("[!] AsmJit failed: %s\n", p_lua_tostring(L, -1));
-			p_lua_pop(L, 3);                // [ ]
+		lua_pushvalue(L, 2);                                                // [ debug, traceback, func ]
+		lua_pushinteger(L, size);                                           // [ debug, traceback, func, size ]
+		if (lua_pcallk(L, 1, 1, -3, 0, nullptr) != LUA_OK) {
+			                                                                // [ debug, traceback, errorMessage ]
+			Print("[!] AsmJit failed: %s\n", lua_tostring(L, -1));
+			lua_pop(L, 3);                                                  // [ ]
 			return reinterpret_cast<uint8_t*>(-1);
 		}
-		                                    // [ debug, traceback, result ]
-		uint8_t* newDst = reinterpret_cast<uint8_t*>(p_lua_tointeger(L, -1));
-		p_lua_pop(L, 3);                    // [ ]
+		                                                                    // [ debug, traceback, result ]
+		uint8_t* newDst = reinterpret_cast<uint8_t*>(lua_tointeger(L, -1));
+		lua_pop(L, 3);                                                      // [ ]
 		return newDst;
 	};
 
-	if (asmjit::Error err = jitAt(reinterpret_cast<uint8_t*>(p_lua_tointeger(L, 1)), &code, checkFunc)) {
+	if (asmjit::Error err = jitAt(reinterpret_cast<uint8_t*>(lua_tointeger(L, 1)), &code, checkFunc)) {
 		Print("[!] AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
@@ -977,7 +978,7 @@ int jitAtInternalLua(lua_State* L) {
 
 int loadLuaBindingsLua(lua_State* L) {
 
-	const char* bindingsFileName = p_lua_tolstring(L, 1, nullptr);
+	const char* bindingsFileName = lua_tolstring(L, 1, nullptr);
 	StringA bindingsPath = getWorkingFolderA().append(bindingsFileName).append(".dll");
 
 	HMODULE bindingsHandle;
@@ -1000,96 +1001,96 @@ int loadLuaBindingsLua(lua_State* L) {
 }
 
 int lshiftLua(lua_State* L) {
-	p_lua_pushinteger(L, static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)) << static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 2)));
+	lua_pushinteger(L, static_cast<UnsignedLuaInt>(lua_tointeger(L, 1)) << static_cast<UnsignedLuaInt>(lua_tointeger(L, 2)));
 	return 1;
 }
 
 int mallocLua(lua_State* L) {
 	castLuaIntArg(1, size_t, size)
-	p_lua_pushinteger(L, reinterpret_cast<lua_Integer>(p_malloc(size)));
+	lua_pushinteger(L, reinterpret_cast<lua_Integer>(malloc(size)));
 	return 1;
 }
 
 int memcpyLua(lua_State* L) {
 	castLuaIntArg(3, size_t, size)
-	memcpy(reinterpret_cast<void*>(p_lua_tointeger(L, 1)), reinterpret_cast<void*>(p_lua_tointeger(L, 2)), size);
+	memcpy(reinterpret_cast<void*>(lua_tointeger(L, 1)), reinterpret_cast<void*>(lua_tointeger(L, 2)), size);
 	return 0;
 }
 
 int memsetLua(lua_State* L) {
 	castLuaIntArg(2, int, val)
 	castLuaIntArg(3, size_t, size)
-	memset(reinterpret_cast<void*>(p_lua_tointeger(L, 1)), val, size);
+	memset(reinterpret_cast<void*>(lua_tointeger(L, 1)), val, size);
 	return 0;
 }
 
 int messageBoxInternalLua(lua_State* L) {
 	castLuaIntArg(2, UINT, uType)
-	MessageBoxA(NULL, p_lua_tostring(L, 1), "EEex", uType);
+	MessageBoxA(NULL, lua_tostring(L, 1), "EEex", uType);
 	return 0;
 }
 
 int printLua(lua_State* L) {
-	Print("%s\n", p_lua_tostring(L, 1));
+	Print("%s\n", lua_tostring(L, 1));
 	return 0;
 }
 
 int printErrLua(lua_State* L) {
-	PrintErr("%s\n", p_lua_tostring(L, 1));
+	PrintErr("%s\n", lua_tostring(L, 1));
 	return 0;
 }
 
 int read16Lua(lua_State* L) {
-	p_lua_pushinteger(L, *reinterpret_cast<__int16*>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, *reinterpret_cast<__int16*>(lua_tointeger(L, 1)));
 	return 1;
 }
 
 int read32Lua(lua_State* L) {
-	p_lua_pushinteger(L, *reinterpret_cast<__int32*>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, *reinterpret_cast<__int32*>(lua_tointeger(L, 1)));
 	return 1;
 }
 
 #if defined(_WIN64)
 int read64Lua(lua_State* L) {
-	p_lua_pushinteger(L, *reinterpret_cast<__int64*>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, *reinterpret_cast<__int64*>(lua_tointeger(L, 1)));
 	return 1;
 }
 #endif
 
 int read8Lua(lua_State* L) {
-	p_lua_pushinteger(L, *reinterpret_cast<__int8*>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, *reinterpret_cast<__int8*>(lua_tointeger(L, 1)));
 	return 1;
 }
 
 int readPointerLua(lua_State* L) {
-	p_lua_pushinteger(L, *reinterpret_cast<uintptr_t*>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, *reinterpret_cast<uintptr_t*>(lua_tointeger(L, 1)));
 	return 1;
 }
 
 int readU16Lua(lua_State* L) {
-	p_lua_pushinteger(L, *reinterpret_cast<unsigned __int16*>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, *reinterpret_cast<unsigned __int16*>(lua_tointeger(L, 1)));
 	return 1;
 }
 
 int readU32Lua(lua_State* L) {
-	p_lua_pushinteger(L, *reinterpret_cast<unsigned __int32*>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, *reinterpret_cast<unsigned __int32*>(lua_tointeger(L, 1)));
 	return 1;
 }
 
 #if defined(_WIN64)
 int readU64Lua(lua_State* L) {
-	p_lua_pushinteger(L, *reinterpret_cast<unsigned __int64*>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, *reinterpret_cast<unsigned __int64*>(lua_tointeger(L, 1)));
 	return 1;
 }
 #endif
 
 int readU8Lua(lua_State* L) {
-	p_lua_pushinteger(L, *reinterpret_cast<unsigned __int8*>(p_lua_tointeger(L, 1)));
+	lua_pushinteger(L, *reinterpret_cast<unsigned __int8*>(lua_tointeger(L, 1)));
 	return 1;
 }
 
 int readLString(lua_State* L) {
-	const char *const data { reinterpret_cast<char*>(p_lua_tointeger(L, 1)) };
+	const char *const data { reinterpret_cast<char*>(lua_tointeger(L, 1)) };
 	castLuaIntArg(2, size_t, length)
 	char *const localCopy { reinterpret_cast<char*>(alloca(length + 1)) };
 	size_t i { 0 };
@@ -1101,17 +1102,17 @@ int readLString(lua_State* L) {
 		localCopy[i] = readVal;
 	}
 	localCopy[i] = '\0';
-	p_lua_pushstring(L, localCopy);
+	lua_pushstring(L, localCopy);
 	return 1;
 }
 
 int readString(lua_State* L) {
-	p_lua_pushstring(L, reinterpret_cast<const char*>(p_lua_tointeger(L, 1)));
+	lua_pushstring(L, reinterpret_cast<const char*>(lua_tointeger(L, 1)));
 	return 1;
 }
 
 int rshiftLua(lua_State* L) {
-	p_lua_pushinteger(L, static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 1)) >> static_cast<UnsignedLuaInt>(p_lua_tointeger(L, 2)));
+	lua_pushinteger(L, static_cast<UnsignedLuaInt>(lua_tointeger(L, 1)) >> static_cast<UnsignedLuaInt>(lua_tointeger(L, 2)));
 	return 1;
 }
 
@@ -1119,21 +1120,21 @@ int runWithStackLua(lua_State* L) {
 
 	castLuaIntArg(1, size_t, size)
 
-	p_lua_getglobal(L, "debug");                              // [ debug ]
-	p_lua_getfield(L, -1, "traceback");                       // [ debug, traceback ]
-	p_lua_pushvalue(L, 2);                                    // [ debug, traceback, func ]
+	lua_getglobal(L, "debug");                              // [ debug ]
+	lua_getfield(L, -1, "traceback");                       // [ debug, traceback ]
+	lua_pushvalue(L, 2);                                    // [ debug, traceback, func ]
 
 	void* mem = alloca(size);
-	p_lua_pushinteger(L, reinterpret_cast<lua_Integer>(mem)); // [ debug, traceback, func, stackPtr ]
+	lua_pushinteger(L, reinterpret_cast<lua_Integer>(mem)); // [ debug, traceback, func, stackPtr ]
 
-	if (p_lua_pcallk(L, 1, 0, -3, 0, nullptr) != LUA_OK) {
-															  // [ debug, traceback, errorMessage ]
-		Print("[!] %s\n", p_lua_tostring(L, -1));
-		p_lua_pop(L, 3);                                      // [ ]
+	if (lua_pcallk(L, 1, 0, -3, 0, nullptr) != LUA_OK) {
+															// [ debug, traceback, errorMessage ]
+		Print("[!] %s\n", lua_tostring(L, -1));
+		lua_pop(L, 3);                                      // [ ]
 	}
 	else {
-															  // [ debug, traceback ]
-		p_lua_pop(L, 2);                                      // [ ]
+															// [ debug, traceback ]
+		lua_pop(L, 2);                                      // [ ]
 	}
 
 	return 0;
@@ -1141,69 +1142,74 @@ int runWithStackLua(lua_State* L) {
 
 int setLuaRegistryIndexLua(lua_State* L) {
 	castLuaIntArg(1, int, n)
-	p_lua_pushvalue(L, 2);
-	p_lua_rawseti(L, LUA_REGISTRYINDEX, n);
+	lua_pushvalue(L, 2);
+	lua_rawseti(L, LUA_REGISTRYINDEX, n);
 	return 0;
+}
+
+int toDecimalStringLua(lua_State* L) {
+	lua_pushstring(L, integerToDecimalStr<StringA>(lua_tointeger(L, 1)).c_str());
+	return 1;
 }
 
 int write16Lua(lua_State* L) {
 	castLuaIntArg(2, __int16, val)
-	*reinterpret_cast<__int16*>(p_lua_tointeger(L, 1)) = val;
+	*reinterpret_cast<__int16*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int write32Lua(lua_State* L) {
 	castLuaIntArg(2, __int32, val)
-	*reinterpret_cast<__int32*>(p_lua_tointeger(L, 1)) = val;
+	*reinterpret_cast<__int32*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 #if defined(_WIN64)
 int write64Lua(lua_State* L) {
 	castLuaIntArg(2, __int64, val)
-	*reinterpret_cast<__int64*>(p_lua_tointeger(L, 1)) = val;
+	*reinterpret_cast<__int64*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 #endif
 
 int write8Lua(lua_State* L) {
 	castLuaIntArg(2, __int8, val)
-	*reinterpret_cast<__int8*>(p_lua_tointeger(L, 1)) = val;
+	*reinterpret_cast<__int8*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int writePointerLua(lua_State* L) {
-	*reinterpret_cast<uintptr_t*>(p_lua_tointeger(L, 1)) = p_lua_tointeger(L, 2);
+	*reinterpret_cast<uintptr_t*>(lua_tointeger(L, 1)) = lua_tointeger(L, 2);
 	return 0;
 }
 
 int writeU16Lua(lua_State* L) {
 	castLuaIntArg(2, unsigned __int16, val)
-	*reinterpret_cast<unsigned __int16*>(p_lua_tointeger(L, 1)) = val;
+	*reinterpret_cast<unsigned __int16*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int writeU32Lua(lua_State* L) {
 	castLuaIntArg(2, unsigned __int32, val)
-	*reinterpret_cast<unsigned __int32*>(p_lua_tointeger(L, 1)) = val;
+	*reinterpret_cast<unsigned __int32*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int writeU64Lua(lua_State* L) {
 	castLuaIntArg(2, unsigned __int64, val)
-	*reinterpret_cast<unsigned __int64*>(p_lua_tointeger(L, 1)) = val;
+	*reinterpret_cast<unsigned __int64*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int writeU8Lua(lua_State* L) {
 	castLuaIntArg(2, unsigned __int8, val)
-	*reinterpret_cast<unsigned __int8*>(p_lua_tointeger(L, 1)) = val;
+	*reinterpret_cast<unsigned __int8*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int writeLStringLua(lua_State* L) {
-	char* dest = reinterpret_cast<char*>(p_lua_tointeger(L, 1));
-	const char* src = p_lua_tostring(L, 2);
+	char* dest = reinterpret_cast<char*>(lua_tointeger(L, 1));
+	const char* src = lua_tostring(L, 2);
 	castLuaIntArg(3, size_t, limit)
 	size_t i = 0;
 	for (; i < limit; ++i) {
@@ -1216,8 +1222,8 @@ int writeLStringLua(lua_State* L) {
 }
 
 int writeStringLua(lua_State* L) {
-	char* writePtr = reinterpret_cast<char*>(p_lua_tointeger(L, 1));
-	const char* str = p_lua_tostring(L, 2);
+	char* writePtr = reinterpret_cast<char*>(lua_tointeger(L, 1));
+	const char* str = lua_tostring(L, 2);
 	while (true) {
 		const char existingChar = *str++;
 		*writePtr++ = existingChar;
@@ -1229,7 +1235,7 @@ int writeStringLua(lua_State* L) {
 }
 
 int writeStringAutoLua(lua_State* L) {
-	const char* str = p_lua_tostring(L, 1);
+	const char* str = lua_tostring(L, 1);
 	size_t len = strlen(str);
 	char* newStr = reinterpret_cast<char*>(p_malloc(len + 1));
 	char* newStrWPtr = newStr;
@@ -1237,7 +1243,7 @@ int writeStringAutoLua(lua_State* L) {
 		*newStrWPtr++ = *str++;
 	}
 	*newStrWPtr = '\0';
-	p_lua_pushinteger(L, reinterpret_cast<intptr_t>(newStr));
+	lua_pushinteger(L, reinterpret_cast<intptr_t>(newStr));
 	return 1;
 }
 
@@ -1564,39 +1570,9 @@ void initLua() {
 		goto cleanup; \
 	}
 
-#define fillLuaPointerLookup(name, outName) \
-	if (fillLuaPointer(TEXT(name), p_##outName)) { \
-		goto cleanup; \
-	}
-
 	/////////////////////////////
 	// Find Hardcoded Patterns //
 	/////////////////////////////
-
-	fillLuaPointerLookup("lua_createtable", lua_createtable);
-	fillLuaPointerLookup("lua_getfield", lua_getfield);
-	fillLuaPointerLookup("lua_getglobal", lua_getglobal);
-	fillLuaPointerLookup("lua_gettop", lua_gettop);
-	fillLuaPointerLookup("lua_pcall", lua_pcall);
-	fillLuaPointerLookup("lua_pcallk", lua_pcallk);
-	fillLuaPointerLookup("lua_pushcclosure", lua_pushcclosure);
-	fillLuaPointerLookup("lua_pushinteger", lua_pushinteger);
-	fillLuaPointerLookup("lua_pushnil", lua_pushnil);
-	fillLuaPointerLookup("lua_pushstring", lua_pushstring);
-	fillLuaPointerLookup("lua_pushvalue", lua_pushvalue);
-	fillLuaPointerLookup("lua_rawgeti", lua_rawgeti);
-	fillLuaPointerLookup("lua_rawset", lua_rawset);
-	fillLuaPointerLookup("lua_rawseti", lua_rawseti);
-	fillLuaPointerLookup("lua_setfield", lua_setfield);
-	fillLuaPointerLookup("lua_setglobal", lua_setglobal);
-	fillLuaPointerLookup("lua_settop", lua_settop);
-	fillLuaPointerLookup("lua_toboolean", lua_toboolean);
-	fillLuaPointerLookup("lua_tointegerx", lua_tointegerx);
-	fillLuaPointerLookup("lua_tolstring", lua_tolstring);
-	fillLuaPointerLookup("lua_type", lua_type);
-	fillLuaPointerLookup("luaL_error", luaL_error);
-	fillLuaPointerLookup("luaL_loadfilex", luaL_loadfilex);
-	fillLuaPointerLookup("luaL_ref", luaL_ref);
 
 	if (luaMode() == LuaMode::INTERNAL) {
 		if (fillPatternPointer(TEXT("Hardcoded_InternalLuaState"), L(), [](intptr_t& address) {
@@ -1629,11 +1605,11 @@ void initLua() {
 	// Export Lua Globals //
 	////////////////////////
 
-	p_lua_pushinteger(L(), sizeof(void*));
-	p_lua_setglobal(L(), "EEex_PointerSize");
+	lua_pushinteger(L(), sizeof(void*));
+	lua_setglobal(L(), "EEex_PointerSize");
 
-	p_lua_pushinteger(L(), sizeof(void*));
-	p_lua_setglobal(L(), "EEex_PtrSize");
+	lua_pushinteger(L(), sizeof(void*));
+	lua_setglobal(L(), "EEex_PtrSize");
 
 	//////////////////////////
 	// Export Lua Functions //
@@ -1683,6 +1659,8 @@ void initLua() {
 	exposeToLua(L(), "EEex_RShift", rshiftLua);
 	exposeToLua(L(), "EEex_RunWithStack", runWithStackLua);
 	exposeToLua(L(), "EEex_SetLuaRegistryIndex", setLuaRegistryIndexLua);
+	exposeToLua(L(), "EEex_ToDecimalString", toDecimalStringLua);
+	exposeToLua(L(), "EEex_ToDecStr", toDecimalStringLua);
 	exposeToLua(L(), "EEex_Write16", write16Lua);
 	exposeToLua(L(), "EEex_Write32", write32Lua);
 #if defined(_WIN64)
@@ -1819,29 +1797,19 @@ DWORD loadExeNameForPatterns() {
 
 DWORD patchExe() {
 
-	if (DWORD lastError = loadExeNameForPatterns()) {
-		return lastError;
-	}
+	TryRetErr( loadExeNameForPatterns() )
 
 	HMODULE foundModule;
-	if (DWORD lastError = findModuleWithPath(GetCurrentProcess(), exePath(), foundModule)) {
-		return lastError;
-	}
+	TryRetErr( findModuleWithPath(GetCurrentProcess(), exePath(), foundModule) )
 
 	if (!findSectionInfo(foundModule, ".text", textInfo())) {
 		Print("[!] Failed to locate .text segment.\n");
 		return -1;
 	}
 
-	if (DWORD lastError = findPatterns(textInfo())) {
-		return lastError;
-	}
-
-	if (DWORD lastError = setUpLuaInitialization(textInfo())) {
-		return lastError;
-	}
-
-	return 0;
+	TryRetErr( findPatterns(textInfo()) )
+	TryRetErr( InitLuaProvider(sharedDLL) )
+	return setUpLuaInitialization(textInfo());
 }
 
 // Return:
@@ -1898,7 +1866,7 @@ byte init(HANDLE hSharedFile) {
 		return 2;
 	}
 
-	return ERROR_SUCCESS;
+	return 0;
 }
 
 int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {

@@ -1,3 +1,4 @@
 
 #include "Baldur-v2.6.6.0_generated.h"
-#include "to_lua_pointers.h"
+#include "Baldur-v2.6.6.0_lua_generated.h"
+#include "lua_bindings_core_api.h"

@@ -78,7 +78,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(SolutionDir)LuaBindingsCommon/headers/common;$(SolutionDir)LuaBindingsCommon/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindings-v2.6.6.0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;$(ProjectDir)headers/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindings-v2.6.6.0</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -90,7 +90,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>LuaBindings-v2.6.6.0.def</ModuleDefinitionFile>
@@ -132,6 +132,10 @@
     <ClCompile Include="source\LuaBindings-v2.6.6.0\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\common\Baldur-v2.6.6.0_generated.h" />
+    <ClInclude Include="headers\common\Baldur-v2.6.6.0_lua_generated.h" />
+    <ClInclude Include="headers\common\EEexLua_generated_baseclass_offsets.h" />
+    <ClInclude Include="headers\common\util.hpp" />
     <ClInclude Include="headers\include\lua\lauxlib.h" />
     <ClInclude Include="headers\include\lua\lua.h" />
     <ClInclude Include="headers\include\lua\luaconf.h" />
@@ -163,11 +167,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\Baldur-v2.6.6.0_generated.h" />
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\Baldur-v2.6.6.0_lua_generated.h" />
     <ClInclude Include="headers\LuaBindings-v2.6.6.0\EEexLua_generated.h" />
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\EEexLua_generated_baseclass_offsets.h" />
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\util.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />

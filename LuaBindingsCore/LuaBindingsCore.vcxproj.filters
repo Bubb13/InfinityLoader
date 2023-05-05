@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{5d7cd17d-0e8a-4f41-a9c9-92c4de67feb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\LuaBindingsCore">
+      <UniqueIdentifier>{ad8fb75d-2a77-4696-8bf5-b01ac955d1b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\includes">
+      <UniqueIdentifier>{6c877e59-d1cd-40e7-9fdc-dca723063b1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\includes\tolua">
+      <UniqueIdentifier>{e61db606-6709-4994-a1d6-305362726e8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\LuaBindingsCore">
+      <UniqueIdentifier>{e3b2915c-2e79-4a0d-953a-199b3286a43c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\LuaBindingsCore.cpp">
+      <Filter>Source Files\LuaBindingsCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaBindingsCore_common.cpp">
+      <Filter>Source Files\LuaBindingsCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\to_lua_pointers.cpp">
+      <Filter>Source Files\LuaBindingsCore</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\LuaBindingsCore\LuaBindingsCommon.h">
+      <Filter>Header Files\LuaBindingsCore</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\LuaBindingsCore\to_lua_pointers.h">
+      <Filter>Header Files\LuaBindingsCore</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\lua_bindings_core_api.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\includes\tolua\tolua.h">
+      <Filter>Header Files\includes\tolua</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

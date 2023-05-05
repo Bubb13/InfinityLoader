@@ -1,1 +1,3 @@
-#include "LuaBindingsCommon.cpp"
+
+#include "InfinityLoaderCommon.cpp"
+#include "InfinityLoaderCommonSharedDLLMemory.cpp"

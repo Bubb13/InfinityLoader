@@ -1,7 +1,8 @@
 
 #include <stdio.h>
 
-#include "lua_pointers.h"
+#include "lua_bindings_core_api.h"
+#include "InfinityLoaderCommon.h"
 
 ///////////////
 // Debugging //
@@ -9,10 +10,10 @@
 
 void dumpLuaStack(lua_State *const L)
 {
-    const int top { p_lua_gettop(L) };
+    const int top { lua_gettop(L) };
     for (int i { 1 }; i <= top; ++i)
     {
-        const int type { p_lua_type(L, i) };
+        const int type { lua_type(L, i) };
         const char* typeStr { nullptr };
 
         switch (type)
@@ -30,23 +31,23 @@ void dumpLuaStack(lua_State *const L)
             default:                 typeStr = "UNKNOWN";            break;
         }
 
-        printf("%d    %s    ", i, typeStr);
+        Print("%d    %s    ", i, typeStr);
         switch (type)
         {
             case LUA_TNUMBER:
-                printf("%g\n", p_lua_tonumberx(L, i, nullptr));
+                Print("%g\n", lua_tonumberx(L, i, nullptr));
                 break;
             case LUA_TSTRING:
-                printf("%s\n", p_lua_tostring(L, i));
+                Print("%s\n", lua_tostring(L, i));
                 break;
             case LUA_TBOOLEAN:
-                printf("%s\n", p_lua_toboolean(L, i) ? "true" : "false");
+                Print("%s\n", lua_toboolean(L, i) ? "true" : "false");
                 break;
             case LUA_TNIL:
-                printf("%s\n", "nil");
+                Print("%s\n", "nil");
                 break;
             default:
-                printf("<no representation>\n");
+                Print("<no representation>\n");
                 break;
         }
     }

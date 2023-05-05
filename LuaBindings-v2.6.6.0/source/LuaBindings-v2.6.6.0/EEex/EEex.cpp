@@ -15,51 +15,51 @@ bool topLevel = true;
 void exitStutterLog(const char *const name, long long timeTaken) {
 
 	lua_State *const L = *p_g_lua;
-	p_lua_getglobal(L, "EEex_StutterDetector_Private_Times");            // 1 [ ..., EEex_StutterDetector_Private_Times ]
+	lua_getglobal(L, "EEex_StutterDetector_Private_Times");            // 1 [ ..., EEex_StutterDetector_Private_Times ]
 
-	p_lua_pushstring(L, name);                                           // 2 [ ..., EEex_StutterDetector_Private_Times, name ]
-	p_lua_rawget(L, -2);                                                 // 2 [ ..., EEex_StutterDetector_Private_Times, EEex_StutterDetector_Private_Times[name] -> timeEntry ]
+	lua_pushstring(L, name);                                           // 2 [ ..., EEex_StutterDetector_Private_Times, name ]
+	lua_rawget(L, -2);                                                 // 2 [ ..., EEex_StutterDetector_Private_Times, EEex_StutterDetector_Private_Times[name] -> timeEntry ]
 
-	if (!p_lua_isnil(L, -1)) {
+	if (!lua_isnil(L, -1)) {
 
-		p_lua_rawgeti(L, -1, 1);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, timeEntry[1] -> count ]
-		const lua_Integer count = p_lua_tointeger(L, -1);
-		p_lua_pop(L, 1);                                                 // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
-		p_lua_pushinteger(L, count + 1);                                 // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, newCount ]
-		p_lua_rawseti(L, -2, 1);                                         // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
+		lua_rawgeti(L, -1, 1);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, timeEntry[1] -> count ]
+		const lua_Integer count = lua_tointeger(L, -1);
+		lua_pop(L, 1);                                                 // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
+		lua_pushinteger(L, count + 1);                                 // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, newCount ]
+		lua_rawseti(L, -2, 1);                                         // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
 
-		p_lua_rawgeti(L, -1, 2);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, timeEntry[1] -> totalTimeTaken ]
-		const lua_Integer totalTimeTaken = p_lua_tointeger(L, -1);
-		p_lua_pop(L, 1);                                                 // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
-		p_lua_pushinteger(L, totalTimeTaken + timeTaken);                // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, newTotalTimeTaken ]
-		p_lua_rawseti(L, -2, 2);                                         // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
+		lua_rawgeti(L, -1, 2);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, timeEntry[1] -> totalTimeTaken ]
+		const lua_Integer totalTimeTaken = lua_tointeger(L, -1);
+		lua_pop(L, 1);                                                 // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
+		lua_pushinteger(L, totalTimeTaken + timeTaken);                // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, newTotalTimeTaken ]
+		lua_rawseti(L, -2, 2);                                         // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
 
-		p_lua_pop(L, 2);                                                 // 0 [ ... ]
+		lua_pop(L, 2);                                                 // 0 [ ... ]
 	}
 	else {
 
-		p_lua_pop(L, 1);                                                 // 1 [ ..., EEex_StutterDetector_Private_Times ]
-		p_lua_pushstring(L, name);                                       // 2 [ ..., EEex_StutterDetector_Private_Times, name ]
-		p_lua_newtable(L);                                               // 3 [ ..., EEex_StutterDetector_Private_Times, name, {} -> timeEntry ]
+		lua_pop(L, 1);                                                 // 1 [ ..., EEex_StutterDetector_Private_Times ]
+		lua_pushstring(L, name);                                       // 2 [ ..., EEex_StutterDetector_Private_Times, name ]
+		lua_newtable(L);                                               // 3 [ ..., EEex_StutterDetector_Private_Times, name, {} -> timeEntry ]
 
-		p_lua_pushinteger(L, 1);                                         // 4 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry, 1 ]
-		p_lua_rawseti(L, -2, 1);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry ]
+		lua_pushinteger(L, 1);                                         // 4 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry, 1 ]
+		lua_rawseti(L, -2, 1);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry ]
 
-		p_lua_pushinteger(L, timeTaken);                                 // 4 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry, timeTaken ]
-		p_lua_rawseti(L, -2, 2);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry ]
+		lua_pushinteger(L, timeTaken);                                 // 4 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry, timeTaken ]
+		lua_rawseti(L, -2, 2);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry ]
 
-		p_lua_rawset(L, -3);                                             // 1 [ ..., EEex_StutterDetector_Private_Times ]
+		lua_rawset(L, -3);                                             // 1 [ ..., EEex_StutterDetector_Private_Times ]
 
-		p_lua_pop(L, 1);                                                 // 0 [ ... ]
+		lua_pop(L, 1);                                                 // 0 [ ... ]
 	}
 
 	if (topLevel) {
 
-		p_lua_getglobal(L, "EEex_StutterDetector_Private_TopLevelTime"); // 1 [ ..., EEex_StutterDetector_Private_TopLevelTime ]
-		const lua_Integer topLevelTime = p_lua_tointeger(L, -1);
-		p_lua_pop(L, 1);                                                 // 0 [ ... ]
-		p_lua_pushinteger(L, topLevelTime + timeTaken);                  // 1 [ ..., newTopLevelTime ]
-		p_lua_setglobal(L, "EEex_StutterDetector_Private_TopLevelTime"); // 0 [ ... ]
+		lua_getglobal(L, "EEex_StutterDetector_Private_TopLevelTime"); // 1 [ ..., EEex_StutterDetector_Private_TopLevelTime ]
+		const lua_Integer topLevelTime = lua_tointeger(L, -1);
+		lua_pop(L, 1);                                                 // 0 [ ... ]
+		lua_pushinteger(L, topLevelTime + timeTaken);                  // 1 [ ..., newTopLevelTime ]
+		lua_setglobal(L, "EEex_StutterDetector_Private_TopLevelTime"); // 0 [ ... ]
 	}
 }
 
@@ -126,20 +126,20 @@ void EEex_PushGameObjectUserData(lua_State *const L, CGameObject *const pObject)
 // 3 [ ..., matchFunc, debug, traceback ]
 bool EEex_RunMatchFunction(lua_State *const L, CGameObject *const pObject)
 {
-	p_lua_pushvalue(L, -3);                                                          // 4 [ ..., matchFunc, debug, traceback, matchFunc ]
-	EEex_PushGameObjectUserData(L, pObject);                                         // 5 [ ..., matchFunc, debug, traceback, matchFunc, pObject ]
-	p_lua_setglobal(L, "EEex_MatchObject");                                          // 4 [ ..., matchFunc, debug, traceback, matchFunc ]
+	lua_pushvalue(L, -3);                                                          // 4 [ ..., matchFunc, debug, traceback, matchFunc ]
+	EEex_PushGameObjectUserData(L, pObject);                                       // 5 [ ..., matchFunc, debug, traceback, matchFunc, pObject ]
+	lua_setglobal(L, "EEex_MatchObject");                                          // 4 [ ..., matchFunc, debug, traceback, matchFunc ]
 
-    if (p_lua_pcallk(L, 0, 1, -2, 0, nullptr) != LUA_OK)
+    if (lua_pcallk(L, 0, 1, -2, 0, nullptr) != LUA_OK)
 	{
-                                                                                     // 4 [ ..., matchFunc, debug, traceback, error ]
-        Print("[!] [EEex_MatchObject] Runtime error: %s\n", p_lua_tostring(L, -1));
-        p_lua_pop(L, 1);                                                             // 3 [ ..., matchFunc, debug, traceback ]
+                                                                                   // 4 [ ..., matchFunc, debug, traceback, error ]
+        Print("[!] [EEex_MatchObject] Runtime error: %s\n", lua_tostring(L, -1));
+        lua_pop(L, 1);                                                             // 3 [ ..., matchFunc, debug, traceback ]
 		return false;
     }
-	                                                                                 // 4 [ ..., matchFunc, debug, traceback, result ]
-	const bool toReturn { static_cast<bool>(p_lua_toboolean(L, -1)) };
-    p_lua_pop(L, 1);                                                                 // 3 [ ..., matchFunc, debug, traceback ]
+	                                                                               // 4 [ ..., matchFunc, debug, traceback, result ]
+	const bool toReturn { static_cast<bool>(lua_toboolean(L, -1)) };
+    lua_pop(L, 1);                                                                 // 3 [ ..., matchFunc, debug, traceback ]
 	return toReturn;
 }
 
@@ -318,15 +318,15 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 			return -1;
 		}
 
-		if (p_luaL_loadstring(L, matchChunk) != LUA_OK)
-		{                                                                                // 1 [ ..., error ]
-			Print("[!] [EEex_MatchObject] Compile error: %s\n", p_lua_tostring(L, -1));
-			p_lua_pop(L, 1);                                                             // 0 [ ... ]
+		if (luaL_loadstring(L, matchChunk) != LUA_OK)
+		{                                                                              // 1 [ ..., error ]
+			Print("[!] [EEex_MatchObject] Compile error: %s\n", lua_tostring(L, -1));
+			lua_pop(L, 1);                                                             // 0 [ ... ]
 			return -1;
 		}
-		                                                                                 // 1 [ ..., matchFunc ]
-		p_lua_getglobal(L, "debug");                                                     // 2 [ ..., matchFunc, debug ]
-		p_lua_getfield(L, -1, "traceback");                                              // 3 [ ..., matchFunc, debug, traceback ]
+		                                                                               // 1 [ ..., matchFunc ]
+		lua_getglobal(L, "debug");                                                     // 2 [ ..., matchFunc, debug ]
+		lua_getfield(L, -1, "traceback");                                              // 3 [ ..., matchFunc, debug, traceback ]
 
 		const short arraySize { static_cast<short>(nth) + 1 };
 		long *const idArray { reinterpret_cast<long*>(alloca(sizeof(long) * arraySize + sizeof(int) * arraySize)) };
@@ -431,7 +431,7 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 
 		#undef check
 
-		p_lua_pop(L, 3);                                                                 // 0 [ ... ]
+		lua_pop(L, 3);                                                                 // 0 [ ... ]
 		return toReturn;
 	});
 }
@@ -445,11 +445,11 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 //
 void EEex::DestroyUDAux(lua_State* L, void* ptr) {
 	logStutter<void>("EEex::DestroyUDAux", [&]() {
-		p_lua_getglobal(L, "EEex_UserDataAuxiliary"); // 1 [ ..., EEex_UserDataAuxiliary ]
-		p_lua_pushlightuserdata(L, ptr);              // 2 [ ..., EEex_UserDataAuxiliary, lud(ptr) ]
-		p_lua_pushnil(L);                             // 3 [ ..., EEex_UserDataAuxiliary, lud(ptr), nil ]
-		p_lua_rawset(L, -3);                          // 1 [ ..., EEex_UserDataAuxiliary ]
-		p_lua_pop(L, 1);                              // 0 [ ... ]
+		lua_getglobal(L, "EEex_UserDataAuxiliary"); // 1 [ ..., EEex_UserDataAuxiliary ]
+		lua_pushlightuserdata(L, ptr);              // 2 [ ..., EEex_UserDataAuxiliary, lud(ptr) ]
+		lua_pushnil(L);                             // 3 [ ..., EEex_UserDataAuxiliary, lud(ptr), nil ]
+		lua_rawset(L, -3);                          // 1 [ ..., EEex_UserDataAuxiliary ]
+		lua_pop(L, 1);                              // 0 [ ... ]
 	});
 }
 
@@ -457,13 +457,13 @@ void EEex::DestroyUDAux(lua_State* L, void* ptr) {
 // Returns: n [ ... ]
 void EEex::CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr) {
 	logStutter<void>("EEex::CopyUDAux", [&]() {
-		p_lua_getglobal(L, "EEex_UserDataAuxiliary"); // 1 [ ..., EEex_UserDataAuxiliary ]
-		p_lua_pushlightuserdata(L, sourcePtr);        // 2 [ ..., EEex_UserDataAuxiliary, lud(sourcePtr) ]
-		p_lua_rawget(L, -2);                          // 2 [ ..., EEex_UserDataAuxiliary, EEex_UserDataAuxiliary[lud(sourcePtr)] -> srcAux ]
-		p_lua_pushlightuserdata(L, targetPtr);        // 3 [ ..., EEex_UserDataAuxiliary, srcAux, lud(targetPtr) ]
-		EEex::DeepCopyIndex(L, -2);                   // 4 [ ..., EEex_UserDataAuxiliary, srcAux, lud(targetPtr), srcAuxCopy ]
-		p_lua_rawset(L, -4);                          // 2 [ ..., EEex_UserDataAuxiliary, srcAux ]
-		p_lua_pop(L, 2);                              // 0 [ ... ]
+		lua_getglobal(L, "EEex_UserDataAuxiliary"); // 1 [ ..., EEex_UserDataAuxiliary ]
+		lua_pushlightuserdata(L, sourcePtr);        // 2 [ ..., EEex_UserDataAuxiliary, lud(sourcePtr) ]
+		lua_rawget(L, -2);                          // 2 [ ..., EEex_UserDataAuxiliary, EEex_UserDataAuxiliary[lud(sourcePtr)] -> srcAux ]
+		lua_pushlightuserdata(L, targetPtr);        // 3 [ ..., EEex_UserDataAuxiliary, srcAux, lud(targetPtr) ]
+		EEex::DeepCopyIndex(L, -2);                 // 4 [ ..., EEex_UserDataAuxiliary, srcAux, lud(targetPtr), srcAuxCopy ]
+		lua_rawset(L, -4);                          // 2 [ ..., EEex_UserDataAuxiliary, srcAux ]
+		lua_pop(L, 2);                              // 0 [ ... ]
 	});
 }
 
@@ -940,25 +940,25 @@ void getUDAux(lua_State *const L, void *const ptr) {
 	// end                                                    //
 	////////////////////////////////////////////////////////////
 
-	p_lua_getglobal(L, "EEex_UserDataAuxiliary"); // 1 [ ..., EEex_UserDataAuxiliary ]
-	p_lua_pushlightuserdata(L, ptr);              // 2 [ ..., EEex_UserDataAuxiliary, lud(ptr) -> lud ]
-	p_lua_rawget(L, -2);                          // 2 [ ..., EEex_UserDataAuxiliary, EEex_UserDataAuxiliary[lud] -> t ]
-	if (p_lua_isnil(L, -1)) {
-		p_lua_pop(L, 1);                          // 1 [ ..., EEex_UserDataAuxiliary ]
-		p_lua_newtable(L);                        // 2 [ ..., EEex_UserDataAuxiliary, {} -> t ]
-		p_lua_pushlightuserdata(L, ptr);          // 3 [ ..., EEex_UserDataAuxiliary, t, lud(ptr) -> lud ]
-		p_lua_pushvalue(L, -2);                   // 4 [ ..., EEex_UserDataAuxiliary, t, lud, t ]
-		p_lua_rawset(L, -4);                      // 2 [ ..., EEex_UserDataAuxiliary, t ]
+	lua_getglobal(L, "EEex_UserDataAuxiliary"); // 1 [ ..., EEex_UserDataAuxiliary ]
+	lua_pushlightuserdata(L, ptr);              // 2 [ ..., EEex_UserDataAuxiliary, lud(ptr) -> lud ]
+	lua_rawget(L, -2);                          // 2 [ ..., EEex_UserDataAuxiliary, EEex_UserDataAuxiliary[lud] -> t ]
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 1);                          // 1 [ ..., EEex_UserDataAuxiliary ]
+		lua_newtable(L);                        // 2 [ ..., EEex_UserDataAuxiliary, {} -> t ]
+		lua_pushlightuserdata(L, ptr);          // 3 [ ..., EEex_UserDataAuxiliary, t, lud(ptr) -> lud ]
+		lua_pushvalue(L, -2);                   // 4 [ ..., EEex_UserDataAuxiliary, t, lud, t ]
+		lua_rawset(L, -4);                      // 2 [ ..., EEex_UserDataAuxiliary, t ]
 	}
-	p_lua_remove(L, -2);                          // 1 [ ..., t ]
+	lua_remove(L, -2);                          // 1 [ ..., t ]
 }
 
 // Expects: n     [ ... ]
 // Returns: n + 1 [ ..., castPtrUD ]
 void getCastUD(lua_State* L, const char* castBaseName, const char* castFuncName, void* toCastPtr) {
-	p_lua_getglobal(L, castFuncName);                      // 1 [ castFunc ]
+	lua_getglobal(L, castFuncName);                        // 1 [ castFunc ]
 	tolua_pushusertype_nocast(L, toCastPtr, castBaseName); // 2 [ castFunc, toCastPtr ]
-	p_lua_call(L, 1, 1);                                   // 1 [ castPtrUD ]
+	lua_call(L, 1, 1);                                     // 1 [ castPtrUD ]
 }
 
 bool isSprite(CGameObject* pObject, bool allowDead = false) {
@@ -987,26 +987,26 @@ void EEex::Stats_Hook_OnEqu(lua_State* L, CDerivedStats* stats, CDerivedStats* o
 		tolua_pushusertype_nocast(L, otherStats, "CDerivedStats"); //  3 [ statsUD, statsAux, otherStatsUD ]
 		getUDAux(L, otherStats);                                   //  4 [ statsUD, statsAux, otherStatsUD, otherStatsAux ]
 
-		p_lua_getglobal(L, "EEex_Stats_Registered");               //  5 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered" ]
-		p_lua_pushnil(L);                                          //  6 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", nil ]
-		while (p_lua_next(L, -2)) {
+		lua_getglobal(L, "EEex_Stats_Registered");                 //  5 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered" ]
+		lua_pushnil(L);                                            //  6 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", nil ]
+		while (lua_next(L, -2)) {
 			                                                       //  7 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v ]
-			p_lua_getfield(L, -1, "onEqu");                        //  8 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu ]
-			if (!p_lua_isnil(L, -1)) {
-				p_lua_pushvalue(L, -2);                            //  9 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v ]
-				p_lua_pushvalue(L, -9);                            // 10 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v, statsUD ]
-				p_lua_pushvalue(L, -9);                            // 11 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v, statsUD, statsAux ]
-				p_lua_pushvalue(L, -9);                            // 12 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v, statsUD, statsAux, otherStatsUD ]
-				p_lua_pushvalue(L, -9);                            // 13 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v, statsUD, statsAux, otherStatsUD, otherStatsAux ]
-				p_lua_call(L, 5, 0);                               //  7 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v ]
-				p_lua_pop(L, 1);                                   //  6 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k ]
+			lua_getfield(L, -1, "onEqu");                          //  8 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu ]
+			if (!lua_isnil(L, -1)) {
+				lua_pushvalue(L, -2);                              //  9 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v ]
+				lua_pushvalue(L, -9);                              // 10 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v, statsUD ]
+				lua_pushvalue(L, -9);                              // 11 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v, statsUD, statsAux ]
+				lua_pushvalue(L, -9);                              // 12 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v, statsUD, statsAux, otherStatsUD ]
+				lua_pushvalue(L, -9);                              // 13 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v, v.onEqu, v, statsUD, statsAux, otherStatsUD, otherStatsAux ]
+				lua_call(L, 5, 0);                                 //  7 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k, v ]
+				lua_pop(L, 1);                                     //  6 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k ]
 			}
 			else {
-				p_lua_pop(L, 2);                                   //  6 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k ]
+				lua_pop(L, 2);                                     //  6 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered", k ]
 			}
 		}
 		                                                           //  5 [ statsUD, statsAux, otherStatsUD, otherStatsAux, "EEex_Stats_Registered" ]
-		p_lua_pop(L, 5);                                           //  0 [ ]
+		lua_pop(L, 5);                                             //  0 [ ]
 	});
 }
 
@@ -1038,40 +1038,40 @@ int EEex::Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite*
 
 		getUDAux(L, sprite->GetActiveStats());                             //  3 [ effectUD, spriteUD, aux(sprite->GetActiveStats()) -> statsAux ]
 
-		p_lua_pushstring(L, "EEex_ScreenEffects");                         //  4 [ effectUD, spriteUD, statsAux, "EEex_ScreenEffects" ]
-		p_lua_rawget(L, -2);                                               //  4 [ effectUD, spriteUD, statsAux, statsAux["EEex_ScreenEffects"] -> screenT ]
+		lua_pushstring(L, "EEex_ScreenEffects");                           //  4 [ effectUD, spriteUD, statsAux, "EEex_ScreenEffects" ]
+		lua_rawget(L, -2);                                                 //  4 [ effectUD, spriteUD, statsAux, statsAux["EEex_ScreenEffects"] -> screenT ]
 
-		p_lua_pushnil(L);                                                  //  5 [ effectUD, spriteUD, statsAux, screenT, nil ]
-		while (p_lua_next(L, -2)) {
+		lua_pushnil(L);                                                    //  5 [ effectUD, spriteUD, statsAux, screenT, nil ]
+		while (lua_next(L, -2)) {
 			                                                               //  6 [ effectUD, spriteUD, statsAux, screenT, k, v -> screenEffectUD ]
 			CGameEffect *const pEffect = *reinterpret_cast<CGameEffect**>(
-				p_lua_touserdata(L, -1));
+				lua_touserdata(L, -1));
 
 			char immunityFuncName[9];
 			pEffect->m_res.toNullTerminatedStr(immunityFuncName);
 
-			p_lua_getglobal(L, immunityFuncName);                          //  7 [ effectUD, spriteUD, statsAux, screenT, k, screenEffectUD, immunityFunc ]
+			lua_getglobal(L, immunityFuncName);                            //  7 [ effectUD, spriteUD, statsAux, screenT, k, screenEffectUD, immunityFunc ]
 
-			if (!p_lua_isnil(L, -1)) {
+			if (!lua_isnil(L, -1)) {
 
-				p_lua_insert(L, -2);                                       //  7 [ effectUD, spriteUD, statsAux, screenT, k, immunityFunc, screenEffectUD ]
-				p_lua_pushvalue(L, -7);                                    //  8 [ effectUD, spriteUD, statsAux, screenT, k, immunityFunc, screenEffectUD, effectUD ]
-				p_lua_pushvalue(L, -7);                                    //  9 [ effectUD, spriteUD, statsAux, screenT, k, immunityFunc, screenEffectUD, effectUD, spriteUD ]
-				p_lua_call(L, 3, 1);                                       //  6 [ effectUD, spriteUD, statsAux, screenT, k, retVal ]
+				lua_insert(L, -2);                                         //  7 [ effectUD, spriteUD, statsAux, screenT, k, immunityFunc, screenEffectUD ]
+				lua_pushvalue(L, -7);                                      //  8 [ effectUD, spriteUD, statsAux, screenT, k, immunityFunc, screenEffectUD, effectUD ]
+				lua_pushvalue(L, -7);                                      //  9 [ effectUD, spriteUD, statsAux, screenT, k, immunityFunc, screenEffectUD, effectUD, spriteUD ]
+				lua_call(L, 3, 1);                                         //  6 [ effectUD, spriteUD, statsAux, screenT, k, retVal ]
 
-				if (p_lua_toboolean(L, -1)) {
-					p_lua_pop(L, 6);                                       //  0 [ ]
+				if (lua_toboolean(L, -1)) {
+					lua_pop(L, 6);                                         //  0 [ ]
 					return 1;
 				}
 
-				p_lua_pop(L, 1);                                           //  5 [ effectUD, spriteUD, statsAux, screenT, k ]
+				lua_pop(L, 1);                                             //  5 [ effectUD, spriteUD, statsAux, screenT, k ]
 			}
 			else {
-				p_lua_pop(L, 2);                                           //  5 [ effectUD, spriteUD, statsAux, screenT, k ]
+				lua_pop(L, 2);                                             //  5 [ effectUD, spriteUD, statsAux, screenT, k ]
 			}
 		}
 		                                                                   //  4 [ effectUD, spriteUD, statsAux, screenT ]
-		p_lua_pop(L, 4);                                                   //  0 [ ]
+		lua_pop(L, 4);                                                     //  0 [ ]
 		return 0;
 	});
 }
@@ -1089,7 +1089,7 @@ void registerProjVFTableType(std::map<String, PatternEntry>& patterns, const TCH
 
 void pushProjectileUD(lua_State* L, CProjectile* pProjectile) {
 	if (pProjectile == nullptr) {
-		p_lua_pushnil(L);
+		lua_pushnil(L);
 		return;
 	}
 	const uintptr_t vfptr = *reinterpret_cast<uintptr_t*>(pProjectile);
@@ -1133,7 +1133,7 @@ void EEex::InitPatterns(std::map<String, PatternEntry>& patterns) {
 
 void pushGameObjectUD(lua_State* L, CGameObject* pGameObject) {
 	if (pGameObject == nullptr) {
-		p_lua_pushnil(L);
+		lua_pushnil(L);
 		return;
 	}
 	const char* userType;
@@ -1177,11 +1177,11 @@ struct LuaTypeContainer {
 };
 
 LuaTypeContainer getLuaTypeContainer(lua_State* L, int index) {
-	const int type = p_lua_type(L, index);
+	const int type = lua_type(L, index);
 	switch (type) {
-		case LUA_TNUMBER: return LuaTypeContainer{ type, p_lua_tointeger(L, index) };
-		case LUA_TSTRING: return LuaTypeContainer{ type, p_lua_tostring(L, index) };
-		case LUA_TBOOLEAN: return LuaTypeContainer{ type, static_cast<bool>(p_lua_toboolean(L, index)) };
+		case LUA_TNUMBER: return LuaTypeContainer{ type, lua_tointeger(L, index) };
+		case LUA_TSTRING: return LuaTypeContainer{ type, lua_tostring(L, index) };
+		case LUA_TBOOLEAN: return LuaTypeContainer{ type, static_cast<bool>(lua_toboolean(L, index)) };
 	}
 	return LuaTypeContainer{ type };
 }
@@ -1192,26 +1192,26 @@ LuaTypeContainer callMutatorFunction(
 	const char* mutatorFunctionName,
 	int argumentsTableIndex)
 {
-	argumentsTableIndex = p_lua_absindex(L, argumentsTableIndex);
-	p_lua_getglobal(L, mutatorTableName);            // 1 [ ..., mutatorTable ]
-	if (p_lua_type(L, -1) == LUA_TTABLE) {
-		p_lua_pushstring(L, mutatorFunctionName);    // 2 [ ..., mutatorTable, mutatorFunctionName ]
-		p_lua_rawget(L, -2);                         // 2 [ ..., mutatorTable, mutatorFunction ]
-		if (p_lua_type(L, -1) == LUA_TFUNCTION) {
-			p_lua_pushvalue(L, argumentsTableIndex); // 3 [ ..., mutatorTable, mutatorFunction, argumentsTable ]
-			p_lua_call(L, 1, 1);                     // 2 [ ..., mutatorTable, retVal ]
+	argumentsTableIndex = lua_absindex(L, argumentsTableIndex);
+	lua_getglobal(L, mutatorTableName);            // 1 [ ..., mutatorTable ]
+	if (lua_type(L, -1) == LUA_TTABLE) {
+		lua_pushstring(L, mutatorFunctionName);    // 2 [ ..., mutatorTable, mutatorFunctionName ]
+		lua_rawget(L, -2);                         // 2 [ ..., mutatorTable, mutatorFunction ]
+		if (lua_type(L, -1) == LUA_TFUNCTION) {
+			lua_pushvalue(L, argumentsTableIndex); // 3 [ ..., mutatorTable, mutatorFunction, argumentsTable ]
+			lua_call(L, 1, 1);                     // 2 [ ..., mutatorTable, retVal ]
 			const LuaTypeContainer toRet = getLuaTypeContainer(L, -1);
-			p_lua_pop(L, 2);                         // 0 [ ... ]
+			lua_pop(L, 2);                         // 0 [ ... ]
 			return toRet;
 		}
 		else {
 			Print("[!] op408 (ProjectileMutator) attempted to use an invalid \"%s\" value under: \"%s\"", mutatorFunctionName, mutatorTableName);
-			p_lua_pop(L, 2);                         // 0 [ ... ]
+			lua_pop(L, 2);                         // 0 [ ... ]
 		}
 	}
 	else {
 		Print("[!] op408(ProjectileMutator) attempted to use an invalid mutator table : \"%s\"", mutatorTableName);
-		p_lua_pop(L, 1);                             // 0 [ ... ]
+		lua_pop(L, 1);                             // 0 [ ... ]
 	}
 	return LuaTypeContainer{};
 }
@@ -1221,38 +1221,38 @@ LuaTypeContainer processMutatorFunctions(
 	int projectileMutatorEffectsIndex,
 	std::function<LuaTypeContainer(const char*, std::optional<int>)> func)
 {
-	projectileMutatorEffectsIndex = p_lua_absindex(L, projectileMutatorEffectsIndex);
+	projectileMutatorEffectsIndex = lua_absindex(L, projectileMutatorEffectsIndex);
 
-	p_lua_getglobal(L, "EEex_Projectile_Private_GlobalMutators"); // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
-	p_lua_pushnil(L);                                             // 2 [ ..., EEex_Projectile_Private_GlobalMutators, nil ]
-	while (p_lua_next(L, -2)) {
+	lua_getglobal(L, "EEex_Projectile_Private_GlobalMutators");   // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
+	lua_pushnil(L);                                               // 2 [ ..., EEex_Projectile_Private_GlobalMutators, nil ]
+	while (lua_next(L, -2)) {
 		                                                          // 3 [ ..., EEex_Projectile_Private_GlobalMutators, k, v -> mutatorTableName ]
-		LuaTypeContainer retType = func(p_lua_tostring(L, -1), {});
+		LuaTypeContainer retType = func(lua_tostring(L, -1), {});
 		if (retType.valid && retType.type != LUA_TNIL) {
-			p_lua_pop(L, 3);                                      // 0 [ ... ]
+			lua_pop(L, 3);                                        // 0 [ ... ]
 			return retType;
 		}
 
-		p_lua_pop(L, 1);                                          // 2 [ ..., EEex_Projectile_Private_GlobalMutators, k ]
+		lua_pop(L, 1);                                            // 2 [ ..., EEex_Projectile_Private_GlobalMutators, k ]
 	}
 	                                                              // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
-	p_lua_pop(L, 1);                                              // 0 [ ... ]
+	lua_pop(L, 1);                                                // 0 [ ... ]
 
-	if (!p_lua_isnil(L, projectileMutatorEffectsIndex)) {
-		p_lua_pushnil(L);                                         // 1 [ ..., nil ]
-		while (p_lua_next(L, projectileMutatorEffectsIndex)) {
+	if (!lua_isnil(L, projectileMutatorEffectsIndex)) {
+		lua_pushnil(L);                                           // 1 [ ..., nil ]
+		while (lua_next(L, projectileMutatorEffectsIndex)) {
 			                                                      // 2 [ ..., k, v -> originatingEffect ]
-			CGameEffect *const pEffect = *reinterpret_cast<CGameEffect**>(p_lua_touserdata(L, -1));
+			CGameEffect *const pEffect = *reinterpret_cast<CGameEffect**>(lua_touserdata(L, -1));
 			char mutatorTableName[9];
 			pEffect->m_res.toNullTerminatedStr(mutatorTableName);
 
 			LuaTypeContainer retType = func(mutatorTableName, -1);
 			if (retType.valid && retType.type != LUA_TNIL) {
-				p_lua_pop(L, 2);                                  // 0 [ ... ]
+				lua_pop(L, 2);                                    // 0 [ ... ]
 				return retType;
 			}
 
-			p_lua_pop(L, 1);                                      // 1 [ ..., k ]
+			lua_pop(L, 1);                                        // 1 [ ..., k ]
 		}
 	}
 
@@ -1268,24 +1268,24 @@ void EEex::Projectile_Hook_BeforeAddEffect(
 {
 	logStutter<void>("EEex::Projectile_Hook_BeforeAddEffect", [&]() {
 
-		const int myBase = p_lua_gettop(L);
+		const int myBase = lua_gettop(L);
 
-		p_lua_getglobal(L, "EEex_Projectile_Private_AddEffectSources");                                             // 1 [ ..., EEex_Projectile_Private_AddEffectSources ]
-		p_lua_pushinteger(L, retPtr);                                                                               // 2 [ ..., EEex_Projectile_Private_AddEffectSources, retPtr ]
-		p_lua_rawget(L, -2);                                                                                        // 2 [ ..., EEex_Projectile_Private_AddEffectSources, EEex_Projectile_Private_AddEffectSources[retPtr] -> addEffectSource ]
-		p_lua_remove(L, -2);                                                                                        // 1 [ ..., addEffectSource ]
+		lua_getglobal(L, "EEex_Projectile_Private_AddEffectSources");                                               // 1 [ ..., EEex_Projectile_Private_AddEffectSources ]
+		lua_pushinteger(L, retPtr);                                                                                 // 2 [ ..., EEex_Projectile_Private_AddEffectSources, retPtr ]
+		lua_rawget(L, -2);                                                                                          // 2 [ ..., EEex_Projectile_Private_AddEffectSources, EEex_Projectile_Private_AddEffectSources[retPtr] -> addEffectSource ]
+		lua_remove(L, -2);                                                                                          // 1 [ ..., addEffectSource ]
 
 		pushProjectileUD(L, projectile);                                                                            // 2 [ ..., addEffectSource, projectileUD ]
 		pushGameObjectUD(L, aiBase);                                                                                // 3 [ ..., addEffectSource, projectileUD, aiBaseUD ]
 
 		if (isSprite(aiBase, true)) {
 			getUDAux(L, reinterpret_cast<CGameSprite*>(aiBase)->GetActiveStats());                                  // 4 [ ..., addEffectSource, projectileUD, aiBaseUD, aux(aiBase->GetActiveStats()) -> aiBaseStatsAux ]
-			p_lua_pushstring(L, "EEex_ProjectileMutatorEffects");                                                   // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, aiBaseStatsAux, "EEex_ProjectileMutatorEffects" ]
-			p_lua_rawget(L, -2);                                                                                    // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, aiBaseStatsAux, aiBaseStatsAux["EEex_ProjectileMutatorEffects"] -> projectileMutatorEffects ]
-			p_lua_remove(L, -2);                                                                                    // 4 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects ]
+			lua_pushstring(L, "EEex_ProjectileMutatorEffects");                                                     // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, aiBaseStatsAux, "EEex_ProjectileMutatorEffects" ]
+			lua_rawget(L, -2);                                                                                      // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, aiBaseStatsAux, aiBaseStatsAux["EEex_ProjectileMutatorEffects"] -> projectileMutatorEffects ]
+			lua_remove(L, -2);                                                                                      // 4 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects ]
 		}
 		else {
-			p_lua_pushnil(L);                                                                                       // 4 [ ..., addEffectSource, projectileUD, aiBaseUD, nil -> projectileMutatorEffects]
+			lua_pushnil(L);                                                                                         // 4 [ ..., addEffectSource, projectileUD, aiBaseUD, nil -> projectileMutatorEffects]
 		}
 
 		tolua_pushusertype_nocast(L, effect, "CGameEffect");                                                        // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD ]
@@ -1293,35 +1293,35 @@ void EEex::Projectile_Hook_BeforeAddEffect(
 		processMutatorFunctions(L, -2, [&](const char* mutatorTableName, std::optional<int> originatingEffectIndex) -> LuaTypeContainer {
 			                                                                                                        // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ... ]
 			if (originatingEffectIndex.has_value()) {
-				originatingEffectIndex = p_lua_absindex(L, *originatingEffectIndex);
+				originatingEffectIndex = lua_absindex(L, *originatingEffectIndex);
 			}
 
-			p_lua_newtable(L);                                                                                      // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT]
+			lua_newtable(L);                                                                                        // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT]
 
-			p_lua_pushstring(L, "addEffectSource");                                                                 // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "addEffectSource" ]
-			p_lua_pushvalue(L, myBase + 1);                                                                         // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "addEffectSource", addEffectSource ]
-			p_lua_rawset(L, -3);                                                                                    // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
+			lua_pushstring(L, "addEffectSource");                                                                   // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "addEffectSource" ]
+			lua_pushvalue(L, myBase + 1);                                                                           // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "addEffectSource", addEffectSource ]
+			lua_rawset(L, -3);                                                                                      // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
 
-			p_lua_pushstring(L, "projectile");                                                                      // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "projectile" ]
-			p_lua_pushvalue(L, myBase + 2);                                                                         // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "projectile", projectileUD ]
-			p_lua_rawset(L, -3);                                                                                    // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
+			lua_pushstring(L, "projectile");                                                                        // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "projectile" ]
+			lua_pushvalue(L, myBase + 2);                                                                           // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "projectile", projectileUD ]
+			lua_rawset(L, -3);                                                                                      // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
 
-			p_lua_pushstring(L, "originatingSprite");                                                               // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "originatingSprite" ]
-			p_lua_pushvalue(L, myBase + 3);                                                                         // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "originatingSprite", aiBaseUD ]
-			p_lua_rawset(L, -3);                                                                                    // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
+			lua_pushstring(L, "originatingSprite");                                                                 // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "originatingSprite" ]
+			lua_pushvalue(L, myBase + 3);                                                                           // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "originatingSprite", aiBaseUD ]
+			lua_rawset(L, -3);                                                                                      // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
 
-			p_lua_pushstring(L, "effect");                                                                          // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "effect" ]
-			p_lua_pushvalue(L, myBase + 5);                                                                         // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "effect", effectUD ]
-			p_lua_rawset(L, -3);                                                                                    // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
+			lua_pushstring(L, "effect");                                                                            // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "effect" ]
+			lua_pushvalue(L, myBase + 5);                                                                           // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "effect", effectUD ]
+			lua_rawset(L, -3);                                                                                      // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
 
 			if (originatingEffectIndex.has_value()) {
-				p_lua_pushstring(L, "originatingEffect");                                                           // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "originatingEffect" ]
-				p_lua_pushvalue(L, *originatingEffectIndex);                                                        // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "originatingEffect", originatingEffect ]
-				p_lua_rawset(L, -3);                                                                                // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
+				lua_pushstring(L, "originatingEffect");                                                             // 7 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "originatingEffect" ]
+				lua_pushvalue(L, *originatingEffectIndex);                                                          // 8 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT, "originatingEffect", originatingEffect ]
+				lua_rawset(L, -3);                                                                                  // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
 			}
 
 			LuaTypeContainer blockFurtherMutations = callMutatorFunction(L, mutatorTableName, "effectMutator", -1); // 6 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ..., argsT ]
-			p_lua_pop(L, 1);                                                                                        // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ... ]
+			lua_pop(L, 1);                                                                                          // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD, ... ]
 
 			if (blockFurtherMutations.valid && blockFurtherMutations.type != LUA_TNIL) {
 				if (blockFurtherMutations.type == LUA_TBOOLEAN) {
@@ -1337,7 +1337,7 @@ void EEex::Projectile_Hook_BeforeAddEffect(
 			return LuaTypeContainer{};
 		});
 		                                                                                                            // 5 [ ..., addEffectSource, projectileUD, aiBaseUD, projectileMutatorEffects, effectUD ]
-		p_lua_pop(L, 5);                                                                                            // 0 [ ... ]
+		lua_pop(L, 5);                                                                                              // 0 [ ... ]
 	});
 }
 
@@ -1348,97 +1348,97 @@ void EEex::DeepCopyIndex(lua_State* L, int tIndex) {
 	logStutter<void>("EEex::DeepCopyIndex", [&] {
 
 		// Only deep-copying tables
-		if (p_lua_type(L, tIndex) != LUA_TTABLE) {
-			p_lua_pushvalue(L, tIndex);                 // 1 [ ..., t ]
+		if (lua_type(L, tIndex) != LUA_TTABLE) {
+			lua_pushvalue(L, tIndex);                 // 1 [ ..., t ]
 			return;
 		}
 
-		tIndex = p_lua_absindex(L, tIndex);
+		tIndex = lua_absindex(L, tIndex);
 
 		// Push return value (tCopy)
 		// and processStack.
-		p_lua_newtable(L);                              // 1 [ ..., tCopy ]
-		p_lua_newtable(L);                              // 2 [ ..., tCopy, processStack ]
+		lua_newtable(L);                              // 1 [ ..., tCopy ]
+		lua_newtable(L);                              // 2 [ ..., tCopy, processStack ]
 		int stackTop = 1;
 
 		// Set initial toFillT (tCopy)
-		p_lua_pushvalue(L, -2);                         // 3 [ ..., tCopy, processStack, tCopy -> toFillT ]
-		p_lua_rawseti(L, -2, stackTop++);               // 2 [ ..., tCopy, processStack ]
+		lua_pushvalue(L, -2);                         // 3 [ ..., tCopy, processStack, tCopy -> toFillT ]
+		lua_rawseti(L, -2, stackTop++);               // 2 [ ..., tCopy, processStack ]
 
 		// Set initial toProcessT (t)
-		p_lua_pushvalue(L, tIndex);                     // 3 [ ..., tCopy, processStack, t -> toProcessT ]
-		p_lua_rawseti(L, -2, stackTop++);               // 2 [ ..., tCopy, processStack ]
+		lua_pushvalue(L, tIndex);                     // 3 [ ..., tCopy, processStack, t -> toProcessT ]
+		lua_rawseti(L, -2, stackTop++);               // 2 [ ..., tCopy, processStack ]
 
 		// Set initial iterK (nil)
-		p_lua_pushnil(L);                               // 3 [ ..., tCopy, processStack, nil -> iterK ]
-		p_lua_rawseti(L, -2, stackTop++);               // 2 [ ..., tCopy, processStack ]
+		lua_pushnil(L);                               // 3 [ ..., tCopy, processStack, nil -> iterK ]
+		lua_rawseti(L, -2, stackTop++);               // 2 [ ..., tCopy, processStack ]
 
 		while (true) {
 		continueOuterWhile:;
 
 			// Read toFillT, toProcessT, and
 			// iterK from processStack.
-			p_lua_rawgeti(L, -1, stackTop - 3);         // 3 [ ..., tCopy, processStack, toFillT ]
-			p_lua_rawgeti(L, -2, stackTop - 2);         // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
-			p_lua_rawgeti(L, -3, stackTop - 1);         // 5 [ ..., tCopy, processStack, toFillT, toProcessT, iterK ]
+			lua_rawgeti(L, -1, stackTop - 3);         // 3 [ ..., tCopy, processStack, toFillT ]
+			lua_rawgeti(L, -2, stackTop - 2);         // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
+			lua_rawgeti(L, -3, stackTop - 1);         // 5 [ ..., tCopy, processStack, toFillT, toProcessT, iterK ]
 
-			while (p_lua_next(L, -2)) {
-				                                        // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
-				if (p_lua_type(L, -1) == LUA_TTABLE) {
+			while (lua_next(L, -2)) {
+				                                      // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
+				if (lua_type(L, -1) == LUA_TTABLE) {
 
 					// Save iterK to resume later
-					p_lua_pushvalue(L, -2);             // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, k ]
-					p_lua_rawseti(L, -6, stackTop - 1); // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
+					lua_pushvalue(L, -2);             // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, k ]
+					lua_rawseti(L, -6, stackTop - 1); // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
 
 					// Set next toFillT ({})
-					p_lua_newtable(L);                  // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, nextToFillT ]
-					p_lua_rawseti(L, -6, stackTop++);   // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
+					lua_newtable(L);                  // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, nextToFillT ]
+					lua_rawseti(L, -6, stackTop++);   // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
 
 					// Set next toProcessT (v)
-					p_lua_pushvalue(L, -1);             // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, nextToProcessT ]
-					p_lua_rawseti(L, -6, stackTop++);   // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
+					lua_pushvalue(L, -1);             // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, nextToProcessT ]
+					lua_rawseti(L, -6, stackTop++);   // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
 
 					// Set next iterK (nil)
-					p_lua_pushnil(L);                   // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, nil -> nextIterK ]
-					p_lua_rawseti(L, -6, stackTop++);   // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
+					lua_pushnil(L);                   // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, nil -> nextIterK ]
+					lua_rawseti(L, -6, stackTop++);   // 6 [ ..., tCopy, processStack, toFillT, toProcessT, k, v ]
 
 					// Jump to process subtable
-					p_lua_pop(L, 4);                    // 2 [ ..., tCopy, processStack ]
+					lua_pop(L, 4);                    // 2 [ ..., tCopy, processStack ]
 					goto continueOuterWhile;
 				}
 				else {
 					// toFillT[iterK] = v
-					p_lua_pushvalue(L, -2);             // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, k ]
-					p_lua_insert(L, -2);                // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, k, v ]
-					p_lua_rawset(L, -5);                // 5 [ ..., tCopy, processStack, toFillT, toProcessT, k ]
+					lua_pushvalue(L, -2);             // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, v, k ]
+					lua_insert(L, -2);                // 7 [ ..., tCopy, processStack, toFillT, toProcessT, k, k, v ]
+					lua_rawset(L, -5);                // 5 [ ..., tCopy, processStack, toFillT, toProcessT, k ]
 				}
 			}
-			                                            // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
+			                                          // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
 			if (stackTop == 4) {
 				// The top-level table doesn't have
 				// a parent to store its value on,
 				// deep copy done.
-				p_lua_pop(L, 3);                        // 1 [ ..., tCopy ]
+				lua_pop(L, 3);                        // 1 [ ..., tCopy ]
 				return;
 			}
 
 			// Remove toFillT, toProcessT, and
 			// iterK from processStack.
-			p_lua_pushnil(L);                           // 5 [ ..., tCopy, processStack, toFillT, toProcessT, nil ]
-			p_lua_rawseti(L, -4, --stackTop);           // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
-			p_lua_pushnil(L);                           // 5 [ ..., tCopy, processStack, toFillT, toProcessT, nil ]
-			p_lua_rawseti(L, -4, --stackTop);           // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
-			p_lua_pushnil(L);                           // 5 [ ..., tCopy, processStack, toFillT, toProcessT, nil ]
-			p_lua_rawseti(L, -4, --stackTop);           // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
+			lua_pushnil(L);                           // 5 [ ..., tCopy, processStack, toFillT, toProcessT, nil ]
+			lua_rawseti(L, -4, --stackTop);           // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
+			lua_pushnil(L);                           // 5 [ ..., tCopy, processStack, toFillT, toProcessT, nil ]
+			lua_rawseti(L, -4, --stackTop);           // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
+			lua_pushnil(L);                           // 5 [ ..., tCopy, processStack, toFillT, toProcessT, nil ]
+			lua_rawseti(L, -4, --stackTop);           // 4 [ ..., tCopy, processStack, toFillT, toProcessT ]
 
 			// parentToFillT[parentIterK] = toFillT
-			p_lua_rawgeti(L, -3, stackTop - 3);         // 5 [ ..., tCopy, processStack, toFillT, toProcessT, parentToFillT ]
-			p_lua_rawgeti(L, -4, stackTop - 1);         // 6 [ ..., tCopy, processStack, toFillT, toProcessT, parentToFillT, parentIterK ]
-			p_lua_pushvalue(L, -4);                     // 7 [ ..., tCopy, processStack, toFillT, toProcessT, parentToFillT, parentIterK, toFillT ]
-			p_lua_rawset(L, -3);                        // 5 [ ..., tCopy, processStack, toFillT, toProcessT, parentToFillT ]
+			lua_rawgeti(L, -3, stackTop - 3);         // 5 [ ..., tCopy, processStack, toFillT, toProcessT, parentToFillT ]
+			lua_rawgeti(L, -4, stackTop - 1);         // 6 [ ..., tCopy, processStack, toFillT, toProcessT, parentToFillT, parentIterK ]
+			lua_pushvalue(L, -4);                     // 7 [ ..., tCopy, processStack, toFillT, toProcessT, parentToFillT, parentIterK, toFillT ]
+			lua_rawset(L, -3);                        // 5 [ ..., tCopy, processStack, toFillT, toProcessT, parentToFillT ]
 
 			// Continue parent processing
-			p_lua_pop(L, 3);                            // 2 [ ..., tCopy, processStack ]
+			lua_pop(L, 3);                            // 2 [ ..., tCopy, processStack ]
 		}
 	});
 }

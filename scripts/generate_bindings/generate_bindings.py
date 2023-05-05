@@ -2770,17 +2770,16 @@ def tryResolveDependencyOrder(groups: UniqueList[Group]):
 
 def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[Group], out: TextIOWrapper, baseclassHeaderOut: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
 
-	baseclassHeaderOut.write("\n#pragma once\n\n")
-	baseclassHeaderOut.write("#include <unordered_map>\n\n")
-	baseclassHeaderOut.write(f"#include \"{pathToFileNameNoExt(outputFileName)}.h\"\n\n")
-	baseclassHeaderOut.write("extern std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> baseclassOffsets;\n")
+	baseclassOut.write("\n#include \"lua_bindings_core_api.h\"\n")
+	baseclassOut.write(f"#include \"{pathToFileNameNoExt(outputFileName)}.h\"\n\n")
 
-	baseclassOut.write("\n#include \"EEexLua_generated_baseclass_offsets.h\"\n\n")
 	baseclassOut.write("template<typename Derived, typename Base>\n")
 	baseclassOut.write("constexpr uintptr_t offsetofbase() {\n")
 	baseclassOut.write("\treturn reinterpret_cast<uintptr_t>(static_cast<Base*>(reinterpret_cast<Derived*>(1))) - 1;\n")
 	baseclassOut.write("}\n\n")
-	baseclassOut.write("std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> baseclassOffsets {\n")
+
+	baseclassOut.write("void registerBaseclasses() {\n")
+	baseclassOut.write("\tregisterBaseclassOffsets({\n")
 
 	class OpenFieldData:
 		def __init__(self) -> None:
@@ -3448,7 +3447,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				break
 
 		if not openData.group.isPrimitive() and hasNonPrimitiveBase:
-			baseclassOut.write(f"\t{{\"{openData.appliedNameUsertype}\", {{")
+			baseclassOut.write(f"\t\t{{\"{openData.appliedNameUsertype}\", {{")
 
 		if len(openData.group.extends) > 0:
 
@@ -3468,7 +3467,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 					continue
 
 				if hasNonPrimitiveBase:
-					baseclassOut.write(f"\t\t{{\"{extendRefUT}\", ")
+					baseclassOut.write(f"\t\t\t{{\"{extendRefUT}\", ")
 					baseclassOut.write(f"offsetofbase<{openData.appliedHeaderName}, {extendRef.getHeaderName()}>()")
 					baseclassOut.write("},\n")
 
@@ -3476,7 +3475,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			out.write("".join(parts))
 
 			if hasNonPrimitiveBase:
-				baseclassOut.write("\t")
+				baseclassOut.write("\t\t")
 
 		if not openData.group.isPrimitive() and hasNonPrimitiveBase:
 			baseclassOut.write("}},\n")
@@ -3518,7 +3517,12 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 	out.write("\treturn 1;\n")
 	out.write("}\n")
 
-	baseclassOut.write("};\n")
+	baseclassOut.write("\t});\n")
+	baseclassOut.write("}\n\n")
+
+	baseclassOut.write("void InitGenerated() {\n")
+	baseclassOut.write("\tregisterBaseclasses();\n")
+	baseclassOut.write("}\n")
 
 
 
@@ -4053,7 +4057,7 @@ struct ConstCharString
 			outBindingsPath, outBindingsBase = separatePathNoExt(bindingsFileName)
 			with \
 			open(bindingsFileName, "w") as bindingsOut, \
-			open(f"{outBindingsPath}{outBindingsBase}_baseclass_offsets.h", "w") as baseclassHeaderOut, \
+			open(f"{outBindingsPath}{outBindingsBase}_generated.h", "w") as baseclassHeaderOut, \
 			open(f"{outBindingsPath}{outBindingsBase}_baseclass_offsets.cpp", "w") as baseclassOut:
 				outputFile(bindingsPreludeFile, bindingsOut)
 				writeBindings(mainState, outputFileName, mainState.filteredGroups, bindingsOut, baseclassHeaderOut, baseclassOut)

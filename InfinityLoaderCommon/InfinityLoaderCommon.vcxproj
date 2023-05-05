@@ -95,13 +95,10 @@
     <None Include="COPY_TO_COMMON.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="common\bounds_exceeded.cpp" />
-    <ClCompile Include="common\InfinityLoaderCommon.cpp" />
-    <ClCompile Include="common\InfinityLoaderCommonSharedDLLMemory.cpp" />
-    <ClCompile Include="common\InfinityLoaderCommonSharedMemory.cpp" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="headers\common\dll_api.h" />
     <ClInclude Include="headers\common\InfinityLoaderCommonTypes.h" />
+    <ClInclude Include="headers\common\lua_provider_api.h" />
+    <ClInclude Include="headers\common\lua_provider_api_core.h" />
     <ClInclude Include="headers\common\shared_memory.h" />
     <ClInclude Include="headers\common\bounds_exceeded.h" />
     <ClInclude Include="headers\common\dummy_lua_generated.h" />
@@ -113,6 +110,12 @@
     <ClInclude Include="headers\include\lua\lua.hpp" />
     <ClInclude Include="headers\include\lua\luaconf.h" />
     <ClInclude Include="headers\include\lua\lualib.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\common\bounds_exceeded.cpp" />
+    <ClCompile Include="source\common\InfinityLoaderCommon.cpp" />
+    <ClCompile Include="source\common\InfinityLoaderCommonSharedDLLMemory.cpp" />
+    <ClCompile Include="source\common\InfinityLoaderCommonSharedMemory.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

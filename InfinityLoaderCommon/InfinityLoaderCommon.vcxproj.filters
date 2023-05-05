@@ -34,20 +34,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="common\InfinityLoaderCommon.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\bounds_exceeded.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\InfinityLoaderCommonSharedDLLMemory.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\InfinityLoaderCommonSharedMemory.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="headers\common\bounds_exceeded.h">
       <Filter>Header Files\common\InfinityLoaderCommon</Filter>
     </ClInclude>
@@ -84,5 +70,28 @@
     <ClInclude Include="headers\common\shared_memory_types.h">
       <Filter>Header Files\common\InfinityLoaderCommon</Filter>
     </ClInclude>
+    <ClInclude Include="headers\common\lua_provider_api_core.h">
+      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\lua_provider_api.h">
+      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\dll_api.h">
+      <Filter>Header Files\common\InfinityLoaderCommon</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\common\InfinityLoaderCommonSharedDLLMemory.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\InfinityLoaderCommonSharedMemory.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\bounds_exceeded.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\InfinityLoaderCommon.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
