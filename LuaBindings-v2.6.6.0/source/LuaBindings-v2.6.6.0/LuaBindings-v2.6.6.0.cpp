@@ -8,13 +8,13 @@ void __stdcall Init(SharedDLLMemory *const argSharedDLL) {
     sharedDLL = argSharedDLL;
 
     InitLuaBindingsCommon(argSharedDLL, [&]() {
-        addPattern("EEex::DestroyUDAux", EEex::DestroyUDAux);
-        addPattern("EEex::CopyUDAux", EEex::CopyUDAux);
-        addPattern("EEex::Override_CGameEffect_CheckSave", EEex::Override_CGameEffect_CheckSave);
-        addPattern("EEex::Stats_Hook_OnEqu", EEex::Stats_Hook_OnEqu);
-        addPattern("EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget", EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget);
-        addPattern("EEex::Opcode_Hook_OnCheckAdd", EEex::Opcode_Hook_OnCheckAdd);
-        addPattern("EEex::Projectile_Hook_BeforeAddEffect", EEex::Projectile_Hook_BeforeAddEffect);
+        AddPattern("EEex::DestroyUDAux", EEex::DestroyUDAux);
+        AddPattern("EEex::CopyUDAux", EEex::CopyUDAux);
+        AddPattern("EEex::Override_CGameEffect_CheckSave", EEex::Override_CGameEffect_CheckSave);
+        AddPattern("EEex::Stats_Hook_OnEqu", EEex::Stats_Hook_OnEqu);
+        AddPattern("EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget", EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget);
+        AddPattern("EEex::Opcode_Hook_OnCheckAdd", EEex::Opcode_Hook_OnCheckAdd);
+        AddPattern("EEex::Projectile_Hook_BeforeAddEffect", EEex::Projectile_Hook_BeforeAddEffect);
     });
 
     // Populate internal engine pointers from patterns

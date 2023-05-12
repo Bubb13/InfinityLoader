@@ -87,13 +87,14 @@
       <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>powershell.exe -ExecutionPolicy Unrestricted -file COPY_TO_GAME.ps1 -OutDir "$(OutDir)." -GamePath "$(DEBUGGER_WORKING_DIRECTORY)."</Command>

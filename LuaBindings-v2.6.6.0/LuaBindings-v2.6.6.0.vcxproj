@@ -90,7 +90,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>LuaBindings-v2.6.6.0.def</ModuleDefinitionFile>

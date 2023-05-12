@@ -21,6 +21,12 @@
     <Filter Include="Header Files\common">
       <UniqueIdentifier>{c7c42c05-cde2-474b-a28b-b8855686f7e2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\InfinityLoaderCommon">
+      <UniqueIdentifier>{9596dc2c-d9ea-43e7-9730-656bc51c780f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\InfinityLoaderCommon">
+      <UniqueIdentifier>{a1141eb3-4072-4dec-b28e-b2b2b38440c4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_COMMON.ps1">
@@ -55,8 +61,17 @@
     <ClInclude Include="headers\common\dummy_lua_generated.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="headers\common\InfinityLoaderCommon.h">
+    <ClInclude Include="headers\InfinityLoaderCommon\template_functions.h">
+      <Filter>Header Files\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderCommon\InfinityLoaderCommon.h">
+      <Filter>Header Files\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\infinity_loader_common_api.h">
       <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderCommon\assembly_writer.h">
+      <Filter>Header Files\InfinityLoaderCommon</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -66,11 +81,17 @@
     <ClCompile Include="source\common\InfinityLoaderCommonSharedMemory.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="source\common\bounds_exceeded.cpp">
-      <Filter>Source Files\common</Filter>
+    <ClCompile Include="source\InfinityLoaderCommon\template_function_instantiations.cpp">
+      <Filter>Source Files\InfinityLoaderCommon</Filter>
     </ClCompile>
-    <ClCompile Include="source\common\InfinityLoaderCommon.cpp">
-      <Filter>Source Files\common</Filter>
+    <ClCompile Include="source\InfinityLoaderCommon\template_functions.cpp">
+      <Filter>Source Files\InfinityLoaderCommon</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InfinityLoaderCommon\InfinityLoaderCommon.cpp">
+      <Filter>Source Files\InfinityLoaderCommon</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InfinityLoaderCommon\assembly_writer.cpp">
+      <Filter>Source Files\InfinityLoaderCommon</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -8,7 +8,7 @@ constexpr uintptr_t offsetofbase() {
 }
 
 void registerBaseclasses() {
-	registerBaseclassOffsets({
+	RegisterBaseclassOffsets({
 		{"CResInfTile", {
 			{"CResTile", offsetofbase<CResInfTile, CResTile>()},
 		}},

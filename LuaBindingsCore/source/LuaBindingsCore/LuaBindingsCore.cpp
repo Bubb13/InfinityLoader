@@ -24,8 +24,8 @@ void exposeToLua(lua_State* L, const char* exposedName, lua_CFunction func) {
 // Lua Functions //
 ///////////////////
 
-EXTERN_C_EXPORT void addPattern(const char* name, void* value) {
-	String nameStr = ToString(name);
+EXPORT void AddPattern(const char* name, void* value) {
+	String nameStr = NulTermStrToStr(name);
 	patterns().try_emplace(nameStr, nameStr, reinterpret_cast<intptr_t>(value));
 }
 
@@ -55,8 +55,8 @@ int getUserTypeLua(lua_State* L) {
 }
 
 int memsetUserDataLua(lua_State* L) {
-	castLuaIntArg(2, int, val)
-	castLuaIntArg(3, size_t, size)
+	castLuaIntArg(2, int, Int, val)
+	castLuaIntArg(3, size_t, SizeT, size)
 	memset(tolua_tousertype(L, 1, 0), val, size);
 	return 0;
 }
@@ -138,7 +138,7 @@ constexpr void* GetMemberPtr(T func) {
 	return reinterpret_cast<void*&>(func);
 }
 
-EXTERN_C_EXPORT void InitLuaBindingsCommon(SharedDLLMemory *const argSharedDLL, std::function<void()> specificBindingsCallback) {
+EXPORT void InitLuaBindingsCommon(SharedDLLMemory *const argSharedDLL, std::function<void()> specificBindingsCallback) {
 
 #define setNamedPointer(patternName, funcName, ptrName) \
 	if (auto itr = patterns().find(TEXT(patternName)); itr != patterns().end()) { \
@@ -226,15 +226,15 @@ EXTERN_C_EXPORT void InitLuaBindingsCommon(SharedDLLMemory *const argSharedDLL, 
 		lua_setglobal(L(), "NULL_POINTER");
 
 		// Export tolua overrides (the versions in-engine aren't sufficient)
-		addPattern("Hardcoded_tolua_pushusertype", tolua_pushusertype_nocast);
-		addPattern("override_class_index_event", class_index_event);
-		addPattern("override_class_newindex_event", class_newindex_event);
-		addPattern("override_module_index_event", module_index_event);
-		addPattern("override_module_newindex_event", module_newindex_event);
-		addPattern("override_tolua_cclass", tolua_cclass_translate);
-		addPattern("override_tolua_open", tolua_open);
-		addPattern("override_tolua_beginmodule", tolua_beginmodule);
-		addPattern("override_tolua_module", tolua_module);
+		AddPattern("Hardcoded_tolua_pushusertype", tolua_pushusertype_nocast);
+		AddPattern("override_class_index_event", class_index_event);
+		AddPattern("override_class_newindex_event", class_newindex_event);
+		AddPattern("override_module_index_event", module_index_event);
+		AddPattern("override_module_newindex_event", module_newindex_event);
+		AddPattern("override_tolua_cclass", tolua_cclass_translate);
+		AddPattern("override_tolua_open", tolua_open);
+		AddPattern("override_tolua_beginmodule", tolua_beginmodule);
+		AddPattern("override_tolua_module", tolua_module);
 	}
 
 	if (specificBindingsCallback != nullptr) {

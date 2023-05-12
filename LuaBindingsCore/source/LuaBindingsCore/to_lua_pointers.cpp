@@ -12,7 +12,7 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 // Special Functions //
 ///////////////////////
 
-EXTERN_C_EXPORT void registerClassBaseclassOffsets(const char* name, const std::initializer_list<const std::pair<const char*, uintptr_t>>& toRegister) {
+EXPORT void RegisterClassBaseclassOffsets(const char* name, const std::initializer_list<const std::pair<const char*, uintptr_t>>& toRegister) {
 	std::unordered_map<const char*, uintptr_t>& offsets = baseclassOffsets[name];
 	for (auto [baseclassName, baseclassOffset] : toRegister) {
 		offsets.emplace(baseclassName, baseclassOffset);
@@ -34,9 +34,9 @@ EXTERN_C_EXPORT void registerClassBaseclassOffsets(const char* name, const std::
 //     }},
 // }
 //
-EXTERN_C_EXPORT void registerBaseclassOffsets(const std::initializer_list<const std::pair<const char*, std::initializer_list<const std::pair<const char*, uintptr_t>>>>& toRegister) {
+EXPORT void RegisterBaseclassOffsets(const std::initializer_list<const std::pair<const char*, std::initializer_list<const std::pair<const char*, uintptr_t>>>>& toRegister) {
 	for (auto& [className, baseclassInfo] : toRegister) {
-		registerClassBaseclassOffsets(className, baseclassInfo);
+		RegisterClassBaseclassOffsets(className, baseclassInfo);
 	}
 }
 
@@ -107,7 +107,7 @@ void dumpStackIndex(lua_State* L, const char* label, int index) {
 int dumpStack(lua_State* L) {
 	int top = lua_gettop(L);
 	for (int i = 1; i <= top; ++i) {
-		StringA label = integerToDecimalStr<StringA>(i);
+		StringA label = IntToDecStrA(i);
 		dumpStackIndex(L, label.c_str(), i);
 	}
 	return 0;
@@ -232,11 +232,11 @@ static void storeatpeer(lua_State* L, int index) {
 // Custom //
 ////////////
 
-EXTERN_C_EXPORT void tolua_cclass_translate(lua_State* L, const char* lname, const char* name, const char* base, lua_CFunction col) {
+EXPORT void tolua_cclass_translate(lua_State* L, const char* lname, const char* name, const char* base, lua_CFunction col) {
 	tolua_cclass(L, lname, name, { base }, col);
 }
 
-EXTERN_C_EXPORT bool tolua_function_toboolean(lua_State *const L, const int narg, const char *const functionName) {
+EXPORT bool tolua_function_toboolean(lua_State *const L, const int narg, const char *const functionName) {
 	if (lua_gettop(L) < narg) {
 		return luaL_error(L, "boolean argument #%d missing in function '%s'; 'boolean' or 'number' expected.", narg, functionName);
 	}
@@ -254,7 +254,7 @@ EXTERN_C_EXPORT bool tolua_function_toboolean(lua_State *const L, const int narg
 	return luaL_error(L, "invalid type '%s' for boolean argument #%d in function '%s'; 'boolean' or 'number' expected.", tolua_typename(L, narg), narg, functionName);
 }
 
-EXTERN_C_EXPORT char tolua_function_tochar(lua_State *const L, const int narg, const char *const functionName) {
+EXPORT char tolua_function_tochar(lua_State *const L, const int narg, const char *const functionName) {
 	if (lua_gettop(L) < narg) {
 		return luaL_error(L, "character argument #%d missing in function '%s'; 'string' or 'number' expected.", narg, functionName);
 	}
@@ -277,7 +277,7 @@ EXTERN_C_EXPORT char tolua_function_tochar(lua_State *const L, const int narg, c
 	return luaL_error(L, "invalid type '%s' for character argument #%d in function '%s'; 'string' or 'number' expected.", tolua_typename(L, narg), narg, functionName);
 }
 
-EXTERN_C_EXPORT const char* tolua_function_tostring(lua_State *const L, const int narg, const char *const functionName) {
+EXPORT const char* tolua_function_tostring(lua_State *const L, const int narg, const char *const functionName) {
 	if (lua_gettop(L) < narg) {
 		luaL_error(L, "string argument #%d missing in function '%s'; 'string' expected.", narg, functionName);
 	}
@@ -292,7 +292,7 @@ EXTERN_C_EXPORT const char* tolua_function_tostring(lua_State *const L, const in
 	return nullptr; // To silence warning, luaL_error() never returns
 }
 
-EXTERN_C_EXPORT bool tolua_setter_toboolean(lua_State *const L, const char *const variableName) {
+EXPORT bool tolua_setter_toboolean(lua_State *const L, const char *const variableName) {
 	constexpr int narg = 2;
 	if (lua_gettop(L) < narg) {
 		return luaL_error(L, "argument missing in boolean variable setter '%s'; 'boolean' or 'number' expected.", variableName);
@@ -311,7 +311,7 @@ EXTERN_C_EXPORT bool tolua_setter_toboolean(lua_State *const L, const char *cons
 	return luaL_error(L, "invalid type '%s' in boolean variable setter '%s'; 'boolean' or 'number' expected.", tolua_typename(L, narg), variableName);
 }
 
-EXTERN_C_EXPORT char tolua_setter_tochar(lua_State *const L, const char *const variableName) {
+EXPORT char tolua_setter_tochar(lua_State *const L, const char *const variableName) {
 	constexpr int narg = 2;
 	if (lua_gettop(L) < narg) {
 		return luaL_error(L, "argument missing in character variable setter '%s'; 'string' or 'number' expected.", variableName);
@@ -335,7 +335,7 @@ EXTERN_C_EXPORT char tolua_setter_tochar(lua_State *const L, const char *const v
 	return luaL_error(L, "invalid type '%s' in character variable setter '%s'; 'string' or 'number' expected.", tolua_typename(L, narg), variableName);
 }
 
-EXTERN_C_EXPORT void* tolua_tousertype_dynamic(lua_State* L, int index, void* def, const char* targetUsertype) {
+EXPORT void* tolua_tousertype_dynamic(lua_State* L, int index, void* def, const char* targetUsertype) {
 	if (lua_gettop(L) < abs(index)) {
 		return def;
 	}
@@ -378,7 +378,7 @@ EXTERN_C_EXPORT void* tolua_tousertype_dynamic(lua_State* L, int index, void* de
 	}
 }
 
-EXTERN_C_EXPORT void tolua_pushusertype_nocast(lua_State* L, void* value, const char* type) {
+EXPORT void tolua_pushusertype_nocast(lua_State* L, void* value, const char* type) {
 	if (value == nullptr) {
 		lua_pushnil(L);
 	}
@@ -389,7 +389,7 @@ EXTERN_C_EXPORT void tolua_pushusertype_nocast(lua_State* L, void* value, const 
 	}
 }
 
-EXTERN_C_EXPORT void tolua_pushusertypepointer(lua_State* L, void* value, const char* type) {
+EXPORT void tolua_pushusertypepointer(lua_State* L, void* value, const char* type) {
 	if (value == nullptr) {
 		lua_pushnil(L);
 	}
@@ -402,7 +402,7 @@ EXTERN_C_EXPORT void tolua_pushusertypepointer(lua_State* L, void* value, const 
 	}
 }
 
-EXTERN_C_EXPORT void tolua_pushusertypestring(lua_State* L, int index) {
+EXPORT void tolua_pushusertypestring(lua_State* L, int index) {
 	int tag = lua_type(L, index);
 	if (tag == LUA_TUSERDATA && lua_getmetatable(L, index)) {
 											  // [ getmetatable(stack[index]) ]
@@ -585,7 +585,7 @@ int callGetDynamic(lua_State* L) {
 // Expects   [ table, key ]
 // End Stack [ table, key, ..., retVal ]
 // Returns   1
-EXTERN_C_EXPORT int class_index_event(lua_State* L) {
+EXPORT int class_index_event(lua_State* L) {
 	int t = lua_type(L, 1);
 	if (t == LUA_TUSERDATA) {
 
@@ -766,7 +766,7 @@ void callSetI(lua_State* L) {
 }
 
 // Expects [ table, key, value ]
-EXTERN_C_EXPORT int class_newindex_event(lua_State* L) {
+EXPORT int class_newindex_event(lua_State* L) {
 	int t = lua_type(L, 1);
 	if (t == LUA_TUSERDATA) {
 		if (lua_isnumber(L, 2)) {
@@ -787,7 +787,7 @@ EXTERN_C_EXPORT int class_newindex_event(lua_State* L) {
 // Expects   [ table, key ]
 // End Stack [ table, key, table[".get"], ..., retVal ]
 // Returns   1
-EXTERN_C_EXPORT int module_index_event(lua_State* L) {
+EXPORT int module_index_event(lua_State* L) {
 
 	///////////////////////////////////////////
 	// local getT = table[".get"]            //
@@ -932,7 +932,7 @@ int callSet(lua_State* L) {
 }
 
 // Expects [ table, key, value ]
-EXTERN_C_EXPORT int module_newindex_event(lua_State* L) {
+EXPORT int module_newindex_event(lua_State* L) {
 
 	if (callSet(L)) {
 		return 0;
@@ -1059,7 +1059,7 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 
 // Expects   [ ..., module ]
 // End Stack [ ..., module ]
-EXTERN_C_EXPORT void tolua_cclass(lua_State* L, const char* lname, const char* name, std::initializer_list<const char*>&& bases, lua_CFunction col) {
+EXPORT void tolua_cclass(lua_State* L, const char* lname, const char* name, std::initializer_list<const char*>&& bases, lua_CFunction col) {
 
 	const char* base = bases.size() > 0 ? *bases.begin() : "";
 	char cname[128] = "const ";
@@ -1101,7 +1101,7 @@ void tolua_push_globals_table(lua_State* L) {
 }
 
 // Expects [ module ]
-EXTERN_C_EXPORT void tolua_beginmodule(lua_State* L, const char* name) {
+EXPORT void tolua_beginmodule(lua_State* L, const char* name) {
 	if (name) {
 		lua_pushstring(L, name);     // [ module, name ]
 		lua_rawget(L, -2);           // [ module[name] ]
@@ -1112,7 +1112,7 @@ EXTERN_C_EXPORT void tolua_beginmodule(lua_State* L, const char* name) {
 }
 
 // Expects [ table ]
-EXTERN_C_EXPORT void tolua_module(lua_State* L, const char* name, int hasvar) {
+EXPORT void tolua_module(lua_State* L, const char* name, int hasvar) {
 	if (name) {
 		lua_pushstring(L, name);         // [ table, name ]
 		lua_rawget(L, -2);               // [ table, table[name] -> module ]
@@ -1142,7 +1142,7 @@ EXTERN_C_EXPORT void tolua_module(lua_State* L, const char* name, int hasvar) {
 	lua_pop(L, 1);                           // [ table ]
 }
 
-EXTERN_C_EXPORT void tolua_open(lua_State* L) {
+EXPORT void tolua_open(lua_State* L) {
 	int top = lua_gettop(L);
 	lua_pushstring(L, "tolua_opened");       // [ "tolua_opened" ]
 	lua_rawget(L, LUA_REGISTRYINDEX);        // [ registry["tolua_opened"] ]

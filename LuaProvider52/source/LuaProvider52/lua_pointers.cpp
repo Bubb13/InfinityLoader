@@ -1,4 +1,8 @@
 
+#include <format>
+#include <limits>
+#include <string>
+
 #include "dll_api.h"
 #include "lua_pointers.h"
 #include "lua_implementation.h"
@@ -74,4 +78,78 @@ EXPORT int lua_absindex(lua_State* L, int idx) {
 	return (idx > 0 || lua_ispseudo(idx))
 		? idx
 		: lua_cast_int(L->top - L->ci->func + idx);
+}
+
+/////////////
+// Utiilty //
+/////////////
+
+typedef ptrdiff_t lua_Integer;
+#define lua_tointeger(L, i) lua_tointegerx(L, (i), NULL)
+
+template<typename IntegerType>
+bool checkLuaArgBounds(lua_State *const L, const int argI, IntegerType& resultVal, std::string& error) {
+
+	const lua_Integer val = lua_tointeger(L, argI);
+
+	constexpr auto min = (std::numeric_limits<IntegerType>::lowest)();
+	if (val < min) {
+		// Error: Too small
+		error = std::format("arg #{:d} ({:d}) too small (min: {:d})", argI, val, min);
+		return true;
+	}
+
+	constexpr auto max = (std::numeric_limits<IntegerType>::max)();
+	if (val > max) {
+		// Error: Too large
+		error = std::format("arg #{:d} ({:d}) too large (max: {:d})", argI, val, max);
+		return true;
+	}
+
+	resultVal = static_cast<IntegerType>(val);
+	return false;
+}
+
+EXPORT bool CheckLuaArgBoundsInt8(lua_State *const L, const int argI, __int8& resultVal, std::string& error) {
+	return checkLuaArgBounds<__int8>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsInt16(lua_State *const L, const int argI, __int16& resultVal, std::string& error) {
+ 	return checkLuaArgBounds<__int16>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsInt32(lua_State *const L, const int argI, __int32& resultVal, std::string& error) {
+	return checkLuaArgBounds<__int32>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsInt64(lua_State *const L, const int argI, __int64& resultVal, std::string& error) {
+	return checkLuaArgBounds<__int64>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsUInt8(lua_State *const L, const int argI, unsigned __int8& resultVal, std::string& error) {
+	return checkLuaArgBounds<unsigned __int8>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsUInt16(lua_State *const L, const int argI, unsigned __int16& resultVal, std::string& error) {
+	return checkLuaArgBounds<unsigned __int16>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsUInt32(lua_State *const L, const int argI, unsigned __int32& resultVal, std::string& error) {
+	return checkLuaArgBounds<unsigned __int32>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsUInt64(lua_State *const L, const int argI, unsigned __int64& resultVal, std::string& error) {
+	return checkLuaArgBounds<unsigned __int64>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsInt(lua_State *const L, const int argI, int& resultVal, std::string& error) {
+	return checkLuaArgBounds<int>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsUInt(lua_State *const L, const int argI, unsigned int& resultVal, std::string& error) {
+	return checkLuaArgBounds<unsigned int>(L, argI, resultVal, error);
+}
+
+EXPORT bool CheckLuaArgBoundsSizeT(lua_State *const L, const int argI, size_t& resultVal, std::string& error) {
+	return checkLuaArgBounds<size_t>(L, argI, resultVal, error);
 }

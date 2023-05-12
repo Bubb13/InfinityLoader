@@ -26,7 +26,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <CharacterSet>Unicode</CharacterSet>
-    <ConfigurationType>Utility</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -41,6 +41,7 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\User_Macros.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -70,25 +71,26 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)headers/include;$(ProjectDir)headers/common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/common;$(ProjectDir)headers/InfinityLoaderCommon</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>INFINITY_LOADER_COMMON_EXPORT;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>powershell.exe -ExecutionPolicy Unrestricted -file COPY_TO_GAME.ps1 -OutDir "$(OutDir)." -GamePath "$(DEBUGGER_WORKING_DIRECTORY)."</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -98,19 +100,26 @@
     <ClInclude Include="headers\common\bounds_exceeded.h" />
     <ClInclude Include="headers\common\dll_api.h" />
     <ClInclude Include="headers\common\dummy_lua_generated.h" />
-    <ClInclude Include="headers\common\InfinityLoaderCommon.h" />
     <ClInclude Include="headers\common\InfinityLoaderCommonTypes.h" />
+    <ClInclude Include="headers\common\infinity_loader_common_api.h" />
     <ClInclude Include="headers\common\lua_provider_api.h" />
     <ClInclude Include="headers\common\lua_provider_api_core.h" />
     <ClInclude Include="headers\common\shared_memory.h" />
     <ClInclude Include="headers\common\shared_memory_dll.h" />
     <ClInclude Include="headers\common\shared_memory_types.h" />
+    <ClInclude Include="headers\InfinityLoaderCommon\assembly_writer.h" />
+    <ClInclude Include="headers\InfinityLoaderCommon\InfinityLoaderCommon.h" />
+    <ClInclude Include="headers\InfinityLoaderCommon\template_functions.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\common\bounds_exceeded.cpp" />
-    <ClCompile Include="source\common\InfinityLoaderCommon.cpp" />
-    <ClCompile Include="source\common\InfinityLoaderCommonSharedDLLMemory.cpp" />
+    <ClCompile Include="source\common\InfinityLoaderCommonSharedDLLMemory.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="source\common\InfinityLoaderCommonSharedMemory.cpp" />
+    <ClCompile Include="source\InfinityLoaderCommon\assembly_writer.cpp" />
+    <ClCompile Include="source\InfinityLoaderCommon\InfinityLoaderCommon.cpp" />
+    <ClCompile Include="source\InfinityLoaderCommon\template_functions.cpp" />
+    <ClCompile Include="source\InfinityLoaderCommon\template_function_instantiations.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

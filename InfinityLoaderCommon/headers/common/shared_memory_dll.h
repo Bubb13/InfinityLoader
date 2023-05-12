@@ -11,6 +11,7 @@ struct SharedDLLPaths {
 	String exeName;
 	String iniPath;
 	String workingFolder;
+	StringA workingFolderA;
 };
 
 #define dbPath() sharedDLL->paths.dbPath
@@ -18,6 +19,7 @@ struct SharedDLLPaths {
 #define exeName() sharedDLL->paths.exeName
 #define iniPath() sharedDLL->paths.iniPath
 #define workingFolder() sharedDLL->paths.workingFolder
+#define workingFolderA() sharedDLL->paths.workingFolderA
 
 enum class LuaMode {
 	INTERNAL,

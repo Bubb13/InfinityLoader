@@ -2779,7 +2779,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 	baseclassOut.write("}\n\n")
 
 	baseclassOut.write("void registerBaseclasses() {\n")
-	baseclassOut.write("\tregisterBaseclassOffsets({\n")
+	baseclassOut.write("\tRegisterBaseclassOffsets({\n")
 
 	class OpenFieldData:
 		def __init__(self) -> None:

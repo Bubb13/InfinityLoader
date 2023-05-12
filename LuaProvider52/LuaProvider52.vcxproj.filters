@@ -56,5 +56,8 @@
     <ClCompile Include="source\LuaProvider52\lua_pointers.cpp">
       <Filter>Source Files\LuaProvider52</Filter>
     </ClCompile>
+    <ClCompile Include="source\LuaProvider52\common.cpp">
+      <Filter>Source Files\LuaProvider52</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

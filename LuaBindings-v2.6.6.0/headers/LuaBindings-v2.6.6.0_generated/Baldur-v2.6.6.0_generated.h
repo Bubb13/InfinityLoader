@@ -5,7 +5,7 @@
 #include <queue>
 #include <vector>
 
-#include "InfinityLoaderCommon.h"
+#include "infinity_loader_common_api.h"
 #include "lua_bindings_core_api.h"
 
 typedef char sbyte;

@@ -1,8 +1,5 @@
 
-#include "dll_api.h"
-
-#include "InfinityLoaderCommon.cpp"
-#include "InfinityLoaderCommonSharedDLLMemory.cpp"
+#include "infinity_loader_common_api.h"
 
 //////////
 // Init //
@@ -18,7 +15,7 @@ DWORD getLuaProc(HMODULE luaLibrary, const char* name, out_type& out) {
 	return 0;
 }
 
-EXTERN_C_EXPORT DWORD InitLuaProvider(SharedDLLMemory* sharedDLL) {
+EXTERN_EXPORT DWORD InitLuaProvider(SharedDLLMemory* sharedDLL) {
 
 	#define setLuaPointer(patternName, functionNameStr, functionName) \
 		if (reinterpret_cast<intptr_t>(luaLibrary()) == -1) { \

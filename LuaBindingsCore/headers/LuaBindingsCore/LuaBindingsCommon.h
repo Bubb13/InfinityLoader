@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "InfinityLoaderCommon.h"
+#include "infinity_loader_common_api.h"
 
-EXTERN_C_EXPORT void addPattern(const char* name, void* value);
-EXTERN_C_EXPORT void InitLuaBindingsCommon(SharedDLLMemory* argSharedDLL, std::function<void()> specificBindingsCallback);
+EXPORT void AddPattern(const char* name, void* value);
+EXPORT void InitLuaBindingsCommon(SharedDLLMemory *const argSharedDLL, std::function<void()> specificBindingsCallback);

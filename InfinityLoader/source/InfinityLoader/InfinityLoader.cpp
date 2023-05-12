@@ -2,8 +2,9 @@
 #include <filesystem>
 #include <iostream>
 #include <thread>
+#include <type_traits>
 
-#include "InfinityLoaderCommon.h"
+#include "infinity_loader_common_api.h"
 
 /////////////
 // Globals //
@@ -14,6 +15,7 @@ String exePath;
 String exeName;
 String iniPath;
 String workingFolder;
+StringA workingFolderA;
 
 //////////
 // Code //
@@ -55,39 +57,33 @@ void showConsole()
 	return dwStartAddress;
 }*/
 
-DWORD createSharedMemory() {
+template<typename CharType>
+DWORD writeProcessString(HANDLE hProcess, const CharType* str, intptr_t& memoryPtr) {
 
-	constexpr std::size_t sharedMemSize = sizeof(SharedMemory);
-	hSharedFile = CreateFileMapping(
-		INVALID_HANDLE_VALUE,
-		0,                    // Default security
-		PAGE_READWRITE,
-		sharedMemSize >> 32,
-		sharedMemSize & 0xFFFFFFFF,
-		nullptr               // No name
-	);
+	size_t strSizeBytes;
+	if constexpr (std::is_same<CharType, char>::value) {
+		strSizeBytes = (sizeof(char) + 1) * strlen(str);
+	}
+	else {
+		static_assert(std::is_same<CharType, TCHAR>::value, "Bad character type");
+		strSizeBytes = (sizeof(CharType) + 1) * strlenT(str);
+	}
 
-	if (hSharedFile == NULL) {
-		const DWORD lastError = GetLastError();
-		Print("[!] CreateFileMapping failed (%d).\n", lastError);
+	LPVOID allocPtr = VirtualAllocEx(hProcess, NULL, strSizeBytes, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	if (!allocPtr) {
+		DWORD lastError = GetLastError();
+		Print("[!] VirtualAllocEx failed (%d).\n", lastError);
 		return lastError;
 	}
 
-	shared = reinterpret_cast<SharedMemory*>(MapViewOfFile(
-		hSharedFile,
-		FILE_MAP_ALL_ACCESS,
-		0,                   // Offset to map (high)
-		0,                   // Offset to map (low)
-		0                    // Number of bytes to map (0 = to end of file)
-	));
-
-	if (shared == nullptr) {
-		const DWORD lastError = GetLastError();
-		Print("[!] MapViewOfFile failed (%d).\n", lastError);
+	if (!WriteProcessMemory(hProcess, allocPtr, str, strSizeBytes, NULL)) {
+		DWORD lastError = GetLastError();
+		Print("[!] WriteProcessMemory failed (%d).\n", lastError);
 		return lastError;
 	}
 
-	return ERROR_SUCCESS;
+	memoryPtr = reinterpret_cast<intptr_t>(allocPtr);
+	return 0;
 }
 
 DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
@@ -112,7 +108,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	//////////////////////
 
 	intptr_t dllStrMemory;
-	if (DWORD lastError = writeProcessString(hProcess, TEXT("InfinityLoaderDLL.dll"), dllStrMemory)) {
+	if (DWORD lastError = writeProcessString<TCHAR>(hProcess, TEXT("InfinityLoaderDLL.dll"), dllStrMemory)) {
 		return lastError;
 	}
 
@@ -192,7 +188,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	///////////////////////////////////////
 
 	intptr_t dllInitStrMem;
-	if (DWORD lastError = writeProcessStringA(hProcess, "Init", dllInitStrMem)) {
+	if (DWORD lastError = writeProcessString<char>(hProcess, "Init", dllInitStrMem)) {
 		return lastError;
 	}
 
@@ -310,7 +306,7 @@ DWORD startGame() {
 		return lastError;
 	}
 
-	if (lastError = GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Pause"), 0, bPause())) {
+	if (lastError = GetINIBoolDef(iniPath, TEXT("General"), TEXT("Pause"), false, bPause())) {
 		goto errorFinally;
 	}
 
@@ -366,17 +362,17 @@ errorFinally:;
 }
 
 DWORD init() {
-	TryRetErr( createSharedMemory() )
-	TryRetErr( initPaths(dbPath, exePath, exeName, iniPath, workingFolder) )
-	TryRetErr( GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
-	TryRetErr( GetINIIntegerDef<bool>(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility()) )
+	TryRetErr( CreateSharedMemory(hSharedFile, shared) )
+	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
+	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
+	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility()) )
 	TryElseRetErr( UnbufferCrtStreams(), Print("[!] UnbufferCrtStreams failed (%d).\n", error) )
 	TryElseRetErr( InitFPrint(), Print("[!] InitFPrint failed (%d).\n", error) )
 	return ERROR_SUCCESS;
 }
 
 int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
-	String dmpLocation = writeDump(pointers);
+	String dmpLocation = WriteDump(workingFolder, pointers);
 	MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, TEXT("Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
 	exit(code);
 }

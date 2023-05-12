@@ -13,7 +13,7 @@
 
 #include "pointers.h"
 #include "lua_provider_api.h"
-#include "InfinityLoaderCommon.h"
+#include "infinity_loader_common_api.h"
 #include "asmjit/asmjit.h"
 #include "asmtk/asmtk.h"
 #include "bounds_exceeded.h"
@@ -68,7 +68,7 @@ DWORD loadLuaLibrary(const String& luaModeStr) {
 	String luaLibraryName;
 
 	bool filled;
-	TryRetErr( GetINIString(iniPath(), TEXT("General"), TEXT("LuaLibrary"), luaLibraryName, filled))
+	TryRetErr( GetINIStr(iniPath(), TEXT("General"), TEXT("LuaLibrary"), luaLibraryName, filled))
 
 	if (!filled) {
 		PrintT(TEXT("[!] [General].LuaLibrary must be defined when [General].LuaPatchMode == \"%s\".\n"), luaModeStr.c_str());
@@ -85,7 +85,7 @@ DWORD loadLuaLibrary(const String& luaModeStr) {
 DWORD loadLuaMode() {
 
 	String luaModeStr;
-	TryRetErr( GetINIStringDef(iniPath(), TEXT("General"), TEXT("LuaPatchMode"), TEXT(""), luaModeStr) );
+	TryRetErr( GetINIStrDef(iniPath(), TEXT("General"), TEXT("LuaPatchMode"), TEXT(""), luaModeStr) );
 
 	if (luaModeStr == TEXT("INTERNAL")) {
 		luaMode() = LuaMode::INTERNAL;
@@ -180,7 +180,7 @@ void callOverrideFile(lua_State* L, const char* name) {
 	lua_getglobal(L, "debug");                                                              // [ debug ]
 	lua_getfield(L, -1, "traceback");                                                       // [ debug, traceback ]
 
-	StringA luaFile = getWorkingFolderA().append("override\\").append(name).append(".lua");
+	StringA luaFile = StringA{ workingFolderA() }.append("override\\").append(name).append(".lua");
 	if (luaL_loadfilex(L, luaFile.c_str(), nullptr) != LUA_OK) {
 		                                                                                    // [ debug, traceback, errorMessage ]
 		lua_pushvalue(L, -2);                                                               // [ debug, traceback, errorMessage, traceback ]
@@ -349,7 +349,7 @@ bool findByteList(ImageSectionInfo& section, std::list<PatternByteEntry> byteLis
 
 template<typename Func>
 bool checkOperationsArgCount(const String& iniCategoryName, const String& operationStr,
-							 const std::vector<String>& parts, const Func condition)
+	const std::vector<String>& parts, const Func condition)
 {
 	size_t numArgs = parts.size() - 1;
 	if (!condition(numArgs)) {
@@ -361,7 +361,7 @@ bool checkOperationsArgCount(const String& iniCategoryName, const String& operat
 }
 
 bool checkOperationsStackCount(const String& iniCategoryName, const String& operationStr,
-							   const std::vector<intptr_t>& stack, size_t neededStackSize)
+	const std::vector<intptr_t>& stack, size_t neededStackSize)
 {
 	size_t stackSize = stack.size();
 	if (stackSize < neededStackSize) {
@@ -373,10 +373,10 @@ bool checkOperationsStackCount(const String& iniCategoryName, const String& oper
 }
 
 bool tryOperationsConvertToDecimal(const String& iniCategoryName, const String& operationStr,
-								   const std::vector<String>& parts, const int argI, intptr_t& out)
+	const std::vector<String>& parts, const int argI, intptr_t& out)
 {
 	String arg = parts[argI];
-	if (!decimalStrToInteger(arg, out)) {
+	if (!DecStrToIntPtr(arg, out)) {
 		PrintT(TEXT("[!] Failed to convert %s argument to decimal for [%s].Operations: \"%s\"\n"),
 				operationStr.c_str(), iniCategoryName.c_str(), arg.c_str());
 		return false;
@@ -410,9 +410,9 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, intpt
 		return true; \
 	}
 
-	forEveryCharSplit(operationsStr, TCHAR{ ',' }, [&](const String str) {
+	ForEveryCharSplit(operationsStr, TCHAR{ ',' }, [&](const String str) {
 
-		forEveryCharSplit(str, TCHAR{ ' ' }, [&](const String str) {
+		ForEveryCharSplit(str, TCHAR{ ' ' }, [&](const String str) {
 			curParts.push_back(str);
 			return false;
 		});
@@ -584,7 +584,7 @@ DWORD resolveAliasTarget(const String aliasList, String& toTransform) {
 	}
 
 	DWORD result = 0;
-	forEveryCharSplit(aliasList, TCHAR{','}, [&](const String str) {
+	ForEveryCharSplit(aliasList, TCHAR{','}, [&](const String str) {
 
 		const size_t colonI = str.find(TCHAR{':'});
 
@@ -618,14 +618,14 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPat
 	String iniCategoryName, intptr_t& addressOut)
 {
 	intptr_t bExeSwitch;
-	if (DWORD lastError = GetINIIntegerDef<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
+	if (DWORD lastError = GetINIIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
 		return lastError;
 	}
 
 	if (bExeSwitch) {
 
 		String exeAlias;
-		if (DWORD lastError{ GetINIStringDef(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitchAlias"), TEXT(""), exeAlias) }) {
+		if (DWORD lastError{ GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitchAlias"), TEXT(""), exeAlias) }) {
 			return lastError;
 		}
 
@@ -638,14 +638,14 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPat
 	}
 
 	bool noCache;
-	if (DWORD lastError = GetINIIntegerDef<bool>(iniPath, iniCategoryName.c_str(), TEXT("NoCache"), false, noCache)) {
+	if (DWORD lastError = GetINIBoolDef(iniPath, iniCategoryName.c_str(), TEXT("NoCache"), false, noCache)) {
 		return lastError;
 	}
 
 	if (!noCache && attemptUseCached) {
 
 		intptr_t cachedAddress;
-		if (DWORD lastError = GetINIIntegerDef<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), 0, cachedAddress)) {
+		if (DWORD lastError = GetINIIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), 0, cachedAddress)) {
 			return lastError;
 		}
 
@@ -656,7 +656,7 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPat
 	}
 
 	String hardcodedPatchPattern;
-	if (DWORD lastError = GetINIStringDef(iniPath, iniCategoryName.c_str(), TEXT("Pattern"), TEXT(""), hardcodedPatchPattern)) {
+	if (DWORD lastError = GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Pattern"), TEXT(""), hardcodedPatchPattern)) {
 		return lastError;
 	}
 
@@ -673,7 +673,7 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPat
 	}
 
 	String operations;
-	if (DWORD lastError = GetINIStringDef(iniPath, iniCategoryName.c_str(), TEXT("Operations"), TEXT(""), operations)) {
+	if (DWORD lastError = GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Operations"), TEXT(""), operations)) {
 		return lastError;
 	}
 
@@ -682,7 +682,7 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPat
 	}
 
 	if (!noCache) {
-		if (DWORD lastError = SetINIInteger<intptr_t>(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), addressOut)) {
+		if (DWORD lastError = SetINIIntPtr(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), addressOut)) {
 			return lastError;
 		}
 	}
@@ -714,7 +714,7 @@ DWORD findPatterns(ImageSectionInfo& sectionInfo) {
 	bool alreadyCached;
 	long long cachedExeTime;
 
-	if (DWORD lastError = GetINIInteger<long long>(iniPath(), TEXT("Auto-Generated"), TEXT("CachedExeTime"), cachedExeTime, alreadyCached)) {
+	if (DWORD lastError = GetINILongLong(iniPath(), TEXT("Auto-Generated"), TEXT("CachedExeTime"), cachedExeTime, alreadyCached)) {
 		return lastError;
 	}
 
@@ -725,7 +725,7 @@ DWORD findPatterns(ImageSectionInfo& sectionInfo) {
 	}
 
 	if (!attemptUseCached) {
-		if (DWORD lastError = SetINIInteger<long long>(iniPath(), TEXT("Auto-Generated"), TEXT("CachedExeTime"), exeLastModifiedTime)) {
+		if (DWORD lastError = SetINILongLong(iniPath(), TEXT("Auto-Generated"), TEXT("CachedExeTime"), exeLastModifiedTime)) {
 			return lastError;
 		}
 	}
@@ -769,9 +769,7 @@ int allocCodePageInternalLua(lua_State* L) {
 	GetSystemInfo(&info);
 
 	intptr_t allocated;
-	if (DWORD lastError = allocateNear(textInfo().ImageBase, info.dwAllocationGranularity,
-		info.dwAllocationGranularity, allocated))
-	{
+	if (AllocateNear(textInfo().ImageBase, info.dwAllocationGranularity, allocated)) {
 		return 0;
 	}
 
@@ -831,7 +829,7 @@ int freeLua(lua_State* L) {
 }
 
 int getLuaRegistryIndexLua(lua_State* L) {
-	castLuaIntArg(1, int, n)
+	castLuaIntArg(1, int, Int, n)
 	lua_rawgeti(L, LUA_REGISTRYINDEX, n);
 	return 1;
 }
@@ -851,11 +849,11 @@ int getMicrosecondsLua(lua_State* L) {
 }
 
 int getPatternMapLua(lua_State* L) {
-	lua_newtable(L);                                    // [ table ]
+	lua_newtable(L);                                            // [ table ]
 	for (auto& pattern : patterns()) {
-		lua_pushstring(L, ws2s(pattern.first).c_str()); // [ table, k ]
-		lua_pushinteger(L, pattern.second.value);       // [ table, k, v ]
-		lua_rawset(L, -3);                              // [ table ]
+		lua_pushstring(L, WideStrToStr(pattern.first).c_str()); // [ table, k ]
+		lua_pushinteger(L, pattern.second.value);               // [ table, k, v ]
+		lua_rawset(L, -3);                                      // [ table ]
 	}
 	return 1;
 }
@@ -979,7 +977,7 @@ int jitAtInternalLua(lua_State* L) {
 int loadLuaBindingsLua(lua_State* L) {
 
 	const char* bindingsFileName = lua_tolstring(L, 1, nullptr);
-	StringA bindingsPath = getWorkingFolderA().append(bindingsFileName).append(".dll");
+	StringA bindingsPath = StringA{ workingFolderA() }.append(bindingsFileName).append(".dll");
 
 	HMODULE bindingsHandle;
 	if (bindingsHandle = LoadLibraryA(bindingsPath.c_str()); !bindingsHandle) {
@@ -1006,26 +1004,26 @@ int lshiftLua(lua_State* L) {
 }
 
 int mallocLua(lua_State* L) {
-	castLuaIntArg(1, size_t, size)
+	castLuaIntArg(1, size_t, SizeT, size)
 	lua_pushinteger(L, reinterpret_cast<lua_Integer>(malloc(size)));
 	return 1;
 }
 
 int memcpyLua(lua_State* L) {
-	castLuaIntArg(3, size_t, size)
+	castLuaIntArg(3, size_t, SizeT, size)
 	memcpy(reinterpret_cast<void*>(lua_tointeger(L, 1)), reinterpret_cast<void*>(lua_tointeger(L, 2)), size);
 	return 0;
 }
 
 int memsetLua(lua_State* L) {
-	castLuaIntArg(2, int, val)
-	castLuaIntArg(3, size_t, size)
+	castLuaIntArg(2, int, Int, val)
+	castLuaIntArg(3, size_t, SizeT, size)
 	memset(reinterpret_cast<void*>(lua_tointeger(L, 1)), val, size);
 	return 0;
 }
 
 int messageBoxInternalLua(lua_State* L) {
-	castLuaIntArg(2, UINT, uType)
+	castLuaIntArg(2, UINT, UInt, uType)
 	MessageBoxA(NULL, lua_tostring(L, 1), "EEex", uType);
 	return 0;
 }
@@ -1091,7 +1089,7 @@ int readU8Lua(lua_State* L) {
 
 int readLString(lua_State* L) {
 	const char *const data { reinterpret_cast<char*>(lua_tointeger(L, 1)) };
-	castLuaIntArg(2, size_t, length)
+	castLuaIntArg(2, size_t, SizeT, length)
 	char *const localCopy { reinterpret_cast<char*>(alloca(length + 1)) };
 	size_t i { 0 };
 	for (; i < length; ++i) {
@@ -1118,7 +1116,7 @@ int rshiftLua(lua_State* L) {
 
 int runWithStackLua(lua_State* L) {
 
-	castLuaIntArg(1, size_t, size)
+	castLuaIntArg(1, size_t, SizeT, size)
 
 	lua_getglobal(L, "debug");                              // [ debug ]
 	lua_getfield(L, -1, "traceback");                       // [ debug, traceback ]
@@ -1141,39 +1139,40 @@ int runWithStackLua(lua_State* L) {
 }
 
 int setLuaRegistryIndexLua(lua_State* L) {
-	castLuaIntArg(1, int, n)
+	castLuaIntArg(1, int, Int, n)
 	lua_pushvalue(L, 2);
 	lua_rawseti(L, LUA_REGISTRYINDEX, n);
 	return 0;
 }
 
 int toDecimalStringLua(lua_State* L) {
-	lua_pushstring(L, integerToDecimalStr<StringA>(lua_tointeger(L, 1)).c_str());
+	static_assert(std::is_same<lua_Integer, ptrdiff_t>::value, "Expected lua_Integer type");
+	lua_pushstring(L, PtrDiffToDecStrA(lua_tointeger(L, 1)).c_str());
 	return 1;
 }
 
 int write16Lua(lua_State* L) {
-	castLuaIntArg(2, __int16, val)
+	castLuaIntArg(2, __int16, Int16, val)
 	*reinterpret_cast<__int16*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int write32Lua(lua_State* L) {
-	castLuaIntArg(2, __int32, val)
+	castLuaIntArg(2, __int32, Int32, val)
 	*reinterpret_cast<__int32*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 #if defined(_WIN64)
 int write64Lua(lua_State* L) {
-	castLuaIntArg(2, __int64, val)
+	castLuaIntArg(2, __int64, Int64, val)
 	*reinterpret_cast<__int64*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 #endif
 
 int write8Lua(lua_State* L) {
-	castLuaIntArg(2, __int8, val)
+	castLuaIntArg(2, __int8, Int8, val)
 	*reinterpret_cast<__int8*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
@@ -1184,25 +1183,25 @@ int writePointerLua(lua_State* L) {
 }
 
 int writeU16Lua(lua_State* L) {
-	castLuaIntArg(2, unsigned __int16, val)
+	castLuaIntArg(2, unsigned __int16, UInt16, val)
 	*reinterpret_cast<unsigned __int16*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int writeU32Lua(lua_State* L) {
-	castLuaIntArg(2, unsigned __int32, val)
+	castLuaIntArg(2, unsigned __int32, UInt32, val)
 	*reinterpret_cast<unsigned __int32*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int writeU64Lua(lua_State* L) {
-	castLuaIntArg(2, unsigned __int64, val)
+	castLuaIntArg(2, unsigned __int64, UInt64, val)
 	*reinterpret_cast<unsigned __int64*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
 
 int writeU8Lua(lua_State* L) {
-	castLuaIntArg(2, unsigned __int8, val)
+	castLuaIntArg(2, unsigned __int8, UInt8, val)
 	*reinterpret_cast<unsigned __int8*>(lua_tointeger(L, 1)) = val;
 	return 0;
 }
@@ -1210,7 +1209,7 @@ int writeU8Lua(lua_State* L) {
 int writeLStringLua(lua_State* L) {
 	char* dest = reinterpret_cast<char*>(lua_tointeger(L, 1));
 	const char* src = lua_tostring(L, 2);
-	castLuaIntArg(3, size_t, limit)
+	castLuaIntArg(3, size_t, SizeT, limit)
 	size_t i = 0;
 	for (; i < limit; ++i) {
 		*dest++ = *src++;
@@ -1280,9 +1279,7 @@ DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
 
-	if (DWORD lastError = allocateNear(textInfo().ImageBase, info.dwAllocationGranularity,
-		info.dwAllocationGranularity, curAllocatedPtr))
-	{
+	if (DWORD lastError = AllocateNear(textInfo().ImageBase, info.dwAllocationGranularity, curAllocatedPtr)) {
 		return lastError;
 	}
 
@@ -1380,7 +1377,7 @@ DWORD detatchFromConsole(bool force = false) {
 		}
 
 		bool keepConsoleAttached;
-		if (GetINIIntegerDef<bool>(iniPath(), TEXT("General"), TEXT("KeepConsoleAttached"), false, keepConsoleAttached) == ERROR_SUCCESS
+		if (GetINIBoolDef(iniPath(), TEXT("General"), TEXT("KeepConsoleAttached"), false, keepConsoleAttached) == ERROR_SUCCESS
 			&& keepConsoleAttached)
 		{
 			return ERROR_SUCCESS;
@@ -1401,7 +1398,7 @@ DWORD detatchFromConsole(bool force = false) {
 	// OS handles in the file descriptors still need to be closed.
 
 	bool keepCrtStreamsAttached;
-	if (GetINIIntegerDef<bool>(iniPath(), TEXT("General"), TEXT("KeepCrtStreamsAttached"), false, keepCrtStreamsAttached) == ERROR_SUCCESS
+	if (GetINIBoolDef(iniPath(), TEXT("General"), TEXT("KeepCrtStreamsAttached"), false, keepCrtStreamsAttached) == ERROR_SUCCESS
 		&& !keepCrtStreamsAttached)
 	{
 		NulCrtStreams();
@@ -1538,7 +1535,7 @@ DWORD fillLuaPointer(const String& name, pointer_type& pointer, const operations
 		operations(address);
 	}
 	else {
-		TryRetErr( getLuaProc(StringToStringA(name).c_str(), address) )
+		TryRetErr( getLuaProc(StrToStrA(name).c_str(), address) )
 	}
 
 	fillExportedPointer(hardcodedName, pointer, address);
@@ -1757,7 +1754,7 @@ DWORD setUpLuaInitialization(ImageSectionInfo& textInfo) {
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
 
-	TryRetErr( allocateNear(textInfo.ImageBase, info.dwAllocationGranularity, info.dwAllocationGranularity, curAllocatedPtr) )
+	TryRetErr( AllocateNear(textInfo.ImageBase, info.dwAllocationGranularity, curAllocatedPtr) )
 
 	unsigned char codeBuff[1024];
 	AssemblyWriter writer{ codeBuff };
@@ -1791,7 +1788,7 @@ DWORD setUpLuaInitialization(ImageSectionInfo& textInfo) {
 DWORD loadExeNameForPatterns() {
 	exeNameForPatterns = exeName();
 	String globalExeAlias;
-	TryRetErr( GetINIStringDef(iniPath(), TEXT("General"), TEXT("ExeSwitchAlias"), TEXT(""), globalExeAlias) )
+	TryRetErr( GetINIStrDef(iniPath(), TEXT("General"), TEXT("ExeSwitchAlias"), TEXT(""), globalExeAlias) )
 	return resolveAliasTarget(globalExeAlias, exeNameForPatterns);
 }
 
@@ -1832,6 +1829,8 @@ byte init(HANDLE hSharedFile) {
 		return 1;
 	}
 
+	InitSharedMemory(hSharedFile, shared());
+
 	if (bPause()) {
 		MessageBox(NULL, TEXT("Pause"), TEXT("InfinityLoaderDLL"), MB_ICONINFORMATION);
 	}
@@ -1862,7 +1861,7 @@ byte init(HANDLE hSharedFile) {
 		Print("[?] DLL hStdError: %d\n", GetStdHandle(STD_ERROR_HANDLE));
 	}
 
-	if (initPaths(dbPath(), exePath(), exeName(), iniPath(), workingFolder())) {
+	if (InitPaths(dbPath(), exePath(), exeName(), iniPath(), workingFolder(), workingFolderA())) {
 		return 2;
 	}
 
@@ -1870,7 +1869,7 @@ byte init(HANDLE hSharedFile) {
 }
 
 int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
-	String dmpLocation = writeDump(pointers);
+	String dmpLocation = WriteDump(workingFolder(), pointers);
 	MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
 	codeOut = code;
 	return EXCEPTION_EXECUTE_HANDLER;
@@ -1878,7 +1877,7 @@ int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned i
 
 int exceptionFilterIgnoreIfSubsequent(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
 	if (!codeOut) {
-		String dmpLocation = writeDump(pointers);
+		String dmpLocation = WriteDump(workingFolder(), pointers);
 		MessageBoxFormat(TEXT("InfinityLoaderDLL"), MB_ICONERROR, TEXT("Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
 		codeOut = code;
 	}

@@ -1,8 +1,8 @@
 
 #include <stdio.h>
 
+#include "infinity_loader_common_api.h"
 #include "lua_bindings_core_api.h"
-#include "InfinityLoaderCommon.h"
 
 ///////////////
 // Debugging //

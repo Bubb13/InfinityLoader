@@ -3,7 +3,17 @@
 
 #include <string>
 
+#include "dll_api.h"
+
 #include <Windows.h>
+
+#ifdef INFINITY_LOADER_COMMON_EXPORT
+#define INFINITY_LOADER_COMMON_API EXPORT
+#define INFINITY_LOADER_COMMON_API_VAR EXTERN_EXPORT
+#else
+#define INFINITY_LOADER_COMMON_API IMPORT
+#define INFINITY_LOADER_COMMON_API_VAR EXTERN_IMPORT
+#endif
 
 ///////////////////////////
 // Type Defs and Defines //
@@ -37,6 +47,7 @@ typedef std::wifstream IFStream;
 #define PrintErr(...) FPrint(stderr, ##__VA_ARGS__)
 #define PrintT(...) FPrintT(stdout, ##__VA_ARGS__)
 #define PrintTErr(...) FPrintT(stderr, ##__VA_ARGS__)
+typedef void (LogFuncT)(const TCHAR* toLog);
 
 #define printf error
 #define printfT error
@@ -47,13 +58,58 @@ typedef std::string StringA;
 typedef std::wstring StringW;
 typedef std::ostringstream OStringStreamA;
 
+#define TryRetErr(expression) \
+	if (auto error = expression) { \
+		return error; \
+	}
+
+#define TryAssignRetErr(toAssign, expression) \
+	if (toAssign = expression) { \
+		return toAssign; \
+	}
+
+#define TryAssignElseRetErr(toAssign, expression, errorStatement) \
+	if (toAssign = expression) { \
+		errorStatement; \
+		return toAssign; \
+	}
+
+#define TryAssignCondElseRetLastErr(toAssign, expression, condition, errorStatement) \
+	if (toAssign = expression; condition) { \
+		DWORD lastError = GetLastError(); \
+		errorStatement; \
+		return lastError; \
+	}
+
+#define TryRet(expression) \
+	if (expression) { \
+		return; \
+	}
+
+#define TryElseRetErr(expression, errorStatement) \
+	if (auto error = expression) { \
+		errorStatement; \
+		return error; \
+	}
+
+#define TryElseRetLastErr(expression, errorStatement) \
+	if (expression) { \
+		DWORD lastError = GetLastError(); \
+		errorStatement; \
+		return lastError; \
+	}
+
+#define TryRetLastErr(expression) \
+	if (expression) { \
+		return GetLastError(); \
+	}
+
 /////////////
 // Logging //
 /////////////
 
 typedef void(*type_FPrint)(FILE* file, const char* formatText, ...);
 typedef void(*type_FPrintT)(FILE* file, const TCHAR* formatText, ...);
-typedef void (LogFuncT)(const TCHAR* toLog);
 
 //////////////////
 // INI Handling //
@@ -62,44 +118,16 @@ typedef void (LogFuncT)(const TCHAR* toLog);
 struct PatternEntry {
 	String name;
 	intptr_t value;
-	PatternEntry(const String str, const intptr_t val);
+	INFINITY_LOADER_COMMON_API PatternEntry(const String str, const intptr_t val);
 };
 
 //////////////////////
 // Assembly Writing //
 //////////////////////
 
-struct ImageSectionInfo
-{
+struct ImageSectionInfo {
 	intptr_t ImageBase;
 	char SectionName[IMAGE_SIZEOF_SHORT_NAME];
 	void* SectionAddress;
 	DWORD SectionSize;
-};
-
-class AssemblyWriter {
-private:
-	unsigned char* buffer;
-	size_t curI;
-	intptr_t startMemAddress;
-	intptr_t curMemAddress;
-public:
-	AssemblyWriter(unsigned char* buff);
-	intptr_t getLocation();
-	void setLocation(intptr_t newCurMemAddress);
-	void writeBytesToBuffer(int numBytes, ...);
-	void writeNumberToBuffer(intptr_t pointer, size_t writeSize);
-	void writeRelativeToBuffer32(intptr_t relAddress);
-	void branchUsingIndirect64(intptr_t destAddress, unsigned char branchOpcode);
-	void writeArgImmediate32(__int32 num, int argI);
-	void jmpToAddressFar(intptr_t address);
-	void jmpToAddress(intptr_t address);
-	void callToAddressFar(intptr_t address);
-	void callToAddress(intptr_t address);
-	void alignStackAndMakeShadowSpace();
-	void undoAlignAndShadowSpace();
-	void pushVolatileRegisters();
-	void popVolatileRegisters();
-	void printBuffer();
-	void flush();
 };
