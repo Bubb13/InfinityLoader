@@ -1,1 +1,1 @@
-#include "InfinityLoaderCommonSharedMemory.cpp"
+#include "infinity_loader_common_shared_memory.cpp"

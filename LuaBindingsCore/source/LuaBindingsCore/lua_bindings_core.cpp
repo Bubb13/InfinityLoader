@@ -1,9 +1,6 @@
 
-#include <map>
-
-#include "LuaBindingsCommon.h"
+#include "infinity_loader_common_api.h"
 #include "to_lua_pointers.h"
-#include "bounds_exceeded.h"
 
 /////////////
 // Globals //

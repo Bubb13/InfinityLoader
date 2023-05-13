@@ -1,11 +1,7 @@
 
 #pragma once
 
-#include <format>
-#include <string>
-
 #include "tolua/tolua.h"
-#include "lua_provider_api.h"
 
 /////////////
 // Special //

@@ -41,10 +41,10 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\InfinityLoader\InfinityLoader.cpp">
+    <ClCompile Include="source\InfinityLoader\common.cpp">
       <Filter>Source Files\InfinityLoader</Filter>
     </ClCompile>
-    <ClCompile Include="source\InfinityLoader\common.cpp">
+    <ClCompile Include="source\InfinityLoader\infinity_loader.cpp">
       <Filter>Source Files\InfinityLoader</Filter>
     </ClCompile>
   </ItemGroup>

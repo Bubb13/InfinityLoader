@@ -1,12 +1,11 @@
 
 #pragma once
 
-#include <functional>
 #include <format>
+#include <functional>
 
 #include "shared_memory_dll.h"
 #include "tolua/tolua.h"
-#include "lua_provider_api.h"
 
 //////////
 // Main //

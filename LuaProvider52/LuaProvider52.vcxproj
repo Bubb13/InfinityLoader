@@ -73,7 +73,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_PROVIDER_EXPORT;SHARED_MEMORY_DLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;NDEBUG;LUAPROVIDER52_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_PROVIDER_EXPORT;SHARED_MEMORY_DLL;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -104,7 +104,7 @@
   <ItemGroup>
     <ClCompile Include="source\LuaProvider52\common.cpp" />
     <ClCompile Include="source\LuaProvider52\lua_pointers.cpp" />
-    <ClCompile Include="source\LuaProvider52\main.cpp" />
+    <ClCompile Include="source\LuaProvider52\lua_provider_52.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

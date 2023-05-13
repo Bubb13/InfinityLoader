@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Baldur-v2.6.6.0_lua_generated.h"
+#include "lua_provider_api.h"
 
 void InitGenerated();
 int OpenBindings(lua_State* L);

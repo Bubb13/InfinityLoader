@@ -422,13 +422,13 @@
     <ClCompile Include="asmtk\asmtokenizer.cpp">
       <Filter>asmtk</Filter>
     </ClCompile>
-    <ClCompile Include="source\InfinityLoaderDLL\InfinityLoaderDLL.cpp">
-      <Filter>Source Files\InfinityLoaderDLL</Filter>
-    </ClCompile>
     <ClCompile Include="source\InfinityLoaderDLL\pointers.cpp">
       <Filter>Source Files\InfinityLoaderDLL</Filter>
     </ClCompile>
     <ClCompile Include="source\InfinityLoaderDLL\common.cpp">
+      <Filter>Source Files\InfinityLoaderDLL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InfinityLoaderDLL\infinity_loader_dll.cpp">
       <Filter>Source Files\InfinityLoaderDLL</Filter>
     </ClCompile>
   </ItemGroup>
@@ -436,7 +436,7 @@
     <None Include="COPY_TO_GAME.ps1">
       <Filter>Build Tasks</Filter>
     </None>
-    <None Include="InfinityLoaderDLL.def">
+    <None Include="infinity_loader_dll.def">
       <Filter>Module Definition</Filter>
     </None>
   </ItemGroup>

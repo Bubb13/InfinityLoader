@@ -27,9 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\LuaBindingsCore\LuaBindingsCommon.h">
-      <Filter>Header Files\LuaBindingsCore</Filter>
-    </ClInclude>
     <ClInclude Include="headers\LuaBindingsCore\to_lua_pointers.h">
       <Filter>Header Files\LuaBindingsCore</Filter>
     </ClInclude>
@@ -44,10 +41,10 @@
     <ClCompile Include="source\LuaBindingsCore\to_lua_pointers.cpp">
       <Filter>Source Files\LuaBindingsCore</Filter>
     </ClCompile>
-    <ClCompile Include="source\LuaBindingsCore\LuaBindingsCore.cpp">
+    <ClCompile Include="source\LuaBindingsCore\lua_bindings_core.cpp">
       <Filter>Source Files\LuaBindingsCore</Filter>
     </ClCompile>
-    <ClCompile Include="source\LuaBindingsCore\LuaBindingsCore_common.cpp">
+    <ClCompile Include="source\LuaBindingsCore\common.cpp">
       <Filter>Source Files\LuaBindingsCore</Filter>
     </ClCompile>
   </ItemGroup>

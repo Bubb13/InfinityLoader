@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "lua_provider_api_core.h"
 #include "shared_memory_dll.h"
 
 //////////

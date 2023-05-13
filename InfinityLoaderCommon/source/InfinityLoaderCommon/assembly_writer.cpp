@@ -1,6 +1,6 @@
 
-#include "InfinityLoaderCommon.h"
 #include "assembly_writer.h"
+#include "infinity_loader_common.h"
 
 //////////////////////
 // Assembly Writing //

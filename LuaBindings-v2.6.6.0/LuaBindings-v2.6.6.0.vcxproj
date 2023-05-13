@@ -84,16 +84,16 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;NDEBUG;LUABINDINGSV2660_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>LuaBindings-v2.6.6.0.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>lua_bindings-v2.6.6.0.def</ModuleDefinitionFile>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -123,7 +123,7 @@
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated.cpp" />
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\LuaBindings-v2.6.6.0.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\lua_bindings-v2.6.6.0.cpp" />
     <ClCompile Include="source\LuaBindings-v2.6.6.0\util.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -141,7 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />
-    <None Include="LuaBindings-v2.6.6.0.def" />
+    <None Include="lua_bindings-v2.6.6.0.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

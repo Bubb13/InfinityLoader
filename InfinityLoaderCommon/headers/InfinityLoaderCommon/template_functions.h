@@ -1,9 +1,7 @@
 
 #pragma once
 
-#include <functional>
-
-#include "InfinityLoaderCommon.h"
+#include "infinity_loader_common.h"
 
 /////////////
 // Globals //
@@ -20,27 +18,6 @@ void LogUsingFuncT(LogFuncT logFunc, const TCHAR* formatText, ...);
 ////////////////////////
 // Template Functions //
 ////////////////////////
-
-template<typename IntegerType>
-constexpr IntegerType maxIntegerTypeValue() {
-	if constexpr (std::is_unsigned<IntegerType>::value) {
-		return ~0;
-	}
-	else {
-		using UnsignedType = typename std::make_unsigned<IntegerType>::type;
-		return static_cast<UnsignedType>(~0) >> 1;
-	}
-}
-
-template<typename IntegerType>
-constexpr std::make_signed<IntegerType>::type minIntegerTypeValue() {
-	if constexpr (std::is_unsigned<IntegerType>::value) {
-		return 0;
-	}
-	else {
-		return -maxIntegerTypeValue<IntegerType>() - 1;
-	}
-}
 
 // TODO: Suboptimal
 template<typename IntegerType>
@@ -96,7 +73,7 @@ struct DivisorInformation {
 template<typename IntegerType>
 constexpr DivisorInformation<IntegerType> calculateDivisorInformation() {
 
-	constexpr auto maxPossible = maxIntegerTypeValue<IntegerType>() / 10;
+	constexpr auto maxPossible = (std::numeric_limits<IntegerType>::max)() / 10;
 
 	IntegerType multiple = 1;
 	IntegerType numChars = 1;

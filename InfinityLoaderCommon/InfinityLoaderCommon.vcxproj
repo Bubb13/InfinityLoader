@@ -77,7 +77,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <PreprocessorDefinitions>INFINITY_LOADER_COMMON_EXPORT;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>INFINITY_LOADER_COMMON_EXPORT;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -97,27 +97,25 @@
     <None Include="COPY_TO_COMMON.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\common\bounds_exceeded.h" />
     <ClInclude Include="headers\common\dll_api.h" />
-    <ClInclude Include="headers\common\dummy_lua_generated.h" />
-    <ClInclude Include="headers\common\InfinityLoaderCommonTypes.h" />
     <ClInclude Include="headers\common\infinity_loader_common_api.h" />
+    <ClInclude Include="headers\common\infinity_loader_common_types.h" />
     <ClInclude Include="headers\common\lua_provider_api.h" />
     <ClInclude Include="headers\common\lua_provider_api_core.h" />
     <ClInclude Include="headers\common\shared_memory.h" />
     <ClInclude Include="headers\common\shared_memory_dll.h" />
     <ClInclude Include="headers\common\shared_memory_types.h" />
     <ClInclude Include="headers\InfinityLoaderCommon\assembly_writer.h" />
-    <ClInclude Include="headers\InfinityLoaderCommon\InfinityLoaderCommon.h" />
+    <ClInclude Include="headers\InfinityLoaderCommon\infinity_loader_common.h" />
     <ClInclude Include="headers\InfinityLoaderCommon\template_functions.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\common\InfinityLoaderCommonSharedDLLMemory.cpp">
+    <ClCompile Include="source\common\infinity_loader_common_shared_dll_memory.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="source\common\InfinityLoaderCommonSharedMemory.cpp" />
+    <ClCompile Include="source\common\infinity_loader_common_shared_memory.cpp" />
     <ClCompile Include="source\InfinityLoaderCommon\assembly_writer.cpp" />
-    <ClCompile Include="source\InfinityLoaderCommon\InfinityLoaderCommon.cpp" />
+    <ClCompile Include="source\InfinityLoaderCommon\infinity_loader_common.cpp" />
     <ClCompile Include="source\InfinityLoaderCommon\template_functions.cpp" />
     <ClCompile Include="source\InfinityLoaderCommon\template_function_instantiations.cpp" />
   </ItemGroup>

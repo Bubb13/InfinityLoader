@@ -1,9 +1,11 @@
 
 #pragma once
 
-#include "InfinityLoaderCommonTypes.h"
-#include "shared_memory_types.h"
+#include <map>
+
+#include "infinity_loader_common_types.h"
 #include "lua_provider_api_core.h"
+#include "shared_memory_types.h"
 
 struct SharedDLLPaths {
 	String dbPath;

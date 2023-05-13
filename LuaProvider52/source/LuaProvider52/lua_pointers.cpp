@@ -1,11 +1,8 @@
 
 #include <format>
-#include <limits>
-#include <string>
 
-#include "dll_api.h"
-#include "lua_pointers.h"
 #include "lua_implementation.h"
+#include "lua_pointers.h"
 
 /////////////
 // Defines //

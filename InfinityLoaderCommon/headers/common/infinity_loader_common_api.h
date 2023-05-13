@@ -3,8 +3,7 @@
 
 #include <functional>
 
-#include "InfinityLoaderCommonTypes.h"
-#include "dll_api.h"
+#include "infinity_loader_common_types.h"
 
 #if defined SHARED_MEMORY_DLL_HOST || defined SHARED_MEMORY_DLL
 #include "shared_memory_dll.h"
@@ -105,10 +104,6 @@ IMPORT StringA PtrDiffToDecStrA(const ptrdiff_t integer);
 // Paths //
 ///////////
 
-//extern String getMyFolder();
-//extern String getMyPath();
-//extern String getWorkingFolder();
-//extern StringA getWorkingFolderA();
 IMPORT DWORD InitPaths(String& dbPath, String& exePath, String& exeName,
 	String& iniPath, String& workingFolder, StringA& workingFolderA);
 
@@ -116,8 +111,6 @@ IMPORT DWORD InitPaths(String& dbPath, String& exePath, String& exeName,
 // Assembly Writing //
 //////////////////////
 
-//extern DWORD writeProcessString(HANDLE hProcess, const TCHAR* str, intptr_t& memoryPtr);
-//extern DWORD writeProcessStringA(HANDLE hProcess, const char* str, intptr_t& memoryPtr);
 IMPORT DWORD AllocateNear(intptr_t address, size_t size, intptr_t& allocatedOut);
 
 ////////////////////////

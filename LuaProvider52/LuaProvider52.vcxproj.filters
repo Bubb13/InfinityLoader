@@ -50,13 +50,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\LuaProvider52\main.cpp">
-      <Filter>Source Files\LuaProvider52</Filter>
-    </ClCompile>
     <ClCompile Include="source\LuaProvider52\lua_pointers.cpp">
       <Filter>Source Files\LuaProvider52</Filter>
     </ClCompile>
     <ClCompile Include="source\LuaProvider52\common.cpp">
+      <Filter>Source Files\LuaProvider52</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaProvider52\lua_provider_52.cpp">
       <Filter>Source Files\LuaProvider52</Filter>
     </ClCompile>
   </ItemGroup>

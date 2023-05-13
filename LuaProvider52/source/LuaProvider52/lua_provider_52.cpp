@@ -15,7 +15,7 @@ DWORD getLuaProc(HMODULE luaLibrary, const char* name, out_type& out) {
 	return 0;
 }
 
-EXTERN_EXPORT DWORD InitLuaProvider(SharedDLLMemory* sharedDLL) {
+EXPORT DWORD InitLuaProvider(SharedDLLMemory* sharedDLL) {
 
 	#define setLuaPointer(patternName, functionNameStr, functionName) \
 		if (reinterpret_cast<intptr_t>(luaLibrary()) == -1) { \
@@ -53,6 +53,7 @@ EXTERN_EXPORT DWORD InitLuaProvider(SharedDLLMemory* sharedDLL) {
 	setLuaPointer("Hardcoded_lua_pushlightuserdata", "lua_pushlightuserdata", lua_pushlightuserdata)
 	setLuaPointer("Hardcoded_lua_pushlstring", "lua_pushlstring", lua_pushlstring)
 	setLuaPointer("Hardcoded_lua_pushnil", "lua_pushnil", lua_pushnil)
+	setLuaPointer("Hardcoded_lua_pushnumber", "lua_pushnumber", lua_pushnumber)
 	setLuaPointer("Hardcoded_lua_pushstring", "lua_pushstring", lua_pushstring)
 	setLuaPointer("Hardcoded_lua_pushvalue", "lua_pushvalue", lua_pushvalue)
 	setLuaPointer("Hardcoded_lua_rawget", "lua_rawget", lua_rawget)
@@ -75,7 +76,6 @@ EXTERN_EXPORT DWORD InitLuaProvider(SharedDLLMemory* sharedDLL) {
 	setLuaPointer("Hardcoded_luaL_loadfilex", "luaL_loadfilex", luaL_loadfilex)
 	setLuaPointer("Hardcoded_luaL_loadstring", "luaL_loadstring", luaL_loadstring)
 	setLuaPointer("Hardcoded_luaL_ref", "luaL_ref", luaL_ref)
-	setLuaPointer("Hardcoded_lua_pushnumber", "lua_pushnumber", lua_pushnumber)
 
 	return ERROR_SUCCESS;
 }

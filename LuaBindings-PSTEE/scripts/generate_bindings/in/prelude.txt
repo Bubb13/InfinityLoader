@@ -4,7 +4,7 @@
 #include <queue>
 #include <vector>
 
-#include "InfinityLoaderCommon.h"
+#include "infinity_loader_common.h"
 #include "to_lua_pointers.h"
 
 typedef __int8 sbyte;

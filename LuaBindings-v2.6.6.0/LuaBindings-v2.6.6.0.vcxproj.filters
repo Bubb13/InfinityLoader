@@ -53,9 +53,6 @@
     <ClCompile Include="source\LuaBindings-v2.6.6.0\EEex\EEex.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0\EEex</Filter>
     </ClCompile>
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\LuaBindings-v2.6.6.0.cpp">
-      <Filter>Source Files\LuaBindings-v2.6.6.0</Filter>
-    </ClCompile>
     <ClCompile Include="source\LuaBindings-v2.6.6.0\util.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0</Filter>
     </ClCompile>
@@ -88,6 +85,9 @@
     </ClCompile>
     <ClCompile Include="references\source\tolua_reference\tolua_map.c">
       <Filter>References\source\tolua_reference</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\lua_bindings-v2.6.6.0.cpp">
+      <Filter>Source Files\LuaBindings-v2.6.6.0</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -129,7 +129,7 @@
     <None Include="COPY_TO_GAME.ps1">
       <Filter>Build Tasks</Filter>
     </None>
-    <None Include="LuaBindings-v2.6.6.0.def">
+    <None Include="lua_bindings-v2.6.6.0.def">
       <Filter>Module Definition</Filter>
     </None>
   </ItemGroup>

@@ -1,5 +1,4 @@
 
-#include "InfinityLoaderCommon.h"
 #include "template_functions.h"
 
 /////////////

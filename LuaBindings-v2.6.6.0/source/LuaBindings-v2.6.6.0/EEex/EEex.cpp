@@ -1,5 +1,4 @@
 
-#include <functional>
 #include <optional>
 #include <sstream>
 

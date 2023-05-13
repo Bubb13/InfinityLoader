@@ -84,7 +84,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <PreprocessorDefinitions>SHARED_MEMORY_DLL_HOST;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;ASMJIT_STATIC;ASMTK_STATIC;NDEBUG;INFINITYLOADERDLL_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SHARED_MEMORY_DLL_HOST;ASMJIT_STATIC;ASMTK_STATIC;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -93,7 +93,7 @@
       <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>InfinityLoaderDLL.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>infinity_loader_dll.def</ModuleDefinitionFile>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -234,12 +234,12 @@
     <ClCompile Include="asmtk\asmparser.cpp" />
     <ClCompile Include="asmtk\asmtokenizer.cpp" />
     <ClCompile Include="source\InfinityLoaderDLL\common.cpp" />
-    <ClCompile Include="source\InfinityLoaderDLL\InfinityLoaderDLL.cpp" />
+    <ClCompile Include="source\InfinityLoaderDLL\infinity_loader_dll.cpp" />
     <ClCompile Include="source\InfinityLoaderDLL\pointers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />
-    <None Include="InfinityLoaderDLL.def" />
+    <None Include="infinity_loader_dll.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

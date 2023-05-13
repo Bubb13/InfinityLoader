@@ -34,9 +34,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\common\InfinityLoaderCommonTypes.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="headers\common\lua_provider_api.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
@@ -52,19 +49,10 @@
     <ClInclude Include="headers\common\shared_memory_types.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="headers\common\bounds_exceeded.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="headers\common\dll_api.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="headers\common\dummy_lua_generated.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="headers\InfinityLoaderCommon\template_functions.h">
-      <Filter>Header Files\InfinityLoaderCommon</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\InfinityLoaderCommon\InfinityLoaderCommon.h">
       <Filter>Header Files\InfinityLoaderCommon</Filter>
     </ClInclude>
     <ClInclude Include="headers\common\infinity_loader_common_api.h">
@@ -73,25 +61,31 @@
     <ClInclude Include="headers\InfinityLoaderCommon\assembly_writer.h">
       <Filter>Header Files\InfinityLoaderCommon</Filter>
     </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderCommon\infinity_loader_common.h">
+      <Filter>Header Files\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\infinity_loader_common_types.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\common\InfinityLoaderCommonSharedDLLMemory.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
-    <ClCompile Include="source\common\InfinityLoaderCommonSharedMemory.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
     <ClCompile Include="source\InfinityLoaderCommon\template_function_instantiations.cpp">
       <Filter>Source Files\InfinityLoaderCommon</Filter>
     </ClCompile>
     <ClCompile Include="source\InfinityLoaderCommon\template_functions.cpp">
       <Filter>Source Files\InfinityLoaderCommon</Filter>
     </ClCompile>
-    <ClCompile Include="source\InfinityLoaderCommon\InfinityLoaderCommon.cpp">
-      <Filter>Source Files\InfinityLoaderCommon</Filter>
-    </ClCompile>
     <ClCompile Include="source\InfinityLoaderCommon\assembly_writer.cpp">
       <Filter>Source Files\InfinityLoaderCommon</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InfinityLoaderCommon\infinity_loader_common.cpp">
+      <Filter>Source Files\InfinityLoaderCommon</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\infinity_loader_common_shared_memory.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\infinity_loader_common_shared_dll_memory.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

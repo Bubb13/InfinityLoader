@@ -1,22 +1,17 @@
 
-#include <Windows.h>
-#include <dbghelp.h>
-#include <fcntl.h>
-#include <io.h>
-#include <iostream>
-#include <map>
-#include <psapi.h>
-#include <regex>
-#include <chrono>
-#include <list>
 #include <filesystem>
+#include <iostream>
+#include <regex>
 
-#include "pointers.h"
-#include "lua_provider_api.h"
-#include "infinity_loader_common_api.h"
 #include "asmjit/asmjit.h"
 #include "asmtk/asmtk.h"
-#include "bounds_exceeded.h"
+#include "infinity_loader_common_api.h"
+#include "lua_provider_api.h"
+#include "pointers.h"
+
+#include <Windows.h>
+#include <dbghelp.h>
+#include <psapi.h>
 
 /////////////
 // Structs //

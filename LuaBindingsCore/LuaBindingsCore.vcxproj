@@ -13,12 +13,11 @@
   <ItemGroup>
     <ClInclude Include="headers\common\lua_bindings_core_api.h" />
     <ClInclude Include="headers\common\tolua\tolua.h" />
-    <ClInclude Include="headers\LuaBindingsCore\LuaBindingsCommon.h" />
     <ClInclude Include="headers\LuaBindingsCore\to_lua_pointers.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\LuaBindingsCore\LuaBindingsCore.cpp" />
-    <ClCompile Include="source\LuaBindingsCore\LuaBindingsCore_common.cpp" />
+    <ClCompile Include="source\LuaBindingsCore\common.cpp" />
+    <ClCompile Include="source\LuaBindingsCore\lua_bindings_core.cpp" />
     <ClCompile Include="source\LuaBindingsCore\to_lua_pointers.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -84,7 +83,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>

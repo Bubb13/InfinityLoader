@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "dll_api.h"
 #include "lua/lua.h"
 
 ////////////////////
@@ -151,7 +152,7 @@ EXTERN_EXPORT type_lua_pushnumber lua_pushnumber;
 // Reimplementations //
 ///////////////////////
 
-EXTERN_EXPORT int lua_absindex(lua_State* L, int idx);
+EXPORT int lua_absindex(lua_State* L, int idx);
 
 /////////////
 // Defines //

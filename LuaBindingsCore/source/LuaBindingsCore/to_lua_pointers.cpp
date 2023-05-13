@@ -1,5 +1,5 @@
 
-#include "LuaBindingsCommon.h"
+#include "infinity_loader_common_api.h"
 #include "to_lua_pointers.h"
 
 /////////////

@@ -1,9 +1,7 @@
 
 #pragma once
 
-#include <map>
-
-#include "InfinityLoaderCommonTypes.h"
+#include <Windows.h>
 
 struct SharedIO {
 	DWORD parentProcessId;

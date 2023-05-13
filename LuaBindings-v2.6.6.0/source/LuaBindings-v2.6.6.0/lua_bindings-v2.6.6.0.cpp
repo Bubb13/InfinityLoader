@@ -1,7 +1,6 @@
 
-#include "lua_bindings_core_api.h"
-#include "EEexLua_generated.h"
 #include "Baldur-v2.6.6.0_generated.h"
+#include "EEexLua_generated.h"
 
 void __stdcall Init(SharedDLLMemory *const argSharedDLL) {
 

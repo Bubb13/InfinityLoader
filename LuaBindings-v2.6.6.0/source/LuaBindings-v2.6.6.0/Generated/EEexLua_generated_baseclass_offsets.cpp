@@ -1,5 +1,4 @@
 
-#include "lua_bindings_core_api.h"
 #include "Baldur-v2.6.6.0_generated.h"
 
 template<typename Derived, typename Base>

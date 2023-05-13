@@ -3,13 +3,13 @@
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <io.h>
 #include <iostream>
 #include <ranges>
-#include <functional>
 
-#include "InfinityLoaderCommon.h"
-#include "dll_api.h"
+#include "infinity_loader_common.h"
+#include "shared_memory.h"
 
 #include <dbghelp.h>
 
