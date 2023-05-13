@@ -318,7 +318,7 @@ bool decodeByteString(String byteStr, std::list<PatternByteEntry>& listToFill, S
 	return true;
 }
 
-bool findByteList(ImageSectionInfo& section, std::list<PatternByteEntry> byteList, intptr_t& addressOut) {
+bool findByteList(ImageSectionInfo& section, std::list<PatternByteEntry> byteList, uintptr_t& addressOut) {
 
 	unsigned char* curAddress = reinterpret_cast<unsigned char*>(section.SectionAddress);
 	unsigned char* endAddress = curAddress + section.SectionSize;
@@ -334,7 +334,7 @@ bool findByteList(ImageSectionInfo& section, std::list<PatternByteEntry> byteLis
 			++checkAddress;
 		}
 
-		addressOut = reinterpret_cast<intptr_t>(curAddress);
+		addressOut = reinterpret_cast<uintptr_t>(curAddress);
 		return true;
 		continue_outer:;
 	}
@@ -379,9 +379,9 @@ bool tryOperationsConvertToDecimal(const String& iniCategoryName, const String& 
 	return true;
 }
 
-bool handlePatternOperations(String iniCategoryName, String operationsStr, intptr_t& address) {
+bool handlePatternOperations(String iniCategoryName, String operationsStr, uintptr_t& address) {
 
-	std::vector<intptr_t> stack{ address };
+	std::vector<intptr_t> stack{ static_cast<intptr_t>(address) };
 	std::vector<String> curParts;
 	bool result = true;
 
@@ -610,10 +610,10 @@ DWORD resolveAliasTarget(const String aliasList, String& toTransform) {
 }
 
 DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPath,
-	String iniCategoryName, intptr_t& addressOut)
+	String iniCategoryName, uintptr_t& addressOut)
 {
-	intptr_t bExeSwitch;
-	if (DWORD lastError = GetINIIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
+	uintptr_t bExeSwitch;
+	if (DWORD lastError = GetINIUIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
 		return lastError;
 	}
 
@@ -639,8 +639,8 @@ DWORD findINICategoryPattern(ImageSectionInfo& sectionInfo, const String& iniPat
 
 	if (!noCache && attemptUseCached) {
 
-		intptr_t cachedAddress;
-		if (DWORD lastError = GetINIIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), 0, cachedAddress)) {
+		uintptr_t cachedAddress;
+		if (DWORD lastError = GetINIUIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), 0, cachedAddress)) {
 			return lastError;
 		}
 
@@ -736,7 +736,7 @@ DWORD findPatterns(ImageSectionInfo& sectionInfo) {
 			return false;
 		}
 
-		intptr_t address;
+		uintptr_t address;
 		if (returnVal = findINICategoryPattern(sectionInfo, dbPath(), section.c_str(), address)) {
 			return true;
 		}
@@ -763,7 +763,7 @@ int allocCodePageInternalLua(lua_State* L) {
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
 
-	intptr_t allocated;
+	uintptr_t allocated;
 	if (AllocateNear(textInfo().ImageBase, info.dwAllocationGranularity, allocated)) {
 		return 0;
 	}
@@ -830,7 +830,7 @@ int getLuaRegistryIndexLua(lua_State* L) {
 }
 
 int getLuaLibraryProcLua(lua_State* L) {
-	intptr_t address;
+	uintptr_t address;
 	if (getLuaProc(lua_tostring(L, 1), address)) {
 		return 0;
 	}
@@ -925,7 +925,7 @@ int jitLua(lua_State* L) {
 		return 0;
 	}
 
-	lua_pushinteger(L, reinterpret_cast<intptr_t>(ptr));
+	lua_pushinteger(L, reinterpret_cast<uintptr_t>(ptr));
 	return 1;
 }
 
@@ -1237,7 +1237,7 @@ int writeStringAutoLua(lua_State* L) {
 		*newStrWPtr++ = *str++;
 	}
 	*newStrWPtr = '\0';
-	lua_pushinteger(L, reinterpret_cast<intptr_t>(newStr));
+	lua_pushinteger(L, reinterpret_cast<uintptr_t>(newStr));
 	return 1;
 }
 
@@ -1265,12 +1265,12 @@ int logShimDisable(FILE* stream, const char* format, const char* level, const ch
 
 DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 
-	intptr_t patchAddress;
+	uintptr_t patchAddress;
 	if (DWORD lastError = findINICategoryPattern(textInfo(), iniPath(), TEXT("Hardcoded_SDL_LogOutput()_fprintf"), patchAddress)) {
 		return lastError;
 	}
 
-	intptr_t curAllocatedPtr;
+	uintptr_t curAllocatedPtr;
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
 
@@ -1278,19 +1278,17 @@ DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 		return lastError;
 	}
 
-	unsigned char codeBuff[1024];
-	AssemblyWriter writer{ codeBuff };
+	AssemblyWriter writer = AssemblyWriter{};
 
-	writer.setLocation(patchAddress);
-	writer.jmpToAddress(curAllocatedPtr);
+	writer.SetLocation(patchAddress);
+	writer.JmpToAddress(curAllocatedPtr);
 	disableCodeProtection();
-	writer.flush();
+	writer.Flush();
 	enableCodeProtection();
-	writer.setLocation(curAllocatedPtr);
-	writer.callToAddressFar(reinterpret_cast<intptr_t>(!disable_fprintf ? logShim : logShimDisable));
-	writer.jmpToAddress(patchAddress + 5);
-	writer.flush();
-	curAllocatedPtr = writer.getLocation();
+	writer.SetLocation(curAllocatedPtr);
+	writer.CallToAddressFar(reinterpret_cast<uintptr_t>(!disable_fprintf ? logShim : logShimDisable));
+	writer.JmpToAddress(patchAddress + 5);
+	writer.Flush();
 
 	return 0;
 }
@@ -1485,7 +1483,7 @@ cleanup:;
 }
 
 template<typename pointer_type>
-void fillExportedPointer(const String& name, pointer_type& pointer, intptr_t address) {
+void fillExportedPointer(const String& name, pointer_type& pointer, uintptr_t address) {
 	if (auto itr = patterns().find(name); itr != patterns().end()) {
 		PatternEntry& patternEntry = itr->second;
 		patternEntry.value = address;
@@ -1498,13 +1496,13 @@ void fillExportedPointer(const String& name, pointer_type& pointer, intptr_t add
 
 template<typename pointer_type>
 void fillExportedPointer(const String& name, pointer_type& pointer, void* address) {
-	fillExportedPointer(name, pointer, reinterpret_cast<intptr_t>(address));
+	fillExportedPointer(name, pointer, reinterpret_cast<uintptr_t>(address));
 }
 
 template<typename pointer_type, typename operations_type>
 bool fillPatternPointer(const String& name, pointer_type& pointer, const operations_type& operations) {
 
-	intptr_t address;
+	uintptr_t address;
 	if (findINICategoryPattern(textInfo(), iniPath(), name, address)) {
 		return true;
 	}
@@ -1516,14 +1514,14 @@ bool fillPatternPointer(const String& name, pointer_type& pointer, const operati
 
 template<typename pointer_type>
 bool fillPatternPointer(const String& name, pointer_type& pointer) {
-	return fillPatternPointer(name, pointer, [](intptr_t& address){});
+	return fillPatternPointer(name, pointer, [](uintptr_t& address){});
 }
 
 template<typename pointer_type, typename operations_type>
 DWORD fillLuaPointer(const String& name, pointer_type& pointer, const operations_type& operations) {
 
 	const String hardcodedName = TEXT("Hardcoded_") + name;
-	intptr_t address;
+	uintptr_t address;
 
 	if (luaMode() == LuaMode::INTERNAL) {
 		TryRetErr( findINICategoryPattern(textInfo(), iniPath(), hardcodedName, address) )
@@ -1539,7 +1537,7 @@ DWORD fillLuaPointer(const String& name, pointer_type& pointer, const operations
 
 template<typename pointer_type>
 bool fillLuaPointer(const String& name, pointer_type& pointer) {
-	return fillLuaPointer(name, pointer, [](intptr_t& address) {});
+	return fillLuaPointer(name, pointer, [](uintptr_t& address) {});
 }
 
 void initLua() {
@@ -1567,8 +1565,8 @@ void initLua() {
 	/////////////////////////////
 
 	if (luaMode() == LuaMode::INTERNAL) {
-		if (fillPatternPointer(TEXT("Hardcoded_InternalLuaState"), L(), [](intptr_t& address) {
-			address = *reinterpret_cast<intptr_t*>(address);
+		if (fillPatternPointer(TEXT("Hardcoded_InternalLuaState"), L(), [](uintptr_t& address) {
+			address = *reinterpret_cast<uintptr_t*>(address);
 		})) {
 			goto cleanup;
 		}
@@ -1713,31 +1711,30 @@ void delayedMainCall() {
 	TryRet( detatchFromConsole() )
 }
 
-void writeCallHookProcAfterCall(AssemblyWriter& writer, intptr_t& curAllocatedPtr, intptr_t patchAddress, void* targetProc) {
+void writeCallHookProcAfterCall(AssemblyWriter& writer, uintptr_t curAllocatedPtr, uintptr_t patchAddress, void* targetProc) {
 
 	__int32 relativeAmount = *reinterpret_cast<__int32*>(patchAddress + 1);
-	intptr_t target = patchAddress + 5 + relativeAmount;
+	uintptr_t target = patchAddress + 5 + relativeAmount;
 
-	writer.setLocation(patchAddress);
-	writer.jmpToAddress(curAllocatedPtr);
+	writer.SetLocation(patchAddress);
+	writer.JmpToAddress(curAllocatedPtr);
 	disableCodeProtection();
-	writer.flush();
+	writer.Flush();
 	enableCodeProtection();
 
-	writer.setLocation(curAllocatedPtr);
-	writer.callToAddress(target);
-	writer.pushVolatileRegisters();
-	writer.alignStackAndMakeShadowSpace();
-	writer.callToAddressFar(reinterpret_cast<intptr_t>(targetProc));
-	writer.undoAlignAndShadowSpace();
-	writer.popVolatileRegisters();
-	writer.jmpToAddress(patchAddress + 5);
-	writer.flush();
-	curAllocatedPtr = writer.getLocation();
+	writer.SetLocation(curAllocatedPtr);
+	writer.CallToAddress(target);
+	writer.PushVolatileRegisters();
+	writer.AlignStackAndMakeShadowSpace();
+	writer.CallToAddressFar(reinterpret_cast<uintptr_t>(targetProc));
+	writer.UndoAlignAndShadowSpace();
+	writer.PopVolatileRegisters();
+	writer.JmpToAddress(patchAddress + 5);
+	writer.Flush();
 }
 
-DWORD writeInternalPatch(AssemblyWriter& writer, intptr_t& curAllocatedPtr, void(*funcPtr)()) {
-	intptr_t patchAddress;
+DWORD writeInternalPatch(AssemblyWriter& writer, uintptr_t curAllocatedPtr, void(*funcPtr)()) {
+	uintptr_t patchAddress;
 	TryRetErr( findINICategoryPattern(textInfo(), iniPath(), TEXT("Hardcoded_InternalPatchLocation"), patchAddress))
 	writeCallHookProcAfterCall(writer, curAllocatedPtr, patchAddress, funcPtr);
 	return ERROR_SUCCESS;
@@ -1745,19 +1742,18 @@ DWORD writeInternalPatch(AssemblyWriter& writer, intptr_t& curAllocatedPtr, void
 
 DWORD setUpLuaInitialization(ImageSectionInfo& textInfo) {
 
-	intptr_t curAllocatedPtr;
+	uintptr_t curAllocatedPtr;
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
 
 	TryRetErr( AllocateNear(textInfo.ImageBase, info.dwAllocationGranularity, curAllocatedPtr) )
 
-	unsigned char codeBuff[1024];
-	AssemblyWriter writer{ codeBuff };
+	AssemblyWriter writer = AssemblyWriter{};
 
 	// Write hook early in WinMain to check for Console redirection
 
 	if (INISectionExists(iniPath(), TEXT("Hardcoded_WinMainPatchLocation"))) {
-		intptr_t winMainPatchAddress;
+		uintptr_t winMainPatchAddress;
 		TryRetErr( findINICategoryPattern(textInfo, iniPath(), TEXT("Hardcoded_WinMainPatchLocation"), winMainPatchAddress) )
 		writeCallHookProcAfterCall(writer, curAllocatedPtr, winMainPatchAddress, winMainHook);
 	}

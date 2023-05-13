@@ -13,16 +13,65 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\EEex-v2.6.6.0">
+      <UniqueIdentifier>{964e1b48-86e4-4b98-932d-339fff05857a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EEex-v2.6.6.0\Generated">
+      <UniqueIdentifier>{8612f39b-e4c9-4413-a1e9-bac4680e79b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\EEex-v2.6.6.0">
+      <UniqueIdentifier>{9be16359-4aa4-4e72-9764-fa5ead65c35c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\EEex-v2.6.6.0_generated">
+      <UniqueIdentifier>{2b175408-a190-4c92-847a-74c62509e011}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Module Definition">
+      <UniqueIdentifier>{ebbfcbd4-db88-4415-8133-a65922897a7d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\EEex.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\EEex-v2.6.6.0\main.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0</Filter>
     </ClCompile>
-    <ClCompile Include="source\EEex_common.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\EEex-v2.6.6.0\util.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0</Filter>
     </ClCompile>
-    <ClCompile Include="source\main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\EEex-v2.6.6.0\common.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0</Filter>
     </ClCompile>
+    <ClCompile Include="source\EEex-v2.6.6.0\EEex.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.6.6.0\engine_reimplementations.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\EEex-v2.6.6.0\util.hpp">
+      <Filter>Header Files\EEex-v2.6.6.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.6.6.0\EEexLua_generated.h">
+      <Filter>Header Files\EEex-v2.6.6.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur-v2.6.6.0_lua_generated.h">
+      <Filter>Header Files\EEex-v2.6.6.0_generated</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur-v2.6.6.0_generated.h">
+      <Filter>Header Files\EEex-v2.6.6.0_generated</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="EEex-v2.6.6.0.def">
+      <Filter>Module Definition</Filter>
+    </None>
   </ItemGroup>
 </Project>

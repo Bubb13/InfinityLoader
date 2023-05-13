@@ -58,7 +58,8 @@ bool decimalStrToIntegerTemplate(const String& decimalStr, IntegerType& accumula
 	} while (i-- != minimumI);
 
 	if (negative) {
-		accumulator = -accumulator;
+		using SignedIntegerType = std::make_signed<IntegerType>::type;
+		accumulator = -static_cast<SignedIntegerType>(accumulator);
 	}
 
 	return true;

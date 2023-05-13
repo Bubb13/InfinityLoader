@@ -1,0 +1,66 @@
+
+#pragma once
+
+#include <map>
+#include <queue>
+#include <vector>
+
+#include "infinity_loader_common_api.h"
+#include "lua_bindings_core_api.h"
+
+typedef char sbyte;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+
+template<typename T>
+struct hasDestruct {
+    template<typename U>
+    static constexpr auto check(U*) -> decltype(std::declval<U>().Destruct(), false) {
+        return true;
+    }
+    template<typename>
+    static constexpr bool check(...) {
+        return false;
+    }
+    static constexpr bool value = check<T>(nullptr);
+};
+
+template<typename A>
+struct W
+{
+
+private:
+
+	union {
+		A val;
+	};
+
+public:
+
+	A* operator->() {
+		return &val;
+	}
+
+	A& operator*() {
+		return val;
+	}
+
+	template<typename... Args>
+	W(Args&&... args) {
+		val.Construct(std::forward<Args>(args)...);
+	}
+
+	~W() {
+		if constexpr (hasDestruct<decltype(val)>::value) {
+			val.Destruct();
+		}
+	}
+};
+
+template<typename T, typename... Args>
+T* newEngineObj(Args&&... args) {
+	T* ptr = reinterpret_cast<T*>(p_malloc(sizeof(T)));
+	ptr->Construct(std::forward<Args>(args)...);
+	return ptr;
+}
+

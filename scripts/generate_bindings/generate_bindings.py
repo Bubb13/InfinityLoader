@@ -2770,8 +2770,7 @@ def tryResolveDependencyOrder(groups: UniqueList[Group]):
 
 def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[Group], out: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
 
-	baseclassOut.write("\n#include \"lua_bindings_core_api.h\"\n")
-	baseclassOut.write(f"#include \"{pathToFileNameNoExt(outputFileName)}.h\"\n\n")
+	baseclassOut.write(f"\n#include \"{pathToFileNameNoExt(outputFileName)}.h\"\n\n")
 
 	baseclassOut.write("template<typename Derived, typename Base>\n")
 	baseclassOut.write("constexpr uintptr_t offsetofbase() {\n")

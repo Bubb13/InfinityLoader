@@ -15,31 +15,33 @@
 // Structs //
 /////////////
 
+class AssemblyWriterImp;
+
 class AssemblyWriter {
 private:
-	unsigned char* buffer;
-	size_t curI;
-	intptr_t startMemAddress;
-	intptr_t curMemAddress;
+	AssemblyWriterImp* imp;
 public:
-	IMPORT AssemblyWriter(unsigned char* buff);
-	IMPORT intptr_t getLocation();
-	IMPORT void setLocation(intptr_t newCurMemAddress);
-	IMPORT void writeBytesToBuffer(int numBytes, ...);
-	IMPORT void writeNumberToBuffer(intptr_t pointer, size_t writeSize);
-	IMPORT void writeRelativeToBuffer32(intptr_t relAddress);
-	IMPORT void branchUsingIndirect64(intptr_t destAddress, unsigned char branchOpcode);
-	IMPORT void writeArgImmediate32(__int32 num, int argI);
-	IMPORT void jmpToAddressFar(intptr_t address);
-	IMPORT void jmpToAddress(intptr_t address);
-	IMPORT void callToAddressFar(intptr_t address);
-	IMPORT void callToAddress(intptr_t address);
-	IMPORT void alignStackAndMakeShadowSpace();
-	IMPORT void undoAlignAndShadowSpace();
-	IMPORT void pushVolatileRegisters();
-	IMPORT void popVolatileRegisters();
-	IMPORT void printBuffer();
-	IMPORT void flush();
+	IMPORT AssemblyWriter();
+	IMPORT ~AssemblyWriter();
+	IMPORT const unsigned char* GetBuffer();
+	IMPORT uintptr_t GetCurrentLocation();
+	IMPORT uintptr_t GetStartingLocation();
+	IMPORT size_t GetSize();
+	IMPORT void AlignStackAndMakeShadowSpace();
+	IMPORT void CallToAddress(uintptr_t address);
+	IMPORT void CallToAddressFar(uintptr_t address);
+	IMPORT void Flush();
+	IMPORT void JmpToAddress(uintptr_t address);
+	IMPORT void JmpToAddressFar(uintptr_t address);
+	IMPORT void PopVolatileRegisters();
+	IMPORT void PrintBuffer();
+	IMPORT void PushVolatileRegisters();
+	IMPORT void SetLocation(uintptr_t newCurMemAddress);
+	IMPORT void UndoAlignAndShadowSpace();
+	IMPORT void WriteArgImmediate32(size_t argI, __int32 num);
+	IMPORT void WriteBytesToBuffer(size_t numBytes, ...);
+	IMPORT void WriteNumberToBuffer(uintptr_t pointer, size_t writeSize);
+	IMPORT void WriteRelativeToBuffer32(uintptr_t relAddress);
 };
 
 /////////////
@@ -93,6 +95,7 @@ IMPORT bool GetINILongLong(const String& iniPath, const TCHAR *const section, co
 IMPORT bool GetINIBoolDef(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const bool def, bool& outInteger);
 IMPORT bool GetINIIntDef(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const int def, int& outInteger);
 IMPORT bool GetINIIntPtrDef(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const intptr_t def, intptr_t& outInteger);
+IMPORT bool GetINIUIntPtrDef(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const uintptr_t def, uintptr_t& outInteger);
 
 IMPORT DWORD SetINIIntPtr(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const intptr_t toSet);
 IMPORT DWORD SetINILongLong(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const long long toSet);
@@ -111,7 +114,7 @@ IMPORT DWORD InitPaths(String& dbPath, String& exePath, String& exeName,
 // Assembly Writing //
 //////////////////////
 
-IMPORT DWORD AllocateNear(intptr_t address, size_t size, intptr_t& allocatedOut);
+IMPORT DWORD AllocateNear(uintptr_t address, const size_t size, uintptr_t& allocatedOut);
 
 ////////////////////////
 // String Conversions //

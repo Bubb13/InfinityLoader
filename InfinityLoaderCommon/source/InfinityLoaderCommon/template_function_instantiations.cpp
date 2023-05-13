@@ -67,6 +67,12 @@ EXPORT bool GetINIIntPtrDef(const String& iniPath, const TCHAR *const section,
 	return getINIIntegerDefTemplate<intptr_t>(iniPath, section, key, def, outInteger);
 }
 
+EXPORT bool GetINIUIntPtrDef(const String& iniPath, const TCHAR *const section,
+	const TCHAR *const key, const uintptr_t def, uintptr_t& outInteger)
+{
+	return getINIIntegerDefTemplate<uintptr_t>(iniPath, section, key, def, outInteger);
+}
+
 EXPORT DWORD SetINIIntPtr(const String& iniPath, const TCHAR *const section,
 	const TCHAR *const key, const intptr_t toSet)
 {

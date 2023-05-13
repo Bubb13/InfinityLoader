@@ -394,7 +394,7 @@ bool CaseInsensitiveEquals(const StringView& lhs, const StringView& rhs) {
 // INI Handling //
 //////////////////
 
-EXPORT PatternEntry::PatternEntry(const String str, const intptr_t val) : name(str), value(val) {};
+EXPORT PatternEntry::PatternEntry(const String str, const uintptr_t val) : name(str), value(val) {}
 
 EXPORT bool INISectionExists(const String& iniPath, const TCHAR *const section) {
 
@@ -550,7 +550,7 @@ EXPORT DWORD InitPaths(String& dbPath, String& exePath, String& exeName,
 	return initExePath(workingFolder, iniPath, exePath, exeName);
 }
 
-EXPORT DWORD AllocateNear(intptr_t address, const size_t size, intptr_t& allocatedOut) {
+EXPORT DWORD AllocateNear(uintptr_t address, const size_t size, uintptr_t& allocatedOut) {
 
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);

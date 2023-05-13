@@ -10,12 +10,30 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\EEex-v2.6.6.0\common.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\EEex.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\engine_reimplementations.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\main.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\EEex-v2.6.6.0\EEexLua_generated.h" />
+    <ClInclude Include="headers\EEex-v2.6.6.0\util.hpp" />
+    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur-v2.6.6.0_generated.h" />
+    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur-v2.6.6.0_lua_generated.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="EEex-v2.6.6.0.def" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{5d96a1b5-6b58-49d5-92c1-8164041dd87e}</ProjectGuid>
     <RootNamespace>EEexv2660</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -74,11 +92,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;NDEBUG;EEEXV2660_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(SolutionDir)LuaBindingsCommon/headers/common;$(SolutionDir)LuaBindingsCommon/common;$(SolutionDir)LuaBindings-v2.6.6.0/headers/common;$(SolutionDir)LuaBindings-v2.6.6.0/headers/include;$(SolutionDir)LuaBindings-v2.6.6.0/source/common/Generated</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;$(ProjectDir)headers/EEex-v2.6.6.0;$(ProjectDir)headers/EEex-v2.6.6.0_generated</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -86,14 +104,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>powershell.exe -ExecutionPolicy Unrestricted -file COPY_TO_GAME.ps1 -OutDir "$(OutDir)." -GamePath "$(DEBUGGER_WORKING_DIRECTORY)."</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="source\EEex.cpp" />
-    <ClCompile Include="source\EEex_common.cpp" />
-    <ClCompile Include="source\main.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

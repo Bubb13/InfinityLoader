@@ -55,7 +55,7 @@ void showConsole()
 }*/
 
 template<typename CharType>
-DWORD writeProcessString(HANDLE hProcess, const CharType* str, intptr_t& memoryPtr) {
+DWORD writeProcessString(HANDLE hProcess, const CharType* str, uintptr_t& memoryPtr) {
 
 	size_t strSizeBytes;
 	if constexpr (std::is_same<CharType, char>::value) {
@@ -79,7 +79,7 @@ DWORD writeProcessString(HANDLE hProcess, const CharType* str, intptr_t& memoryP
 		return lastError;
 	}
 
-	memoryPtr = reinterpret_cast<intptr_t>(allocPtr);
+	memoryPtr = reinterpret_cast<uintptr_t>(allocPtr);
 	return 0;
 }
 
@@ -104,7 +104,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	// Write DLL string //
 	//////////////////////
 
-	intptr_t dllStrMemory;
+	uintptr_t dllStrMemory;
 	if (DWORD lastError = writeProcessString<TCHAR>(hProcess, TEXT("InfinityLoaderDLL.dll"), dllStrMemory)) {
 		return lastError;
 	}
@@ -120,22 +120,21 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 		return lastError;
 	}
 
-	unsigned char codeBuff[1024];
-	AssemblyWriter writer{ codeBuff };
-	writer.setLocation(reinterpret_cast<intptr_t>(codeMem));
+	AssemblyWriter writer = AssemblyWriter{};
+	writer.SetLocation(reinterpret_cast<uintptr_t>(codeMem));
 
 	///////////////////////
 	// Align Stack to 16 //
 	///////////////////////
 
-	writer.alignStackAndMakeShadowSpace();
+	writer.AlignStackAndMakeShadowSpace();
 
 	///////////////////////////////////////////////
 	// Call LoadLibrary("InfinityLoaderDLL.dll") //
 	///////////////////////////////////////////////
 
-	writer.writeArgImmediate32(static_cast<__int32>(dllStrMemory), 0);
-	writer.callToAddressFar(reinterpret_cast<intptr_t>(LoadLibrary));
+	writer.WriteArgImmediate32(0, static_cast<__int32>(dllStrMemory));
+	writer.CallToAddressFar(reinterpret_cast<uintptr_t>(LoadLibrary));
 
 	///////////////////////////////
 	// Write SharedMemory struct //
@@ -184,39 +183,39 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	// Call InfinityLoaderDLL.dll Init() //
 	///////////////////////////////////////
 
-	intptr_t dllInitStrMem;
+	uintptr_t dllInitStrMem;
 	if (DWORD lastError = writeProcessString<char>(hProcess, "Init", dllInitStrMem)) {
 		return lastError;
 	}
 
-	writer.writeArgImmediate32(static_cast<__int32>(dllInitStrMem), 1);
+	writer.WriteArgImmediate32(1, static_cast<__int32>(dllInitStrMem));
 
 #if defined(_WIN64)
-	writer.writeBytesToBuffer(3, 0x48, 0x89, 0xC1);
+	writer.WriteBytesToBuffer(3, 0x48, 0x89, 0xC1); // mov rcx,rax 
 #else
-	writer.writeBytesToBuffer(1, 0x50);
+	writer.writeBytesToBuffer(1, 0x50); // push rax
 #endif
 
-	writer.callToAddressFar(reinterpret_cast<intptr_t>(GetProcAddress));
+	writer.CallToAddressFar(reinterpret_cast<uintptr_t>(GetProcAddress));
 	// Only the lower 32 bits of a HANDLE are significant
 	// https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
-	writer.writeArgImmediate32(static_cast<int>(reinterpret_cast<intptr_t>(hChildSharedFile)), 0);
-	writer.writeBytesToBuffer(2, 0xFF, 0xD0); // call eax/rax
+	writer.WriteArgImmediate32(0, static_cast<__int32>(reinterpret_cast<uintptr_t>(hChildSharedFile)));
+	writer.WriteBytesToBuffer(2, 0xFF, 0xD0); // call eax/rax
 
 	///////////////////
 	// Pop Alignment //
 	///////////////////
 
-	writer.undoAlignAndShadowSpace();
+	writer.UndoAlignAndShadowSpace();
 
 	/////////////////////////////////////////////////////////
 	// JMP (Return to main thread's normal starting point) //
 	/////////////////////////////////////////////////////////
 
-	writer.jmpToAddressFar(threadStart);
+	writer.JmpToAddressFar(threadStart);
 
 	//writer.printBuffer();
-	if (!WriteProcessMemory(hProcess, codeMem, codeBuff, sizeof(codeBuff), NULL)) {
+	if (!WriteProcessMemory(hProcess, codeMem, writer.GetBuffer(), writer.GetSize(), NULL)) {
 		DWORD lastError = GetLastError();
 		Print("[!] WriteProcessMemory failed (%d).\n", lastError);
 		return lastError;

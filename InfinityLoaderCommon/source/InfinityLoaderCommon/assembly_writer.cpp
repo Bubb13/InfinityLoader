@@ -2,142 +2,172 @@
 #include "assembly_writer.h"
 #include "infinity_loader_common.h"
 
-//////////////////////
-// Assembly Writing //
-//////////////////////
+///////////////////////
+// AssemblyWriterImp //
+///////////////////////
 
-EXPORT AssemblyWriter::AssemblyWriter(unsigned char* buff) :
-	buffer(buff), curI(0), startMemAddress(0),
-	curMemAddress(0) {}
+AssemblyWriterImp::AssemblyWriterImp() :
+	bufferSize(1024),
+	buffer(new unsigned char[bufferSize]),
+	curI(0), startMemAddress(0), curMemAddress(0) {}
 
-EXPORT intptr_t AssemblyWriter::getLocation() {
-	return curMemAddress;
+AssemblyWriterImp::~AssemblyWriterImp() {
+	delete[] buffer;
 }
 
-EXPORT void AssemblyWriter::setLocation(intptr_t newCurMemAddress) {
-	curI = 0;
-	startMemAddress = newCurMemAddress;
-	curMemAddress = newCurMemAddress;
+////////////////////
+// AssemblyWriter //
+////////////////////
+
+EXPORT AssemblyWriter::AssemblyWriter() {
+	imp = new AssemblyWriterImp{};
 }
 
-EXPORT void AssemblyWriter::writeBytesToBuffer(int numBytes, ...) {
-	va_list args;
-	va_start(args, numBytes);
-	for (int i = 0; i < numBytes; ++i) {
-		unsigned char byte = va_arg(args, unsigned char);
-		buffer[curI++] = byte;
-		++curMemAddress;
-	}
-	va_end(args);
+EXPORT AssemblyWriter::~AssemblyWriter() {
+	delete imp;
 }
 
-EXPORT void AssemblyWriter::writeNumberToBuffer(intptr_t pointer, size_t writeSize) {
-	for (size_t i = 0; i < writeSize; ++i) {
-		buffer[curI++] = pointer & 0xFF;
-		++curMemAddress;
-		pointer = pointer >> 8;
-	}
+EXPORT const unsigned char* AssemblyWriter::GetBuffer() {
+	return imp->buffer;
 }
 
-EXPORT void AssemblyWriter::writeRelativeToBuffer32(intptr_t relAddress) {
-	intptr_t destOffset = relAddress - (curMemAddress + 4);
-	writeNumberToBuffer(destOffset, 4);
+EXPORT uintptr_t AssemblyWriter::GetCurrentLocation() {
+	return imp->curMemAddress;
 }
 
-EXPORT void AssemblyWriter::branchUsingIndirect64(intptr_t destAddress, unsigned char branchOpcode) {
-
-	writeBytesToBuffer(2, 0xEB, 0x8); // JMP
-	writeNumberToBuffer(destAddress, 8); // (QWORD)
-
-	writeBytesToBuffer(2, 0xFF, branchOpcode); // CALL/JMP [&QWORD]
-	writeRelativeToBuffer32(curMemAddress - 10);
+EXPORT uintptr_t AssemblyWriter::GetStartingLocation() {
+	return imp->startMemAddress;
 }
 
-EXPORT void AssemblyWriter::writeArgImmediate32(__int32 num, int argI) {
-
-#if defined(_WIN64)
-	switch (argI) {
-		case 0: writeBytesToBuffer(3, 0x48, 0xC7, 0xC1); break;
-		case 1: writeBytesToBuffer(3, 0x48, 0xC7, 0xC2); break;
-		case 2: writeBytesToBuffer(3, 0x49, 0xC7, 0xC0); break;
-		case 3: writeBytesToBuffer(3, 0x49, 0xC7, 0xC1); break;
-		default: MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, TEXT("(internal error) unhandled argI: %d"), argI); return;
-	}
-#else
-	writeBytesToBuffer(1, 0x68);
-#endif
-
-	writeNumberToBuffer(num, 4);
+EXPORT size_t AssemblyWriter::GetSize() {
+	return imp->curI;
 }
 
-EXPORT void AssemblyWriter::jmpToAddressFar(intptr_t address) {
-#if defined(_WIN64)
-	branchUsingIndirect64(address, 0x25);
-#else
-	writeBytesToBuffer(1, 0xE9);
-	writeRelativeToBuffer32(address);
-#endif
-}
-
-EXPORT void AssemblyWriter::jmpToAddress(intptr_t address) {
-	writeBytesToBuffer(1, 0xE9);
-	writeRelativeToBuffer32(address);
-}
-
-EXPORT void AssemblyWriter::callToAddressFar(intptr_t address) {
-#if defined(_WIN64)
-	branchUsingIndirect64(address, 0x15);
-#else
-	writeBytesToBuffer(1, 0xE8);
-	writeRelativeToBuffer32(address);
-#endif
-}
-
-EXPORT void AssemblyWriter::callToAddress(intptr_t address) {
-	writeBytesToBuffer(1, 0xE8);
-	writeRelativeToBuffer32(address);
-}
-
-EXPORT void AssemblyWriter::alignStackAndMakeShadowSpace() {
+EXPORT void AssemblyWriter::AlignStackAndMakeShadowSpace() {
 #if defined(_WIN64)
 	// push rsp
 	// and rsp, 0xFFFFFFFFFFFFFFF0
 	// sub rsp, 0x20
-	writeBytesToBuffer(9, 0x54, 0x48, 0x83, 0xE4, 0xF0, 0x48, 0x83, 0xEC, 0x20);
+	WriteBytesToBuffer(9, 0x54, 0x48, 0x83, 0xE4, 0xF0, 0x48, 0x83, 0xEC, 0x20);
 #endif
 }
 
-EXPORT void AssemblyWriter::undoAlignAndShadowSpace() {
-#if defined(_WIN64)
-	writeBytesToBuffer(5, 0x48, 0x83, 0xC4, 0x20, 0x5C);
-#endif
+void AssemblyWriter::branchUsingIndirect64(uintptr_t destAddress, unsigned char branchOpcode) {
+
+	WriteBytesToBuffer(2, 0xEB, 0x8); // JMP
+	WriteNumberToBuffer(destAddress, 8); // (QWORD)
+
+	WriteBytesToBuffer(2, 0xFF, branchOpcode); // CALL/JMP [&QWORD]
+	WriteRelativeToBuffer32(imp->curMemAddress - 10);
 }
 
-EXPORT void AssemblyWriter::pushVolatileRegisters() {
+EXPORT void AssemblyWriter::CallToAddress(uintptr_t address) {
+	WriteBytesToBuffer(1, 0xE8);
+	WriteRelativeToBuffer32(address);
+}
+
+EXPORT void AssemblyWriter::CallToAddressFar(uintptr_t address) {
 #if defined(_WIN64)
-	writeBytesToBuffer(11, 0x50, 0x51, 0x52, 0x41, 0x50, 0x41, 0x51, 0x41, 0x52, 0x41, 0x53);
+	branchUsingIndirect64(address, 0x15);
 #else
-	writeBytesToBuffer(3, 0x50, 0x52, 0x51);
+	WriteBytesToBuffer(1, 0xE8);
+	WriteRelativeToBuffer32(address);
 #endif
 }
 
-EXPORT void AssemblyWriter::popVolatileRegisters() {
+EXPORT void AssemblyWriter::Flush() {
+	memcpy_s(reinterpret_cast<void*>(imp->startMemAddress), imp->curI, imp->buffer, imp->curI);
+	imp->startMemAddress = imp->curMemAddress;
+	imp->curI = 0;
+}
+
+EXPORT void AssemblyWriter::JmpToAddress(uintptr_t address) {
+	WriteBytesToBuffer(1, 0xE9);
+	WriteRelativeToBuffer32(address);
+}
+
+EXPORT void AssemblyWriter::JmpToAddressFar(uintptr_t address) {
 #if defined(_WIN64)
-	writeBytesToBuffer(11, 0x41, 0x5B, 0x41, 0x5A, 0x41, 0x59, 0x41, 0x58, 0x5A, 0x59, 0x58);
+	branchUsingIndirect64(address, 0x25);
 #else
-	writeBytesToBuffer(3, 0x59, 0x5A, 0x58);
+	WriteBytesToBuffer(1, 0xE9);
+	WriteRelativeToBuffer32(address);
 #endif
 }
 
-EXPORT void AssemblyWriter::printBuffer() {
-	Print("[!] Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(startMemAddress));
-	for (size_t i = 0; i < curI; ++i) {
-		Print("%02X ", buffer[i]);
+EXPORT void AssemblyWriter::PopVolatileRegisters() {
+#if defined(_WIN64)
+	WriteBytesToBuffer(11, 0x41, 0x5B, 0x41, 0x5A, 0x41, 0x59, 0x41, 0x58, 0x5A, 0x59, 0x58);
+#else
+	WriteBytesToBuffer(3, 0x59, 0x5A, 0x58);
+#endif
+}
+
+EXPORT void AssemblyWriter::PrintBuffer() {
+	Print("[!] Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(imp->startMemAddress));
+	for (size_t i = 0; i < imp->curI; ++i) {
+		Print("%02X ", imp->buffer[i]);
 	}
 	Print("\n");
 }
 
-EXPORT void AssemblyWriter::flush() {
-	memcpy_s(reinterpret_cast<void*>(startMemAddress), curI, buffer, curI);
-	curI = 0;
+EXPORT void AssemblyWriter::PushVolatileRegisters() {
+#if defined(_WIN64)
+	WriteBytesToBuffer(11, 0x50, 0x51, 0x52, 0x41, 0x50, 0x41, 0x51, 0x41, 0x52, 0x41, 0x53);
+#else
+	WriteBytesToBuffer(3, 0x50, 0x52, 0x51);
+#endif
+}
+
+EXPORT void AssemblyWriter::SetLocation(uintptr_t newCurMemAddress) {
+	imp->curI = 0;
+	imp->startMemAddress = newCurMemAddress;
+	imp->curMemAddress = newCurMemAddress;
+}
+
+EXPORT void AssemblyWriter::UndoAlignAndShadowSpace() {
+#if defined(_WIN64)
+	WriteBytesToBuffer(5, 0x48, 0x83, 0xC4, 0x20, 0x5C);
+#endif
+}
+
+EXPORT void AssemblyWriter::WriteArgImmediate32(size_t argI, __int32 num) {
+
+#if defined(_WIN64)
+	switch (argI) {
+		case 0: WriteBytesToBuffer(3, 0x48, 0xC7, 0xC1); break;
+		case 1: WriteBytesToBuffer(3, 0x48, 0xC7, 0xC2); break;
+		case 2: WriteBytesToBuffer(3, 0x49, 0xC7, 0xC0); break;
+		case 3: WriteBytesToBuffer(3, 0x49, 0xC7, 0xC1); break;
+		default: MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, TEXT("(internal error) unhandled argI: %d"), argI); return;
+	}
+#else
+	WriteBytesToBuffer(1, 0x68);
+#endif
+
+	WriteNumberToBuffer(num, 4);
+}
+
+EXPORT void AssemblyWriter::WriteBytesToBuffer(size_t numBytes, ...) {
+	va_list args;
+	va_start(args, numBytes);
+	for (size_t i = 0; i < numBytes; ++i) {
+		unsigned char byte = va_arg(args, unsigned char);
+		imp->buffer[imp->curI++] = byte;
+		++imp->curMemAddress;
+	}
+	va_end(args);
+}
+
+EXPORT void AssemblyWriter::WriteNumberToBuffer(uintptr_t pointer, size_t writeSize) {
+	for (size_t i = 0; i < writeSize; ++i) {
+		imp->buffer[imp->curI++] = pointer & 0xFF;
+		++imp->curMemAddress;
+		pointer = pointer >> 8;
+	}
+}
+
+EXPORT void AssemblyWriter::WriteRelativeToBuffer32(uintptr_t relAddress) {
+	uintptr_t destOffset = relAddress - (imp->curMemAddress + 4);
+	WriteNumberToBuffer(destOffset, 4);
 }

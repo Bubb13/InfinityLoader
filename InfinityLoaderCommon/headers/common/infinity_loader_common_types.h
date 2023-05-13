@@ -117,8 +117,8 @@ typedef void(*type_FPrintT)(FILE* file, const TCHAR* formatText, ...);
 
 struct PatternEntry {
 	String name;
-	intptr_t value;
-	INFINITY_LOADER_COMMON_API PatternEntry(const String str, const intptr_t val);
+	uintptr_t value;
+	INFINITY_LOADER_COMMON_API PatternEntry(const String str, const uintptr_t val);
 };
 
 //////////////////////
@@ -126,7 +126,7 @@ struct PatternEntry {
 //////////////////////
 
 struct ImageSectionInfo {
-	intptr_t ImageBase;
+	uintptr_t ImageBase;
 	char SectionName[IMAGE_SIZEOF_SHORT_NAME];
 	void* SectionAddress;
 	DWORD SectionSize;

@@ -1,0 +1,3 @@
+LIBRARY EEex.dll
+EXPORTS
+	Init @1
