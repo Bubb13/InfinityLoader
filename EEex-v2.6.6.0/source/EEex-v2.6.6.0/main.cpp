@@ -2,9 +2,9 @@
 #include "Baldur-v2.6.6.0_generated.h"
 #include "EEexLua_generated.h"
 
-void __stdcall Init(SharedDLLMemory *const argSharedDLL) {
+void __stdcall Init(SharedState argSharedDLL) {
 
-    sharedDLL = argSharedDLL;
+    sharedState() = argSharedDLL;
 
     InitLuaBindingsCommon(argSharedDLL, [&]() {
         AddPattern("EEex::DestroyUDAux", EEex::DestroyUDAux);
@@ -32,5 +32,5 @@ void __stdcall Init(SharedDLLMemory *const argSharedDLL) {
     EEex::InitPatterns(patterns());
 
     // Export lua bindings
-    OpenBindings(L());
+    OpenBindings(luaState());
 }

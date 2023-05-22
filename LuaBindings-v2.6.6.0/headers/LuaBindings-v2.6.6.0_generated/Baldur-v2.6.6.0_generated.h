@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <map>
 #include <queue>
 #include <vector>
 
@@ -2828,25 +2827,15 @@ namespace EEex
 	};
 
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
-
 	void DestroyUDAux(lua_State* L, void* ptr);
-
 	void CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr);
-
 	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
-
 	void Stats_Hook_OnEqu(lua_State* L, CDerivedStats* stats, CDerivedStats* otherStats);
-
 	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* effect);
-
 	int Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite* sprite);
-
 	void Projectile_Hook_BeforeAddEffect(lua_State* L, CProjectile* projectile, CGameAIBase* aiBase, CGameEffect* effect, uintptr_t retPtr);
-
-	void InitPatterns(std::map<String,PatternEntry>& patterns);
-
+	void InitEEex();
 	void DeepCopyIndex(lua_State* L, int index);
-
 	void DeepCopy(lua_State* L);
 };
 
@@ -12104,9 +12093,7 @@ struct CGameArea
 	static type_OnActionButtonClickGround p_OnActionButtonClickGround;
 
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
-
 	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
-
 	int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
 
 	int GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest)

@@ -4,15 +4,14 @@
 #include <format>
 #include <functional>
 
-#include "shared_memory_dll.h"
+#include "shared_state_api.h"
 #include "tolua/tolua.h"
 
 //////////
 // Main //
 //////////
 
-IMPORT void InitLuaBindingsCommon(SharedDLLMemory *const argSharedDLL, std::function<void()> specificBindingsCallback);
-IMPORT void AddPattern(const char* name, void* value);
+IMPORT void InitLuaBindingsCommon(SharedState argSharedDLL, std::function<void()> specificBindingsCallback);
 IMPORT void RegisterClassBaseclassOffsets(const char* name, const std::initializer_list<const std::pair<const char*, uintptr_t>>& toRegister);
 IMPORT void RegisterBaseclassOffsets(const std::initializer_list<const std::pair<const char*, std::initializer_list<const std::pair<const char*, uintptr_t>>>>& toRegister);
 

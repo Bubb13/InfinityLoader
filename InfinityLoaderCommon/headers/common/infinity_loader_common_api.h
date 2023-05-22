@@ -4,12 +4,8 @@
 #include <functional>
 
 #include "infinity_loader_common_types.h"
-
-#if defined SHARED_MEMORY_DLL_HOST || defined SHARED_MEMORY_DLL
-#include "shared_memory_dll.h"
-#else
-#include "shared_memory.h"
-#endif
+#include "opaque_object_api.h"
+#include "shared_state_api.h"
 
 /////////////
 // Structs //
@@ -21,8 +17,8 @@ class AssemblyWriter {
 private:
 	AssemblyWriterImp* imp;
 public:
-	IMPORT AssemblyWriter();
-	IMPORT ~AssemblyWriter();
+	OpaqueObjectBoilerplateAPIDef(AssemblyWriter)
+	IMPORT static AssemblyWriter Create();
 	IMPORT const unsigned char* GetBuffer();
 	IMPORT uintptr_t GetCurrentLocation();
 	IMPORT uintptr_t GetStartingLocation();
@@ -55,8 +51,8 @@ EXTERN_IMPORT type_FPrintT FPrintT;
 // Init //
 //////////
 
-IMPORT DWORD CreateSharedMemory(HANDLE& hSharedFileOut, SharedMemory*& sharedOut);
-IMPORT void InitSharedMemory(const HANDLE hSharedFileArg, SharedMemory *const sharedArg);
+IMPORT DWORD CreateMappedMemory(HANDLE& mappedMemoryHandleOut, SharedStateMappedMemory& mappedMemoryOut);
+IMPORT DWORD InitMappedMemory(HANDLE mappedMemoryHandle, SharedStateMappedMemory& mappedMemoryOut);
 
 /////////////
 // Logging //
@@ -76,6 +72,7 @@ IMPORT void MessageBoxFormatA(StringA caption, UINT uType, StringA formatText, .
 IMPORT int UnbufferCrtStreams();
 IMPORT void NulCrtStreams();
 IMPORT void BindCrtStreamsToOSHandles();
+IMPORT long long CurrentMicroseconds();
 
 //////////////////
 // INI Handling //

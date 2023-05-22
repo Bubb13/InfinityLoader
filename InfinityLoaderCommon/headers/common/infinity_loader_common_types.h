@@ -110,24 +110,3 @@ typedef std::ostringstream OStringStreamA;
 
 typedef void(*type_FPrint)(FILE* file, const char* formatText, ...);
 typedef void(*type_FPrintT)(FILE* file, const TCHAR* formatText, ...);
-
-//////////////////
-// INI Handling //
-//////////////////
-
-struct PatternEntry {
-	String name;
-	uintptr_t value;
-	INFINITY_LOADER_COMMON_API PatternEntry(const String str, const uintptr_t val);
-};
-
-//////////////////////
-// Assembly Writing //
-//////////////////////
-
-struct ImageSectionInfo {
-	uintptr_t ImageBase;
-	char SectionName[IMAGE_SIZEOF_SHORT_NAME];
-	void* SectionAddress;
-	DWORD SectionSize;
-};

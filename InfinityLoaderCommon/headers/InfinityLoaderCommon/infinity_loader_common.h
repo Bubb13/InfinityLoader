@@ -20,9 +20,19 @@ EXPORT void LogPrint(const TCHAR* toLog);
 /////////////
 
 EXPORT void MessageBoxFormat(String caption, UINT uType, String formatText, ...);
+EXPORT void MessageBoxFormatA(StringA caption, UINT uType, StringA formatText, ...);
+EXPORT long long CurrentMicroseconds();
+
+//////////////////
+// INI Handling //
+//////////////////
+
+EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR *const section, const TCHAR *const key, String& outStr, bool& filled);
+EXPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const TCHAR *const def, String& outStr);
 
 ///////////
 // Paths //
 ///////////
 
-extern String getMyPath();
+EXPORT DWORD InitPaths(String& dbPath, String& exePath, String& exeName, String& iniPath, String& workingFolder, StringA& workingFolderA);
+String getMyPath();

@@ -1,5 +1,6 @@
 
 #include "infinity_loader_common_api.h"
+#include "shared_state_api.h"
 
 //////////
 // Init //
@@ -15,12 +16,12 @@ DWORD getLuaProc(HMODULE luaLibrary, const char* name, out_type& out) {
 	return 0;
 }
 
-EXPORT DWORD InitLuaProvider(SharedDLLMemory* sharedDLL) {
+EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 
 	#define setLuaPointer(patternName, functionNameStr, functionName) \
-		if (reinterpret_cast<intptr_t>(luaLibrary()) == -1) { \
-			if (auto itr = patterns().find(TEXT(patternName)); itr != patterns().end()) { \
-				##functionName = (type_##functionName)(itr->second.value); \
+		if (reinterpret_cast<intptr_t>(luaLibrary) == -1) { \
+			if (sharedState().GetPatternValue(TEXT(patternName), patternVal)) { \
+				##functionName = (type_##functionName)(patternVal); \
 			} \
 			else { \
 				Print("[!] Lua pattern not defined: \"Hardcoded_%s\"; binding failed!\n", functionNameStr); \
@@ -28,10 +29,14 @@ EXPORT DWORD InitLuaProvider(SharedDLLMemory* sharedDLL) {
 			} \
 		} \
 		else { \
-			if (DWORD lastError = getLuaProc(luaLibrary(), functionNameStr, ##functionName)) { \
+			if (DWORD lastError = getLuaProc(luaLibrary, functionNameStr, ##functionName)) { \
 				return lastError; \
 			} \
 		}
+
+	sharedState() = sharedDLL;
+	HMODULE luaLibrary = luaLibrary();
+	uintptr_t patternVal;
 
 	setLuaPointer("Hardcoded_lua_callk", "lua_callk", lua_callk)
 	setLuaPointer("Hardcoded_lua_createtable", "lua_createtable", lua_createtable)

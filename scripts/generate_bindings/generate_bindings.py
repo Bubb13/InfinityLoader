@@ -2237,12 +2237,25 @@ class Group:
 
 		if isNormal:
 
+			lastWasExternalImplementation = False
 			writeGroupInternalFunctionPointers(self, nextIndent)
 
 			for functionImplementation in self.functionImplementations:
-				parts.append(functionImplementation.toString(mainState, indent))
-				parts.append("\n")
+				
+				if functionImplementation.externalImplementation:
+					parts.append(functionImplementation.toString(mainState, indent))
+					lastWasExternalImplementation = True
+				else:
+					if lastWasExternalImplementation:
+						parts.append("\n")
+					parts.append(functionImplementation.toString(mainState, indent))
+					parts.append("\n")
+					lastWasExternalImplementation = False
+
 				wroteSomething = True
+
+			if lastWasExternalImplementation:
+				parts.append("\n")
 		else:
 
 			writeGroupInternalFunctionPointers(self)

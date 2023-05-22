@@ -9,7 +9,7 @@
 #include <ranges>
 
 #include "infinity_loader_common.h"
-#include "shared_memory.h"
+#include "shared_state_mapped_memory.h"
 
 #include <dbghelp.h>
 
@@ -17,47 +17,18 @@
 // Init //
 //////////
 
-EXPORT DWORD CreateSharedMemory(HANDLE& hSharedFileOut, SharedMemory*& sharedOut) {
-
-	constexpr std::size_t sharedMemSize = sizeof(SharedMemory);
-	hSharedFile = CreateFileMapping(
-		INVALID_HANDLE_VALUE,
-		0,                    // Default security
-		PAGE_READWRITE,
-		sharedMemSize >> 32,
-		sharedMemSize & 0xFFFFFFFF,
-		nullptr               // No name
-	);
-
-	if (hSharedFile == NULL) {
-		const DWORD lastError = GetLastError();
-		Print("[!] CreateFileMapping failed (%d).\n", lastError);
-		return lastError;
-	}
-
-	hSharedFileOut = hSharedFile;
-
-	shared = reinterpret_cast<SharedMemory*>(MapViewOfFile(
-		hSharedFile,
-		FILE_MAP_ALL_ACCESS,
-		0,                   // Offset to map (high)
-		0,                   // Offset to map (low)
-		0                    // Number of bytes to map (0 = to end of file)
-	));
-
-	if (shared == nullptr) {
-		const DWORD lastError = GetLastError();
-		Print("[!] MapViewOfFile failed (%d).\n", lastError);
-		return lastError;
-	}
-
-	sharedOut = shared;
+EXPORT DWORD CreateMappedMemory(HANDLE& mappedMemoryHandleOut, SharedStateMappedMemory& mappedMemoryOut) {
+	TryRetErr( SharedStateMappedMemory::Create(mappedMemoryHandle(), mappedMemory()) )
+	mappedMemoryHandleOut = mappedMemoryHandle();
+	mappedMemoryOut = mappedMemory();
 	return ERROR_SUCCESS;
 }
 
-EXPORT void InitSharedMemory(const HANDLE hSharedFileArg, SharedMemory *const sharedArg) {
-	hSharedFile = hSharedFileArg;
-	shared = sharedArg;
+EXPORT DWORD InitMappedMemory(HANDLE mappedMemoryHandle, SharedStateMappedMemory& mappedMemoryOut) {
+	TryRetErr( SharedStateMappedMemory::CreateFromHandle(mappedMemoryHandle, mappedMemory()) )
+	mappedMemoryHandle() = mappedMemoryHandle;
+	mappedMemoryOut = mappedMemory();
+	return ERROR_SUCCESS;
 }
 
 /////////////
@@ -390,11 +361,13 @@ bool CaseInsensitiveEquals(const StringView& lhs, const StringView& rhs) {
 	return std::ranges::equal(lhs | toLowerTransform, rhs | toLowerTransform);
 }
 
+EXPORT long long CurrentMicroseconds() {
+	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
 //////////////////
 // INI Handling //
 //////////////////
-
-EXPORT PatternEntry::PatternEntry(const String str, const uintptr_t val) : name(str), value(val) {}
 
 EXPORT bool INISectionExists(const String& iniPath, const TCHAR *const section) {
 
@@ -557,7 +530,7 @@ EXPORT DWORD AllocateNear(uintptr_t address, const size_t size, uintptr_t& alloc
 
 	while (true) {
 
-		allocatedOut = reinterpret_cast<intptr_t>(VirtualAlloc(reinterpret_cast<void*>(address),
+		allocatedOut = reinterpret_cast<uintptr_t>(VirtualAlloc(reinterpret_cast<void*>(address),
 			size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE));
 
 		if (allocatedOut) {

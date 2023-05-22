@@ -1,9 +1,4 @@
 
-#include "shared_memory_dll.h"
+#include "shared_state_api.h"
 
-#ifdef SHARED_MEMORY_DLL_HOST
-SharedDLLMemory sharedDLLHost;
-SharedDLLMemory* sharedDLL = &sharedDLLHost;
-#else
-SharedDLLMemory* sharedDLL;
-#endif
+SharedState sharedState{};

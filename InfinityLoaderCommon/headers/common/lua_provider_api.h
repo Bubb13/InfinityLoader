@@ -1,10 +1,11 @@
 
 #pragma once
 
-#include "shared_memory_dll.h"
+#include "lua_provider_api_core.h"
+#include "shared_state_api.h"
 
 //////////
 // Init //
 //////////
 
-LUA_PROVIDER_API DWORD InitLuaProvider(SharedDLLMemory* sharedDLL);
+LUA_PROVIDER_API DWORD InitLuaProvider(SharedState sharedDLL);

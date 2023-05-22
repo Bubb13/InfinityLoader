@@ -1,5 +1,5 @@
 
-#include "shared_memory_types.h"
+#include "shared_state_mapped_memory_api.h"
 
-HANDLE hSharedFile;
-SharedMemory* shared;
+HANDLE hSharedStateMappedMemory;
+SharedStateMappedMemory sharedStateMappedMemory{};

@@ -1077,9 +1077,10 @@ int EEex::Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite*
 
 std::unordered_map<uintptr_t, std::pair<const char*, EEex::ProjectileType>> projVFTableToType{};
 
-void registerProjVFTableType(std::map<String, PatternEntry>& patterns, const TCHAR* patternName, std::pair<const char*, EEex::ProjectileType> info) {
-	if (auto found = patterns.find(patternName); found != patterns.end()) {
-		projVFTableToType.emplace(found->second.value, info);
+void registerProjVFTableType(const TCHAR* patternName, std::pair<const char*, EEex::ProjectileType> info) {
+	uintptr_t patternVal;
+	if (sharedState().GetPatternValue(patternName, patternVal)) {
+		projVFTableToType.emplace(patternVal, info);
 	}
 	else {
 		PrintT(TEXT("[!] Pattern %s missing, EEex will not work as expected!\n"), patternName);
@@ -1100,34 +1101,34 @@ void pushProjectileUD(lua_State* L, CProjectile* pProjectile) {
 	}
 }
 
-void EEex::InitPatterns(std::map<String, PatternEntry>& patterns) {
-	registerProjVFTableType(patterns, TEXT("CProjectile::VFTable"),              { "CProjectile",                    EEex::ProjectileType::CProjectile                    });
-	registerProjVFTableType(patterns, TEXT("CProjectileAmbiant::VFTable"),       { "CProjectileAmbiant",             EEex::ProjectileType::CProjectileAmbiant             });
-	registerProjVFTableType(patterns, TEXT("CProjectileArea::VFTable"),          { "CProjectileArea",                EEex::ProjectileType::CProjectileArea                });
-	registerProjVFTableType(patterns, TEXT("CProjectileBAM::VFTable"),           { "CProjectileBAM",                 EEex::ProjectileType::CProjectileBAM                 });
-	//registerProjVFTableType(patterns, TEXT("CProjectileCallLightning::VFTable"), { "CProjectileCallLightning",       EEex::ProjectileType::CProjectileCallLightning       });
-	//registerProjVFTableType(patterns, TEXT("CProjectileCastingGlow::VFTable"),   { "CProjectileCastingGlow",         EEex::ProjectileType::CProjectileCastingGlow         });
-	registerProjVFTableType(patterns, TEXT("CProjectileChain::VFTable"),         { "CProjectileChain",               EEex::ProjectileType::CProjectileChain               });
-	registerProjVFTableType(patterns, TEXT("CProjectileColorSpray::VFTable"),    { "CProjectileColorSpray",          EEex::ProjectileType::CProjectileColorSpray          });
-	registerProjVFTableType(patterns, TEXT("CProjectileConeOfCold::VFTable"),    { "CProjectileConeOfCold",          EEex::ProjectileType::CProjectileConeOfCold          });
-	registerProjVFTableType(patterns, TEXT("CProjectileFall::VFTable"),          { "CProjectileFall",                EEex::ProjectileType::CProjectileFall                });
-	registerProjVFTableType(patterns, TEXT("CProjectileFireHands::VFTable"),     { "CProjectileFireHands",           EEex::ProjectileType::CProjectileFireHands           });
-	registerProjVFTableType(patterns, TEXT("CProjectileInstant::VFTable"),       { "CProjectileInstant",             EEex::ProjectileType::CProjectileInstant             });
-	//registerProjVFTableType(patterns, TEXT("CProjectileInvisibleTravelling"),    { "CProjectileInvisibleTravelling", EEex::ProjectileType::CProjectileInvisibleTravelling });
-	//registerProjVFTableType(patterns, TEXT("CProjectileLightningBolt"),          { "CProjectileLightningBolt",       EEex::ProjectileType::CProjectileLightningBolt       });
-	//registerProjVFTableType(patterns, TEXT("CProjectileLightningBoltGround"),    { "CProjectileLightningBoltGround", EEex::ProjectileType::CProjectileLightningBoltGround });
-	//registerProjVFTableType(patterns, TEXT("CProjectileLightningBounce"),        { "CProjectileLightningBounce",     EEex::ProjectileType::CProjectileLightningBounce     });
-	//registerProjVFTableType(patterns, TEXT("CProjectileLightningStorm"),         { "CProjectileLightningStorm",      EEex::ProjectileType::CProjectileLightningStorm      });
-	//registerProjVFTableType(patterns, TEXT("CProjectileMagicMissileMulti"),      { "CProjectileMagicMissileMulti",   EEex::ProjectileType::CProjectileMagicMissileMulti   });
-	registerProjVFTableType(patterns, TEXT("CProjectileMulti::VFTable"),         { "CProjectileMulti",               EEex::ProjectileType::CProjectileMulti               });
-	registerProjVFTableType(patterns, TEXT("CProjectileMushroom::VFTable"),      { "CProjectileMushroom",            EEex::ProjectileType::CProjectileMushroom            });
-	registerProjVFTableType(patterns, TEXT("CProjectileNewScorcher::VFTable"),   { "CProjectileNewScorcher",         EEex::ProjectileType::CProjectileNewScorcher         });
-	registerProjVFTableType(patterns, TEXT("CProjectileScorcher::VFTable"),      { "CProjectileScorcher",            EEex::ProjectileType::CProjectileScorcher            });
-	registerProjVFTableType(patterns, TEXT("CProjectileSegment::VFTable"),       { "CProjectileSegment",             EEex::ProjectileType::CProjectileSegment             });
-	registerProjVFTableType(patterns, TEXT("CProjectileSkyStrike::VFTable"),     { "CProjectileSkyStrike",           EEex::ProjectileType::CProjectileSkyStrike           });
-	registerProjVFTableType(patterns, TEXT("CProjectileSkyStrikeBAM::VFTable"),  { "CProjectileSkyStrikeBAM",        EEex::ProjectileType::CProjectileSkyStrikeBAM        });
-	registerProjVFTableType(patterns, TEXT("CProjectileSpellHit::VFTable"),      { "CProjectileSpellHit",            EEex::ProjectileType::CProjectileSpellHit            });
-	registerProjVFTableType(patterns, TEXT("CProjectileTravelDoor::VFTable"),    { "CProjectileTravelDoor",          EEex::ProjectileType::CProjectileTravelDoor          });
+void EEex::InitEEex() {
+	registerProjVFTableType(TEXT("CProjectile::VFTable"),              { "CProjectile",                    EEex::ProjectileType::CProjectile                    });
+	registerProjVFTableType(TEXT("CProjectileAmbiant::VFTable"),       { "CProjectileAmbiant",             EEex::ProjectileType::CProjectileAmbiant             });
+	registerProjVFTableType(TEXT("CProjectileArea::VFTable"),          { "CProjectileArea",                EEex::ProjectileType::CProjectileArea                });
+	registerProjVFTableType(TEXT("CProjectileBAM::VFTable"),           { "CProjectileBAM",                 EEex::ProjectileType::CProjectileBAM                 });
+	//registerProjVFTableType(TEXT("CProjectileCallLightning::VFTable"), { "CProjectileCallLightning",       EEex::ProjectileType::CProjectileCallLightning       });
+	//registerProjVFTableType(TEXT("CProjectileCastingGlow::VFTable"),   { "CProjectileCastingGlow",         EEex::ProjectileType::CProjectileCastingGlow         });
+	registerProjVFTableType(TEXT("CProjectileChain::VFTable"),         { "CProjectileChain",               EEex::ProjectileType::CProjectileChain               });
+	registerProjVFTableType(TEXT("CProjectileColorSpray::VFTable"),    { "CProjectileColorSpray",          EEex::ProjectileType::CProjectileColorSpray          });
+	registerProjVFTableType(TEXT("CProjectileConeOfCold::VFTable"),    { "CProjectileConeOfCold",          EEex::ProjectileType::CProjectileConeOfCold          });
+	registerProjVFTableType(TEXT("CProjectileFall::VFTable"),          { "CProjectileFall",                EEex::ProjectileType::CProjectileFall                });
+	registerProjVFTableType(TEXT("CProjectileFireHands::VFTable"),     { "CProjectileFireHands",           EEex::ProjectileType::CProjectileFireHands           });
+	registerProjVFTableType(TEXT("CProjectileInstant::VFTable"),       { "CProjectileInstant",             EEex::ProjectileType::CProjectileInstant             });
+	//registerProjVFTableType(TEXT("CProjectileInvisibleTravelling"),    { "CProjectileInvisibleTravelling", EEex::ProjectileType::CProjectileInvisibleTravelling });
+	//registerProjVFTableType(TEXT("CProjectileLightningBolt"),          { "CProjectileLightningBolt",       EEex::ProjectileType::CProjectileLightningBolt       });
+	//registerProjVFTableType(TEXT("CProjectileLightningBoltGround"),    { "CProjectileLightningBoltGround", EEex::ProjectileType::CProjectileLightningBoltGround });
+	//registerProjVFTableType(TEXT("CProjectileLightningBounce"),        { "CProjectileLightningBounce",     EEex::ProjectileType::CProjectileLightningBounce     });
+	//registerProjVFTableType(TEXT("CProjectileLightningStorm"),         { "CProjectileLightningStorm",      EEex::ProjectileType::CProjectileLightningStorm      });
+	//registerProjVFTableType(TEXT("CProjectileMagicMissileMulti"),      { "CProjectileMagicMissileMulti",   EEex::ProjectileType::CProjectileMagicMissileMulti   });
+	registerProjVFTableType(TEXT("CProjectileMulti::VFTable"),         { "CProjectileMulti",               EEex::ProjectileType::CProjectileMulti               });
+	registerProjVFTableType(TEXT("CProjectileMushroom::VFTable"),      { "CProjectileMushroom",            EEex::ProjectileType::CProjectileMushroom            });
+	registerProjVFTableType(TEXT("CProjectileNewScorcher::VFTable"),   { "CProjectileNewScorcher",         EEex::ProjectileType::CProjectileNewScorcher         });
+	registerProjVFTableType(TEXT("CProjectileScorcher::VFTable"),      { "CProjectileScorcher",            EEex::ProjectileType::CProjectileScorcher            });
+	registerProjVFTableType(TEXT("CProjectileSegment::VFTable"),       { "CProjectileSegment",             EEex::ProjectileType::CProjectileSegment             });
+	registerProjVFTableType(TEXT("CProjectileSkyStrike::VFTable"),     { "CProjectileSkyStrike",           EEex::ProjectileType::CProjectileSkyStrike           });
+	registerProjVFTableType(TEXT("CProjectileSkyStrikeBAM::VFTable"),  { "CProjectileSkyStrikeBAM",        EEex::ProjectileType::CProjectileSkyStrikeBAM        });
+	registerProjVFTableType(TEXT("CProjectileSpellHit::VFTable"),      { "CProjectileSpellHit",            EEex::ProjectileType::CProjectileSpellHit            });
+	registerProjVFTableType(TEXT("CProjectileTravelDoor::VFTable"),    { "CProjectileTravelDoor",          EEex::ProjectileType::CProjectileTravelDoor          });
 }
 
 void pushGameObjectUD(lua_State* L, CGameObject* pGameObject) {

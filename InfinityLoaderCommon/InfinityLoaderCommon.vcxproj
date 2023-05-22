@@ -102,11 +102,16 @@
     <ClInclude Include="headers\common\infinity_loader_common_types.h" />
     <ClInclude Include="headers\common\lua_provider_api.h" />
     <ClInclude Include="headers\common\lua_provider_api_core.h" />
-    <ClInclude Include="headers\common\shared_memory.h" />
-    <ClInclude Include="headers\common\shared_memory_dll.h" />
-    <ClInclude Include="headers\common\shared_memory_types.h" />
+    <ClInclude Include="headers\common\opaque_object_api.h" />
+    <ClInclude Include="headers\common\shared_state_api.h" />
+    <ClInclude Include="headers\common\shared_state_mapped_memory_api.h" />
+    <ClInclude Include="headers\common\shared_state_mapped_memory_types_api.h" />
+    <ClInclude Include="headers\common\shared_state_types_api.h" />
     <ClInclude Include="headers\InfinityLoaderCommon\assembly_writer.h" />
     <ClInclude Include="headers\InfinityLoaderCommon\infinity_loader_common.h" />
+    <ClInclude Include="headers\InfinityLoaderCommon\opaque_object.h" />
+    <ClInclude Include="headers\InfinityLoaderCommon\shared_state.h" />
+    <ClInclude Include="headers\InfinityLoaderCommon\shared_state_mapped_memory.h" />
     <ClInclude Include="headers\InfinityLoaderCommon\template_functions.h" />
   </ItemGroup>
   <ItemGroup>
@@ -116,6 +121,7 @@
     <ClCompile Include="source\common\infinity_loader_common_shared_memory.cpp" />
     <ClCompile Include="source\InfinityLoaderCommon\assembly_writer.cpp" />
     <ClCompile Include="source\InfinityLoaderCommon\infinity_loader_common.cpp" />
+    <ClCompile Include="source\InfinityLoaderCommon\shared_state.cpp" />
     <ClCompile Include="source\InfinityLoaderCommon\template_functions.cpp" />
     <ClCompile Include="source\InfinityLoaderCommon\template_function_instantiations.cpp" />
   </ItemGroup>

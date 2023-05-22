@@ -1173,7 +1173,7 @@ namespace EEex
 	$external_implementation $nobinding int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* effect);
 	$external_implementation $nobinding int Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite* sprite);
 	$external_implementation $nobinding void Projectile_Hook_BeforeAddEffect(lua_State* L, CProjectile* projectile, CGameAIBase* aiBase, CGameEffect* effect, uintptr_t retPtr);
-	$external_implementation $nobinding void InitPatterns(std::map<String, PatternEntry>& patterns);
+	$external_implementation $nobinding void InitEEex();
 	$external_implementation $nobinding void DeepCopyIndex(lua_State* L, int index);
 	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
 };

@@ -4,25 +4,24 @@
 #include <cstdint>
 
 #include "dll_api.h"
+#include "opaque_object.h"
 
-class AssemblyWriterImp {
+class AssemblyWriterData {
 private:
 	friend class AssemblyWriter;
+	friend class OpaqueObject::Obj<AssemblyWriterData>;
+	AssemblyWriterData();
 	size_t bufferSize;
 	unsigned char* buffer;
 	size_t curI;
 	uintptr_t startMemAddress;
 	uintptr_t curMemAddress;
-	AssemblyWriterImp();
-	~AssemblyWriterImp();
 };
 
-class AssemblyWriter {
-private:
-	AssemblyWriterImp* imp;
+class AssemblyWriter : OpaqueObject::Obj<AssemblyWriterData> {
 public:
-	EXPORT AssemblyWriter();
-	EXPORT ~AssemblyWriter();
+	OpaqueObjectBoilerplateDef(AssemblyWriter)
+	EXPORT static AssemblyWriter Create();
 	EXPORT const unsigned char* GetBuffer();
 	EXPORT uintptr_t GetCurrentLocation();
 	EXPORT uintptr_t GetStartingLocation();

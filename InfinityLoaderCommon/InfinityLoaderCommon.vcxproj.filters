@@ -40,15 +40,6 @@
     <ClInclude Include="headers\common\lua_provider_api_core.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="headers\common\shared_memory.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\shared_memory_dll.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\shared_memory_types.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="headers\common\dll_api.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
@@ -65,6 +56,30 @@
       <Filter>Header Files\InfinityLoaderCommon</Filter>
     </ClInclude>
     <ClInclude Include="headers\common\infinity_loader_common_types.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\shared_state_api.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderCommon\shared_state.h">
+      <Filter>Header Files\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderCommon\shared_state_mapped_memory.h">
+      <Filter>Header Files\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\shared_state_mapped_memory_api.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\shared_state_types_api.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\shared_state_mapped_memory_types_api.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderCommon\opaque_object.h">
+      <Filter>Header Files\InfinityLoaderCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\opaque_object_api.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
@@ -86,6 +101,9 @@
     </ClCompile>
     <ClCompile Include="source\common\infinity_loader_common_shared_dll_memory.cpp">
       <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InfinityLoaderCommon\shared_state.cpp">
+      <Filter>Source Files\InfinityLoaderCommon</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

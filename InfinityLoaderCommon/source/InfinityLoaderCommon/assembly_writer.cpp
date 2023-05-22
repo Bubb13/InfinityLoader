@@ -1,46 +1,44 @@
 
 #include "assembly_writer.h"
 #include "infinity_loader_common.h"
+#include "opaque_object.h"
 
-///////////////////////
-// AssemblyWriterImp //
-///////////////////////
+////////////////////////
+// AssemblyWriterData //
+////////////////////////
 
-AssemblyWriterImp::AssemblyWriterImp() :
+AssemblyWriterData::AssemblyWriterData() :
 	bufferSize(1024),
 	buffer(new unsigned char[bufferSize]),
-	curI(0), startMemAddress(0), curMemAddress(0) {}
-
-AssemblyWriterImp::~AssemblyWriterImp() {
-	delete[] buffer;
-}
+	curI(0),
+	startMemAddress(0),
+	curMemAddress(0)
+{}
 
 ////////////////////
 // AssemblyWriter //
 ////////////////////
 
-EXPORT AssemblyWriter::AssemblyWriter() {
-	imp = new AssemblyWriterImp{};
-}
+OpaqueObjectBoilerplateImp(AssemblyWriter, AssemblyWriterData)
 
-EXPORT AssemblyWriter::~AssemblyWriter() {
-	delete imp;
+EXPORT AssemblyWriter AssemblyWriter::Create() {
+	return AssemblyWriter{ OpaqueObject::AllocMode::NOW };
 }
 
 EXPORT const unsigned char* AssemblyWriter::GetBuffer() {
-	return imp->buffer;
+	return data()->buffer;
 }
 
 EXPORT uintptr_t AssemblyWriter::GetCurrentLocation() {
-	return imp->curMemAddress;
+	return data()->curMemAddress;
 }
 
 EXPORT uintptr_t AssemblyWriter::GetStartingLocation() {
-	return imp->startMemAddress;
+	return data()->startMemAddress;
 }
 
 EXPORT size_t AssemblyWriter::GetSize() {
-	return imp->curI;
+	return data()->curI;
 }
 
 EXPORT void AssemblyWriter::AlignStackAndMakeShadowSpace() {
@@ -58,7 +56,7 @@ void AssemblyWriter::branchUsingIndirect64(uintptr_t destAddress, unsigned char 
 	WriteNumberToBuffer(destAddress, 8); // (QWORD)
 
 	WriteBytesToBuffer(2, 0xFF, branchOpcode); // CALL/JMP [&QWORD]
-	WriteRelativeToBuffer32(imp->curMemAddress - 10);
+	WriteRelativeToBuffer32(data()->curMemAddress - 10);
 }
 
 EXPORT void AssemblyWriter::CallToAddress(uintptr_t address) {
@@ -76,9 +74,10 @@ EXPORT void AssemblyWriter::CallToAddressFar(uintptr_t address) {
 }
 
 EXPORT void AssemblyWriter::Flush() {
-	memcpy_s(reinterpret_cast<void*>(imp->startMemAddress), imp->curI, imp->buffer, imp->curI);
-	imp->startMemAddress = imp->curMemAddress;
-	imp->curI = 0;
+	AssemblyWriterData *const data = this->data();
+	memcpy_s(reinterpret_cast<void*>(data->startMemAddress), data->curI, data->buffer, data->curI);
+	data->startMemAddress = data->curMemAddress;
+	data->curI = 0;
 }
 
 EXPORT void AssemblyWriter::JmpToAddress(uintptr_t address) {
@@ -104,9 +103,10 @@ EXPORT void AssemblyWriter::PopVolatileRegisters() {
 }
 
 EXPORT void AssemblyWriter::PrintBuffer() {
-	Print("[!] Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(imp->startMemAddress));
-	for (size_t i = 0; i < imp->curI; ++i) {
-		Print("%02X ", imp->buffer[i]);
+	AssemblyWriterData *const data = this->data();
+	Print("[!] Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(data->startMemAddress));
+	for (size_t i = 0; i < data->curI; ++i) {
+		Print("%02X ", data->buffer[i]);
 	}
 	Print("\n");
 }
@@ -120,9 +120,10 @@ EXPORT void AssemblyWriter::PushVolatileRegisters() {
 }
 
 EXPORT void AssemblyWriter::SetLocation(uintptr_t newCurMemAddress) {
-	imp->curI = 0;
-	imp->startMemAddress = newCurMemAddress;
-	imp->curMemAddress = newCurMemAddress;
+	AssemblyWriterData *const data = this->data();
+	data->curI = 0;
+	data->startMemAddress = newCurMemAddress;
+	data->curMemAddress = newCurMemAddress;
 }
 
 EXPORT void AssemblyWriter::UndoAlignAndShadowSpace() {
@@ -149,25 +150,27 @@ EXPORT void AssemblyWriter::WriteArgImmediate32(size_t argI, __int32 num) {
 }
 
 EXPORT void AssemblyWriter::WriteBytesToBuffer(size_t numBytes, ...) {
+	AssemblyWriterData *const data = this->data();
 	va_list args;
 	va_start(args, numBytes);
 	for (size_t i = 0; i < numBytes; ++i) {
 		unsigned char byte = va_arg(args, unsigned char);
-		imp->buffer[imp->curI++] = byte;
-		++imp->curMemAddress;
+		data->buffer[data->curI++] = byte;
+		++data->curMemAddress;
 	}
 	va_end(args);
 }
 
 EXPORT void AssemblyWriter::WriteNumberToBuffer(uintptr_t pointer, size_t writeSize) {
+	AssemblyWriterData *const data = this->data();
 	for (size_t i = 0; i < writeSize; ++i) {
-		imp->buffer[imp->curI++] = pointer & 0xFF;
-		++imp->curMemAddress;
+		data->buffer[data->curI++] = pointer & 0xFF;
+		++data->curMemAddress;
 		pointer = pointer >> 8;
 	}
 }
 
 EXPORT void AssemblyWriter::WriteRelativeToBuffer32(uintptr_t relAddress) {
-	uintptr_t destOffset = relAddress - (imp->curMemAddress + 4);
+	uintptr_t destOffset = relAddress - (data()->curMemAddress + 4);
 	WriteNumberToBuffer(destOffset, 4);
 }

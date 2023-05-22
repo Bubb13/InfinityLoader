@@ -120,7 +120,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 		return lastError;
 	}
 
-	AssemblyWriter writer = AssemblyWriter{};
+	AssemblyWriter writer = AssemblyWriter::Create();
 	writer.SetLocation(reinterpret_cast<uintptr_t>(codeMem));
 
 	///////////////////////
@@ -140,44 +140,13 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	// Write SharedMemory struct //
 	///////////////////////////////
 
-	constexpr std::size_t sharedMemSize = sizeof(SharedMemory);
-	const HANDLE hSharedFile = CreateFileMapping(
-		INVALID_HANDLE_VALUE,
-		0,                    // Default security
-		PAGE_READWRITE,
-		sharedMemSize >> 32,
-		sharedMemSize & 0xFFFFFFFF,
-		nullptr               // No name
-	);
+	HANDLE hChildMappedMemory;
+	DuplicateHandle(GetCurrentProcess(), mappedMemoryHandle(), hProcess, &hChildMappedMemory, 0, false, DUPLICATE_SAME_ACCESS);
 
-	if (hSharedFile == NULL) {
-		const DWORD lastError = GetLastError();
-		Print("[!] CreateFileMapping failed (%d).\n", lastError);
-		return lastError;
-	}
-
-	SharedMemory *const sharedFilePtr = reinterpret_cast<SharedMemory*>(MapViewOfFile(
-		hSharedFile,
-		FILE_MAP_ALL_ACCESS,
-		0,                   // Offset to map (high)
-		0,                   // Offset to map (low)
-		0                    // Number of bytes to map (0 = to end of file)
-	));
-
-	if (sharedFilePtr == nullptr) {
-		const DWORD lastError = GetLastError();
-		Print("[!] MapViewOfFile failed (%d).\n", lastError);
-		return lastError;
-	}
-
-	HANDLE hChildSharedFile;
-	DuplicateHandle(GetCurrentProcess(), hSharedFile, hProcess, &hChildSharedFile, 0, false, DUPLICATE_SAME_ACCESS);
-
-	SharedIO& sharedIO = sharedFilePtr->io;
-	sharedIO.parentProcessId = GetCurrentProcessId();
-	sharedIO.hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	sharedIO.hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	sharedIO.hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+	parentProcessId() = GetCurrentProcessId();
+	stdIn() = GetStdHandle(STD_INPUT_HANDLE);
+	stdOut() = GetStdHandle(STD_OUTPUT_HANDLE);
+	stdErr() = GetStdHandle(STD_ERROR_HANDLE);
 
 	///////////////////////////////////////
 	// Call InfinityLoaderDLL.dll Init() //
@@ -199,7 +168,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	writer.CallToAddressFar(reinterpret_cast<uintptr_t>(GetProcAddress));
 	// Only the lower 32 bits of a HANDLE are significant
 	// https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
-	writer.WriteArgImmediate32(0, static_cast<__int32>(reinterpret_cast<uintptr_t>(hChildSharedFile)));
+	writer.WriteArgImmediate32(0, static_cast<__int32>(reinterpret_cast<uintptr_t>(hChildMappedMemory)));
 	writer.WriteBytesToBuffer(2, 0xFF, 0xD0); // call eax/rax
 
 	///////////////////
@@ -302,11 +271,11 @@ DWORD startGame() {
 		return lastError;
 	}
 
-	if (lastError = GetINIBoolDef(iniPath, TEXT("General"), TEXT("Pause"), false, bPause())) {
+	if (lastError = GetINIBoolDef(iniPath, TEXT("General"), TEXT("Pause"), false, pause())) {
 		goto errorFinally;
 	}
 
-	if (bPause()) {
+	if (pause()) {
 		MessageBox(NULL, TEXT("Pause"), TEXT("InfinityLoader"), MB_ICONINFORMATION);
 	}
 
@@ -358,7 +327,7 @@ errorFinally:;
 }
 
 DWORD init() {
-	TryRetErr( CreateSharedMemory(hSharedFile, shared) )
+	TryRetErr( CreateMappedMemory(mappedMemoryHandle(), mappedMemory()) )
 	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility()) )
