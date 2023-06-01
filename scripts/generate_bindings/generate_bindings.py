@@ -2241,7 +2241,7 @@ class Group:
 			writeGroupInternalFunctionPointers(self, nextIndent)
 
 			for functionImplementation in self.functionImplementations:
-				
+
 				if functionImplementation.externalImplementation:
 					parts.append(functionImplementation.toString(mainState, indent))
 					lastWasExternalImplementation = True

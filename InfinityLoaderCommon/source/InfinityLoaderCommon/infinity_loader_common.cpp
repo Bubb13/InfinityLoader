@@ -369,7 +369,7 @@ EXPORT long long CurrentMicroseconds() {
 // INI Handling //
 //////////////////
 
-EXPORT bool INISectionExists(const String& iniPath, const TCHAR *const section) {
+EXPORT bool INISectionExists(const String& iniPath, const TCHAR* section) {
 
 	const StringView sectionView{ section };
 
@@ -429,7 +429,7 @@ EXPORT bool INISectionExists(const String& iniPath, const TCHAR *const section) 
 	return false;
 }
 
-EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR *const section, const TCHAR *const key, String& outStr, bool& filled) {
+EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR* section, const TCHAR* key, String& outStr, bool& filled) {
 
 	filled = false;
 
@@ -452,7 +452,7 @@ EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR *const section, const 
 	return 0;
 }
 
-EXPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const TCHAR *const def, String& outStr) {
+EXPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr) {
 	bool filled;
 	DWORD error = GetINIStr(iniPath, section, key, outStr, filled);
 	if (!filled) {
@@ -523,7 +523,7 @@ EXPORT DWORD InitPaths(String& dbPath, String& exePath, String& exeName,
 	return initExePath(workingFolder, iniPath, exePath, exeName);
 }
 
-EXPORT DWORD AllocateNear(uintptr_t address, const size_t size, uintptr_t& allocatedOut) {
+EXPORT DWORD AllocateNear(uintptr_t address, size_t size, uintptr_t& allocatedOut) {
 
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);

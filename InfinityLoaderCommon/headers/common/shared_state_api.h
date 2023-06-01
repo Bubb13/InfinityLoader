@@ -7,7 +7,7 @@
 // Globals and Defines //
 /////////////////////////
 
-#if defined SHARED_MEMORY_DLL_HOST 
+#if defined SHARED_MEMORY_DLL_HOST
 extern SharedState sharedState;
 #define sharedState() sharedState
 #elif defined SHARED_MEMORY_DLL

@@ -174,17 +174,17 @@ LUA_PROVIDER_API int lua_absindex(lua_State* L, int idx);
 // Utility //
 /////////////
 
-LUA_PROVIDER_API bool CheckLuaArgBoundsInt8(lua_State *const L, const int argI, __int8& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsInt16(lua_State *const L, const int argI, __int16& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsInt32(lua_State *const L, const int argI, __int32& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsInt64(lua_State *const L, const int argI, __int64& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsUInt8(lua_State *const L, const int argI, unsigned __int8& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsUInt16(lua_State *const L, const int argI, unsigned __int16& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsUInt32(lua_State *const L, const int argI, unsigned __int32& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsUInt64(lua_State *const L, const int argI, unsigned __int64& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsInt(lua_State *const L, const int argI, int& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsUInt(lua_State *const L, const int argI, unsigned int& resultVal, std::string& error);
-LUA_PROVIDER_API bool CheckLuaArgBoundsSizeT(lua_State *const L, const int argI, size_t& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsInt8(lua_State* L, int argI, __int8& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsInt16(lua_State* L, int argI, __int16& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsInt32(lua_State* L, int argI, __int32& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsInt64(lua_State* L, int argI, __int64& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsUInt8(lua_State* L, int argI, unsigned __int8& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsUInt16(lua_State* L, int argI, unsigned __int16& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsUInt32(lua_State* L, int argI, unsigned __int32& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsUInt64(lua_State* L, int argI, unsigned __int64& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsInt(lua_State* L, int argI, int& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsUInt(lua_State* L, int argI, unsigned int& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsSizeT(lua_State* L, int argI, size_t& resultVal, std::string& error);
 
 /////////////
 // Defines //

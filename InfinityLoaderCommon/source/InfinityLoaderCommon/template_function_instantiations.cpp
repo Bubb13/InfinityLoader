@@ -43,45 +43,31 @@ EXPORT bool DecStrToIntPtr(const String& decimalStr, intptr_t& accumulator) {
 	return decimalStrToIntegerTemplate<intptr_t>(decimalStr, accumulator);
 }
 
-EXPORT bool GetINILongLong(const String& iniPath, const TCHAR *const section,
-	const TCHAR *const key, long long& outInteger, bool& filled)
-{
+EXPORT bool GetINILongLong(const String& iniPath, const TCHAR* section, const TCHAR* key, long long& outInteger, bool& filled) {
 	return getINIIntegerTemplate<long long>(iniPath, section, key, outInteger, filled);
 }
 
-EXPORT bool GetINIBoolDef(const String& iniPath, const TCHAR *const section,
-	const TCHAR *const key, const bool def, bool& outInteger)
-{
+EXPORT bool GetINIBoolDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const bool def, bool& outInteger) {
 	return getINIIntegerDefTemplate<bool>(iniPath, section, key, def, outInteger);
 }
 
-EXPORT bool GetINIIntDef(const String& iniPath, const TCHAR *const section,
-	const TCHAR *const key, const int def, int& outInteger)
-{
+EXPORT bool GetINIIntDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const int def, int& outInteger) {
 	return getINIIntegerDefTemplate<int>(iniPath, section, key, def, outInteger);
 }
 
-EXPORT bool GetINIIntPtrDef(const String& iniPath, const TCHAR *const section,
-	const TCHAR *const key, const intptr_t def, intptr_t& outInteger)
-{
+EXPORT bool GetINIIntPtrDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const intptr_t def, intptr_t& outInteger) {
 	return getINIIntegerDefTemplate<intptr_t>(iniPath, section, key, def, outInteger);
 }
 
-EXPORT bool GetINIUIntPtrDef(const String& iniPath, const TCHAR *const section,
-	const TCHAR *const key, const uintptr_t def, uintptr_t& outInteger)
-{
+EXPORT bool GetINIUIntPtrDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const uintptr_t def, uintptr_t& outInteger) {
 	return getINIIntegerDefTemplate<uintptr_t>(iniPath, section, key, def, outInteger);
 }
 
-EXPORT DWORD SetINIIntPtr(const String& iniPath, const TCHAR *const section,
-	const TCHAR *const key, const intptr_t toSet)
-{
+EXPORT DWORD SetINIIntPtr(const String& iniPath, const TCHAR* section, const TCHAR* key, const intptr_t toSet) {
 	return setINIIntegerTemplate<intptr_t>(iniPath, section, key, toSet);
 }
 
-EXPORT DWORD SetINILongLong(const String& iniPath, const TCHAR *const section,
-	const TCHAR *const key, const long long toSet)
-{
+EXPORT DWORD SetINILongLong(const String& iniPath, const TCHAR* section, const TCHAR* key, const long long toSet) {
 	return setINIIntegerTemplate<long long>(iniPath, section, key, toSet);
 }
 

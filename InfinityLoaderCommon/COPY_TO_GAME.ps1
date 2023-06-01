@@ -6,7 +6,7 @@ param (
 
 try {
 	if (($GamePath -ne ".") -and (Test-Path $GamePath)) {
-		"InfinityLoaderCommon.dll", "InfinityLoaderCommon.pdb" | ForEach-Object {Copy-Item "$OutDir/$_" $GamePath} 
+		"InfinityLoaderCommon.dll", "InfinityLoaderCommon.pdb" | ForEach-Object {Copy-Item "$OutDir/$_" $GamePath}
 	}
 }
 catch {

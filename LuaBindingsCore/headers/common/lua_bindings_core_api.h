@@ -12,8 +12,8 @@
 //////////
 
 IMPORT void InitLuaBindingsCommon(SharedState argSharedDLL, std::function<void()> specificBindingsCallback);
-IMPORT void RegisterClassBaseclassOffsets(const char* name, const std::initializer_list<const std::pair<const char*, uintptr_t>>& toRegister);
-IMPORT void RegisterBaseclassOffsets(const std::initializer_list<const std::pair<const char*, std::initializer_list<const std::pair<const char*, uintptr_t>>>>& toRegister);
+IMPORT void RegisterClassBaseclassOffsets(const char* name, const std::initializer_list<std::pair<const char*, uintptr_t>>& toRegister);
+IMPORT void RegisterBaseclassOffsets(const std::initializer_list<std::pair<const char*, std::initializer_list<std::pair<const char*, uintptr_t>>>>& toRegister);
 
 /////////////
 // Special //
@@ -144,7 +144,7 @@ IMPORT void tolua_open(lua_State* L);
 //////////////////////////////
 
 template<typename IntegerType>
-IntegerType tolua_function_tointeger(lua_State* const L, const int narg, const char* const functionName) {
+IntegerType tolua_function_tointeger(lua_State *const L, const int narg, const char *const functionName) {
 
 	if (lua_gettop(L) < narg) {
 		return luaL_error(L, "integer argument #%d missing in function '%s'; 'number' or 'boolean' expected.", narg, functionName);
@@ -170,7 +170,7 @@ IntegerType tolua_function_tointeger(lua_State* const L, const int narg, const c
 }
 
 template<typename IntegerType>
-IntegerType tolua_setter_tointeger(lua_State* const L, const char* const variableName) {
+IntegerType tolua_setter_tointeger(lua_State *const L, const char *const variableName) {
 
 	constexpr int narg = 2;
 	if (lua_gettop(L) < narg) {
@@ -197,7 +197,7 @@ IntegerType tolua_setter_tointeger(lua_State* const L, const char* const variabl
 }
 
 template<typename FloatingType>
-FloatingType tolua_function_tonumber(lua_State* const L, const int narg, const char* const functionName) {
+FloatingType tolua_function_tonumber(lua_State *const L, const int narg, const char *const functionName) {
 
 	if (lua_gettop(L) < narg) {
 		luaL_error(L, "number argument #%d missing in function '%s'; 'number' expected.", narg, functionName);
@@ -221,7 +221,7 @@ FloatingType tolua_function_tonumber(lua_State* const L, const int narg, const c
 }
 
 template<typename FloatingType>
-FloatingType tolua_setter_tonumber(lua_State* const L, const char* const variableName) {
+FloatingType tolua_setter_tonumber(lua_State *const L, const char *const variableName) {
 
 	constexpr int narg = 2;
 	if (lua_gettop(L) < narg) {

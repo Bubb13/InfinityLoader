@@ -11,5 +11,5 @@ def fixup(mainState):
 
 	mainState.getGroup("CGameEffectBase").retypeField(mainState, "m_scriptName", "LCharString<32>")
 	mainState.getGroup("Item_effect_st").retypeField(mainState, "res", "CResRef")
-	
+
 	pass

@@ -107,46 +107,46 @@ bool checkLuaArgBounds(lua_State *const L, const int argI, IntegerType& resultVa
 	return false;
 }
 
-EXPORT bool CheckLuaArgBoundsInt8(lua_State *const L, const int argI, __int8& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsInt8(lua_State* L, const int argI, __int8& resultVal, std::string& error) {
 	return checkLuaArgBounds<__int8>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsInt16(lua_State *const L, const int argI, __int16& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsInt16(lua_State* L, const int argI, __int16& resultVal, std::string& error) {
  	return checkLuaArgBounds<__int16>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsInt32(lua_State *const L, const int argI, __int32& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsInt32(lua_State* L, const int argI, __int32& resultVal, std::string& error) {
 	return checkLuaArgBounds<__int32>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsInt64(lua_State *const L, const int argI, __int64& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsInt64(lua_State* L, const int argI, __int64& resultVal, std::string& error) {
 	return checkLuaArgBounds<__int64>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsUInt8(lua_State *const L, const int argI, unsigned __int8& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsUInt8(lua_State* L, const int argI, unsigned __int8& resultVal, std::string& error) {
 	return checkLuaArgBounds<unsigned __int8>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsUInt16(lua_State *const L, const int argI, unsigned __int16& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsUInt16(lua_State* L, const int argI, unsigned __int16& resultVal, std::string& error) {
 	return checkLuaArgBounds<unsigned __int16>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsUInt32(lua_State *const L, const int argI, unsigned __int32& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsUInt32(lua_State* L, const int argI, unsigned __int32& resultVal, std::string& error) {
 	return checkLuaArgBounds<unsigned __int32>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsUInt64(lua_State *const L, const int argI, unsigned __int64& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsUInt64(lua_State* L, const int argI, unsigned __int64& resultVal, std::string& error) {
 	return checkLuaArgBounds<unsigned __int64>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsInt(lua_State *const L, const int argI, int& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsInt(lua_State* L, const int argI, int& resultVal, std::string& error) {
 	return checkLuaArgBounds<int>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsUInt(lua_State *const L, const int argI, unsigned int& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsUInt(lua_State* L, const int argI, unsigned int& resultVal, std::string& error) {
 	return checkLuaArgBounds<unsigned int>(L, argI, resultVal, error);
 }
 
-EXPORT bool CheckLuaArgBoundsSizeT(lua_State *const L, const int argI, size_t& resultVal, std::string& error) {
+EXPORT bool CheckLuaArgBoundsSizeT(lua_State* L, const int argI, size_t& resultVal, std::string& error) {
 	return checkLuaArgBounds<size_t>(L, argI, resultVal, error);
 }

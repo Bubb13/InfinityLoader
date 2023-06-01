@@ -160,7 +160,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	writer.WriteArgImmediate32(1, static_cast<__int32>(dllInitStrMem));
 
 #if defined(_WIN64)
-	writer.WriteBytesToBuffer(3, 0x48, 0x89, 0xC1); // mov rcx,rax 
+	writer.WriteBytesToBuffer(3, 0x48, 0x89, 0xC1); // mov rcx,rax
 #else
 	writer.writeBytesToBuffer(1, 0x50); // push rax
 #endif

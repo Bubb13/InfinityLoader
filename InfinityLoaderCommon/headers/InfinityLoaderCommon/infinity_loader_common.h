@@ -27,8 +27,8 @@ EXPORT long long CurrentMicroseconds();
 // INI Handling //
 //////////////////
 
-EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR *const section, const TCHAR *const key, String& outStr, bool& filled);
-EXPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const TCHAR *const def, String& outStr);
+EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR* section, const TCHAR* key, String& outStr, bool& filled);
+EXPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr);
 
 ///////////
 // Paths //

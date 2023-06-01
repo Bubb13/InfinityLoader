@@ -12,7 +12,7 @@ std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> base
 // Special Functions //
 ///////////////////////
 
-EXPORT void RegisterClassBaseclassOffsets(const char* name, const std::initializer_list<const std::pair<const char*, uintptr_t>>& toRegister) {
+EXPORT void RegisterClassBaseclassOffsets(const char* name, const std::initializer_list<std::pair<const char*, uintptr_t>>& toRegister) {
 	std::unordered_map<const char*, uintptr_t>& offsets = baseclassOffsets[name];
 	for (auto [baseclassName, baseclassOffset] : toRegister) {
 		offsets.emplace(baseclassName, baseclassOffset);
@@ -34,7 +34,7 @@ EXPORT void RegisterClassBaseclassOffsets(const char* name, const std::initializ
 //     }},
 // }
 //
-EXPORT void RegisterBaseclassOffsets(const std::initializer_list<const std::pair<const char*, std::initializer_list<const std::pair<const char*, uintptr_t>>>>& toRegister) {
+EXPORT void RegisterBaseclassOffsets(const std::initializer_list<std::pair<const char*, std::initializer_list<std::pair<const char*, uintptr_t>>>>& toRegister) {
 	for (auto& [className, baseclassInfo] : toRegister) {
 		RegisterClassBaseclassOffsets(className, baseclassInfo);
 	}

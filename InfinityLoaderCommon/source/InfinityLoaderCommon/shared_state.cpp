@@ -62,7 +62,7 @@ DWORD SharedStateMappedMemory::Create(HANDLE& mappedMemoryHandleOut, SharedState
 	if (lastError == ERROR_SUCCESS) {
 		mappedMemoryOut = std::move(toReturn);
 	}
-	
+
 	return lastError;
 }
 
