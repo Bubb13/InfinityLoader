@@ -919,8 +919,8 @@ struct CPoint
 
 	$nobinding $constructor ConstructFromXY(int x, int y)
 	{
-		x = x;
-		y = y;
+		this->x = x;
+		this->y = y;
 	}
 
 	$nobinding $constructor ConstructFromPoint(CPoint* point)

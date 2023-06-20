@@ -9,7 +9,7 @@ from enum import Enum
 from io import TextIOWrapper
 from itertools import islice
 from typing import Callable, Generic, Match, Pattern, Tuple, TypeVar
-import importlib
+import importlib.util
 import re
 import sys
 
