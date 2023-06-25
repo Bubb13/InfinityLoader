@@ -1,0 +1,102 @@
+
+/////////////////////////////////////////////
+// Manual Engine Template Type Definitions //
+/////////////////////////////////////////////
+
+template<class BASE_CLASS, class RESULT_CLASS>
+struct CCallResult : CCallbackBase
+{
+	unsigned __int64 m_hAPICall;
+	BASE_CLASS* m_pObj;
+	void(__thiscall* m_Func)(BASE_CLASS*, RESULT_CLASS*, bool);
+};
+
+struct CList::CNode
+{
+	CList::CNode* pNext;
+	CList::CNode* pPrev;
+	TYPE data;
+};
+
+template<class TYPE, class ARG_TYPE>
+struct CList : CObject
+{
+	CList::CNode* m_pNodeHead;
+	CList::CNode* m_pNodeTail;
+	int m_nCount;
+	CList::CNode* m_pNodeFree;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+};
+
+template<class TYPE, class ARG_TYPE>
+struct CArray : CObject
+{
+	TYPE* m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
+};
+
+template<class RES_CLASS, int RES_ID>
+struct CResHelper
+{
+	RES_CLASS* pRes;
+	CResRef cResRef;
+};
+
+template<class BASE_CLASS, class T>
+struct CTypedPtrArray : CObject
+{
+	T* m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
+};
+
+struct CTypedPtrList::CNode
+{
+	CTypedPtrList::CNode* pNext;
+	CTypedPtrList::CNode* pPrev;
+	T data;
+};
+
+template<class BASE_CLASS, class T>
+struct CTypedPtrList : CObject
+{
+	CTypedPtrList::CNode* m_pNodeHead;
+	CTypedPtrList::CNode* m_pNodeTail;
+	int m_nCount;
+	CTypedPtrList::CNode* m_pNodeFree;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+
+	$constructor_fake Construct(int size)
+	{
+		((CObList*)this)->Construct(size);
+	}
+
+	CTypedPtrList::CNode* AddTail(T newElement)
+	{
+		#pragma warning(disable:4312)
+		return (CTypedPtrList::CNode*)((CObList*)this)->AddTail((void*)newElement);
+		#pragma warning(default:4312)
+	}
+
+	T RemoveHead()
+	{
+		#pragma warning(disable:4302 4311)
+		return (T)((CObList*)this)->RemoveHead();
+		#pragma warning(default:4302 4311)
+	}
+
+	void RemoveAt(__POSITION* position)
+	{
+		((CObList*)this)->RemoveAt(position);
+	}
+
+	void Destruct()
+	{
+		((CObList*)this)->Destruct();
+	}
+};

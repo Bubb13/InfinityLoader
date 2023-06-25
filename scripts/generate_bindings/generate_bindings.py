@@ -9,7 +9,7 @@ from enum import Enum
 from io import TextIOWrapper
 from itertools import islice
 from typing import Callable, Generic, Match, Pattern, Tuple, TypeVar
-import importlib
+import importlib.util
 import re
 import sys
 
@@ -409,10 +409,49 @@ class HeaderType(Enum):
 	CLEANED = 2
 
 
-# Foward declarations just to suppress warnings
+# Forward declarations just to suppress warnings
 class Group: pass
 class TypeReference: pass
 class Field: pass
+class LineGroupFlags: pass
+
+class FlagSource(Enum):
+	DEFAULT = 1
+	EXPLICIT = 2
+
+
+class LineGroupFlags:
+
+	__slots__ = ("flags")
+	def __init__(self):
+		self.flags: dict = {}
+
+	def getFlag(self, name: str):
+		return self.flags.get(name)
+
+	def setFlag(self, name: str, value) -> bool:
+		if value == None:
+			del self.flags[name]
+		else:
+			self.flags[name] = value
+
+	def isFlagDefined(self, name: str) -> bool:
+		return name in self.flags
+
+	def isFlagged(self, name: str) -> bool:
+		# Ternary to do "truthy" evaluation
+		return True if self.flags.get(name) else False
+
+	def isExplicitlyFlagged(self, name: str) -> bool:
+		return self.flags.get(name) == FlagSource.EXPLICIT
+
+	def applyTo(self, other: LineGroupFlags):
+		for name, flag in self.flags.items():
+			other.flags[name] = flag
+
+	def transferTo(self, other: LineGroupFlags, name: str):
+		if (flag := self.flags.get(name)) != None:
+			other.flags[name] = flag
 
 
 class MainState:
@@ -424,6 +463,7 @@ class MainState:
 		self.filteredGroups: UniqueList[Group] = UniqueList()
 		self.noCustomTypes: bool = None
 		self.idaUnnamedScheme: bool = False
+		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 
 
 	def addGroup(self, group: Group):
@@ -727,7 +767,7 @@ class TypeReference:
 		typeManipulator: Callable[[str], str]=None, noTemplate: bool=False, noPointers: bool=False):
 
 		"""
-		Given a TypeRef in which the caller wants to express an arbritary series of template uses, returns a
+		Given a TypeRef in which the caller wants to express an arbitrary series of template uses, returns a
 		string representation of the current TypeRef's group name as if its template types were filled with the information
 		held by templateMappingTracker.
 
@@ -1150,13 +1190,13 @@ class FunctionImplementation:
 		self.isFakeConstructor: bool = False
 		self.isDestructor: bool = False
 		self.customReturnCount: int = None
-		self.noBinding: bool = False
 		self.group = None
 		self.virtual: bool = False
 		self.externalImplementation: bool = False
 		self.passLuaState: bool = False
 		self.eofBody: bool = False
 		self.bindingName: str = None
+		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 
 
 	def setName(self, name: str):
@@ -1291,10 +1331,11 @@ class FunctionImplementation:
 class CheckLinesState:
 
 	def __init__(self):
-		self.bracketLevel = 0
-		self.hitFirstBracket = False
+		self.bracketLevel: int = 0
+		self.hitFirstBracket: bool = False
 		self.functionImplementationBody: list[str] = []
-		self.currentFunctionImplementation = None
+		self.currentFunctionImplementation: FunctionImplementation = None
+		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 
 
 class CheckUnnamedStructsState:
@@ -1302,8 +1343,9 @@ class CheckUnnamedStructsState:
 	def __init__(self):
 		self.groupType: str = None
 		self.preBracketLevel: int = None
-		self.bracketLevel = 0
+		self.bracketLevel: int = 0
 		self.lines: list[str] = []
+		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 
 
 variablePatternGlobal = "^((?:(?:nopointer|nobinding|static)\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*&:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
@@ -1311,17 +1353,20 @@ variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\s+)*)(?:__unaligne
 
 def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
+	isGlobal = group == mainState.globalGroup
+
 	functionImplementationMatch: Match = re.match("^\s*(?!typedef)((?:(?:\$nobinding|\$nodeclaration|\$external_implementation|\$pass_lua_state|\$eof_body|\$binding_name\(\S+\))\s+)*)(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]=]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>&]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)\s*(const){0,1}\s*(?:(;)){0,1}$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
 		state.currentFunctionImplementation.group = group
+		state.lineGroupFlags.applyTo(state.currentFunctionImplementation.lineGroupFlags)
 
 		if keywordMatch := functionImplementationMatch.group(1):
 			for keyword in keywordMatch.strip().split(" "):
 				if keyword == "$nobinding":
-					assert not state.currentFunctionImplementation.noBinding, "nobinding already defined"
-					state.currentFunctionImplementation.noBinding = True
+					assert not state.currentFunctionImplementation.lineGroupFlags.isExplicitlyFlagged("noBindings"), "nobinding already defined"
+					state.currentFunctionImplementation.lineGroupFlags.setFlag("noBindings", FlagSource.EXPLICIT)
 				elif keyword == "$nodeclaration":
 					assert not state.currentFunctionImplementation.noDeclaration, "nodeclaration already defined"
 					state.currentFunctionImplementation.noDeclaration = True
@@ -1416,16 +1461,17 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 					state.currentFunctionImplementation = None
 
 
-	variableMatch: Match = re.match(variablePatternGlobal if group == mainState.globalGroup else variablePatternLocal, line)
+	variableMatch: Match = re.match(variablePatternGlobal if isGlobal else variablePatternLocal, line)
 	if variableMatch != None:
 
 		variableField = VariableField(group)
+		state.lineGroupFlags.applyTo(variableField.lineGroupFlags)
 
 		if keywordMatch := variableMatch.group(1):
 			for keyword in keywordMatch.strip().split(" "):
 				if keyword == "nobinding":
-					assert not variableField.nobinding, "nobinding already defined"
-					variableField.nobinding = True
+					assert not variableField.lineGroupFlags.isExplicitlyFlagged("noBindings"), f"nobinding already defined for {group.name}::{variableMatch.group(3)}"
+					variableField.lineGroupFlags.setFlag("noBindings", FlagSource.EXPLICIT)
 				elif keyword == "static":
 					assert not variableField.static, "static already defined"
 					variableField.static = True
@@ -1470,6 +1516,12 @@ class UniqueTemplateUsesByHeaderName(UniqueList[TemplateUse]):
 		super().__init__(pHash=UniqueTemplateUsesByHeaderName.pHash, pEq=UniqueTemplateUsesByHeaderName.pEq)
 
 
+class GroupLineCollection:
+	__slots__ = ("lineGroupFlags", "lines")
+	def __init__(self):
+		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
+		self.lines: list[str] = []
+
 
 class Group:
 
@@ -1484,9 +1536,9 @@ class Group:
 		self.singleName: str = None # String filled with the name of the group. If group is a sub-group, contains only the last group name. Example:
 									# self.name = "CPtrList::CNode" => self.singleName = "CNode"
 
-		self.defined: bool = False  # True if the group was defined in a header file
-		self.lines: list[str] = []  # List of all lines in the group's definition.
-		self.linesProcessed = False # True if the group's lines have already been processed.
+		self.defined: bool = False                            # True if the group was defined in a header file
+		self.lineCollections: list[GroupLineCollection] = []  # List of all lines in the group's definition.
+		self.linesProcessed = False                           # True if the group's lines have already been processed.
 
 		self.ignoreHeader: bool = False        # If True the group's header won't be written to the .h file. The group's bindings will still be written.
 		self.overrideUsertypeSingleName = None # Used to override normal singleName when writing Lua bindings,
@@ -1524,6 +1576,8 @@ class Group:
 		self.hadVfptrField: bool = False
 		self.numOriginalVFuncs: int = None
 
+		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
+
 
 
 	def isSubgroup(self):
@@ -1558,7 +1612,11 @@ class Group:
 		return topGroup.groupType != "undefined"
 
 
-	def hasField(self, fieldName):
+	def getField(self, fieldName) -> Field | None:
+		return self.fieldsMap.get(fieldName)
+
+
+	def hasField(self, fieldName) -> bool:
 		return self.fieldsMap.get(fieldName) != None
 
 
@@ -1673,66 +1731,72 @@ class Group:
 		state: CheckLinesState = CheckLinesState()
 		unnamedStructsState = CheckUnnamedStructsState()
 
-		for line in self.lines:
+		for lineCollection in self.lineCollections:
 
-			checkUnnamedStructs(mainState, unnamedStructsState, self, line)
+			state.lineGroupFlags = lineCollection.lineGroupFlags
+			unnamedStructsState.lineGroupFlags = lineCollection.lineGroupFlags
 
-			# Define extends types
-			declMatch: Match = re.match("^(?:\$pack_(\d+)\s+){0,1}(?:const\s+){0,1}(?:struct|class|enum|union)\s+(?:\/\*VFT\*\/\s+){0,1}(?:__cppobj\s+){0,1}(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}[^;]*?(?:\s+\:\s+(.*?)){0,1}\s*$", line)
-			if declMatch != None:
-				if packGroup := declMatch.group(1):
-					self.pack = int(packGroup)
-				extendsStr = declMatch.group(2)
-				if extendsStr != None:
-					for extendsType in splitKeepBrackets(extendsStr, [","]):
-						self.extends.append(defineTypeRef(mainState, self, extendsType, TypeRefSourceType.VARIABLE, debugLine=f"processLinesFillTypes()-1 {line}"))
+			for line in lineCollection.lines:
 
-			# Define function fields
-			functionVariableMatch: Match = re.match("^\t([, _a-zA-Z0-9*:<>]+?)\s*\(\s*(?:([_a-zA-Z]+?)\s*){0,1}\*\s*([_a-zA-Z0-9~]+)\s*\)\s*\((?:\s*([, _a-zA-Z0-9*:<>]+?)\s+\*\s*this(?:\s*,\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\s+\*\s*result(?:\s*,\s+){0,1}){0,1}\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\.\.\.(?=\s*\))){0,1}){0,1}\s*\)\;$", line)
-			if functionVariableMatch != None:
+				checkUnnamedStructs(mainState, unnamedStructsState, self, line)
 
-				functionField = FunctionField()
-				functionField.returnType = defineTypeRef(mainState, self, functionVariableMatch.group(1), TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-2 {line}")
-				functionField.callConvention = functionVariableMatch.group(2)
-				functionField.functionName = functionVariableMatch.group(3)
+				# Define extends types
+				declMatch: Match = re.match("^(?:\$pack_(\d+)\s+){0,1}(?:const\s+){0,1}(?:struct|class|enum|union)\s+(?:\/\*VFT\*\/\s+){0,1}(?:__cppobj\s+){0,1}(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}[^;]*?(?:\s+\:\s+(.*?)){0,1}\s*$", line)
+				if declMatch != None:
+					if packGroup := declMatch.group(1):
+						self.pack = int(packGroup)
+					extendsStr = declMatch.group(2)
+					if extendsStr != None:
+						for extendsType in splitKeepBrackets(extendsStr, [","]):
+							self.extends.append(defineTypeRef(mainState, self, extendsType, TypeRefSourceType.VARIABLE, debugLine=f"processLinesFillTypes()-1 {line}"))
 
-				if functionField.functionName.startswith("~"):
-					functionField.functionName = "Destruct"
+				# Define function fields
+				functionVariableMatch: Match = re.match("^\t([, _a-zA-Z0-9*:<>]+?)\s*\(\s*(?:([_a-zA-Z]+?)\s*){0,1}\*\s*([_a-zA-Z0-9~]+)\s*\)\s*\((?:\s*([, _a-zA-Z0-9*:<>]+?)\s+\*\s*this(?:\s*,\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\s+\*\s*result(?:\s*,\s+){0,1}){0,1}\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\.\.\.(?=\s*\))){0,1}){0,1}\s*\)\;$", line)
+				if functionVariableMatch != None:
 
-				if thisTypeNoPtrMatch := functionVariableMatch.group(4):
-					functionField.thisType = defineTypeRef(mainState, self, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-3 {line}")
+					functionField = FunctionField()
+					functionField.returnType = defineTypeRef(mainState, self, functionVariableMatch.group(1), TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-2 {line}")
+					functionField.callConvention = functionVariableMatch.group(2)
+					functionField.functionName = functionVariableMatch.group(3)
+					state.lineGroupFlags.applyTo(functionField.lineGroupFlags)
 
-				if resultTypeNoPtrMatch := functionVariableMatch.group(5):
-					functionField.resultType = defineTypeRef(mainState, self, f"{resultTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-4 {line}")
+					if functionField.functionName.startswith("~"):
+						functionField.functionName = "Destruct"
 
-				parameterStr = functionVariableMatch.group(6)
-				if parameterStr != None and parameterStr != "":
-					for paramType in splitKeepBrackets(parameterStr, [","]):
-						functionField.parameterTypes.append(defineTypeRef(mainState, self, paramType, TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-5 {line}"))
+					if thisTypeNoPtrMatch := functionVariableMatch.group(4):
+						functionField.thisType = defineTypeRef(mainState, self, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-3 {line}")
 
-				self.addField(functionField)
+					if resultTypeNoPtrMatch := functionVariableMatch.group(5):
+						functionField.resultType = defineTypeRef(mainState, self, f"{resultTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-4 {line}")
 
-			processCommonGroupLines(mainState, state, line, self)
+					parameterStr = functionVariableMatch.group(6)
+					if parameterStr != None and parameterStr != "":
+						for paramType in splitKeepBrackets(parameterStr, [","]):
+							functionField.parameterTypes.append(defineTypeRef(mainState, self, paramType, TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-5 {line}"))
 
-			# Define certain enum values in group.enumTuples, else print to console
-			if self.groupType == "enum":
-				enumLineMatch: Match = re.match("^\s*([_a-zA-Z0-9]+)\s*=\s*(.+?)\s*,\s*(?:\/\/.*){0,1}$", line)
-				if enumLineMatch:
-					firstExtendName = self.extends[0].getName() if len(self.extends) > 0 else "__int32"
-					if firstExtendName == "__int8":
-						value = int(enumLineMatch.group(2), 16)
-						if value & 0x80 != 0: value = -1 - (0xFF - value)
-						self.enumTuples.append((enumLineMatch.group(1), value))
-					elif firstExtendName == "__int32":
-						value = int(enumLineMatch.group(2), 16)
-						if value & 0x80000000 != 0: value = -1 - (0xFFFFFFFF - value)
-						self.enumTuples.append((enumLineMatch.group(1), value))
-					elif firstExtendName == "__int64":
-						value = int(enumLineMatch.group(2), 16)
-						if value & 0x8000000000000000 != 0: value = -1 - (0xFFFFFFFFFFFFFFFF - value)
-						self.enumTuples.append((enumLineMatch.group(1), value))
-					else:
-						print(f"[!] Unknown enum extend type: \"{firstExtendName}")
+					self.addField(functionField)
+
+				processCommonGroupLines(mainState, state, line, self)
+
+				# Define certain enum values in group.enumTuples, else print to console
+				if self.groupType == "enum":
+					enumLineMatch: Match = re.match("^\s*([_a-zA-Z0-9]+)\s*=\s*(.+?)\s*,\s*(?:\/\/.*){0,1}$", line)
+					if enumLineMatch:
+						firstExtendName = self.extends[0].getName() if len(self.extends) > 0 else "__int32"
+						if firstExtendName == "__int8":
+							value = int(enumLineMatch.group(2), 16)
+							if value & 0x80 != 0: value = -1 - (0xFF - value)
+							self.enumTuples.append((enumLineMatch.group(1), value))
+						elif firstExtendName == "__int32":
+							value = int(enumLineMatch.group(2), 16)
+							if value & 0x80000000 != 0: value = -1 - (0xFFFFFFFF - value)
+							self.enumTuples.append((enumLineMatch.group(1), value))
+						elif firstExtendName == "__int64":
+							value = int(enumLineMatch.group(2), 16)
+							if value & 0x8000000000000000 != 0: value = -1 - (0xFFFFFFFFFFFFFFFF - value)
+							self.enumTuples.append((enumLineMatch.group(1), value))
+						else:
+							print(f"[!] Unknown enum extend type: \"{firstExtendName}")
 
 
 	def mapTemplateTypeNames(self):
@@ -1911,6 +1975,7 @@ class Group:
 				newGroup.groupType = "undefined"
 				newGroup.name = name
 				newGroup.singleName = singleName
+				self.lineGroupFlags.applyTo(newGroup.lineGroupFlags)
 				mainState.addGroup(newGroup)
 				toReturn = newGroup
 
@@ -1986,7 +2051,7 @@ class Group:
 		singleName=False, noName=False, templateTypeMode: TemplateTypeMode=None, typeManipulator: Callable[[str], str]=None):
 
 		"""
-		Given a Group in which the caller wants to express an arbritary series of template uses, returns a
+		Given a Group in which the caller wants to express an arbitrary series of template uses, returns a
 		string representation of the current Group name as if its template types were filled with the information
 		held by templateMappingTracker.
 		"""
@@ -2029,51 +2094,130 @@ class Group:
 		"""
 
 		if vtblStruct := mainState.tryGetGroup(f"{self.name}::vtbl"):
-			return vtblStruct
+			# vtbl already processed
+			finalSuperVGroup: Group = vtblStruct
+			while True:
+				if len(finalSuperVGroup.extends) > 0:
+					extendRef: TypeReference = finalSuperVGroup.extends[0]
+					finalSuperVGroup = extendRef.group
+				else:
+					break
+
+			return vtblStruct, finalSuperVGroup
 
 		if not (vtblStruct := mainState.tryGetGroup(f"{self.name}_vtbl")):
-			return
+
+			# Get super vtbl struct if it exists
+			superVGroup: Group = None
+			for extendRef in self.extends:
+				superVGroupTemp, _ = extendRef.group.checkForVGroup(mainState)
+				if superVGroupTemp:
+					if superVGroup == None:
+						superVGroup = superVGroupTemp
+					else:
+						# print(f"[!] Failed to fully create vtbl struct for {self.name}. Code can only handle one superclass having a vftable.")
+						superVGroup = None
+						break
+
+			if superVGroup:
+				# If I didn't have a vtbl struct, and yet my super struct did, copy the super vtbl struct
+				# This is useful for manual structs that extend a struct with a vtbl - this code generates the
+				# new struct's vtbl automatically.
+				vtblStruct = Group()
+				vtblStruct.groupType = "struct"
+				vtblStruct.defined = True
+				superVGroup.lineGroupFlags.applyTo(vtblStruct.lineGroupFlags)
+				vtblStruct.updateSingleName(mainState, f"{self.name}_vtbl")
+
+				for field in superVGroup.fields:
+					vtblStruct.addField(field.shallowCopy())
+
+				mainState.addGroup(vtblStruct)
+
+			# vtbl struct doesn't exist
+			return None, None
 
 		self.vGroup = vtblStruct
+		# Relocate vtbl struct so that it nests under its parent Group
 		vtblStruct.relocate(mainState, f"{self.name}::vtbl")
 
-		if self.hasField("__vftable"):
+		# Remove __vftable field if it exists
+		# (they are hidden and should never be explicitly defined in C++)
+		vfptrField = self.getField("__vftable")
+		if vfptrField != None:
 			self.hadVfptrField = True
 			self.removeFieldByName(mainState, "__vftable")
 
+		# Keep track of some hierarchy Groups, (immediate parent and upper-most parent)
 		superVGroup: Group = None
+		finalSuperVGroup: Group = None
+
+		# Build vtbl struct hierarchy
 		for extendRef in self.extends:
+
 			assert extendRef.group, "checkForVGroup() - extendRef has no group assigned"
-			if superVGroupTemp := extendRef.group.checkForVGroup(mainState):
-				if len(self.extends) == 1:
+			# Recursively handle all vtbl structs in the hierarchy chain
+			superVGroupTemp, finalSuperVGroupTemp = extendRef.group.checkForVGroup(mainState)
+
+			if superVGroupTemp != None:
+
+				if superVGroup == None:
+					# Add the parent vtbl struct to this struct's extends list
 					superVGroup = superVGroupTemp
+					finalSuperVGroup = finalSuperVGroupTemp
 					vtblStruct.extends.append(defineTypeRef(mainState, vtblStruct, superVGroup.name, TypeRefSourceType.VARIABLE, debugLine=f"checkForVGroup()"))
-				# I don't know how to handle multiple inheritance with vftables
+				else:
+					# print(f"[!] Failed to fully create vtbl struct for {self.name}. Code can only handle one superclass having a vftable.")
+
+					# Clear everything since building the hierarchy failed
+					superVGroup = None
+					finalSuperVGroup = None
+
+					for extendRef in vtblStruct.extends:
+						extendRef.removeFromGroupRefs()
+
+					vtblStruct.extends.clear()
+
 
 		vtblStruct.numOriginalVFuncs = len(vtblStruct.fields)
 
-		if superVGroup:
+		if superVGroup != None:
+			# Remove vtbl fields that were inherited
 			for _ in range(superVGroup.numOriginalVFuncs):
 				vtblStruct.removeFieldByIndex(mainState, 0)
 
 		for field in vtblStruct.fields:
 
-			if field.type != FieldType.FUNCTION:
-				#print(f"vtblStruct {vtblStruct.name} has non-function field: {field.toString(mainState)}, breaking!")
-				break
+			if field.type == FieldType.VARIABLE:
+				if not vtblStruct.superGroup.name.startswith("cricket::Port"):
+					print(f"[!] Variable field detected in vtbl struct {vtblStruct.name}")
 
-			functionField: FunctionField = field
+			elif field.type == FieldType.FUNCTION:
 
-			thisType = functionField.thisType
-			if thisType and thisType.getGroup() != self:
-				continue
+				functionField: FunctionField = field
 
-			impl: FunctionImplementation = functionField.toImplementation(self, fromVFTable=True)
-			impl.name = f"virtual_{functionField.functionName}"
-			impl.virtual = True
-			self.functionImplementations.append(impl)
+				thisType = functionField.thisType
+				if (
+					thisType and thisType.getGroup() != self
+					and not vtblStruct.superGroup.name.startswith("buzz::Xmpp")
+					and not vtblStruct.superGroup.name.startswith("cricket")
+					and not vtblStruct.superGroup.name.startswith("Microsoft::WRL::Wrappers")
+					and not vtblStruct.superGroup.name.startswith("talk_base")
+					and not vtblStruct.superGroup.name.startswith("XmppHandler")
+					and not vtblStruct.superGroup.name.startswith("XmppPump")
+					and not vtblStruct.superGroup.name.startswith("XmppThread")
+				):
+					print(f"[!] Function field {functionField.functionName} detected in vtbl struct {vtblStruct.name} with a `this` parameter mismatch")
+					continue
 
-		return vtblStruct
+				impl: FunctionImplementation = functionField.toImplementation(self, fromVFTable=True)
+				impl.name = f"virtual_{functionField.functionName}"
+				impl.virtual = True
+				self.functionImplementations.append(impl)
+			else:
+				assert False, f"Unexpected field type in vtbl struct {vtblStruct.name}"
+
+		return vtblStruct, finalSuperVGroup if finalSuperVGroup != None else vtblStruct
 
 
 	def writeHeader(self, mainState, internalPointersOut, internalPointersListOut: list[tuple[str,str]], headerType: HeaderType, indent="") -> str:
@@ -2312,7 +2456,7 @@ class Group:
 			if subGroup.isUsed(mainState, dontCheckSuper=True, processed=processed):
 				return True
 
-		# Check if I am requested when my supergroup is being used, (isSoftWanted).
+		# Check if I am requested when my superGroup is being used, (isSoftWanted).
 		return not dontCheckSuper and self.isSoftWanted and self.superGroup and self.superGroup.isUsed(mainState, dontCheckSuper=True, processed=processed)
 
 
@@ -2339,7 +2483,13 @@ def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, s
 		subGroup = Group()
 		subGroup.groupType = state.groupType
 		subGroup.defined = True
-		subGroup.lines = state.lines
+		state.lineGroupFlags.applyTo(subGroup.lineGroupFlags)
+
+		subGroupLineCollection = GroupLineCollection()
+		subGroupLineCollection.lines = state.lines
+		state.lineGroupFlags.applyTo(subGroupLineCollection.lineGroupFlags)
+
+		subGroup.lineCollections.append(subGroupLineCollection)
 		subGroup.superGroup = superGroup
 
 		subGroup.updateSingleName(mainState, myTypeName)
@@ -2351,6 +2501,7 @@ def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, s
 		newSuperField = VariableField(superGroup)
 		newSuperField.variableType = defineTypeRef(mainState, superGroup, myFullName, TypeRefSourceType.VARIABLE, debugLine=f"checkUnnamedStructs() {line}")
 		newSuperField.variableName = myName
+		state.lineGroupFlags.applyTo(newSuperField.lineGroupFlags)
 		superGroup.addField(newSuperField)
 
 		state.preBracketLevel = None
@@ -2372,6 +2523,14 @@ class Field:
 	def __init__(self):
 		self.type: FieldType = None
 		self.listI: int = None
+		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
+
+	def shallowCopy(self, copy=None):
+		copy = copy if copy != None else Field()
+		copy.type = self.type
+		copy.listI = self.listI
+		self.lineGroupFlags.applyTo(copy.lineGroupFlags)
+		return copy
 
 	def getName(self) -> str:
 		assert False, "Field.getName() intentionally unimplemented"
@@ -2399,6 +2558,20 @@ class FunctionField(Field):
 		self.parameterTypes: list[TypeReference] = []
 
 
+	def shallowCopy(self, copy=None):
+		copy: FunctionField = copy if copy != None else FunctionField()
+		super().shallowCopy(copy)
+		copy.type = self.type
+		copy.returnType = self.returnType.shallowCopy()
+		copy.callConvention = self.callConvention
+		copy.functionName = self.functionName
+		copy.thisType = self.thisType.shallowCopy() if self.thisType != None else None
+		copy.resultType = self.resultType.shallowCopy() if self.resultType != None else None
+		for parameterType in self.parameterTypes:
+			copy.parameterTypes.append(parameterType.shallowCopy())
+		return copy
+
+
 	def toImplementation(self, group: Group, fromVFTable: bool = False) -> FunctionImplementation:
 
 		impl = FunctionImplementation()
@@ -2406,6 +2579,7 @@ class FunctionField(Field):
 		impl.returnType = self.returnType
 		impl.callingConvention = self.callConvention
 		impl.name = self.functionName
+		self.lineGroupFlags.applyTo(impl.lineGroupFlags)
 
 		enumerateStartI = 0
 
@@ -2499,9 +2673,20 @@ class VariableField(Field):
 		self.group = group
 		self.variableType: TypeReference = None
 		self.variableName: str = None
-		self.nobinding: bool = False
 		self.static: bool = False
 		self.nopointer: bool = False
+
+
+	def shallowCopy(self, copy=None):
+		copy: VariableField = copy if copy != None else VariableField()
+		super().shallowCopy(copy)
+		copy.type = self.type
+		copy.group = self.group
+		copy.variableType = self.variableType.shallowCopy()
+		copy.variableName = self.variableName
+		copy.static = self.static
+		copy.nopointer = self.nopointer
+		return copy
 
 
 	def getName(self):
@@ -2642,6 +2827,8 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 			if not typeGroup:
 				typeGroup = Group()
 				typeGroup.groupType = "struct" if struct else "undefined"
+				if sourceGroup:
+					sourceGroup.lineGroupFlags.applyTo(typeGroup.lineGroupFlags)
 				typeGroup.updateSingleName(mainState, groupName)
 				mainState.addGroup(typeGroup)
 
@@ -2822,6 +3009,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			self.fieldBindings: list[OpenFieldData] = []
 			self.functionBindings: list[OpenFunctionData] = []
 			self.constantBindings: list[OpenConstantData] = []
+			self.hasReasonForOutput: bool = False
 
 
 	class OpenFunctionData:
@@ -2864,43 +3052,8 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		groupOpenData.appliedHeaderName = group.getAppliedName(mainState, templateMappingTracker, templateTypeMode=TemplateTypeMode.HEADER)
 		groupNameStrIden, _ = re.subn("[^a-zA-Z0-9_]", "_", groupOpenData.appliedNameUsertypeNoOverride)
 
-		# Writing getInternalReference() function which returns the userdata's internal pointer
-		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Array", "CharString", "ConstCharString"):
-
-			skip: bool = False
-
-			if group.name == "Pointer":
-				innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
-				if innerRef.getUserTypePointerLevel() >= currentTemplate.maxPointerLevel:
-					skip = True
-
-			if not skip:
-
-				getTypeFunc = OpenFunctionData()
-				getTypeFunc.functionBindingName = resolveIdentifer(f"tolua_function_{groupNameStrIden}_getInternalReference")
-				getTypeFunc.functionName = "getInternalReference"
-
-				out.write(f"static int {getTypeFunc.functionBindingName}(lua_State* L)\n")
-				out.write("{\n")
-				out.write(f"\tvoid** ptr = (void**)lua_touserdata(L, 1);\n")
-
-				pointerName = f"Pointer<{groupOpenData.appliedHeaderName}>"
-				if group.name == "void":
-					pointerName = "VoidPointer"
-				elif group.name == "Pointer":
-					innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
-					pointerName = f"Pointer<{innerRef.getHeaderName(pointerLevelAdjust=1, useUsertypeOverride=True)}>"
-				elif group.name == "VoidPointer":
-					pointerName = "Pointer<void*>"
-
-				out.write(f"\ttolua_pushusertype(L, ptr, \"{pointerName}\");\n")
-				out.write("\treturn 1;\n")
-				out.write("}\n\n")
-
-				groupOpenData.functionBindings.append(getTypeFunc)
-
 		# Writing sizeof variable which returns the value of the sizeof operator when run on the usertype
-		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name != "void":
+		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name != "void" and not group.lineGroupFlags.isFlagged("noHardcodedBindings"):
 			sizeofConstant = OpenConstantData()
 			sizeofConstant.name = "sizeof"
 			sizeofConstant.valueType = OpenConstantType.STRING
@@ -2924,11 +3077,12 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			assert field.type in (FieldType.VARIABLE, FieldType.FUNCTION), "field.type unhandled in writeGroupWithTemplateUse()"
 			if field.type == FieldType.VARIABLE:
 				variableField: VariableField = field
-				if variableField.nobinding: return
+				if variableField.lineGroupFlags.isFlagged("noBindings"): return
 				if len(variableField.variableType.arrayParts) > 0: return # These use GenericArray functions
 				fieldNameStr = variableField.variableName
 			elif field.type == FieldType.FUNCTION:
 				functionField: FunctionField = field
+				if functionField.lineGroupFlags.isFlagged("noBindings"): return
 				fieldNameStr = functionField.functionName
 
 			fieldOpenData = OpenFieldData()
@@ -2939,6 +3093,8 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			addressPrefix = "reference_" if isPointerCast else ""
 
 			groupOpenData.fieldBindings.append(fieldOpenData)
+			groupOpenData.hasReasonForOutput = True
+
 			fieldOpenData.fieldBindingName = f"{addressPrefix}{fieldNameStr}"
 
 			if isNormal:
@@ -3195,6 +3351,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			functionOpenData.functionBindingName = resolveIdentifer(f"tolua_function_{groupIden}{funcImpBindingName}")
 
 			groupOpenData.functionBindings.append(functionOpenData)
+			groupOpenData.hasReasonForOutput = True
 
 			out.write(f"static int {functionOpenData.functionBindingName}(lua_State* L)\n")
 			out.write("{\n")
@@ -3379,16 +3536,63 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			groupOpenData.constantBindings.append(openConstantData)
 
 
+		def handleHardcodedBindings():
+
+			if not groupOpenData.hasReasonForOutput or group.lineGroupFlags.isFlagged("noHardcodedBindings"):
+				return
+
+			# Writing getInternalReference() function which returns the userdata's internal pointer
+			if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Array", "CharString", "ConstCharString"):
+
+				skip: bool = False
+
+				if group.name == "Pointer":
+					innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
+					if innerRef.getUserTypePointerLevel() >= currentTemplate.maxPointerLevel:
+						skip = True
+
+				if not skip:
+
+					getTypeFunc = OpenFunctionData()
+					getTypeFunc.functionBindingName = resolveIdentifer(f"tolua_function_{groupNameStrIden}_getInternalReference")
+					getTypeFunc.functionName = "getInternalReference"
+
+					out.write(f"static int {getTypeFunc.functionBindingName}(lua_State* L)\n")
+					out.write("{\n")
+					out.write(f"\tvoid** ptr = (void**)lua_touserdata(L, 1);\n")
+
+					pointerName = f"Pointer<{groupOpenData.appliedHeaderName}>"
+					if group.name == "void":
+						pointerName = "VoidPointer"
+					elif group.name == "Pointer":
+						innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
+						pointerName = f"Pointer<{innerRef.getHeaderName(pointerLevelAdjust=1, useUsertypeOverride=True)}>"
+					elif group.name == "VoidPointer":
+						pointerName = "Pointer<void*>"
+
+					out.write(f"\ttolua_pushusertype(L, ptr, \"{pointerName}\");\n")
+					out.write("\treturn 1;\n")
+					out.write("}\n\n")
+
+					groupOpenData.functionBindings.append(getTypeFunc)
+
 
 		for field in group.fields:
 			handleField(field)
 
 		for functionImplementation in group.functionImplementations:
-			if functionImplementation.noBinding: continue
+			if functionImplementation.lineGroupFlags.isFlagged("noBindings"): continue
 			handleFunctionImplementation(functionImplementation)
 
 		for enumTuple in group.enumTuples:
 			handleEnumTuple(enumTuple)
+
+		# Empty structs (those that simply derive from a superclass) should
+		# be outputted if they were defined when bindings were enabled.
+		if len(group.fields) == 0 and len(group.functionImplementations) == 0 and not group.lineGroupFlags.isFlagged("noBindings"):
+			groupOpenData.hasReasonForOutput = True
+
+		handleHardcodedBindings()
 
 		for subGroup in group.subGroups:
 			writeGroup(subGroup, templateMappingTracker)
@@ -3400,7 +3604,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 	def writeGroup(group: Group, templateMappingTracker: TemplateMappingTracker):
 
-		if not group.isUsed(mainState):
+		if group.name == "void" or group.isPrimitive() or not group.isUsed(mainState):
 			return
 
 		if group.template != None:
@@ -3423,6 +3627,10 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 	out.write("{\n")
 
 	for openData in openDataGroups:
+
+		if not openData.hasReasonForOutput:
+			continue
+
 		out.write(f"\ttolua_usertype(L, \"{openData.appliedNameUsertype}\");\n")
 
 	out.write("}\n\n")
@@ -3434,6 +3642,9 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 	out.write("\ttolua_module(L, NULL, 0);\n")
 	out.write("\ttolua_beginmodule(L, NULL);\n")
 	for openData in openDataGroups:
+
+		if not openData.hasReasonForOutput:
+			continue
 
 		# Write global mappings
 		if openData.group == mainState.globalGroup:
@@ -3845,10 +4056,17 @@ def outputHeader(mainState: MainState, outputFileName: str, out: TextIOWrapper):
 
 
 def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None) -> None:
+	"""
+	Processes the given header file and registers all of the top-level `Group`s (struct/class/enum/union/namespace)
+	Note that Group lines are not processed past associating them with the Group.
+	The "global" Group (that contains lines not found in a Group) is fully processed by this function.
+	"""
 
 	state: CheckLinesState = CheckLinesState()
+	mainState.lineGroupFlags.applyTo(state.lineGroupFlags)
 
 	currentGroup = None
+	currentLineCollection = None
 	groupLevel = 0
 	hitFirstBracket = False
 	previousTemplate: str = None
@@ -3858,6 +4076,7 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 
 		nonlocal state
 		nonlocal currentGroup
+		nonlocal currentLineCollection
 		nonlocal groupLevel
 		nonlocal hitFirstBracket
 		nonlocal previousTemplate
@@ -3900,7 +4119,12 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 				currentGroup.template = previousTemplate
 				currentGroup.groupType = declMatch.group(1)
 				currentGroup.defined = True
+				mainState.lineGroupFlags.applyTo(currentGroup.lineGroupFlags)
 				currentGroup.updateSingleName(mainState, nameStr)
+
+			currentLineCollection = GroupLineCollection()
+			mainState.lineGroupFlags.applyTo(currentLineCollection.lineGroupFlags)
+			currentGroup.lineCollections.append(currentLineCollection)
 
 		# Track template lines, (previousTemplate is only set if the previous line was a template declaration outside of a Group)
 		if currentGroup == None and len(split) >= 1 and stripTypeBrackets(split[0]) == "template":
@@ -3915,9 +4139,9 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 			groupLevel += openBracketCount
 			groupLevel -= line.count("}")
 
-			# TODO: Store struct declaration seperately so separately definitions can override the previous ones
+			# TODO: Store struct declaration separately so separately definitions can override the previous ones
 			if (not alreadyExisted or (groupLevel > 0 and hitFirstBracket)):
-				currentGroup.lines.append(line)
+				currentLineCollection.lines.append(line)
 
 			if openBracketCount > 0: hitFirstBracket = True
 
@@ -3927,10 +4151,12 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 					mainState.addGroup(currentGroup)
 
 				currentGroup = None
+				currentLineCollection = None
 				hitFirstBracket = False
 				alreadyExisted = False
 
 		else:
+			# Process the global group's lines
 			processCommonGroupLines(mainState, state, line, mainState.globalGroup)
 
 	if filePath:
@@ -3976,7 +4202,7 @@ def main():
 		if   k == "-normal":  assert False, "-normal removed"
 		elif k == "-cleaned": assert False, "-cleaned removed"
 		elif k == "-noCustomTypes": mainState.noCustomTypes = True
-		elif (v := re.search("-inFile=(.+)",                      k)) != None: inputFileName               = v.group(1)
+		elif (v := re.search("-inFiles=(.+)",                     k)) != None: inputFileNames              = v.group(1)
 		elif (v := re.search("-outFile=(.+)",                     k)) != None: outputFileName              = v.group(1)
 		elif (v := re.search("-bindingsOutFile=(.+)",             k)) != None: bindingsFileName            = v.group(1)
 		elif (v := re.search("-fixupFile=(.+)",                   k)) != None: fixupFileName               = v.group(1)
@@ -3991,8 +4217,9 @@ def main():
 
 
 	mainState.globalGroup = Group()
-	mainState.globalGroup.updateSingleName(mainState, "EngineGlobals")
 	mainState.globalGroup.defined = True
+	mainState.lineGroupFlags.applyTo(mainState.globalGroup.lineGroupFlags)
+	mainState.globalGroup.updateSingleName(mainState, "EngineGlobals")
 	mainState.addGroup(mainState.globalGroup)
 
 	if mainState.noCustomTypes:
@@ -4025,7 +4252,30 @@ struct ConstCharString
 		if manualTypesFile != None:
 			processInputHeader(mainState, manualTypesFile)
 
-		processInputHeader(mainState, inputFileName)
+		for inputFileName in inputFileNames.split(","):
+
+			parts = inputFileName.split(":")
+			numParts = len(parts)
+			if numParts not in (1, 2):
+				assert False, "inFiles malformed"
+
+			flags = parts[0] if numParts == 2 else ""
+			fileName = parts[1] if numParts == 2 else parts[0]
+
+			oldFlagValues = []
+			for flag in flags.split(";"):
+				if flag == "NO_BINDINGS":
+					oldFlagValues.append(("noBindings", mainState.lineGroupFlags.getFlag("noBindings")))
+					mainState.lineGroupFlags.setFlag("noBindings", FlagSource.DEFAULT)
+				elif flag == "NO_HARDCODED_BINDINGS":
+					oldFlagValues.append(("noHardcodedBindings", mainState.lineGroupFlags.getFlag("noHardcodedBindings")))
+					mainState.lineGroupFlags.setFlag("noHardcodedBindings", FlagSource.DEFAULT)
+
+			processInputHeader(mainState, fileName)
+
+			for flagName, oldFlagValue in oldFlagValues:
+				mainState.lineGroupFlags.setFlag(flagName, oldFlagValue)
+
 
 		# Process Group lines to derive types
 		for group in mainState.groups:
@@ -4094,8 +4344,9 @@ def loadMinimumMainState(inputFileName: str, fixupFileName: str=None, manualType
 	mainState.idaUnnamedScheme = idaUnnamedScheme
 
 	mainState.globalGroup = Group()
-	mainState.globalGroup.updateSingleName(mainState, "EngineGlobals")
 	mainState.globalGroup.defined = True
+	mainState.lineGroupFlags.applyTo(mainState.globalGroup.lineGroupFlags)
+	mainState.globalGroup.updateSingleName(mainState, "EngineGlobals")
 	mainState.addGroup(mainState.globalGroup)
 
 	processInputHeader(mainState, blob="""

@@ -1,0 +1,15 @@
+{
+    "cSpell.includeRegExpList": [
+        "#.*",
+        "/([\"]{3}|[']{3})[^\\1]*?\\1/g"
+    ],
+    "cSpell.words": [
+        "noconst",
+        "Staticify",
+        "userdata's",
+        "usertype",
+        "usertypes",
+        "vftable",
+        "vtbl"
+    ]
+}

@@ -105,6 +105,8 @@ struct CInfButtonArray;
 struct CInfGame;
 struct CInfTileSet;
 struct CItem;
+struct CMemINISection;
+struct CMemINIValue;
 struct CMessage;
 struct CMessageHandler;
 struct CMoveListEntry;
@@ -4697,8 +4699,8 @@ struct CPoint
 
 	CPoint(int x, int y)
 	{
-		x = x;
-		y = y;
+		this->x = x;
+		this->y = y;
 	}
 
 	CPoint(CPoint* point)
@@ -5020,6 +5022,11 @@ struct CTypedPtrList : CObject
 		CNode() = delete;
 	};
 
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
 	CTypedPtrList::CNode* m_pNodeHead;
 	CTypedPtrList::CNode* m_pNodeTail;
 	int m_nCount;
@@ -5062,6 +5069,11 @@ struct CTypedPtrList : CObject
 template<class BASE_CLASS, class T>
 struct CTypedPtrArray : CObject
 {
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
 	T* m_pData;
 	int m_nSize;
 	int m_nMaxSize;
@@ -5122,32 +5134,6 @@ struct CPtrList : CObject
 	CPtrList() = delete;
 };
 
-struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CPersistantEffectList() = delete;
-};
-
-struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffect*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	unsigned int m_nCounter;
-
-	CPersistantEffectListRegenerated() = delete;
-};
-
 struct CMessageHandler
 {
 	CTypedPtrList<CPtrList,CMessage*> m_messageList;
@@ -5205,6 +5191,63 @@ struct CChatBuffer
 	CChatBuffer() = delete;
 };
 
+struct CGameButtonList : CTypedPtrList<CPtrList,CButtonData*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_nFirstMageSpellIndex;
+
+	CGameButtonList() = delete;
+};
+
+struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__POSITION* m_posNext;
+	__POSITION* m_posCurrent;
+	int m_newEffect;
+	int m_retry;
+
+	CGameEffectList() = delete;
+};
+
+struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesAIType() = delete;
+
+	typedef int (__thiscall *type_OnList)(CImmunitiesAIType* pThis, const CAIObjectType* type);
+	static type_OnList p_OnList;
+
+	int OnList(const CAIObjectType* type)
+	{
+		return p_OnList(this, type);
+	}
+};
+
+struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffect*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_nCounter;
+
+	CPersistantEffectListRegenerated() = delete;
+};
+
 struct CAIResponse
 {
 	__int16 m_weight;
@@ -5216,12 +5259,205 @@ struct CAIResponse
 	CAIResponse() = delete;
 };
 
+struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CApplyEffectList() = delete;
+};
+
+struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CBounceList() = delete;
+};
+
+struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CColorEffects() = delete;
+};
+
+struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CColorRanges() = delete;
+};
+
+struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CContingencyList() = delete;
+};
+
+struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CCriticalEntryList() = delete;
+};
+
+struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CGameEffectUsabilityList() = delete;
+};
+
+struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesEffect() = delete;
+};
+
+struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesItemEquipList() = delete;
+};
+
+struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesItemTypeEquipList() = delete;
+};
+
+struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesProjectile() = delete;
+};
+
+struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesSchoolAndSecondary() = delete;
+};
+
+struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesSchoolAndSecondaryDecrementing() = delete;
+};
+
+struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesSpellList() = delete;
+};
+
+struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesWeapon() = delete;
+};
+
+struct CMemINI : CTypedPtrList<CPtrList,void*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString mFileName;
+	CMemINISection* mpLastSection;
+
+	CMemINI() = delete;
+};
+
+struct CMemINISection : CTypedPtrList<CPtrList,CMemINIValue*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString mSectionName;
+
+	CMemINISection() = delete;
+};
+
+struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMoveList() = delete;
+};
+
+struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
+{
+	struct vtbl : CTypedPtrList::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CPersistantEffectList() = delete;
+};
+
 struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
 {
-	struct vtbl
+	struct vtbl : CTypedPtrList::vtbl
 	{
-		void (__fastcall *Destruct)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -5238,10 +5474,8 @@ struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
 
 struct CSpawnFile : CTypedPtrList<CPtrList,void*>
 {
-	struct vtbl
+	struct vtbl : CTypedPtrList::vtbl
 	{
-		void (__fastcall *Destruct)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -5254,10 +5488,8 @@ struct CSpawnFile : CTypedPtrList<CPtrList,void*>
 
 struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
 {
-	struct vtbl
+	struct vtbl : CTypedPtrList::vtbl
 	{
-		void (__fastcall *Destruct)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -5270,10 +5502,8 @@ struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
 
 struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
 {
-	struct vtbl
+	struct vtbl : CTypedPtrList::vtbl
 	{
-		void (__fastcall *Destruct)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -5282,10 +5512,8 @@ struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
 
 struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
 {
-	struct vtbl
+	struct vtbl : CTypedPtrList::vtbl
 	{
-		void (__fastcall *Destruct)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -5305,6 +5533,23 @@ struct CPtrArray : CObject
 	int m_nGrowBy;
 
 	CPtrArray() = delete;
+};
+
+struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
+{
+	struct vtbl : CTypedPtrArray::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_dialogText;
+	CAICondition m_startCondition;
+	int m_picked;
+	unsigned int m_conditionPriority;
+	unsigned int m_dialogIndex;
+	unsigned __int8 m_bDisplayButton;
+
+	CGameDialogEntry() = delete;
 };
 
 struct CGameJournal
@@ -5332,12 +5577,20 @@ struct CImportGame
 	CImportGame() = delete;
 };
 
+struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
+{
+	struct vtbl : CTypedPtrArray::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CGameAbilityList() = delete;
+};
+
 struct CSpawnPointArray : CTypedPtrArray<CPtrArray,CSpawnPoint*>
 {
-	struct vtbl
+	struct vtbl : CTypedPtrArray::vtbl
 	{
-		void (__fastcall *Destruct)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -5719,18 +5972,6 @@ struct CWarp : CObject
 	}
 };
 
-struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CMoveList() = delete;
-};
-
 struct CMessage
 {
 	struct vtbl
@@ -5921,225 +6162,6 @@ struct CMemINIValue
 	}
 };
 
-struct CMemINISection : CTypedPtrList<CPtrList,CMemINIValue*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CString mSectionName;
-
-	CMemINISection() = delete;
-};
-
-struct CMemINI : CTypedPtrList<CPtrList,void*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CString mFileName;
-	CMemINISection* mpLastSection;
-
-	CMemINI() = delete;
-};
-
-struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CImmunitiesWeapon() = delete;
-};
-
-struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CImmunitiesSpellList() = delete;
-};
-
-struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CImmunitiesSchoolAndSecondaryDecrementing() = delete;
-};
-
-struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CImmunitiesSchoolAndSecondary() = delete;
-};
-
-struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CImmunitiesProjectile() = delete;
-};
-
-struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CImmunitiesItemTypeEquipList() = delete;
-};
-
-struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CImmunitiesItemEquipList() = delete;
-};
-
-struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CImmunitiesEffect() = delete;
-};
-
-struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CImmunitiesAIType() = delete;
-
-	typedef int (__thiscall *type_OnList)(CImmunitiesAIType* pThis, const CAIObjectType* type);
-	static type_OnList p_OnList;
-
-	int OnList(const CAIObjectType* type)
-	{
-		return p_OnList(this, type);
-	}
-};
-
-struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CGameEffectUsabilityList() = delete;
-};
-
-struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	__POSITION* m_posNext;
-	__POSITION* m_posCurrent;
-	int m_newEffect;
-	int m_retry;
-
-	CGameEffectList() = delete;
-};
-
-struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	unsigned int m_dialogText;
-	CAICondition m_startCondition;
-	int m_picked;
-	unsigned int m_conditionPriority;
-	unsigned int m_dialogIndex;
-	unsigned __int8 m_bDisplayButton;
-
-	CGameDialogEntry() = delete;
-};
-
-struct CGameButtonList : CTypedPtrList<CPtrList,CButtonData*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	int m_nFirstMageSpellIndex;
-
-	CGameButtonList() = delete;
-};
-
-struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CGameAbilityList() = delete;
-};
-
 struct CFile : CObject
 {
 	struct vtbl : CObject::vtbl
@@ -6240,54 +6262,6 @@ struct CFile : CObject
 	}
 };
 
-struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CCriticalEntryList() = delete;
-};
-
-struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CContingencyList() = delete;
-};
-
-struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CColorRanges() = delete;
-};
-
-struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CColorEffects() = delete;
-};
-
 struct CCallbackBase
 {
 	struct vtbl
@@ -6326,18 +6300,6 @@ struct CCallResult : CCallbackBase
 	void (__thiscall *m_Func)(BASE_CLASS*, RESULT_CLASS*, bool);
 
 	CCallResult() = delete;
-};
-
-struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CBounceList() = delete;
 };
 
 struct CBaldurEngine : CWarp
@@ -6465,18 +6427,6 @@ struct CDungeonMaster : CBaldurEngine
 	};
 
 	CDungeonMaster() = delete;
-};
-
-struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CObject*);
-
-		vtbl() = delete;
-	};
-
-	CApplyEffectList() = delete;
 };
 
 struct CAIGroup
@@ -9274,10 +9224,8 @@ struct CSpell : CResHelper<CResSpell,1006>
 
 struct CSoundImp : CObject, CResHelper<CResWave,4>
 {
-	struct vtbl
+	struct vtbl : CObject::vtbl
 	{
-		void (__fastcall *Destruct)(CObject*);
-
 		vtbl() = delete;
 	};
 
@@ -9312,10 +9260,8 @@ struct CSoundImp : CObject, CResHelper<CResWave,4>
 
 struct CSound : CObject, CResHelper<CResWave,4>
 {
-	struct vtbl
+	struct vtbl : CObject::vtbl
 	{
-		void (__fastcall *Destruct)(CObject*);
-
 		vtbl() = delete;
 	};
 

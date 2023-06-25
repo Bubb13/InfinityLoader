@@ -10,8 +10,7 @@ python %script_path%^
  -bindingsPreludeFile=./in/bindings_prelude.txt^
  -fixupFile=./in/fixup.py^
  -ignoreHeaderFile=./in/ignore_header_types.txt^
- -inFile=./in/Baldur-v2.6.6.0.h^
- -manualTypesFile=./in/manual_types.txt^
+ -inFiles=./in/manual_types.txt,./in/Baldur-v2.6.6.0.h^
  -outFile=./out/Baldur-v2.6.6.0_generated.h^
  -packingFile=./in/packing.txt^
  -preludeFile=./in/prelude.txt^
@@ -25,7 +24,7 @@ copy /Y .\out\EEexLua_generated_baseclass_offsets.cpp ..\..\source\LuaBindings-v
 
 python %script_path%^
  -ignoreHeaderFile=./in_lua/ignore_header_types.txt^
- -inFile=./in/Baldur-v2.6.6.0.h^
+ -inFiles=./in_lua/manual_types.txt,./in/Baldur-v2.6.6.0.h^
  -noCustomTypes^
  -outFile=./out/Baldur-v2.6.6.0_lua_generated.h^
  -packingFile=./in/packing.txt^

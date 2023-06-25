@@ -146,212 +146,422 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CAIId*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIId*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CAIId*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAIId*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CAIAction*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIAction*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CAIAction*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAIAction*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CAITrigger*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAITrigger*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CAITrigger*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAITrigger*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CGameTimer*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameTimer*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CGameTimer*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CGameTimer*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CCreatureFileKnownSpell*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CCreatureFileMemorizedSpell*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CCreatureFileMemorizedSpell*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CCreatureFileMemorizedSpell*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CCreatureFileMemorizedSpell*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,long*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,long*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,long*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,long*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CBlood*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CBlood*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CBlood*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CBlood*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CPortraitIcon*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CPortraitIcon*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CPortraitIcon*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CPortraitIcon*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CPoint*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CPoint*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CPoint*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CPoint*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CFeedbackEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CFeedbackEntry*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CFeedbackEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CFeedbackEntry*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CGameSprite::GroundItem*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameSprite::GroundItem*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CGameSprite::GroundItem*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CGameSprite::GroundItem*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CResRef*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CResRef*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CResRef*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CResRef*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CSearchRequest*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSearchRequest*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CSearchRequest*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSearchRequest*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,SAreaFileWrapper*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,SAreaFileWrapper*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,SAreaFileWrapper*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,SAreaFileWrapper*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CSavedGameStoredLocation*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSavedGameStoredLocation*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CSavedGameStoredLocation*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSavedGameStoredLocation*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,long>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,long>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,long>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,long>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,__POSITION*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,__POSITION*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,__POSITION*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,__POSITION*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CTiledObject*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CTiledObject*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CTiledObject*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CTiledObject*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CAIObjectType*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIObjectType*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CAIObjectType*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAIObjectType*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CAIConditionResponse*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIConditionResponse*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CAIConditionResponse*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAIConditionResponse*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CMessage*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMessage*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CMessage*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CMessage*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CDeathSound*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CDeathSound*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CDeathSound*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CDeathSound*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CMusicPosition*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMusicPosition*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CMusicPosition*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CMusicPosition*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CGameJournalEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameJournalEntry*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CGameJournalEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CGameJournalEntry*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CMoveListEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMoveListEntry*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CMoveListEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CMoveListEntry*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CAreaUserNote*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAreaUserNote*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CAreaUserNote*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAreaUserNote*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CAOEEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CAOEEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,void*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,void*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,void*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,void*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CGameEffectUsability*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameEffectUsability*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CGameEffectUsability*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CGameEffectUsability*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CStoreFileItem*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CStoreFileItem*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CStoreFileItem*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CStoreFileItem*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CMemINIValue*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMemINIValue*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CMemINIValue*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CMemINIValue*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CAIResponse*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIResponse*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CAIResponse*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAIResponse*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CSpawn*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSpawn*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CSpawn*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSpawn*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CGameEffect*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameEffect*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CGameEffect*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CGameEffect*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CWeaponIdentification*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CWeaponIdentification*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CSelectiveBonus*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveBonus*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CSelectiveBonus*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSelectiveBonus*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CImmunitiesItemEquip*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CImmunitiesItemEquip*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CImmunitiesItemEquip*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CImmunitiesItemEquip*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CImmunitySpell*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CImmunitySpell*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CImmunitySpell*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CImmunitySpell*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CContingency*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CContingency*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CContingency*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CContingency*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CPersistantEffect*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CPersistantEffect*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CPersistantEffect*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CPersistantEffect*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CColorRange*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CColorRange*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CColorRange*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CColorRange*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CColorEffect*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CColorEffect*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CColorEffect*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CColorEffect*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CSelectiveWeaponType*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveWeaponType*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CSelectiveWeaponType*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSelectiveWeaponType*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CCriticalEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CCriticalEntry*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CCriticalEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CCriticalEntry*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,EEex_CGameOptions*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameOptions*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CGameOptions*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CGameOptions*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CString*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CString*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CString*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CString*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CBounceEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CBounceEntry*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CBounceEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CBounceEntry*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CSequenceSound*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSequenceSound*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CSequenceSound*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSequenceSound*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CButtonData*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CButtonData*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CButtonData*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CButtonData*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CItem*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CItem*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CItem*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CItem*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CParticle*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CParticle*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CParticle*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CParticle*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CVidCell*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CVidCell*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CVidCell*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CVidCell*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CProjectile*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CProjectile*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CProjectile*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CProjectile*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,CRes*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CRes*>, CObject>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,CRes*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CRes*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,long*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,long*>, CObject>()},
 		}},
+		{"CTypedPtrArray<CPtrArray,long*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,long*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>, CObject>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*>, CObject>()},
 		}},
+		{"CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,unsigned char*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,unsigned char*>, CObject>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,unsigned char*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,unsigned char*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,CAbilityData*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CAbilityData*>, CObject>()},
 		}},
+		{"CTypedPtrArray<CPtrArray,CAbilityData*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CAbilityData*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,CSaveGameSlot*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CSaveGameSlot*>, CObject>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,CSaveGameSlot*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CSaveGameSlot*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,CGameDialogEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogEntry*>, CObject>()},
 		}},
+		{"CTypedPtrArray<CPtrArray,CGameDialogEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogEntry*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,CSpawnPoint*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CSpawnPoint*>, CObject>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,CSpawnPoint*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CSpawnPoint*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,CGameDialogReply*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogReply*>, CObject>()},
 		}},
+		{"CTypedPtrArray<CPtrArray,CGameDialogReply*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogReply*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,__int8>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,__int8>, CObject>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,__int8>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,__int8>::vtbl, CObject::vtbl>()},
 		}},
 		{"CStringList", {
 			{"CObject", offsetofbase<CStringList, CObject>()},
@@ -365,26 +575,173 @@ void registerBaseclasses() {
 		{"CPtrList::vtbl", {
 			{"CObject::vtbl", offsetofbase<CPtrList::vtbl, CObject::vtbl>()},
 		}},
-		{"CPersistantEffectList", {
-			{"CTypedPtrList<CPtrList,CPersistantEffect*>", offsetofbase<CPersistantEffectList, CTypedPtrList<CPtrList,CPersistantEffect*>>()},
+		{"CGameButtonList", {
+			{"CTypedPtrList<CPtrList,CButtonData*>", offsetofbase<CGameButtonList, CTypedPtrList<CPtrList,CButtonData*>>()},
+		}},
+		{"CGameButtonList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CGameButtonList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CGameEffectList", {
+			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CGameEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
+		}},
+		{"CGameEffectList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CGameEffectList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CImmunitiesAIType", {
+			{"CTypedPtrList<CPtrList,CAIObjectType*>", offsetofbase<CImmunitiesAIType, CTypedPtrList<CPtrList,CAIObjectType*>>()},
+		}},
+		{"CImmunitiesAIType::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CImmunitiesAIType::vtbl, CTypedPtrList::vtbl>()},
 		}},
 		{"CPersistantEffectListRegenerated", {
 			{"CTypedPtrList<CPtrList,CPersistantEffect*>", offsetofbase<CPersistantEffectListRegenerated, CTypedPtrList<CPtrList,CPersistantEffect*>>()},
 		}},
+		{"CPersistantEffectListRegenerated::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CPersistantEffectListRegenerated::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CApplyEffectList", {
+			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CApplyEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
+		}},
+		{"CApplyEffectList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CApplyEffectList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CBounceList", {
+			{"CTypedPtrList<CPtrList,CBounceEntry*>", offsetofbase<CBounceList, CTypedPtrList<CPtrList,CBounceEntry*>>()},
+		}},
+		{"CBounceList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CBounceList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CColorEffects", {
+			{"CTypedPtrList<CPtrList,CColorEffect*>", offsetofbase<CColorEffects, CTypedPtrList<CPtrList,CColorEffect*>>()},
+		}},
+		{"CColorEffects::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CColorEffects::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CColorRanges", {
+			{"CTypedPtrList<CPtrList,CColorRange*>", offsetofbase<CColorRanges, CTypedPtrList<CPtrList,CColorRange*>>()},
+		}},
+		{"CColorRanges::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CColorRanges::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CContingencyList", {
+			{"CTypedPtrList<CPtrList,CContingency*>", offsetofbase<CContingencyList, CTypedPtrList<CPtrList,CContingency*>>()},
+		}},
+		{"CContingencyList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CContingencyList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CCriticalEntryList", {
+			{"CTypedPtrList<CPtrList,CCriticalEntry*>", offsetofbase<CCriticalEntryList, CTypedPtrList<CPtrList,CCriticalEntry*>>()},
+		}},
+		{"CCriticalEntryList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CCriticalEntryList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CGameEffectUsabilityList", {
+			{"CTypedPtrList<CPtrList,CGameEffectUsability*>", offsetofbase<CGameEffectUsabilityList, CTypedPtrList<CPtrList,CGameEffectUsability*>>()},
+		}},
+		{"CGameEffectUsabilityList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CGameEffectUsabilityList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CImmunitiesEffect", {
+			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CImmunitiesEffect, CTypedPtrList<CPtrList,CGameEffect*>>()},
+		}},
+		{"CImmunitiesEffect::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CImmunitiesEffect::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CImmunitiesItemEquipList", {
+			{"CTypedPtrList<CPtrList,CImmunitiesItemEquip*>", offsetofbase<CImmunitiesItemEquipList, CTypedPtrList<CPtrList,CImmunitiesItemEquip*>>()},
+		}},
+		{"CImmunitiesItemEquipList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CImmunitiesItemEquipList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CImmunitiesItemTypeEquipList", {
+			{"CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>", offsetofbase<CImmunitiesItemTypeEquipList, CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>>()},
+		}},
+		{"CImmunitiesItemTypeEquipList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CImmunitiesItemTypeEquipList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CImmunitiesProjectile", {
+			{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesProjectile, CTypedPtrList<CPtrList,long*>>()},
+		}},
+		{"CImmunitiesProjectile::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CImmunitiesProjectile::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CImmunitiesSchoolAndSecondary", {
+			{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesSchoolAndSecondary, CTypedPtrList<CPtrList,long*>>()},
+		}},
+		{"CImmunitiesSchoolAndSecondary::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CImmunitiesSchoolAndSecondary::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CImmunitiesSchoolAndSecondaryDecrementing", {
+			{"CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>", offsetofbase<CImmunitiesSchoolAndSecondaryDecrementing, CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>>()},
+		}},
+		{"CImmunitiesSchoolAndSecondaryDecrementing::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CImmunitiesSchoolAndSecondaryDecrementing::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CImmunitiesSpellList", {
+			{"CTypedPtrList<CPtrList,CImmunitySpell*>", offsetofbase<CImmunitiesSpellList, CTypedPtrList<CPtrList,CImmunitySpell*>>()},
+		}},
+		{"CImmunitiesSpellList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CImmunitiesSpellList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CImmunitiesWeapon", {
+			{"CTypedPtrList<CPtrList,CWeaponIdentification*>", offsetofbase<CImmunitiesWeapon, CTypedPtrList<CPtrList,CWeaponIdentification*>>()},
+		}},
+		{"CImmunitiesWeapon::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CImmunitiesWeapon::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CMemINI", {
+			{"CTypedPtrList<CPtrList,void*>", offsetofbase<CMemINI, CTypedPtrList<CPtrList,void*>>()},
+		}},
+		{"CMemINI::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CMemINI::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CMemINISection", {
+			{"CTypedPtrList<CPtrList,CMemINIValue*>", offsetofbase<CMemINISection, CTypedPtrList<CPtrList,CMemINIValue*>>()},
+		}},
+		{"CMemINISection::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CMemINISection::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CMoveList", {
+			{"CTypedPtrList<CPtrList,CMoveListEntry*>", offsetofbase<CMoveList, CTypedPtrList<CPtrList,CMoveListEntry*>>()},
+		}},
+		{"CMoveList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CMoveList::vtbl, CTypedPtrList::vtbl>()},
+		}},
+		{"CPersistantEffectList", {
+			{"CTypedPtrList<CPtrList,CPersistantEffect*>", offsetofbase<CPersistantEffectList, CTypedPtrList<CPtrList,CPersistantEffect*>>()},
+		}},
+		{"CPersistantEffectList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CPersistantEffectList::vtbl, CTypedPtrList::vtbl>()},
+		}},
 		{"CSpawnList", {
 			{"CTypedPtrList<CPtrList,CSpawn*>", offsetofbase<CSpawnList, CTypedPtrList<CPtrList,CSpawn*>>()},
+		}},
+		{"CSpawnList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CSpawnList::vtbl, CTypedPtrList::vtbl>()},
 		}},
 		{"CSpawnFile", {
 			{"CTypedPtrList<CPtrList,void*>", offsetofbase<CSpawnFile, CTypedPtrList<CPtrList,void*>>()},
 		}},
+		{"CSpawnFile::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CSpawnFile::vtbl, CTypedPtrList::vtbl>()},
+		}},
 		{"CSequenceSoundList", {
 			{"CTypedPtrList<CPtrList,CSequenceSound*>", offsetofbase<CSequenceSoundList, CTypedPtrList<CPtrList,CSequenceSound*>>()},
+		}},
+		{"CSequenceSoundList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CSequenceSoundList::vtbl, CTypedPtrList::vtbl>()},
 		}},
 		{"CSelectiveWeaponTypeList", {
 			{"CTypedPtrList<CPtrList,CSelectiveWeaponType*>", offsetofbase<CSelectiveWeaponTypeList, CTypedPtrList<CPtrList,CSelectiveWeaponType*>>()},
 		}},
+		{"CSelectiveWeaponTypeList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CSelectiveWeaponTypeList::vtbl, CTypedPtrList::vtbl>()},
+		}},
 		{"CSelectiveBonusList", {
 			{"CTypedPtrList<CPtrList,CSelectiveBonus*>", offsetofbase<CSelectiveBonusList, CTypedPtrList<CPtrList,CSelectiveBonus*>>()},
+		}},
+		{"CSelectiveBonusList::vtbl", {
+			{"CTypedPtrList::vtbl", offsetofbase<CSelectiveBonusList::vtbl, CTypedPtrList::vtbl>()},
 		}},
 		{"CPtrArray", {
 			{"CObject", offsetofbase<CPtrArray, CObject>()},
@@ -392,8 +749,23 @@ void registerBaseclasses() {
 		{"CPtrArray::vtbl", {
 			{"CObject::vtbl", offsetofbase<CPtrArray::vtbl, CObject::vtbl>()},
 		}},
+		{"CGameDialogEntry", {
+			{"CTypedPtrArray<CPtrArray,CGameDialogReply*>", offsetofbase<CGameDialogEntry, CTypedPtrArray<CPtrArray,CGameDialogReply*>>()},
+		}},
+		{"CGameDialogEntry::vtbl", {
+			{"CTypedPtrArray::vtbl", offsetofbase<CGameDialogEntry::vtbl, CTypedPtrArray::vtbl>()},
+		}},
+		{"CGameAbilityList", {
+			{"CTypedPtrArray<CPtrArray,CAbilityData*>", offsetofbase<CGameAbilityList, CTypedPtrArray<CPtrArray,CAbilityData*>>()},
+		}},
+		{"CGameAbilityList::vtbl", {
+			{"CTypedPtrArray::vtbl", offsetofbase<CGameAbilityList::vtbl, CTypedPtrArray::vtbl>()},
+		}},
 		{"CSpawnPointArray", {
 			{"CTypedPtrArray<CPtrArray,CSpawnPoint*>", offsetofbase<CSpawnPointArray, CTypedPtrArray<CPtrArray,CSpawnPoint*>>()},
+		}},
+		{"CSpawnPointArray::vtbl", {
+			{"CTypedPtrArray::vtbl", offsetofbase<CSpawnPointArray::vtbl, CTypedPtrArray::vtbl>()},
 		}},
 		{"CObList", {
 			{"CObject", offsetofbase<CObList, CObject>()},
@@ -406,9 +778,6 @@ void registerBaseclasses() {
 		}},
 		{"CWarp::vtbl", {
 			{"CObject::vtbl", offsetofbase<CWarp::vtbl, CObject::vtbl>()},
-		}},
-		{"CMoveList", {
-			{"CTypedPtrList<CPtrList,CMoveListEntry*>", offsetofbase<CMoveList, CTypedPtrList<CPtrList,CMoveListEntry*>>()},
 		}},
 		{"CMessageSetDirection", {
 			{"CMessage", offsetofbase<CMessageSetDirection, CMessage>()},
@@ -434,71 +803,11 @@ void registerBaseclasses() {
 		{"CMessageAddEffect::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageAddEffect::vtbl, CMessage::vtbl>()},
 		}},
-		{"CMemINISection", {
-			{"CTypedPtrList<CPtrList,CMemINIValue*>", offsetofbase<CMemINISection, CTypedPtrList<CPtrList,CMemINIValue*>>()},
-		}},
-		{"CMemINI", {
-			{"CTypedPtrList<CPtrList,void*>", offsetofbase<CMemINI, CTypedPtrList<CPtrList,void*>>()},
-		}},
-		{"CImmunitiesWeapon", {
-			{"CTypedPtrList<CPtrList,CWeaponIdentification*>", offsetofbase<CImmunitiesWeapon, CTypedPtrList<CPtrList,CWeaponIdentification*>>()},
-		}},
-		{"CImmunitiesSpellList", {
-			{"CTypedPtrList<CPtrList,CImmunitySpell*>", offsetofbase<CImmunitiesSpellList, CTypedPtrList<CPtrList,CImmunitySpell*>>()},
-		}},
-		{"CImmunitiesSchoolAndSecondaryDecrementing", {
-			{"CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>", offsetofbase<CImmunitiesSchoolAndSecondaryDecrementing, CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>>()},
-		}},
-		{"CImmunitiesSchoolAndSecondary", {
-			{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesSchoolAndSecondary, CTypedPtrList<CPtrList,long*>>()},
-		}},
-		{"CImmunitiesProjectile", {
-			{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesProjectile, CTypedPtrList<CPtrList,long*>>()},
-		}},
-		{"CImmunitiesItemTypeEquipList", {
-			{"CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>", offsetofbase<CImmunitiesItemTypeEquipList, CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>>()},
-		}},
-		{"CImmunitiesItemEquipList", {
-			{"CTypedPtrList<CPtrList,CImmunitiesItemEquip*>", offsetofbase<CImmunitiesItemEquipList, CTypedPtrList<CPtrList,CImmunitiesItemEquip*>>()},
-		}},
-		{"CImmunitiesEffect", {
-			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CImmunitiesEffect, CTypedPtrList<CPtrList,CGameEffect*>>()},
-		}},
-		{"CImmunitiesAIType", {
-			{"CTypedPtrList<CPtrList,CAIObjectType*>", offsetofbase<CImmunitiesAIType, CTypedPtrList<CPtrList,CAIObjectType*>>()},
-		}},
-		{"CGameEffectUsabilityList", {
-			{"CTypedPtrList<CPtrList,CGameEffectUsability*>", offsetofbase<CGameEffectUsabilityList, CTypedPtrList<CPtrList,CGameEffectUsability*>>()},
-		}},
-		{"CGameEffectList", {
-			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CGameEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
-		}},
-		{"CGameDialogEntry", {
-			{"CTypedPtrArray<CPtrArray,CGameDialogReply*>", offsetofbase<CGameDialogEntry, CTypedPtrArray<CPtrArray,CGameDialogReply*>>()},
-		}},
-		{"CGameButtonList", {
-			{"CTypedPtrList<CPtrList,CButtonData*>", offsetofbase<CGameButtonList, CTypedPtrList<CPtrList,CButtonData*>>()},
-		}},
-		{"CGameAbilityList", {
-			{"CTypedPtrArray<CPtrArray,CAbilityData*>", offsetofbase<CGameAbilityList, CTypedPtrArray<CPtrArray,CAbilityData*>>()},
-		}},
 		{"CFile", {
 			{"CObject", offsetofbase<CFile, CObject>()},
 		}},
 		{"CFile::vtbl", {
 			{"CObject::vtbl", offsetofbase<CFile::vtbl, CObject::vtbl>()},
-		}},
-		{"CCriticalEntryList", {
-			{"CTypedPtrList<CPtrList,CCriticalEntry*>", offsetofbase<CCriticalEntryList, CTypedPtrList<CPtrList,CCriticalEntry*>>()},
-		}},
-		{"CContingencyList", {
-			{"CTypedPtrList<CPtrList,CContingency*>", offsetofbase<CContingencyList, CTypedPtrList<CPtrList,CContingency*>>()},
-		}},
-		{"CColorRanges", {
-			{"CTypedPtrList<CPtrList,CColorRange*>", offsetofbase<CColorRanges, CTypedPtrList<CPtrList,CColorRange*>>()},
-		}},
-		{"CColorEffects", {
-			{"CTypedPtrList<CPtrList,CColorEffect*>", offsetofbase<CColorEffects, CTypedPtrList<CPtrList,CColorEffect*>>()},
 		}},
 		{"CCallResult<CSteam,CreateItemResult_t>", {
 			{"CCallbackBase", offsetofbase<CCallResult<CSteam,CreateItemResult_t>, CCallbackBase>()},
@@ -512,9 +821,6 @@ void registerBaseclasses() {
 		{"CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t>", {
 			{"CCallbackBase", offsetofbase<CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t>, CCallbackBase>()},
 		}},
-		{"CBounceList", {
-			{"CTypedPtrList<CPtrList,CBounceEntry*>", offsetofbase<CBounceList, CTypedPtrList<CPtrList,CBounceEntry*>>()},
-		}},
 		{"EEex_CBaldurEngine", {
 			{"EEex_CWarp", offsetofbase<CBaldurEngine, CWarp>()},
 		}},
@@ -526,9 +832,6 @@ void registerBaseclasses() {
 		}},
 		{"CDungeonMaster::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CDungeonMaster::vtbl, CBaldurEngine::vtbl>()},
-		}},
-		{"CApplyEffectList", {
-			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CApplyEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
 		}},
 		{"CVariable", {
 			{"CAreaVariable", offsetofbase<CVariable, CAreaVariable>()},
@@ -687,9 +990,15 @@ void registerBaseclasses() {
 			{"CObject", offsetofbase<CSoundImp, CObject>()},
 			{"CResHelper<CResWave,4>", offsetofbase<CSoundImp, CResHelper<CResWave,4>>()},
 		}},
+		{"CSoundImp::vtbl", {
+			{"CObject::vtbl", offsetofbase<CSoundImp::vtbl, CObject::vtbl>()},
+		}},
 		{"CSound", {
 			{"CObject", offsetofbase<CSound, CObject>()},
 			{"CResHelper<CResWave,4>", offsetofbase<CSound, CResHelper<CResWave,4>>()},
+		}},
+		{"CSound::vtbl", {
+			{"CObject::vtbl", offsetofbase<CSound::vtbl, CObject::vtbl>()},
 		}},
 		{"EEex_CScreenChapter", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenChapter, CBaldurEngine>()},

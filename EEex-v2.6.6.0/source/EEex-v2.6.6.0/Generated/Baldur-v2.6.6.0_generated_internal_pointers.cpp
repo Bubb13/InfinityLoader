@@ -14,6 +14,7 @@ CRes::type_Destruct CRes::p_Destruct;
 CRes::type_Demand CRes::p_Demand;
 CMessageHandler::type_AddMessage CMessageHandler::p_AddMessage;
 CAICondition::type_Hold CAICondition::p_Hold;
+CImmunitiesAIType::type_OnList CImmunitiesAIType::p_OnList;
 CObList::type_Construct CObList::p_Construct;
 CObList::type_RemoveHead CObList::p_RemoveHead;
 CObList::type_RemoveAt CObList::p_RemoveAt;
@@ -23,7 +24,6 @@ void* CMessageSetDirection::VFTable;
 void* CMessageDisplayTextRef::VFTable;
 void* CMessageDisplayText::VFTable;
 void* CMessageAddEffect::VFTable;
-CImmunitiesAIType::type_OnList CImmunitiesAIType::p_OnList;
 CAIGroup::type_FollowLeader CAIGroup::p_FollowLeader;
 CAIGroup::type_RemoveFromSearch CAIGroup::p_RemoveFromSearch;
 CAIGroup::type_AddToSearch CAIGroup::p_AddToSearch;
@@ -126,6 +126,7 @@ CGameSprite::type_PlaySound CGameSprite::p_PlaySound;
 CGameSprite::type_UpdateTarget CGameSprite::p_UpdateTarget;
 CGameSprite::type_GetNameRef CGameSprite::p_GetNameRef;
 CGameSprite::type_GetName CGameSprite::p_GetName;
+CGameSprite::type_test CGameSprite::p_test;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CVariableHash::FindKey"), reinterpret_cast<void**>(&CVariableHash::p_FindKey)},
@@ -141,6 +142,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CRes::Demand"), reinterpret_cast<void**>(&CRes::p_Demand)},
 	std::pair{TEXT("CMessageHandler::AddMessage"), reinterpret_cast<void**>(&CMessageHandler::p_AddMessage)},
 	std::pair{TEXT("CAICondition::Hold"), reinterpret_cast<void**>(&CAICondition::p_Hold)},
+	std::pair{TEXT("CImmunitiesAIType::OnList"), reinterpret_cast<void**>(&CImmunitiesAIType::p_OnList)},
 	std::pair{TEXT("CObList::Construct"), reinterpret_cast<void**>(&CObList::p_Construct)},
 	std::pair{TEXT("CObList::RemoveHead"), reinterpret_cast<void**>(&CObList::p_RemoveHead)},
 	std::pair{TEXT("CObList::RemoveAt"), reinterpret_cast<void**>(&CObList::p_RemoveAt)},
@@ -150,7 +152,6 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CMessageDisplayTextRef::VFTable"), reinterpret_cast<void**>(&CMessageDisplayTextRef::VFTable)},
 	std::pair{TEXT("CMessageDisplayText::VFTable"), reinterpret_cast<void**>(&CMessageDisplayText::VFTable)},
 	std::pair{TEXT("CMessageAddEffect::VFTable"), reinterpret_cast<void**>(&CMessageAddEffect::VFTable)},
-	std::pair{TEXT("CImmunitiesAIType::OnList"), reinterpret_cast<void**>(&CImmunitiesAIType::p_OnList)},
 	std::pair{TEXT("CAIGroup::FollowLeader"), reinterpret_cast<void**>(&CAIGroup::p_FollowLeader)},
 	std::pair{TEXT("CAIGroup::RemoveFromSearch"), reinterpret_cast<void**>(&CAIGroup::p_RemoveFromSearch)},
 	std::pair{TEXT("CAIGroup::AddToSearch"), reinterpret_cast<void**>(&CAIGroup::p_AddToSearch)},
@@ -253,4 +254,5 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameSprite::UpdateTarget"), reinterpret_cast<void**>(&CGameSprite::p_UpdateTarget)},
 	std::pair{TEXT("CGameSprite::GetNameRef"), reinterpret_cast<void**>(&CGameSprite::p_GetNameRef)},
 	std::pair{TEXT("CGameSprite::GetName"), reinterpret_cast<void**>(&CGameSprite::p_GetName)},
+	std::pair{TEXT("CGameSprite::test"), reinterpret_cast<void**>(&CGameSprite::p_test)},
 };
