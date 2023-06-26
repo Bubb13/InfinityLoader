@@ -5193,7 +5193,7 @@ struct CChatBuffer
 
 struct CGameButtonList : CTypedPtrList<CPtrList,CButtonData*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CButtonData*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5205,7 +5205,7 @@ struct CGameButtonList : CTypedPtrList<CPtrList,CButtonData*>
 
 struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CGameEffect*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5220,7 +5220,7 @@ struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 
 struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CAIObjectType*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5238,7 +5238,7 @@ struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 
 struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffect*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CPersistantEffect*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5261,7 +5261,7 @@ struct CAIResponse
 
 struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CGameEffect*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5271,7 +5271,7 @@ struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 
 struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CBounceEntry*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5281,7 +5281,7 @@ struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
 
 struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CColorEffect*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5291,7 +5291,7 @@ struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
 
 struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CColorRange*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5301,7 +5301,7 @@ struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
 
 struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CContingency*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5311,7 +5311,7 @@ struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
 
 struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CCriticalEntry*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5321,7 +5321,7 @@ struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
 
 struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CGameEffectUsability*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5331,7 +5331,7 @@ struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
 
 struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CGameEffect*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5341,7 +5341,7 @@ struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
 
 struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5351,7 +5351,7 @@ struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
 
 struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5361,7 +5361,7 @@ struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemType
 
 struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,long*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5371,7 +5371,7 @@ struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
 
 struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,long*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5381,7 +5381,7 @@ struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
 
 struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5391,7 +5391,7 @@ struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoo
 
 struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CImmunitySpell*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5401,7 +5401,7 @@ struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
 
 struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5411,7 +5411,7 @@ struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
 
 struct CMemINI : CTypedPtrList<CPtrList,void*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,void*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5424,7 +5424,7 @@ struct CMemINI : CTypedPtrList<CPtrList,void*>
 
 struct CMemINISection : CTypedPtrList<CPtrList,CMemINIValue*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CMemINIValue*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5436,7 +5436,7 @@ struct CMemINISection : CTypedPtrList<CPtrList,CMemINIValue*>
 
 struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CMoveListEntry*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5446,7 +5446,7 @@ struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
 
 struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CPersistantEffect*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5456,7 +5456,7 @@ struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
 
 struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CSpawn*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5474,7 +5474,7 @@ struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
 
 struct CSpawnFile : CTypedPtrList<CPtrList,void*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,void*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5488,7 +5488,7 @@ struct CSpawnFile : CTypedPtrList<CPtrList,void*>
 
 struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CSequenceSound*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5502,7 +5502,7 @@ struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
 
 struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CSelectiveWeaponType*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5512,7 +5512,7 @@ struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
 
 struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
 {
-	struct vtbl : CTypedPtrList::vtbl
+	struct vtbl : CTypedPtrList<CPtrList,CSelectiveBonus*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5537,7 +5537,7 @@ struct CPtrArray : CObject
 
 struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
 {
-	struct vtbl : CTypedPtrArray::vtbl
+	struct vtbl : CTypedPtrArray<CPtrArray,CGameDialogReply*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5579,7 +5579,7 @@ struct CImportGame
 
 struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
 {
-	struct vtbl : CTypedPtrArray::vtbl
+	struct vtbl : CTypedPtrArray<CPtrArray,CAbilityData*>::vtbl
 	{
 		vtbl() = delete;
 	};
@@ -5589,7 +5589,7 @@ struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
 
 struct CSpawnPointArray : CTypedPtrArray<CPtrArray,CSpawnPoint*>
 {
-	struct vtbl : CTypedPtrArray::vtbl
+	struct vtbl : CTypedPtrArray<CPtrArray,CSpawnPoint*>::vtbl
 	{
 		vtbl() = delete;
 	};

@@ -2162,10 +2162,21 @@ class Group:
 			if superVGroupTemp != None:
 
 				if superVGroup == None:
+
 					# Add the parent vtbl struct to this struct's extends list
 					superVGroup = superVGroupTemp
 					finalSuperVGroup = finalSuperVGroupTemp
-					vtblStruct.extends.append(defineTypeRef(mainState, vtblStruct, superVGroup.name, TypeRefSourceType.VARIABLE, debugLine=f"checkForVGroup()"))
+
+					extendTemplateTypes: list[TypeReference] = extendRef.getTemplates(mainState, askingGroup=extendRef.group)
+					if len(extendTemplateTypes) == 0:
+						superVGroupRefStr = superVGroup.name
+					else:
+						# Resolve super vtbl struct's templates
+						templateMappingTracker: TemplateMappingTracker = TemplateMappingTracker()
+						templateMappingTracker.registerMapping(extendRef.group.name, tuple(extendTemplateTypes))
+						superVGroupRefStr = superVGroup.getAppliedName(mainState, templateMappingTracker, templateTypeMode=TemplateTypeMode.HEADER)
+
+					vtblStruct.extends.append(defineTypeRef(mainState, vtblStruct, superVGroupRefStr, TypeRefSourceType.VARIABLE, debugLine=f"checkForVGroup()"))
 				else:
 					# print(f"[!] Failed to fully create vtbl struct for {self.name}. Code can only handle one superclass having a vftable.")
 
