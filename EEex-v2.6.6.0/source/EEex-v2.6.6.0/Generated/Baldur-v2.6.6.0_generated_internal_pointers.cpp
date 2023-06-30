@@ -126,7 +126,6 @@ CGameSprite::type_PlaySound CGameSprite::p_PlaySound;
 CGameSprite::type_UpdateTarget CGameSprite::p_UpdateTarget;
 CGameSprite::type_GetNameRef CGameSprite::p_GetNameRef;
 CGameSprite::type_GetName CGameSprite::p_GetName;
-CGameSprite::type_test CGameSprite::p_test;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CVariableHash::FindKey"), reinterpret_cast<void**>(&CVariableHash::p_FindKey)},
@@ -254,5 +253,4 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameSprite::UpdateTarget"), reinterpret_cast<void**>(&CGameSprite::p_UpdateTarget)},
 	std::pair{TEXT("CGameSprite::GetNameRef"), reinterpret_cast<void**>(&CGameSprite::p_GetNameRef)},
 	std::pair{TEXT("CGameSprite::GetName"), reinterpret_cast<void**>(&CGameSprite::p_GetName)},
-	std::pair{TEXT("CGameSprite::test"), reinterpret_cast<void**>(&CGameSprite::p_test)},
 };

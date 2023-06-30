@@ -2840,6 +2840,7 @@ namespace EEex
 	void InitEEex();
 	void DeepCopyIndex(lua_State* L, int index);
 	void DeepCopy(lua_State* L);
+	int test();
 };
 
 struct ConstCharString
@@ -13987,9 +13988,6 @@ struct CGameSprite : CGameAIBase
 	typedef CString* (__thiscall *type_GetName)(CGameSprite* pThis, int ignoreSTRREFON);
 	static type_GetName p_GetName;
 
-	typedef int (__thiscall *type_test)(CGameSprite* pThis, CResRef param);
-	static type_test p_test;
-
 	short GetCasterLevel(CSpell* pSpell, int includeWildMage)
 	{
 		return p_GetCasterLevel(this, pSpell, includeWildMage);
@@ -14058,11 +14056,6 @@ struct CGameSprite : CGameAIBase
 	CString* GetName(int ignoreSTRREFON)
 	{
 		return p_GetName(this, ignoreSTRREFON);
-	}
-
-	int test(CResRef param)
-	{
-		return p_test(this, param);
 	}
 
 	virtual void virtual_SetTarget_2(const CPoint* _0, int _1)

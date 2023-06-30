@@ -1,5 +1,5 @@
 
-struct CGameSprite : CGameAIBase
+namespace EEex
 {
-	int test(CResRef param);
-};
+	$external_implementation int test();
+}

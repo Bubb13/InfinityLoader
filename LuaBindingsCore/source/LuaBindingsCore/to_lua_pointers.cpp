@@ -77,7 +77,6 @@ EXPORT type_tolua_pushstring tolua_pushstring;
 EXPORT type_tolua_tostring tolua_tostring;
 EXPORT type_tolua_tousertype tolua_tousertype;
 EXPORT type_tolua_typename tolua_typename;
-EXPORT type_tolua_usertype tolua_usertype;
 EXPORT type_tolua_variable tolua_variable;
 
 //////////
@@ -117,16 +116,19 @@ int dumpStack(lua_State* L) {
 // Unnecessary Reimplementations (engine includes these) //
 ///////////////////////////////////////////////////////////
 
-// Set name's metatable-metatable to base metatable
-static void mapinheritance(lua_State* L, const char* name, const char* base) {
+// Set <name> metatable's metatable to <baseName> metatable
+//
+// setmetatable(getmetatable(name), getmetatable(baseName or "tolua_commonclass"))
+//
+static void mapinheritance(lua_State* L, const char* name, const char* baseName) {
 
-	/////////////////////////////////////////////////////////////////////////////////
-	// setmetatable(getmetatable(name), getmetatable(base or "tolua_commonclass")) //
-	/////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////
+	// setmetatable(getmetatable(name), getmetatable(baseName or "tolua_commonclass")) //
+	/////////////////////////////////////////////////////////////////////////////////////
 
 	tolua_getmetatable(L, name);                    // 1 [ tolua_getmetatable(name) ] // TODO: Metatable
-	if (base && *base) {
-		tolua_getmetatable(L, base);                // 2 [ tolua_getmetatable(name), tolua_getmetatable(base) ] // TODO: Metatable
+	if (baseName && *baseName) {
+		tolua_getmetatable(L, baseName);            // 2 [ tolua_getmetatable(name), tolua_getmetatable(baseName) ] // TODO: Metatable
 	}
 	else {
 		tolua_getmetatable(L, "tolua_commonclass"); // 2 [ tolua_getmetatable(name), tolua_getmetatable("tolua_commonclass") ] // TODO: Metatable
@@ -135,16 +137,20 @@ static void mapinheritance(lua_State* L, const char* name, const char* base) {
 	lua_pop(L, 1);                                  // 0 [ ]
 }
 
-// Sets registry["tolua_super"][getmetatable(name)][base] = true
-// All superclasses mapped under registry["tolua_super"][getmetatable(base)] are also copied to name's entry.
+// Sets registry["tolua_super"][getmetatable(name)][baseName] = true
+// 
+// All superclasses mapped under registry["tolua_super"][getmetatable(baseName)] are also copied to name's entry.
+// In effect registry["tolua_super"][getmetatable(name)] contains ALL superclasses, not just immediate ones.
+// 
 // registry["tolua_super"] used by:
 //     lua_isusertype()
 //     tolua_pushusertype()
-static void mapsuper(lua_State* L, const char* name, const char* base) {
+//
+static void mapsuper(lua_State* L, const char* name, const char* baseName) {
 
-	////////////////////////////////////////////////////////////////////
-	// registry["tolua_super"][tolua_getmetatable(name)][base] = true //
-	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////
+	// registry["tolua_super"][tolua_getmetatable(name)][baseName] = true //
+	////////////////////////////////////////////////////////////////////////
 
 	lua_pushstring(L, "tolua_super");  // 1 [ "tolua_super" ]
 	lua_rawget(L, LUA_REGISTRYINDEX);  // 1 [ registry["tolua_super"] ]
@@ -158,12 +164,12 @@ static void mapsuper(lua_State* L, const char* name, const char* base) {
 		lua_rawset(L, -4);             // 2 [ registry["tolua_super"], newtable ]
 	}
 									   // 2 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)] ]
-	lua_pushstring(L, base);           // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], base ]
-	lua_pushboolean(L, 1);             // 4 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], base, true ]
+	lua_pushstring(L, baseName);       // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], baseName ]
+	lua_pushboolean(L, 1);             // 4 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], baseName, true ]
 	lua_rawset(L, -3);                 // 2 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)] ]
 
 	//////////////////////////////////////////////////////////////////////
-	// local t = registry["tolua_super"][tolua_getmetatable(base)]      //
+	// local t = registry["tolua_super"][tolua_getmetatable(baseName)]  //
 	// if type(t) == "table" then                                       //
 	//     for k, v in pairs(t) do                                      //
 	//         registry["tolua_super"][tolua_getmetatable(name)][k] = v //
@@ -171,17 +177,17 @@ static void mapsuper(lua_State* L, const char* name, const char* base) {
 	// end                                                              //
 	//////////////////////////////////////////////////////////////////////
 
-	tolua_getmetatable(L, base);       // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], tolua_getmetatable(base) ] // TODO: Metatable
-	lua_rawget(L, -3);                 // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)] ]
+	tolua_getmetatable(L, baseName);   // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], tolua_getmetatable(baseName) ] // TODO: Metatable
+	lua_rawget(L, -3);                 // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(baseName)] ]
 	if (lua_istable(L, -1)) {
-		lua_pushnil(L);                // 4 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], nil ]
+		lua_pushnil(L);                // 4 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(baseName)], nil ]
 		while (lua_next(L, -2) != 0) {
-									   // 5 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], k, v ]
-			lua_pushvalue(L, -2);      // 6 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], k, v, k ]
-			lua_insert(L, -2);         // 6 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], k, k, v ]
-			lua_rawset(L, -5);         // 4 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], k]
+									   // 5 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(baseName)], k, v ]
+			lua_pushvalue(L, -2);      // 6 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(baseName)], k, v, k ]
+			lua_insert(L, -2);         // 6 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(baseName)], k, k, v ]
+			lua_rawset(L, -5);         // 4 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(baseName)], k]
 		}
-									   // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)] ]
+									   // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(baseName)] ]
 	}
 	lua_pop(L, 3);                     // 0 [ ]
 }
@@ -1057,21 +1063,56 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 	lua_pop(L, 4);                       // 0 [ ... ]
 }
 
+void tolua_usertype(lua_State* L, const char* type) {
+
+	// Don't register same usertype more than once
+	tolua_getmetatable(L, type); // 1 [ ..., getmetatable(type) ]
+	if (!lua_isnil(L, -1)) {
+		lua_pop(L, 1);           // 0 [ ... ]
+		return;
+	}
+	lua_pop(L, 1);               // 0 [ ... ]
+
+	char constType[128] = "const ";
+	strncat(constType, type, 120);
+
+	tolua_newmetatable(L, constType);
+	tolua_newmetatable(L, type);
+
+	mapsuper(L, type, constType);
+}
+
 // Expects   [ ..., module ]
 // End Stack [ ..., module ]
 EXPORT void tolua_cclass(lua_State* L, const char* lname, const char* name, std::initializer_list<const char*>&& bases, lua_CFunction col) {
 
-	const char* base = bases.size() > 0 ? *bases.begin() : "";
-	char cname[128] = "const ";
-	char cbase[128] = "const ";
-	strncat(cname, name, 120);
-	strncat(cbase, base, 120);
+	// Don't register cclass more than once 
+	lua_pushstring(L, "tolua_cclass_registered"); // 2 [ ..., module, "tolua_cclass_registered" ]
+	getOrCreateTable(L, LUA_REGISTRYINDEX);       // 2 [ ..., module, registry["tolua_cclass_registered"] ]
+	lua_pushstring(L, name);                      // 3 [ ..., module, registry["tolua_cclass_registered"], name ]
+	lua_rawget(L, -2);                            // 3 [ ..., module, registry["tolua_cclass_registered"], registry["tolua_cclass_registered"][name] ]
+	
+	if (!lua_isnil(L, -1)) {
+		lua_pop(L, 2);                            // 1 [ ..., module ]
+		return;
+	}
+	lua_pop(L, 1);                                // 2 [ ..., module, registry["tolua_cclass_registered"] ]
+	lua_pushstring(L, name);                      // 3 [ ..., module, registry["tolua_cclass_registered"], name ]
+	lua_pushboolean(L, true);                     // 4 [ ..., module, registry["tolua_cclass_registered"], name, true ]
+	lua_rawset(L, -3);                            // 2 [ ..., module, registry["tolua_cclass_registered"] ]
+	lua_pop(L, 1);                                // 1 [ ..., module ]
 
-	mapinheritance(L, name, base);
-	mapinheritance(L, cname, name);
+	const char* baseName = bases.size() > 0 ? *bases.begin() : "";
+	char constName[128] = "const ";
+	char constBaseName[128] = "const ";
+	strncat(constName, name, 120);
+	strncat(constBaseName, baseName, 120);
 
-	mapsuper(L, cname, cbase);
-	mapsuper(L, name, base);
+	mapinheritance(L, name, baseName);
+	mapinheritance(L, constName, name);
+
+	mapsuper(L, constName, constBaseName);
+	mapsuper(L, name, baseName);
 
 	mapBases(L, name, bases);
 
@@ -1080,12 +1121,12 @@ EXPORT void tolua_cclass(lua_State* L, const char* lname, const char* name, std:
 	// module[lname] = getmetatable(name)     //
 	////////////////////////////////////////////
 
-	lua_pushstring(L, lname);        // [ ..., module, lname ]
-	tolua_getmetatable(L, name);     // [ ..., module, lname, getmetatable(name) ]
-	lua_pushstring(L, ".collector"); // [ ..., module, lname, getmetatable(name), ".collector" ]
-	lua_pushcfunction(L, col);       // [ ..., module, lname, getmetatable(name), ".collector", col ]
-	lua_rawset(L, -3);               // [ ..., module, lname, getmetatable(name) ]
-	lua_rawset(L, -3);               // [ ..., module ]
+	lua_pushstring(L, lname);                     // 2 [ ..., module, lname ]
+	tolua_getmetatable(L, name);                  // 3 [ ..., module, lname, getmetatable(name) ]
+	lua_pushstring(L, ".collector");              // 4 [ ..., module, lname, getmetatable(name), ".collector" ]
+	lua_pushcfunction(L, col);                    // 5 [ ..., module, lname, getmetatable(name), ".collector", col ]
+	lua_rawset(L, -3);                            // 3 [ ..., module, lname, getmetatable(name) ]
+	lua_rawset(L, -3);                            // 1 [ ..., module ]
 }
 
 void tolua_push_globals_table(lua_State* L) {
@@ -1111,35 +1152,49 @@ EXPORT void tolua_beginmodule(lua_State* L, const char* name) {
 	}
 }
 
-// Expects [ table ]
+// Expects 1 [ ..., table ]
 EXPORT void tolua_module(lua_State* L, const char* name, int hasvar) {
+
+	/////////////////////////////////////////
+	// local module                        //
+	// if name then                        //
+	//     module = table[name]            //
+	//     if type(module) ~= "table" then //
+	//         module = {}                 //
+	//         table[name] = module        //
+	//     end                             //
+	// else                                //
+	//     module = _G                     //
+	// end                                 //
+	/////////////////////////////////////////
+
 	if (name) {
-		lua_pushstring(L, name);         // [ table, name ]
-		lua_rawget(L, -2);               // [ table, table[name] -> module ]
+		lua_pushstring(L, name);           // 2 [ ..., table, name ]
+		lua_rawget(L, -2);                 // 2 [ ..., table, table[name] -> module ]
 		if (!lua_istable(L, -1)) {
-			lua_pop(L, 1);               // [ table ]
-			lua_newtable(L);             // [ table, newT ]
-			lua_pushstring(L, name);     // [ table, newT, name ]
-			lua_pushvalue(L, -2);        // [ table, newT, name, newT ]
-			lua_rawset(L, -4);           // [ table, newT -> module ]
+			lua_pop(L, 1);                 // 1 [ ..., table ]
+			lua_newtable(L);               // 2 [ ..., table, newT ]
+			lua_pushstring(L, name);       // 3 [ ..., table, newT, name ]
+			lua_pushvalue(L, -2);          // 4 [ ..., table, newT, name, newT ]
+			lua_rawset(L, -4);             // 2 [ ..., table, newT -> module ]
 		}
 	}
 	else {
-		tolua_push_globals_table(L);
+		tolua_push_globals_table(L);       // 2 [ ..., table, _G -> module ]
 	}
 
 	if (hasvar) {
 		if (!tolua_ismodulemetatable(L)) {
-			lua_newtable(L);                 // [ table, module, newMT ]
+			lua_newtable(L);               // 3 [ table, module, newMT ]
 			tolua_moduleevents(L);
 			if (lua_getmetatable(L, -2)) {
-											 // [ table, module, newMT, mt(module) ]
-				lua_setmetatable(L, -2);     // [ table, module, newMT ]
+										   // 4 [ table, module, newMT, mt(module) ]
+				lua_setmetatable(L, -2);   // 3 [ table, module, newMT ]
 			}
-			lua_setmetatable(L, -2);         // [ table, module ]
+			lua_setmetatable(L, -2);       // 2 [ table, module ]
 		}
 	}
-	lua_pop(L, 1);                           // [ table ]
+	lua_pop(L, 1);                         // 1 [ table ]
 }
 
 EXPORT void tolua_open(lua_State* L) {

@@ -5,6 +5,11 @@
 #include "Baldur-v2.6.6.0_generated.h"
 #include "util.hpp"
 
+int EEex::test() {
+	Print("Test!\n");
+	return 42;
+}
+
 long long currentMicroseconds() {
 	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }

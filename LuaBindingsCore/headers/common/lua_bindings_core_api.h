@@ -100,9 +100,6 @@ EXTERN_IMPORT type_tolua_tousertype tolua_tousertype;
 typedef const char* (*type_tolua_typename)(lua_State* L, int lo);
 EXTERN_IMPORT type_tolua_typename tolua_typename;
 
-typedef void (*type_tolua_usertype)(lua_State* L, const char* type);
-EXTERN_IMPORT type_tolua_usertype tolua_usertype;
-
 typedef void (*type_tolua_variable)(lua_State* L, const char* name, lua_CFunction get, lua_CFunction set);
 EXTERN_IMPORT type_tolua_variable tolua_variable;
 
@@ -138,6 +135,7 @@ IMPORT void tolua_cclass(lua_State* L, const char* lname, const char* name, std:
 IMPORT void tolua_beginmodule(lua_State* L, const char* name);
 IMPORT void tolua_module(lua_State* L, const char* name, int hasvar);
 IMPORT void tolua_open(lua_State* L);
+IMPORT void tolua_usertype(lua_State* L, const char* type);
 
 //////////////////////////////
 // Template Implementations //

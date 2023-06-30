@@ -105,6 +105,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>EEex-v2.6.6.0.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>powershell.exe -ExecutionPolicy Unrestricted -file COPY_TO_GAME.ps1 -OutDir "$(OutDir)." -GamePath "$(DEBUGGER_WORKING_DIRECTORY)."</Command>

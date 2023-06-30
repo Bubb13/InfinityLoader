@@ -193,7 +193,6 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL, std::function<void()
 		setPointer("Hardcoded_tolua_tostring", tolua_tostring);
 		setPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
 		setPointer("Hardcoded_tolua_typename", tolua_typename);
-		setPointer("Hardcoded_tolua_usertype", tolua_usertype);
 		setPointer("Hardcoded_tolua_variable", tolua_variable);
 
 		// Export Lua functions that deal with user data / user types
@@ -233,6 +232,7 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL, std::function<void()
 		sharedState().SetPatternValue(TEXT("override_tolua_open"), tolua_open);
 		sharedState().SetPatternValue(TEXT("override_tolua_beginmodule"), tolua_beginmodule);
 		sharedState().SetPatternValue(TEXT("override_tolua_module"), tolua_module);
+		sharedState().SetPatternValue(TEXT("override_tolua_usertype"), tolua_usertype);
 	}
 
 	if (specificBindingsCallback != nullptr) {
