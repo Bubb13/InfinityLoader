@@ -36,3 +36,9 @@ EXPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR* section, const TCH
 
 EXPORT DWORD InitPaths(String& dbPath, String& exePath, String& exeName, String& iniPath, String& workingFolder, StringA& workingFolderA);
 String getMyPath();
+
+////////////////////////
+// String Conversions //
+////////////////////////
+
+EXPORT StringA StrToStrA(const String& string);

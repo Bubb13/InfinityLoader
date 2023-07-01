@@ -1170,20 +1170,6 @@ enum class EItemPreviewType : __int32
 	k_EItemPreviewType_ReservedMax = 255,
 };
 
-enum class EEex_MatchObjectFlags : __int32
-{
-	IGNORE_LOS = 1,
-	MATCH_NON_SPRITES = 2,
-	IGNORE_INVISIBLE = 4,
-	MATCH_INVISIBLE = 8,
-	MATCH_SLEEPING = 16,
-	MATCH_DEAD = 32,
-	MATCH_BACKLIST = 64,
-	PRIORITIZE_BACKLIST = 128,
-	MATCH_ONLY_BACKLIST = 256,
-	FARTHEST = 512,
-};
-
 enum class DP_ProviderID : __int32
 {
 	DP_PROVIDER_NONE = 0,
@@ -2800,45 +2786,6 @@ struct Pointer
 	{
 		*reference = val;
 	}
-};
-
-namespace EEex
-{
-	enum class ProjectileType : __int32
-	{
-		Unknown = 1,
-		CProjectile = 2,
-		CProjectileAmbiant = 4,
-		CProjectileArea = 8,
-		CProjectileBAM = 16,
-		CProjectileChain = 32,
-		CProjectileColorSpray = 64,
-		CProjectileConeOfCold = 128,
-		CProjectileFall = 256,
-		CProjectileFireHands = 512,
-		CProjectileInstant = 1024,
-		CProjectileMulti = 2048,
-		CProjectileMushroom = 4096,
-		CProjectileNewScorcher = 8192,
-		CProjectileScorcher = 16384,
-		CProjectileSegment = 32768,
-		CProjectileSkyStrike = 65536,
-		CProjectileSkyStrikeBAM = 131072,
-		CProjectileSpellHit = 262144,
-		CProjectileTravelDoor = 524288,
-	};
-
-	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
-	void DestroyUDAux(lua_State* L, void* ptr);
-	void CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr);
-	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
-	void Stats_Hook_OnEqu(lua_State* L, CDerivedStats* stats, CDerivedStats* otherStats);
-	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* effect);
-	int Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite* sprite);
-	void Projectile_Hook_BeforeAddEffect(lua_State* L, CProjectile* projectile, CGameAIBase* aiBase, CGameEffect* effect, uintptr_t retPtr);
-	void InitEEex();
-	void DeepCopyIndex(lua_State* L, int index);
-	void DeepCopy(lua_State* L);
 };
 
 struct ConstCharString

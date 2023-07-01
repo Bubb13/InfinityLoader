@@ -1,5 +1,66 @@
 
+//////////
+// EEex //
+//////////
+
+enum EEex_MatchObjectFlags : __int32
+{
+	IGNORE_LOS           = 0x00000001,
+	MATCH_NON_SPRITES    = 0x00000002,
+	IGNORE_INVISIBLE     = 0x00000004,
+	MATCH_INVISIBLE      = 0x00000008,
+	MATCH_SLEEPING       = 0x00000010,
+	MATCH_DEAD           = 0x00000020,
+	MATCH_BACKLIST       = 0x00000040,
+	PRIORITIZE_BACKLIST  = 0x00000080,
+	MATCH_ONLY_BACKLIST  = 0x00000100,
+	FARTHEST             = 0x00000200,
+};
+
 namespace EEex
 {
+	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+	$external_implementation $pass_lua_state $nobinding void DestroyUDAux(void* ptr);
+	$external_implementation $pass_lua_state $nobinding void CopyUDAux(void* sourcePtr, void* targetPtr);
+	$external_implementation $nobinding int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
+	$external_implementation $nobinding void Stats_Hook_OnEqu(lua_State* L, CDerivedStats* stats, CDerivedStats* otherStats);
+	$external_implementation $nobinding int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* effect);
+	$external_implementation $nobinding int Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite* sprite);
+	$external_implementation $nobinding void Projectile_Hook_BeforeAddEffect(lua_State* L, CProjectile* projectile, CGameAIBase* aiBase, CGameEffect* effect, uintptr_t retPtr);
+	$external_implementation $nobinding void InitEEex();
+	$external_implementation $nobinding void DeepCopyIndex(lua_State* L, int index);
+	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
 	$external_implementation int test();
-}
+};
+
+enum EEex::ProjectileType : __int32
+{
+	Unknown                          = 0x1,
+	CProjectile                      = 0x2,     // 0x14059A0E0
+	CProjectileAmbiant               = 0x4,     // 0x14059B460
+	CProjectileArea                  = 0x8,     // 0x14059AD30
+	CProjectileBAM                   = 0x10,    // 0x14059A218
+	//CProjectileCallLightning       = (no dedicated VFTable)
+	//CProjectileCastingGlow         = (no dedicated VFTable)
+	CProjectileChain                 = 0x20,    // 0x14059B590
+	CProjectileColorSpray            = 0x40,    // 0x14059A710
+	CProjectileConeOfCold            = 0x80,    // 0x14059A980
+	CProjectileFall                  = 0x100,   // 0x14059ABF8
+	CProjectileFireHands             = 0x200,   // 0x14059A848
+	CProjectileInstant               = 0x400,   // 0x14059AFA0
+	//CProjectileInvisibleTravelling = (no dedicated VFTable)
+	//CProjectileLightningBolt       = (no dedicated VFTable)
+	//CProjectileLightningBoltGround = (no dedicated VFTable)
+	//CProjectileLightningBounce     = (no dedicated VFTable)
+	//CProjectileLightningStorm      = (no dedicated VFTable)
+	//CProjectileMagicMissileMulti   = (no dedicated VFTable)
+	CProjectileMulti                 = 0x800,   // 0x14059AE68
+	CProjectileMushroom              = 0x1000,  // 0x14059A5D0
+	CProjectileNewScorcher           = 0x2000,  // 0x14059A488
+	CProjectileScorcher              = 0x4000,  // 0x14059A350
+	CProjectileSegment               = 0x8000,  // 0x14059AAB8
+	CProjectileSkyStrike             = 0x10000, // 0x14059B200
+	CProjectileSkyStrikeBAM          = 0x20000, // 0x14059B6C8
+	CProjectileSpellHit              = 0x40000, // 0x14059B330
+	CProjectileTravelDoor            = 0x80000, // 0x14059B0D0
+};

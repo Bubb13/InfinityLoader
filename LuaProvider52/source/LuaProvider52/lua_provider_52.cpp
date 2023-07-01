@@ -24,7 +24,7 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 				##functionName = (type_##functionName)(patternVal); \
 			} \
 			else { \
-				Print("[!] Lua pattern not defined: \"Hardcoded_%s\"; binding failed!\n", functionNameStr); \
+				Print("[!][LuaProvider] Lua pattern not defined: \"Hardcoded_%s\"; binding failed!\n", functionNameStr); \
 				return -1; \
 			} \
 		} \

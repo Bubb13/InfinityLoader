@@ -48,6 +48,7 @@ private:
 	HMODULE luaLibrary = reinterpret_cast<HMODULE>(-1);
 	LuaMode luaMode;
 	std::map<String, PatternEntry> patterns;
+	std::vector<PatternEntry> pendingPatterns;
 	uintptr_t imageBase;
 	std::map<StringA, SectionInfo> sectionInfo;
 };

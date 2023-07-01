@@ -759,13 +759,8 @@ int getMicrosecondsLua(lua_State* L) {
 }
 
 int getPatternMapLua(lua_State* L) {
-	lua_newtable(L);                                                              // [ table ]
-	sharedState().IteratePatternValues([&](const String& name, uintptr_t value) {
-		lua_pushstring(L, WideStrToStr(name).c_str());                            // [ table, k ]
-		lua_pushinteger(L, value);                                                // [ table, k, v ]
-		lua_rawset(L, -3);                                                        // [ table ]
-		return false;
-	});
+	lua_pushstring(L, "InfinityLoader_Patterns"); // 1 [ "InfinityLoader_Patterns" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);             // 1 [ registry["InfinityLoader_Patterns"] ]
 	return 1;
 }
 

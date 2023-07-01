@@ -119,7 +119,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="source\LuaBindings-v2.6.6.0\common.cpp" />
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\EEex\EEex.cpp" />
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated.cpp" />
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />

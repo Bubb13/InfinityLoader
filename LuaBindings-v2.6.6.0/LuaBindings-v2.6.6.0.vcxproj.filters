@@ -24,9 +24,6 @@
     <Filter Include="Source Files\LuaBindings-v2.6.6.0\Generated">
       <UniqueIdentifier>{14edab24-d755-492d-af81-1a23ba9e3cec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\LuaBindings-v2.6.6.0\EEex">
-      <UniqueIdentifier>{62065f07-dc22-4224-a50d-0ec2a85a1443}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\LuaBindings-v2.6.6.0">
       <UniqueIdentifier>{ff0b60f9-a2ab-4a5d-a811-3a21d0c37c63}</UniqueIdentifier>
     </Filter>
@@ -50,9 +47,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\EEex\EEex.cpp">
-      <Filter>Source Files\LuaBindings-v2.6.6.0\EEex</Filter>
-    </ClCompile>
     <ClCompile Include="source\LuaBindings-v2.6.6.0\util.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0</Filter>
     </ClCompile>
