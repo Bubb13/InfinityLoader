@@ -36,6 +36,7 @@ public:
 	IMPORT const StringA& WorkingFolderA();
 	IMPORT long long InitTime();
 	IMPORT void InitLuaState(lua_State* L);
+	IMPORT void AddLuaStateInitializedCallback(std::function<void()> callback);
 	IMPORT lua_State* LuaState();
 	IMPORT HMODULE LuaLibrary();
 	IMPORT LuaMode LuaMode();
@@ -43,6 +44,7 @@ public:
 	IMPORT bool GetPatternValue(const String& name, uintptr_t& out);
 	IMPORT void SetPatternValue(const String& name, uintptr_t value);
 	IMPORT void SetPatternValue(const String& name, void* value);
+	IMPORT void AddAfterPatternSetListener(std::function<void(const String&, uintptr_t)> listener);
 	IMPORT uintptr_t ImageBase();
 	IMPORT DWORD LoadSegmentInfo(const StringA& sectionName);
 	IMPORT bool GetSegmentPointer(const char* name, void*& out);

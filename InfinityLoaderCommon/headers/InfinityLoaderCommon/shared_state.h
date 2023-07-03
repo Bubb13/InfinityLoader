@@ -45,10 +45,11 @@ private:
 	friend class SharedState;
 	long long initTime;
 	lua_State* L;
+	std::vector<std::function<void()>> luaStateInitializedCallbacks;
 	HMODULE luaLibrary = reinterpret_cast<HMODULE>(-1);
 	LuaMode luaMode;
 	std::map<String, PatternEntry> patterns;
-	std::vector<PatternEntry> pendingPatterns;
+	std::vector<std::function<void(const String&, uintptr_t)>> afterPatternSetListeners;
 	uintptr_t imageBase;
 	std::map<StringA, SectionInfo> sectionInfo;
 };
@@ -77,6 +78,7 @@ public:
 	EXPORT const StringA& WorkingFolderA();
 	EXPORT long long InitTime();
 	EXPORT void InitLuaState(lua_State* L);
+	EXPORT void AddLuaStateInitializedCallback(std::function<void()> callback);
 	EXPORT lua_State* LuaState();
 	EXPORT HMODULE LuaLibrary();
 	EXPORT LuaMode LuaMode();
@@ -84,6 +86,7 @@ public:
 	EXPORT bool GetPatternValue(const String& name, uintptr_t& out);
 	EXPORT void SetPatternValue(const String& name, uintptr_t value);
 	EXPORT void SetPatternValue(const String& name, void* value);
+	EXPORT void AddAfterPatternSetListener(std::function<void(const String&, uintptr_t)> listener);
 	EXPORT uintptr_t ImageBase();
 	EXPORT DWORD LoadSegmentInfo(const StringA& sectionName);
 	EXPORT bool GetSegmentPointer(const char* name, void*& out);

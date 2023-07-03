@@ -310,22 +310,21 @@ EXPORT void SharedState::InitLuaState(lua_State* L) {
 	}
 	state.L = L;
 
-	lua_pushstring(L, "InfinityLoader_Patterns");   // 1 [ ..., "InfinityLoader_Patterns" ]
-	lua_newtable(L);                                // 2 [ ..., "InfinityLoader_Patterns", t ]
-	lua_pushvalue(L, -1);                           // 3 [ ..., "InfinityLoader_Patterns", t, t ]
-	lua_insert(L, -3);                              // 3 [ ..., t, "InfinityLoader_Patterns", t ]
-	lua_rawset(L, LUA_REGISTRYINDEX);               // 1 [ ..., t -> registry["InfinityLoader_Patterns"] ]
-
-	auto& patterns = state.patterns;
-	auto& pendingPatterns = state.pendingPatterns;
-	for (auto& [name, value] : pendingPatterns) {
-		lua_pushstring(L, StrToStrA(name).c_str()); // 2 [ ..., registry["InfinityLoader_Patterns"], name ]
-		lua_pushinteger(L, value);                  // 3 [ ..., registry["InfinityLoader_Patterns"], name, value ]
-		lua_rawset(L, -3);                          // 1 [ ..., registry["InfinityLoader_Patterns"] ]
+	auto& callbacks = state.luaStateInitializedCallbacks;
+	for (auto& callback : callbacks) {
+		callback();
 	}
-	lua_pop(L, 1);                                  // 0 [ ... ]
+	callbacks.~vector();
+}
 
-	pendingPatterns.~vector();
+EXPORT void SharedState::AddLuaStateInitializedCallback(std::function<void()> callback) {
+	SharedDLLState& state = data()->state;
+	if (state.L == nullptr) {
+		state.luaStateInitializedCallbacks.emplace_back(callback);
+	}
+	else {
+		callback();
+	}
 }
 
 EXPORT lua_State* SharedState::LuaState() {
@@ -361,31 +360,26 @@ EXPORT bool SharedState::GetPatternValue(const String& name, uintptr_t& out) {
 EXPORT void SharedState::SetPatternValue(const String& name, uintptr_t value) {
 
 	SharedDLLState& state = data()->state;
-	lua_State* L = state.L;
-
-	if (L == nullptr) {
-		state.pendingPatterns.push_back({name, value});
-	}
-	else {
-		lua_pushstring(L, "InfinityLoader_Patterns"); // 1 [ ..., "InfinityLoader_Patterns" ]
-		lua_rawget(L, LUA_REGISTRYINDEX);             // 1 [ ..., registry["InfinityLoader_Patterns"] ]
-		lua_pushstring(L, StrToStrA(name).c_str());   // 2 [ ..., registry["InfinityLoader_Patterns"], name ]
-		lua_pushinteger(L, value);                    // 3 [ ..., registry["InfinityLoader_Patterns"], name, value ]
-		lua_rawset(L, -3);                            // 1 [ ..., registry["InfinityLoader_Patterns"] ]
-		lua_pop(L, 1);                                // 0 [ ... ]
-	}
-
 	auto& patterns = state.patterns;
+
 	if (auto found = patterns.find(name); found == patterns.end()) {
 		patterns.try_emplace(name, name, value);
 	}
 	else {
 		found->second.value = value;
 	}
+
+	for (auto& listener : state.afterPatternSetListeners) {
+		listener(name, value);
+	}
 }
 
 EXPORT void SharedState::SetPatternValue(const String& name, void* value) {
 	SetPatternValue(name, reinterpret_cast<uintptr_t>(value));
+}
+
+EXPORT void SharedState::AddAfterPatternSetListener(std::function<void(const String&, uintptr_t)> listener) {
+	data()->state.afterPatternSetListeners.emplace_back(listener);
 }
 
 bool findSectionInfo(HMODULE module, const char* sectionName, SectionInfo& sectionInfo) {

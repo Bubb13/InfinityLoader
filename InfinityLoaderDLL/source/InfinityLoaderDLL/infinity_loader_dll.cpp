@@ -1671,6 +1671,68 @@ DWORD writeInternalPatch(AssemblyWriter& writer, uintptr_t curAllocatedPtr, void
 	return ERROR_SUCCESS;
 }
 
+////////////////////////////
+// START Pattern Tracking //
+////////////////////////////
+
+// Expects:   0 [ ... ]
+// End Stack: 1 [ ..., registry["InfinityLoader_Patterns"] ]
+void pushPatternsTable(lua_State* L) {
+	lua_pushstring(L, "InfinityLoader_Patterns");     // 1 [ ..., "InfinityLoader_Patterns" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);                 // 1 [ ..., registry["InfinityLoader_Patterns"] ]
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 1);                                // 0 [ ... ]
+		lua_newtable(L);                              // 1 [ ..., t ]
+		lua_pushstring(L, "InfinityLoader_Patterns"); // 2 [ ..., t, "InfinityLoader_Patterns" ]
+		lua_pushvalue(L, -2);                         // 3 [ ..., t, "InfinityLoader_Patterns", t ]
+		lua_rawset(L, LUA_REGISTRYINDEX);             // 1 [ ..., t -> registry["InfinityLoader_Patterns"] ]
+	}
+}
+
+// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] ]
+// End Stack: 1 [ ..., registry["InfinityLoader_Patterns"] ]
+void exportPattern(lua_State* L, const String& name, uintptr_t value) {
+	lua_pushstring(L, StrToStrA(name).c_str()); // 2 [ ..., registry["InfinityLoader_Patterns"], name ]
+	lua_pushinteger(L, value);                  // 3 [ ..., registry["InfinityLoader_Patterns"], name, value ]
+	lua_rawset(L, -3);                          // 1 [ ..., registry["InfinityLoader_Patterns"] ]
+}
+
+// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] ]
+// End Stack: 1 [ ..., registry["InfinityLoader_Patterns"] ]
+void exportExistingPatterns(lua_State* L) {
+	sharedState().IteratePatternValues([&](const String& name, uintptr_t value) -> bool {
+		exportPattern(L, name, value);
+		return false;
+	});
+}
+
+void onLuaStateInitialized() {
+	lua_State* L = luaState();
+	pushPatternsTable(L);      // 1 [ ..., registry["InfinityLoader_Patterns"] ]
+	exportExistingPatterns(L);
+	lua_pop(L, 1);             // 0 [ ... ]
+}
+
+void onAfterPatternSet(const String& name, uintptr_t value) {
+	lua_State* L = luaState();
+	if (L != nullptr) {
+		pushPatternsTable(L);          // 1 [ ..., registry["InfinityLoader_Patterns"] ]
+		exportPattern(L, name, value);
+		lua_pop(L, 1);                 // 0 [ ... ]
+	}
+}
+
+void initPatternTracking() {
+	// Callback that exports all existing patterns
+	sharedState().AddLuaStateInitializedCallback(onLuaStateInitialized);
+	// Listener that exports future patterns when they are set
+	sharedState().AddAfterPatternSetListener(onAfterPatternSet);
+}
+
+//////////////////////////
+// END Pattern Tracking //
+//////////////////////////
+
 DWORD setUpLuaInitialization(void* sectionPtr, DWORD sectionSize) {
 
 	uintptr_t curAllocatedPtr;
@@ -1687,6 +1749,9 @@ DWORD setUpLuaInitialization(void* sectionPtr, DWORD sectionSize) {
 		TryRetErr( findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_WinMainPatchLocation"), winMainPatchAddress) )
 		writeCallHookProcAfterCall(writer, curAllocatedPtr, winMainPatchAddress, winMainHook);
 	}
+
+	// Initialize code that tracks patterns and exports them to Lua
+	initPatternTracking();
 
 	// Write Lua initialization hook
 	if (LuaMode luaMode = luaMode(); luaMode == LuaMode::INTERNAL) {
