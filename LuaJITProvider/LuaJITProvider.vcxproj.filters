@@ -13,26 +13,34 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\LuaProvider52">
-      <UniqueIdentifier>{ad45d52b-20df-4b3e-9e98-3f0fd89d63cf}</UniqueIdentifier>
+    <Filter Include="Source Files\LuaJITProvider">
+      <UniqueIdentifier>{ee695ae0-d4ef-4e38-b20f-1094643a1474}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\LuaJITProvider">
+      <UniqueIdentifier>{c09452ba-6b2e-4bd8-96f6-8e2f94091a92}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\include">
-      <UniqueIdentifier>{77257e16-f21e-437c-920f-dbe2e146d98a}</UniqueIdentifier>
+      <UniqueIdentifier>{c56e144e-04ed-41c4-b381-a2c77d887ea4}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\include\lua">
-      <UniqueIdentifier>{85793b7a-967e-455d-92cd-4942db5fad5f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\LuaProvider52">
-      <UniqueIdentifier>{e785fadd-c5b6-42cc-9d82-f372b53dcbf9}</UniqueIdentifier>
+      <UniqueIdentifier>{7a88e4ac-4381-41bc-9565-faed7fa2b7ac}</UniqueIdentifier>
     </Filter>
     <Filter Include="Build Tasks">
-      <UniqueIdentifier>{c938ac01-1c89-4296-971a-981b9148f13d}</UniqueIdentifier>
+      <UniqueIdentifier>{c9765adf-e9f8-4f65-88bd-8f01e8555eef}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="header\LuaProvider52\lua_pointers.h">
-      <Filter>Header Files\LuaProvider52</Filter>
-    </ClInclude>
+    <ClCompile Include="source\LuaJITProvider\lua_pointers.cpp">
+      <Filter>Source Files\LuaJITProvider</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaJITProvider\common.cpp">
+      <Filter>Source Files\LuaJITProvider</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LuaJITProvider\lua_provider.cpp">
+      <Filter>Source Files\LuaJITProvider</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="header\include\lua\lua.hpp">
       <Filter>Header Files\include\lua</Filter>
     </ClInclude>
@@ -48,20 +56,12 @@
     <ClInclude Include="header\include\lua\lua.h">
       <Filter>Header Files\include\lua</Filter>
     </ClInclude>
-    <ClInclude Include="header\LuaProvider52\lua_implementation.h">
-      <Filter>Header Files\LuaProvider52</Filter>
+    <ClInclude Include="header\LuaJITProvider\lua_pointers.h">
+      <Filter>Header Files\LuaJITProvider</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="source\LuaProvider52\lua_pointers.cpp">
-      <Filter>Source Files\LuaProvider52</Filter>
-    </ClCompile>
-    <ClCompile Include="source\LuaProvider52\common.cpp">
-      <Filter>Source Files\LuaProvider52</Filter>
-    </ClCompile>
-    <ClCompile Include="source\LuaProvider52\lua_provider.cpp">
-      <Filter>Source Files\LuaProvider52</Filter>
-    </ClCompile>
+    <ClInclude Include="header\include\lua\luajit.h">
+      <Filter>Header Files\include\lua</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1">

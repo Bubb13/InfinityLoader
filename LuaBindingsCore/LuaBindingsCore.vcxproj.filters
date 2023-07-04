@@ -25,6 +25,9 @@
     <Filter Include="Header Files\common\tolua">
       <UniqueIdentifier>{d544ffd2-476d-40dc-bc0f-59d454077f65}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Build Tasks">
+      <UniqueIdentifier>{c7a0dc13-f920-4f18-9c88-ed9e2099209f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\LuaBindingsCore\to_lua_pointers.h">
@@ -47,5 +50,10 @@
     <ClCompile Include="source\LuaBindingsCore\common.cpp">
       <Filter>Source Files\LuaBindingsCore</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="COPY_TO_GAME.ps1">
+      <Filter>Build Tasks</Filter>
+    </None>
   </ItemGroup>
 </Project>

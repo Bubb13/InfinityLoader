@@ -28,6 +28,9 @@
     <Filter Include="Module Definition">
       <UniqueIdentifier>{ebbfcbd4-db88-4415-8133-a65922897a7d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Build Tasks">
+      <UniqueIdentifier>{7401bc95-18bd-4d13-b4a5-17df07b7b7f4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\EEex-v2.6.6.0\main.cpp">
@@ -72,6 +75,9 @@
   <ItemGroup>
     <None Include="EEex-v2.6.6.0.def">
       <Filter>Module Definition</Filter>
+    </None>
+    <None Include="COPY_TO_GAME.ps1">
+      <Filter>Build Tasks</Filter>
     </None>
   </ItemGroup>
 </Project>
