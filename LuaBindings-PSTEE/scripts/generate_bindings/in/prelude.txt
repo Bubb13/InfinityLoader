@@ -4,8 +4,8 @@
 #include <queue>
 #include <vector>
 
-#include "infinity_loader_common.h"
-#include "to_lua_pointers.h"
+#include "infinity_loader_common_api.h"
+#include "lua_bindings_core_api.h"
 
 typedef __int8 sbyte;
 typedef unsigned char uchar;

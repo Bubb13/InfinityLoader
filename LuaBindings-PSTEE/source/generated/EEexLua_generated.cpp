@@ -1,18 +1,12 @@
 
-#include "engine_structs.h"
-#include "to_lua_pointers.h"
+#include "engine_structs_generated.h"
+#include "Baldur-v2.5.17.0_lua_generated.h"
+#include "lua_bindings_core_api.h"
 
 static int tolua_function_CAIAction_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
 	tolua_pushusertype(L, ptr, "Pointer<CAIAction>");
-	return 1;
-}
-
-static int tolua_function_CGameAnimation_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameAnimation>");
 	return 1;
 }
 
@@ -40,31 +34,10 @@ static int tolua_get_CGameAnimation_reference_m_animation(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CGameAnimationType_getInternalReference(lua_State* L)
+static int tolua_function_CGameAnimation_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameAnimationType>");
-	return 1;
-}
-
-static int tolua_function_CPersistantEffectColorEffect_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CPersistantEffectColorEffect>");
-	return 1;
-}
-
-static int tolua_function_CPlanescape_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CPlanescape>");
-	return 1;
-}
-
-static int tolua_function_CPtrList_CNode_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CPtrList_CNode>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameAnimation>");
 	return 1;
 }
 
@@ -140,45 +113,17 @@ static int tolua_get_CPtrList_CNode_reference_data(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_CPtrList_CNode_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CPtrList_CNode>");
+	return 1;
+}
+
 static int tolua_function_CResCell_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
 	tolua_pushusertype(L, ptr, "Pointer<CResCell>");
-	return 1;
-}
-
-static int tolua_function_CScreenWorld_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CScreenWorld>");
-	return 1;
-}
-
-static int tolua_function_CSound_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CSound>");
-	return 1;
-}
-
-static int tolua_function_CSoundImp_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CSoundImp>");
-	return 1;
-}
-
-static int tolua_function_CVidImage_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CVidImage>");
-	return 1;
-}
-
-static int tolua_function_CVideo_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CVideo>");
 	return 1;
 }
 
@@ -206,6 +151,13 @@ static int tolua_get_CVideo_reference_pCurrentMode(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_CVideo_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CVideo>");
+	return 1;
+}
+
 static int tolua_get_g_pBaldurChitin(lua_State* L)
 {
 	tolua_pushusertype(L, (void*)*p_g_pBaldurChitin, "EEex_CBaldurChitin");
@@ -216,13 +168,6 @@ static int tolua_set_g_pBaldurChitin(lua_State* L)
 {
 	*p_g_pBaldurChitin = (CBaldurChitin*)tolua_tousertype_dynamic(L, 2, 0, "EEex_CBaldurChitin");
 	return 0;
-}
-
-static int tolua_function_VoidPointer_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<void*>");
-	return 1;
 }
 
 static int tolua_get_VoidPointer_reference(lua_State* L)
@@ -249,38 +194,17 @@ static int tolua_get_VoidPointer_reference_reference(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_VoidPointer_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<void*>");
+	return 1;
+}
+
 static int tolua_function___POSITION_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
 	tolua_pushusertype(L, ptr, "Pointer<__POSITION>");
-	return 1;
-}
-
-static int tolua_function___int32_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<__int32>");
-	return 1;
-}
-
-static int tolua_function___int8_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<__int8>");
-	return 1;
-}
-
-static int tolua_function_byte_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<byte>");
-	return 1;
-}
-
-static int tolua_function_CTimerWorld_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTimerWorld>");
 	return 1;
 }
 
@@ -340,38 +264,10 @@ static int tolua_get_CTimerWorld_reference_m_nLastPercentage(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_char_getInternalReference(lua_State* L)
+static int tolua_function_CTimerWorld_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<char>");
-	return 1;
-}
-
-static int tolua_function_double_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<double>");
-	return 1;
-}
-
-static int tolua_function_float_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<float>");
-	return 1;
-}
-
-static int tolua_function_int_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<int>");
-	return 1;
-}
-
-static int tolua_function_CRect_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CRect>");
+	tolua_pushusertype(L, ptr, "Pointer<CTimerWorld>");
 	return 1;
 }
 
@@ -471,10 +367,10 @@ static int tolua_get_CRect_reference_bottom(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CPtrList_getInternalReference(lua_State* L)
+static int tolua_function_CRect_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CPtrList>");
+	tolua_pushusertype(L, ptr, "Pointer<CRect>");
 	return 1;
 }
 
@@ -622,10 +518,10 @@ static int tolua_get_CPtrList_reference_m_nBlockSize(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CPoint_getInternalReference(lua_State* L)
+static int tolua_function_CPtrList_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CPoint>");
+	tolua_pushusertype(L, ptr, "Pointer<CPtrList>");
 	return 1;
 }
 
@@ -677,10 +573,10 @@ static int tolua_get_CPoint_reference_y(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CGameObjectArray_getInternalReference(lua_State* L)
+static int tolua_function_CPoint_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameObjectArray>");
+	tolua_pushusertype(L, ptr, "Pointer<CPoint>");
 	return 1;
 }
 
@@ -697,10 +593,10 @@ static int tolua_get_reference_CGameObjectArray_GetShare(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CBaldurChitin_getInternalReference(lua_State* L)
+static int tolua_function_CGameObjectArray_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CBaldurChitin>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameObjectArray>");
 	return 1;
 }
 
@@ -880,17 +776,10 @@ static int tolua_get_CBaldurChitin_reference_m_cMessageHandler(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_long_getInternalReference(lua_State* L)
+static int tolua_function_CBaldurChitin_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<long>");
-	return 1;
-}
-
-static int tolua_function_CMessage_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CMessage>");
+	tolua_pushusertype(L, ptr, "Pointer<CBaldurChitin>");
 	return 1;
 }
 
@@ -942,10 +831,10 @@ static int tolua_get_CMessage_reference_m_sourceId(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CMessageVisualEffect_getInternalReference(lua_State* L)
+static int tolua_function_CMessage_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CMessageVisualEffect>");
+	tolua_pushusertype(L, ptr, "Pointer<CMessage>");
 	return 1;
 }
 
@@ -997,10 +886,10 @@ static int tolua_get_CMessageVisualEffect_reference_m_nEffectProperty(lua_State*
 	return 1;
 }
 
-static int tolua_function_CMessageAddEffect_getInternalReference(lua_State* L)
+static int tolua_function_CMessageVisualEffect_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CMessageAddEffect>");
+	tolua_pushusertype(L, ptr, "Pointer<CMessageVisualEffect>");
 	return 1;
 }
 
@@ -1052,38 +941,10 @@ static int tolua_get_CMessageAddEffect_reference_m_noSave(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_short_getInternalReference(lua_State* L)
+static int tolua_function_CMessageAddEffect_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<short>");
-	return 1;
-}
-
-static int tolua_function_size_t_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<size_t>");
-	return 1;
-}
-
-static int tolua_function_uint_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<uint>");
-	return 1;
-}
-
-static int tolua_function_CVidMode_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CVidMode>");
-	return 1;
-}
-
-static int tolua_function_CInfinity_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CInfinity>");
+	tolua_pushusertype(L, ptr, "Pointer<CMessageAddEffect>");
 	return 1;
 }
 
@@ -1319,17 +1180,10 @@ static int tolua_get_CInfinity_reference_m_pArea(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_uintptr_t_getInternalReference(lua_State* L)
+static int tolua_function_CInfinity_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<uintptr_t>");
-	return 1;
-}
-
-static int tolua_function_UnmappedUserType_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<UnmappedUserType>");
+	tolua_pushusertype(L, ptr, "Pointer<CInfinity>");
 	return 1;
 }
 
@@ -1342,17 +1196,10 @@ static int tolua_function_UnmappedUserType_toPointer(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_ushort_getInternalReference(lua_State* L)
+static int tolua_function_UnmappedUserType_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<ushort>");
-	return 1;
-}
-
-static int tolua_function_CGameTrigger_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameTrigger>");
+	tolua_pushusertype(L, ptr, "Pointer<UnmappedUserType>");
 	return 1;
 }
 
@@ -1540,10 +1387,10 @@ static int tolua_get_CGameTrigger_reference_m_trapActivated(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CGameDoor_getInternalReference(lua_State* L)
+static int tolua_function_CGameTrigger_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameDoor>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameTrigger>");
 	return 1;
 }
 
@@ -1579,10 +1426,10 @@ static int tolua_get_CGameDoor_reference_m_trapActivated(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CGameContainer_getInternalReference(lua_State* L)
+static int tolua_function_CGameDoor_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameContainer>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameDoor>");
 	return 1;
 }
 
@@ -1610,17 +1457,10 @@ static int tolua_get_CGameContainer_reference_m_trapActivated(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_void_getInternalReference(lua_State* L)
+static int tolua_function_CGameContainer_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "VoidPointer");
-	return 1;
-}
-
-static int tolua_function_Pointer_CBaldurChitin__getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<EEex_CBaldurChitin*>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameContainer>");
 	return 1;
 }
 
@@ -1648,10 +1488,10 @@ static int tolua_function_Pointer_CBaldurChitin__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CObject__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CBaldurChitin__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CObject*>");
+	tolua_pushusertype(L, ptr, "Pointer<EEex_CBaldurChitin*>");
 	return 1;
 }
 
@@ -1679,10 +1519,10 @@ static int tolua_function_Pointer_CObject__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CGameObject__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CObject__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameObject*>");
+	tolua_pushusertype(L, ptr, "Pointer<CObject*>");
 	return 1;
 }
 
@@ -1710,10 +1550,10 @@ static int tolua_function_Pointer_CGameObject__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CGameArea__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CGameObject__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameArea*>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameObject*>");
 	return 1;
 }
 
@@ -1741,10 +1581,10 @@ static int tolua_function_Pointer_CGameArea__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_const_CPoint__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CGameArea__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<const CPoint*>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameArea*>");
 	return 1;
 }
 
@@ -1764,10 +1604,10 @@ static int tolua_set_Pointer_const_CPoint__reference(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_const_CAIObjectType__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_const_CPoint__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<const CAIObjectType*>");
+	tolua_pushusertype(L, ptr, "Pointer<const CPoint*>");
 	return 1;
 }
 
@@ -1787,10 +1627,10 @@ static int tolua_set_Pointer_const_CAIObjectType__reference(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CPoint__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_const_CAIObjectType__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CPoint*>");
+	tolua_pushusertype(L, ptr, "Pointer<const CAIObjectType*>");
 	return 1;
 }
 
@@ -1818,10 +1658,10 @@ static int tolua_function_Pointer_CPoint__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CTypedPtrList_CPtrList_long___CNode__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CPoint__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,long>::CNode*>");
+	tolua_pushusertype(L, ptr, "Pointer<CPoint*>");
 	return 1;
 }
 
@@ -1849,10 +1689,10 @@ static int tolua_function_Pointer_CTypedPtrList_CPtrList_long___CNode__setValue(
 	return 0;
 }
 
-static int tolua_function_Pointer_unsigned_int__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CTypedPtrList_CPtrList_long___CNode__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<unsigned int*>");
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,long>::CNode*>");
 	return 1;
 }
 
@@ -1889,10 +1729,10 @@ static int tolua_function_Pointer_unsigned_int__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_const_CString__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_unsigned_int__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<const CString*>");
+	tolua_pushusertype(L, ptr, "Pointer<unsigned int*>");
 	return 1;
 }
 
@@ -1912,10 +1752,10 @@ static int tolua_set_Pointer_const_CString__reference(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CVidMode__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_const_CString__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CVidMode*>");
+	tolua_pushusertype(L, ptr, "Pointer<const CString*>");
 	return 1;
 }
 
@@ -1943,10 +1783,10 @@ static int tolua_function_Pointer_CVidMode__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer___POSITION__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CVidMode__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<__POSITION*>");
+	tolua_pushusertype(L, ptr, "Pointer<CVidMode*>");
 	return 1;
 }
 
@@ -1974,10 +1814,10 @@ static int tolua_function_Pointer___POSITION__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_const_CAITrigger__getInternalReference(lua_State* L)
+static int tolua_function_Pointer___POSITION__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<const CAITrigger*>");
+	tolua_pushusertype(L, ptr, "Pointer<__POSITION*>");
 	return 1;
 }
 
@@ -1997,10 +1837,10 @@ static int tolua_set_Pointer_const_CAITrigger__reference(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CGameAIBase__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_const_CAITrigger__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameAIBase*>");
+	tolua_pushusertype(L, ptr, "Pointer<const CAITrigger*>");
 	return 1;
 }
 
@@ -2028,10 +1868,10 @@ static int tolua_function_Pointer_CGameAIBase__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_const_CAIAction__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CGameAIBase__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<const CAIAction*>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameAIBase*>");
 	return 1;
 }
 
@@ -2051,10 +1891,10 @@ static int tolua_set_Pointer_const_CAIAction__reference(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CGameEffect__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_const_CAIAction__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameEffect*>");
+	tolua_pushusertype(L, ptr, "Pointer<const CAIAction*>");
 	return 1;
 }
 
@@ -2082,10 +1922,10 @@ static int tolua_function_Pointer_CGameEffect__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CResRef__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CGameEffect__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CResRef*>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameEffect*>");
 	return 1;
 }
 
@@ -2113,10 +1953,10 @@ static int tolua_function_Pointer_CResRef__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CGameObject___getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CResRef__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameObject**>");
+	tolua_pushusertype(L, ptr, "Pointer<CResRef*>");
 	return 1;
 }
 
@@ -2153,10 +1993,10 @@ static int tolua_function_Pointer_CGameObject___setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_Item_effect_st__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CGameObject___getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<Item_effect_st*>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameObject**>");
 	return 1;
 }
 
@@ -2184,10 +2024,10 @@ static int tolua_function_Pointer_Item_effect_st__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CProjectile__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_Item_effect_st__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CProjectile*>");
+	tolua_pushusertype(L, ptr, "Pointer<Item_effect_st*>");
 	return 1;
 }
 
@@ -2215,10 +2055,10 @@ static int tolua_function_Pointer_CProjectile__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CInfGame__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CProjectile__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<EEex_CInfGame*>");
+	tolua_pushusertype(L, ptr, "Pointer<CProjectile*>");
 	return 1;
 }
 
@@ -2246,10 +2086,10 @@ static int tolua_function_Pointer_CInfGame__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CScreenWorld__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CInfGame__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<EEex_CScreenWorld*>");
+	tolua_pushusertype(L, ptr, "Pointer<EEex_CInfGame*>");
 	return 1;
 }
 
@@ -2277,10 +2117,10 @@ static int tolua_function_Pointer_CScreenWorld__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CGameAnimationType__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CScreenWorld__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameAnimationType*>");
+	tolua_pushusertype(L, ptr, "Pointer<EEex_CScreenWorld*>");
 	return 1;
 }
 
@@ -2308,10 +2148,10 @@ static int tolua_function_Pointer_CGameAnimationType__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CProjectileUnknownPST2__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CGameAnimationType__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CProjectileUnknownPST2*>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameAnimationType*>");
 	return 1;
 }
 
@@ -2339,10 +2179,10 @@ static int tolua_function_Pointer_CProjectileUnknownPST2__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CInfinity__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CProjectileUnknownPST2__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CInfinity*>");
+	tolua_pushusertype(L, ptr, "Pointer<CProjectileUnknownPST2*>");
 	return 1;
 }
 
@@ -2370,10 +2210,10 @@ static int tolua_function_Pointer_CInfinity__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CVidCell__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CInfinity__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CVidCell*>");
+	tolua_pushusertype(L, ptr, "Pointer<CInfinity*>");
 	return 1;
 }
 
@@ -2401,10 +2241,10 @@ static int tolua_function_Pointer_CVidCell__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CPtrList_CNode__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CVidCell__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CPtrList_CNode*>");
+	tolua_pushusertype(L, ptr, "Pointer<CVidCell*>");
 	return 1;
 }
 
@@ -2432,10 +2272,10 @@ static int tolua_function_Pointer_CPtrList_CNode__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_int__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CPtrList_CNode__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<int*>");
+	tolua_pushusertype(L, ptr, "Pointer<CPtrList_CNode*>");
 	return 1;
 }
 
@@ -2472,10 +2312,10 @@ static int tolua_function_Pointer_int__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CSoundImp__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_int__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CSoundImp*>");
+	tolua_pushusertype(L, ptr, "Pointer<int*>");
 	return 1;
 }
 
@@ -2503,10 +2343,10 @@ static int tolua_function_Pointer_CSoundImp__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Pointer_CAreaTintOverride__getInternalReference(lua_State* L)
+static int tolua_function_Pointer_CSoundImp__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CAreaTintOverride*>");
+	tolua_pushusertype(L, ptr, "Pointer<CSoundImp*>");
 	return 1;
 }
 
@@ -2532,6 +2372,13 @@ static int tolua_function_Pointer_CAreaTintOverride__setValue(lua_State* L)
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
 	self->setValue(*(CAreaTintOverride*)tolua_tousertype_dynamic(L, 2, 0, "CAreaTintOverride"));
 	return 0;
+}
+
+static int tolua_function_Pointer_CAreaTintOverride__getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CAreaTintOverride*>");
+	return 1;
 }
 
 static int tolua_get_Pointer_CBaldurChitin___reference(lua_State* L)
@@ -4728,6 +4575,54 @@ static int tolua_function_Pointer_CAIObjectType__setValue(lua_State* L)
 	return 0;
 }
 
+static int tolua_get_Pointer_CProjectile__vtbl__reference(lua_State* L)
+{
+	Pointer<CProjectile::vtbl>* self = (Pointer<CProjectile::vtbl>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<CProjectile::vtbl>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "CProjectile::vtbl");
+	return 1;
+}
+
+static int tolua_set_Pointer_CProjectile__vtbl__reference(lua_State* L)
+{
+	Pointer<CProjectile::vtbl>* self = (Pointer<CProjectile::vtbl>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<CProjectile::vtbl>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (CProjectile::vtbl*)tolua_tousertype_dynamic(L, 2, 0, "CProjectile::vtbl");
+	return 0;
+}
+
+static int tolua_function_Pointer_CProjectile__vtbl__setValue(lua_State* L)
+{
+	Pointer<CProjectile::vtbl>* self = (Pointer<CProjectile::vtbl>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<CProjectile::vtbl>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(CProjectile::vtbl*)tolua_tousertype_dynamic(L, 2, 0, "CProjectile::vtbl"));
+	return 0;
+}
+
+static int tolua_get_Pointer_CProjectileBAM__vtbl__reference(lua_State* L)
+{
+	Pointer<CProjectileBAM::vtbl>* self = (Pointer<CProjectileBAM::vtbl>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<CProjectileBAM::vtbl>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "CProjectileBAM::vtbl");
+	return 1;
+}
+
+static int tolua_set_Pointer_CProjectileBAM__vtbl__reference(lua_State* L)
+{
+	Pointer<CProjectileBAM::vtbl>* self = (Pointer<CProjectileBAM::vtbl>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<CProjectileBAM::vtbl>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (CProjectileBAM::vtbl*)tolua_tousertype_dynamic(L, 2, 0, "CProjectileBAM::vtbl");
+	return 0;
+}
+
+static int tolua_function_Pointer_CProjectileBAM__vtbl__setValue(lua_State* L)
+{
+	Pointer<CProjectileBAM::vtbl>* self = (Pointer<CProjectileBAM::vtbl>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<CProjectileBAM::vtbl>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(CProjectileBAM::vtbl*)tolua_tousertype_dynamic(L, 2, 0, "CProjectileBAM::vtbl"));
+	return 0;
+}
+
 static int tolua_get_Pointer_CProjectileBAM__reference(lua_State* L)
 {
 	Pointer<CProjectileBAM>* self = (Pointer<CProjectileBAM>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<CProjectileBAM>");
@@ -4947,13 +4842,6 @@ static int tolua_function_CharString_free(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_CString_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CString>");
-	return 1;
-}
-
 static int tolua_get_CString_m_pchData(lua_State* L)
 {
 	CString* self = (CString*)tolua_tousertype_dynamic(L, 1, 0, "CString");
@@ -4962,10 +4850,10 @@ static int tolua_get_CString_m_pchData(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CObject_getInternalReference(lua_State* L)
+static int tolua_function_CString_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CObject>");
+	tolua_pushusertype(L, ptr, "Pointer<CString>");
 	return 1;
 }
 
@@ -4977,10 +4865,10 @@ static int tolua_function_CObject_virtual_Destruct(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_CObject__vtbl_getInternalReference(lua_State* L)
+static int tolua_function_CObject_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CObject::vtbl>");
+	tolua_pushusertype(L, ptr, "Pointer<CObject>");
 	return 1;
 }
 
@@ -4994,10 +4882,10 @@ static int tolua_set_CObject__vtbl_Destruct(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_CTypedPtrList_CPtrList_long__getInternalReference(lua_State* L)
+static int tolua_function_CObject__vtbl_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,long>>");
+	tolua_pushusertype(L, ptr, "Pointer<CObject::vtbl>");
 	return 1;
 }
 
@@ -5145,10 +5033,10 @@ static int tolua_get_CTypedPtrList_CPtrList_long__reference_m_nBlockSize(lua_Sta
 	return 1;
 }
 
-static int tolua_function_CTypedPtrList_CPtrList_long___CNode_getInternalReference(lua_State* L)
+static int tolua_function_CTypedPtrList_CPtrList_long__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,long>::CNode>");
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,long>>");
 	return 1;
 }
 
@@ -5224,10 +5112,17 @@ static int tolua_get_CTypedPtrList_CPtrList_long___CNode_reference_data(lua_Stat
 	return 1;
 }
 
-static int tolua_function_CTypedPtrList_CPtrList_CGameEffect___getInternalReference(lua_State* L)
+static int tolua_function_CTypedPtrList_CPtrList_long___CNode_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,CGameEffect*>>");
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,long>::CNode>");
+	return 1;
+}
+
+static int tolua_function_CTypedPtrList_CPtrList_long___vtbl_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,long>::vtbl>");
 	return 1;
 }
 
@@ -5375,10 +5270,10 @@ static int tolua_get_CTypedPtrList_CPtrList_CGameEffect___reference_m_nBlockSize
 	return 1;
 }
 
-static int tolua_function_CTypedPtrList_CPtrList_CGameEffect____CNode_getInternalReference(lua_State* L)
+static int tolua_function_CTypedPtrList_CPtrList_CGameEffect___getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,CGameEffect*>::CNode>");
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,CGameEffect*>>");
 	return 1;
 }
 
@@ -5454,10 +5349,17 @@ static int tolua_get_CTypedPtrList_CPtrList_CGameEffect____CNode_reference_data(
 	return 1;
 }
 
-static int tolua_function_CTypedPtrList_CPtrList_int___getInternalReference(lua_State* L)
+static int tolua_function_CTypedPtrList_CPtrList_CGameEffect____CNode_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int*>>");
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,CGameEffect*>::CNode>");
+	return 1;
+}
+
+static int tolua_function_CTypedPtrList_CPtrList_CGameEffect____vtbl_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,CGameEffect*>::vtbl>");
 	return 1;
 }
 
@@ -5605,10 +5507,10 @@ static int tolua_get_CTypedPtrList_CPtrList_int___reference_m_nBlockSize(lua_Sta
 	return 1;
 }
 
-static int tolua_function_CTypedPtrList_CPtrList_int____CNode_getInternalReference(lua_State* L)
+static int tolua_function_CTypedPtrList_CPtrList_int___getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int*>::CNode>");
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int*>>");
 	return 1;
 }
 
@@ -5684,10 +5586,17 @@ static int tolua_get_CTypedPtrList_CPtrList_int____CNode_reference_data(lua_Stat
 	return 1;
 }
 
-static int tolua_function_CTypedPtrList_CPtrList_int__getInternalReference(lua_State* L)
+static int tolua_function_CTypedPtrList_CPtrList_int____CNode_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int>>");
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int*>::CNode>");
+	return 1;
+}
+
+static int tolua_function_CTypedPtrList_CPtrList_int____vtbl_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int*>::vtbl>");
 	return 1;
 }
 
@@ -5835,10 +5744,10 @@ static int tolua_get_CTypedPtrList_CPtrList_int__reference_m_nBlockSize(lua_Stat
 	return 1;
 }
 
-static int tolua_function_CTypedPtrList_CPtrList_int___CNode_getInternalReference(lua_State* L)
+static int tolua_function_CTypedPtrList_CPtrList_int__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int>::CNode>");
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int>>");
 	return 1;
 }
 
@@ -5914,10 +5823,17 @@ static int tolua_get_CTypedPtrList_CPtrList_int___CNode_reference_data(lua_State
 	return 1;
 }
 
-static int tolua_function_CAreaTintOverride_getInternalReference(lua_State* L)
+static int tolua_function_CTypedPtrList_CPtrList_int___CNode_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CAreaTintOverride>");
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int>::CNode>");
+	return 1;
+}
+
+static int tolua_function_CTypedPtrList_CPtrList_int___vtbl_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CTypedPtrList<CPtrList,int>::vtbl>");
 	return 1;
 }
 
@@ -6513,10 +6429,10 @@ static int tolua_get_CAreaTintOverride_spritesWithSuppressedTintsList(lua_State*
 	return 1;
 }
 
-static int tolua_function_CGameArea_getInternalReference(lua_State* L)
+static int tolua_function_CAreaTintOverride_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameArea>");
+	tolua_pushusertype(L, ptr, "Pointer<CAreaTintOverride>");
 	return 1;
 }
 
@@ -6776,10 +6692,10 @@ static int tolua_get_CGameArea_reference_mpSpawner(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CGameEffectList_getInternalReference(lua_State* L)
+static int tolua_function_CGameArea_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameEffectList>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameArea>");
 	return 1;
 }
 
@@ -6876,6 +6792,13 @@ static int tolua_get_CGameEffectList_reference_m_retry(lua_State* L)
 	CGameEffectList* self = (CGameEffectList*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffectList");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'm_retry'", NULL);
 	tolua_pushusertypepointer(L, (void*)&self->m_retry, "Pointer<int>");
+	return 1;
+}
+
+static int tolua_function_CGameEffectList_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CGameEffectList>");
 	return 1;
 }
 
@@ -7051,13 +6974,6 @@ static int tolua_function_Array_byte_5__set(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_LCharString_32__getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<LCharString<32>>");
-	return 1;
-}
-
 static int tolua_function_LCharString_32__getChar(lua_State* L)
 {
 	LCharString<32>* self = (LCharString<32>*)tolua_tousertype_dynamic(L, 1, 0, "LCharString<32>");
@@ -7091,10 +7007,10 @@ static int tolua_function_LCharString_32__get(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CResRef_getInternalReference(lua_State* L)
+static int tolua_function_LCharString_32__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CResRef>");
+	tolua_pushusertype(L, ptr, "Pointer<LCharString<32>>");
 	return 1;
 }
 
@@ -7130,10 +7046,10 @@ static int tolua_function_CResRef_copy(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_Item_effect_st_getInternalReference(lua_State* L)
+static int tolua_function_CResRef_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<Item_effect_st>");
+	tolua_pushusertype(L, ptr, "Pointer<CResRef>");
 	return 1;
 }
 
@@ -7481,10 +7397,10 @@ static int tolua_get_Item_effect_st_reference_special(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CResHelper_CResCell_1000__getInternalReference(lua_State* L)
+static int tolua_function_Item_effect_st_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CResHelper<CResCell,1000>>");
+	tolua_pushusertype(L, ptr, "Pointer<Item_effect_st>");
 	return 1;
 }
 
@@ -7520,10 +7436,10 @@ static int tolua_get_CResHelper_CResCell_1000__cResRef(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CVidCell_getInternalReference(lua_State* L)
+static int tolua_function_CResHelper_CResCell_1000__getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CVidCell>");
+	tolua_pushusertype(L, ptr, "Pointer<CResHelper<CResCell,1000>>");
 	return 1;
 }
 
@@ -7687,10 +7603,10 @@ static int tolua_get_CVidCell_reference_m_bShadowOn(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CInfGame_getInternalReference(lua_State* L)
+static int tolua_function_CVidCell_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CInfGame>");
+	tolua_pushusertype(L, ptr, "Pointer<CVidCell>");
 	return 1;
 }
 
@@ -8022,10 +7938,10 @@ static int tolua_get_CInfGame_reference_m_currAnimation(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CGameEffectBase_getInternalReference(lua_State* L)
+static int tolua_function_CInfGame_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameEffectBase>");
+	tolua_pushusertype(L, ptr, "Pointer<CInfGame>");
 	return 1;
 }
 
@@ -8485,10 +8401,10 @@ static int tolua_get_CGameEffectBase_m_pad(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CGameEffect_getInternalReference(lua_State* L)
+static int tolua_function_CGameEffectBase_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameEffect>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameEffectBase>");
 	return 1;
 }
 
@@ -8721,10 +8637,10 @@ static int tolua_get_reference_CGameEffect_DecodeEffect(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CDerivedStats_getInternalReference(lua_State* L)
+static int tolua_function_CGameEffect_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CDerivedStats>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameEffect>");
 	return 1;
 }
 
@@ -8864,10 +8780,10 @@ static int tolua_get_CDerivedStats_m_spellStates(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CAreaVariable_getInternalReference(lua_State* L)
+static int tolua_function_CDerivedStats_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CAreaVariable>");
+	tolua_pushusertype(L, ptr, "Pointer<CDerivedStats>");
 	return 1;
 }
 
@@ -8991,17 +8907,17 @@ static int tolua_get_CAreaVariable_m_stringValue(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_CAreaVariable_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CAreaVariable>");
+	return 1;
+}
+
 static int tolua_function_CVariable_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
 	tolua_pushusertype(L, ptr, "Pointer<CVariable>");
-	return 1;
-}
-
-static int tolua_function_CAIObjectType_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CAIObjectType>");
 	return 1;
 }
 
@@ -9213,10 +9129,10 @@ static int tolua_get_CAIObjectType_reference_m_Alignment(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CGameObject_getInternalReference(lua_State* L)
+static int tolua_function_CAIObjectType_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameObject>");
+	tolua_pushusertype(L, ptr, "Pointer<CAIObjectType>");
 	return 1;
 }
 
@@ -9728,10 +9644,10 @@ static int tolua_function_CGameObject_virtual_EvaluateStatusTrigger(lua_State* L
 	return 1;
 }
 
-static int tolua_function_CGameObject__vtbl_getInternalReference(lua_State* L)
+static int tolua_function_CGameObject_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameObject::vtbl>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameObject>");
 	return 1;
 }
 
@@ -9975,10 +9891,10 @@ static int tolua_set_CGameObject__vtbl_EvaluateStatusTrigger(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_CProjectile_getInternalReference(lua_State* L)
+static int tolua_function_CGameObject__vtbl_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CProjectile>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameObject::vtbl>");
 	return 1;
 }
 
@@ -10467,10 +10383,17 @@ static int tolua_get_reference_CProjectile_DecodeProjectile(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CProjectileBAM_getInternalReference(lua_State* L)
+static int tolua_function_CProjectile_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CProjectileBAM>");
+	tolua_pushusertype(L, ptr, "Pointer<CProjectile>");
+	return 1;
+}
+
+static int tolua_function_CProjectile__vtbl_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CProjectile::vtbl>");
 	return 1;
 }
 
@@ -10858,10 +10781,17 @@ static int tolua_get_CProjectileBAM_reference_nDelayedRemoveCounter(lua_State* L
 	return 1;
 }
 
-static int tolua_function_CProjectileArea_getInternalReference(lua_State* L)
+static int tolua_function_CProjectileBAM_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CProjectileArea>");
+	tolua_pushusertype(L, ptr, "Pointer<CProjectileBAM>");
+	return 1;
+}
+
+static int tolua_function_CProjectileBAM__vtbl_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CProjectileBAM::vtbl>");
 	return 1;
 }
 
@@ -10889,10 +10819,10 @@ static int tolua_get_CProjectileArea_reference_m_coneSize(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CProjectileUnknownPST_getInternalReference(lua_State* L)
+static int tolua_function_CProjectileArea_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CProjectileUnknownPST>");
+	tolua_pushusertype(L, ptr, "Pointer<CProjectileArea>");
 	return 1;
 }
 
@@ -11040,10 +10970,17 @@ static int tolua_get_CProjectileUnknownPST_reference_bDelayedRemoveScheduled(lua
 	return 1;
 }
 
-static int tolua_function_CProjectileUnknownPST2_getInternalReference(lua_State* L)
+static int tolua_function_CProjectileUnknownPST_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CProjectileUnknownPST2>");
+	tolua_pushusertype(L, ptr, "Pointer<CProjectileUnknownPST>");
+	return 1;
+}
+
+static int tolua_function_CProjectileUnknownPST__vtbl_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CProjectileUnknownPST::vtbl>");
 	return 1;
 }
 
@@ -11095,17 +11032,10 @@ static int tolua_get_CProjectileUnknownPST2_reference_nTypePST(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CProjectileUnknownBase_getInternalReference(lua_State* L)
+static int tolua_function_CProjectileUnknownPST2_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CProjectileUnknownBase>");
-	return 1;
-}
-
-static int tolua_function_CProjectile205_getInternalReference(lua_State* L)
-{
-	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CProjectile205>");
+	tolua_pushusertype(L, ptr, "Pointer<CProjectileUnknownPST2>");
 	return 1;
 }
 
@@ -11133,10 +11063,10 @@ static int tolua_get_CProjectile205_reference_bHitTarget(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CAITrigger_getInternalReference(lua_State* L)
+static int tolua_function_CProjectile205_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CAITrigger>");
+	tolua_pushusertype(L, ptr, "Pointer<CProjectile205>");
 	return 1;
 }
 
@@ -11284,10 +11214,10 @@ static int tolua_get_CAITrigger_m_string2(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CMessageSetTrigger_getInternalReference(lua_State* L)
+static int tolua_function_CAITrigger_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CMessageSetTrigger>");
+	tolua_pushusertype(L, ptr, "Pointer<CAITrigger>");
 	return 1;
 }
 
@@ -11299,10 +11229,10 @@ static int tolua_get_CMessageSetTrigger_m_trigger(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_CGameAIBase_getInternalReference(lua_State* L)
+static int tolua_function_CMessageSetTrigger_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameAIBase>");
+	tolua_pushusertype(L, ptr, "Pointer<CMessageSetTrigger>");
 	return 1;
 }
 
@@ -11492,10 +11422,10 @@ static int tolua_function_CGameAIBase_virtual_AddEffect(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_CGameAIBase__vtbl_getInternalReference(lua_State* L)
+static int tolua_function_CGameAIBase_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameAIBase::vtbl>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameAIBase>");
 	return 1;
 }
 
@@ -11559,10 +11489,10 @@ static int tolua_set_CGameAIBase__vtbl_AddEffect(lua_State* L)
 	return 0;
 }
 
-static int tolua_function_CGameSprite_getInternalReference(lua_State* L)
+static int tolua_function_CGameAIBase__vtbl_getInternalReference(lua_State* L)
 {
 	void** ptr = (void**)lua_touserdata(L, 1);
-	tolua_pushusertype(L, ptr, "Pointer<CGameSprite>");
+	tolua_pushusertype(L, ptr, "Pointer<CGameAIBase::vtbl>");
 	return 1;
 }
 
@@ -12422,55 +12352,40 @@ static int tolua_get_CGameSprite_reference_nOverTriggerId(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_CGameSprite_getInternalReference(lua_State* L)
+{
+	void** ptr = (void**)lua_touserdata(L, 1);
+	tolua_pushusertype(L, ptr, "Pointer<CGameSprite>");
+	return 1;
+}
+
 static void tolua_reg_types(lua_State* L)
 {
 	tolua_usertype(L, "CAIAction");
 	tolua_usertype(L, "CGameAnimation");
-	tolua_usertype(L, "CGameAnimationType");
-	tolua_usertype(L, "CPersistantEffectColorEffect");
-	tolua_usertype(L, "CPlanescape");
 	tolua_usertype(L, "CPtrList_CNode");
 	tolua_usertype(L, "CResCell");
-	tolua_usertype(L, "EEex_CScreenWorld");
-	tolua_usertype(L, "CSound");
-	tolua_usertype(L, "CSoundImp");
-	tolua_usertype(L, "CVidImage");
 	tolua_usertype(L, "CVideo");
 	tolua_usertype(L, "EngineGlobals");
 	tolua_usertype(L, "VoidPointer");
 	tolua_usertype(L, "__POSITION");
-	tolua_usertype(L, "__int32");
 	tolua_usertype(L, "DrawFeature");
-	tolua_usertype(L, "__int8");
 	tolua_usertype(L, "VertListType");
 	tolua_usertype(L, "CGameObjectType");
-	tolua_usertype(L, "byte");
 	tolua_usertype(L, "EEex_CTimerWorld");
-	tolua_usertype(L, "char");
-	tolua_usertype(L, "double");
-	tolua_usertype(L, "float");
-	tolua_usertype(L, "int");
 	tolua_usertype(L, "CRect");
 	tolua_usertype(L, "CPtrList");
 	tolua_usertype(L, "CPoint");
 	tolua_usertype(L, "CGameObjectArray");
 	tolua_usertype(L, "EEex_CBaldurChitin");
-	tolua_usertype(L, "long");
 	tolua_usertype(L, "CMessage");
 	tolua_usertype(L, "CMessageVisualEffect");
 	tolua_usertype(L, "CMessageAddEffect");
-	tolua_usertype(L, "short");
-	tolua_usertype(L, "size_t");
-	tolua_usertype(L, "uint");
-	tolua_usertype(L, "CVidMode");
 	tolua_usertype(L, "CInfinity");
-	tolua_usertype(L, "uintptr_t");
 	tolua_usertype(L, "UnmappedUserType");
-	tolua_usertype(L, "ushort");
 	tolua_usertype(L, "CGameTrigger");
 	tolua_usertype(L, "CGameDoor");
 	tolua_usertype(L, "CGameContainer");
-	tolua_usertype(L, "void");
 	tolua_usertype(L, "Pointer<EEex_CBaldurChitin>");
 	tolua_usertype(L, "Pointer<CObject>");
 	tolua_usertype(L, "Pointer<CGameObject>");
@@ -12576,6 +12491,8 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "Pointer<CDerivedStats>");
 	tolua_usertype(L, "Pointer<CAreaVariable>");
 	tolua_usertype(L, "Pointer<CAIObjectType>");
+	tolua_usertype(L, "Pointer<CProjectile::vtbl>");
+	tolua_usertype(L, "Pointer<CProjectileBAM::vtbl>");
 	tolua_usertype(L, "Pointer<CProjectileBAM>");
 	tolua_usertype(L, "Pointer<CProjectileUnknownPST>");
 	tolua_usertype(L, "Pointer<CProjectileUnknownPST2**>");
@@ -12587,12 +12504,16 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CObject::vtbl");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,long>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,long>::CNode");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,long>::vtbl");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CGameEffect*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CGameEffect*>::CNode");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,CGameEffect*>::vtbl");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,int*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,int*>::CNode");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,int*>::vtbl");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,int>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,int>::CNode");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,int>::vtbl");
 	tolua_usertype(L, "CAreaTintOverride");
 	tolua_usertype(L, "CGameArea");
 	tolua_usertype(L, "CGameEffectList");
@@ -12619,11 +12540,13 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CGameObject");
 	tolua_usertype(L, "CGameObject::vtbl");
 	tolua_usertype(L, "CProjectile");
+	tolua_usertype(L, "CProjectile::vtbl");
 	tolua_usertype(L, "CProjectileBAM");
+	tolua_usertype(L, "CProjectileBAM::vtbl");
 	tolua_usertype(L, "CProjectileArea");
 	tolua_usertype(L, "CProjectileUnknownPST");
+	tolua_usertype(L, "CProjectileUnknownPST::vtbl");
 	tolua_usertype(L, "CProjectileUnknownPST2");
-	tolua_usertype(L, "CProjectileUnknownBase");
 	tolua_usertype(L, "CProjectile205");
 	tolua_usertype(L, "CAITrigger");
 	tolua_usertype(L, "CMessageSetTrigger");
@@ -12632,7 +12555,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CGameSprite");
 }
 
-int tolua_EEexLua_open(lua_State* L)
+int OpenBindings(lua_State* L)
 {
 	tolua_open(L);
 	tolua_reg_types(L);
@@ -12650,21 +12573,6 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function_CGameAnimation_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CGameAnimation));
 	tolua_endmodule(L);
-	tolua_cclass(L, "CGameAnimationType", "CGameAnimationType", {}, NULL);
-	tolua_beginmodule(L, "CGameAnimationType");
-		tolua_function(L, "getInternalReference", &tolua_function_CGameAnimationType_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(CGameAnimationType));
-	tolua_endmodule(L);
-	tolua_cclass(L, "CPersistantEffectColorEffect", "CPersistantEffectColorEffect", {}, NULL);
-	tolua_beginmodule(L, "CPersistantEffectColorEffect");
-		tolua_function(L, "getInternalReference", &tolua_function_CPersistantEffectColorEffect_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(CPersistantEffectColorEffect));
-	tolua_endmodule(L);
-	tolua_cclass(L, "CPlanescape", "CPlanescape", {}, NULL);
-	tolua_beginmodule(L, "CPlanescape");
-		tolua_function(L, "getInternalReference", &tolua_function_CPlanescape_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(CPlanescape));
-	tolua_endmodule(L);
 	tolua_cclass(L, "CPtrList_CNode", "CPtrList_CNode", {}, NULL);
 	tolua_beginmodule(L, "CPtrList_CNode");
 		tolua_variable(L, "pNext", tolua_get_CPtrList_CNode_pNext, tolua_set_CPtrList_CNode_pNext);
@@ -12680,26 +12588,6 @@ int tolua_EEexLua_open(lua_State* L)
 	tolua_beginmodule(L, "CResCell");
 		tolua_function(L, "getInternalReference", &tolua_function_CResCell_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CResCell));
-	tolua_endmodule(L);
-	tolua_cclass(L, "EEex_CScreenWorld", "EEex_CScreenWorld", {}, NULL);
-	tolua_beginmodule(L, "EEex_CScreenWorld");
-		tolua_function(L, "getInternalReference", &tolua_function_CScreenWorld_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(CScreenWorld));
-	tolua_endmodule(L);
-	tolua_cclass(L, "CSound", "CSound", {}, NULL);
-	tolua_beginmodule(L, "CSound");
-		tolua_function(L, "getInternalReference", &tolua_function_CSound_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(CSound));
-	tolua_endmodule(L);
-	tolua_cclass(L, "CSoundImp", "CSoundImp", {}, NULL);
-	tolua_beginmodule(L, "CSoundImp");
-		tolua_function(L, "getInternalReference", &tolua_function_CSoundImp_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(CSoundImp));
-	tolua_endmodule(L);
-	tolua_cclass(L, "CVidImage", "CVidImage", {}, NULL);
-	tolua_beginmodule(L, "CVidImage");
-		tolua_function(L, "getInternalReference", &tolua_function_CVidImage_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(CVidImage));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CVideo", "CVideo", {}, NULL);
 	tolua_beginmodule(L, "CVideo");
@@ -12724,22 +12612,12 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function___POSITION_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(__POSITION));
 	tolua_endmodule(L);
-	tolua_cclass(L, "__int32", "__int32", {}, NULL);
-	tolua_beginmodule(L, "__int32");
-		tolua_function(L, "getInternalReference", &tolua_function___int32_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(__int32));
-	tolua_endmodule(L);
 	tolua_cclass(L, "DrawFeature", "DrawFeature", {"__int32"}, NULL);
 	tolua_beginmodule(L, "DrawFeature");
 		tolua_constant(L, "DRAW_BLEND", 12354);
 		tolua_constant(L, "DRAW_SCISSOR_TEST", 12425);
 		tolua_constant(L, "DRAW_RENDER_YUV", 12432);
 		tolua_constant(L, "DRAW_TEXTURE_2D", 13651);
-	tolua_endmodule(L);
-	tolua_cclass(L, "__int8", "__int8", {}, NULL);
-	tolua_beginmodule(L, "__int8");
-		tolua_function(L, "getInternalReference", &tolua_function___int8_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(__int8));
 	tolua_endmodule(L);
 	tolua_cclass(L, "VertListType", "VertListType", {"__int8"}, NULL);
 	tolua_beginmodule(L, "VertListType");
@@ -12766,11 +12644,6 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_constant(L, "FIREBALL", 112);
 		tolua_constant(L, "GAME_AI", 113);
 	tolua_endmodule(L);
-	tolua_cclass(L, "byte", "byte", {}, NULL);
-	tolua_beginmodule(L, "byte");
-		tolua_function(L, "getInternalReference", &tolua_function_byte_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(byte));
-	tolua_endmodule(L);
 	tolua_cclass(L, "EEex_CTimerWorld", "EEex_CTimerWorld", {}, NULL);
 	tolua_beginmodule(L, "EEex_CTimerWorld");
 		tolua_variable(L, "m_gameTime", tolua_get_CTimerWorld_m_gameTime, NULL);
@@ -12780,26 +12653,6 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "reference_m_nLastPercentage", tolua_get_CTimerWorld_reference_m_nLastPercentage, NULL);
 		tolua_function(L, "getInternalReference", &tolua_function_CTimerWorld_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CTimerWorld));
-	tolua_endmodule(L);
-	tolua_cclass(L, "char", "char", {}, NULL);
-	tolua_beginmodule(L, "char");
-		tolua_function(L, "getInternalReference", &tolua_function_char_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(char));
-	tolua_endmodule(L);
-	tolua_cclass(L, "double", "double", {}, NULL);
-	tolua_beginmodule(L, "double");
-		tolua_function(L, "getInternalReference", &tolua_function_double_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(double));
-	tolua_endmodule(L);
-	tolua_cclass(L, "float", "float", {}, NULL);
-	tolua_beginmodule(L, "float");
-		tolua_function(L, "getInternalReference", &tolua_function_float_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(float));
-	tolua_endmodule(L);
-	tolua_cclass(L, "int", "int", {}, NULL);
-	tolua_beginmodule(L, "int");
-		tolua_function(L, "getInternalReference", &tolua_function_int_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(int));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CRect", "CRect", {}, NULL);
 	tolua_beginmodule(L, "CRect");
@@ -12843,8 +12696,8 @@ int tolua_EEexLua_open(lua_State* L)
 	tolua_cclass(L, "CGameObjectArray", "CGameObjectArray", {}, NULL);
 	tolua_beginmodule(L, "CGameObjectArray");
 		tolua_variable(L, "reference_GetShare", tolua_get_reference_CGameObjectArray_GetShare, NULL);
-		tolua_function(L, "getInternalReference", &tolua_function_CGameObjectArray_getInternalReference);
 		tolua_function(L, "GetShare", &tolua_function_CGameObjectArray_GetShare);
+		tolua_function(L, "getInternalReference", &tolua_function_CGameObjectArray_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CGameObjectArray));
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex_CBaldurChitin", "EEex_CBaldurChitin", {}, NULL);
@@ -12866,11 +12719,6 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "reference_m_cMessageHandler", tolua_get_CBaldurChitin_reference_m_cMessageHandler, NULL);
 		tolua_function(L, "getInternalReference", &tolua_function_CBaldurChitin_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CBaldurChitin));
-	tolua_endmodule(L);
-	tolua_cclass(L, "long", "long", {}, NULL);
-	tolua_beginmodule(L, "long");
-		tolua_function(L, "getInternalReference", &tolua_function_long_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(long));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CMessage", "CMessage", {}, NULL);
 	tolua_beginmodule(L, "CMessage");
@@ -12899,26 +12747,6 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function_CMessageAddEffect_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CMessageAddEffect));
 	tolua_endmodule(L);
-	tolua_cclass(L, "short", "short", {}, NULL);
-	tolua_beginmodule(L, "short");
-		tolua_function(L, "getInternalReference", &tolua_function_short_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(short));
-	tolua_endmodule(L);
-	tolua_cclass(L, "size_t", "size_t", {}, NULL);
-	tolua_beginmodule(L, "size_t");
-		tolua_function(L, "getInternalReference", &tolua_function_size_t_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(size_t));
-	tolua_endmodule(L);
-	tolua_cclass(L, "uint", "uint", {}, NULL);
-	tolua_beginmodule(L, "uint");
-		tolua_function(L, "getInternalReference", &tolua_function_uint_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(uint));
-	tolua_endmodule(L);
-	tolua_cclass(L, "CVidMode", "CVidMode", {}, NULL);
-	tolua_beginmodule(L, "CVidMode");
-		tolua_function(L, "getInternalReference", &tolua_function_CVidMode_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(CVidMode));
-	tolua_endmodule(L);
 	tolua_cclass(L, "CInfinity", "CInfinity", {}, NULL);
 	tolua_beginmodule(L, "CInfinity");
 		tolua_variable(L, "rViewPortNotZoomed", tolua_get_CInfinity_rViewPortNotZoomed, NULL);
@@ -12944,21 +12772,11 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function_CInfinity_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CInfinity));
 	tolua_endmodule(L);
-	tolua_cclass(L, "uintptr_t", "uintptr_t", {}, NULL);
-	tolua_beginmodule(L, "uintptr_t");
-		tolua_function(L, "getInternalReference", &tolua_function_uintptr_t_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(uintptr_t));
-	tolua_endmodule(L);
 	tolua_cclass(L, "UnmappedUserType", "UnmappedUserType", {}, NULL);
 	tolua_beginmodule(L, "UnmappedUserType");
-		tolua_function(L, "getInternalReference", &tolua_function_UnmappedUserType_getInternalReference);
 		tolua_function(L, "toPointer", &tolua_function_UnmappedUserType_toPointer);
+		tolua_function(L, "getInternalReference", &tolua_function_UnmappedUserType_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(UnmappedUserType));
-	tolua_endmodule(L);
-	tolua_cclass(L, "ushort", "ushort", {}, NULL);
-	tolua_beginmodule(L, "ushort");
-		tolua_function(L, "getInternalReference", &tolua_function_ushort_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(ushort));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CGameTrigger", "CGameTrigger", {}, NULL);
 	tolua_beginmodule(L, "CGameTrigger");
@@ -12996,36 +12814,32 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function_CGameContainer_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CGameContainer));
 	tolua_endmodule(L);
-	tolua_cclass(L, "void", "void", {}, NULL);
-	tolua_beginmodule(L, "void");
-		tolua_function(L, "getInternalReference", &tolua_function_void_getInternalReference);
-	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<EEex_CBaldurChitin>", "Pointer<EEex_CBaldurChitin>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<EEex_CBaldurChitin>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CBaldurChitin__reference, tolua_set_Pointer_CBaldurChitin__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CBaldurChitin__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CBaldurChitin__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CBaldurChitin__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CBaldurChitin>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CObject>", "Pointer<CObject>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CObject>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CObject__reference, tolua_set_Pointer_CObject__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CObject__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CObject__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CObject__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CObject>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CGameObject>", "Pointer<CGameObject>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CGameObject>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CGameObject__reference, tolua_set_Pointer_CGameObject__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameObject__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CGameObject__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameObject__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CGameObject>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CGameArea>", "Pointer<CGameArea>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CGameArea>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CGameArea__reference, tolua_set_Pointer_CGameArea__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameArea__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CGameArea__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameArea__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CGameArea>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<const CPoint>", "Pointer<const CPoint>", {}, NULL);
@@ -13043,23 +12857,23 @@ int tolua_EEexLua_open(lua_State* L)
 	tolua_cclass(L, "Pointer<CPoint>", "Pointer<CPoint>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CPoint>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CPoint__reference, tolua_set_Pointer_CPoint__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CPoint__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CPoint__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CPoint__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CPoint>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CTypedPtrList<CPtrList,long>::CNode>", "Pointer<CTypedPtrList<CPtrList,long>::CNode>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CTypedPtrList<CPtrList,long>::CNode>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CTypedPtrList_CPtrList_long___CNode__reference, tolua_set_Pointer_CTypedPtrList_CPtrList_long___CNode__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CTypedPtrList_CPtrList_long___CNode__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CTypedPtrList_CPtrList_long___CNode__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CTypedPtrList_CPtrList_long___CNode__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CTypedPtrList<CPtrList,long>::CNode>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<unsigned int>", "Pointer<unsigned int>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<unsigned int>");
 		tolua_variable(L, "reference", tolua_get_Pointer_unsigned_int__reference, tolua_set_Pointer_unsigned_int__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_unsigned_int__getInternalReference);
 		tolua_function(L, "getValue", &tolua_function_Pointer_unsigned_int__getValue);
 		tolua_function(L, "setValue", &tolua_function_Pointer_unsigned_int__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_unsigned_int__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<unsigned int>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<const CString>", "Pointer<const CString>", {}, NULL);
@@ -13071,15 +12885,15 @@ int tolua_EEexLua_open(lua_State* L)
 	tolua_cclass(L, "Pointer<CVidMode>", "Pointer<CVidMode>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CVidMode>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CVidMode__reference, tolua_set_Pointer_CVidMode__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CVidMode__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CVidMode__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CVidMode__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CVidMode>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<__POSITION>", "Pointer<__POSITION>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<__POSITION>");
 		tolua_variable(L, "reference", tolua_get_Pointer___POSITION__reference, tolua_set_Pointer___POSITION__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer___POSITION__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer___POSITION__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer___POSITION__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<__POSITION>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<const CAITrigger>", "Pointer<const CAITrigger>", {}, NULL);
@@ -13091,8 +12905,8 @@ int tolua_EEexLua_open(lua_State* L)
 	tolua_cclass(L, "Pointer<CGameAIBase>", "Pointer<CGameAIBase>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CGameAIBase>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CGameAIBase__reference, tolua_set_Pointer_CGameAIBase__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameAIBase__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CGameAIBase__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameAIBase__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CGameAIBase>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<const CAIAction>", "Pointer<const CAIAction>", {}, NULL);
@@ -13104,108 +12918,108 @@ int tolua_EEexLua_open(lua_State* L)
 	tolua_cclass(L, "Pointer<CGameEffect>", "Pointer<CGameEffect>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CGameEffect>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CGameEffect__reference, tolua_set_Pointer_CGameEffect__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameEffect__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CGameEffect__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameEffect__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CGameEffect>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CResRef>", "Pointer<CResRef>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CResRef>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CResRef__reference, tolua_set_Pointer_CResRef__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CResRef__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CResRef__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CResRef__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CResRef>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CGameObject*>", "Pointer<CGameObject*>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CGameObject*>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CGameObject___reference, tolua_set_Pointer_CGameObject___reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameObject___getInternalReference);
 		tolua_function(L, "getValue", &tolua_function_Pointer_CGameObject___getValue);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CGameObject___setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameObject___getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CGameObject*>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<Item_effect_st>", "Pointer<Item_effect_st>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<Item_effect_st>");
 		tolua_variable(L, "reference", tolua_get_Pointer_Item_effect_st__reference, tolua_set_Pointer_Item_effect_st__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_Item_effect_st__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_Item_effect_st__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_Item_effect_st__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<Item_effect_st>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CProjectile>", "Pointer<CProjectile>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CProjectile>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CProjectile__reference, tolua_set_Pointer_CProjectile__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CProjectile__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CProjectile__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CProjectile__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CProjectile>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<EEex_CInfGame>", "Pointer<EEex_CInfGame>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<EEex_CInfGame>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CInfGame__reference, tolua_set_Pointer_CInfGame__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CInfGame__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CInfGame__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CInfGame__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CInfGame>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<EEex_CScreenWorld>", "Pointer<EEex_CScreenWorld>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<EEex_CScreenWorld>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CScreenWorld__reference, tolua_set_Pointer_CScreenWorld__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CScreenWorld__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CScreenWorld__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CScreenWorld__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CScreenWorld>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CGameAnimationType>", "Pointer<CGameAnimationType>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CGameAnimationType>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CGameAnimationType__reference, tolua_set_Pointer_CGameAnimationType__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameAnimationType__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CGameAnimationType__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CGameAnimationType__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CGameAnimationType>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CProjectileUnknownPST2>", "Pointer<CProjectileUnknownPST2>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CProjectileUnknownPST2>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CProjectileUnknownPST2__reference, tolua_set_Pointer_CProjectileUnknownPST2__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CProjectileUnknownPST2__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CProjectileUnknownPST2__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CProjectileUnknownPST2__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CProjectileUnknownPST2>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CInfinity>", "Pointer<CInfinity>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CInfinity>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CInfinity__reference, tolua_set_Pointer_CInfinity__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CInfinity__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CInfinity__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CInfinity__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CInfinity>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CVidCell>", "Pointer<CVidCell>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CVidCell>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CVidCell__reference, tolua_set_Pointer_CVidCell__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CVidCell__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CVidCell__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CVidCell__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CVidCell>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CPtrList_CNode>", "Pointer<CPtrList_CNode>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CPtrList_CNode>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CPtrList_CNode__reference, tolua_set_Pointer_CPtrList_CNode__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CPtrList_CNode__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CPtrList_CNode__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CPtrList_CNode__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CPtrList_CNode>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<int>", "Pointer<int>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<int>");
 		tolua_variable(L, "reference", tolua_get_Pointer_int__reference, tolua_set_Pointer_int__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_int__getInternalReference);
 		tolua_function(L, "getValue", &tolua_function_Pointer_int__getValue);
 		tolua_function(L, "setValue", &tolua_function_Pointer_int__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_int__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<int>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CSoundImp>", "Pointer<CSoundImp>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CSoundImp>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CSoundImp__reference, tolua_set_Pointer_CSoundImp__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CSoundImp__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CSoundImp__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CSoundImp__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CSoundImp>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CAreaTintOverride>", "Pointer<CAreaTintOverride>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CAreaTintOverride>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CAreaTintOverride__reference, tolua_set_Pointer_CAreaTintOverride__reference);
-		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CAreaTintOverride__getInternalReference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_CAreaTintOverride__setValue);
+		tolua_function(L, "getInternalReference", &tolua_function_Pointer_CAreaTintOverride__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CAreaTintOverride>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<EEex_CBaldurChitin*>", "Pointer<EEex_CBaldurChitin*>", {}, NULL);
@@ -13702,6 +13516,18 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "setValue", &tolua_function_Pointer_CAIObjectType__setValue);
 		tolua_constant(L, "sizeof", sizeof(Pointer<CAIObjectType>));
 	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<CProjectile::vtbl>", "Pointer<CProjectile::vtbl>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<CProjectile::vtbl>");
+		tolua_variable(L, "reference", tolua_get_Pointer_CProjectile__vtbl__reference, tolua_set_Pointer_CProjectile__vtbl__reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_CProjectile__vtbl__setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<CProjectile::vtbl>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<CProjectileBAM::vtbl>", "Pointer<CProjectileBAM::vtbl>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<CProjectileBAM::vtbl>");
+		tolua_variable(L, "reference", tolua_get_Pointer_CProjectileBAM__vtbl__reference, tolua_set_Pointer_CProjectileBAM__vtbl__reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_CProjectileBAM__vtbl__setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<CProjectileBAM::vtbl>));
+	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<CProjectileBAM>", "Pointer<CProjectileBAM>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<CProjectileBAM>");
 		tolua_variable(L, "reference", tolua_get_Pointer_CProjectileBAM__reference, tolua_set_Pointer_CProjectileBAM__reference);
@@ -13756,8 +13582,8 @@ int tolua_EEexLua_open(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CObject", "CObject", {}, NULL);
 	tolua_beginmodule(L, "CObject");
-		tolua_function(L, "getInternalReference", &tolua_function_CObject_getInternalReference);
 		tolua_function(L, "virtual_Destruct", &tolua_function_CObject_virtual_Destruct);
+		tolua_function(L, "getInternalReference", &tolua_function_CObject_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CObject));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CObject::vtbl", "CObject::vtbl", {}, NULL);
@@ -13794,6 +13620,11 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function_CTypedPtrList_CPtrList_long___CNode_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CTypedPtrList<CPtrList,long>::CNode));
 	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,long>::vtbl", "CTypedPtrList<CPtrList,long>::vtbl", {"CObject::vtbl"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,long>::vtbl");
+		tolua_function(L, "getInternalReference", &tolua_function_CTypedPtrList_CPtrList_long___vtbl_getInternalReference);
+		tolua_constant(L, "sizeof", sizeof(CTypedPtrList<CPtrList,long>::vtbl));
+	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CGameEffect*>", "CTypedPtrList<CPtrList,CGameEffect*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CGameEffect*>");
 		tolua_variable(L, "m_pNodeHead", tolua_get_CTypedPtrList_CPtrList_CGameEffect___m_pNodeHead, tolua_set_CTypedPtrList_CPtrList_CGameEffect___m_pNodeHead);
@@ -13821,6 +13652,11 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "reference_data", tolua_get_CTypedPtrList_CPtrList_CGameEffect____CNode_reference_data, NULL);
 		tolua_function(L, "getInternalReference", &tolua_function_CTypedPtrList_CPtrList_CGameEffect____CNode_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CTypedPtrList<CPtrList,CGameEffect*>::CNode));
+	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,CGameEffect*>::vtbl", "CTypedPtrList<CPtrList,CGameEffect*>::vtbl", {"CObject::vtbl"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CGameEffect*>::vtbl");
+		tolua_function(L, "getInternalReference", &tolua_function_CTypedPtrList_CPtrList_CGameEffect____vtbl_getInternalReference);
+		tolua_constant(L, "sizeof", sizeof(CTypedPtrList<CPtrList,CGameEffect*>::vtbl));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,int*>", "CTypedPtrList<CPtrList,int*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,int*>");
@@ -13850,6 +13686,11 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function_CTypedPtrList_CPtrList_int____CNode_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CTypedPtrList<CPtrList,int*>::CNode));
 	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,int*>::vtbl", "CTypedPtrList<CPtrList,int*>::vtbl", {"CObject::vtbl"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,int*>::vtbl");
+		tolua_function(L, "getInternalReference", &tolua_function_CTypedPtrList_CPtrList_int____vtbl_getInternalReference);
+		tolua_constant(L, "sizeof", sizeof(CTypedPtrList<CPtrList,int*>::vtbl));
+	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,int>", "CTypedPtrList<CPtrList,int>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,int>");
 		tolua_variable(L, "m_pNodeHead", tolua_get_CTypedPtrList_CPtrList_int__m_pNodeHead, tolua_set_CTypedPtrList_CPtrList_int__m_pNodeHead);
@@ -13877,6 +13718,11 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "reference_data", tolua_get_CTypedPtrList_CPtrList_int___CNode_reference_data, NULL);
 		tolua_function(L, "getInternalReference", &tolua_function_CTypedPtrList_CPtrList_int___CNode_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CTypedPtrList<CPtrList,int>::CNode));
+	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,int>::vtbl", "CTypedPtrList<CPtrList,int>::vtbl", {"CObject::vtbl"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,int>::vtbl");
+		tolua_function(L, "getInternalReference", &tolua_function_CTypedPtrList_CPtrList_int___vtbl_getInternalReference);
+		tolua_constant(L, "sizeof", sizeof(CTypedPtrList<CPtrList,int>::vtbl));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CAreaTintOverride", "CAreaTintOverride", {}, NULL);
 	tolua_beginmodule(L, "CAreaTintOverride");
@@ -14027,20 +13873,20 @@ int tolua_EEexLua_open(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "LCharString<32>", "LCharString<32>", {}, NULL);
 	tolua_beginmodule(L, "LCharString<32>");
-		tolua_function(L, "getInternalReference", &tolua_function_LCharString_32__getInternalReference);
 		tolua_function(L, "getChar", &tolua_function_LCharString_32__getChar);
 		tolua_function(L, "setChar", &tolua_function_LCharString_32__setChar);
 		tolua_function(L, "set", &tolua_function_LCharString_32__set);
 		tolua_function(L, "get", &tolua_function_LCharString_32__get);
+		tolua_function(L, "getInternalReference", &tolua_function_LCharString_32__getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(LCharString<32>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CResRef", "CResRef", {}, NULL);
 	tolua_beginmodule(L, "CResRef");
 		tolua_variable(L, "m_resRef", tolua_get_CResRef_m_resRef, NULL);
-		tolua_function(L, "getInternalReference", &tolua_function_CResRef_getInternalReference);
 		tolua_function(L, "get", &tolua_function_CResRef_get);
 		tolua_function(L, "set", &tolua_function_CResRef_set);
 		tolua_function(L, "copy", &tolua_function_CResRef_copy);
+		tolua_function(L, "getInternalReference", &tolua_function_CResRef_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CResRef));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Item_effect_st", "Item_effect_st", {}, NULL);
@@ -14213,8 +14059,8 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "reference_m_sourceTarget", tolua_get_CGameEffect_reference_m_sourceTarget, NULL);
 		tolua_variable(L, "unknownResRef", tolua_get_CGameEffect_unknownResRef, NULL);
 		tolua_variable(L, "reference_DecodeEffect", tolua_get_reference_CGameEffect_DecodeEffect, NULL);
-		tolua_function(L, "getInternalReference", &tolua_function_CGameEffect_getInternalReference);
 		tolua_function(L, "DecodeEffect", &tolua_function_CGameEffect_DecodeEffect);
+		tolua_function(L, "getInternalReference", &tolua_function_CGameEffect_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CGameEffect));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CDerivedStats", "CDerivedStats", {}, NULL);
@@ -14306,7 +14152,6 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "reference_m_bLocalControl", tolua_get_CGameObject_reference_m_bLocalControl, NULL);
 		tolua_variable(L, "m_AIInhibitor", tolua_get_CGameObject_m_AIInhibitor, tolua_set_CGameObject_m_AIInhibitor);
 		tolua_variable(L, "reference_m_AIInhibitor", tolua_get_CGameObject_reference_m_AIInhibitor, NULL);
-		tolua_function(L, "getInternalReference", &tolua_function_CGameObject_getInternalReference);
 		tolua_function(L, "virtual_GetObjectType", &tolua_function_CGameObject_virtual_GetObjectType);
 		tolua_function(L, "virtual_AddToArea", &tolua_function_CGameObject_virtual_AddToArea);
 		tolua_function(L, "virtual_AIUpdate", &tolua_function_CGameObject_virtual_AIUpdate);
@@ -14331,6 +14176,7 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "virtual_SetTarget", &tolua_function_CGameObject_virtual_SetTarget);
 		tolua_function(L, "virtual_SetVertListPos", &tolua_function_CGameObject_virtual_SetVertListPos);
 		tolua_function(L, "virtual_EvaluateStatusTrigger", &tolua_function_CGameObject_virtual_EvaluateStatusTrigger);
+		tolua_function(L, "getInternalReference", &tolua_function_CGameObject_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CGameObject));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CGameObject::vtbl", "CGameObject::vtbl", {"CObject::vtbl"}, NULL);
@@ -14407,9 +14253,14 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "unknown2", tolua_get_CProjectile_unknown2, tolua_set_CProjectile_unknown2);
 		tolua_variable(L, "reference_unknown2", tolua_get_CProjectile_reference_unknown2, NULL);
 		tolua_variable(L, "reference_DecodeProjectile", tolua_get_reference_CProjectile_DecodeProjectile, NULL);
-		tolua_function(L, "getInternalReference", &tolua_function_CProjectile_getInternalReference);
 		tolua_function(L, "DecodeProjectile", &tolua_function_CProjectile_DecodeProjectile);
+		tolua_function(L, "getInternalReference", &tolua_function_CProjectile_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CProjectile));
+	tolua_endmodule(L);
+	tolua_cclass(L, "CProjectile::vtbl", "CProjectile::vtbl", {"CGameObject::vtbl"}, NULL);
+	tolua_beginmodule(L, "CProjectile::vtbl");
+		tolua_function(L, "getInternalReference", &tolua_function_CProjectile__vtbl_getInternalReference);
+		tolua_constant(L, "sizeof", sizeof(CProjectile::vtbl));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CProjectileBAM", "CProjectileBAM", {"CProjectile"}, NULL);
 	tolua_beginmodule(L, "CProjectileBAM");
@@ -14449,6 +14300,11 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function_CProjectileBAM_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CProjectileBAM));
 	tolua_endmodule(L);
+	tolua_cclass(L, "CProjectileBAM::vtbl", "CProjectileBAM::vtbl", {"CProjectile::vtbl"}, NULL);
+	tolua_beginmodule(L, "CProjectileBAM::vtbl");
+		tolua_function(L, "getInternalReference", &tolua_function_CProjectileBAM__vtbl_getInternalReference);
+		tolua_constant(L, "sizeof", sizeof(CProjectileBAM::vtbl));
+	tolua_endmodule(L);
 	tolua_cclass(L, "CProjectileArea", "CProjectileArea", {"CProjectileBAM"}, NULL);
 	tolua_beginmodule(L, "CProjectileArea");
 		tolua_variable(L, "m_coneSize", tolua_get_CProjectileArea_m_coneSize, tolua_set_CProjectileArea_m_coneSize);
@@ -14473,6 +14329,11 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_function(L, "getInternalReference", &tolua_function_CProjectileUnknownPST_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CProjectileUnknownPST));
 	tolua_endmodule(L);
+	tolua_cclass(L, "CProjectileUnknownPST::vtbl", "CProjectileUnknownPST::vtbl", {"CProjectileBAM::vtbl"}, NULL);
+	tolua_beginmodule(L, "CProjectileUnknownPST::vtbl");
+		tolua_function(L, "getInternalReference", &tolua_function_CProjectileUnknownPST__vtbl_getInternalReference);
+		tolua_constant(L, "sizeof", sizeof(CProjectileUnknownPST::vtbl));
+	tolua_endmodule(L);
 	tolua_cclass(L, "CProjectileUnknownPST2", "CProjectileUnknownPST2", {"CProjectileUnknownPST"}, NULL);
 	tolua_beginmodule(L, "CProjectileUnknownPST2");
 		tolua_variable(L, "bRemoveOnNextUpdate", tolua_get_CProjectileUnknownPST2_bRemoveOnNextUpdate, tolua_set_CProjectileUnknownPST2_bRemoveOnNextUpdate);
@@ -14481,11 +14342,6 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "reference_nTypePST", tolua_get_CProjectileUnknownPST2_reference_nTypePST, NULL);
 		tolua_function(L, "getInternalReference", &tolua_function_CProjectileUnknownPST2_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CProjectileUnknownPST2));
-	tolua_endmodule(L);
-	tolua_cclass(L, "CProjectileUnknownBase", "CProjectileUnknownBase", {"CProjectileBAM"}, NULL);
-	tolua_beginmodule(L, "CProjectileUnknownBase");
-		tolua_function(L, "getInternalReference", &tolua_function_CProjectileUnknownBase_getInternalReference);
-		tolua_constant(L, "sizeof", sizeof(CProjectileUnknownBase));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CProjectile205", "CProjectile205", {"CProjectileUnknownBase"}, NULL);
 	tolua_beginmodule(L, "CProjectile205");
@@ -14534,13 +14390,13 @@ int tolua_EEexLua_open(lua_State* L)
 		tolua_variable(L, "m_actionCount", tolua_get_CGameAIBase_m_actionCount, tolua_set_CGameAIBase_m_actionCount);
 		tolua_variable(L, "reference_m_actionCount", tolua_get_CGameAIBase_reference_m_actionCount, NULL);
 		tolua_variable(L, "triggerOverride", tolua_get_CGameAIBase_triggerOverride, NULL);
-		tolua_function(L, "getInternalReference", &tolua_function_CGameAIBase_getInternalReference);
 		tolua_function(L, "virtual_ClearActions", &tolua_function_CGameAIBase_virtual_ClearActions);
 		tolua_function(L, "virtual_FloatMessage", &tolua_function_CGameAIBase_virtual_FloatMessage);
 		tolua_function(L, "virtual_KillFloatMessage", &tolua_function_CGameAIBase_virtual_KillFloatMessage);
 		tolua_function(L, "virtual_UpdateTarget", &tolua_function_CGameAIBase_virtual_UpdateTarget);
 		tolua_function(L, "virtual_AddAction", &tolua_function_CGameAIBase_virtual_AddAction);
 		tolua_function(L, "virtual_AddEffect", &tolua_function_CGameAIBase_virtual_AddEffect);
+		tolua_function(L, "getInternalReference", &tolua_function_CGameAIBase_getInternalReference);
 		tolua_constant(L, "sizeof", sizeof(CGameAIBase));
 	tolua_endmodule(L);
 	tolua_cclass(L, "CGameAIBase::vtbl", "CGameAIBase::vtbl", {"CGameObject::vtbl"}, NULL);

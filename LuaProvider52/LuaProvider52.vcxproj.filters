@@ -51,6 +51,12 @@
     <ClInclude Include="header\LuaProvider52\lua_implementation.h">
       <Filter>Header Files\LuaProvider52</Filter>
     </ClInclude>
+    <ClInclude Include="header\LuaProvider52\lua_implementation_x32.h">
+      <Filter>Header Files\LuaProvider52</Filter>
+    </ClInclude>
+    <ClInclude Include="header\LuaProvider52\lua_implementation_x64.h">
+      <Filter>Header Files\LuaProvider52</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\LuaProvider52\lua_pointers.cpp">

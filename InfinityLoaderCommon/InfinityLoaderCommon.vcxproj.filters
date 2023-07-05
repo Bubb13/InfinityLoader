@@ -29,11 +29,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="COPY_TO_COMMON.ps1">
-      <Filter>Build Tasks</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="headers\common\lua_provider_api.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
@@ -105,5 +100,10 @@
     <ClCompile Include="source\InfinityLoaderCommon\shared_state.cpp">
       <Filter>Source Files\InfinityLoaderCommon</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="COPY_TO_GAME.ps1">
+      <Filter>Build Tasks</Filter>
+    </None>
   </ItemGroup>
 </Project>

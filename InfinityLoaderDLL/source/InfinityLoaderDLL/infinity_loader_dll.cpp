@@ -754,7 +754,7 @@ int getLuaLibraryProcLua(lua_State* L) {
 }
 
 int getMicrosecondsLua(lua_State* L) {
-	lua_pushinteger(L, CurrentMicroseconds() - initTime());
+	lua_pushinteger(L, static_cast<lua_Integer>(CurrentMicroseconds() - initTime()));
 	return 1;
 }
 
@@ -1634,7 +1634,9 @@ void delayedMainCall() {
 	TryRet( detatchFromConsole() )
 }
 
-void writeCallHookProcAfterCall(AssemblyWriter& writer, uintptr_t curAllocatedPtr, uintptr_t patchAddress, void* targetProc) {
+void writeCallHookProcAfterCall(AssemblyWriter& writer, uintptr_t& curAllocatedPtr, uintptr_t patchAddress, void* targetProc) {
+
+	// curAllocatedPtr keeps track of the current address in the VirtualAlloc()'d patch space
 
 	__int32 relativeAmount = *reinterpret_cast<__int32*>(patchAddress + 1);
 	uintptr_t target = patchAddress + 5 + relativeAmount;
@@ -1654,9 +1656,13 @@ void writeCallHookProcAfterCall(AssemblyWriter& writer, uintptr_t curAllocatedPt
 	writer.PopVolatileRegisters();
 	writer.JmpToAddress(patchAddress + 5);
 	writer.Flush();
+
+	curAllocatedPtr = writer.GetCurrentLocation();
 }
 
-DWORD writeInternalPatch(AssemblyWriter& writer, uintptr_t curAllocatedPtr, void(*funcPtr)()) {
+DWORD writeInternalPatch(AssemblyWriter& writer, uintptr_t& curAllocatedPtr, void(*funcPtr)()) {
+
+	// curAllocatedPtr keeps track of the current address in the VirtualAlloc()'d patch space
 
 	void* sectionPtr;
 	DWORD sectionSize;
@@ -1856,7 +1862,8 @@ int exceptionFilterIgnoreIfSubsequent(unsigned int code, _EXCEPTION_POINTERS* po
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-void Init(HANDLE mappedMemoryHandle) {
+// Don't remove __stdcall - the patch that calls this function assumes the stack gets cleaned up
+void __stdcall Init(HANDLE mappedMemoryHandle) {
 
 	unsigned int exitCode = 0;
 

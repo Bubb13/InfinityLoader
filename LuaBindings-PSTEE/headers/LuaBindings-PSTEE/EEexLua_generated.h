@@ -1,6 +1,7 @@
 
 #pragma once
 
-#include "lua/lua.h"
+#include "lua_provider_api.h"
 
-int tolua_EEexLua_open(lua_State* L);
+void InitGenerated();
+int OpenBindings(lua_State* L);

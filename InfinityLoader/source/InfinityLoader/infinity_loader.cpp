@@ -162,7 +162,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 #if defined(_WIN64)
 	writer.WriteBytesToBuffer(3, 0x48, 0x89, 0xC1); // mov rcx,rax
 #else
-	writer.writeBytesToBuffer(1, 0x50); // push rax
+	writer.WriteBytesToBuffer(1, 0x50); // push rax
 #endif
 
 	writer.CallToAddressFar(reinterpret_cast<uintptr_t>(GetProcAddress));

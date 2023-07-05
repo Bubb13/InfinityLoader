@@ -24,7 +24,11 @@ DWORD SharedStateMappedMemory::Create(HANDLE& mappedMemoryHandleOut, SharedState
 				INVALID_HANDLE_VALUE,
 				0,                    // Default security
 				PAGE_READWRITE,
+#ifdef _WIN64
 				sharedMemSize >> 32,
+#else
+				0,
+#endif
 				sharedMemSize & 0xFFFFFFFF,
 				nullptr               // No name
 			);

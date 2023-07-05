@@ -14,17 +14,13 @@
     <ClCompile Include="source\common.cpp" />
     <ClCompile Include="source\generated\EEexLua_generated.cpp" />
     <ClCompile Include="source\generated\EEexLua_generated_baseclass_offsets.cpp" />
-    <ClCompile Include="source\generated\engine_structs_internal_pointers.cpp" />
+    <ClCompile Include="source\generated\engine_structs_generated_internal_pointers.cpp" />
     <ClCompile Include="source\LuaBindings-PSTEE.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\include\lua\lauxlib.h" />
-    <ClInclude Include="headers\include\lua\lua.h" />
-    <ClInclude Include="headers\include\lua\luaconf.h" />
-    <ClInclude Include="headers\LuaBindings-PSTEE\Baldur-v2.5.17.0_lua_generated.h" />
     <ClInclude Include="headers\LuaBindings-PSTEE\EEexLua_generated.h" />
-    <ClInclude Include="headers\LuaBindings-PSTEE\EEexLua_generated_baseclass_offsets.h" />
-    <ClInclude Include="headers\LuaBindings-PSTEE\engine_structs.h" />
+    <ClInclude Include="headers\LuaBindings-PSTEE_generated\Baldur-v2.5.17.0_lua_generated.h" />
+    <ClInclude Include="headers\LuaBindings-PSTEE_generated\engine_structs_generated.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />
@@ -65,15 +61,19 @@
     <Import Project="..\User_Macros.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(SolutionDir)LuaBindingsCommon/headers/common;$(SolutionDir)LuaBindingsCommon/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindings-PSTEE</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;$(ProjectDir)headers/LuaBindings-PSTEE;$(ProjectDir)headers/LuaBindings-PSTEE_generated</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -83,8 +83,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>LuaBindings-PSTEE.def</ModuleDefinitionFile>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
       <Command>powershell.exe -ExecutionPolicy Unrestricted -file COPY_TO_GAME.ps1 -OutDir "$(OutDir)." -GamePath "$(DEBUGGER_WORKING_DIRECTORY)."</Command>
@@ -96,9 +97,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/common;$(SolutionDir)LuaBindingsCommon/headers/common;$(SolutionDir)LuaBindingsCommon/common;$(ProjectDir)headers/include;$(ProjectDir)headers/LuaBindings-PSTEE</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;$(ProjectDir)headers/LuaBindings-PSTEE;$(ProjectDir)headers/LuaBindings-PSTEE_generated</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -108,8 +109,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>LuaBindings-PSTEE.def</ModuleDefinitionFile>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
       <Command>powershell.exe -ExecutionPolicy Unrestricted -file COPY_TO_GAME.ps1 -OutDir "$(OutDir)." -GamePath "$(DEBUGGER_WORKING_DIRECTORY)."</Command>

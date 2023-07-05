@@ -2129,9 +2129,17 @@ class Group:
 				superVGroup.lineGroupFlags.applyTo(vtblStruct.lineGroupFlags)
 				vtblStruct.updateSingleName(mainState, f"{self.name}_vtbl")
 
-				for field in superVGroup.fields:
-					vtblStruct.addField(field.shallowCopy())
+				def copyVtblStructFields(toCopyVtblGroup: Group):
+					nonlocal vtblStruct
+					# Copy the vtbl fields higher in the hierarchy first
+					# len(toCopyVtblGroup.extends) is either 1 or 0 (when the hierarchy failed to build)
+					for extendRef in toCopyVtblGroup.extends:
+						copyVtblStructFields(extendRef.group)
 
+					for field in toCopyVtblGroup.fields:
+						vtblStruct.addField(field.shallowCopy())
+
+				copyVtblStructFields(superVGroup)
 				mainState.addGroup(vtblStruct)
 
 			# vtbl struct doesn't exist

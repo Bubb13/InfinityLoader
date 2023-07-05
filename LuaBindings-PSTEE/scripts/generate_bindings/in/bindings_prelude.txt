@@ -1,3 +1,4 @@
 
-#include "engine_structs.h"
-#include "to_lua_pointers.h"
+#include "engine_structs_generated.h"
+#include "Baldur-v2.5.17.0_lua_generated.h"
+#include "lua_bindings_core_api.h"

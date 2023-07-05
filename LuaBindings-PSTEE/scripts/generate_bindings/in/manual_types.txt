@@ -84,7 +84,7 @@ struct CharString
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
+		lua_pushstring(L, localCopy);
 	}
 
 	void free()
@@ -192,7 +192,7 @@ struct LCharString
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
+		lua_pushstring(L, localCopy);
 	}
 };
 
@@ -744,7 +744,7 @@ struct CResRef
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
+		lua_pushstring(L, localCopy);
 	}
 
 	void set(primitive const char* newVal)
@@ -768,6 +768,19 @@ struct CResRef
 	void copy(CResRef* newVal)
 	{
 		*reinterpret_cast<__int64*>(&m_resRef) = *reinterpret_cast<__int64*>(newVal);
+	}
+
+	$nobinding void toNullTerminatedStr(char* nullTerminatedStr)
+	{
+		size_t i = 0;
+		for (; i < sizeof(m_resRef); ++i) {
+			const char readVal = m_resRef[i];
+			if (readVal == '\0') {
+				break;
+			}
+			nullTerminatedStr[i] = readVal;
+		}
+		nullTerminatedStr[i] = '\0';
 	}
 };
 

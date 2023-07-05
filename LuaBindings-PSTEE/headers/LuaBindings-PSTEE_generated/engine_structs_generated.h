@@ -4,8 +4,8 @@
 #include <queue>
 #include <vector>
 
-#include "infinity_loader_common.h"
-#include "to_lua_pointers.h"
+#include "infinity_loader_common_api.h"
+#include "lua_bindings_core_api.h"
 
 typedef __int8 sbyte;
 typedef unsigned char uchar;
@@ -27281,7 +27281,7 @@ struct CharString
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
+		lua_pushstring(L, localCopy);
 	}
 
 	void free()
@@ -27325,6 +27325,11 @@ struct CTypedPtrList : CObject
 		T data;
 
 		CNode() = delete;
+	};
+
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
 	};
 
 	CTypedPtrList::CNode* m_pNodeHead;
@@ -29640,7 +29645,7 @@ struct LCharString
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
+		lua_pushstring(L, localCopy);
 	}
 };
 
@@ -29662,7 +29667,7 @@ struct CResRef
 			localCopy[i] = readVal;
 		}
 		localCopy[i] = '\0';
-		p_lua_pushstring(L, localCopy);
+		lua_pushstring(L, localCopy);
 	}
 
 	void set(const char* newVal)
@@ -29686,6 +29691,19 @@ struct CResRef
 	void copy(CResRef* newVal)
 	{
 		*reinterpret_cast<__int64*>(&m_resRef) = *reinterpret_cast<__int64*>(newVal);
+	}
+
+	void toNullTerminatedStr(char* nullTerminatedStr)
+	{
+		size_t i = 0;
+		for (; i < sizeof(m_resRef); ++i) {
+			const char readVal = m_resRef[i];
+			if (readVal == '\0') {
+				break;
+			}
+			nullTerminatedStr[i] = readVal;
+		}
+		nullTerminatedStr[i] = '\0';
 	}
 };
 
@@ -71149,6 +71167,11 @@ struct CGameObject : CObject
 
 struct CProjectile : CGameObject
 {
+	struct vtbl : CGameObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
 	short m_projectileType;
 	undefined _0x4A;
 	undefined _0x4B;
@@ -71325,6 +71348,11 @@ struct CProjectile : CGameObject
 
 struct CProjectileBAM : CProjectile
 {
+	struct vtbl : CProjectile::vtbl
+	{
+		vtbl() = delete;
+	};
+
 	CVidCell* m_currentVidCell;
 	CVidCell* m_shadowVidCell;
 	undefined _0x1A0;
@@ -71793,6 +71821,11 @@ struct CProjectileArea : CProjectileBAM
 
 struct CProjectileUnknownPST : CProjectileBAM
 {
+	struct vtbl : CProjectileBAM::vtbl
+	{
+		vtbl() = delete;
+	};
+
 	CInfinity* pInfinity;
 	undefined _0x2F0;
 	undefined _0x2F1;

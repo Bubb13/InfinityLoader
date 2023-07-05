@@ -1,5 +1,5 @@
 
-#include "engine_structs.h"
+#include "engine_structs_generated.h"
 
 CBaldurChitin** p_g_pBaldurChitin;
 CGameObjectArray::type_GetShare CGameObjectArray::p_GetShare;
