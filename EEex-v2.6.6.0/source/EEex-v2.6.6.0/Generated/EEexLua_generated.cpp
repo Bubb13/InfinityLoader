@@ -3,6 +3,24 @@
 #include "Baldur-v2.6.6.0_lua_generated.h"
 #include "lua_bindings_core_api.h"
 
+static int tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::Opcode_LuaHook_AfterListsResolved_Enabled);
+	return 1;
+}
+
+static int tolua_set_EEex_Opcode_LuaHook_AfterListsResolved_Enabled(lua_State* L)
+{
+	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = tolua_setter_toboolean(L, "Opcode_LuaHook_AfterListsResolved_Enabled");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_Opcode_LuaHook_AfterListsResolved_Enabled(lua_State* L)
+{
+	tolua_pushusertypepointer(L, (void*)&EEex::Opcode_LuaHook_AfterListsResolved_Enabled, "Pointer<bool>");
+	return 1;
+}
+
 static int tolua_function_EEex_MatchObject(lua_State* L)
 {
 	long returnVal = EEex::MatchObject(L, (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject"), tolua_function_tostring(L, 2, "MatchObject"), tolua_function_tointeger<int>(L, 3, "MatchObject"), tolua_function_tointeger<int>(L, 4, "MatchObject"), (EEex_MatchObjectFlags)tolua_function_tointeger<__int32>(L, 5, "MatchObject"));
@@ -16,10 +34,24 @@ static int tolua_function_EEex_DeepCopy(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_EEex_test(lua_State* L)
+static int tolua_function_EEex_ShouldEffectBypassOp120(lua_State* L)
 {
-	int returnVal = EEex::test();
+	bool returnVal = EEex::ShouldEffectBypassOp120((CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect"));
+	tolua_pushboolean(L, (bool)returnVal);
+	return 1;
+}
+
+static int tolua_function_EEex_GetExtendedStatValue(lua_State* L)
+{
+	int returnVal = EEex::GetExtendedStatValue((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"), tolua_function_tointeger<int>(L, 2, "GetExtendedStatValue"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
+	return 1;
+}
+
+static int tolua_function_EEex_IsPlayerScript(lua_State* L)
+{
+	bool returnVal = EEex::IsPlayerScript((CAIScript*)tolua_tousertype_dynamic(L, 1, 0, "CAIScript"));
+	tolua_pushboolean(L, (bool)returnVal);
 	return 1;
 }
 
@@ -51,9 +83,13 @@ int OpenBindings(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex", "EEex", {}, NULL);
 	tolua_beginmodule(L, "EEex");
+		tolua_variable(L, "Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled, tolua_set_EEex_Opcode_LuaHook_AfterListsResolved_Enabled);
+		tolua_variable(L, "reference_Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_reference_Opcode_LuaHook_AfterListsResolved_Enabled, NULL);
 		tolua_function(L, "MatchObject", &tolua_function_EEex_MatchObject);
 		tolua_function(L, "DeepCopy", &tolua_function_EEex_DeepCopy);
-		tolua_function(L, "test", &tolua_function_EEex_test);
+		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
+		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
+		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");

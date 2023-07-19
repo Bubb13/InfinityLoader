@@ -63,6 +63,7 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	setLuaPointer("Hardcoded_lua_pushvalue", "lua_pushvalue", lua_pushvalue)
 	setLuaPointer("Hardcoded_lua_rawget", "lua_rawget", lua_rawget)
 	setLuaPointer("Hardcoded_lua_rawgeti", "lua_rawgeti", lua_rawgeti)
+	setLuaPointer("Hardcoded_lua_rawlen", "lua_rawlen", lua_rawlen)
 	setLuaPointer("Hardcoded_lua_rawset", "lua_rawset", lua_rawset)
 	setLuaPointer("Hardcoded_lua_rawseti", "lua_rawseti", lua_rawseti)
 	setLuaPointer("Hardcoded_lua_remove", "lua_remove", lua_remove)

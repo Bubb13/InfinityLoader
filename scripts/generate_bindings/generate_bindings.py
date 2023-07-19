@@ -724,6 +724,10 @@ class TypeReference:
 		return self.pointerLevel
 
 
+	def getHeaderPointerLevel(self):
+		return self.pointerLevel
+
+
 	def adjustUserTypePointerLevel(self, mainState: MainState, adjustAmount: int) -> None:
 		self.setUserTypePointerLevel(mainState, self.getUserTypePointerLevel() + adjustAmount)
 
@@ -989,6 +993,10 @@ class PointerReference(TypeReference):
 		return self.originalRef.getName()
 
 
+	def getHeaderPointerLevel(self):
+		return self.getUserTypePointerLevel() + 1
+
+
 	def setUserTypePointerLevel(self, mainState: MainState, newVal: int) -> None:
 
 		super().setUserTypePointerLevel(mainState, newVal)
@@ -1120,6 +1128,10 @@ class CharReference(TypeReference):
 		return copyObj
 
 
+	def getHeaderPointerLevel(self):
+		return self.charPointerLevel
+
+
 	def setUserTypePointerLevel(self, mainState: MainState, newVal: int) -> None:
 		if self.mode == CharReferenceMode.PRIMITIVE_ONLY:
 			super().setUserTypePointerLevel(mainState, newVal)
@@ -1171,12 +1183,18 @@ class FunctionImplementationParameter:
 		self.type: TypeReference = None
 		self.name: str = None
 
+	def shallowCopy(self, copy=None):
+		copy = copy if copy != None else FunctionImplementationParameter()
+		copy.type = self.type.shallowCopy()
+		copy.name = self.name
+		return copy
+
 
 class FunctionImplementation:
 
 	def __init__(self):
-		self.isConst = None
-		self.isStatic = None
+		self.isConst: bool = None
+		self.isStatic: bool = None
 		self.returnType: TypeReference = None
 		self.callingConvention: str = None
 		self.name: str = None
@@ -1185,12 +1203,12 @@ class FunctionImplementation:
 		self.parameters: list[FunctionImplementationParameter] = []
 		self.body: list[str] = []
 		self.noBody: bool = None
-		self.noDeclaration = False
+		self.noDeclaration: bool = False
 		self.isConstructor: bool = False
 		self.isFakeConstructor: bool = False
 		self.isDestructor: bool = False
 		self.customReturnCount: int = None
-		self.group = None
+		self.group: Group = None
 		self.virtual: bool = False
 		self.externalImplementation: bool = False
 		self.passLuaState: bool = False
@@ -1198,6 +1216,36 @@ class FunctionImplementation:
 		self.bindingName: str = None
 		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 
+	def shallowCopy(self, copy=None):
+		copy = copy if copy != None else FunctionImplementation()
+		copy.isConst = self.isConst
+		copy.isStatic = self.isStatic
+		copy.returnType = self.returnType.shallowCopy()
+		copy.callingConvention = self.callingConvention
+		copy.name = self.name
+		copy.funcPtrName = self.funcPtrName
+		copy.removedThisType = self.removedThisType.shallowCopy() if self.removedThisType != None else None
+
+		for parameter in self.parameters:
+			copy.parameters.append(parameter.shallowCopy())
+
+		for line in self.body:
+			copy.body.append(line)
+
+		copy.noBody = self.noBody
+		copy.noDeclaration = self.noDeclaration
+		copy.isConstructor = self.isConstructor
+		copy.isFakeConstructor = self.isFakeConstructor
+		copy.isDestructor = self.isDestructor
+		copy.customReturnCount = self.customReturnCount
+		copy.group = self.group
+		copy.virtual = self.virtual
+		copy.externalImplementation = self.externalImplementation
+		copy.passLuaState = self.passLuaState
+		copy.eofBody = self.eofBody
+		copy.bindingName = self.bindingName
+		self.lineGroupFlags.applyTo(copy.lineGroupFlags)
+		return copy
 
 	def setName(self, name: str):
 		self.name = name
@@ -2381,7 +2429,7 @@ class Group:
 				parts.append("\n")
 				needExtraNewlineBeforeFuncImps = True
 
-			if not mainState.noCustomTypes and self.groupType not in ("enum", "namespace"):
+			if not mainState.noCustomTypes and self.groupType not in ("enum", "namespace") and self.name not in ("Array",):
 
 				deleteDefault: bool = True
 				for funcImp in self.functionImplementations:

@@ -85,6 +85,8 @@ CInfGame::type_SetState CInfGame::p_SetState;
 CInfGame::type_SetIconIndex CInfGame::p_SetIconIndex;
 CInfGame::type_UnselectAll CInfGame::p_UnselectAll;
 CGameEffect::type_DecodeEffect CGameEffect::p_DecodeEffect;
+CDerivedStats::type_Construct CDerivedStats::p_Construct;
+CDerivedStats::type_Destruct CDerivedStats::p_Destruct;
 CDerivedStats::type_GetAtOffset CDerivedStats::p_GetAtOffset;
 CDerivedStats::type_GetSpellState CDerivedStats::p_GetSpellState;
 CGameArea::type_GetNearest2 CGameArea::p_GetNearest2;
@@ -212,6 +214,8 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&CInfGame::p_SetIconIndex)},
 	std::pair{TEXT("CInfGame::UnselectAll"), reinterpret_cast<void**>(&CInfGame::p_UnselectAll)},
 	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&CGameEffect::p_DecodeEffect)},
+	std::pair{TEXT("CDerivedStats::Construct"), reinterpret_cast<void**>(&CDerivedStats::p_Construct)},
+	std::pair{TEXT("CDerivedStats::Destruct"), reinterpret_cast<void**>(&CDerivedStats::p_Destruct)},
 	std::pair{TEXT("CDerivedStats::GetAtOffset"), reinterpret_cast<void**>(&CDerivedStats::p_GetAtOffset)},
 	std::pair{TEXT("CDerivedStats::GetSpellState"), reinterpret_cast<void**>(&CDerivedStats::p_GetSpellState)},
 	std::pair{TEXT("CGameArea::GetNearest2"), reinterpret_cast<void**>(&CGameArea::p_GetNearest2)},

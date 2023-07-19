@@ -22,7 +22,7 @@ typedef __int16 undefined2;
 typedef __int32 undefined4;
 
 template<typename A>
-struct W
+struct EngineVal
 {
 
 private:
@@ -42,11 +42,11 @@ public:
 	}
 
 	template<typename... Args>
-	W(Args&&... args) {
+	EngineVal(Args&&... args) {
 		val.Construct(std::forward<Args>(args)...);
 	}
 
-	~W() {
+	~EngineVal() {
 		val.Destruct();
 	}
 };

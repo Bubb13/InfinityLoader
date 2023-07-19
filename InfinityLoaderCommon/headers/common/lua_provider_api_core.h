@@ -107,6 +107,9 @@ LUA_PROVIDER_API_VAR type_lua_rawget lua_rawget;
 typedef void (*type_lua_rawgeti)(lua_State* L, int index, int n);
 LUA_PROVIDER_API_VAR type_lua_rawgeti lua_rawgeti;
 
+typedef size_t (*type_lua_rawlen)(lua_State* L, int index);
+LUA_PROVIDER_API_VAR type_lua_rawlen lua_rawlen;
+
 typedef void (*type_lua_rawset)(lua_State* L, int index);
 LUA_PROVIDER_API_VAR type_lua_rawset lua_rawset;
 

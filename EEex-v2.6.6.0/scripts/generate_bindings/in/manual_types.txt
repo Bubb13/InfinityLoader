@@ -721,6 +721,11 @@ struct CResRef
 		}
 	}
 
+	$nobinding $constructor Construct(primitive const char* chars)
+	{
+		set(chars);
+	}
+
 	void copy(CResRef* newVal)
 	{
 		*reinterpret_cast<__int64*>(&m_resRef) = *reinterpret_cast<__int64*>(newVal);
@@ -746,7 +751,7 @@ struct CResRef
 
 struct C2DArray : CResHelper<CResText,1012>
 {
-	void Construct();
+	$constructor_fake Construct();
 	void Load(const CResRef* res);
 	const CString* GetAtLabels(const CString* nX, const CString* nY);
 	void Destruct();
@@ -759,7 +764,7 @@ struct CAbilityId
 
 struct CAIIdList : CResHelper<CResText,1008>
 {
-	void Construct1();
+	$constructor_fake Construct1();
 	void Destruct();
 	void LoadList2(CResRef id, int faster);
 	CAIId* Find1(int id);

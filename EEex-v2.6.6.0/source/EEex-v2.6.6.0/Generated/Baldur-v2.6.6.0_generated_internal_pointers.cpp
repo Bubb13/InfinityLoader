@@ -4,6 +4,7 @@
 CVariableHash::type_FindKey CVariableHash::p_FindKey;
 CVariableHash::type_AddKey CVariableHash::p_AddKey;
 CGameObjectArray::type_GetShare CGameObjectArray::p_GetShare;
+bool EEex::Opcode_LuaHook_AfterListsResolved_Enabled;
 CString::type_ConstructFromChars CString::p_ConstructFromChars;
 CString::type_ConstructFromCString CString::p_ConstructFromCString;
 CString::type_Destruct CString::p_Destruct;

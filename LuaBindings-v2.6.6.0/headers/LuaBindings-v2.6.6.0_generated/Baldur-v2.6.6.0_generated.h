@@ -25,7 +25,7 @@ struct hasDestruct {
 };
 
 template<typename A>
-struct W
+struct EngineVal
 {
 
 private:
@@ -45,11 +45,11 @@ public:
 	}
 
 	template<typename... Args>
-	W(Args&&... args) {
+	EngineVal(Args&&... args) {
 		val.Construct(std::forward<Args>(args)...);
 	}
 
-	~W() {
+	~EngineVal() {
 		if constexpr (hasDestruct<decltype(val)>::value) {
 			val.Destruct();
 		}
@@ -11355,11 +11355,27 @@ struct CDerivedStats : CDerivedStatsTemplate
 
 	CDerivedStats() = delete;
 
+	typedef void (__thiscall *type_Construct)(CDerivedStats* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Destruct)(CDerivedStats* pThis);
+	static type_Destruct p_Destruct;
+
 	typedef long (__thiscall *type_GetAtOffset)(CDerivedStats* pThis, short offset);
 	static type_GetAtOffset p_GetAtOffset;
 
 	typedef int (__thiscall *type_GetSpellState)(CDerivedStats* pThis, uint bit);
 	static type_GetSpellState p_GetSpellState;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
 
 	long GetAtOffset(short offset)
 	{

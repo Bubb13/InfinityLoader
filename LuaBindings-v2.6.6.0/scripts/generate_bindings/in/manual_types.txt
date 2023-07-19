@@ -997,6 +997,8 @@ struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 
 struct CDerivedStats : CDerivedStatsTemplate
 {
+	$constructor_fake Construct();
+	void Destruct();
 	long GetAtOffset(short offset);
 	int GetSpellState(uint bit);
 };

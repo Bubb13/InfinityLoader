@@ -887,7 +887,7 @@ int loadLuaBindingsLua(lua_State* L) {
 
 	HMODULE bindingsHandle;
 	if (bindingsHandle = LoadLibraryA(bindingsPath.c_str()); !bindingsHandle) {
-		Print("[!] LoadLibraryA failed (%d).\n", GetLastError());
+		Print("[!] LoadLibraryA(\"%s\") failed (%d).\n", bindingsPath.c_str(), GetLastError());
 		return 0;
 	}
 

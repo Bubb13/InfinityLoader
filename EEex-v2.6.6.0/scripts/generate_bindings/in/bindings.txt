@@ -20,17 +20,11 @@ enum EEex_MatchObjectFlags : __int32
 namespace EEex
 {
 	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
-	$external_implementation $pass_lua_state $nobinding void DestroyUDAux(void* ptr);
-	$external_implementation $pass_lua_state $nobinding void CopyUDAux(void* sourcePtr, void* targetPtr);
-	$external_implementation $nobinding int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
-	$external_implementation $nobinding void Stats_Hook_OnEqu(lua_State* L, CDerivedStats* stats, CDerivedStats* otherStats);
-	$external_implementation $nobinding int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* effect);
-	$external_implementation $nobinding int Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite* sprite);
-	$external_implementation $nobinding void Projectile_Hook_BeforeAddEffect(lua_State* L, CProjectile* projectile, CGameAIBase* aiBase, CGameEffect* effect, uintptr_t retPtr);
-	$external_implementation $nobinding void InitEEex();
-	$external_implementation $nobinding void DeepCopyIndex(lua_State* L, int index);
 	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
-	$external_implementation int test();
+	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
+	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	$external_implementation bool IsPlayerScript(CAIScript* pScript);
+	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 };
 
 enum EEex::ProjectileType : __int32

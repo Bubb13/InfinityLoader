@@ -71,6 +71,9 @@
     <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur-v2.6.6.0_generated.h">
       <Filter>Header Files\EEex-v2.6.6.0_generated</Filter>
     </ClInclude>
+    <ClInclude Include="headers\EEex-v2.6.6.0\EEex.h">
+      <Filter>Header Files\EEex-v2.6.6.0</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="EEex-v2.6.6.0.def">

@@ -47,6 +47,7 @@ EXPORT type_lua_pushstring lua_pushstring;
 EXPORT type_lua_pushvalue lua_pushvalue;
 EXPORT type_lua_rawget lua_rawget;
 EXPORT type_lua_rawgeti lua_rawgeti;
+EXPORT type_lua_rawlen lua_rawlen;
 EXPORT type_lua_rawset lua_rawset;
 EXPORT type_lua_rawseti lua_rawseti;
 EXPORT type_lua_remove lua_remove;

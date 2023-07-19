@@ -46,14 +46,14 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 
 		if (pStats.m_nEncumberance == 2)
 		{
-			W<CString> temp { "" };
+			EngineVal<CString> temp { "" };
 			pSprite->FeedBack(0xF, 1, 0, 0, -1, 0, &*temp);
 			return;
 		}
 
 		if (pStats.m_nEncumberance == 1)
 		{
-			W<CString> temp { "" };
+			EngineVal<CString> temp { "" };
 			pSprite->FeedBack(0xE, 1, 0, 0, -1, 0, &*temp);
 		}
 
@@ -85,7 +85,7 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 			}
 		}
 
-		W<CAIAction> moveToPoint { 23, &finalTarget, 0, -1 };
+		EngineVal<CAIAction> moveToPoint { 23, &finalTarget, 0, -1 };
 		pSprite->m_userCommandPause = 75;
 		pSprite->m_triggerId = -1;
 
@@ -112,7 +112,7 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 	byte nCharacter { 0 };
 	CPoint* offsets { };
 	short* facings { };
-	W<CTypedPtrList<CPtrList, W<CAIAction>*>> actionList { 10 };
+	EngineVal<CTypedPtrList<CPtrList, EngineVal<CAIAction>*>> actionList { 10 };
 
 	CTypedPtrList<CPtrList, long>::CNode* memberNode { memberList.m_pNodeHead };
 	while (memberNode != nullptr)
@@ -189,7 +189,7 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 		int curPointOffsetY { curPointOffset.y * 12 / 1000 };
 
 		CPoint facePoint { -1, -1 };
-		actionList->AddTail(new W<CAIAction>{ 84, &facePoint, *(facings + nCharacter), -1 });
+		actionList->AddTail(new EngineVal<CAIAction>{ 84, &facePoint, *(facings + nCharacter), -1 });
 
 		// Apply formation offsets
 		CPoint curTargetPointOffset { curTargetPoint.x + curPointOffsetX, curTargetPoint.y + curPointOffsetY };
@@ -248,25 +248,25 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 
 		if (pStats->m_nEncumberance == 2)
 		{
-			W<CString> temp { "" };
+			EngineVal<CString> temp { "" };
 			pSprite->FeedBack(0xF, 1, 0, 0, -1, 0, &*temp);
 		}
 		else
 		{
 			if (pStats->m_nEncumberance == 1)
 			{
-				W<CString> temp { "" };
+				EngineVal<CString> temp { "" };
 				pSprite->FeedBack(0xE, 1, 0, 0, -1, 0, &*temp);
 			}
 
 			// MoveToPoint
-			actionList->AddTail(new W<CAIAction>{ 23, &curTargetPointOffset, 0, -1 });
+			actionList->AddTail(new EngineVal<CAIAction>{ 23, &curTargetPointOffset, 0, -1 });
 
 			if (pGame.m_worldTime.m_active)
 			{
 				// SmallWait
 				CPoint temp { -1, -1 };
-				actionList->AddTail(new W<CAIAction>{ 83, &temp, ((rand() & 0x7FFF) * 7) >> 0xF, -1});
+				actionList->AddTail(new EngineVal<CAIAction>{ 83, &temp, ((rand() & 0x7FFF) * 7) >> 0xF, -1});
 			}
 
 			pSprite->m_userCommandPause = 75;
@@ -277,7 +277,7 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 				pSprite->m_interrupt = 1;
 				while (actionList->m_nCount != 0)
 				{
-					W<CAIAction>* pAction { actionList->RemoveHead() };
+					EngineVal<CAIAction>* pAction { actionList->RemoveHead() };
 					pSprite->virtual_AddAction(&**pAction);
 					delete pAction;
 				}
@@ -292,7 +292,7 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 
 				while (actionList->m_nCount != 0)
 				{
-					W<CAIAction>* pAction { actionList->RemoveHead() };
+					EngineVal<CAIAction>* pAction { actionList->RemoveHead() };
 					pSprite->virtual_InsertAction(&**pAction);
 					delete pAction;
 				}

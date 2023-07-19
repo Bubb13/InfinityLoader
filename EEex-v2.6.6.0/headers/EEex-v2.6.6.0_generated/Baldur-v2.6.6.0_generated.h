@@ -26,7 +26,7 @@ struct hasDestruct {
 };
 
 template<typename A>
-struct W
+struct EngineVal
 {
 
 private:
@@ -37,6 +37,14 @@ private:
 
 public:
 
+	operator A*() {
+		return &val;
+	}
+
+	operator A() {
+		return val;
+	}
+
 	A* operator->() {
 		return &val;
 	}
@@ -46,11 +54,11 @@ public:
 	}
 
 	template<typename... Args>
-	W(Args&&... args) {
+	EngineVal(Args&&... args) {
 		val.Construct(std::forward<Args>(args)...);
 	}
 
-	~W() {
+	~EngineVal() {
 		if constexpr (hasDestruct<decltype(val)>::value) {
 			val.Destruct();
 		}
@@ -2829,18 +2837,13 @@ namespace EEex
 		CProjectileTravelDoor = 524288,
 	};
 
+	extern bool Opcode_LuaHook_AfterListsResolved_Enabled;
+
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
-	void DestroyUDAux(lua_State* L, void* ptr);
-	void CopyUDAux(lua_State* L, void* sourcePtr, void* targetPtr);
-	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
-	void Stats_Hook_OnEqu(lua_State* L, CDerivedStats* stats, CDerivedStats* otherStats);
-	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* effect);
-	int Opcode_Hook_OnCheckAdd(lua_State* L, CGameEffect* effect, CGameSprite* sprite);
-	void Projectile_Hook_BeforeAddEffect(lua_State* L, CProjectile* projectile, CGameAIBase* aiBase, CGameEffect* effect, uintptr_t retPtr);
-	void InitEEex();
-	void DeepCopyIndex(lua_State* L, int index);
 	void DeepCopy(lua_State* L);
-	int test();
+	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
+	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	bool IsPlayerScript(CAIScript* pScript);
 };
 
 struct ConstCharString
@@ -6515,8 +6518,6 @@ struct Array
 {
 	T data[size];
 
-	Array() = delete;
-
 	T get(size_t index)
 	{
 		if (index >= size) {
@@ -7663,6 +7664,11 @@ struct CResRef
 		}
 	}
 
+	CResRef(const char* chars)
+	{
+		set(chars);
+	}
+
 	void copy(CResRef* newVal)
 	{
 		*reinterpret_cast<__int64*>(&m_resRef) = *reinterpret_cast<__int64*>(newVal);
@@ -8158,7 +8164,7 @@ struct CAIIdList : CResHelper<CResText,1008>
 	typedef CAIId* (__thiscall *type_Find1)(CAIIdList* pThis, int id);
 	static type_Find1 p_Find1;
 
-	void Construct1()
+	void Construct()
 	{
 		p_Construct1(this);
 	}
