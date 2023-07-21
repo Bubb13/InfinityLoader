@@ -3,7 +3,28 @@
 
 #include "Baldur-v2.6.6.0_generated.h"
 
+#pragma pack(push, 1)
+struct NonVolatileRegisters {
+	__int64 rbx;
+	__int64 rbp;
+	__int64 rsp;
+	__int64 rsi;
+	__int64 rdi;
+	__int64 r12;
+	__int64 r13;
+	__int64 r14;
+	__int64 r15;
+};
+#pragma pack(pop)
+
 namespace EEex {
+
+	//----------------------------------------//
+	//          Integrity Check Util          //
+	//----------------------------------------//
+
+	void IntegrityCheckEnter(uintptr_t address, byte* rsp, NonVolatileRegisters* nonVolatileRegisters);
+	void IntegrityCheckExit(uintptr_t address, byte* rsp, NonVolatileRegisters* nonVolatileRegisters);
 
 	//------------------------//
 	//          Misc          //
@@ -13,13 +34,13 @@ namespace EEex {
 	void DeepCopyIndex(lua_State* L, int index);
 	void InitEEex();
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
-	
+
 	//-----------------------------//
 	//          Overrides          //
 	//-----------------------------//
 
 	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
-	
+
 	//-------------------------//
 	//          Hooks          //
 	//-------------------------//

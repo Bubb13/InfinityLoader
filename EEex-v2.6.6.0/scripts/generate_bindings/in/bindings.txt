@@ -24,6 +24,7 @@ namespace EEex
 	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
 	$external_implementation bool IsPlayerScript(CAIScript* pScript);
+	$external_implementation void IntegrityCheckIgnoreStackRange(uintptr_t address, int lowerBound, int upperBound);
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 };
 

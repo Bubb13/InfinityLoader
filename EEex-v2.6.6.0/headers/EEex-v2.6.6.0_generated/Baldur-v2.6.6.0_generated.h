@@ -2844,6 +2844,7 @@ namespace EEex
 	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
 	bool IsPlayerScript(CAIScript* pScript);
+	void IntegrityCheckIgnoreStackRange(uintptr_t address, int lowerBound, int upperBound);
 };
 
 struct ConstCharString

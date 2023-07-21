@@ -55,6 +55,12 @@ static int tolua_function_EEex_IsPlayerScript(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_IntegrityCheckIgnoreStackRange(lua_State* L)
+{
+	EEex::IntegrityCheckIgnoreStackRange(tolua_function_tointeger<uintptr_t>(L, 1, "IntegrityCheckIgnoreStackRange"), tolua_function_tointeger<int>(L, 2, "IntegrityCheckIgnoreStackRange"), tolua_function_tointeger<int>(L, 3, "IntegrityCheckIgnoreStackRange"));
+	return 0;
+}
+
 static void tolua_reg_types(lua_State* L)
 {
 	tolua_usertype(L, "EEex_MatchObjectFlags");
@@ -90,6 +96,7 @@ int OpenBindings(lua_State* L)
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
 		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
+		tolua_function(L, "IntegrityCheckIgnoreStackRange", &tolua_function_EEex_IntegrityCheckIgnoreStackRange);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");

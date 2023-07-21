@@ -10,6 +10,12 @@
 //          Defines          //
 //---------------------------//
 
+//////////////////////////
+// Integrity Check Util //
+//////////////////////////
+
+constexpr int STACK_SNAPSHOT_SIZE = 256;
+
 //////////////////
 // Stutter Util //
 //////////////////
@@ -34,6 +40,18 @@
 //---------------------------//
 //          Globals          //
 //---------------------------//
+
+//////////////////////////
+// Integrity Check Util //
+//////////////////////////
+
+struct IntegrityCheckData {
+	NonVolatileRegisters nonVolatileRegisters;
+	byte stackSnapshot[STACK_SNAPSHOT_SIZE];
+};
+
+thread_local std::vector<IntegrityCheckData> integrityDataVector;
+std::unordered_map<uintptr_t, std::vector<std::pair<int, int>>> integrityIgnoredStackRanges;
 
 //////////////////
 // Stutter Util //
@@ -130,6 +148,76 @@ template<typename NumType>
 NumType clampedPercent(NumType num, NumType percent) {
 	static_assert(canTypeHoldProduct<__int64, NumType>());
 	return clampToType<NumType>(static_cast<__int64>(num) * percent / 100);
+}
+
+//----------------------------------------//
+//          Integrity Check Util          //
+//----------------------------------------//
+
+void EEex::IntegrityCheckIgnoreStackRange(uintptr_t address, int lowerBound, int upperBound) {
+	integrityIgnoredStackRanges[address].emplace_back(lowerBound, upperBound);
+}
+
+void EEex::IntegrityCheckEnter(uintptr_t address, byte* rsp, NonVolatileRegisters* nonVolatileRegisters)
+{
+	IntegrityCheckData& integrityData = integrityDataVector.emplace_back();
+
+	integrityData.nonVolatileRegisters = *nonVolatileRegisters;
+
+	byte* stackSnapshot = integrityData.stackSnapshot;
+	for (int i = 0; i < STACK_SNAPSHOT_SIZE; ++i) {
+		stackSnapshot[i] = rsp[i];
+	}
+}
+
+void EEex::IntegrityCheckExit(uintptr_t address, byte* rsp, NonVolatileRegisters* nonVolatileRegisters)
+{
+	IntegrityCheckData& integrityData = integrityDataVector.back();
+
+	#define checkRegister(reg, regStr) \
+		if (integrityData.nonVolatileRegisters.reg != nonVolatileRegisters->reg) { \
+			Print("[!] [Integrity Check] [%p] %s changed from 0x%X to 0x%X\n", address, regStr, \
+				integrityData.nonVolatileRegisters.reg, nonVolatileRegisters->reg); \
+		}
+
+	checkRegister(rbx, "rbx")
+	checkRegister(rbp, "rbp")
+	checkRegister(rsp, "rsp")
+	checkRegister(rsi, "rsi")
+	checkRegister(rdi, "rdi")
+	checkRegister(r12, "r12")
+	checkRegister(r13, "r13")
+	checkRegister(r14, "r14")
+	checkRegister(r15, "r15")
+
+	byte* stackSnapshot = integrityData.stackSnapshot;
+
+	for (int i = 32; i < STACK_SNAPSHOT_SIZE; ++i) {
+
+		byte stackSnapshotByte = stackSnapshot[i];
+		byte stackByte = rsp[i];
+
+		if (stackSnapshotByte == stackByte) {
+			continue;
+		}
+
+		bool ignore = false;
+
+		if (auto itr = integrityIgnoredStackRanges.find(address); itr != integrityIgnoredStackRanges.end()) {
+			for (auto& ignoredRange : itr->second) {
+				if (i >= ignoredRange.first && i <= ignoredRange.second) {
+					ignore = true;
+					break;
+				}
+			}
+		}
+
+		if (!ignore) {
+			Print("[!] [Integrity Check] [%p] Stack[+0x%X] Changed from 0x%X to 0x%X\n", address, i, stackSnapshotByte, stackByte);
+		}
+	}
+
+	integrityDataVector.pop_back();
 }
 
 //--------------------------------//
@@ -1576,9 +1664,9 @@ int EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect(CGameEffect* pEffect, CGa
 		pEffect->m_done = 1;
 		return 1;
 	}
-	
+
 	pEffect->m_firstCall = 0;
-	
+
 	if (CAIScript *const pExistingScript = getScriptLevel(pSprite, param2);
 		pExistingScript != nullptr)
 	{

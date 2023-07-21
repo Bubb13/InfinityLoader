@@ -9,6 +9,13 @@ void __stdcall Init(SharedState argSharedDLL) {
 
 	InitLuaBindingsCommon(argSharedDLL, [&]() {
 
+		////////////////////////////////////////////
+		//          Integrity Check Util          //
+		////////////////////////////////////////////
+
+		sharedState().SetPatternValue(TEXT("EEex::IntegrityCheckEnter"), EEex::IntegrityCheckEnter);
+		sharedState().SetPatternValue(TEXT("EEex::IntegrityCheckExit"), EEex::IntegrityCheckExit);
+
 		/////////////////////////////////
 		//          Overrides          //
 		/////////////////////////////////
@@ -55,7 +62,7 @@ void __stdcall Init(SharedState argSharedDLL) {
 		sharedState().SetPatternValue(TEXT("EEex::Opcode_Hook_ProjectileMutator_ApplyEffect"), EEex::Opcode_Hook_ProjectileMutator_ApplyEffect);
 		// New op409
 		sharedState().SetPatternValue(TEXT("EEex::Opcode_Hook_EnableActionListener_ApplyEffect"), EEex::Opcode_Hook_EnableActionListener_ApplyEffect);
-		
+
 		sharedState().SetPatternValue(TEXT("EEex::Opcode_Hook_OnCopy"), EEex::Opcode_Hook_OnCopy);
 		sharedState().SetPatternValue(TEXT("EEex::Opcode_Hook_OnDestruct"), EEex::Opcode_Hook_OnDestruct);
 		sharedState().SetPatternValue(TEXT("EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget"), EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget);

@@ -138,10 +138,10 @@ static void mapinheritance(lua_State* L, const char* name, const char* baseName)
 }
 
 // Sets registry["tolua_super"][getmetatable(name)][baseName] = true
-// 
+//
 // All superclasses mapped under registry["tolua_super"][getmetatable(baseName)] are also copied to name's entry.
 // In effect registry["tolua_super"][getmetatable(name)] contains ALL superclasses, not just immediate ones.
-// 
+//
 // registry["tolua_super"] used by:
 //     lua_isusertype()
 //     tolua_pushusertype()
@@ -1086,12 +1086,12 @@ void tolua_usertype(lua_State* L, const char* type) {
 // End Stack [ ..., module ]
 EXPORT void tolua_cclass(lua_State* L, const char* lname, const char* name, std::initializer_list<const char*>&& bases, lua_CFunction col) {
 
-	// Don't register cclass more than once 
+	// Don't register cclass more than once
 	lua_pushstring(L, "tolua_cclass_registered"); // 2 [ ..., module, "tolua_cclass_registered" ]
 	getOrCreateTable(L, LUA_REGISTRYINDEX);       // 2 [ ..., module, registry["tolua_cclass_registered"] ]
 	lua_pushstring(L, name);                      // 3 [ ..., module, registry["tolua_cclass_registered"], name ]
 	lua_rawget(L, -2);                            // 3 [ ..., module, registry["tolua_cclass_registered"], registry["tolua_cclass_registered"][name] ]
-	
+
 	if (!lua_isnil(L, -1)) {
 		lua_pop(L, 2);                            // 1 [ ..., module ]
 		return;
