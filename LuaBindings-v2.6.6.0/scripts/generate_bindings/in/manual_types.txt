@@ -814,6 +814,7 @@ struct CGameSprite : CGameAIBase
 	void UpdateTarget(CGameObject* target);
 	uint GetNameRef();
 	CString* GetName(int ignoreSTRREFON);
+	short SpellPoint();
 };
 
 struct CProjectile : CGameObject

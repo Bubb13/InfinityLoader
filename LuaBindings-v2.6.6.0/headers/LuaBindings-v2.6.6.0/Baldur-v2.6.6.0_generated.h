@@ -14001,6 +14001,9 @@ struct CGameSprite : CGameAIBase
 	typedef CString* (__thiscall *type_GetName)(CGameSprite* pThis, int ignoreSTRREFON);
 	static type_GetName p_GetName;
 
+	typedef short (__thiscall *type_SpellPoint)(CGameSprite* pThis);
+	static type_SpellPoint p_SpellPoint;
+
 	short GetCasterLevel(CSpell* pSpell, int includeWildMage)
 	{
 		return p_GetCasterLevel(this, pSpell, includeWildMage);
@@ -14069,6 +14072,11 @@ struct CGameSprite : CGameAIBase
 	CString* GetName(int ignoreSTRREFON)
 	{
 		return p_GetName(this, ignoreSTRREFON);
+	}
+
+	short SpellPoint()
+	{
+		return p_SpellPoint(this);
 	}
 
 	virtual void virtual_SetTarget_2(const CPoint* _0, int _1)
