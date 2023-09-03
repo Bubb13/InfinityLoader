@@ -13427,6 +13427,12 @@ struct CGameAIBase : CGameObject
 	typedef CGameObject* (__thiscall *type_GetTargetShare)(CGameAIBase* pThis);
 	static type_GetTargetShare p_GetTargetShare;
 
+	typedef CGameObject* (__thiscall *type_GetTargetShareType1)(CGameAIBase* pThis, CAIObjectType* AItype, byte type);
+	static type_GetTargetShareType1 p_GetTargetShareType1;
+
+	typedef CGameObject* (__thiscall *type_GetTargetShareType2)(CGameAIBase* pThis, byte type);
+	static type_GetTargetShareType2 p_GetTargetShareType2;
+
 	typedef short (__thiscall *type_ForceSpellPoint)(CGameAIBase* pThis);
 	static type_ForceSpellPoint p_ForceSpellPoint;
 
@@ -13438,6 +13444,16 @@ struct CGameAIBase : CGameObject
 	CGameObject* GetTargetShare()
 	{
 		return p_GetTargetShare(this);
+	}
+
+	CGameObject* GetTargetShareType1(CAIObjectType* AItype, byte type)
+	{
+		return p_GetTargetShareType1(this, AItype, type);
+	}
+
+	CGameObject* GetTargetShareType2(byte type)
+	{
+		return p_GetTargetShareType2(this, type);
 	}
 
 	short ForceSpellPoint()

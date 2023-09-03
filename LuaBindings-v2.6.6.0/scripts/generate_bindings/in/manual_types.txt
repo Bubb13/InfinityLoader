@@ -796,6 +796,8 @@ struct CGameAIBase : CGameObject
 {
 	void ApplyEffectToParty(CGameEffect* effect);
 	CGameObject* GetTargetShare();
+	CGameObject* GetTargetShareType1(CAIObjectType* AItype, byte type);
+	CGameObject* GetTargetShareType2(byte type);
 	short ForceSpellPoint();
 };
 
