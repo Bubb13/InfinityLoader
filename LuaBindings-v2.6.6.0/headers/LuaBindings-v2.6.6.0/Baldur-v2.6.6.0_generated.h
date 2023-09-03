@@ -13427,6 +13427,9 @@ struct CGameAIBase : CGameObject
 	typedef CGameObject* (__thiscall *type_GetTargetShare)(CGameAIBase* pThis);
 	static type_GetTargetShare p_GetTargetShare;
 
+	typedef short (__thiscall *type_ForceSpellPoint)(CGameAIBase* pThis);
+	static type_ForceSpellPoint p_ForceSpellPoint;
+
 	void ApplyEffectToParty(CGameEffect* effect)
 	{
 		p_ApplyEffectToParty(this, effect);
@@ -13435,6 +13438,11 @@ struct CGameAIBase : CGameObject
 	CGameObject* GetTargetShare()
 	{
 		return p_GetTargetShare(this);
+	}
+
+	short ForceSpellPoint()
+	{
+		return p_ForceSpellPoint(this);
 	}
 
 	virtual void virtual_ClearActions(int _0)

@@ -112,6 +112,7 @@ CProjectile::type_AddEffect CProjectile::p_AddEffect;
 CProjectile::type_ClearEffects CProjectile::p_ClearEffects;
 CGameAIBase::type_ApplyEffectToParty CGameAIBase::p_ApplyEffectToParty;
 CGameAIBase::type_GetTargetShare CGameAIBase::p_GetTargetShare;
+CGameAIBase::type_ForceSpellPoint CGameAIBase::p_ForceSpellPoint;
 CGameSprite::type_GetCasterLevel CGameSprite::p_GetCasterLevel;
 CGameSprite::type_CheckQuickLists CGameSprite::p_CheckQuickLists;
 CGameSprite::type_GetKitMask CGameSprite::p_GetKitMask;
@@ -240,6 +241,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CProjectile::ClearEffects"), reinterpret_cast<void**>(&CProjectile::p_ClearEffects)},
 	std::pair{TEXT("CGameAIBase::ApplyEffectToParty"), reinterpret_cast<void**>(&CGameAIBase::p_ApplyEffectToParty)},
 	std::pair{TEXT("CGameAIBase::GetTargetShare"), reinterpret_cast<void**>(&CGameAIBase::p_GetTargetShare)},
+	std::pair{TEXT("CGameAIBase::ForceSpellPoint"), reinterpret_cast<void**>(&CGameAIBase::p_ForceSpellPoint)},
 	std::pair{TEXT("CGameSprite::GetCasterLevel"), reinterpret_cast<void**>(&CGameSprite::p_GetCasterLevel)},
 	std::pair{TEXT("CGameSprite::CheckQuickLists"), reinterpret_cast<void**>(&CGameSprite::p_CheckQuickLists)},
 	std::pair{TEXT("CGameSprite::GetKitMask"), reinterpret_cast<void**>(&CGameSprite::p_GetKitMask)},
