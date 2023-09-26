@@ -818,6 +818,9 @@ struct CGameSprite : CGameAIBase
 	uint GetNameRef();
 	CString* GetName(int ignoreSTRREFON);
 	short SpellPoint();
+	CCreatureFileKnownSpell* GetKnownSpellMage(int nSpellLevel, int nKnownSpellIndex);
+	CCreatureFileKnownSpell* GetKnownSpellPriest(int nSpellLevel, int nKnownSpellIndex);
+	CCreatureFileKnownSpell* GetKnownSpellInnate(int nSpellLevel, int nKnownSpellIndex);
 };
 
 struct CProjectile : CGameObject
@@ -990,6 +993,9 @@ struct CDerivedStats : CDerivedStatsTemplate
 {
 	long GetAtOffset(short offset);
 	int GetSpellState(uint bit);
+	byte GetWizardLevelCast(byte nClass);
+	byte GetPriestLevelCast(byte nClass);
+	byte GetAverageLevel(byte nClass);
 };
 
 struct CAIScript

@@ -1129,6 +1129,58 @@ int runWithStackLua(lua_State* L) {
 	return 0;
 }
 
+int selectFromTablesLua(lua_State* L) {
+
+	const int nStackTop = p_lua_gettop(L);
+
+	if (nStackTop % 3 != 0) {
+		p_luaL_error(L, "Expected number of args to be a multiple of 3 (got %d)", nStackTop);
+	}
+
+	int nTotalLength = 0;
+
+	for (int i = 1; i <= nStackTop; i += 3) {
+
+		if (p_lua_type(L, i) != LUA_TNUMBER) {
+			p_luaL_error(L, "Expected number (nStart) at arg %d", i);
+		}
+
+		const int nLengthI = i + 1;
+		if (p_lua_type(L, i) != LUA_TNUMBER) {
+			p_luaL_error(L, "Expected number (nLength) at arg %d", nLengthI);
+		}
+
+		const int nTableI = i + 2;
+		if (p_lua_type(L, nTableI) != LUA_TTABLE) {
+			p_luaL_error(L, "Expected table at arg %d", nTableI);
+		}
+
+		castLuaIntArg(i, int, nStart)
+		castLuaIntArg(nLengthI, int, nLength)
+
+		if (nLength == -1) {
+			int j = nStart;
+			while (true) {
+				p_lua_rawgeti(L, nTableI, j++);
+				if (p_lua_type(L, -1) == LUA_TNIL) {
+					p_lua_pop(L, 1);
+					break;
+				}
+				++nTotalLength;
+			}
+		}
+		else {
+			int end = nStart + nLength;
+			for (int j = nStart; j < end; ++j) {
+				p_lua_rawgeti(L, nTableI, j);
+			}
+			nTotalLength += nLength;
+		}
+	}
+
+	return nTotalLength;
+}
+
 int setLuaRegistryIndexLua(lua_State* L) {
 	castLuaIntArg(1, int, n)
 	p_lua_pushvalue(L, 2);
@@ -1660,6 +1712,7 @@ void initLua() {
 	exposeToLua(L, "EEex_ReadString", readString);
 	exposeToLua(L, "EEex_RShift", rshiftLua);
 	exposeToLua(L, "EEex_RunWithStack", runWithStackLua);
+	exposeToLua(L, "EEex_SelectFromTables", selectFromTablesLua);
 	exposeToLua(L, "EEex_SetLuaRegistryIndex", setLuaRegistryIndexLua);
 	exposeToLua(L, "EEex_Write16", write16Lua);
 	exposeToLua(L, "EEex_Write32", write32Lua);

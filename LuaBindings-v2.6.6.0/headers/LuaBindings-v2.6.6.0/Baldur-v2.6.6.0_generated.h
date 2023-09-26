@@ -7841,6 +7841,15 @@ struct CMoveListEntry
 	CMoveListEntry() = delete;
 };
 
+struct CCreatureFileKnownSpell
+{
+	CResRef m_knownSpellId;
+	unsigned __int16 m_spellLevel;
+	unsigned __int16 m_magicType;
+
+	CCreatureFileKnownSpell() = delete;
+};
+
 struct CGameStatsRes : CObject
 {
 	struct vtbl : CObject::vtbl
@@ -11427,6 +11436,15 @@ struct CDerivedStats : CDerivedStatsTemplate
 	typedef int (__thiscall *type_GetSpellState)(CDerivedStats* pThis, uint bit);
 	static type_GetSpellState p_GetSpellState;
 
+	typedef byte (__thiscall *type_GetWizardLevelCast)(CDerivedStats* pThis, byte nClass);
+	static type_GetWizardLevelCast p_GetWizardLevelCast;
+
+	typedef byte (__thiscall *type_GetPriestLevelCast)(CDerivedStats* pThis, byte nClass);
+	static type_GetPriestLevelCast p_GetPriestLevelCast;
+
+	typedef byte (__thiscall *type_GetAverageLevel)(CDerivedStats* pThis, byte nClass);
+	static type_GetAverageLevel p_GetAverageLevel;
+
 	long GetAtOffset(short offset)
 	{
 		return p_GetAtOffset(this, offset);
@@ -11435,6 +11453,21 @@ struct CDerivedStats : CDerivedStatsTemplate
 	int GetSpellState(uint bit)
 	{
 		return p_GetSpellState(this, bit);
+	}
+
+	byte GetWizardLevelCast(byte nClass)
+	{
+		return p_GetWizardLevelCast(this, nClass);
+	}
+
+	byte GetPriestLevelCast(byte nClass)
+	{
+		return p_GetPriestLevelCast(this, nClass);
+	}
+
+	byte GetAverageLevel(byte nClass)
+	{
+		return p_GetAverageLevel(this, nClass);
 	}
 };
 
@@ -11445,15 +11478,6 @@ struct CCreatureFileMemorizedSpell
 	Array<unsigned __int8,2> structureAlignment1;
 
 	CCreatureFileMemorizedSpell() = delete;
-};
-
-struct CCreatureFileKnownSpell
-{
-	Array<unsigned __int8,8> m_knownSpellId;
-	unsigned __int16 m_spellLevel;
-	unsigned __int16 m_magicType;
-
-	CCreatureFileKnownSpell() = delete;
 };
 
 struct CCreatureFileItem
@@ -14028,6 +14052,15 @@ struct CGameSprite : CGameAIBase
 	typedef short (__thiscall *type_SpellPoint)(CGameSprite* pThis);
 	static type_SpellPoint p_SpellPoint;
 
+	typedef CCreatureFileKnownSpell* (__thiscall *type_GetKnownSpellMage)(CGameSprite* pThis, int nSpellLevel, int nKnownSpellIndex);
+	static type_GetKnownSpellMage p_GetKnownSpellMage;
+
+	typedef CCreatureFileKnownSpell* (__thiscall *type_GetKnownSpellPriest)(CGameSprite* pThis, int nSpellLevel, int nKnownSpellIndex);
+	static type_GetKnownSpellPriest p_GetKnownSpellPriest;
+
+	typedef CCreatureFileKnownSpell* (__thiscall *type_GetKnownSpellInnate)(CGameSprite* pThis, int nSpellLevel, int nKnownSpellIndex);
+	static type_GetKnownSpellInnate p_GetKnownSpellInnate;
+
 	short GetCasterLevel(CSpell* pSpell, int includeWildMage)
 	{
 		return p_GetCasterLevel(this, pSpell, includeWildMage);
@@ -14101,6 +14134,21 @@ struct CGameSprite : CGameAIBase
 	short SpellPoint()
 	{
 		return p_SpellPoint(this);
+	}
+
+	CCreatureFileKnownSpell* GetKnownSpellMage(int nSpellLevel, int nKnownSpellIndex)
+	{
+		return p_GetKnownSpellMage(this, nSpellLevel, nKnownSpellIndex);
+	}
+
+	CCreatureFileKnownSpell* GetKnownSpellPriest(int nSpellLevel, int nKnownSpellIndex)
+	{
+		return p_GetKnownSpellPriest(this, nSpellLevel, nKnownSpellIndex);
+	}
+
+	CCreatureFileKnownSpell* GetKnownSpellInnate(int nSpellLevel, int nKnownSpellIndex)
+	{
+		return p_GetKnownSpellInnate(this, nSpellLevel, nKnownSpellIndex);
 	}
 
 	virtual void virtual_SetTarget_2(const CPoint* _0, int _1)

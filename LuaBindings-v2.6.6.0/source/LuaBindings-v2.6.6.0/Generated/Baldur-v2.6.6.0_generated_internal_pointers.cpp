@@ -87,6 +87,9 @@ CInfGame::type_UnselectAll CInfGame::p_UnselectAll;
 CGameEffect::type_DecodeEffect CGameEffect::p_DecodeEffect;
 CDerivedStats::type_GetAtOffset CDerivedStats::p_GetAtOffset;
 CDerivedStats::type_GetSpellState CDerivedStats::p_GetSpellState;
+CDerivedStats::type_GetWizardLevelCast CDerivedStats::p_GetWizardLevelCast;
+CDerivedStats::type_GetPriestLevelCast CDerivedStats::p_GetPriestLevelCast;
+CDerivedStats::type_GetAverageLevel CDerivedStats::p_GetAverageLevel;
 CGameArea::type_GetNearest2 CGameArea::p_GetNearest2;
 CGameArea::type_AdjustTarget CGameArea::p_AdjustTarget;
 CGameArea::type_CheckWalkable CGameArea::p_CheckWalkable;
@@ -130,6 +133,9 @@ CGameSprite::type_UpdateTarget CGameSprite::p_UpdateTarget;
 CGameSprite::type_GetNameRef CGameSprite::p_GetNameRef;
 CGameSprite::type_GetName CGameSprite::p_GetName;
 CGameSprite::type_SpellPoint CGameSprite::p_SpellPoint;
+CGameSprite::type_GetKnownSpellMage CGameSprite::p_GetKnownSpellMage;
+CGameSprite::type_GetKnownSpellPriest CGameSprite::p_GetKnownSpellPriest;
+CGameSprite::type_GetKnownSpellInnate CGameSprite::p_GetKnownSpellInnate;
 
 std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CVariableHash::FindKey"), reinterpret_cast<void**>(&CVariableHash::p_FindKey)},
@@ -218,6 +224,9 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&CGameEffect::p_DecodeEffect)},
 	std::pair{TEXT("CDerivedStats::GetAtOffset"), reinterpret_cast<void**>(&CDerivedStats::p_GetAtOffset)},
 	std::pair{TEXT("CDerivedStats::GetSpellState"), reinterpret_cast<void**>(&CDerivedStats::p_GetSpellState)},
+	std::pair{TEXT("CDerivedStats::GetWizardLevelCast"), reinterpret_cast<void**>(&CDerivedStats::p_GetWizardLevelCast)},
+	std::pair{TEXT("CDerivedStats::GetPriestLevelCast"), reinterpret_cast<void**>(&CDerivedStats::p_GetPriestLevelCast)},
+	std::pair{TEXT("CDerivedStats::GetAverageLevel"), reinterpret_cast<void**>(&CDerivedStats::p_GetAverageLevel)},
 	std::pair{TEXT("CGameArea::GetNearest2"), reinterpret_cast<void**>(&CGameArea::p_GetNearest2)},
 	std::pair{TEXT("CGameArea::AdjustTarget"), reinterpret_cast<void**>(&CGameArea::p_AdjustTarget)},
 	std::pair{TEXT("CGameArea::CheckWalkable"), reinterpret_cast<void**>(&CGameArea::p_CheckWalkable)},
@@ -261,4 +270,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CGameSprite::GetNameRef"), reinterpret_cast<void**>(&CGameSprite::p_GetNameRef)},
 	std::pair{TEXT("CGameSprite::GetName"), reinterpret_cast<void**>(&CGameSprite::p_GetName)},
 	std::pair{TEXT("CGameSprite::SpellPoint"), reinterpret_cast<void**>(&CGameSprite::p_SpellPoint)},
+	std::pair{TEXT("CGameSprite::GetKnownSpellMage"), reinterpret_cast<void**>(&CGameSprite::p_GetKnownSpellMage)},
+	std::pair{TEXT("CGameSprite::GetKnownSpellPriest"), reinterpret_cast<void**>(&CGameSprite::p_GetKnownSpellPriest)},
+	std::pair{TEXT("CGameSprite::GetKnownSpellInnate"), reinterpret_cast<void**>(&CGameSprite::p_GetKnownSpellInnate)},
 };
