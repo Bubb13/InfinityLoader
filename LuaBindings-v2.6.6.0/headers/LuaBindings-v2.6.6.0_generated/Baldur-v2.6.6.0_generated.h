@@ -13,15 +13,15 @@ typedef unsigned int uint;
 
 template<typename T>
 struct hasDestruct {
-    template<typename U>
-    static constexpr auto check(U*) -> decltype(std::declval<U>().Destruct(), false) {
-        return true;
-    }
-    template<typename>
-    static constexpr bool check(...) {
-        return false;
-    }
-    static constexpr bool value = check<T>(nullptr);
+	template<typename U>
+	static constexpr auto check(U*) -> decltype(std::declval<U>().Destruct(), false) {
+		return true;
+	}
+	template<typename>
+	static constexpr bool check(...) {
+		return false;
+	}
+	static constexpr bool value = check<T>(nullptr);
 };
 
 template<typename A>
@@ -7606,6 +7606,11 @@ struct CResRef
 		}
 	}
 
+	CResRef(const char* chars)
+	{
+		set(chars);
+	}
+
 	void copy(CResRef* newVal)
 	{
 		*reinterpret_cast<__int64*>(&m_resRef) = *reinterpret_cast<__int64*>(newVal);
@@ -8101,7 +8106,7 @@ struct CAIIdList : CResHelper<CResText,1008>
 	typedef CAIId* (__thiscall *type_Find1)(CAIIdList* pThis, int id);
 	static type_Find1 p_Find1;
 
-	void Construct1()
+	void Construct()
 	{
 		p_Construct1(this);
 	}

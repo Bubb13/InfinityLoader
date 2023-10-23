@@ -186,7 +186,7 @@ namespace OpaqueObject {
 	                                                                                                \
 	className::className(OpaqueObject::AllocMode allocMode)                                         \
 		: OpaqueObject::Obj<dataClassName>(allocMode) {}                                            \
-                                                                                                    \
+	                                                                                                \
 	EXPORT className::className()                                                                   \
 		: OpaqueObject::Obj<dataClassName>() {}                                                     \
 	                                                                                                \

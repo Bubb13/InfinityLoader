@@ -13,15 +13,15 @@ typedef unsigned int uint;
 
 template<typename T>
 struct hasDestruct {
-    template<typename U>
-    static constexpr auto check(U*) -> decltype(std::declval<U>().Destruct(), false) {
-        return true;
-    }
-    template<typename>
-    static constexpr bool check(...) {
-        return false;
-    }
-    static constexpr bool value = check<T>(nullptr);
+	template<typename U>
+	static constexpr auto check(U*) -> decltype(std::declval<U>().Destruct(), false) {
+		return true;
+	}
+	template<typename>
+	static constexpr bool check(...) {
+		return false;
+	}
+	static constexpr bool value = check<T>(nullptr);
 };
 
 template<typename A>

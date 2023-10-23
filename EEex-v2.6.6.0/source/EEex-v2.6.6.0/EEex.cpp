@@ -1041,34 +1041,34 @@ void EEex::DeepCopy(lua_State* L) {
 
 void EEex::Override_bootstrapLua() {
 
-    //*p_g_lua = luaL_newstate();
+	//*p_g_lua = luaL_newstate();
 	lua_State *const L = luaState();
 	*p_g_lua = L;
 
-    //luaL_requiref(L, "_G", luaopen_base, 1);
-    //lua_settop(L, -2);
+	//luaL_requiref(L, "_G", luaopen_base, 1);
+	//lua_settop(L, -2);
 
-    lua_pushcfunction(L, p_l_log_print);
-    lua_setglobal(L, "print");
+	lua_pushcfunction(L, p_l_log_print);
+	lua_setglobal(L, "print");
 
-    //luaL_requiref(L, "table", luaopen_table, 1);
-    //lua_settop(L, -2);
+	//luaL_requiref(L, "table", luaopen_table, 1);
+	//lua_settop(L, -2);
 
-    //luaL_requiref(L, "string", luaopen_string, 1);
-    //lua_settop(L, -2);
+	//luaL_requiref(L, "string", luaopen_string, 1);
+	//lua_settop(L, -2);
 
-    //luaL_requiref(L, "bit32", luaopen_bit32, 1);
-    //lua_settop(L, -2);
+	//luaL_requiref(L, "bit32", luaopen_bit32, 1);
+	//lua_settop(L, -2);
 
-    //luaL_requiref(L, "math", luaopen_math, 1);
-    //lua_settop(L, -2);
+	//luaL_requiref(L, "math", luaopen_math, 1);
+	//lua_settop(L, -2);
 
-    //luaL_requiref(L, "debug", luaopen_debug, 1);
-    //lua_settop(L, -2);
+	//luaL_requiref(L, "debug", luaopen_debug, 1);
+	//lua_settop(L, -2);
 
-    lua_atpanic(L, p_panic);
+	lua_atpanic(L, p_panic);
 
-    int result = luaL_loadstring(L,
+	int result = luaL_loadstring(L,
 R"(
 options = {};
 function SetPrivateProfileString( section, key, value )
@@ -1078,14 +1078,14 @@ end
 )"
 	);
 
-    if (result == 0) {
-        lua_pcallk(L, 0, -1, 0, 0, nullptr);
-    }
+	if (result == 0) {
+		lua_pcallk(L, 0, -1, 0, 0, nullptr);
+	}
 
-    lua_pushcfunction(L, p_Chitin_GetSectionCallback);
-    lua_setglobal(L, "Chitin_GetSectionCallback");
+	lua_pushcfunction(L, p_Chitin_GetSectionCallback);
+	lua_setglobal(L, "Chitin_GetSectionCallback");
 
-    result = luaL_loadstring(L,
+	result = luaL_loadstring(L,
 R"(
 function getOptionsSection(sectionName, functionPointer, batton)
 	for index,value in pairs(options) do
@@ -1099,11 +1099,11 @@ end
 )"
 	);
 
-    if (result == 0) {
-        lua_pcallk(L, 0, -1, 0, 0, nullptr);
-    }
+	if (result == 0) {
+		lua_pcallk(L, 0, -1, 0, 0, nullptr);
+	}
 
-    result = luaL_loadstring(L,
+	result = luaL_loadstring(L,
 R"(
 languages = {}
 function setLanguageVisible( locale )
@@ -1112,9 +1112,9 @@ end
 )"
 	);
 
-    if (result == 0) {
-        lua_pcallk(L, 0, -1, 0, 0, nullptr);
-    }
+	if (result == 0) {
+		lua_pcallk(L, 0, -1, 0, 0, nullptr);
+	}
 }
 
 int checkNoSavingThrowsAndEvasion(CGameEffect *const pEffect, CGameSprite *const pTarget) {
