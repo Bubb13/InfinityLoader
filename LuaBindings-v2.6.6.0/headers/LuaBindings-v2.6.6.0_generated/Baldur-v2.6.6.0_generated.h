@@ -6460,8 +6460,6 @@ struct Array
 {
 	T data[size];
 
-	Array() = delete;
-
 	T get(size_t index)
 	{
 		if (index >= size) {

@@ -18,6 +18,13 @@ enum class LuaMode {
 	REPLACE_INTERNAL_WITH_EXTERNAL,
 };
 
+enum class PatternValueType {
+	INVALID = 0,
+	SINGLE = 1,
+	LIST = 2,
+};
+typedef const void* PatternValueHandle;
+
 class SharedState {
 private:
 	void* imp;
@@ -40,11 +47,20 @@ public:
 	IMPORT lua_State* LuaState();
 	IMPORT HMODULE LuaLibrary();
 	IMPORT LuaMode LuaMode();
-	IMPORT void IteratePatternValues(std::function<bool(const String&, uintptr_t)> func);
-	IMPORT bool GetPatternValue(const String& name, uintptr_t& out);
-	IMPORT void SetPatternValue(const String& name, uintptr_t value);
-	IMPORT void SetPatternValue(const String& name, void* value);
-	IMPORT void AddAfterPatternSetListener(std::function<void(const String&, uintptr_t)> listener);
+
+	IMPORT void AddAfterPatternModifiedListener(std::function<void(PatternValueHandle, uintptr_t)> listener);
+	IMPORT void AddListPatternValue(PatternValueHandle valueHandle, uintptr_t value);
+	IMPORT void AddListPatternValue(PatternValueHandle valueHandle, void* value);
+	IMPORT bool GetOrCreatePatternValue(const String& name, PatternValueType valueType, PatternValueHandle& out);
+	IMPORT PatternValueType GetPatternValue(const String& name, PatternValueHandle& out);
+	IMPORT const String& GetPatternValueName(PatternValueHandle valueHandle);
+	IMPORT PatternValueType GetPatternValueType(PatternValueHandle valueHandle);
+	IMPORT uintptr_t GetSinglePatternValue(PatternValueHandle valueHandle);
+	IMPORT void IteratePatternList(PatternValueHandle valueHandle, std::function<bool(uintptr_t)> func);
+	IMPORT void IteratePatternValues(std::function<bool(PatternValueHandle)> func);
+	IMPORT void SetSinglePatternValue(PatternValueHandle valueHandle, uintptr_t value);
+	IMPORT void SetSinglePatternValue(PatternValueHandle valueHandle, void* value);
+
 	IMPORT uintptr_t ImageBase();
 	IMPORT DWORD LoadSegmentInfo(const StringA& sectionName);
 	IMPORT bool GetSegmentPointer(const char* name, void*& out);

@@ -20,11 +20,11 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 
 	#define setLuaPointer(patternName, functionNameStr, functionName) \
 		if (reinterpret_cast<intptr_t>(luaLibrary) == -1) { \
-			if (sharedState().GetPatternValue(TEXT(patternName), patternVal)) { \
-				##functionName = (type_##functionName)(patternVal); \
+			if (sharedState().GetPatternValue(TEXT(patternName), patternHandle) == PatternValueType::SINGLE) { \
+				##functionName = (type_##functionName)(sharedState().GetSinglePatternValue(patternHandle)); \
 			} \
 			else { \
-				Print("[!][LuaProvider] Lua pattern not defined: \"Hardcoded_%s\"; binding failed!\n", functionNameStr); \
+				Print("[!][LuaProvider] Lua pattern type not SINGLE: \"Hardcoded_%s\"; binding failed!\n", functionNameStr); \
 				return -1; \
 			} \
 		} \
@@ -36,8 +36,9 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 
 	sharedState() = sharedDLL;
 	HMODULE luaLibrary = luaLibrary();
-	uintptr_t patternVal;
+	PatternValueHandle patternHandle;
 
+	setLuaPointer("Hardcoded_lua_atpanic", "lua_atpanic", lua_atpanic)
 	setLuaPointer("Hardcoded_lua_callk", "lua_callk", lua_callk)
 	setLuaPointer("Hardcoded_lua_createtable", "lua_createtable", lua_createtable)
 	setLuaPointer("Hardcoded_lua_getfield", "lua_getfield", lua_getfield)

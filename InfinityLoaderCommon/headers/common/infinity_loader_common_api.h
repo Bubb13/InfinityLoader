@@ -76,27 +76,30 @@ IMPORT long long CurrentMicroseconds();
 // INI Handling //
 //////////////////
 
-IMPORT bool INISectionExists(const String& iniPath, const TCHAR* section);
-
 IMPORT DWORD GetINIStr(const String& iniPath, const TCHAR* section, const TCHAR* key, String& outStr, bool& filled);
-IMPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr);
-
-IMPORT bool DecStrToBool(const String& decimalStr, bool& result);
-IMPORT bool DecStrToInt(const String& decimalStr, int& accumulator);
-IMPORT bool DecStrToIntPtr(const String& decimalStr, intptr_t& accumulator);
-
 IMPORT bool GetINILongLong(const String& iniPath, const TCHAR* section, const TCHAR* key, long long& outInteger, bool& filled);
 
+IMPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR* section, const TCHAR* key, const TCHAR* def, String& outStr);
 IMPORT bool GetINIBoolDef(const String& iniPath, const TCHAR* section, const TCHAR* key, bool def, bool& outInteger);
 IMPORT bool GetINIIntDef(const String& iniPath, const TCHAR* section, const TCHAR* key, int def, int& outInteger);
 IMPORT bool GetINIIntPtrDef(const String& iniPath, const TCHAR* section, const TCHAR* key, intptr_t def, intptr_t& outInteger);
 IMPORT bool GetINIUIntPtrDef(const String& iniPath, const TCHAR* section, const TCHAR* key, uintptr_t def, uintptr_t& outInteger);
 
+IMPORT bool INISectionExists(const String& iniPath, const TCHAR* section);
+
+IMPORT DWORD SetINIStr(const String& iniPath, const TCHAR* section, const TCHAR* key, const String& toSet);
 IMPORT DWORD SetINIIntPtr(const String& iniPath, const TCHAR* section, const TCHAR* key, intptr_t toSet);
 IMPORT DWORD SetINILongLong(const String& iniPath, const TCHAR* section, const TCHAR* key, long long toSet);
+IMPORT DWORD SetINIUIntPtr(const String& iniPath, const TCHAR* section, const TCHAR* key, uintptr_t toSet);
+
+IMPORT bool DecStrToBool(const String& decimalStr, bool& result);
+IMPORT bool DecStrToInt(const String& decimalStr, int& accumulator);
+IMPORT bool DecStrToIntPtr(const String& decimalStr, intptr_t& accumulator);
+IMPORT bool DecStrToUIntPtr(const String& decimalStr, uintptr_t& accumulator);
 
 IMPORT StringA IntToDecStrA(int integer);
 IMPORT StringA PtrDiffToDecStrA(ptrdiff_t integer);
+IMPORT String UIntPtrToDecStr(uintptr_t integer);
 
 ///////////
 // Paths //

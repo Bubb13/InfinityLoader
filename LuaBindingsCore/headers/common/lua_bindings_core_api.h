@@ -11,7 +11,7 @@
 // Main //
 //////////
 
-IMPORT void InitLuaBindingsCommon(SharedState argSharedDLL, std::function<void()> specificBindingsCallback = nullptr);
+IMPORT void InitLuaBindingsCommon(SharedState argSharedDLL);
 IMPORT void RegisterClassBaseclassOffsets(const char* name, const std::initializer_list<std::pair<const char*, uintptr_t>>& toRegister);
 IMPORT void RegisterBaseclassOffsets(const std::initializer_list<std::pair<const char*, std::initializer_list<std::pair<const char*, uintptr_t>>>>& toRegister);
 

@@ -130,25 +130,50 @@ constexpr void* GetMemberPtr(T func) {
 	return reinterpret_cast<void*&>(func);
 }
 
-EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL, std::function<void()> specificBindingsCallback) {
+void exportPattern(const String& name, void* value) {
+
+	PatternValueHandle handle;
+	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, handle)) {
+		PrintT(TEXT("[!][LuaBindingsCore.dll] exportPattern() - [%s].Type must be SINGLE\n"), name.c_str());
+		return;
+	}
+
+	sharedState().SetSinglePatternValue(handle, value);
+}
+
+EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 
 #define setNamedPointer(patternName, funcName, ptrName) \
-	if (sharedState().GetPatternValue(TEXT(patternName), patternVal)) { \
-		##ptrName = (type_##funcName)(patternVal); \
-	} \
-	else { \
-		Print("[!][LuaBindingsCore] Pattern not defined: \"%s\"; initialization failed!\n", patternName); \
-		return; \
-	} \
+	switch (sharedState().GetPatternValue(TEXT(patternName), patternHandle)) { \
+		case (PatternValueType::SINGLE): { \
+			##ptrName = (type_##funcName)(sharedState().GetSinglePatternValue(patternHandle)); \
+			break; \
+		} \
+		case (PatternValueType::INVALID): { \
+			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed!\n", patternName); \
+			return; \
+		} \
+		default: { \
+			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed!\n", patternName); \
+			return; \
+		} \
+	}
 
 #define setPointer(patternName, funcName) \
-	if (sharedState().GetPatternValue(TEXT(patternName), patternVal)) { \
-		##funcName = (type_##funcName)(patternVal); \
-	} \
-	else { \
-		Print("[!][LuaBindingsCore] Lua pattern not defined: \"%s\"; initialization failed!\n", patternName); \
-		return; \
-	} \
+	switch (sharedState().GetPatternValue(TEXT(patternName), patternHandle)) { \
+		case (PatternValueType::SINGLE): { \
+			##funcName = (type_##funcName)(sharedState().GetSinglePatternValue(patternHandle)); \
+			break; \
+		} \
+		case (PatternValueType::INVALID): { \
+			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed!\n", patternName); \
+			return; \
+		} \
+		default: { \
+			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed!\n", patternName); \
+			return; \
+		} \
+	}
 
 	if (!alreadyInitialized) {
 		sharedState() = argSharedDLL;
@@ -165,7 +190,7 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL, std::function<void()
 			return;
 		}
 
-		uintptr_t patternVal;
+		PatternValueHandle patternHandle;
 
 		// Read required function pointers from the pattern map
 		setNamedPointer("Hardcoded_free", free, p_free);
@@ -223,23 +248,19 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL, std::function<void()
 		lua_setglobal(L, "NULL_POINTER");
 
 		// Export tolua overrides (the versions in-engine aren't sufficient)
-		sharedState().SetPatternValue(TEXT("Hardcoded_tolua_pushusertype"), tolua_pushusertype_nocast);
-		sharedState().SetPatternValue(TEXT("override_class_index_event"), class_index_event);
-		sharedState().SetPatternValue(TEXT("override_class_newindex_event"), class_newindex_event);
-		sharedState().SetPatternValue(TEXT("override_module_index_event"), module_index_event);
-		sharedState().SetPatternValue(TEXT("override_module_newindex_event"), module_newindex_event);
-		sharedState().SetPatternValue(TEXT("override_tolua_cclass"), tolua_cclass_translate);
-		sharedState().SetPatternValue(TEXT("override_tolua_open"), tolua_open);
-		sharedState().SetPatternValue(TEXT("override_tolua_beginmodule"), tolua_beginmodule);
-		sharedState().SetPatternValue(TEXT("override_tolua_module"), tolua_module);
-		sharedState().SetPatternValue(TEXT("override_tolua_usertype"), tolua_usertype);
-	}
+		exportPattern(TEXT("Hardcoded_tolua_pushusertype"), tolua_pushusertype_nocast);
+		exportPattern(TEXT("override_class_index_event"), class_index_event);
+		exportPattern(TEXT("override_class_newindex_event"), class_newindex_event);
+		exportPattern(TEXT("override_module_index_event"), module_index_event);
+		exportPattern(TEXT("override_module_newindex_event"), module_newindex_event);
+		exportPattern(TEXT("override_tolua_cclass"), tolua_cclass_translate);
+		exportPattern(TEXT("override_tolua_open"), tolua_open);
+		exportPattern(TEXT("override_tolua_beginmodule"), tolua_beginmodule);
+		exportPattern(TEXT("override_tolua_module"), tolua_module);
+		exportPattern(TEXT("override_tolua_usertype"), tolua_usertype);
 
-	if (specificBindingsCallback != nullptr) {
-		specificBindingsCallback();
+		// The Lua environment needs to grab the pattern map and execute any
+		// patches relating to tolua before the Lua bindings are exported
+		runCallback(L);
 	}
-
-	// The Lua environment needs to grab the pattern map and execute any
-	// patches relating to tolua before the Lua bindings are exported
-	runCallback(L);
 }

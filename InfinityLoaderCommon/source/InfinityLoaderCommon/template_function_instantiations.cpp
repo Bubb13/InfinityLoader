@@ -43,6 +43,10 @@ EXPORT bool DecStrToIntPtr(const String& decimalStr, intptr_t& accumulator) {
 	return decimalStrToIntegerTemplate<intptr_t>(decimalStr, accumulator);
 }
 
+EXPORT bool DecStrToUIntPtr(const String& decimalStr, uintptr_t& accumulator) {
+	return decimalStrToIntegerTemplate<uintptr_t>(decimalStr, accumulator);
+}
+
 EXPORT bool GetINILongLong(const String& iniPath, const TCHAR* section, const TCHAR* key, long long& outInteger, bool& filled) {
 	return getINIIntegerTemplate<long long>(iniPath, section, key, outInteger, filled);
 }
@@ -71,10 +75,18 @@ EXPORT DWORD SetINILongLong(const String& iniPath, const TCHAR* section, const T
 	return setINIIntegerTemplate<long long>(iniPath, section, key, toSet);
 }
 
+EXPORT DWORD SetINIUIntPtr(const String& iniPath, const TCHAR* section, const TCHAR* key, const uintptr_t toSet) {
+	return setINIIntegerTemplate<uintptr_t>(iniPath, section, key, toSet);
+}
+
 EXPORT StringA IntToDecStrA(const int integer) {
 	return integerToDecimalStrTemplate<StringA, int>(integer);
 }
 
 EXPORT StringA PtrDiffToDecStrA(const ptrdiff_t integer) {
 	return integerToDecimalStrTemplate<StringA, ptrdiff_t>(integer);
+}
+
+EXPORT String UIntPtrToDecStr(const uintptr_t integer) {
+	return integerToDecimalStrTemplate<String, uintptr_t>(integer);
 }

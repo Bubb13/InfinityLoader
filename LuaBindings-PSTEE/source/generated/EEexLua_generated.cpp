@@ -12555,8 +12555,10 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CGameSprite");
 }
 
-int OpenBindings(lua_State* L)
+void registerBaseclasses();
+int OpenBindingsInternal(lua_State* L)
 {
+	registerBaseclasses();
 	tolua_open(L);
 	tolua_reg_types(L);
 	tolua_module(L, NULL, 0);

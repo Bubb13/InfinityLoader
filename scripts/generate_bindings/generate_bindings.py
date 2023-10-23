@@ -3702,8 +3702,10 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 	out.write("}\n\n")
 
-	out.write("int OpenBindings(lua_State* L)\n")
+	out.write("void registerBaseclasses();\n")
+	out.write("int OpenBindingsInternal(lua_State* L)\n")
 	out.write("{\n")
+	out.write("\tregisterBaseclasses();\n")
 	out.write("\ttolua_open(L);\n")
 	out.write("\ttolua_reg_types(L);\n")
 	out.write("\ttolua_module(L, NULL, 0);\n")
@@ -3810,9 +3812,6 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 	baseclassOut.write("\t});\n")
 	baseclassOut.write("}\n\n")
 
-	baseclassOut.write("void InitGenerated() {\n")
-	baseclassOut.write("\tregisterBaseclasses();\n")
-	baseclassOut.write("}\n")
 
 
 

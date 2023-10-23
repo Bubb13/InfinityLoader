@@ -23,6 +23,18 @@ struct PatternByteEntry {
 	PatternByteEntry(const unsigned char pByte, const bool pIsWild) : byte(pByte), isWild(pIsWild) {};
 };
 
+struct LoadedBindings {
+
+	enum class LoadState {
+		Uninitialized,
+		Initialized,
+		BindingsOpened,
+	};
+
+	LoadState loadState = LoadState::Uninitialized;
+	HMODULE hHandle;
+};
+
 /////////////
 // Globals //
 /////////////
@@ -30,6 +42,7 @@ struct PatternByteEntry {
 String exeNameForPatterns;
 bool attemptUseCached = false;
 asmjit::JitRuntime rt;
+std::unordered_map<StringA, LoadedBindings> loadedBindingsMap{};
 
 const std::tuple<const TCHAR*, const TCHAR*, const unsigned char> aHexLetterToByte[] = {
 	std::tuple{TEXT("0"), TEXT("0"), 0},
@@ -92,28 +105,28 @@ void callOverrideFile(lua_State* L, const char* name) {
 
 	StringA luaFile = StringA{ workingFolderA() }.append("override\\").append(name).append(".lua");
 	if (luaL_loadfilex(L, luaFile.c_str(), nullptr) != LUA_OK) {
-		                                                                                    // [ debug, traceback, errorMessage ]
+																							// [ debug, traceback, errorMessage ]
 		lua_pushvalue(L, -2);                                                               // [ debug, traceback, errorMessage, traceback ]
 		lua_pushvalue(L, -2);                                                               // [ debug, traceback, errorMessage, traceback, errorMessage ]
 		if (lua_pcallk(L, 1, 1, 0, 0, nullptr) != LUA_OK) {
-			                                                                                // [ debug, traceback, errorMessage, errorErrorMessage  ]
+																							// [ debug, traceback, errorMessage, errorErrorMessage  ]
 			Print("[!] Error in error handling calling debug.traceback()\n");
 			lua_pop(L, 4);                                                                  // [ ]
 			return;
 		}
-		                                                                                    // [ debug, traceback, errorMessage, errorMessageTraceback ]
+																							// [ debug, traceback, errorMessage, errorMessageTraceback ]
 		Print("[!] %s\n", lua_tostring(L, -1));
 		lua_pop(L, 4);                                                                      // [ ]
 		return;
 	}
-	                                                                                        // [ debug, traceback, chunk ]
+																							// [ debug, traceback, chunk ]
 	if (lua_pcallk(L, 0, 0, -2, 0, nullptr) != LUA_OK) {
-		                                                                                    // [ debug, traceback, errorMessage ]
+																							// [ debug, traceback, errorMessage ]
 		Print("[!] %s\n", lua_tostring(L, -1));
 		lua_pop(L, 3);                                                                      // [ ]
 	}
 	else {
-		                                                                                    // [ debug, traceback ]
+																							// [ debug, traceback ]
 		lua_pop(L, 2);                                                                      // [ ]
 	}
 }
@@ -233,7 +246,7 @@ bool decodeByteString(String byteStr, std::list<PatternByteEntry>& listToFill, S
 	return true;
 }
 
-bool findByteList(void* sectionPtr, DWORD sectionSize, std::list<PatternByteEntry> byteList, uintptr_t& addressOut) {
+bool findByteList(void* sectionPtr, DWORD sectionSize, std::list<PatternByteEntry>& byteList, uintptr_t& addressOut) {
 
 	unsigned char* curAddress = reinterpret_cast<unsigned char*>(sectionPtr);
 	unsigned char* endAddress = curAddress + sectionSize;
@@ -525,8 +538,10 @@ DWORD resolveAliasTarget(const String aliasList, String& toTransform) {
 }
 
 DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& iniPath,
-	String iniCategoryName, uintptr_t& addressOut)
+	const String& originalINICategoryName, PatternValueHandle& valueHandleOut)
 {
+	String iniCategoryName = originalINICategoryName;
+
 	uintptr_t bExeSwitch;
 	if (DWORD lastError = GetINIUIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("ExeSwitch"), 0, bExeSwitch)) {
 		return lastError;
@@ -547,53 +562,172 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 		iniCategoryName.insert(0, String{ TEXT("!ExeSwitch-") }.append(exeSwitchName).append(TEXT("-")));
 	}
 
-	bool noCache;
-	if (DWORD lastError = GetINIBoolDef(iniPath, iniCategoryName.c_str(), TEXT("NoCache"), false, noCache)) {
-		return lastError;
+	String typeStr;
+	TryRetErr( GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Type"), TEXT("SINGLE"), typeStr));
+
+	PatternValueType type;
+	if (typeStr == TEXT("SINGLE")) {
+		type = PatternValueType::SINGLE;
 	}
+	else if (typeStr == TEXT("LIST")) {
+		type = PatternValueType::LIST;
+	}
+	else {
+		PrintT(TEXT("[!] Invalid [%s].Type.\n"), iniCategoryName.c_str());
+		return -1;
+	}
+
+	bool noCache;
+	TryRetErr( GetINIBoolDef(iniPath, iniCategoryName.c_str(), TEXT("NoCache"), false, noCache));
 
 	if (!noCache && attemptUseCached) {
 
-		uintptr_t cachedAddress;
-		if (DWORD lastError = GetINIUIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), 0, cachedAddress)) {
-			return lastError;
-		}
+		if (type == PatternValueType::SINGLE) {
 
-		if (cachedAddress != 0) {
-			addressOut = cachedAddress;
-			return 0;
+			uintptr_t cachedAddress;
+			TryRetErr( GetINIUIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), 0, cachedAddress) )
+
+			if (cachedAddress != 0) {
+
+				PatternValueHandle handle;
+				if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::SINGLE, handle)) {
+					PrintT(TEXT("[!] Conflicting pattern [%s].Type.\n"), originalINICategoryName.c_str());
+					return -1;
+				}
+
+				sharedState().SetSinglePatternValue(handle, cachedAddress);
+				valueHandleOut = handle;
+				return 0;
+			}
+		}
+		else if (type == PatternValueType::LIST) {
+
+			String cachedAddresses;
+			bool filled;
+			TryRetErr( GetINIStr(iniPath, iniCategoryName.c_str(), TEXT("CachedAddresses"), cachedAddresses, filled) )
+
+			if (filled) {
+
+				PatternValueHandle handle;
+				if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::LIST, handle)) {
+					PrintT(TEXT("[!] Conflicting pattern [%s].Type.\n"), originalINICategoryName.c_str());
+					return -1;
+				}
+
+				bool success = false;
+
+				ForEveryCharSplit(cachedAddresses, TCHAR{','}, [&](String addressStr) {
+
+					uintptr_t address;
+					if (!DecStrToUIntPtr(addressStr, address)) {
+						success = false;
+						PrintT(TEXT("[!] Failed to parse [%s].CachedAddresses.\n"), iniCategoryName.c_str());
+						return true;
+					}
+
+					success = true;
+					sharedState().AddListPatternValue(handle, address);
+					return false;
+				});
+
+				if (success) {
+					valueHandleOut = handle;
+					return 0;
+				}
+			}
 		}
 	}
 
-	String hardcodedPatchPattern;
-	if (DWORD lastError = GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Pattern"), TEXT(""), hardcodedPatchPattern)) {
+	String pattern;
+	if (DWORD lastError = GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Pattern"), TEXT(""), pattern)) {
 		return lastError;
 	}
 
 	std::list<PatternByteEntry> byteList;
 	String errorStr;
-	if (!decodeByteString(hardcodedPatchPattern, byteList, errorStr)) {
+	if (!decodeByteString(pattern, byteList, errorStr)) {
 		PrintT(TEXT("[!] Failed to decode [%s].Pattern: \"%s\".\n"), iniCategoryName.c_str(), errorStr.c_str());
 		return -1;
 	}
 
-	if (!findByteList(sectionPtr, sectionSize, byteList, addressOut)) {
-		PrintT(TEXT("[!] Could not find [%s].Pattern.\n"), iniCategoryName.c_str());
-		return -1;
-	}
+	if (type == PatternValueType::SINGLE) {
 
-	String operations;
-	if (DWORD lastError = GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Operations"), TEXT(""), operations)) {
-		return lastError;
-	}
+		uintptr_t foundAddress;
+		if (!findByteList(sectionPtr, sectionSize, byteList, foundAddress)) {
+			PrintT(TEXT("[!] Could not find [%s].Pattern.\n"), iniCategoryName.c_str());
+			return -1;
+		}
 
-	if (operations != TEXT("")) {
-		handlePatternOperations(iniCategoryName, operations, addressOut);
+		String operations;
+		if (DWORD lastError = GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Operations"), TEXT(""), operations)) {
+			return lastError;
+		}
+
+		if (operations != TEXT("")) {
+			handlePatternOperations(iniCategoryName, operations, foundAddress);
+		}
+
+		PatternValueHandle handle;
+		if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::SINGLE, handle)) {
+			PrintT(TEXT("[!] Conflicting pattern [%s].Type.\n"), originalINICategoryName.c_str());
+			return -1;
+		}
+		sharedState().SetSinglePatternValue(handle, foundAddress);
+		valueHandleOut = handle;
+	}
+	else if (type == PatternValueType::LIST) {
+
+		PatternValueHandle handle;
+		if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::LIST, handle)) {
+			PrintT(TEXT("[!] Conflicting pattern [%s].Type.\n"), originalINICategoryName.c_str());
+			return -1;
+		}
+
+		void* curAddress = sectionPtr;
+		while (true) {
+
+			uintptr_t foundAddress;
+			if (!findByteList(curAddress, sectionSize, byteList, foundAddress)) {
+				break;
+			}
+
+			String operations;
+			TryRetErr( GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Operations"), TEXT(""), operations) )
+
+			uintptr_t finalAddress = foundAddress;
+			if (operations != TEXT("")) {
+				handlePatternOperations(iniCategoryName, operations, finalAddress);
+			}
+
+			sharedState().AddListPatternValue(handle, finalAddress);
+			curAddress = reinterpret_cast<void*>(foundAddress + byteList.size());
+		}
+
+		if (curAddress == sectionPtr) {
+			PrintT(TEXT("[!] Could not find [%s].Pattern.\n"), iniCategoryName.c_str());
+			return -1;
+		}
+
+		valueHandleOut = handle;
 	}
 
 	if (!noCache) {
-		if (DWORD lastError = SetINIIntPtr(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), addressOut)) {
-			return lastError;
+
+		if (type == PatternValueType::SINGLE) {
+			TryRetErr( SetINIUIntPtr(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), sharedState().GetSinglePatternValue(valueHandleOut)) )
+		}
+		else if (type == PatternValueType::LIST) {
+
+			OStringStream stream{};
+
+			sharedState().IteratePatternList(valueHandleOut, [&](uintptr_t address) {
+				stream << UIntPtrToDecStr(address) << ",";
+				return false;
+			});
+
+			String listStr = stream.str();
+			listStr.resize(listStr.length() - 1);
+			TryRetErr( SetINIStr(iniPath, iniCategoryName.c_str(), TEXT("CachedAddresses"), listStr) )
 		}
 	}
 	return 0;
@@ -651,12 +785,11 @@ DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
 			return false;
 		}
 
-		uintptr_t address;
-		if (returnVal = findINICategoryPattern(sectionPtr, sectionSize, dbPath(), section.c_str(), address)) {
+		PatternValueHandle patternValue;
+		if (returnVal = findINICategoryPattern(sectionPtr, sectionSize, dbPath(), section.c_str(), patternValue)) {
 			return true;
 		}
 
-		sharedState().SetPatternValue(section, address);
 		return false;
 	});
 
@@ -798,13 +931,13 @@ int iterateRegexLua(lua_State* L) {
 		}
 
 		if (lua_pcallk(L, 4, 1, -6, 0, nullptr) != LUA_OK) {
-			                                                         // [ debug, traceback, errorMessage ]
+																		// [ debug, traceback, errorMessage ]
 			Print("[!] %s\n", lua_tostring(L, -1));
 			lua_pop(L, 1);                                           // [ debug, traceback ]
 			break;
 		}
 		else {
-			                                                         // [ debug, traceback, ret ]
+																		// [ debug, traceback, ret ]
 			int retVal = lua_toboolean(L, -1);
 			lua_pop(L, 1);                                           // [ debug, traceback ]
 			if (retVal) {
@@ -861,12 +994,12 @@ int jitAtInternalLua(lua_State* L) {
 		lua_pushvalue(L, 2);                                                // [ debug, traceback, func ]
 		lua_pushinteger(L, size);                                           // [ debug, traceback, func, size ]
 		if (lua_pcallk(L, 1, 1, -3, 0, nullptr) != LUA_OK) {
-			                                                                // [ debug, traceback, errorMessage ]
+																			// [ debug, traceback, errorMessage ]
 			Print("[!] AsmJit failed: %s\n", lua_tostring(L, -1));
 			lua_pop(L, 3);                                                  // [ ]
 			return reinterpret_cast<uint8_t*>(-1);
 		}
-		                                                                    // [ debug, traceback, result ]
+																			// [ debug, traceback, result ]
 		uint8_t* newDst = reinterpret_cast<uint8_t*>(lua_tointeger(L, -1));
 		lua_pop(L, 3);                                                      // [ ]
 		return newDst;
@@ -880,27 +1013,68 @@ int jitAtInternalLua(lua_State* L) {
 	return 0;
 }
 
-int loadLuaBindingsLua(lua_State* L) {
+bool initializeLuaBindings(const char* bindingsFileName, LoadedBindings& loadedBindings) {
 
-	const char* bindingsFileName = lua_tolstring(L, 1, nullptr);
 	StringA bindingsPath = StringA{ workingFolderA() }.append(bindingsFileName).append(".dll");
 
-	HMODULE bindingsHandle;
-	if (bindingsHandle = LoadLibraryA(bindingsPath.c_str()); !bindingsHandle) {
+	if (loadedBindings.hHandle = LoadLibraryA(bindingsPath.c_str()); !loadedBindings.hHandle) {
 		Print("[!] LoadLibraryA(\"%s\") failed (%d).\n", bindingsPath.c_str(), GetLastError());
-		return 0;
+		return true;
 	}
 
-	FARPROC proc;
-	if (proc = GetProcAddress(bindingsHandle, "Init"); !proc) {
+	FARPROC initProcFar;
+	if (initProcFar = GetProcAddress(loadedBindings.hHandle, "Init"); !initProcFar) {
 		Print("[!] GetProcAddress failed (%d).\n", GetLastError());
-		return 0;
+		return true;
 	}
 
 	typedef void(__stdcall* type_Init)(SharedState);
-	type_Init initProc = reinterpret_cast<type_Init>(proc);
+	type_Init initProc = reinterpret_cast<type_Init>(initProcFar);
 	initProc(sharedState());
 
+	loadedBindings.loadState = LoadedBindings::LoadState::Initialized;
+	return false;
+}
+
+int openLuaBindingsLua(lua_State* L) {
+
+	const char* bindingsFileName = lua_tolstring(L, 1, nullptr);
+	LoadedBindings& loadedBindings = loadedBindingsMap[bindingsFileName];
+
+	if (loadedBindings.loadState == LoadedBindings::LoadState::Uninitialized
+		&& initializeLuaBindings(bindingsFileName, loadedBindings))
+	{
+		return 0;
+	}
+
+	if (loadedBindings.loadState == LoadedBindings::LoadState::Initialized) {
+
+		FARPROC openBindingsProcFar;
+		if (openBindingsProcFar = GetProcAddress(loadedBindings.hHandle, "OpenBindings"); !openBindingsProcFar) {
+			Print("[!] GetProcAddress failed (%d).\n", GetLastError());
+			return 0;
+		}
+
+		typedef void(__stdcall* type_OpenBindings)();
+		type_OpenBindings openBindingsProc = reinterpret_cast<type_OpenBindings>(openBindingsProcFar);
+		openBindingsProc();
+
+		loadedBindings.loadState = LoadedBindings::LoadState::BindingsOpened;
+	}
+
+	return 0;
+}
+
+int initializeLuaBindingsLua(lua_State* L) {
+
+	const char* bindingsFileName = lua_tolstring(L, 1, nullptr);
+	LoadedBindings& loadedBindings = loadedBindingsMap[bindingsFileName];
+
+	if (loadedBindings.loadState != LoadedBindings::LoadState::Uninitialized) {
+		return 0;
+	}
+
+	initializeLuaBindings(bindingsFileName, loadedBindings);
 	return 0;
 }
 
@@ -1183,10 +1357,13 @@ DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 		return -1;
 	}
 
-	uintptr_t patchAddress;
-	if (DWORD lastError = findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_SDL_LogOutput()_fprintf"), patchAddress)) {
-		return lastError;
+	PatternValueHandle patchAddressHandle;
+	TryRetErr( findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_SDL_LogOutput()_fprintf"), patchAddressHandle) )
+	if (sharedState().GetPatternValueType(patchAddressHandle) != PatternValueType::SINGLE) {
+		Print("[!][InfinityLoaderDLL] writeReplaceLogFunction() - [Hardcoded_SDL_LogOutput()_fprintf].Type must be SINGLE\n");
+		return -1;
 	}
+	uintptr_t patchAddress = sharedState().GetSinglePatternValue(patchAddressHandle);
 
 	uintptr_t curAllocatedPtr;
 	SYSTEM_INFO info;
@@ -1402,7 +1579,14 @@ cleanup:;
 
 template<typename pointer_type>
 void fillExportedPointer(const String& name, pointer_type& pointer, uintptr_t address) {
-	sharedState().SetPatternValue(name, address);
+
+	PatternValueHandle patternHandle;
+	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, patternHandle)) {
+		PrintT(TEXT("[!][InfinityLoaderDLL] fillExportedPointer() - [%s].Type must be SINGLE\n"), name.c_str());
+		return;
+	}
+
+	sharedState().SetSinglePatternValue(patternHandle, address);
 	pointer = reinterpret_cast<pointer_type>(address);
 }
 
@@ -1414,13 +1598,18 @@ void fillExportedPointer(const String& name, pointer_type& pointer, void* addres
 template<typename pointer_type, typename operations_type>
 bool fillPatternPointer(void* segmentPtr, DWORD segmentSize, const String& name, pointer_type& pointer, const operations_type& operations) {
 
-	uintptr_t address;
-	if (findINICategoryPattern(segmentPtr, segmentSize, iniPath(), name, address)) {
+	PatternValueHandle patternHandle;
+	TryRetErr( findINICategoryPattern(segmentPtr, segmentSize, iniPath(), name, patternHandle) )
+
+	if (sharedState().GetPatternValueType(patternHandle) != PatternValueType::SINGLE) {
+		PrintT(TEXT("[!][InfinityLoaderDLL] fillPatternPointer() - [%s].Type must be SINGLE\n"), name.c_str());
 		return true;
 	}
 
+	uintptr_t address = sharedState().GetSinglePatternValue(patternHandle);
 	operations(address);
-	fillExportedPointer(name, pointer, address);
+	sharedState().SetSinglePatternValue(patternHandle, address);
+	pointer = reinterpret_cast<pointer_type>(address);
 	return false;
 }
 
@@ -1436,7 +1625,16 @@ DWORD fillLuaPointer(void* segmentPtr, DWORD segmentSize, const String& name, po
 	uintptr_t address;
 
 	if (luaMode() == LuaMode::INTERNAL) {
-		TryRetErr( findINICategoryPattern(segmentPtr, segmentSize, iniPath(), hardcodedName, address) )
+
+		PatternValueHandle patternHandle;
+		TryRetErr( findINICategoryPattern(segmentPtr, segmentSize, iniPath(), hardcodedName, patternHandle) )
+
+		if (sharedState().GetPatternValueType(patternHandle) != PatternValueType::SINGLE) {
+			PrintT(TEXT("[!][InfinityLoaderDLL] fillLuaPointer() - [%s].Type must be SINGLE\n"), name.c_str());
+			return true;
+		}
+
+		address = sharedState().GetSinglePatternValue(patternHandle);
 		operations(address);
 	}
 	else {
@@ -1542,15 +1740,17 @@ void initLua() {
 	exposeToLua(L, "EEex_GetLuaLibraryProc", getLuaLibraryProcLua);
 	exposeToLua(L, "EEex_GetMicroseconds", getMicrosecondsLua);
 	exposeToLua(L, "EEex_GetPatternMap", getPatternMapLua);
+	exposeToLua(L, "EEex_InitializeLuaBindings", initializeLuaBindingsLua);
+	exposeToLua(L, "EEex_InitLuaBindings", initializeLuaBindingsLua);
 	exposeToLua(L, "EEex_IterateRegex", iterateRegexLua);
 	exposeToLua(L, "EEex_JIT", jitLua);
 	exposeToLua(L, "EEex_JITAtInternal", jitAtInternalLua);
-	exposeToLua(L, "EEex_LoadLuaBindings", loadLuaBindingsLua);
 	exposeToLua(L, "EEex_LShift", lshiftLua);
 	exposeToLua(L, "EEex_Malloc", mallocLua);
 	exposeToLua(L, "EEex_Memcpy", memcpyLua);
 	exposeToLua(L, "EEex_Memset", memsetLua);
 	exposeToLua(L, "EEex_MessageBoxInternal", messageBoxInternalLua);
+	exposeToLua(L, "EEex_OpenLuaBindings", openLuaBindingsLua);
 	exposeToLua(L, "EEex_Print", printLua);
 	exposeToLua(L, "EEex_PrintErr", printErrLua);
 	exposeToLua(L, "EEex_Read16", read16Lua);
@@ -1671,8 +1871,14 @@ DWORD writeInternalPatch(AssemblyWriter& writer, uintptr_t& curAllocatedPtr, voi
 		return -1;
 	}
 
-	uintptr_t patchAddress;
-	TryRetErr( findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_InternalPatchLocation"), patchAddress))
+	PatternValueHandle patchAddressHandle;
+	TryRetErr( findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_InternalPatchLocation"), patchAddressHandle) )
+	if (sharedState().GetPatternValueType(patchAddressHandle) != PatternValueType::SINGLE) {
+		Print("[!][InfinityLoaderDLL] writeInternalPatch() - [Hardcoded_InternalPatchLocation].Type must be SINGLE\n");
+		return -1;
+	}
+	uintptr_t patchAddress = sharedState().GetSinglePatternValue(patchAddressHandle);
+
 	writeCallHookProcAfterCall(writer, curAllocatedPtr, patchAddress, funcPtr);
 	return ERROR_SUCCESS;
 }
@@ -1695,36 +1901,101 @@ void pushPatternsTable(lua_State* L) {
 	}
 }
 
-// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] ]
-// End Stack: 1 [ ..., registry["InfinityLoader_Patterns"] ]
-void exportPattern(lua_State* L, const String& name, uintptr_t value) {
-	lua_pushstring(L, StrToStrA(name).c_str()); // 2 [ ..., registry["InfinityLoader_Patterns"], name ]
-	lua_pushinteger(L, value);                  // 3 [ ..., registry["InfinityLoader_Patterns"], name, value ]
-	lua_rawset(L, -3);                          // 1 [ ..., registry["InfinityLoader_Patterns"] ]
+// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] -> patternsT ]
+// End Stack: 1 [ ..., patternsT ]
+void exportSinglePatternValue(lua_State *const L, const PatternValueHandle handle, const uintptr_t newAddress) {
+	const String& name = sharedState().GetPatternValueName(handle);
+	const StringA nameA = StrToStrA(name);
+	lua_pushstring(L, nameA.c_str());                               // 2 [ ..., patternsT, name ]
+	lua_pushinteger(L, newAddress);                                 // 3 [ ..., patternsT, name, value ]
+	lua_rawset(L, -3);                                              // 1 [ ..., patternsT ]
 }
 
-// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] ]
-// End Stack: 1 [ ..., registry["InfinityLoader_Patterns"] ]
-void exportExistingPatterns(lua_State* L) {
-	sharedState().IteratePatternValues([&](const String& name, uintptr_t value) -> bool {
-		exportPattern(L, name, value);
+// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] -> patternsT ]
+// End Stack: 2 [ ..., patternsT, patternsT[patternName(handle)] ]
+void pushListPatternTable(lua_State *const L, const PatternValueHandle handle) {
+
+	const String& name = sharedState().GetPatternValueName(handle);
+	const StringA nameA = StrToStrA(name);
+
+	lua_pushstring(L, nameA.c_str());                               // 2 [ ..., patternsT, name ]
+	lua_rawget(L, -2);                                              // 2 [ ..., patternsT, patternsT[name] -> listT ]
+
+	if (!lua_istable(L, -1)) {
+		lua_pop(L, 1);                                              // 1 [ ..., patternsT ]
+		lua_newtable(L);                                            // 2 [ ..., patternsT, newT ]
+		lua_pushstring(L, nameA.c_str());                           // 3 [ ..., patternsT, newT, name ]
+		lua_pushvalue(L, -2);                                       // 4 [ ..., patternsT, newT, name, newT ]
+		lua_rawset(L, -4);                                          // 2 [ ..., patternsT, newT -> listT ]
+		lua_pushinteger(L, 0);                                      // 3 [ ..., patternsT, listT, size ]
+		lua_rawseti(L, -2, 0);                                      // 2 [ ..., patternsT, listT ]
+	}
+}
+
+// Expects:   0 [ ... ]
+// End Stack: 0 [ ... ]
+void exportExistingPatterns() {
+
+	lua_State *const L = luaState();
+	pushPatternsTable(L);                                                             // 1 [ ..., patternsT ]
+
+	sharedState().IteratePatternValues([&](const PatternValueHandle handle) -> bool {
+
+		const PatternValueType type = sharedState().GetPatternValueType(handle);
+		if (type == PatternValueType::SINGLE) {
+			const uintptr_t value = sharedState().GetSinglePatternValue(handle);
+			exportSinglePatternValue(L, handle, value);
+		}
+		else if (type == PatternValueType::LIST) {
+
+			pushListPatternTable(L, handle);                                          // 2 [ ..., patternsT, listT ]
+			lua_rawgeti(L, -1, 0);                                                    // 3 [ ..., patternsT, listT, size ]
+			int size = static_cast<int>(lua_tointeger(L, -1));
+
+			sharedState().IteratePatternList(handle, [&](uintptr_t newAddress) {
+				lua_pushinteger(L, newAddress);                                       // 4 [ ..., patternsT, listT, size, newAddress ]
+				lua_rawseti(L, -3, ++size);                                           // 3 [ ..., patternsT, listT, size ]
+				return false;
+			});
+			                                                                          // 3 [ ..., patternsT, listT, size ]
+			lua_pushinteger(L, size);                                                 // 4 [ ..., patternsT, listT, size, newSize ]
+			lua_rawseti(L, -3, 0);                                                    // 3 [ ..., patternsT, listT, size ]
+			lua_pop(L, 2);                                                            // 1 [ ..., patternsT ]
+		}
+
 		return false;
 	});
+
+	lua_pop(L, 1);                                                                    // 0 [ ... ]
 }
 
 void onLuaStateInitialized() {
-	lua_State* L = luaState();
-	pushPatternsTable(L);      // 1 [ ..., registry["InfinityLoader_Patterns"] ]
-	exportExistingPatterns(L);
-	lua_pop(L, 1);             // 0 [ ... ]
+	exportExistingPatterns();
 }
 
-void onAfterPatternSet(const String& name, uintptr_t value) {
-	lua_State* L = luaState();
-	if (L != nullptr) {
-		pushPatternsTable(L);          // 1 [ ..., registry["InfinityLoader_Patterns"] ]
-		exportPattern(L, name, value);
-		lua_pop(L, 1);                 // 0 [ ... ]
+void onAfterPatternModified(const PatternValueHandle handle, const uintptr_t newAddress) {
+
+	if (lua_State *const L = luaState(); L != nullptr) {
+
+		pushPatternsTable(L);                                                    // 1 [ ..., patternsT ]
+
+		const PatternValueType type = sharedState().GetPatternValueType(handle);
+		if (type == PatternValueType::SINGLE) {
+			uintptr_t value = sharedState().GetSinglePatternValue(handle);
+			exportSinglePatternValue(L, handle, value);
+		}
+		else if (type == PatternValueType::LIST) {
+			pushListPatternTable(L, handle);                                     // 2 [ ..., patternsT, listT ]
+			lua_rawgeti(L, -1, 0);                                               // 3 [ ..., patternsT, listT, size ]
+			const int newSize = static_cast<int>(lua_tointeger(L, -1)) + 1;
+			lua_pushinteger(L, newSize);                                         // 4 [ ..., patternsT, listT, size, newSize ]
+			lua_pushinteger(L, newAddress);                                      // 5 [ ..., patternsT, listT, size, newSize, newAddress ]
+			lua_rawseti(L, -4, newSize);                                         // 4 [ ..., patternsT, listT, size, newSize ]
+			lua_rawseti(L, -3, 0);                                               // 3 [ ..., patternsT, listT, size ]
+			lua_pop(L, 3);                                                       // 0 [ ... ]
+		}
+
+		lua_pop(L, 1);                                                           // 0 [ ... ]
 	}
 }
 
@@ -1732,7 +2003,7 @@ void initPatternTracking() {
 	// Callback that exports all existing patterns
 	sharedState().AddLuaStateInitializedCallback(onLuaStateInitialized);
 	// Listener that exports future patterns when they are set
-	sharedState().AddAfterPatternSetListener(onAfterPatternSet);
+	sharedState().AddAfterPatternModifiedListener(onAfterPatternModified);
 }
 
 //////////////////////////
@@ -1751,8 +2022,13 @@ DWORD setUpLuaInitialization(void* sectionPtr, DWORD sectionSize) {
 
 	// Write hook early in WinMain to check for Console redirection
 	if (INISectionExists(iniPath(), TEXT("Hardcoded_WinMainPatchLocation"))) {
-		uintptr_t winMainPatchAddress;
-		TryRetErr( findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_WinMainPatchLocation"), winMainPatchAddress) )
+		PatternValueHandle winMainPatchAddressHandle;
+		TryRetErr( findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_WinMainPatchLocation"), winMainPatchAddressHandle) )
+		if (sharedState().GetPatternValueType(winMainPatchAddressHandle) != PatternValueType::SINGLE) {
+			Print("[!][InfinityLoaderDLL] setUpLuaInitialization() - [Hardcoded_WinMainPatchLocation].Type must be SINGLE\n");
+			return -1;
+		}
+		uintptr_t winMainPatchAddress = sharedState().GetSinglePatternValue(winMainPatchAddressHandle);
 		writeCallHookProcAfterCall(writer, curAllocatedPtr, winMainPatchAddress, winMainHook);
 	}
 

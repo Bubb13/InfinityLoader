@@ -3,5 +3,4 @@
 
 #include "lua_provider_api.h"
 
-void InitGenerated();
-int OpenBindings(lua_State* L);
+int OpenBindingsInternal(lua_State* L);

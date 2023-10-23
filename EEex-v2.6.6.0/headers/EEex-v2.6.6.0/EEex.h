@@ -39,6 +39,7 @@ namespace EEex {
 	//          Overrides          //
 	//-----------------------------//
 
+	void Override_bootstrapLua();
 	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
 
 	//-------------------------//

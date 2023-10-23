@@ -1002,6 +1002,8 @@ struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 
 struct CDerivedStats : CDerivedStatsTemplate
 {
+	$constructor_fake Construct();
+	void Destruct();
 	long GetAtOffset(short offset);
 	int GetSpellState(uint bit);
 };
@@ -1133,6 +1135,9 @@ void restoreMenuStack();
 int CompareCResByTypeThenName(const CRes* a, const CRes* b);
 int SDL_GetKeyFromName(primitive const char* name);
 int rand();
+$nobinding int l_log_print(lua_State* L);
+$nobinding int panic(lua_State* L);
+$nobinding int Chitin_GetSectionCallback(lua_State* L);
 
 //////////////////////////////
 // Global Variable Bindings //

@@ -7175,6 +7175,15 @@ extern type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
 typedef int (*type_rand)();
 extern type_rand p_rand;
 
+typedef int (*type_l_log_print)(lua_State* L);
+extern type_l_log_print p_l_log_print;
+
+typedef int (*type_panic)(lua_State* L);
+extern type_panic p_panic;
+
+typedef int (*type_Chitin_GetSectionCallback)(lua_State* L);
+extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
+
 extern int* p_numMenus;
 extern Array<uiMenu,256>* p_menus;
 extern Array<uiMenu*,256>* p_menuStack;
@@ -11417,11 +11426,27 @@ struct CDerivedStats : CDerivedStatsTemplate
 
 	CDerivedStats() = delete;
 
+	typedef void (__thiscall *type_Construct)(CDerivedStats* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Destruct)(CDerivedStats* pThis);
+	static type_Destruct p_Destruct;
+
 	typedef long (__thiscall *type_GetAtOffset)(CDerivedStats* pThis, short offset);
 	static type_GetAtOffset p_GetAtOffset;
 
 	typedef int (__thiscall *type_GetSpellState)(CDerivedStats* pThis, uint bit);
 	static type_GetSpellState p_GetSpellState;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
 
 	long GetAtOffset(short offset)
 	{

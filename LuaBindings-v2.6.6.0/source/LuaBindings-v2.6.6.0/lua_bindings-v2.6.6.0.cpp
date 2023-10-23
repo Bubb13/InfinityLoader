@@ -2,25 +2,34 @@
 #include "Baldur-v2.6.6.0_generated.h"
 #include "EEexLua_generated.h"
 
-void __stdcall Init(SharedState argSharedDLL) {
+void __stdcall Init(SharedState argSharedState) {
 
-    sharedState() = argSharedDLL;
+	sharedState() = argSharedState;
 
-    InitLuaBindingsCommon(argSharedDLL);
+	// Populate internal engine pointers from patterns
+	for (auto& pair : internalPointersMap) {
+		PatternValueHandle patternHandle;
+		switch (sharedState().GetPatternValue(pair.first, patternHandle)) {
+			case (PatternValueType::SINGLE): {
+				*pair.second = reinterpret_cast<void*>(sharedState().GetSinglePatternValue(patternHandle));
+				break;
+			}
+			case (PatternValueType::INVALID): {
+				PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] Init() - Function pattern [%s] not present for bindings; calling this function will crash the game!\n"), pair.first);
+				break;
+			}
+			default: {
+				PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] Init() - [%s].Type must be SINGLE\n"), pair.first);
+				break;
+			}
+		}
+	}
+}
 
-    // Populate internal engine pointers from patterns
-    for (auto& pair : internalPointersMap) {
-        uintptr_t patternVal;
-        if (sharedState().GetPatternValue(pair.first, patternVal)) {
-            *pair.second = reinterpret_cast<void*>(patternVal);
-        }
-        else {
-            PrintT(TEXT("[!][LuaBindings-v2.6.6.0] Function pattern [%s] not present for bindings; calling this function will crash the game!\n"), pair.first);
-        }
-    }
+void __stdcall OpenBindings() {
 
-    InitGenerated();
+	InitLuaBindingsCommon(sharedState());
 
-    // Export lua bindings
-    OpenBindings(luaState());
+	// Export lua bindings
+	OpenBindingsInternal(luaState());
 }

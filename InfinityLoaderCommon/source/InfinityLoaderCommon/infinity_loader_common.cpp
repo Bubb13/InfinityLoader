@@ -433,20 +433,59 @@ EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR* section, const TCHAR*
 
 	filled = false;
 
-	TCHAR buffer[1024];
-	const std::size_t bufferSize = sizeof(buffer) / sizeof(buffer[0]);
+	// Try to use a stack buffer at first
+	const DWORD initialBufferSize = 1024;
+	TCHAR stackBuffer[initialBufferSize];
+
+	// If the stack buffer is too small allocate one on the heap
+	TCHAR* curBuffer = stackBuffer;
+	DWORD curBufferSize = initialBufferSize;
 
 	DWORD numRead = GetPrivateProfileString(section, key, nullptr,
-		buffer, bufferSize, iniPath.c_str());
+		curBuffer, curBufferSize, iniPath.c_str());
 
-	if (DWORD lastError = GetLastError(); lastError != ERROR_SUCCESS && lastError != ERROR_FILE_NOT_FOUND) {
+	if (DWORD lastError = GetLastError(); lastError == ERROR_SUCCESS || lastError == ERROR_FILE_NOT_FOUND) {
+		if (numRead > 0) {
+			outStr = curBuffer;
+			filled = true;
+		}
+	}
+	else if (lastError == ERROR_MORE_DATA) {
+
+		// Stack buffer too small
+		curBufferSize *= 2;
+		curBuffer = new TCHAR[curBufferSize];
+
+		while (true) {
+
+			// Try again with the larger buffer
+			numRead = GetPrivateProfileString(section, key, nullptr,
+				curBuffer, curBufferSize, iniPath.c_str());
+
+			if (lastError = GetLastError(); lastError == ERROR_SUCCESS || lastError == ERROR_FILE_NOT_FOUND) {
+				if (numRead > 0) {
+					outStr = curBuffer;
+					filled = true;
+				}
+				delete[] curBuffer;
+				break;
+			}
+			else if (lastError == ERROR_MORE_DATA) {
+				// Still too small
+				delete[] curBuffer;
+				curBufferSize *= 2;
+				curBuffer = new TCHAR[curBufferSize];
+			}
+			else {
+				delete[] curBuffer;
+				Print("[!] GetPrivateProfileString failed (%d).\n", lastError);
+				return lastError;
+			}
+		}
+	}
+	else {
 		Print("[!] GetPrivateProfileString failed (%d).\n", lastError);
 		return lastError;
-	}
-
-	if (numRead > 0) {
-		outStr = buffer;
-		filled = true;
 	}
 
 	return 0;
@@ -459,6 +498,14 @@ EXPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR* section, const TCH
 		outStr = def;
 	}
 	return error;
+}
+
+EXPORT DWORD SetINIStr(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const String& toSet) {
+	if (!WritePrivateProfileString(section, key, toSet.c_str(), iniPath.c_str())) {
+		PrintT(TEXT("[!] Failed to set [%s].%s = %s\n"), section, key, toSet.c_str());
+		return GetLastError();
+	}
+	return ERROR_SUCCESS;
 }
 
 ///////////

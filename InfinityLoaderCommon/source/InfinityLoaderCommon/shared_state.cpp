@@ -140,9 +140,33 @@ EXPORT bool& SharedStateMappedMemory::ProtonCompatibility() {
 // SharedState //
 /////////////////
 
-PatternEntry::PatternEntry(const String str, const uintptr_t val) :
-	name(str), value(val)
-{}
+static const String EMPTY_STRING{TEXT("")};
+
+Pattern::Entry::Entry(const String& str, const uintptr_t val) {
+	name = str;
+	valueType = Pattern::ValueType::SINGLE;
+	value.address = val;
+}
+
+Pattern::Entry::Entry(const String& str, const ValueType valType) {
+	name = str;
+	valueType = valType;
+	switch (valType) {
+		case (Pattern::ValueType::LIST): {
+			new (&value.addresses) std::vector<uintptr_t>{};
+			break;
+		}
+	}
+}
+
+Pattern::Entry::~Entry() {
+	switch (valueType) {
+		case (Pattern::ValueType::LIST): {
+			value.addresses.~vector();
+			break;
+		}
+	}
+}
 
 OpaqueObjectBoilerplateImp(SharedState, SharedStateData)
 
@@ -343,47 +367,120 @@ EXPORT LuaMode SharedState::LuaMode() {
 	return data()->state.luaMode;
 }
 
-EXPORT void SharedState::IteratePatternValues(std::function<bool(const String&, uintptr_t)> func) {
+EXPORT void SharedState::AddAfterPatternModifiedListener(std::function<void(PatternValueHandle valueHandle, uintptr_t)> listener) {
+	data()->state.afterPatternSetListeners.emplace_back(listener);
+}
+
+EXPORT void SharedState::AddListPatternValue(PatternValueHandle valueHandle, uintptr_t value) {
+	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::LIST) {
+		pEntry->value.addresses.emplace_back(value);
+		for (auto& listener : data()->state.afterPatternSetListeners) {
+			listener(pEntry, value);
+		}
+		return;
+	}
+	PrintT(TEXT("[!] SharedState::AddListPatternValue() - Failed, type of pattern \"%s\" is not LIST!\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
+}
+
+EXPORT void SharedState::AddListPatternValue(PatternValueHandle valueHandle, void* value) {
+	AddListPatternValue(valueHandle, reinterpret_cast<uintptr_t>(value));
+}
+
+EXPORT bool SharedState::GetOrCreatePatternValue(const String& name, PatternValueType valueType, PatternValueHandle& out) {
+	auto& patterns = data()->state.patterns;
+	if (auto itr = patterns.find(name); itr != patterns.end()) {
+		Pattern::Entry* pEntry = &itr->second;
+		if (static_cast<PatternValueType>(pEntry->valueType) == valueType) {
+			out = pEntry;
+			return false;
+		}
+		out = nullptr;
+		return true;
+	}
+	out = &patterns.try_emplace(name, name, static_cast<Pattern::ValueType>(valueType)).first->second;
+	return false;
+}
+
+EXPORT PatternValueType SharedState::GetPatternValue(const String& name, PatternValueHandle& out) {
+	auto& patterns = data()->state.patterns;
+	if (auto itr = patterns.find(name); itr != patterns.end()) {
+		Pattern::Entry* pEntry = &itr->second;
+		out = pEntry;
+		return static_cast<PatternValueType>(pEntry->valueType);
+	}
+	out = nullptr;
+	return PatternValueType::INVALID;
+}
+
+EXPORT const String& SharedState::GetPatternValueName(PatternValueHandle valueHandle) {
+	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+	if (pEntry != nullptr) {
+		return pEntry->name;
+	}
+	PrintT(TEXT("[!] SharedState::GetPatternValueName() - Failed, type of pattern \"%s\" is INVALID!\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
+	return EMPTY_STRING;
+}
+
+EXPORT PatternValueType SharedState::GetPatternValueType(PatternValueHandle valueHandle) {
+	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+	if (pEntry != nullptr) {
+		return static_cast<PatternValueType>(pEntry->valueType);
+	}
+	return PatternValueType::INVALID;
+}
+
+EXPORT uintptr_t SharedState::GetSinglePatternValue(PatternValueHandle valueHandle) {
+	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::SINGLE) {
+		return pEntry->value.address;
+	}
+	PrintT(TEXT("[!] SharedState::GetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE!\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
+	return 0x0;
+}
+
+EXPORT void SharedState::IteratePatternList(PatternValueHandle valueHandle, std::function<bool(uintptr_t)> func) {
+	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::LIST) {
+		auto& addresses = pEntry->value.addresses;
+		for (uintptr_t address : addresses) {
+			if (func(address)) {
+				break;
+			}
+		}
+		return;
+	}
+	PrintT(TEXT("[!] SharedState::IteratePatternList() - Failed, type of pattern \"%s\" is not LIST!\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
+}
+
+EXPORT void SharedState::IteratePatternValues(std::function<bool(PatternValueHandle)> func) {
 	auto& patterns = data()->state.patterns;
 	for (auto& [key, entry] : patterns) {
-		if (func(entry.name, entry.value)) {
+		if (func(reinterpret_cast<PatternValueHandle>(&entry))) {
 			break;
 		}
 	}
 }
 
-EXPORT bool SharedState::GetPatternValue(const String& name, uintptr_t& out) {
-	auto& patterns =  data()->state.patterns;
-	if (auto found = patterns.find(name); found != patterns.end()) {
-		out = found->second.value;
-		return true;
+EXPORT void SharedState::SetSinglePatternValue(PatternValueHandle valueHandle, uintptr_t value) {
+	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::SINGLE) {
+		pEntry->value.address = value;
+		for (const auto& listener : data()->state.afterPatternSetListeners) {
+			listener(pEntry, value);
+		}
+		return;
 	}
-	return false;
+	PrintT(TEXT("[!] SharedState::SetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE!\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
 }
 
-EXPORT void SharedState::SetPatternValue(const String& name, uintptr_t value) {
-
-	SharedDLLState& state = data()->state;
-	auto& patterns = state.patterns;
-
-	if (auto found = patterns.find(name); found == patterns.end()) {
-		patterns.try_emplace(name, name, value);
-	}
-	else {
-		found->second.value = value;
-	}
-
-	for (auto& listener : state.afterPatternSetListeners) {
-		listener(name, value);
-	}
-}
-
-EXPORT void SharedState::SetPatternValue(const String& name, void* value) {
-	SetPatternValue(name, reinterpret_cast<uintptr_t>(value));
-}
-
-EXPORT void SharedState::AddAfterPatternSetListener(std::function<void(const String&, uintptr_t)> listener) {
-	data()->state.afterPatternSetListeners.emplace_back(listener);
+EXPORT void SharedState::SetSinglePatternValue(PatternValueHandle valueHandle, void* value) {
+	SetSinglePatternValue(valueHandle, reinterpret_cast<uintptr_t>(value));
 }
 
 bool findSectionInfo(HMODULE module, const char* sectionName, SectionInfo& sectionInfo) {

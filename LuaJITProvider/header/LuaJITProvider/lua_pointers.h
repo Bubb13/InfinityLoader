@@ -19,6 +19,9 @@ EXTERN_EXPORT int LUA_GLOBALSINDEX;
 // Pointers //
 //////////////
 
+typedef lua_CFunction (*type_lua_atpanic)(lua_State* L, lua_CFunction panicf);
+EXTERN_EXPORT type_lua_atpanic lua_atpanic;
+
 typedef void (*type_lua_callk)(lua_State* L, int nargs, int nresults, int ctx, lua_CFunction k);
 EXTERN_EXPORT type_lua_callk lua_callk;
 

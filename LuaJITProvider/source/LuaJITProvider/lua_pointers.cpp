@@ -22,6 +22,7 @@ EXPORT int LUA_GLOBALSINDEX = -10002;
 // Pointers //
 //////////////
 
+EXPORT type_lua_atpanic lua_atpanic;
 EXPORT type_lua_callk lua_callk;
 EXPORT type_lua_createtable lua_createtable;
 EXPORT type_lua_getfield lua_getfield;

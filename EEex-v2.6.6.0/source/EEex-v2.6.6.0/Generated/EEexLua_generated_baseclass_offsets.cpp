@@ -11,6 +11,3 @@ void registerBaseclasses() {
 	});
 }
 
-void InitGenerated() {
-	registerBaseclasses();
-}

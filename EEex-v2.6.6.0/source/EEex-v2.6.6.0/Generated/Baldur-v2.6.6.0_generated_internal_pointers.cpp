@@ -39,6 +39,9 @@ type_restoreMenuStack p_restoreMenuStack;
 type_CompareCResByTypeThenName p_CompareCResByTypeThenName;
 type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
 type_rand p_rand;
+type_l_log_print p_l_log_print;
+type_panic p_panic;
+type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
 int* p_numMenus;
 Array<uiMenu,256>* p_menus;
 Array<uiMenu*,256>* p_menuStack;
@@ -86,6 +89,8 @@ CInfGame::type_SetState CInfGame::p_SetState;
 CInfGame::type_SetIconIndex CInfGame::p_SetIconIndex;
 CInfGame::type_UnselectAll CInfGame::p_UnselectAll;
 CGameEffect::type_DecodeEffect CGameEffect::p_DecodeEffect;
+CDerivedStats::type_Construct CDerivedStats::p_Construct;
+CDerivedStats::type_Destruct CDerivedStats::p_Destruct;
 CDerivedStats::type_GetAtOffset CDerivedStats::p_GetAtOffset;
 CDerivedStats::type_GetSpellState CDerivedStats::p_GetSpellState;
 CGameArea::type_GetNearest2 CGameArea::p_GetNearest2;
@@ -166,6 +171,9 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CompareCResByTypeThenName"), reinterpret_cast<void**>(&p_CompareCResByTypeThenName)},
 	std::pair{TEXT("SDL_GetKeyFromName"), reinterpret_cast<void**>(&p_SDL_GetKeyFromName)},
 	std::pair{TEXT("rand"), reinterpret_cast<void**>(&p_rand)},
+	std::pair{TEXT("l_log_print"), reinterpret_cast<void**>(&p_l_log_print)},
+	std::pair{TEXT("panic"), reinterpret_cast<void**>(&p_panic)},
+	std::pair{TEXT("Chitin_GetSectionCallback"), reinterpret_cast<void**>(&p_Chitin_GetSectionCallback)},
 	std::pair{TEXT("numMenus"), reinterpret_cast<void**>(&p_numMenus)},
 	std::pair{TEXT("menus"), reinterpret_cast<void**>(&p_menus)},
 	std::pair{TEXT("menuStack"), reinterpret_cast<void**>(&p_menuStack)},
@@ -213,6 +221,8 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("CInfGame::SetIconIndex"), reinterpret_cast<void**>(&CInfGame::p_SetIconIndex)},
 	std::pair{TEXT("CInfGame::UnselectAll"), reinterpret_cast<void**>(&CInfGame::p_UnselectAll)},
 	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&CGameEffect::p_DecodeEffect)},
+	std::pair{TEXT("CDerivedStats::Construct"), reinterpret_cast<void**>(&CDerivedStats::p_Construct)},
+	std::pair{TEXT("CDerivedStats::Destruct"), reinterpret_cast<void**>(&CDerivedStats::p_Destruct)},
 	std::pair{TEXT("CDerivedStats::GetAtOffset"), reinterpret_cast<void**>(&CDerivedStats::p_GetAtOffset)},
 	std::pair{TEXT("CDerivedStats::GetSpellState"), reinterpret_cast<void**>(&CDerivedStats::p_GetSpellState)},
 	std::pair{TEXT("CGameArea::GetNearest2"), reinterpret_cast<void**>(&CGameArea::p_GetNearest2)},

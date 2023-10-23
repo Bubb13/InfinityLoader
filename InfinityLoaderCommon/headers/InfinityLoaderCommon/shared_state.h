@@ -34,11 +34,39 @@ struct SectionInfo {
 	DWORD SectionSize;
 };
 
-struct PatternEntry {
-	String name;
-	uintptr_t value;
-	PatternEntry(const String str, const uintptr_t val);
+// API
+enum class PatternValueType {
+	INVALID = 0,
+	SINGLE = 1,
+	LIST = 2,
 };
+typedef const void* PatternValueHandle;
+
+// Implementation
+namespace Pattern {
+
+	enum class ValueType {
+		INVALID = 0,
+		SINGLE = 1,
+		LIST = 2,
+	};
+
+	union Value {
+		uintptr_t address;
+		std::vector<uintptr_t> addresses;
+		Value() {};
+		~Value() {};
+	};
+
+	struct Entry {
+		String name;
+		ValueType valueType;
+		Value value;
+		Entry(const String& str, uintptr_t val);
+		Entry(const String& str, ValueType val);
+		~Entry();
+	};
+}
 
 class SharedDLLState {
 private:
@@ -48,8 +76,8 @@ private:
 	std::vector<std::function<void()>> luaStateInitializedCallbacks;
 	HMODULE luaLibrary = reinterpret_cast<HMODULE>(-1);
 	LuaMode luaMode;
-	std::map<String, PatternEntry> patterns;
-	std::vector<std::function<void(const String&, uintptr_t)>> afterPatternSetListeners;
+	std::map<String, Pattern::Entry> patterns;
+	std::vector<std::function<void(const PatternValueHandle valueHandle, uintptr_t)>> afterPatternSetListeners;
 	uintptr_t imageBase;
 	std::map<StringA, SectionInfo> sectionInfo;
 };
@@ -82,11 +110,20 @@ public:
 	EXPORT lua_State* LuaState();
 	EXPORT HMODULE LuaLibrary();
 	EXPORT LuaMode LuaMode();
-	EXPORT void IteratePatternValues(std::function<bool(const String&, uintptr_t)> func);
-	EXPORT bool GetPatternValue(const String& name, uintptr_t& out);
-	EXPORT void SetPatternValue(const String& name, uintptr_t value);
-	EXPORT void SetPatternValue(const String& name, void* value);
-	EXPORT void AddAfterPatternSetListener(std::function<void(const String&, uintptr_t)> listener);
+
+	EXPORT void AddAfterPatternModifiedListener(std::function<void(PatternValueHandle, uintptr_t)> listener);
+	EXPORT void AddListPatternValue(PatternValueHandle valueHandle, uintptr_t value);
+	EXPORT void AddListPatternValue(PatternValueHandle valueHandle, void* value);
+	EXPORT bool GetOrCreatePatternValue(const String& name, PatternValueType valueType, PatternValueHandle& out);
+	EXPORT PatternValueType GetPatternValue(const String& name, PatternValueHandle& out);
+	EXPORT const String& GetPatternValueName(PatternValueHandle valueHandle);
+	EXPORT PatternValueType GetPatternValueType(PatternValueHandle valueHandle);
+	EXPORT uintptr_t GetSinglePatternValue(PatternValueHandle valueHandle);
+	EXPORT void IteratePatternList(PatternValueHandle valueHandle, std::function<bool(uintptr_t)> func);
+	EXPORT void IteratePatternValues(std::function<bool(PatternValueHandle)> func);
+	EXPORT void SetSinglePatternValue(PatternValueHandle valueHandle, uintptr_t value);
+	EXPORT void SetSinglePatternValue(PatternValueHandle valueHandle, void* value);
+
 	EXPORT uintptr_t ImageBase();
 	EXPORT DWORD LoadSegmentInfo(const StringA& sectionName);
 	EXPORT bool GetSegmentPointer(const char* name, void*& out);
