@@ -838,6 +838,11 @@ int borLua(lua_State* L) {
 	return 1;
 }
 
+int cFunctionToPointerLua(lua_State* L) {
+	lua_pushinteger(L, reinterpret_cast<lua_Integer>(lua_tocfunction(L, 1)));
+	return 1;
+}
+
 int disableCodeProtectionLua(lua_State* L) {
 	disableCodeProtection();
 	return 0;
@@ -1731,6 +1736,8 @@ void initLua() {
 	exposeToLua(L, "EEex_BAnd", bandLua);
 	exposeToLua(L, "EEex_BNot", bnotLua);
 	exposeToLua(L, "EEex_BOr", borLua);
+	exposeToLua(L, "EEex_CFunctionToPointer", cFunctionToPointerLua);
+	exposeToLua(L, "EEex_CFuncToPtr", cFunctionToPointerLua);
 	exposeToLua(L, "EEex_DisableCodeProtection", disableCodeProtectionLua);
 	exposeToLua(L, "EEex_DoFile", doFileLua);
 	exposeToLua(L, "EEex_EnableCodeProtection", enableCodeProtectionLua);

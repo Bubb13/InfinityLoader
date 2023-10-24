@@ -1138,6 +1138,7 @@ int rand();
 $nobinding int l_log_print(lua_State* L);
 $nobinding int panic(lua_State* L);
 $nobinding int Chitin_GetSectionCallback(lua_State* L);
+$nobinding _iobuf* __cdecl OpenIniFile(const char* path, const char* mode);
 
 //////////////////////////////
 // Global Variable Bindings //
@@ -1154,3 +1155,4 @@ $9B9540D9920A90D57A3D80DDD1A70514 capture;
 CBaldurChitin* g_pBaldurChitin;
 lua_State* g_lua;
 char* afxPchNil;
+nobinding int optionsHaveChanged;

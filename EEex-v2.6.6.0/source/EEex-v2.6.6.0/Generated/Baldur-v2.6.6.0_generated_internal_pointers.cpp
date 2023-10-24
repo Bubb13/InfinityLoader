@@ -42,6 +42,7 @@ type_rand p_rand;
 type_l_log_print p_l_log_print;
 type_panic p_panic;
 type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
+type_OpenIniFile p_OpenIniFile;
 int* p_numMenus;
 Array<uiMenu,256>* p_menus;
 Array<uiMenu*,256>* p_menuStack;
@@ -53,6 +54,7 @@ _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 CBaldurChitin** p_g_pBaldurChitin;
 lua_State** p_g_lua;
 char** p_afxPchNil;
+int* p_optionsHaveChanged;
 CTlkTable::type_Fetch CTlkTable::p_Fetch;
 CAIScript::type_Construct1 CAIScript::p_Construct1;
 CAbilityId::type_Construct CAbilityId::p_Construct;
@@ -174,6 +176,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("l_log_print"), reinterpret_cast<void**>(&p_l_log_print)},
 	std::pair{TEXT("panic"), reinterpret_cast<void**>(&p_panic)},
 	std::pair{TEXT("Chitin_GetSectionCallback"), reinterpret_cast<void**>(&p_Chitin_GetSectionCallback)},
+	std::pair{TEXT("OpenIniFile"), reinterpret_cast<void**>(&p_OpenIniFile)},
 	std::pair{TEXT("numMenus"), reinterpret_cast<void**>(&p_numMenus)},
 	std::pair{TEXT("menus"), reinterpret_cast<void**>(&p_menus)},
 	std::pair{TEXT("menuStack"), reinterpret_cast<void**>(&p_menuStack)},
@@ -185,6 +188,7 @@ std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
 	std::pair{TEXT("g_pBaldurChitin"), reinterpret_cast<void**>(&p_g_pBaldurChitin)},
 	std::pair{TEXT("g_lua"), reinterpret_cast<void**>(&p_g_lua)},
 	std::pair{TEXT("afxPchNil"), reinterpret_cast<void**>(&p_afxPchNil)},
+	std::pair{TEXT("optionsHaveChanged"), reinterpret_cast<void**>(&p_optionsHaveChanged)},
 	std::pair{TEXT("CTlkTable::Fetch"), reinterpret_cast<void**>(&CTlkTable::p_Fetch)},
 	std::pair{TEXT("CAIScript::Construct1"), reinterpret_cast<void**>(&CAIScript::p_Construct1)},
 	std::pair{TEXT("CAbilityId::Construct"), reinterpret_cast<void**>(&CAbilityId::p_Construct)},

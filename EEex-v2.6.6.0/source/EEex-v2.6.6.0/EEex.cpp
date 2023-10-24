@@ -41,6 +41,12 @@ constexpr int STACK_SNAPSHOT_SIZE = 256;
 //          Globals          //
 //---------------------------//
 
+typedef int(*type_wrapper_fprintf)(FILE* stream, const char* format, ...);
+type_wrapper_fprintf wrapper_fprintf;
+
+typedef int(*type_wrapper_fclose)(FILE* stream);
+type_wrapper_fclose wrapper_fclose;
+
 //////////////////////////
 // Integrity Check Util //
 //////////////////////////
@@ -1537,6 +1543,27 @@ int EEex::Override_CGameEffect_CheckSave(CGameEffect *const pEffect, CGameSprite
 	STUTTER_LOG_END
 }
 
+void __cdecl EEex::Override_chWriteInifile() {
+	if (*p_optionsHaveChanged != 0) {
+		_iobuf *const buf = p_OpenIniFile("Baldur.lua", "wb");
+		if (buf != nullptr) {
+			lua_State *const L = luaState();
+			lua_getglobal(L, "printIni");
+			lua_pushlightuserdata(L, buf);
+			lua_callk(L, 1, 0, 0, nullptr);
+			wrapper_fclose(buf);
+		}
+	}
+	*p_optionsHaveChanged = 0;
+}
+
+int __cdecl EEex::Override_Infinity_WriteINILine(lua_State* L) {
+	_iobuf *const buf = reinterpret_cast<_iobuf*>(lua_touserdata(L, 1));
+	const char *const line = lua_tolstring(L, 2, nullptr);
+	wrapper_fprintf(buf, "%s", line);
+	return 0;
+}
+
 /////////////////////////////
 //          Hooks          //
 /////////////////////////////
@@ -2415,7 +2442,23 @@ void initStats() {
 	}
 }
 
+template<typename out_type>
+DWORD getLuaProc(const char* name, out_type& out) {
+	if (out = reinterpret_cast<out_type>(GetProcAddress(luaLibrary(), name)); out == 0) {
+		DWORD lastError = GetLastError();
+		Print("[!][EEex.dll] GetProcAddress failed (%d) to find Lua function \"%s\", the game will probably crash!\n", lastError, name);
+		return lastError;
+	}
+	return 0;
+}
+
 void EEex::InitEEex() {
+
 	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = false;
 	initProjectileMutator();
+
+	if (luaMode() == LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL) {
+		getLuaProc("wrapper_fclose", wrapper_fclose);
+		getLuaProc("wrapper_fprintf", wrapper_fprintf);
+	}
 }

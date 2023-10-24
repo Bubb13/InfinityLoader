@@ -7184,6 +7184,9 @@ extern type_panic p_panic;
 typedef int (*type_Chitin_GetSectionCallback)(lua_State* L);
 extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
 
+typedef _iobuf* (__cdecl *type_OpenIniFile)(const char* path, const char* mode);
+extern type_OpenIniFile p_OpenIniFile;
+
 extern int* p_numMenus;
 extern Array<uiMenu,256>* p_menus;
 extern Array<uiMenu*,256>* p_menuStack;
@@ -7195,6 +7198,7 @@ extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 extern CBaldurChitin** p_g_pBaldurChitin;
 extern lua_State** p_g_lua;
 extern char** p_afxPchNil;
+extern int* p_optionsHaveChanged;
 
 struct CWorldMapLinks
 {
