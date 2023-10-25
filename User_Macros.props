@@ -4,6 +4,8 @@
   <PropertyGroup Label="UserMacros">
     <DEBUGGER_WORKING_DIRECTORY>
     </DEBUGGER_WORKING_DIRECTORY>
+    <USING_LUAJIT>
+    </USING_LUAJIT>
   </PropertyGroup>
   <PropertyGroup>
     <_PropertySheetDisplayName>User Macros</_PropertySheetDisplayName>
@@ -12,6 +14,9 @@
   <ItemGroup>
     <BuildMacro Include="DEBUGGER_WORKING_DIRECTORY">
       <Value>$(DEBUGGER_WORKING_DIRECTORY)</Value>
+    </BuildMacro>
+    <BuildMacro Include="USING_LUAJIT">
+      <Value>$(USING_LUAJIT)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

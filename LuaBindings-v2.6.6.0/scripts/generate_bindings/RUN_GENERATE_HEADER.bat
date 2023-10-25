@@ -12,6 +12,7 @@ python %script_path%^
  -ignoreHeaderFile=./in/ignore_header_types.txt^
  -inFiles=./in/manual_types.txt,./in/Baldur-v2.6.6.0.h^
  -outFile=./out/Baldur-v2.6.6.0_generated.h^
+ -dllName=LuaBindings-v2.6.6.0.dll^
  -packingFile=./in/packing.txt^
  -preludeFile=./in/prelude.txt^
  -wantedFile=./in/wanted_types.txt^

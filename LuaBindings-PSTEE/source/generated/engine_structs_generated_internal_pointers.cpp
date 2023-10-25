@@ -6,9 +6,28 @@ CGameObjectArray::type_GetShare CGameObjectArray::p_GetShare;
 CGameEffect::type_DecodeEffect CGameEffect::p_DecodeEffect;
 CProjectile::type_DecodeProjectile CProjectile::p_DecodeProjectile;
 
-std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {
-	std::pair{TEXT("g_pBaldurChitin"), reinterpret_cast<void**>(&p_g_pBaldurChitin)},
-	std::pair{TEXT("CGameObjectArray::GetShare"), reinterpret_cast<void**>(&CGameObjectArray::p_GetShare)},
-	std::pair{TEXT("CGameEffect::DecodeEffect"), reinterpret_cast<void**>(&CGameEffect::p_DecodeEffect)},
-	std::pair{TEXT("CProjectile::DecodeProjectile"), reinterpret_cast<void**>(&CProjectile::p_DecodeProjectile)},
-};
+template<typename OutType>
+static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
+	PatternValueHandle patternHandle;
+	switch (sharedState().GetPatternValue(patternName, patternHandle)) {
+		case PatternValueType::SINGLE: {
+			pointerOut = reinterpret_cast<OutType>(sharedState().GetSinglePatternValue(patternHandle));
+			break;
+		}
+		case PatternValueType::INVALID: {
+			PrintT(TEXT("[!][LuaBindings-PSTEE.dll] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game!\n"), patternName);
+			break;
+		}
+		default: {
+			PrintT(TEXT("[!][LuaBindings-PSTEE.dll] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game!\n"), patternName);
+			break;
+		}
+	}
+}
+
+void InitBindingsInternal() {
+	attemptFillPointer(TEXT("g_pBaldurChitin"), p_g_pBaldurChitin);
+	attemptFillPointer(TEXT("CGameObjectArray::GetShare"), CGameObjectArray::p_GetShare);
+	attemptFillPointer(TEXT("CGameEffect::DecodeEffect"), CGameEffect::p_DecodeEffect);
+	attemptFillPointer(TEXT("CProjectile::DecodeProjectile"), CProjectile::p_DecodeProjectile);
+}

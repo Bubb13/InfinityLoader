@@ -427,11 +427,11 @@ void getCastUD(lua_State* L, const char* castBaseName, const char* castFuncName,
 void registerProjVFTableType(const TCHAR* patternName, std::pair<const char*, EEex::ProjectileType> info) {
 	PatternValueHandle patternHandle;
 	switch (sharedState().GetPatternValue(patternName, patternHandle)) {
-		case (PatternValueType::SINGLE): {
+		case PatternValueType::SINGLE: {
 			projVFTableToType.emplace(sharedState().GetSinglePatternValue(patternHandle), info);
 			break;
 		}
-		case (PatternValueType::INVALID): {
+		case PatternValueType::INVALID: {
 			PrintT(TEXT("[!][EEex.dll] registerProjVFTableType() - Pattern [%s] missing, EEex will not work as expected!\n"), patternName);
 			break;
 		}

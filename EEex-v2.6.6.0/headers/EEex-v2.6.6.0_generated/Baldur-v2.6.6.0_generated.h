@@ -14255,5 +14255,3 @@ inline void CString::Construct()
 {
 	m_pchData = *p_afxPchNil;
 }
-
-extern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;

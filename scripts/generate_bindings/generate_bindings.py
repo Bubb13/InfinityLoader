@@ -4062,7 +4062,7 @@ def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
 	out.write("\n")
 
 
-def outputHeader(mainState: MainState, outputFileName: str, out: TextIOWrapper):
+def outputHeader(mainState: MainState, outputFileName: str, dllName: str, out: TextIOWrapper):
 
 	def doOutput(internalPointersOut: TextIOWrapper):
 
@@ -4082,8 +4082,6 @@ def outputHeader(mainState: MainState, outputFileName: str, out: TextIOWrapper):
 				out.write(groupStr)
 				newline = "\n"
 
-		out.write("\n")
-
 		def doEOFFuncOutput(group: Group):
 
 			for subgroup in group.subGroups:
@@ -4091,8 +4089,8 @@ def outputHeader(mainState: MainState, outputFileName: str, out: TextIOWrapper):
 
 			for functionImp in group.functionImplementations:
 				if functionImp.eofBody:
-					out.write(functionImp.toString(mainState, eof=True))
 					out.write("\n")
+					out.write(functionImp.toString(mainState, eof=True))
 
 		# Output eof body functions
 		for group in mainState.filteredGroups:
@@ -4101,16 +4099,34 @@ def outputHeader(mainState: MainState, outputFileName: str, out: TextIOWrapper):
 
 		if internalPointersOut:
 
-			out.write("extern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;\n")
+			internalPointersOut.write(f"""
+template<typename OutType>
+static void attemptFillPointer(const String& patternName, OutType& pointerOut) {{
+	PatternValueHandle patternHandle;
+	switch (sharedState().GetPatternValue(patternName, patternHandle)) {{
+		case PatternValueType::SINGLE: {{
+			pointerOut = reinterpret_cast<OutType>(sharedState().GetSinglePatternValue(patternHandle));
+			break;
+		}}
+		case PatternValueType::INVALID: {{
+			PrintT(TEXT("[!][{dllName}] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game!\\n"), patternName);
+			break;
+		}}
+		default: {{
+			PrintT(TEXT("[!][{dllName}] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game!\\n"), patternName);
+			break;
+		}}
+	}}
+}}
 
-			if len(internalPointersList) > 0:
-				internalPointersOut.write("\n")
+void InitBindingsInternal() {{
+"""
+			)
 
-			internalPointersOut.write("std::vector<std::pair<const TCHAR*, void**>> internalPointersMap {\n")
 			for internalPointerNameTup in internalPointersList:
-				internalPointersOut.write(f"\tstd::pair{{TEXT(\"{internalPointerNameTup[0]}\"), reinterpret_cast<void**>(&{internalPointerNameTup[1]})}},\n")
+				internalPointersOut.write(f"\tattemptFillPointer(TEXT(\"{internalPointerNameTup[0]}\"), {internalPointerNameTup[1]});\n")
 
-			internalPointersOut.write("};\n")
+			internalPointersOut.write("}\n")
 
 
 	if not mainState.noCustomTypes:
@@ -4263,6 +4279,7 @@ def main():
 	manualTypesFile: str = None
 	alreadyDefinedUsertypesFile: str = None
 	packingFile: str = None
+	dllName: str = None
 
 	for k in islice(sys.argv, 1, None):
 		if   k == "-normal":  assert False, "-normal removed"
@@ -4280,6 +4297,7 @@ def main():
 		elif (v := re.search("-manualTypesFile=(.+)",             k)) != None: manualTypesFile             = v.group(1)
 		elif (v := re.search("-alreadyDefinedUsertypesFile=(.+)", k)) != None: alreadyDefinedUsertypesFile = v.group(1)
 		elif (v := re.search("-packingFile=(.+)",                 k)) != None: packingFile                 = v.group(1)
+		elif (v := re.search("-dllName=(.+)",                     k)) != None: dllName                     = v.group(1)
 
 
 	mainState.globalGroup = Group()
@@ -4396,7 +4414,7 @@ struct ConstCharString
 		outputForwardDeclarations(mainState, out)
 
 		# Write header
-		outputHeader(mainState, outputFileName, out)
+		outputHeader(mainState, outputFileName, dllName, out)
 
 		# Write header suffix
 		outputFile(suffixFile, out)

@@ -84784,6 +84784,4 @@ struct CGameSprite : CGameAIBase
 	CGameSprite() = delete;
 };
 
-extern std::vector<std::pair<const TCHAR*, void**>> internalPointersMap;
-
 #pragma pack(pop)

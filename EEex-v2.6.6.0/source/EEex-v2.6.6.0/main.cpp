@@ -102,28 +102,10 @@ void exportPatterns() {
 	exportPattern(TEXT("EEex::Script_Hook_OnDestruct"), EEex::Script_Hook_OnDestruct);
 }
 
-void __stdcall Init(SharedState argSharedState) {
+void __stdcall InitBindings(SharedState argSharedState) {
 
 	sharedState() = argSharedState;
-
-	// Populate internal engine pointers from patterns
-	for (auto& pair : internalPointersMap) {
-		PatternValueHandle patternHandle;
-		switch (sharedState().GetPatternValue(pair.first, patternHandle)) {
-			case (PatternValueType::SINGLE): {
-				*pair.second = reinterpret_cast<void*>(sharedState().GetSinglePatternValue(patternHandle));
-				break;
-			}
-			case (PatternValueType::INVALID): {
-				PrintT(TEXT("[!][EEex.dll] Init() - Function pattern [%s] not present for bindings; calling this function will crash the game!\n"), pair.first);
-				break;
-			}
-			default: {
-				PrintT(TEXT("[!][EEex.dll] Init() - [%s].Type must be SINGLE\n"), pair.first);
-				break;
-			}
-		}
-	}
+	InitBindingsInternal();
 
 	EEex::InitEEex();
 	exportPatterns();

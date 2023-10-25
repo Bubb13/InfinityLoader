@@ -12,6 +12,7 @@ python %script_path%^
  -ignoreHeaderFile=./in/ignore_header_types.txt^
  -inFiles=NO_BINDINGS;NO_HARDCODED_BINDINGS:./in/manual_types.txt,NO_BINDINGS;NO_HARDCODED_BINDINGS:./in/Baldur-v2.6.6.0.h,./in/bindings.txt^
  -outFile=./out/Baldur-v2.6.6.0_generated.h^
+ -dllName=EEex.dll^
  -packingFile=./in/packing.txt^
  -preludeFile=./in/prelude.txt^
  -wantedFile=./in/wanted_types.txt^

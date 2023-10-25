@@ -152,7 +152,7 @@ Pattern::Entry::Entry(const String& str, const ValueType valType) {
 	name = str;
 	valueType = valType;
 	switch (valType) {
-		case (Pattern::ValueType::LIST): {
+		case Pattern::ValueType::LIST: {
 			new (&value.addresses) std::vector<uintptr_t>{};
 			break;
 		}
@@ -161,7 +161,7 @@ Pattern::Entry::Entry(const String& str, const ValueType valType) {
 
 Pattern::Entry::~Entry() {
 	switch (valueType) {
-		case (Pattern::ValueType::LIST): {
+		case Pattern::ValueType::LIST: {
 			value.addresses.~vector();
 			break;
 		}
@@ -260,7 +260,7 @@ EXPORT DWORD SharedState::InitState() {
 
 	// Init luaMode
 	String luaModeStr;
-	TryRetErr( GetINIStrDef(paths.iniPath, TEXT("General"), TEXT("LuaPatchMode"), TEXT(""), luaModeStr) );
+	TryRetErr( GetINIStrDef(paths.iniPath, TEXT("General"), TEXT("LuaPatchMode"), TEXT(""), luaModeStr) )
 
 	// Init luaLibrary
 	if (luaModeStr == TEXT("INTERNAL")) {
@@ -269,13 +269,13 @@ EXPORT DWORD SharedState::InitState() {
 	else if (luaModeStr == TEXT("EXTERNAL")) {
 		state.luaMode = LuaMode::EXTERNAL;
 		HMODULE luaLibrary;
-		TryRetErr( loadLuaLibrary(paths.iniPath, luaModeStr, luaLibrary) );
+		TryRetErr( loadLuaLibrary(paths.iniPath, luaModeStr, luaLibrary) )
 		state.luaLibrary = luaLibrary;
 	}
 	else if (luaModeStr == TEXT("REPLACE_INTERNAL_WITH_EXTERNAL")) {
 		state.luaMode = LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL;
 		HMODULE luaLibrary;
-		TryRetErr( loadLuaLibrary(paths.iniPath, luaModeStr, luaLibrary) );
+		TryRetErr( loadLuaLibrary(paths.iniPath, luaModeStr, luaLibrary) )
 		state.luaLibrary = luaLibrary;
 	}
 	else {

@@ -355,4 +355,3 @@ union GCObject
 	UpVal uv;
 	lua_State th;
 };
-

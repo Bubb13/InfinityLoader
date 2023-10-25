@@ -563,7 +563,7 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 	}
 
 	String typeStr;
-	TryRetErr( GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Type"), TEXT("SINGLE"), typeStr));
+	TryRetErr( GetINIStrDef(iniPath, iniCategoryName.c_str(), TEXT("Type"), TEXT("SINGLE"), typeStr) )
 
 	PatternValueType type;
 	if (typeStr == TEXT("SINGLE")) {
@@ -578,7 +578,7 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 	}
 
 	bool noCache;
-	TryRetErr( GetINIBoolDef(iniPath, iniCategoryName.c_str(), TEXT("NoCache"), false, noCache));
+	TryRetErr( GetINIBoolDef(iniPath, iniCategoryName.c_str(), TEXT("NoCache"), false, noCache) )
 
 	if (!noCache && attemptUseCached) {
 
@@ -1028,7 +1028,7 @@ bool initializeLuaBindings(const char* bindingsFileName, LoadedBindings& loadedB
 	}
 
 	FARPROC initProcFar;
-	if (initProcFar = GetProcAddress(loadedBindings.hHandle, "Init"); !initProcFar) {
+	if (initProcFar = GetProcAddress(loadedBindings.hHandle, "InitBindings"); !initProcFar) {
 		Print("[!] GetProcAddress failed (%d).\n", GetLastError());
 		return true;
 	}

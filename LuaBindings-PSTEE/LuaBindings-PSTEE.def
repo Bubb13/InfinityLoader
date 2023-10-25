@@ -1,3 +1,4 @@
 LIBRARY LuaBindings-PSTEE.dll
 EXPORTS
-	Init @1
+	InitBindings @1
+	OpenBindings @2

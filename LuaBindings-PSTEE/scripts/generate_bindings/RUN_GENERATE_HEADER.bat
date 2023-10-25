@@ -12,6 +12,7 @@ python %script_path%^
  -ignoreHeaderFile=./in/ignore_header_types.txt^
  -inFiles=./in/manual_types.txt,./in/engine_structs.h^
  -outFile=./out/engine_structs_generated.h^
+ -dllName=LuaBindings-PSTEE.dll^
  -preludeFile=./in/prelude.txt^
  -suffixFile=./in/suffix.txt^
  -wantedFile=./in/wanted_types.txt^

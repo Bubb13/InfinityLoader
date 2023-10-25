@@ -145,11 +145,11 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 
 #define setNamedPointer(patternName, funcName, ptrName) \
 	switch (sharedState().GetPatternValue(TEXT(patternName), patternHandle)) { \
-		case (PatternValueType::SINGLE): { \
+		case PatternValueType::SINGLE: { \
 			##ptrName = (type_##funcName)(sharedState().GetSinglePatternValue(patternHandle)); \
 			break; \
 		} \
-		case (PatternValueType::INVALID): { \
+		case PatternValueType::INVALID: { \
 			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed!\n", patternName); \
 			return; \
 		} \
@@ -161,11 +161,11 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 
 #define setPointer(patternName, funcName) \
 	switch (sharedState().GetPatternValue(TEXT(patternName), patternHandle)) { \
-		case (PatternValueType::SINGLE): { \
+		case PatternValueType::SINGLE: { \
 			##funcName = (type_##funcName)(sharedState().GetSinglePatternValue(patternHandle)); \
 			break; \
 		} \
-		case (PatternValueType::INVALID): { \
+		case PatternValueType::INVALID: { \
 			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed!\n", patternName); \
 			return; \
 		} \
