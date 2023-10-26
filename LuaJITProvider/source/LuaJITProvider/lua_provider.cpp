@@ -10,7 +10,7 @@ template<typename out_type>
 DWORD getLuaProc(HMODULE luaLibrary, const char* name, out_type& out) {
 	if (out = reinterpret_cast<out_type>(GetProcAddress(luaLibrary, name)); out == 0) {
 		DWORD lastError = GetLastError();
-		Print("[!] GetProcAddress failed (%d) to find Lua function \"%s\".\n", lastError, name);
+		Print("[!][LuaProvider.dll] getLuaProc() - GetProcAddress() failed (%d) to find Lua function \"%s\"\n", lastError, name);
 		return lastError;
 	}
 	return 0;
@@ -24,7 +24,7 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 				##functionName = (type_##functionName)(sharedState().GetSinglePatternValue(patternHandle)); \
 			} \
 			else { \
-				Print("[!][LuaProvider] Lua pattern type not SINGLE: \"Hardcoded_%s\"; binding failed!\n", functionNameStr); \
+				Print("[!][LuaProvider.dll] InitLuaProvider() - Lua pattern type not SINGLE: \"Hardcoded_%s\"; binding failed\n", functionNameStr); \
 				return -1; \
 			} \
 		} \

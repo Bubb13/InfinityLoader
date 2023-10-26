@@ -69,13 +69,13 @@ DWORD writeProcessString(HANDLE hProcess, const CharType* str, uintptr_t& memory
 	LPVOID allocPtr = VirtualAllocEx(hProcess, NULL, strSizeBytes, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	if (!allocPtr) {
 		DWORD lastError = GetLastError();
-		Print("[!] VirtualAllocEx failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] writeProcessString() - VirtualAllocEx() failed (%d)\n", lastError);
 		return lastError;
 	}
 
 	if (!WriteProcessMemory(hProcess, allocPtr, str, strSizeBytes, NULL)) {
 		DWORD lastError = GetLastError();
-		Print("[!] WriteProcessMemory failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] writeProcessString() - WriteProcessMemory() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -90,7 +90,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	context.ContextFlags = CONTEXT_INTEGER;
 	if (!GetThreadContext(hThread, &context)) {
 		DWORD lastError = GetLastError();
-		Print("[!] GetThreadContext failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] patchMainThread() - GetThreadContext() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -116,7 +116,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	LPVOID codeMem = VirtualAllocEx(hProcess, NULL, 1024, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (!codeMem) {
 		DWORD lastError = GetLastError();
-		Print("[!] VirtualAllocEx failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] patchMainThread() - VirtualAllocEx() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -186,7 +186,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	//writer.printBuffer();
 	if (!WriteProcessMemory(hProcess, codeMem, writer.GetBuffer(), writer.GetSize(), NULL)) {
 		DWORD lastError = GetLastError();
-		Print("[!] WriteProcessMemory failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] patchMainThread() - WriteProcessMemory() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -202,7 +202,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 
 	if (!SetThreadContext(hThread, &context)) {
 		DWORD lastError = GetLastError();
-		Print("[!] SetThreadContext failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] patchMainThread() - SetThreadContext() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -260,14 +260,14 @@ DWORD startGame() {
 	HANDLE hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
 	if (debug()) {
-		Print("[?] Parent hStdInput: %d\n", hStdInput);
-		Print("[?] Parent hStdOutput: %d\n", hStdOutput);
-		Print("[?] Parent hStdError: %d\n", hStdError);
+		Print("[?][InfinityLoader.exe] startGame() - Parent hStdInput: %d\n", hStdInput);
+		Print("[?][InfinityLoader.exe] startGame() - Parent hStdOutput: %d\n", hStdOutput);
+		Print("[?][InfinityLoader.exe] startGame() - Parent hStdError: %d\n", hStdError);
 	}
 
 	if (!CreateProcess(exePath.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
 		lastError = GetLastError();
-		PrintT(TEXT("[!] CreateProcess failed attempting to start \"%s\" (%d).\n"), exePath.c_str(), lastError);
+		PrintT(TEXT("[!][InfinityLoader.exe] startGame() - CreateProcess() failed (%d) attempting to start \"%s\"\n"), lastError, exePath.c_str());
 		return lastError;
 	}
 
@@ -276,7 +276,7 @@ DWORD startGame() {
 	}
 
 	if (pause()) {
-		MessageBox(NULL, TEXT("Pause"), TEXT("InfinityLoader"), MB_ICONINFORMATION);
+		MessageBox(NULL, TEXT("[?] startGame() - Pause"), TEXT("InfinityLoader.exe"), MB_ICONINFORMATION);
 	}
 
 	if (lastError = patchMainThread(processInfo.hProcess, processInfo.hThread)) {
@@ -289,24 +289,24 @@ DWORD startGame() {
 
 	if (ResumeThread(processInfo.hThread) == -1) {
 		lastError = GetLastError();
-		Print("[!] ResumeThread failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] startGame() - ResumeThread() failed (%d)\n", lastError);
 		goto errorFinally;
 	}
 
 	if (WaitForSingleObject(processInfo.hProcess, INFINITE) == WAIT_FAILED) {
 		lastError = GetLastError();
-		Print("[!] WaitForSingleObject failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] startGame() - WaitForSingleObject() failed (%d)\n", lastError);
 		goto errorFinally;
 	}
 
 	if (!CloseHandle(processInfo.hProcess)) {
 		lastError = GetLastError();
-		Print("[!] CloseHandle failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] startGame() - CloseHandle() failed (%d)\n", lastError);
 	}
 
 	if (!CloseHandle(processInfo.hThread)) {
 		lastError = GetLastError();
-		Print("[!] CloseHandle failed (%d).\n", lastError);
+		Print("[!][InfinityLoader.exe] startGame() - CloseHandle() failed (%d)\n", lastError);
 	}
 
 	return lastError;
@@ -331,14 +331,14 @@ DWORD init() {
 	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility()) )
-	TryElseRetErr( UnbufferCrtStreams(), Print("[!] UnbufferCrtStreams failed (%d).\n", error) )
-	TryElseRetErr( InitFPrint(), Print("[!] InitFPrint failed (%d).\n", error) )
+	TryElseRetErr( UnbufferCrtStreams(), Print("[!][InfinityLoader.exe] init() - UnbufferCrtStreams() failed (%d)\n", error) )
+	TryElseRetErr( InitFPrint(), Print("[!][InfinityLoader.exe] init() - InitFPrint() failed (%d)\n", error) )
 	return ERROR_SUCCESS;
 }
 
 int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
 	String dmpLocation = WriteDump(workingFolder, pointers);
-	MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, TEXT("Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
+	MessageBoxFormat(TEXT("InfinityLoader.exe"), MB_ICONERROR, TEXT("[!] Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
 	exit(code);
 }
 

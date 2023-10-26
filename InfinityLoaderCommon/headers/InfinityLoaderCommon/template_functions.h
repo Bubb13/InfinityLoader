@@ -151,13 +151,13 @@ DWORD getINIIntegerTemplate(const String& iniPath, const TCHAR *const section, c
 		buffer, bufferSize, iniPath.c_str());
 
 	if (DWORD lastError = GetLastError(); lastError != ERROR_SUCCESS && lastError != ERROR_FILE_NOT_FOUND) {
-		LogUsingFuncT(logFunc, TEXT("[!] GetPrivateProfileString failed (%d)."), lastError);
+		LogUsingFuncT(logFunc, TEXT("[!][InfinityLoaderCommon.dll] getINIIntegerTemplate() - GetPrivateProfileString() failed (%d)"), lastError);
 		return lastError;
 	}
 
 	if (numRead > 0) {
 		if (!decimalStrToIntegerTemplate(buffer, outInteger)) {
-			LogUsingFuncT(logFunc, TEXT("[!] Invalid decimal for [%s].%s: \"%s\"."), section, key, buffer);
+			LogUsingFuncT(logFunc, TEXT("[!][InfinityLoaderCommon.dll] getINIIntegerTemplate() - Invalid decimal for [%s].%s: \"%s\""), section, key, buffer);
 			return -1;
 		}
 		filled = true;
@@ -198,7 +198,7 @@ DWORD setINIIntegerTemplate(const String& iniPath, const TCHAR *const section, c
 {
 	const String toSetStr = integerToDecimalStrTemplate<String>(toSet);
 	if (!WritePrivateProfileString(section, key, toSetStr.c_str(), iniPath.c_str())) {
-		PrintT(TEXT("[!] Failed to set [%s].%s = %s\n"), section, key, toSetStr.c_str());
+		PrintT(TEXT("[!][InfinityLoaderCommon.dll] setINIIntegerTemplate() - Failed to set [%s].%s = %s\n"), section, key, toSetStr.c_str());
 		return GetLastError();
 	}
 	return ERROR_SUCCESS;

@@ -85,21 +85,21 @@ EXPORT type_tolua_variable tolua_variable;
 
 void dumpStackIndex(lua_State* L, const char* label, int index) {
 
-	lua_getglobal(L, "debug");                           // [ debug ]
-	lua_getfield(L, -1, "traceback");                    // [ debug, traceback ]
+	lua_getglobal(L, "debug");                                                          // [ debug ]
+	lua_getfield(L, -1, "traceback");                                                   // [ debug, traceback ]
 
-	lua_getglobal(L, "EEex_Dump");                       // [ debug, traceback, EEex_Dump ]
-	lua_pushstring(L, label);                            // [ debug, traceback, EEex_Dump, label ]
-	lua_pushvalue(L, index);                             // [ debug, traceback, EEex_Dump, label, stack[index] ]
+	lua_getglobal(L, "EEex_Dump");                                                      // [ debug, traceback, EEex_Dump ]
+	lua_pushstring(L, label);                                                           // [ debug, traceback, EEex_Dump, label ]
+	lua_pushvalue(L, index);                                                            // [ debug, traceback, EEex_Dump, label, stack[index] ]
 
 	if (lua_pcallk(L, 2, 0, -4, 0, nullptr) != LUA_OK) {
-														 // [ debug, traceback, errorMessage ]
-		Print("[!] %s\n", lua_tostring(L, -1));
-		lua_pop(L, 3);                                   // [ ]
+																						// [ debug, traceback, errorMessage ]
+		Print("[?][LuaBindingsCore.dll] dumpStackIndex() - %s\n", lua_tostring(L, -1));
+		lua_pop(L, 3);                                                                  // [ ]
 	}
 	else {
-														 // [ debug, traceback ]
-		lua_pop(L, 2);                                   // [ ]
+																						// [ debug, traceback ]
+		lua_pop(L, 2);                                                                  // [ ]
 	}
 }
 

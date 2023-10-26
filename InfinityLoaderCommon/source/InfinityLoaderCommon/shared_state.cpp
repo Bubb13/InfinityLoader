@@ -35,7 +35,7 @@ DWORD SharedStateMappedMemory::Create(HANDLE& mappedMemoryHandleOut, SharedState
 
 			if (mappedHandle == NULL) {
 				lastError = GetLastError();
-				Print("[!] CreateFileMapping failed (%d).\n", lastError);
+				Print("[!][InfinityLoaderCommon.dll] SharedStateMappedMemory::Create() - CreateFileMapping() failed (%d)\n", lastError);
 				return nullptr;
 			}
 
@@ -51,7 +51,7 @@ DWORD SharedStateMappedMemory::Create(HANDLE& mappedMemoryHandleOut, SharedState
 
 			if (mappedMemory == nullptr) {
 				lastError = GetLastError();
-				Print("[!] MapViewOfFile failed (%d).\n", lastError);
+				Print("[!][InfinityLoaderCommon.dll] SharedStateMappedMemory::Create() - MapViewOfFile() failed (%d)\n", lastError);
 				return nullptr;
 			}
 
@@ -89,7 +89,7 @@ DWORD SharedStateMappedMemory::CreateFromHandle(HANDLE mappedMemoryHandle, Share
 
 			if (mappedMemory == nullptr) {
 				lastError = GetLastError();
-				MessageBoxFormatA("InfinityLoaderCommon", MB_ICONERROR, "[!] MapViewOfFile failed (%d).\n", lastError);
+				MessageBoxFormatA("InfinityLoaderCommon.dll", MB_ICONERROR, "[!] SharedStateMappedMemory::CreateFromHandle() - MapViewOfFile() failed (%d)", lastError);
 				return nullptr;
 			}
 
@@ -196,7 +196,7 @@ DWORD loadLuaLibrary(const String& iniPath, const String& luaModeStr, HMODULE& l
 	TryRetErr( GetINIStr(iniPath, TEXT("General"), TEXT("LuaLibrary"), luaLibraryName, filled) )
 
 	if (!filled) {
-		PrintT(TEXT("[!] [General].LuaLibrary must be defined when [General].LuaPatchMode == \"%s\".\n"), luaModeStr.c_str());
+		PrintT(TEXT("[!][InfinityLoaderCommon.dll] loadLuaLibrary() - [General].LuaLibrary must be defined when [General].LuaPatchMode == \"%s\"\n"), luaModeStr.c_str());
 		return -1;
 	}
 
@@ -205,7 +205,7 @@ DWORD loadLuaLibrary(const String& iniPath, const String& luaModeStr, HMODULE& l
 	}
 	else {
 		DWORD lastError = GetLastError();
-		PrintT(TEXT("[!] LoadLibrary failed (%d) to load [General].LuaLibrary \"%s\".\n"), lastError, luaLibraryName.c_str());
+		PrintT(TEXT("[!][InfinityLoaderCommon.dll] loadLuaLibrary() - LoadLibrary() failed (%d) to load [General].LuaLibrary \"%s\"\n"), lastError, luaLibraryName.c_str());
 		return lastError;
 	}
 
@@ -227,7 +227,7 @@ DWORD findModuleWithPath(HANDLE process, const String& path, HMODULE& foundModul
 			HMODULE module = modules[i];
 			if (!GetModuleFileName(module, nameBuffer, MAX_PATH)) {
 				DWORD lastError = GetLastError();
-				Print("[!] GetModuleFileName failed (%d).\n", lastError);
+				Print("[!][InfinityLoaderCommon.dll] findModuleWithPath() - GetModuleFileName() failed (%d)\n", lastError);
 				return lastError;
 			}
 
@@ -239,7 +239,7 @@ DWORD findModuleWithPath(HANDLE process, const String& path, HMODULE& foundModul
 	}
 	else {
 		DWORD lastError = GetLastError();
-		Print("[!] EnumProcessModules failed (%d).\n", lastError);
+		Print("[!][InfinityLoaderCommon.dll] findModuleWithPath() - EnumProcessModules() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -279,7 +279,7 @@ EXPORT DWORD SharedState::InitState() {
 		state.luaLibrary = luaLibrary;
 	}
 	else {
-		Print("[!] [General].LuaPatchMode must be either \"INTERNAL\", \"EXTERNAL\", or \"REPLACE_INTERNAL_WITH_EXTERNAL\".\n");
+		Print("[!][InfinityLoaderCommon.dll] SharedState::InitState() - [General].LuaPatchMode must be either \"INTERNAL\", \"EXTERNAL\", or \"REPLACE_INTERNAL_WITH_EXTERNAL\"\n");
 		return -1;
 	}
 
@@ -333,7 +333,7 @@ EXPORT void SharedState::InitLuaState(lua_State* L) {
 	SharedDLLState& state = data()->state;
 
 	if (state.L != nullptr) {
-		Print("[!][InfinityLoaderCommon] Attempted to call SharedState::InitLuaState() more than once, ignoring.");
+		Print("[!][InfinityLoaderCommon.dll] SharedState::InitLuaState() - Attempted to call SharedState::InitLuaState() more than once, ignoring\n");
 		return;
 	}
 	state.L = L;
@@ -380,7 +380,7 @@ EXPORT void SharedState::AddListPatternValue(PatternValueHandle valueHandle, uin
 		}
 		return;
 	}
-	PrintT(TEXT("[!] SharedState::AddListPatternValue() - Failed, type of pattern \"%s\" is not LIST!\n"),
+	PrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::AddListPatternValue() - Failed, type of pattern \"%s\" is not LIST\n"),
 		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
 }
 
@@ -419,7 +419,7 @@ EXPORT const String& SharedState::GetPatternValueName(PatternValueHandle valueHa
 	if (pEntry != nullptr) {
 		return pEntry->name;
 	}
-	PrintT(TEXT("[!] SharedState::GetPatternValueName() - Failed, type of pattern \"%s\" is INVALID!\n"),
+	PrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::GetPatternValueName() - Failed, type of pattern \"%s\" is INVALID\n"),
 		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
 	return EMPTY_STRING;
 }
@@ -437,7 +437,7 @@ EXPORT uintptr_t SharedState::GetSinglePatternValue(PatternValueHandle valueHand
 	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::SINGLE) {
 		return pEntry->value.address;
 	}
-	PrintT(TEXT("[!] SharedState::GetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE!\n"),
+	PrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::GetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE\n"),
 		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
 	return 0x0;
 }
@@ -453,7 +453,7 @@ EXPORT void SharedState::IteratePatternList(PatternValueHandle valueHandle, std:
 		}
 		return;
 	}
-	PrintT(TEXT("[!] SharedState::IteratePatternList() - Failed, type of pattern \"%s\" is not LIST!\n"),
+	PrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::IteratePatternList() - Failed, type of pattern \"%s\" is not LIST\n"),
 		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
 }
 
@@ -475,7 +475,7 @@ EXPORT void SharedState::SetSinglePatternValue(PatternValueHandle valueHandle, u
 		}
 		return;
 	}
-	PrintT(TEXT("[!] SharedState::SetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE!\n"),
+	PrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::SetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE\n"),
 		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
 }
 
@@ -517,7 +517,7 @@ EXPORT DWORD SharedState::LoadSegmentInfo(const StringA& sectionName) {
 	SectionInfo& pSectionInfo = sectionInfoMap[sectionName];
 
 	if (!findSectionInfo(foundModule, sectionName.c_str(), pSectionInfo)) {
-		Print("[!] Failed to locate %s segment.\n", sectionName);
+		Print("[!][InfinityLoaderCommon.dll] SharedState::LoadSegmentInfo() - Failed to locate %s segment\n", sectionName);
 		return -1;
 	}
 

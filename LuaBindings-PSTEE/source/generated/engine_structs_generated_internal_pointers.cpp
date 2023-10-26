@@ -15,11 +15,11 @@ static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
 			break;
 		}
 		case PatternValueType::INVALID: {
-			PrintT(TEXT("[!][LuaBindings-PSTEE.dll] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game!\n"), patternName);
+			PrintT(TEXT("[!][LuaBindings-PSTEE.dll] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game\n"), patternName);
 			break;
 		}
 		default: {
-			PrintT(TEXT("[!][LuaBindings-PSTEE.dll] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game!\n"), patternName);
+			PrintT(TEXT("[!][LuaBindings-PSTEE.dll] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game\n"), patternName);
 			break;
 		}
 	}

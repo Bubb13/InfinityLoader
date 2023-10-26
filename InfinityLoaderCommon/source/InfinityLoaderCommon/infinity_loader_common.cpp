@@ -112,17 +112,17 @@ EXPORT int InitFPrint() {
 		FPrintT = FPrintT_Console;
 
 		if (errno_t error = fopen_s(&consoleOut, "CONOUT$", "w")) {
-			Print("[!] fopen_s failed (%d).\n", error);
+			Print("[!][InfinityLoaderCommon.dll] InitFPrint() - fopen_s() failed (%d)\n", error);
 			return error;
 		}
 
 		if (int error = setvbuf(consoleOut, NULL, _IONBF, 0)) {
-			Print("[!] setvbuf failed (%d).\n", error);
+			Print("[!][InfinityLoaderCommon.dll] InitFPrint() - setvbuf() failed (%d)\n", error);
 			return error;
 		}
 
 		if (debug()) {
-			Print("[?] InitFPrint() - Console\n");
+			Print("[?][InfinityLoaderCommon.dll] InitFPrint() - Console\n");
 		}
 	}
 	else {
@@ -131,7 +131,7 @@ EXPORT int InitFPrint() {
 		FPrintT = FPrintT_NoConsole;
 
 		if (debug()) {
-			Print("[?] InitFPrint() - NoConsole\n");
+			Print("[?][InfinityLoaderCommon.dll] InitFPrint() - NoConsole\n");
 		}
 	}
 
@@ -139,7 +139,7 @@ EXPORT int InitFPrint() {
 }
 
 EXPORT void LogMessageBox(const TCHAR* toLog) {
-	MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, toLog);
+	MessageBoxFormat(TEXT("InfinityLoaderCommon.dll"), MB_ICONERROR, toLog);
 }
 
 EXPORT void LogPrint(const TCHAR* toLog) {
@@ -200,17 +200,17 @@ EXPORT void MessageBoxFormatA(StringA caption, UINT uType, StringA formatText, .
 EXPORT int UnbufferCrtStreams() {
 
 	if (int error = setvbuf(stdin, NULL, _IONBF, 0)) {
-		Print("[!] setvbuf failed (%d).\n", error);
+		Print("[!][InfinityLoaderCommon.dll] UnbufferCrtStreams() - setvbuf() failed (%d)\n", error);
 		return error;
 	}
 
 	if (int error = setvbuf(stdout, NULL, _IONBF, 0)) {
-		Print("[!] setvbuf failed (%d).\n", error);
+		Print("[!][InfinityLoaderCommon.dll] UnbufferCrtStreams() - setvbuf() failed (%d)\n", error);
 		return error;
 	}
 
 	if (int error = setvbuf(stderr, NULL, _IONBF, 0)) {
-		Print("[!] setvbuf failed (%d).\n", error);
+		Print("[!][InfinityLoaderCommon.dll] UnbufferCrtStreams() - setvbuf() failed (%d)\n", error);
 		return error;
 	}
 
@@ -478,13 +478,13 @@ EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR* section, const TCHAR*
 			}
 			else {
 				delete[] curBuffer;
-				Print("[!] GetPrivateProfileString failed (%d).\n", lastError);
+				Print("[!][InfinityLoaderCommon.dll] GetINIStr() - GetPrivateProfileString() failed (%d)\n", lastError);
 				return lastError;
 			}
 		}
 	}
 	else {
-		Print("[!] GetPrivateProfileString failed (%d).\n", lastError);
+		Print("[!][InfinityLoaderCommon.dll] GetINIStr() - GetPrivateProfileString() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -502,7 +502,7 @@ EXPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR* section, const TCH
 
 EXPORT DWORD SetINIStr(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const String& toSet) {
 	if (!WritePrivateProfileString(section, key, toSet.c_str(), iniPath.c_str())) {
-		PrintT(TEXT("[!] Failed to set [%s].%s = %s\n"), section, key, toSet.c_str());
+		PrintT(TEXT("[!][InfinityLoaderCommon.dll] SetINIStr() - Failed to set [%s].%s = %s\n"), section, key, toSet.c_str());
 		return GetLastError();
 	}
 	return ERROR_SUCCESS;
@@ -554,7 +554,7 @@ DWORD initExePath(const String& workingFolder, const String& iniPath, String& ex
 	});
 
 	if (result) {
-		Print("[!] Failed to find any of the executables defined by [General].ExeNames.\n");
+		Print("[!][InfinityLoaderCommon.dll] initExePath() - Failed to find any of the executables defined by [General].ExeNames\n");
 	}
 
 	return result;
@@ -585,7 +585,7 @@ EXPORT DWORD AllocateNear(uintptr_t address, size_t size, uintptr_t& allocatedOu
 		}
 
 		if (DWORD lastError = GetLastError(); lastError != ERROR_INVALID_ADDRESS) {
-			Print("[!] VirtualAlloc failed (%d).\n", lastError);
+			Print("[!][InfinityLoaderCommon.dll] AllocateNear() - VirtualAlloc() failed (%d)\n", lastError);
 			return lastError;
 		}
 

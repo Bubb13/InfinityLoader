@@ -104,7 +104,7 @@ EXPORT void AssemblyWriter::PopVolatileRegisters() {
 
 EXPORT void AssemblyWriter::PrintBuffer() {
 	AssemblyWriterData *const data = this->data();
-	Print("[!] Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(data->startMemAddress));
+	Print("[?][InfinityLoaderCommon.dll] AssemblyWriter::PrintBuffer() - Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(data->startMemAddress));
 	for (size_t i = 0; i < data->curI; ++i) {
 		Print("%02X ", data->buffer[i]);
 	}
@@ -140,7 +140,7 @@ EXPORT void AssemblyWriter::WriteArgImmediate32(size_t argI, __int32 num) {
 		case 1: WriteBytesToBuffer(3, 0x48, 0xC7, 0xC2); break;
 		case 2: WriteBytesToBuffer(3, 0x49, 0xC7, 0xC0); break;
 		case 3: WriteBytesToBuffer(3, 0x49, 0xC7, 0xC1); break;
-		default: MessageBoxFormat(TEXT("InfinityLoader"), MB_ICONERROR, TEXT("(internal error) unhandled argI: %d"), argI); return;
+		default: MessageBoxFormat(TEXT("InfinityLoaderCommon.dll"), MB_ICONERROR, TEXT("[!] AssemblyWriter::WriteArgImmediate32() - Internal error; unhandled argI: %d"), argI); return;
 	}
 #else
 	WriteBytesToBuffer(1, 0x68);

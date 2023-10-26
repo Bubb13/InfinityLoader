@@ -109,18 +109,18 @@ void runCallback(lua_State* L) {
 		return;
 	}
 
-	lua_getglobal(L, "debug");                           // [ debug ]
-	lua_getfield(L, -1, "traceback");                    // [ debug, traceback ]
-	lua_pushvalue(L, 2);                                 // [ debug, traceback, func ]
+	lua_getglobal(L, "debug");                                                       // [ debug ]
+	lua_getfield(L, -1, "traceback");                                                // [ debug, traceback ]
+	lua_pushvalue(L, 2);                                                             // [ debug, traceback, func ]
 
 	if (lua_pcallk(L, 0, 0, -2, 0, nullptr) != LUA_OK) {
-														 // [ debug, traceback, errorMessage ]
-		Print("[!] %s\n", lua_tostring(L, -1));
-		lua_pop(L, 3);                                   // [ ]
+																					 // [ debug, traceback, errorMessage ]
+		Print("[!][LuaBindingsCore.dll] runCallback() - %s\n", lua_tostring(L, -1));
+		lua_pop(L, 3);                                                               // [ ]
 	}
 	else {
-														 // [ debug, traceback ]
-		lua_pop(L, 2);                                   // [ ]
+																					 // [ debug, traceback ]
+		lua_pop(L, 2);                                                               // [ ]
 	}
 }
 
@@ -150,11 +150,11 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 			break; \
 		} \
 		case PatternValueType::INVALID: { \
-			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed!\n", patternName); \
+			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed\n", patternName); \
 			return; \
 		} \
 		default: { \
-			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed!\n", patternName); \
+			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed\n", patternName); \
 			return; \
 		} \
 	}
@@ -166,11 +166,11 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 			break; \
 		} \
 		case PatternValueType::INVALID: { \
-			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed!\n", patternName); \
+			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed\n", patternName); \
 			return; \
 		} \
 		default: { \
-			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed!\n", patternName); \
+			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed\n", patternName); \
 			return; \
 		} \
 	}
@@ -186,7 +186,7 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 		alreadyInitialized = true;
 
 		if (int error = InitFPrint()) {
-			Print("[!] InitFPrint failed (%d).", error);
+			Print("[!][LuaBindingsCore.dll] InitFPrint() failed (%d)\n", error);
 			return;
 		}
 
