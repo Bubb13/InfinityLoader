@@ -56,8 +56,8 @@ static void storeatpeer(lua_State* L, int index) {
 
 	lua_insert(L, -4);                // 4 [ dest, key, value, registry["tolua_peer"] ]
 	lua_pop(L, 1);                    // 3 [ dest, key, value ]
-	lua_rawset(L, -3);                // 1 [ dest ]  
-	lua_pop(L, 1);                    // 0 [ ]  
+	lua_rawset(L, -3);                // 1 [ dest ]
+	lua_pop(L, 1);                    // 0 [ ]
 }
 
 // Expects   [ table, key ]
@@ -107,7 +107,7 @@ static int module_index_event(lua_State* L) {
 
 									  // 3 [ table, key, table[".get"], ... ]
 	if (lua_getmetatable(L, 1)) {     // TODO: Metatable
-		                              // 4 [ table, key, table[".get"], ..., mt(table) ]
+									  // 4 [ table, key, table[".get"], ..., mt(table) ]
 		lua_pushstring(L, "__index"); // 5 [ table, key, table[".get"], ..., mt(table), "__index" ]
 		lua_rawget(L, -2);            // 5 [ table, key, table[".get"], ..., mt(table), mt(table)["__index"] ]
 		lua_pushvalue(L, 1);          // 6 [ table, key, table[".get"], ..., mt(table), mt(table)["__index"], table ]
@@ -161,9 +161,9 @@ static int module_newindex_event(lua_State* L) {
 			return 0;
 		}
 	}
-	                                     // 4  [ table, key, value, table[".set"], ... ]
+										 // 4  [ table, key, value, table[".set"], ... ]
 	if (lua_getmetatable(L, 1) && lua_getmetatable(L, -1)) { // TODO: Metatable Base
-		                                 // 6  [ table, key, value, table[".set"], ..., mt(table), mt(mt(table)) ]
+										 // 6  [ table, key, value, table[".set"], ..., mt(table), mt(mt(table)) ]
 		lua_pushstring(L, "__newindex"); // 7  [ table, key, value, table[".set"], ..., mt(table), mt(mt(table)), "__newindex" ]
 		lua_rawget(L, -2);               // 7  [ table, key, value, table[".set"], ..., mt(table), mt(mt(table)), mt(mt(table))["__newindex"] ]
 		if (lua_isfunction(L, -1)) {
@@ -247,7 +247,7 @@ int class_index_event(lua_State* L) {
 		lua_settop(L, 2);                            // 2 [ table, key ]
 		lua_pushvalue(L, 1);                         // 3 [ table, key, table -> curT ]
 		while (lua_getmetatable(L, -1)) {            // TODO: Metatable Base
-			                                         // 4 [ table, key, curT, mt(curT) ]
+													 // 4 [ table, key, curT, mt(curT) ]
 			lua_remove(L, -2);                       // 3 [ table, key, mt(curT) ]
 			if (lua_isnumber(L, 2)) {
 				lua_pushstring(L, ".geti");          // 4 [ table, key, mt(curT), ".geti" ]
@@ -353,45 +353,45 @@ static int class_newindex_event(lua_State* L) {
 		/////////////////////////////////////////////////////////////////////
 
 		if (lua_isnumber(L, 2)) {
-			lua_pushvalue(L, 1);             // 4 [ table, key, value, table -> curT ]
+			lua_pushvalue(L, 1);              // 4 [ table, key, value, table -> curT ]
 			while (lua_getmetatable(L, -1)) { // TODO: Metatable Base
-				                             // 5 [ table, key, value, curT, mt(curT) ]
-				lua_remove(L, -2);           // 4 [ table, key, value, mt(curT) ]
-				lua_pushstring(L, ".seti");  // 5 [ table, key, value, mt(curT), ".seti" ]
-				lua_rawget(L, -2);           // 5 [ table, key, value, mt(curT), mt(curT)[".seti"] ]
+											  // 5 [ table, key, value, curT, mt(curT) ]
+				lua_remove(L, -2);            // 4 [ table, key, value, mt(curT) ]
+				lua_pushstring(L, ".seti");   // 5 [ table, key, value, mt(curT), ".seti" ]
+				lua_rawget(L, -2);            // 5 [ table, key, value, mt(curT), mt(curT)[".seti"] ]
 				if (lua_isfunction(L, -1)) {
-					lua_pushvalue(L, 1);     // 6 [ table, key, value, mt(curT), mt(curT)[".seti"], table ]
-					lua_pushvalue(L, 2);     // 7 [ table, key, value, mt(curT), mt(curT)[".seti"], table, key ]
-					lua_pushvalue(L, 3);     // 8 [ table, key, value, mt(curT), mt(curT)[".seti"], table, key, value ]
-					lua_call(L, 3, 0);       // 4 [ table, key, value, mt(curT) ]
+					lua_pushvalue(L, 1);      // 6 [ table, key, value, mt(curT), mt(curT)[".seti"], table ]
+					lua_pushvalue(L, 2);      // 7 [ table, key, value, mt(curT), mt(curT)[".seti"], table, key ]
+					lua_pushvalue(L, 3);      // 8 [ table, key, value, mt(curT), mt(curT)[".seti"], table, key, value ]
+					lua_call(L, 3, 0);        // 4 [ table, key, value, mt(curT) ]
 					return 0;
 				}
-				lua_settop(L, 4);            // 4 [ table, key, value, mt(curT) -> curT ]
+				lua_settop(L, 4);             // 4 [ table, key, value, mt(curT) -> curT ]
 			}
 			tolua_error(L, "Attempt to set indexed value on an invalid operand", NULL);
 		}
 		else {
-			lua_pushvalue(L, 1);             // 4 [ table, key, value, table -> curT ]
+			lua_pushvalue(L, 1);              // 4 [ table, key, value, table -> curT ]
 			while (lua_getmetatable(L, -1)) { // TODO: Metatable Base
-				                             // 5 [ table, key, value, curT, mt(curT) ]
-				lua_remove(L, -2);           // 4 [ table, key, value, mt(curT) ]
-				lua_pushstring(L, ".set");   // 5 [ table, key, value, mt(curT), ".set" ]
-				lua_rawget(L, -2);           // 5 [ table, key, value, mt(curT), mt(curT)[".set"] ]
+											  // 5 [ table, key, value, curT, mt(curT) ]
+				lua_remove(L, -2);            // 4 [ table, key, value, mt(curT) ]
+				lua_pushstring(L, ".set");    // 5 [ table, key, value, mt(curT), ".set" ]
+				lua_rawget(L, -2);            // 5 [ table, key, value, mt(curT), mt(curT)[".set"] ]
 				if (lua_istable(L, -1)) {
-					lua_pushvalue(L, 2);     // 6 [ table, key, value, mt(curT), mt(curT)[".set"], key ]
-					lua_rawget(L, -2);       // 6 [ table, key, value, mt(curT), mt(curT)[".set"], mt(curT)[".set"][key] ]
+					lua_pushvalue(L, 2);      // 6 [ table, key, value, mt(curT), mt(curT)[".set"], key ]
+					lua_rawget(L, -2);        // 6 [ table, key, value, mt(curT), mt(curT)[".set"], mt(curT)[".set"][key] ]
 					if (lua_iscfunction(L, -1)) {
-						lua_pushvalue(L, 1); // 7 [ table, key, value, mt(curT), mt(curT)[".set"], mt(curT)[".set"][key], table ]
-						lua_pushvalue(L, 3); // 8 [ table, key, value, mt(curT), mt(curT)[".set"], mt(curT)[".set"][key], table, value ]
-						lua_call(L, 2, 0);   // 5 [ table, key, value, mt(curT), mt(curT)[".set"] ]
+						lua_pushvalue(L, 1);  // 7 [ table, key, value, mt(curT), mt(curT)[".set"], mt(curT)[".set"][key], table ]
+						lua_pushvalue(L, 3);  // 8 [ table, key, value, mt(curT), mt(curT)[".set"], mt(curT)[".set"][key], table, value ]
+						lua_call(L, 2, 0);    // 5 [ table, key, value, mt(curT), mt(curT)[".set"] ]
 						return 0;
 					}
 				}
-				lua_settop(L, 4);            // 4 [ table, key, value, mt(curT) -> curT ]
+				lua_settop(L, 4);             // 4 [ table, key, value, mt(curT) -> curT ]
 			}
 		}
-		lua_settop(L, 3);                    // 3 [ table, key, value ]
-		storeatpeer(L, 1);                   // 1 [ table ]
+		lua_settop(L, 3);                     // 3 [ table, key, value ]
+		storeatpeer(L, 1);                    // 1 [ table ]
 	}
 	else if (t == LUA_TTABLE) {
 		module_newindex_event(L);
@@ -428,7 +428,7 @@ static int do_operator(lua_State* L, const char* op) {
 	if (lua_isuserdata(L, 1)) {
 		lua_pushvalue(L, 1);                       // 3 [ a, b, a -> curT ]
 		while (lua_getmetatable(L, -1)) {          // TODO: Metatable Base
-			                                       // 4 [ a, b, curT, mt(curT) ]
+												   // 4 [ a, b, curT, mt(curT) ]
 			lua_remove(L, -2);                     // 3 [ a, b, mt(curT) ]
 			lua_pushstring(L, op);                 // 4 [ a, b, mt(curT), op ]
 			lua_rawget(L, -2);                     // 4 [ a, b, mt(curT), mt(curT)[op] ]
@@ -484,19 +484,19 @@ static int class_eq_event(lua_State* L) {
 // Returns   1
 static int class_len_event(lua_State* L) {
 	if (lua_isuserdata(L, 1)) {
-		lua_pushvalue(L, 1);           // 2 [ table, table -> curT ]
+		lua_pushvalue(L, 1);              // 2 [ table, table -> curT ]
 		while (lua_getmetatable(L, -1)) { // TODO: Metatable Base
-			                           // 3 [ table, curT, mt(curT) ]
-			lua_remove(L, -2);         // 2 [ table, mt(curT) ]
-			lua_pushstring(L, ".len"); // 3 [ table, mt(curT), ".len" ]
-			lua_rawget(L, -2);         // 3 [ table, mt(curT), mt(curT)[".len"] ]
+										  // 3 [ table, curT, mt(curT) ]
+			lua_remove(L, -2);            // 2 [ table, mt(curT) ]
+			lua_pushstring(L, ".len");    // 3 [ table, mt(curT), ".len" ]
+			lua_rawget(L, -2);            // 3 [ table, mt(curT), mt(curT)[".len"] ]
 			if (lua_isfunction(L, -1)) {
-				lua_pushvalue(L, 1);   // 4 [ table, mt(curT), mt(curT)[".len"], table ]
-				lua_call(L, 1, 1);     // 3 [ table, mt(curT), retVal ]
+				lua_pushvalue(L, 1);      // 4 [ table, mt(curT), mt(curT)[".len"], table ]
+				lua_call(L, 1, 1);        // 3 [ table, mt(curT), retVal ]
 				return 1;
 			}
 			// Note: Loop using wrong top index, (3 vs 2)?
-			lua_settop(L, 3);          // 3 [ table, mt(curT), mt(curT)[".len"] ]
+			lua_settop(L, 3);             // 3 [ table, mt(curT), mt(curT)[".len"] ]
 		}
 	}
 	tolua_error(L, "Attempt to perform operation on an invalid operand", NULL);
@@ -567,7 +567,7 @@ TOLUA_API void tolua_moduleevents(lua_State* L) {
 TOLUA_API int tolua_ismodulemetatable(lua_State* L) {
 	int r = 0;
 	if (lua_getmetatable(L, -1)) {    // TODO: Metatable
-		                              // 2 [ ..., table, mt(table) ]
+									  // 2 [ ..., table, mt(table) ]
 		lua_pushstring(L, "__index"); // 3 [ ..., table, mt(table), "__index" ]
 		lua_rawget(L, -2);            // 3 [ ..., table, mt(table), mt(table)["__index"] ]
 		r = (lua_tocfunction(L, -1) == module_index_event);

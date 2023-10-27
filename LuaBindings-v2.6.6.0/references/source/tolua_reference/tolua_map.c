@@ -63,7 +63,7 @@ static void mapsuper(lua_State* L, const char* name, const char* base) {
 		lua_pushvalue(L, -2);         // 4 [ registry["tolua_super"], newtable, tolua_getmetatable(name), newtable ]
 		lua_rawset(L, -4);            // 2 [ registry["tolua_super"], newtable ]
 	}
-	                                  // 2 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)] ]
+									  // 2 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)] ]
 	lua_pushstring(L, base);          // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], base ]
 	lua_pushboolean(L, 1);            // 4 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], base, true ]
 	lua_rawset(L, -3);                // 2 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)] ]
@@ -77,17 +77,17 @@ static void mapsuper(lua_State* L, const char* name, const char* base) {
 	// end                                                              //
 	//////////////////////////////////////////////////////////////////////
 
-	tolua_getmetatable(L, base); // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], tolua_getmetatable(base) ] // TODO: Metatable
+	tolua_getmetatable(L, base);     // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], tolua_getmetatable(base) ] // TODO: Metatable
 	lua_rawget(L, -3);               // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)] ]
 	if (lua_istable(L, -1)) {
 		lua_pushnil(L);              // 4 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], nil ]
 		while (lua_next(L, -2) != 0) {
-			                         // 5 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], k, v ]
+									 // 5 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], k, v ]
 			lua_pushvalue(L, -2);    // 6 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], k, v, k ]
 			lua_insert(L, -2);       // 6 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], k, k, v ]
 			lua_rawset(L, -5);       // 4 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)], k]
 		}
-		                             // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)] ]
+									 // 3 [ registry["tolua_super"], registry["tolua_super"][tolua_getmetatable(name)], registry["tolua_super"][tolua_getmetatable(base)] ]
 	}
 	lua_pop(L, 3);                   // 0 [ ]
 }
@@ -378,16 +378,16 @@ TOLUA_API void tolua_module(lua_State* L, const char* name, int hasvar) {
 
 	if (hasvar) {
 		if (!tolua_ismodulemetatable(L)) {
-			lua_newtable(L);             // [ table, module, newMT ]
+			lua_newtable(L);               // [ table, module, newMT ]
 			tolua_moduleevents(L);
 			if (lua_getmetatable(L, -2)) { // TODO: Metatable
-				                         // [ table, module, newMT, mt(module) ]
-				lua_setmetatable(L, -2); // [ table, module, newMT ]
+										   // [ table, module, newMT, mt(module) ]
+				lua_setmetatable(L, -2);   // [ table, module, newMT ]
 			}
-			lua_setmetatable(L, -2);     // [ table, module ]
+			lua_setmetatable(L, -2);       // [ table, module ]
 		}
 	}
-	lua_pop(L, 1);                       // [ table ]
+	lua_pop(L, 1);                         // [ table ]
 }
 #else
 TOLUA_API void tolua_module(lua_State* L, const char* name, int hasvar)

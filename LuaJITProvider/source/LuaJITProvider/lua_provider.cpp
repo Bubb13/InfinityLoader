@@ -19,7 +19,7 @@ DWORD getLuaProc(HMODULE luaLibrary, const char* name, out_type& out) {
 EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 
 	#define setLuaPointer(patternName, functionNameStr, functionName) \
-		if (reinterpret_cast<intptr_t>(luaLibrary) == -1) { \
+		if (luaLibrary == INVALID_HANDLE_VALUE) { \
 			if (sharedState().GetPatternValue(TEXT(patternName), patternHandle) == PatternValueType::SINGLE) { \
 				##functionName = (type_##functionName)(sharedState().GetSinglePatternValue(patternHandle)); \
 			} \

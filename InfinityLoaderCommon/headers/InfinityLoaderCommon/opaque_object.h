@@ -183,27 +183,27 @@ namespace OpaqueObject {
 #define OpaqueObjectBoilerplateImp(className, dataClassName)                                        \
 	className::className(AllocFunc allocFunc, FreeFunc freeFunc, OpaqueObject::AllocMode allocMode) \
 		: OpaqueObject::Obj<dataClassName>(allocFunc, freeFunc, allocMode) {}                       \
-	                                                                                                \
+																									\
 	className::className(OpaqueObject::AllocMode allocMode)                                         \
 		: OpaqueObject::Obj<dataClassName>(allocMode) {}                                            \
-	                                                                                                \
+																									\
 	EXPORT className::className()                                                                   \
 		: OpaqueObject::Obj<dataClassName>() {}                                                     \
-	                                                                                                \
+																									\
 	EXPORT className::className(const className& other)                                             \
 		: OpaqueObject::Obj<dataClassName>(other) {}                                                \
-	                                                                                                \
+																									\
 	EXPORT className::className(className&& other) noexcept                                         \
 		: OpaqueObject::Obj<dataClassName>(other) {}                                                \
-	                                                                                                \
+																									\
 	EXPORT className& className::operator=(className&& other) noexcept {                            \
 		OpaqueObject::Obj<dataClassName>::operator=(other);                                         \
 		return *this;                                                                               \
 	}                                                                                               \
-	                                                                                                \
+																									\
 	EXPORT className& className::operator=(const className& other) {                                \
 		OpaqueObject::Obj<dataClassName>::operator=(other);                                         \
 		return *this;                                                                               \
 	}                                                                                               \
-	                                                                                                \
+																									\
 	EXPORT className::~className() {}

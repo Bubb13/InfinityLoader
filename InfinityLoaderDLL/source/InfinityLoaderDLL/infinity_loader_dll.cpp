@@ -105,28 +105,28 @@ void callOverrideFile(lua_State* L, const char* name) {
 
 	StringA luaFile = StringA{ workingFolderA() }.append("override\\").append(name).append(".lua");
 	if (luaL_loadfilex(L, luaFile.c_str(), nullptr) != LUA_OK) {
-																							        					  // [ debug, traceback, errorMessage ]
+																														  // [ debug, traceback, errorMessage ]
 		lua_pushvalue(L, -2);                                                                                             // [ debug, traceback, errorMessage, traceback ]
 		lua_pushvalue(L, -2);                                                                                             // [ debug, traceback, errorMessage, traceback, errorMessage ]
 		if (lua_pcallk(L, 1, 1, 0, 0, nullptr) != LUA_OK) {
-																							        					  // [ debug, traceback, errorMessage, errorErrorMessage  ]
+																														  // [ debug, traceback, errorMessage, errorErrorMessage  ]
 			Print("[!][InfinityLoaderDLL.dll] callOverrideFile() - Error in error handling calling debug.traceback()\n");
 			lua_pop(L, 4);                                                                                                // [ ]
 			return;
 		}
-																							        					  // [ debug, traceback, errorMessage, errorMessageTraceback ]
+																														  // [ debug, traceback, errorMessage, errorMessageTraceback ]
 		Print("[!][InfinityLoaderDLL.dll] callOverrideFile() - %s\n", lua_tostring(L, -1));
 		lua_pop(L, 4);                                                                                                    // [ ]
 		return;
 	}
-																							        					  // [ debug, traceback, chunk ]
+																														  // [ debug, traceback, chunk ]
 	if (lua_pcallk(L, 0, 0, -2, 0, nullptr) != LUA_OK) {
-																							        					  // [ debug, traceback, errorMessage ]
+																														  // [ debug, traceback, errorMessage ]
 		Print("[!][InfinityLoaderDLL.dll] callOverrideFile() - %s\n", lua_tostring(L, -1));
 		lua_pop(L, 3);                                                                                                    // [ ]
 	}
 	else {
-																							        					  // [ debug, traceback ]
+																														  // [ debug, traceback ]
 		lua_pop(L, 2);                                                                                                    // [ ]
 	}
 }
@@ -1211,7 +1211,7 @@ int runWithStackLua(lua_State* L) {
 	lua_pushinteger(L, reinterpret_cast<lua_Integer>(mem));                                  // [ debug, traceback, func, stackPtr ]
 
 	if (lua_pcallk(L, 1, 0, -3, 0, nullptr) != LUA_OK) {
-															        						 // [ debug, traceback, errorMessage ]
+																							 // [ debug, traceback, errorMessage ]
 		Print("[!][InfinityLoaderDLL.dll] EEex_RunWithStack() - %s\n", lua_tostring(L, -1));
 		lua_pop(L, 3);                                                                       // [ ]
 	}
@@ -1964,7 +1964,7 @@ void exportExistingPatterns() {
 				lua_rawseti(L, -3, ++size);                                           // 3 [ ..., patternsT, listT, size ]
 				return false;
 			});
-			                                                                          // 3 [ ..., patternsT, listT, size ]
+																					  // 3 [ ..., patternsT, listT, size ]
 			lua_pushinteger(L, size);                                                 // 4 [ ..., patternsT, listT, size, newSize ]
 			lua_rawseti(L, -3, 0);                                                    // 3 [ ..., patternsT, listT, size ]
 			lua_pop(L, 2);                                                            // 1 [ ..., patternsT ]
