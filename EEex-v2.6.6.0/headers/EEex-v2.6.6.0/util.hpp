@@ -11,6 +11,8 @@ __forceinline bool isAIBase(const CGameObjectType type) {
 	return (static_cast<__int8>(type) & static_cast<__int8>(CGameObjectType::AIBASE)) != 0;
 }
 
+uintptr_t getStackBase();
+
 ///////////////
 // Debugging //
 ///////////////

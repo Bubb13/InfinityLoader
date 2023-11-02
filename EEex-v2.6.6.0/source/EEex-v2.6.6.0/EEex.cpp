@@ -10,11 +10,11 @@
 //          Defines          //
 //---------------------------//
 
-//////////////////////////
-// Integrity Check Util //
-//////////////////////////
+/////////////////////////////
+// Hook Integrity Watchdog //
+/////////////////////////////
 
-constexpr int STACK_SNAPSHOT_SIZE = 256;
+constexpr uintptr_t HOOK_INTEGRITY_WATCHDOG_STACK_SNAPSHOT_SIZE = 256;
 
 //////////////////
 // Stutter Util //
@@ -47,17 +47,28 @@ type_wrapper_fprintf wrapper_fprintf;
 typedef int(*type_wrapper_fclose)(FILE* stream);
 type_wrapper_fclose wrapper_fclose;
 
-//////////////////////////
-// Integrity Check Util //
-//////////////////////////
+/////////////////////////////
+// Hook Integrity Watchdog //
+/////////////////////////////
 
-struct IntegrityCheckData {
-	NonVolatileRegisters nonVolatileRegisters;
-	byte stackSnapshot[STACK_SNAPSHOT_SIZE];
+struct HookIntegrityWatchdogSnapshotData {
+	RegisterValues registers;
+	byte stack[HOOK_INTEGRITY_WATCHDOG_STACK_SNAPSHOT_SIZE];
 };
 
-thread_local std::vector<IntegrityCheckData> integrityDataVector;
-std::unordered_map<uintptr_t, std::vector<std::pair<int, int>>> integrityIgnoredStackRanges;
+struct HookIntegrityWatchdogIgnoreInstance {
+	EEex_HookIntegrityWatchdogRegister registers;
+	std::vector<std::pair<int, int>> stackRanges;
+};
+
+struct HookIntegrityWatchdogIgnoreData {
+	std::unordered_map<size_t, HookIntegrityWatchdogIgnoreInstance> instances;
+};
+
+thread_local std::vector<HookIntegrityWatchdogSnapshotData> hookIntegrityWatchdogSnapshotVector;
+std::unordered_map<uintptr_t, HookIntegrityWatchdogIgnoreData> hookIntegrityWatchdogIgnoreMap;
+
+thread_local uintptr_t hookIntegrityWatchdogCachedStackBase = getStackBase();
 
 //////////////////
 // Stutter Util //
@@ -156,61 +167,94 @@ NumType clampedPercent(NumType num, NumType percent) {
 	return clampToType<NumType>(static_cast<__int64>(num) * percent / 100);
 }
 
-//----------------------------------------//
-//          Integrity Check Util          //
-//----------------------------------------//
+//-------------------------------------------//
+//          Hook Integrity Watchdog          //
+//-------------------------------------------//
 
-void EEex::IntegrityCheckIgnoreStackRange(uintptr_t address, int lowerBound, int upperBound) {
-	integrityIgnoredStackRanges[address].emplace_back(lowerBound, upperBound);
+__forceinline int operator&(const EEex_HookIntegrityWatchdogRegister a, const EEex_HookIntegrityWatchdogRegister b) {
+	return static_cast<__int32>(a) & static_cast<__int32>(b);
 }
 
-void EEex::IntegrityCheckEnter(uintptr_t address, byte* rsp, NonVolatileRegisters* nonVolatileRegisters)
-{
-	IntegrityCheckData& integrityData = integrityDataVector.emplace_back();
+void EEex::HookIntegrityWatchdogIgnoreStackRange(const uintptr_t address, const size_t instance, const int lowerBound, const int upperBound) {
+	hookIntegrityWatchdogIgnoreMap[address].instances[instance].stackRanges.emplace_back(lowerBound, upperBound);
+}
 
-	integrityData.nonVolatileRegisters = *nonVolatileRegisters;
+void EEex::HookIntegrityWatchdogIgnoreRegisters(const uintptr_t address, const size_t instance, const EEex_HookIntegrityWatchdogRegister registers) {
+	hookIntegrityWatchdogIgnoreMap[address].instances[instance].registers = registers;
+}
 
-	byte* stackSnapshot = integrityData.stackSnapshot;
-	for (int i = 0; i < STACK_SNAPSHOT_SIZE; ++i) {
-		stackSnapshot[i] = rsp[i];
+void EEex::HookIntegrityWatchdogEnter(const uintptr_t hookAddress, const RegisterValues *const registers) {
+
+	HookIntegrityWatchdogSnapshotData& hookIntegrityWatchdogSnapshot = hookIntegrityWatchdogSnapshotVector.emplace_back();
+	hookIntegrityWatchdogSnapshot.registers = *registers;
+
+	byte *const hookIntegrityWatchdogStackSnapshot = hookIntegrityWatchdogSnapshot.stack;
+	const byte *const stackPtr = reinterpret_cast<byte*>(registers->rsp);
+
+	const uintptr_t limit = (std::min)(HOOK_INTEGRITY_WATCHDOG_STACK_SNAPSHOT_SIZE,
+		hookIntegrityWatchdogCachedStackBase - reinterpret_cast<uintptr_t>(stackPtr));
+
+	for (uintptr_t i = 0; i < limit; ++i) {
+		hookIntegrityWatchdogStackSnapshot[i] = stackPtr[i];
 	}
 }
 
-void EEex::IntegrityCheckExit(uintptr_t address, byte* rsp, NonVolatileRegisters* nonVolatileRegisters)
-{
-	IntegrityCheckData& integrityData = integrityDataVector.back();
+void EEex::HookIntegrityWatchdogExit(const uintptr_t hookAddress, const size_t instance, const RegisterValues *const registers) {
 
-	#define checkRegister(reg, regStr) \
-		if (integrityData.nonVolatileRegisters.reg != nonVolatileRegisters->reg) { \
-			Print("[!][EEex.dll] EEex::IntegrityCheckExit() - [%p] %s changed from 0x%X to 0x%X\n", address, regStr, \
-				integrityData.nonVolatileRegisters.reg, nonVolatileRegisters->reg); \
+	const HookIntegrityWatchdogSnapshotData& hookIntegrityWatchdogSnapshot = hookIntegrityWatchdogSnapshotVector.back();
+
+	const HookIntegrityWatchdogIgnoreInstance* hookIntegrityWatchdogIgnoreInstance = nullptr;
+	if (auto itr = hookIntegrityWatchdogIgnoreMap.find(hookAddress); itr != hookIntegrityWatchdogIgnoreMap.end()) {
+		auto& hookIntegrityWatchdogIgnoreInstances = itr->second.instances;
+		if (auto itr2 = hookIntegrityWatchdogIgnoreInstances.find(instance); itr2 != hookIntegrityWatchdogIgnoreInstances.end()) {
+			hookIntegrityWatchdogIgnoreInstance = &itr2->second;
+		}
+	}
+
+	#define checkRegister(reg, regStr, ignoreFlag) \
+		if (hookIntegrityWatchdogSnapshot.registers.reg != registers->reg \
+			&& (hookIntegrityWatchdogIgnoreInstance == nullptr || (hookIntegrityWatchdogIgnoreInstance->registers & ignoreFlag) == 0)) \
+		{ \
+			Print("[!][EEex.dll] EEex::HookIntegrityWatchdogExit() - [%p] (instance %llu) %s changed from 0x%X to 0x%X\n", \
+				hookAddress, instance, regStr, hookIntegrityWatchdogSnapshot.registers.reg, registers->reg); \
 		}
 
-	checkRegister(rbx, "rbx")
-	checkRegister(rbp, "rbp")
-	checkRegister(rsp, "rsp")
-	checkRegister(rsi, "rsi")
-	checkRegister(rdi, "rdi")
-	checkRegister(r12, "r12")
-	checkRegister(r13, "r13")
-	checkRegister(r14, "r14")
-	checkRegister(r15, "r15")
+	checkRegister(rax, "rax", EEex_HookIntegrityWatchdogRegister::RAX)
+	checkRegister(rbx, "rbx", EEex_HookIntegrityWatchdogRegister::RBX)
+	checkRegister(rcx, "rcx", EEex_HookIntegrityWatchdogRegister::RCX)
+	checkRegister(rdx, "rdx", EEex_HookIntegrityWatchdogRegister::RDX)
+	checkRegister(rbp, "rbp", EEex_HookIntegrityWatchdogRegister::RBP)
+	checkRegister(rsp, "rsp", EEex_HookIntegrityWatchdogRegister::RSP)
+	checkRegister(rsi, "rsi", EEex_HookIntegrityWatchdogRegister::RSI)
+	checkRegister(rdi, "rdi", EEex_HookIntegrityWatchdogRegister::RDI)
+	checkRegister(r8,  "r8",  EEex_HookIntegrityWatchdogRegister::R8)
+	checkRegister(r9,  "r9",  EEex_HookIntegrityWatchdogRegister::R9)
+	checkRegister(r10, "r10", EEex_HookIntegrityWatchdogRegister::R10)
+	checkRegister(r11, "r11", EEex_HookIntegrityWatchdogRegister::R11)
+	checkRegister(r12, "r12", EEex_HookIntegrityWatchdogRegister::R12)
+	checkRegister(r13, "r13", EEex_HookIntegrityWatchdogRegister::R13)
+	checkRegister(r14, "r14", EEex_HookIntegrityWatchdogRegister::R14)
+	checkRegister(r15, "r15", EEex_HookIntegrityWatchdogRegister::R15)
 
-	byte* stackSnapshot = integrityData.stackSnapshot;
+	const byte *const hookIntegrityWatchdogStackSnapshot = hookIntegrityWatchdogSnapshot.stack;
+	const byte *const stackPtr = reinterpret_cast<byte*>(registers->rsp);
 
-	for (int i = 32; i < STACK_SNAPSHOT_SIZE; ++i) {
+	const uintptr_t limit = (std::min)(HOOK_INTEGRITY_WATCHDOG_STACK_SNAPSHOT_SIZE,
+		hookIntegrityWatchdogCachedStackBase - reinterpret_cast<uintptr_t>(stackPtr));
 
-		byte stackSnapshotByte = stackSnapshot[i];
-		byte stackByte = rsp[i];
+	for (uintptr_t i = 0; i < limit; ++i) {
 
-		if (stackSnapshotByte == stackByte) {
+		const byte hookIntegrityWatchdogStackSnapshotByte = hookIntegrityWatchdogStackSnapshot[i];
+		const byte stackByte = stackPtr[i];
+
+		if (hookIntegrityWatchdogStackSnapshotByte == stackByte) {
 			continue;
 		}
 
 		bool ignore = false;
 
-		if (auto itr = integrityIgnoredStackRanges.find(address); itr != integrityIgnoredStackRanges.end()) {
-			for (auto& ignoredRange : itr->second) {
+		if (hookIntegrityWatchdogIgnoreInstance != nullptr) {
+			for (auto& ignoredRange : hookIntegrityWatchdogIgnoreInstance->stackRanges) {
 				if (i >= ignoredRange.first && i <= ignoredRange.second) {
 					ignore = true;
 					break;
@@ -219,11 +263,12 @@ void EEex::IntegrityCheckExit(uintptr_t address, byte* rsp, NonVolatileRegisters
 		}
 
 		if (!ignore) {
-			Print("[!][EEex.dll] EEex::IntegrityCheckExit() - [%p] Stack[+0x%X] Changed from 0x%X to 0x%X\n", address, i, stackSnapshotByte, stackByte);
+			Print("[!][EEex.dll] EEex::HookIntegrityWatchdogExit() - [%p] (instance %llu) Stack[+0x%X] Changed from 0x%X to 0x%X\n",
+				hookAddress, instance, i, hookIntegrityWatchdogStackSnapshotByte, stackByte);
 		}
 	}
 
-	integrityDataVector.pop_back();
+	hookIntegrityWatchdogSnapshotVector.pop_back();
 }
 
 //--------------------------------//

@@ -4,27 +4,34 @@
 #include "Baldur-v2.6.6.0_generated.h"
 
 #pragma pack(push, 1)
-struct NonVolatileRegisters {
-	__int64 rbx;
-	__int64 rbp;
-	__int64 rsp;
-	__int64 rsi;
-	__int64 rdi;
-	__int64 r12;
-	__int64 r13;
-	__int64 r14;
-	__int64 r15;
+struct RegisterValues {
+	uintptr_t rax;
+	uintptr_t rbx;
+	uintptr_t rcx;
+	uintptr_t rdx;
+	uintptr_t rbp;
+	uintptr_t rsp;
+	uintptr_t rsi;
+	uintptr_t rdi;
+	uintptr_t r8;
+	uintptr_t r9;
+	uintptr_t r10;
+	uintptr_t r11;
+	uintptr_t r12;
+	uintptr_t r13;
+	uintptr_t r14;
+	uintptr_t r15;
 };
 #pragma pack(pop)
 
 namespace EEex {
 
-	//----------------------------------------//
-	//          Integrity Check Util          //
-	//----------------------------------------//
+	//-------------------------------------------//
+	//          Hook Integrity Watchdog          //
+	//-------------------------------------------//
 
-	void IntegrityCheckEnter(uintptr_t address, byte* rsp, NonVolatileRegisters* nonVolatileRegisters);
-	void IntegrityCheckExit(uintptr_t address, byte* rsp, NonVolatileRegisters* nonVolatileRegisters);
+	void HookIntegrityWatchdogEnter(uintptr_t hookAddress, const RegisterValues* registers);
+	void HookIntegrityWatchdogExit(uintptr_t hookAddress, size_t instance, const RegisterValues* registers);
 
 	//------------------------//
 	//          Misc          //

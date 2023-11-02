@@ -24,7 +24,8 @@ namespace EEex
 	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
 	$external_implementation bool IsPlayerScript(CAIScript* pScript);
-	$external_implementation void IntegrityCheckIgnoreStackRange(uintptr_t address, int lowerBound, int upperBound);
+	$external_implementation void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
+	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 };
 
@@ -58,4 +59,24 @@ enum EEex::ProjectileType : __int32
 	CProjectileSkyStrikeBAM          = 0x20000, // 0x14059B6C8
 	CProjectileSpellHit              = 0x40000, // 0x14059B330
 	CProjectileTravelDoor            = 0x80000, // 0x14059B0D0
+};
+
+enum EEex_HookIntegrityWatchdogRegister : __int32
+{
+	RAX = 0x1,
+	RBX = 0x2,
+	RCX = 0x4,
+	RDX = 0x8,
+	RBP = 0x10,
+	RSP = 0x20,
+	RSI = 0x40,
+	RDI = 0x80,
+	R8 = 0x100,
+	R9 = 0x200,
+	R10 = 0x400,
+	R11 = 0x800,
+	R12 = 0x10000,
+	R13 = 0x20000,
+	R14 = 0x40000,
+	R15 = 0x80000,
 };

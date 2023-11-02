@@ -1193,6 +1193,26 @@ enum class EEex_MatchObjectFlags : __int32
 	FARTHEST = 512,
 };
 
+enum class EEex_HookIntegrityWatchdogRegister : __int32
+{
+	RAX = 1,
+	RBX = 2,
+	RCX = 4,
+	RDX = 8,
+	RBP = 16,
+	RSP = 32,
+	RSI = 64,
+	RDI = 128,
+	R8 = 256,
+	R9 = 512,
+	R10 = 1024,
+	R11 = 2048,
+	R12 = 65536,
+	R13 = 131072,
+	R14 = 262144,
+	R15 = 524288,
+};
+
 enum class DP_ProviderID : __int32
 {
 	DP_PROVIDER_NONE = 0,
@@ -2844,7 +2864,8 @@ namespace EEex
 	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
 	bool IsPlayerScript(CAIScript* pScript);
-	void IntegrityCheckIgnoreStackRange(uintptr_t address, int lowerBound, int upperBound);
+	void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
+	void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
 };
 
 struct ConstCharString

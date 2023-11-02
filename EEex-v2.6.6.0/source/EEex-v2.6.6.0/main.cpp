@@ -16,12 +16,12 @@ void exportPattern(const String& name, void* value) {
 
 void exportPatterns() {
 
-	////////////////////////////////////////////
-	//          Integrity Check Util          //
-	////////////////////////////////////////////
+	///////////////////////////////////////////////
+	//          Hook Integrity Watchdog          //
+	///////////////////////////////////////////////
 
-	exportPattern(TEXT("EEex::IntegrityCheckEnter"), EEex::IntegrityCheckEnter);
-	exportPattern(TEXT("EEex::IntegrityCheckExit"), EEex::IntegrityCheckExit);
+	exportPattern(TEXT("EEex::HookIntegrityWatchdogEnter"), EEex::HookIntegrityWatchdogEnter);
+	exportPattern(TEXT("EEex::HookIntegrityWatchdogExit"), EEex::HookIntegrityWatchdogExit);
 
 	/////////////////////////////////
 	//          Overrides          //

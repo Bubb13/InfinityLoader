@@ -1590,7 +1590,7 @@ class Group:
 
 		self.ignoreHeader: bool = False        # If True the group's header won't be written to the .h file. The group's bindings will still be written.
 		self.overrideUsertypeSingleName = None # Used to override normal singleName when writing Lua bindings,
-		                                       # (for instances when the engine already uses the normal name).
+											   # (for instances when the engine already uses the normal name).
 
 		self.dependsOn: dict[str,bool] = {}      # Map of group names which this group needs to be defined in order to be valid.
 		self.lightDependsOn: dict[str,bool] = {} # Map of group names which this group needs to be declared in order to be valid.

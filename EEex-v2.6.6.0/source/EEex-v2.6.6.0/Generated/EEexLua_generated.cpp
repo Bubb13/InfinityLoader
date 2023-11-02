@@ -55,15 +55,22 @@ static int tolua_function_EEex_IsPlayerScript(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_EEex_IntegrityCheckIgnoreStackRange(lua_State* L)
+static int tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange(lua_State* L)
 {
-	EEex::IntegrityCheckIgnoreStackRange(tolua_function_tointeger<uintptr_t>(L, 1, "IntegrityCheckIgnoreStackRange"), tolua_function_tointeger<int>(L, 2, "IntegrityCheckIgnoreStackRange"), tolua_function_tointeger<int>(L, 3, "IntegrityCheckIgnoreStackRange"));
+	EEex::HookIntegrityWatchdogIgnoreStackRange(tolua_function_tointeger<uintptr_t>(L, 1, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<size_t>(L, 2, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<int>(L, 3, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<int>(L, 4, "HookIntegrityWatchdogIgnoreStackRange"));
+	return 0;
+}
+
+static int tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters(lua_State* L)
+{
+	EEex::HookIntegrityWatchdogIgnoreRegisters(tolua_function_tointeger<uintptr_t>(L, 1, "HookIntegrityWatchdogIgnoreRegisters"), tolua_function_tointeger<size_t>(L, 2, "HookIntegrityWatchdogIgnoreRegisters"), (EEex_HookIntegrityWatchdogRegister)tolua_function_tointeger<__int32>(L, 3, "HookIntegrityWatchdogIgnoreRegisters"));
 	return 0;
 }
 
 static void tolua_reg_types(lua_State* L)
 {
 	tolua_usertype(L, "EEex_MatchObjectFlags");
+	tolua_usertype(L, "EEex_HookIntegrityWatchdogRegister");
 	tolua_usertype(L, "EEex");
 	tolua_usertype(L, "EEex::ProjectileType");
 }
@@ -89,6 +96,25 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_constant(L, "MATCH_ONLY_BACKLIST", 256);
 		tolua_constant(L, "FARTHEST", 512);
 	tolua_endmodule(L);
+	tolua_cclass(L, "EEex_HookIntegrityWatchdogRegister", "EEex_HookIntegrityWatchdogRegister", {"__int32"}, NULL);
+	tolua_beginmodule(L, "EEex_HookIntegrityWatchdogRegister");
+		tolua_constant(L, "RAX", 1);
+		tolua_constant(L, "RBX", 2);
+		tolua_constant(L, "RCX", 4);
+		tolua_constant(L, "RDX", 8);
+		tolua_constant(L, "RBP", 16);
+		tolua_constant(L, "RSP", 32);
+		tolua_constant(L, "RSI", 64);
+		tolua_constant(L, "RDI", 128);
+		tolua_constant(L, "R8", 256);
+		tolua_constant(L, "R9", 512);
+		tolua_constant(L, "R10", 1024);
+		tolua_constant(L, "R11", 2048);
+		tolua_constant(L, "R12", 65536);
+		tolua_constant(L, "R13", 131072);
+		tolua_constant(L, "R14", 262144);
+		tolua_constant(L, "R15", 524288);
+	tolua_endmodule(L);
 	tolua_cclass(L, "EEex", "EEex", {}, NULL);
 	tolua_beginmodule(L, "EEex");
 		tolua_variable(L, "Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled, tolua_set_EEex_Opcode_LuaHook_AfterListsResolved_Enabled);
@@ -98,7 +124,8 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
 		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
-		tolua_function(L, "IntegrityCheckIgnoreStackRange", &tolua_function_EEex_IntegrityCheckIgnoreStackRange);
+		tolua_function(L, "HookIntegrityWatchdogIgnoreStackRange", &tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange);
+		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");
