@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <io.h>
 #include <iostream>
+#include <list>
 #include <map>
 #include <psapi.h>
 #include <regex>

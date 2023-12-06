@@ -11473,7 +11473,7 @@ struct CDerivedStats : CDerivedStatsTemplate
 
 struct CCreatureFileMemorizedSpell
 {
-	Array<unsigned __int8,8> m_spellId;
+	CResRef m_spellId;
 	unsigned __int16 m_flags;
 	Array<unsigned __int8,2> structureAlignment1;
 
