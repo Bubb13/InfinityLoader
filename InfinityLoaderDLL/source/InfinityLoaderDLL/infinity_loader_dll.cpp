@@ -1335,64 +1335,6 @@ int writeStringAutoLua(lua_State* L) {
 // Initialization //
 ////////////////////
 
-#undef fprintf
-
-int logShim(FILE* stream, const char* format, const char* level, const char* message) {
-	if (!protonCompatibility()) {
-		return fprintf(stderr, format, level, message); // Intentionally not FPrint
-	}
-	else {
-		FPrint(stderr, format, level, message);
-		return 0;
-	}
-}
-
-#define fprintf error
-
-int logShimDisable(FILE* stream, const char* format, const char* level, const char* message) {
-	return 0;
-}
-
-DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
-
-	void* sectionPtr;
-	DWORD sectionSize;
-	if (sharedState().GetSegmentPointerAndSize(".text", sectionPtr, sectionSize)) {
-		Print("[!][InfinityLoaderDLL.dll] writeReplaceLogFunction() - Failed to fetch .text pointer and size\n");
-		return -1;
-	}
-
-	PatternValueHandle patchAddressHandle;
-	TryRetErr( findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_SDL_LogOutput()_fprintf"), patchAddressHandle) )
-	if (sharedState().GetPatternValueType(patchAddressHandle) != PatternValueType::SINGLE) {
-		Print("[!][InfinityLoaderDLL.dll] writeReplaceLogFunction() - [Hardcoded_SDL_LogOutput()_fprintf].Type must be SINGLE\n");
-		return -1;
-	}
-	uintptr_t patchAddress = sharedState().GetSinglePatternValue(patchAddressHandle);
-
-	uintptr_t curAllocatedPtr;
-	SYSTEM_INFO info;
-	GetSystemInfo(&info);
-
-	if (DWORD lastError = AllocateNear(sharedState().ImageBase(), info.dwAllocationGranularity, curAllocatedPtr)) {
-		return lastError;
-	}
-
-	AssemblyWriter writer = AssemblyWriter::Create();
-
-	writer.SetLocation(patchAddress);
-	writer.JmpToAddress(curAllocatedPtr);
-	disableCodeProtection();
-	writer.Flush();
-	enableCodeProtection();
-	writer.SetLocation(curAllocatedPtr);
-	writer.CallToAddressFar(reinterpret_cast<uintptr_t>(!disable_fprintf ? logShim : logShimDisable));
-	writer.JmpToAddress(patchAddress + 5);
-	writer.Flush();
-
-	return 0;
-}
-
 void bindToParentOSHandles() {
 
 	// The strategy:
@@ -1520,6 +1462,72 @@ DWORD detatchFromConsole(bool force = false) {
 
 	attachedToConsole = false;
 	return ERROR_SUCCESS;
+}
+
+#undef fprintf
+
+int logShim(FILE* stream, const char* format, const char* level, const char* message) {
+	if (!attachedToConsole && !protonCompatibility()) {
+		// Intentionally not FPrint() - Since the engine calls both WriteConsole() and fprintf(), this fprintf()
+		// call only serves to send engine output to the redirected stderr of InfinityLoader. Note that FPrint()
+		// is used when `attachedToConsole == true`, as if InfinityLoader is attached to the console, that means
+		// the engine isn't, (which causes its WriteConsole() to fail).
+		return fprintf(stderr, format, level, message);
+	}
+	else {
+		FPrint(stderr, format, level, message);
+		return 0;
+	}
+}
+
+#define fprintf error
+
+int logShimDisable(FILE* stream, const char* format, const char* level, const char* message) {
+	return 0;
+}
+
+DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
+
+	void* sectionPtr;
+	DWORD sectionSize;
+	if (sharedState().GetSegmentPointerAndSize(".text", sectionPtr, sectionSize)) {
+		Print("[!][InfinityLoaderDLL.dll] writeReplaceLogFunction() - Failed to fetch .text pointer and size\n");
+		return -1;
+	}
+
+	PatternValueHandle patchAddressHandle;
+	TryRetErr( findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_SDL_LogOutput()_fprintf"), patchAddressHandle) )
+	if (sharedState().GetPatternValueType(patchAddressHandle) != PatternValueType::SINGLE) {
+		Print("[!][InfinityLoaderDLL.dll] writeReplaceLogFunction() - [Hardcoded_SDL_LogOutput()_fprintf].Type must be SINGLE\n");
+		return -1;
+	}
+	uintptr_t patchAddress = sharedState().GetSinglePatternValue(patchAddressHandle);
+
+	uintptr_t curAllocatedPtr;
+	SYSTEM_INFO info;
+	GetSystemInfo(&info);
+
+	if (DWORD lastError = AllocateNear(sharedState().ImageBase(), info.dwAllocationGranularity, curAllocatedPtr)) {
+		return lastError;
+	}
+
+	AssemblyWriter writer = AssemblyWriter::Create();
+
+	writer.SetLocation(patchAddress);
+	writer.JmpToAddress(curAllocatedPtr);
+	disableCodeProtection();
+	writer.Flush();
+	enableCodeProtection();
+	writer.SetLocation(curAllocatedPtr);
+	writer.CallToAddressFar(reinterpret_cast<uintptr_t>(!disable_fprintf ? logShim : logShimDisable));
+	writer.JmpToAddress(patchAddress + 5);
+	writer.Flush();
+
+	if (debug()) {
+		Print("[!][InfinityLoaderDLL.dll] writeReplaceLogFunction() - Done\n");
+	}
+
+	return 0;
 }
 
 void winMainHook() {
@@ -1713,6 +1721,12 @@ void initLua() {
 
 		fillExportedPointer(TEXT("Hardcoded_InternalLuaState"), L, p_luaL_newstate());
 		p_luaL_openlibs(L);
+
+		// Since non-internal modes initialize the Lua state immediately, the engine's print() function isn't set when EEex's initial
+		// Lua file is executed, which means print() must be redirected to InfinityLoader's FPrint() to get console output from the
+		// initial file.
+		lua_pushcfunction(L, printLua);
+		lua_setglobal(L, "print");
 	}
 
 	sharedState().InitLuaState(L);
