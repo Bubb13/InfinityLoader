@@ -61,6 +61,10 @@ void exportPatterns() {
 	exportPattern(TEXT("EEex::Opcode_Hook_OnOp248AddTail"), EEex::Opcode_Hook_OnOp248AddTail);
 	// op249
 	exportPattern(TEXT("EEex::Opcode_Hook_OnOp249AddTail"), EEex::Opcode_Hook_OnOp249AddTail);
+	// op280
+	exportPattern(TEXT("EEex::Opcode_Hook_Op280_BeforeApplyEffect"), EEex::Opcode_Hook_Op280_BeforeApplyEffect);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op280_GetForcedWildSurgeNumber"), EEex::Opcode_Hook_Op280_GetForcedWildSurgeNumber);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals"), EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals);
 	// New op400
 	exportPattern(TEXT("EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect"), EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove"), EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove);

@@ -88,8 +88,14 @@ struct EnabledActionListenerData {
 
 struct ExStatData {
 	std::unordered_map<int, int> exStatValues{};
+	// op280
+	int forcedWildSurgeNumber = 0;
+	bool suppressWildSurgeVisuals = false;
+	// op403
 	std::vector<CGameEffect*> screenEffects;
+	// op408
 	std::vector<CGameEffect*> projectileMutatorEffects;
+	// op409
 	std::vector<EnabledActionListenerData> enableActionListenerEffects;
 };
 
@@ -1659,6 +1665,10 @@ void EEex::Stats_Hook_OnReload(CGameSprite* pSprite) {
 
 	ExStatData& exStatData = exStatDataMap[&pSprite->m_derivedStats];
 
+	// op280
+	exStatData.forcedWildSurgeNumber = 0;
+	exStatData.suppressWildSurgeVisuals = false;
+
 	// op401
 	auto& exStatValues = exStatData.exStatValues;
 	for (auto& [id, info] : exStatInfoMap) {
@@ -1683,6 +1693,10 @@ void EEex::Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats) {
 
 	ExStatData& exStatData = exStatDataMap[pStats];
 	ExStatData& otherExStatData = exStatDataMap[pOtherStats];
+
+	// op280
+	exStatData.forcedWildSurgeNumber = otherExStatData.forcedWildSurgeNumber;
+	exStatData.suppressWildSurgeVisuals = otherExStatData.suppressWildSurgeVisuals;
 
 	// op401
 	auto& exStatValues = exStatData.exStatValues;
@@ -1730,6 +1744,15 @@ void EEex::Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStat
 
 	ExStatData& exStatData = exStatDataMap[pStats];
 	ExStatData& otherExStatData = exStatDataMap[pOtherStats];
+
+	// op280
+	if (otherExStatData.forcedWildSurgeNumber != 0) {
+		exStatData.forcedWildSurgeNumber = otherExStatData.forcedWildSurgeNumber;
+	}
+
+	if (otherExStatData.suppressWildSurgeVisuals) {
+		exStatData.suppressWildSurgeVisuals = true;
+	}
 
 	// op401
 	auto& exStatValues = exStatData.exStatValues;
@@ -1803,6 +1826,42 @@ void EEex::Opcode_Hook_OnOp249AddTail(CGameEffect* pOp249, CGameEffect* pEffect)
 	if ((pOp249->m_special & 1) != 0) {
 		exEffectInfoMap[pEffect].bypassOp120 = true;
 	}
+
+	STUTTER_LOG_END
+}
+
+// op280
+void EEex::Opcode_Hook_Op280_BeforeApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Op280_BeforeApplyEffect")
+
+	ExStatData& exStatData = exStatDataMap[&pSprite->m_derivedStats];
+	exStatData.forcedWildSurgeNumber = pEffect->m_effectAmount;
+	exStatData.suppressWildSurgeVisuals = pEffect->m_special != 0;
+
+	STUTTER_LOG_END
+}
+
+// Return:
+//      0 => Don't override wild surge number
+//     !0 => Override wild surge number
+int EEex::Opcode_Hook_Op280_GetForcedWildSurgeNumber(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_Op280_GetForcedWildSurgeNumber")
+
+	return exStatDataMap[&pSprite->m_derivedStats].forcedWildSurgeNumber;
+
+	STUTTER_LOG_END
+}
+
+// Return:
+//     false => Don't suppress wild surge feedback string and visuals
+//     true  => Suppress wild surge feedback string and visuals
+bool EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals")
+
+	return exStatDataMap[&pSprite->m_derivedStats].suppressWildSurgeVisuals;
 
 	STUTTER_LOG_END
 }
