@@ -1806,6 +1806,16 @@ int EEex::Stats_Hook_OnGettingUnknown(CDerivedStats* pStats, int nStatId) {
 // Opcode //
 ////////////
 
+// op101 - Allow saving throw BIT23 to bypass opcode #101
+bool EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect) {
+
+	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity")
+
+	return (pEffect->m_savingThrow & 0x800000) != 0;
+
+	STUTTER_LOG_END
+}
+
 // op248
 void EEex::Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect) {
 

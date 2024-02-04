@@ -76,6 +76,8 @@ namespace EEex {
 	// Opcode //
 	////////////
 
+	// op101
+	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
 	// op248
 	void Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect);
 	// op249

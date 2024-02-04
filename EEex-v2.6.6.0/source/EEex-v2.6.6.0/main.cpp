@@ -57,6 +57,8 @@ void exportPatterns() {
 	// Opcode //
 	////////////
 
+	// op101
+	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
 	// op248
 	exportPattern(TEXT("EEex::Opcode_Hook_OnOp248AddTail"), EEex::Opcode_Hook_OnOp248AddTail);
 	// op249
