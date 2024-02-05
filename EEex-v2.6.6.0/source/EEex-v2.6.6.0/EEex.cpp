@@ -38,6 +38,12 @@ constexpr uintptr_t HOOK_INTEGRITY_WATCHDOG_STACK_SNAPSHOT_SIZE = 256;
 // Needs to be updated if Beamdog ever adds a new stat
 #define FIRST_EXTENDED_STAT_ID 203
 
+////////////////
+// Projectile //
+////////////////
+
+//#define PROJECTILE_MUTATORS_DISABLED
+
 //---------------------------//
 //          Globals          //
 //---------------------------//
@@ -129,7 +135,6 @@ std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
 // Projectile //
 ////////////////
 
-bool bProjectileMutatorsDisabled = false;
 std::unordered_map<uintptr_t, std::pair<const char*, EEex::ProjectileType>> projVFTableToType{};
 
 //-----------------------------//
@@ -2218,20 +2223,23 @@ LuaTypeContainer processMutatorFunctions(
 	const std::optional<std::vector<CGameEffect*>*>& projectileMutatorEffects,
 	std::function<LuaTypeContainer(const char*, std::optional<int>)> func)
 {
-	lua_getglobal(L, "EEex_Projectile_Private_GlobalMutators");   // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
-	lua_pushnil(L);                                               // 2 [ ..., EEex_Projectile_Private_GlobalMutators, nil ]
-	while (lua_next(L, -2)) {
-																  // 3 [ ..., EEex_Projectile_Private_GlobalMutators, k, v -> mutatorTableName ]
-		LuaTypeContainer retType = func(lua_tostring(L, -1), {});
-		if (retType.valid && retType.type != LUA_TNIL) {
-			lua_pop(L, 3);                                        // 0 [ ... ]
-			return retType;
-		}
+	if (EEex::Projectile_LuaHook_GlobalMutators_Enabled) {
 
-		lua_pop(L, 1);                                            // 2 [ ..., EEex_Projectile_Private_GlobalMutators, k ]
+		lua_getglobal(L, "EEex_Projectile_Private_GlobalMutators");   // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
+		lua_pushnil(L);                                               // 2 [ ..., EEex_Projectile_Private_GlobalMutators, nil ]
+		while (lua_next(L, -2)) {
+																	  // 3 [ ..., EEex_Projectile_Private_GlobalMutators, k, v -> mutatorTableName ]
+			LuaTypeContainer retType = func(lua_tostring(L, -1), {});
+			if (retType.valid && retType.type != LUA_TNIL) {
+				lua_pop(L, 3);                                        // 0 [ ... ]
+				return retType;
+			}
+
+			lua_pop(L, 1);                                            // 2 [ ..., EEex_Projectile_Private_GlobalMutators, k ]
+		}
+																	  // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
+		lua_pop(L, 1);                                                // 0 [ ... ]
 	}
-																  // 1 [ ..., EEex_Projectile_Private_GlobalMutators ]
-	lua_pop(L, 1);                                                // 0 [ ... ]
 
 	if (projectileMutatorEffects.has_value()) {
 
@@ -2260,19 +2268,34 @@ std::optional<std::vector<CGameEffect*>*> getProjectileMutatorEffects(CGameAIBas
 	if (isSprite(pDecoder, true)) {
 		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(pDecoder);
 		auto projectileMutatorEffects = &exStatDataMap[pSprite->GetActiveStats()].projectileMutatorEffects;
-		return {projectileMutatorEffects};
+		return { projectileMutatorEffects };
 	}
 
 	return {};
 }
 
+#ifdef PROJECTILE_MUTATORS_DISABLED
+	#define GUARD_GET_PROJECTILE_MUTATOR_EFFECTS(shortCircuitRetVal)        \
+		return shortCircuitRetVal;                                          \
+		std::optional<std::vector<CGameEffect*>*> projectileMutatorEffects;
+#else
+	#define GUARD_GET_PROJECTILE_MUTATOR_EFFECTS(shortCircuitRetVal)                                \
+		auto projectileMutatorEffects = getProjectileMutatorEffects(pDecoder);                      \
+		if (!EEex::Projectile_LuaHook_GlobalMutators_Enabled                                        \
+			&& (!projectileMutatorEffects.has_value() || projectileMutatorEffects.value()->empty()) \
+		)                                                                                           \
+		{                                                                                           \
+			return shortCircuitRetVal;                                                              \
+		}
+#endif
+
+#define NORET
+
 ushort EEex::Projectile_Hook_OnBeforeDecode(ushort nProjectileType, CGameAIBase* pDecoder, uintptr_t pRetPtr) {
 
 	STUTTER_LOG_START(ushort, "EEex::Projectile_Hook_OnBeforeDecode")
 
-	if (bProjectileMutatorsDisabled) {
-		return -1;
-	}
+	GUARD_GET_PROJECTILE_MUTATOR_EFFECTS(-1)
 
 	lua_State *const L = luaState();
 	const int myBase = lua_gettop(L);
@@ -2281,7 +2304,7 @@ ushort EEex::Projectile_Hook_OnBeforeDecode(ushort nProjectileType, CGameAIBase*
 	pushGameObjectUD(L, pDecoder);                                                              // 2 [ ..., decodeSource, pDecoderUD ]
 	lua_pushinteger(L, nProjectileType);                                                        // 3 [ ..., decodeSource, pDecoderUD, nProjectileType ]
 
-	LuaTypeContainer newType = processMutatorFunctions(L, getProjectileMutatorEffects(pDecoder),
+	LuaTypeContainer newType = processMutatorFunctions(L, projectileMutatorEffects,
 		[&](const char* mutatorTableName, std::optional<int> originatingEffectIndex) -> LuaTypeContainer
 	{
 																								// 3 [ ..., decodeSource, pDecoderUD, nProjectileType, ... ]
@@ -2324,9 +2347,7 @@ void EEex::Projectile_Hook_OnAfterDecode(CProjectile* pProjectile, CGameAIBase* 
 
 	STUTTER_LOG_START(void, "EEex::Projectile_Hook_OnAfterDecode")
 
-	if (bProjectileMutatorsDisabled) {
-		return;
-	}
+	GUARD_GET_PROJECTILE_MUTATOR_EFFECTS(NORET)
 
 	lua_State *const L = luaState();
 	const int myBase = lua_gettop(L);
@@ -2335,7 +2356,7 @@ void EEex::Projectile_Hook_OnAfterDecode(CProjectile* pProjectile, CGameAIBase* 
 	pushProjectileUD(L, pProjectile);                                                                               // 2 [ ..., decodeSource, pProjectileUD ]
 	pushGameObjectUD(L, pDecoder);                                                                                  // 3 [ ..., decodeSource, pProjectileUD, pDecoderUD ]
 
-	processMutatorFunctions(L, getProjectileMutatorEffects(pDecoder),
+	processMutatorFunctions(L, projectileMutatorEffects,
 		[&](const char* mutatorTableName, std::optional<int> originatingEffectIndex) -> LuaTypeContainer
 	{
 																													// 3 [ ..., decodeSource, pProjectileUD, pDecoderUD, ... ]
@@ -2379,9 +2400,7 @@ void EEex::Projectile_Hook_OnBeforeAddEffect(CProjectile* pProjectile, CGameAIBa
 
 	STUTTER_LOG_START(void, "EEex::Projectile_Hook_OnBeforeAddEffect")
 
-	if (bProjectileMutatorsDisabled) {
-		return;
-	}
+	GUARD_GET_PROJECTILE_MUTATOR_EFFECTS(NORET)
 
 	lua_State *const L = luaState();
 	const int myBase = lua_gettop(L);
@@ -2391,7 +2410,7 @@ void EEex::Projectile_Hook_OnBeforeAddEffect(CProjectile* pProjectile, CGameAIBa
 	pushGameObjectUD(L, pDecoder);                                                                              // 3 [ ..., addEffectSource, pProjectileUD, pDecoderUD ]
 	tolua_pushusertype_nocast(L, pEffect, "CGameEffect");                                                       // 4 [ ..., addEffectSource, pProjectileUD, pDecoderUD, pEffectUD ]
 
-	processMutatorFunctions(L, getProjectileMutatorEffects(pDecoder),
+	processMutatorFunctions(L, projectileMutatorEffects,
 		[&](const char* mutatorTableName, std::optional<int> originatingEffectIndex) -> LuaTypeContainer
 	{
 																												// 4 [ ..., addEffectSource, pProjectileUD, pDecoderUD, pEffectUD, ... ]
@@ -2431,6 +2450,9 @@ void EEex::Projectile_Hook_OnBeforeAddEffect(CProjectile* pProjectile, CGameAIBa
 
 	STUTTER_LOG_END
 }
+
+#undef GUARD_GET_PROJECTILE_MUTATOR_EFFECTS
+#undef NORET
 
 ////////////
 // Script //
@@ -2570,6 +2592,7 @@ DWORD getLuaProc(const char* name, out_type& out) {
 void EEex::InitEEex() {
 
 	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = false;
+	EEex::Projectile_LuaHook_GlobalMutators_Enabled = false;
 	initProjectileMutator();
 
 	if (luaMode() == LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL) {

@@ -21,6 +21,24 @@ static int tolua_get_EEex_reference_Opcode_LuaHook_AfterListsResolved_Enabled(lu
 	return 1;
 }
 
+static int tolua_get_EEex_Projectile_LuaHook_GlobalMutators_Enabled(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::Projectile_LuaHook_GlobalMutators_Enabled);
+	return 1;
+}
+
+static int tolua_set_EEex_Projectile_LuaHook_GlobalMutators_Enabled(lua_State* L)
+{
+	EEex::Projectile_LuaHook_GlobalMutators_Enabled = tolua_setter_toboolean(L, "Projectile_LuaHook_GlobalMutators_Enabled");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_Projectile_LuaHook_GlobalMutators_Enabled(lua_State* L)
+{
+	tolua_pushusertypepointer(L, (void*)&EEex::Projectile_LuaHook_GlobalMutators_Enabled, "Pointer<bool>");
+	return 1;
+}
+
 static int tolua_function_EEex_MatchObject(lua_State* L)
 {
 	long returnVal = EEex::MatchObject(L, (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject"), tolua_function_tostring(L, 2, "MatchObject"), tolua_function_tointeger<int>(L, 3, "MatchObject"), tolua_function_tointeger<int>(L, 4, "MatchObject"), (EEex_MatchObjectFlags)tolua_function_tointeger<__int32>(L, 5, "MatchObject"));
@@ -119,6 +137,8 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_beginmodule(L, "EEex");
 		tolua_variable(L, "Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled, tolua_set_EEex_Opcode_LuaHook_AfterListsResolved_Enabled);
 		tolua_variable(L, "reference_Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_reference_Opcode_LuaHook_AfterListsResolved_Enabled, NULL);
+		tolua_variable(L, "Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_Projectile_LuaHook_GlobalMutators_Enabled, tolua_set_EEex_Projectile_LuaHook_GlobalMutators_Enabled);
+		tolua_variable(L, "reference_Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_reference_Projectile_LuaHook_GlobalMutators_Enabled, NULL);
 		tolua_function(L, "MatchObject", &tolua_function_EEex_MatchObject);
 		tolua_function(L, "DeepCopy", &tolua_function_EEex_DeepCopy);
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);

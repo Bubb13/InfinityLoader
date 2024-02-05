@@ -2858,6 +2858,7 @@ namespace EEex
 	};
 
 	extern bool Opcode_LuaHook_AfterListsResolved_Enabled;
+	extern bool Projectile_LuaHook_GlobalMutators_Enabled;
 
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 	void DeepCopy(lua_State* L);
