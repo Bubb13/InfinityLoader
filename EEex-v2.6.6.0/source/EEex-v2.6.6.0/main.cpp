@@ -106,6 +106,13 @@ void exportPatterns() {
 	exportPattern(TEXT("EEex::Script_Hook_OnRead"), EEex::Script_Hook_OnRead);
 	exportPattern(TEXT("EEex::Script_Hook_OnCopy"), EEex::Script_Hook_OnCopy);
 	exportPattern(TEXT("EEex::Script_Hook_OnDestruct"), EEex::Script_Hook_OnDestruct);
+
+	/////////
+	// Fix //
+	/////////
+
+	exportPattern(TEXT("EEex::Fix_Hook_ShouldTransformSpellImmunityStrref"), EEex::Fix_Hook_ShouldTransformSpellImmunityStrref);
+	exportPattern(TEXT("EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing"), EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing);
 }
 
 void __stdcall InitBindings(SharedState argSharedState) {

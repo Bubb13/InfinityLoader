@@ -125,4 +125,11 @@ namespace EEex {
 	void Script_Hook_OnRead(CAIScript* pScript, bool bPlayerScript);
 	void Script_Hook_OnCopy(CAIScript* pSrcScript, CAIScript* pDstScript);
 	void Script_Hook_OnDestruct(CAIScript* pScript);
+
+	/////////
+	// Fix //
+	/////////
+
+	bool Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell);
+	bool Fix_Hook_SpellImmunityShouldSkipItemIndexing(CGameObject* pGameObject);
 }

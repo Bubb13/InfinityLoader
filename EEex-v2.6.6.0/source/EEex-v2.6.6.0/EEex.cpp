@@ -2485,6 +2485,29 @@ void EEex::Script_Hook_OnDestruct(CAIScript* pScript) {
 	STUTTER_LOG_END
 }
 
+/////////
+// Fix //
+/////////
+
+bool EEex::Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell) {
+
+	STUTTER_LOG_START(bool, "EEex::Fix_Hook_ShouldTransformSpellImmunityStrref")
+
+	const auto nErrorStrref = pImmunitySpell->m_error;
+	return pEffect->m_sourceRes.m_resRef[0] == '\0' && (nErrorStrref == 0xF00074 || nErrorStrref == 0xF00080);
+
+	STUTTER_LOG_END
+}
+
+bool EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing(CGameObject* pGameObject) {
+
+	STUTTER_LOG_START(bool, "EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing")
+
+	return pGameObject->m_objectType != CGameObjectType::SPRITE;
+
+	STUTTER_LOG_END
+}
+
 //------------------------//
 //          Init          //
 //------------------------//
