@@ -2127,48 +2127,47 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Action_Hook_OnAfterSpriteStartedAction")
 
-	auto& enableActionListenerEffects = exStatDataMap[pSprite->GetActiveStats()].enableActionListenerEffects;
-
-	if (enableActionListenerEffects.empty()) {
-		return;
-	}
-
 	lua_State *const L = luaState();
-	tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                        // 1 [ ..., pSpriteUD ]
-	tolua_pushusertype_nocast(L, &pSprite->m_curAction, "CAIAction");            // 2 [ ..., pSpriteUD, pActionUD ]
-	lua_getglobal(L, "EEex_Action_Private_EnabledSpriteStartedActionListeners"); // 3 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners ]
 
-	for (auto& data : enableActionListenerEffects) {
+	auto& enableActionListenerEffects = exStatDataMap[pSprite->GetActiveStats()].enableActionListenerEffects;
+	if (!enableActionListenerEffects.empty()) {
 
-		if (CGameEffect *const pEffect = data.pEffect; pEffect->m_effectAmount != 0) {
+		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                        // 1 [ ..., pSpriteUD ]
+		tolua_pushusertype_nocast(L, &pSprite->m_curAction, "CAIAction");            // 2 [ ..., pSpriteUD, pActionUD ]
+		lua_getglobal(L, "EEex_Action_Private_EnabledSpriteStartedActionListeners"); // 3 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners ]
 
-			lua_pushstring(L, data.funcName);                                    // 4 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, funcName ]
-			lua_rawget(L, -2);                                                   // 4 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName] ]
+		for (auto& data : enableActionListenerEffects) {
 
-			if (lua_isfunction(L, -1)) {
-				luaCallProtected(L, 1, 0, [&](int base) {
-																				 // 4 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ... ]
-					lua_pushvalue(L, base);                                      // 5 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName] ]
-					lua_pushvalue(L, base - 3);                                  // 6 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD ]
-					lua_pushvalue(L, base - 2);                                  // 7 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD, pActionUD ]
-					tolua_pushusertype_nocast(L, pEffect, "CGameEffect");        // 8 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD, pActionUD, pEffect ]
-				});
+			if (CGameEffect *const pEffect = data.pEffect; pEffect->m_effectAmount != 0) {
+
+				lua_pushstring(L, data.funcName);                                    // 4 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, funcName ]
+				lua_rawget(L, -2);                                                   // 4 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName] ]
+
+				if (lua_isfunction(L, -1)) {
+					luaCallProtected(L, 1, 0, [&](int base) {
+																					 // 4 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ... ]
+						lua_pushvalue(L, base);                                      // 5 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName] ]
+						lua_pushvalue(L, base - 3);                                  // 6 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD ]
+						lua_pushvalue(L, base - 2);                                  // 7 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD, pActionUD ]
+						tolua_pushusertype_nocast(L, pEffect, "CGameEffect");        // 8 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD, pActionUD, pEffect ]
+					});
+				}
+				else {
+					Print("[!][EEex.dll] op409 (EnableActionListener) - Attempted to call invalid function \"%s\"\n", data.funcName);
+				}
+
+				lua_pop(L, 1);                                                       // 3 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners ]
 			}
-			else {
-				Print("[!][EEex.dll] op409 (EnableActionListener) - Attempted to call invalid function \"%s\"\n", data.funcName);
-			}
-
-			lua_pop(L, 1);                                                       // 3 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners ]
 		}
-	}
 
-	lua_pop(L, 3);                                                               // 0 [ ... ]
+		lua_pop(L, 3);                                                               // 0 [ ... ]
+	}
 
 	luaCallProtected(L, 1, 0, [&](int base) {
-		lua_getglobal(L, "EEex_Action_LuaHook_OnAfterSpriteStartedAction");      // 1 [ ..., EEex_Action_Hook_OnAfterSpriteStartedAction ]
-		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                    // 2 [ ..., EEex_Action_Hook_OnAfterSpriteStartedAction, pSpriteUD ]
+		lua_getglobal(L, "EEex_Action_LuaHook_OnAfterSpriteStartedAction");          // 1 [ ..., EEex_Action_Hook_OnAfterSpriteStartedAction ]
+		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                        // 2 [ ..., EEex_Action_Hook_OnAfterSpriteStartedAction, pSpriteUD ]
 	});
-																				 // 0 [ ... ]
+																					 // 0 [ ... ]
 	STUTTER_LOG_END
 }
 
