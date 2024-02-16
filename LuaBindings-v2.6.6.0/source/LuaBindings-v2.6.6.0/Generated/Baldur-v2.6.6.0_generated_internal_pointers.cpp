@@ -89,6 +89,9 @@ CDerivedStats::type_Construct CDerivedStats::p_Construct;
 CDerivedStats::type_Destruct CDerivedStats::p_Destruct;
 CDerivedStats::type_GetAtOffset CDerivedStats::p_GetAtOffset;
 CDerivedStats::type_GetSpellState CDerivedStats::p_GetSpellState;
+CDerivedStats::type_GetWizardLevelCast CDerivedStats::p_GetWizardLevelCast;
+CDerivedStats::type_GetPriestLevelCast CDerivedStats::p_GetPriestLevelCast;
+CDerivedStats::type_GetAverageLevel CDerivedStats::p_GetAverageLevel;
 CGameArea::type_GetNearest2 CGameArea::p_GetNearest2;
 CGameArea::type_AdjustTarget CGameArea::p_AdjustTarget;
 CGameArea::type_CheckWalkable CGameArea::p_CheckWalkable;
@@ -114,6 +117,9 @@ CProjectile::type_AddEffect CProjectile::p_AddEffect;
 CProjectile::type_ClearEffects CProjectile::p_ClearEffects;
 CGameAIBase::type_ApplyEffectToParty CGameAIBase::p_ApplyEffectToParty;
 CGameAIBase::type_GetTargetShare CGameAIBase::p_GetTargetShare;
+CGameAIBase::type_GetTargetShareType1 CGameAIBase::p_GetTargetShareType1;
+CGameAIBase::type_GetTargetShareType2 CGameAIBase::p_GetTargetShareType2;
+CGameAIBase::type_ForceSpellPoint CGameAIBase::p_ForceSpellPoint;
 CGameSprite::type_GetCasterLevel CGameSprite::p_GetCasterLevel;
 CGameSprite::type_CheckQuickLists CGameSprite::p_CheckQuickLists;
 CGameSprite::type_GetKitMask CGameSprite::p_GetKitMask;
@@ -128,6 +134,10 @@ CGameSprite::type_PlaySound CGameSprite::p_PlaySound;
 CGameSprite::type_UpdateTarget CGameSprite::p_UpdateTarget;
 CGameSprite::type_GetNameRef CGameSprite::p_GetNameRef;
 CGameSprite::type_GetName CGameSprite::p_GetName;
+CGameSprite::type_SpellPoint CGameSprite::p_SpellPoint;
+CGameSprite::type_GetKnownSpellMage CGameSprite::p_GetKnownSpellMage;
+CGameSprite::type_GetKnownSpellPriest CGameSprite::p_GetKnownSpellPriest;
+CGameSprite::type_GetKnownSpellInnate CGameSprite::p_GetKnownSpellInnate;
 
 template<typename OutType>
 static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
@@ -237,6 +247,9 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CDerivedStats::Destruct"), CDerivedStats::p_Destruct);
 	attemptFillPointer(TEXT("CDerivedStats::GetAtOffset"), CDerivedStats::p_GetAtOffset);
 	attemptFillPointer(TEXT("CDerivedStats::GetSpellState"), CDerivedStats::p_GetSpellState);
+	attemptFillPointer(TEXT("CDerivedStats::GetWizardLevelCast"), CDerivedStats::p_GetWizardLevelCast);
+	attemptFillPointer(TEXT("CDerivedStats::GetPriestLevelCast"), CDerivedStats::p_GetPriestLevelCast);
+	attemptFillPointer(TEXT("CDerivedStats::GetAverageLevel"), CDerivedStats::p_GetAverageLevel);
 	attemptFillPointer(TEXT("CGameArea::GetNearest2"), CGameArea::p_GetNearest2);
 	attemptFillPointer(TEXT("CGameArea::AdjustTarget"), CGameArea::p_AdjustTarget);
 	attemptFillPointer(TEXT("CGameArea::CheckWalkable"), CGameArea::p_CheckWalkable);
@@ -262,6 +275,9 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CProjectile::ClearEffects"), CProjectile::p_ClearEffects);
 	attemptFillPointer(TEXT("CGameAIBase::ApplyEffectToParty"), CGameAIBase::p_ApplyEffectToParty);
 	attemptFillPointer(TEXT("CGameAIBase::GetTargetShare"), CGameAIBase::p_GetTargetShare);
+	attemptFillPointer(TEXT("CGameAIBase::GetTargetShareType1"), CGameAIBase::p_GetTargetShareType1);
+	attemptFillPointer(TEXT("CGameAIBase::GetTargetShareType2"), CGameAIBase::p_GetTargetShareType2);
+	attemptFillPointer(TEXT("CGameAIBase::ForceSpellPoint"), CGameAIBase::p_ForceSpellPoint);
 	attemptFillPointer(TEXT("CGameSprite::GetCasterLevel"), CGameSprite::p_GetCasterLevel);
 	attemptFillPointer(TEXT("CGameSprite::CheckQuickLists"), CGameSprite::p_CheckQuickLists);
 	attemptFillPointer(TEXT("CGameSprite::GetKitMask"), CGameSprite::p_GetKitMask);
@@ -276,4 +292,8 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CGameSprite::UpdateTarget"), CGameSprite::p_UpdateTarget);
 	attemptFillPointer(TEXT("CGameSprite::GetNameRef"), CGameSprite::p_GetNameRef);
 	attemptFillPointer(TEXT("CGameSprite::GetName"), CGameSprite::p_GetName);
+	attemptFillPointer(TEXT("CGameSprite::SpellPoint"), CGameSprite::p_SpellPoint);
+	attemptFillPointer(TEXT("CGameSprite::GetKnownSpellMage"), CGameSprite::p_GetKnownSpellMage);
+	attemptFillPointer(TEXT("CGameSprite::GetKnownSpellPriest"), CGameSprite::p_GetKnownSpellPriest);
+	attemptFillPointer(TEXT("CGameSprite::GetKnownSpellInnate"), CGameSprite::p_GetKnownSpellInnate);
 }

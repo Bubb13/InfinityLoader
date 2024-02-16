@@ -38,6 +38,8 @@ def fixup(mainState):
 	mainState.getGroup("CCreatureFileHeader").retypeField(mainState, "m_resistSlashingBase", "__int8")
 	mainState.getGroup("CCreatureFileHeader").retypeField(mainState, "m_toHitArmorClass0Base", "__int8")
 	mainState.getGroup("CCreatureFileHeader").retypeField(mainState, "m_trackingTarget", "LCharString<32>")
+	mainState.getGroup("CCreatureFileKnownSpell").retypeField(mainState, "m_knownSpellId", "CResRef")
+	mainState.getGroup("CCreatureFileMemorizedSpell").retypeField(mainState, "m_spellId", "CResRef")
 	mainState.getGroup("CGameAIBase").retypeField(mainState, "m_scriptName", "LCharString<32>")
 	mainState.getGroup("CGameAIBase_vtbl").retypeFunctionFieldRet(mainState, "GetVisibleTerrainTable", "byte*")
 	mainState.getGroup("CGameArea").retypeField(mainState, "m_lVertSort", "CTypedPtrList<CPtrList,long>")
