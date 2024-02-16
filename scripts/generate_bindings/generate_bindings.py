@@ -1396,14 +1396,14 @@ class CheckUnnamedStructsState:
 		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 
 
-variablePatternGlobal = "^((?:(?:nopointer|nobinding|static)\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*&:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
-variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\s+)*)(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([, _a-zA-Z0-9*&:<>\-$]+?)\s*([_a-zA-Z0-9~]+)((?:\[[_a-zA-Z0-9+]+\])+)*(?:\s*:\s*([^\s>]+?)){0,1}(?:\s|(?:\/\*(?:(?!\*\/).)*\*\/))*;(?:\s|(?:\/\/.*)|(?:\/\*(?:(?!\*\/).)*\*\/))*$"
+variablePatternGlobal = "^((?:(?:nopointer|nobinding|static)\\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}([, _a-zA-Z0-9*&:<>\\-$]+?)\\s*([_a-zA-Z0-9~]+)((?:\\[[_a-zA-Z0-9+]+\\])+)*(?:\\s*:\\s*([^\\s>]+?)){0,1}(?:\\s|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*;(?:\\s|(?:\\/\\/.*)|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*$"
+variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\\s+)*)(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}([, _a-zA-Z0-9*&:<>\\-$]+?)\\s*([_a-zA-Z0-9~]+)((?:\\[[_a-zA-Z0-9+]+\\])+)*(?:\\s*:\\s*([^\\s>]+?)){0,1}(?:\\s|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*;(?:\\s|(?:\\/\\/.*)|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*$"
 
 def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
 
 	isGlobal = group == mainState.globalGroup
 
-	functionImplementationMatch: Match = re.match("^\s*(?!typedef)((?:(?:\$nobinding|\$nodeclaration|\$external_implementation|\$pass_lua_state|\$eof_body|\$binding_name\(\S+\))\s+)*)(?:(static)\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\s+(?:(__cdecl|__stdcall|__thiscall)\s+){0,1}([_a-zA-Z0-9\[\]=]+)\s*\(\s*((?:[, _a-zA-Z0-9*:<>&]+?\s+[_a-zA-Z0-9]+(?:\s*,(?!\s*\))){0,1})*)\s*\)\s*(const){0,1}\s*(?:(;)){0,1}$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\))\\s+)*)(?:(static)\\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+){0,1}([_a-zA-Z0-9\\[\\]=]+)\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\))){0,1})*)\\s*\\)\\s*(const){0,1}\\s*(?:(;)){0,1}$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1427,7 +1427,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 				elif keyword == "$eof_body":
 					assert not state.currentFunctionImplementation.eofBody, "eof_body already defined"
 					state.currentFunctionImplementation.eofBody = True
-				elif bindingNameMatch := re.match("^\$binding_name\((\S+)\)$", keyword):
+				elif bindingNameMatch := re.match("^\\$binding_name\\((\\S+)\\)$", keyword):
 					assert not state.currentFunctionImplementation.bindingName, "bindingName already defined"
 					state.currentFunctionImplementation.setBindingName(bindingNameMatch.group(1))
 				else:
@@ -1437,7 +1437,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 		retTypeStr: str = functionImplementationMatch.group(3)
 
-		if customReturnMatch := re.match("^\$custom_return_(\d+)$", retTypeStr):
+		if customReturnMatch := re.match("^\\$custom_return_(\\d+)$", retTypeStr):
 			state.currentFunctionImplementation.customReturnCount = int(customReturnMatch.group(1))
 			retTypeStr = "void"
 		elif retTypeStr.startswith("$constructor"):
@@ -1789,7 +1789,7 @@ class Group:
 				checkUnnamedStructs(mainState, unnamedStructsState, self, line)
 
 				# Define extends types
-				declMatch: Match = re.match("^(?:\$pack_(\d+)\s+){0,1}(?:const\s+){0,1}(?:struct|class|enum|union)\s+(?:\/\*VFT\*\/\s+){0,1}(?:__cppobj\s+){0,1}(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}[^;]*?(?:\s+\:\s+(.*?)){0,1}\s*$", line)
+				declMatch: Match = re.match("^(?:\\$pack_(\\d+)\\s+){0,1}(?:const\\s+){0,1}(?:struct|class|enum|union)\\s+(?:\\/\\*VFT\\*\\/\\s+){0,1}(?:__cppobj\\s+){0,1}(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}[^;]*?(?:\\s+\\:\\s+(.*?)){0,1}\\s*$", line)
 				if declMatch != None:
 					if packGroup := declMatch.group(1):
 						self.pack = int(packGroup)
@@ -1799,7 +1799,7 @@ class Group:
 							self.extends.append(defineTypeRef(mainState, self, extendsType, TypeRefSourceType.VARIABLE, debugLine=f"processLinesFillTypes()-1 {line}"))
 
 				# Define function fields
-				functionVariableMatch: Match = re.match("^\t([, _a-zA-Z0-9*:<>]+?)\s*\(\s*(?:([_a-zA-Z]+?)\s*){0,1}\*\s*([_a-zA-Z0-9~]+)\s*\)\s*\((?:\s*([, _a-zA-Z0-9*:<>]+?)\s+\*\s*this(?:\s*,\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\s+\*\s*result(?:\s*,\s+){0,1}){0,1}\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\.\.\.(?=\s*\))){0,1}){0,1}\s*\)\;$", line)
+				functionVariableMatch: Match = re.match("^\t([, _a-zA-Z0-9*:<>]+?)\\s*\\(\\s*(?:([_a-zA-Z]+?)\\s*){0,1}\\*\\s*([_a-zA-Z0-9~]+)\\s*\\)\\s*\\((?:\\s*([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*this(?:\\s*,\\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*result(?:\\s*,\\s+){0,1}){0,1}\\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\\.\\.\\.(?=\\s*\\))){0,1}){0,1}\\s*\\)\\;$", line)
 				if functionVariableMatch != None:
 
 					functionField = FunctionField()
@@ -1828,7 +1828,7 @@ class Group:
 
 				# Define certain enum values in group.enumTuples, else print to console
 				if self.groupType == "enum":
-					enumLineMatch: Match = re.match("^\s*([_a-zA-Z0-9]+)\s*=\s*(.+?)\s*,\s*(?:\/\/.*){0,1}$", line)
+					enumLineMatch: Match = re.match("^\\s*([_a-zA-Z0-9]+)\\s*=\\s*(.+?)\\s*,\\s*(?:\\/\\/.*){0,1}$", line)
 					if enumLineMatch:
 						firstExtendName = self.extends[0].getName() if len(self.extends) > 0 else "__int32"
 						if firstExtendName == "__int8":
@@ -2530,7 +2530,7 @@ class Group:
 
 def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, superGroup: Group, line: str):
 
-	unnamedStructStart: Match = re.match("^\s*(struct|class|enum|union)(?:\s+__declspec\(align\(\d+\)\)){0,1}\s*$", line)
+	unnamedStructStart: Match = re.match("^\\s*(struct|class|enum|union)(?:\\s+__declspec\\(align\\(\\d+\\)\\)){0,1}\\s*$", line)
 	if unnamedStructStart != None and state.preBracketLevel == None:
 		state.groupType = unnamedStructStart.group(1)
 		state.preBracketLevel = state.bracketLevel
@@ -2539,7 +2539,7 @@ def checkUnnamedStructs(mainState: MainState, state: CheckUnnamedStructsState, s
 	state.bracketLevel += line.count("{")
 	state.bracketLevel -= line.count("}")
 
-	unnamedStructEnd: Match = re.match("^\s*}\s*([_a-zA-Z0-9]+)\s*;\s*$", line)
+	unnamedStructEnd: Match = re.match("^\\s*}\\s*([_a-zA-Z0-9]+)\\s*;\\s*$", line)
 	if unnamedStructEnd != None and state.bracketLevel == state.preBracketLevel:
 
 		myName = unnamedStructEnd.group(1)
@@ -2818,10 +2818,10 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 	primitive = False
 	noconst = False
 	while True:
-		if primitiveMatch := re.fullmatch("primitive\s+(.*)", str):
+		if primitiveMatch := re.fullmatch("primitive\\s+(.*)", str):
 			primitive = True
 			str = primitiveMatch.group(1)
-		elif noconstMatch := re.fullmatch("noconst\s+(.*)", str):
+		elif noconstMatch := re.fullmatch("noconst\\s+(.*)", str):
 			noconst = True
 			str = noconstMatch.group(1)
 		else:
@@ -2831,7 +2831,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 	# Transform arrays into Array types
 	if arrayStr != None:
 		if sourceGroup == None or sourceGroup.name != "Array":
-			allMatches = [x for x in re.finditer("\[(\d+)\]", arrayStr)]
+			allMatches = [x for x in re.finditer("\\[(\\d+)\\]", arrayStr)]
 			all = [x.group(0) for x in allMatches]
 			nextArrayStr = "".join(all[:-1]) if len(all) > 1 else None
 			return defineTypeRef(mainState, sourceGroup, f"Array<{str},{allMatches[-1].group(1)}>", src, nextArrayStr, debugLine=debugLine)
@@ -2849,7 +2849,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 		nonlocal hitName
 
-		name, unsignedCount = removeRegexCount(name, "unsigned\s+")
+		name, unsignedCount = removeRegexCount(name, "unsigned\\s+")
 		if unsignedCount == 1:
 			typeRef.unsigned = True
 		else:
@@ -2858,13 +2858,13 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 		if hitName:
 			name, constCount = removeRegexCount(name, "const")
 		else:
-			name, constCount = removeRegexCount(name, "const\s+")
+			name, constCount = removeRegexCount(name, "const\\s+")
 
-		if volatileMatch := re.match("^volatile\s+(.*)", name):
+		if volatileMatch := re.match("^volatile\\s+(.*)", name):
 			typeRef.volatile = True
 			name = volatileMatch.group(1)
 
-		if longMatch := re.match("^long\s+(.*)", name):
+		if longMatch := re.match("^long\\s+(.*)", name):
 			typeRef.long = True
 			name = longMatch.group(1)
 
@@ -2880,7 +2880,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 		hitName = True
 
 		struct = False
-		if structMatch := re.match("^struct\s+(.*)", name):
+		if structMatch := re.match("^struct\\s+(.*)", name):
 			struct = True
 			name = structMatch.group(1)
 
@@ -2926,7 +2926,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 			doBaseProcess(split)
 
 	if needArrayPart:
-		for arrayPartMatch in re.finditer("\[([a-zA-Z0-9_]+)\]", arrayStr):
+		for arrayPartMatch in re.finditer("\\[([a-zA-Z0-9_]+)\\]", arrayStr):
 			typeRef.arrayParts.append(arrayPartMatch.group(1))
 
 	typeRef.primitive = primitive
@@ -3993,7 +3993,7 @@ def checkRename(mainState: MainState, alreadyDefinedUsertypesFile: str):
 			needRecalc = False
 
 			# Rename unnamed types to something more reasonable
-			unnamedTypeMatch = re.fullmatch("<unnamed_(?:type|enum)_(\S+)>", newName)
+			unnamedTypeMatch = re.fullmatch("<unnamed_(?:type|enum)_(\\S+)>", newName)
 			if unnamedTypeMatch:
 				newName = f"{unnamedTypeMatch.group(1)}_t"
 				needRecalc = True
@@ -4173,7 +4173,7 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 			leftOfExtends = line
 
 		split = splitKeepBrackets(leftOfExtends, [" "])
-		declMatch: Match = re.match("^(?:\$pack_\d+\s+){0,1}(?:const\s+){0,1}(struct|class|enum|union|namespace)\s+(?:\/\*VFT\*\/\s+){0,1}(?:__cppobj\s+){0,1}(?:__unaligned\s+){0,1}(?:__declspec\(align\(\d+\)\)\s+){0,1}([^;]*?)(?:\s+\:\s+(.*?)){0,1}\s*$", line)
+		declMatch: Match = re.match("^(?:\\$pack_\\d+\\s+){0,1}(?:const\\s+){0,1}(struct|class|enum|union|namespace)\\s+(?:\\/\\*VFT\\*\\/\\s+){0,1}(?:__cppobj\\s+){0,1}(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}([^;]*?)(?:\\s+\\:\\s+(.*?)){0,1}\\s*$", line)
 
 		# Attempt to start Group and fill .template, .groupType, .name, and .singleName
 		if declMatch != None:
@@ -4514,7 +4514,7 @@ class IDAStructFields:
 		self.baseclassOffsets: list[int] = []
 
 
-idaStructFieldPattern: Pattern = re.compile('(?<=\n)([0-9a-fA-F]{8})(?:(?: ([^;\s]+)\s+(?!ends\n)\S+\s+[^;\s]+.*)|(\s+db \? ; undefined))\n')
+idaStructFieldPattern: Pattern = re.compile('(?<=\n)([0-9a-fA-F]{8})(?:(?: ([^;\\s]+)\\s+(?!ends\n)\\S+\\s+[^;\\s]+.*)|(\\s+db \\? ; undefined))\n')
 
 def readIdaStructFieldOffsets(idaStructsPath: str) -> dict[str,int]:
 
@@ -4528,7 +4528,7 @@ def readIdaStructFieldOffsets(idaStructsPath: str) -> dict[str,int]:
 		idaStructFields: IDAStructFields = IDAStructFields(int(startMatch.group(2), 16))
 		toReturn[structNameOriginal] = idaStructFields
 
-		idaEndStructPattern = re.compile("(?<=\n)[0-9a-fA-F]{8} (" + re.escape(structNameOriginal) + ") \s*ends\n")
+		idaEndStructPattern = re.compile("(?<=\n)[0-9a-fA-F]{8} (" + re.escape(structNameOriginal) + ") \\s*ends\n")
 		endMatch = idaEndStructPattern.search(fileContents, startMatch.span(0)[1])
 		if not endMatch:
 			raise Exception("PARSE ERROR")
@@ -4597,7 +4597,7 @@ def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStruct
 					offsetHex = str.format("{:X}", idaFieldOffsets.baseclassOffsets[i])
 					typeDisplayName = extendRef.getHeaderName(typeManipulator=refify)
 					typeDisplayName = re.sub(",:ref:", ", :ref:", typeDisplayName)
-					typeDisplayName = re.sub("(:ref:`[^`]*?`)(?=[^\s.,:;!?\\\\\/'\")\]}>])", "\\1\\\\", typeDisplayName)
+					typeDisplayName = re.sub("(:ref:`[^`]*?`)(?=[^\\s.,:;!?\\\\\\/'\")\\]}>])", "\\1\\\\", typeDisplayName)
 					out.write(f"{fieldName}|{offsetHex}|{typeDisplayName}\n")
 
 				fieldOffsetsLen = len(idaFieldOffsets.fieldOffsets)
@@ -4651,7 +4651,7 @@ def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStruct
 					typeDisplayName = field.variableType.getHeaderName(typeManipulator=refify) if field.type == FieldType.VARIABLE \
 						else field.toString(mainState, typeManipulator=refify).replace("*", "\\*")
 					typeDisplayName = re.sub(",:ref:", ", :ref:", typeDisplayName)
-					typeDisplayName = re.sub("(:ref:`[^`]*?`)(?=[^\s.,:;!?\\\\/'\")\]}>])", "\\1\\\\", typeDisplayName)
+					typeDisplayName = re.sub("(:ref:`[^`]*?`)(?=[^\\s.,:;!?\\\\/'\")\\]}>])", "\\1\\\\", typeDisplayName)
 
 					out.write(f"{fieldName}|{offsetHex}|{typeDisplayName}\n")
 					idaIndex += 1
