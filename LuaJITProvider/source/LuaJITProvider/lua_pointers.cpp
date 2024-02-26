@@ -149,3 +149,7 @@ EXPORT bool CheckLuaArgBoundsUInt(lua_State* L, const int argI, unsigned int& re
 EXPORT bool CheckLuaArgBoundsSizeT(lua_State* L, const int argI, size_t& resultVal, std::string& error) {
 	return checkLuaArgBounds<size_t>(L, argI, resultVal, error);
 }
+
+EXPORT bool CheckLuaArgBoundsUIntPtr(lua_State* L, const int argI, size_t& resultVal, std::string& error) {
+	return checkLuaArgBounds<uintptr_t>(L, argI, resultVal, error);
+}

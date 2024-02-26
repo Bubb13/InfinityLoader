@@ -821,24 +821,25 @@ struct CGameAIBase : CGameObject
 
 struct CGameSprite : CGameAIBase
 {
-	short GetCasterLevel(CSpell* pSpell, int includeWildMage);
 	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
-	__int32 GetKitMask();
-	short GetLauncherSlot(short slotNum, short abilityNum);
-	CGameButtonList* GetQuickButtons(unsigned __int16 buttonType, unsigned __int8 existanceCheck);
-	void ReadySpell(CButtonData* button, bool firstCall);
-	void ReadyOffInternalList(CButtonData* button, bool firstCall);
-	CGameButtonList* GetInternalButtonList();
-	CDerivedStats* GetActiveStats();
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
-	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption);
-	void UpdateTarget(CGameObject* target);
-	uint GetNameRef();
-	CString* GetName(int ignoreSTRREFON);
-	short SpellPoint();
+	CDerivedStats* GetActiveStats();
+	short GetCasterLevel(CSpell* pSpell, int includeWildMage);
+	CGameButtonList* GetInternalButtonList();
+	__int32 GetKitMask();
+	CCreatureFileKnownSpell* GetKnownSpellInnate(int nSpellLevel, int nKnownSpellIndex);
 	CCreatureFileKnownSpell* GetKnownSpellMage(int nSpellLevel, int nKnownSpellIndex);
 	CCreatureFileKnownSpell* GetKnownSpellPriest(int nSpellLevel, int nKnownSpellIndex);
-	CCreatureFileKnownSpell* GetKnownSpellInnate(int nSpellLevel, int nKnownSpellIndex);
+	CItem* GetLauncher(Item_ability_st* curAbility, short* launcherSlot);
+	short GetLauncherSlot(short slotNum, short abilityNum);
+	CString* GetName(int ignoreSTRREFON);
+	uint GetNameRef();
+	CGameButtonList* GetQuickButtons(unsigned __int16 buttonType, unsigned __int8 existanceCheck);
+	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption);
+	void ReadyOffInternalList(CButtonData* button, bool firstCall);
+	void ReadySpell(CButtonData* button, bool firstCall);
+	short SpellPoint();
+	void UpdateTarget(CGameObject* target);
 };
 
 struct CProjectile : CGameObject

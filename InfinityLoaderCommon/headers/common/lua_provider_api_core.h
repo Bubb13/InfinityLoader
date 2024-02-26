@@ -191,6 +191,7 @@ LUA_PROVIDER_API bool CheckLuaArgBoundsUInt64(lua_State* L, int argI, unsigned _
 LUA_PROVIDER_API bool CheckLuaArgBoundsInt(lua_State* L, int argI, int& resultVal, std::string& error);
 LUA_PROVIDER_API bool CheckLuaArgBoundsUInt(lua_State* L, int argI, unsigned int& resultVal, std::string& error);
 LUA_PROVIDER_API bool CheckLuaArgBoundsSizeT(lua_State* L, int argI, size_t& resultVal, std::string& error);
+LUA_PROVIDER_API bool CheckLuaArgBoundsUIntPtr(lua_State* L, const int argI, size_t& resultVal, std::string& error);
 
 /////////////
 // Defines //

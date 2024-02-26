@@ -13958,50 +13958,26 @@ struct CGameSprite : CGameAIBase
 
 	CGameSprite() = delete;
 
-	typedef short (__thiscall *type_GetCasterLevel)(CGameSprite* pThis, CSpell* pSpell, int includeWildMage);
-	static type_GetCasterLevel p_GetCasterLevel;
-
 	typedef void (__thiscall *type_CheckQuickLists)(CGameSprite* pThis, CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
 	static type_CheckQuickLists p_CheckQuickLists;
-
-	typedef __int32 (__thiscall *type_GetKitMask)(CGameSprite* pThis);
-	static type_GetKitMask p_GetKitMask;
-
-	typedef short (__thiscall *type_GetLauncherSlot)(CGameSprite* pThis, short slotNum, short abilityNum);
-	static type_GetLauncherSlot p_GetLauncherSlot;
-
-	typedef CGameButtonList* (__thiscall *type_GetQuickButtons)(CGameSprite* pThis, unsigned __int16 buttonType, unsigned __int8 existanceCheck);
-	static type_GetQuickButtons p_GetQuickButtons;
-
-	typedef void (__thiscall *type_ReadySpell)(CGameSprite* pThis, CButtonData* button, bool firstCall);
-	static type_ReadySpell p_ReadySpell;
-
-	typedef void (__thiscall *type_ReadyOffInternalList)(CGameSprite* pThis, CButtonData* button, bool firstCall);
-	static type_ReadyOffInternalList p_ReadyOffInternalList;
-
-	typedef CGameButtonList* (__thiscall *type_GetInternalButtonList)(CGameSprite* pThis);
-	static type_GetInternalButtonList p_GetInternalButtonList;
-
-	typedef CDerivedStats* (__thiscall *type_GetActiveStats)(CGameSprite* pThis);
-	static type_GetActiveStats p_GetActiveStats;
 
 	typedef void (__thiscall *type_FeedBack)(CGameSprite* pThis, uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
 	static type_FeedBack p_FeedBack;
 
-	typedef void (__thiscall *type_PlaySound)(CGameSprite* pThis, byte soundID, int showText, int showCircle, int overrideOption);
-	static type_PlaySound p_PlaySound;
+	typedef CDerivedStats* (__thiscall *type_GetActiveStats)(CGameSprite* pThis);
+	static type_GetActiveStats p_GetActiveStats;
 
-	typedef void (__thiscall *type_UpdateTarget)(CGameSprite* pThis, CGameObject* target);
-	static type_UpdateTarget p_UpdateTarget;
+	typedef short (__thiscall *type_GetCasterLevel)(CGameSprite* pThis, CSpell* pSpell, int includeWildMage);
+	static type_GetCasterLevel p_GetCasterLevel;
 
-	typedef uint (__thiscall *type_GetNameRef)(CGameSprite* pThis);
-	static type_GetNameRef p_GetNameRef;
+	typedef CGameButtonList* (__thiscall *type_GetInternalButtonList)(CGameSprite* pThis);
+	static type_GetInternalButtonList p_GetInternalButtonList;
 
-	typedef CString* (__thiscall *type_GetName)(CGameSprite* pThis, int ignoreSTRREFON);
-	static type_GetName p_GetName;
+	typedef __int32 (__thiscall *type_GetKitMask)(CGameSprite* pThis);
+	static type_GetKitMask p_GetKitMask;
 
-	typedef short (__thiscall *type_SpellPoint)(CGameSprite* pThis);
-	static type_SpellPoint p_SpellPoint;
+	typedef CCreatureFileKnownSpell* (__thiscall *type_GetKnownSpellInnate)(CGameSprite* pThis, int nSpellLevel, int nKnownSpellIndex);
+	static type_GetKnownSpellInnate p_GetKnownSpellInnate;
 
 	typedef CCreatureFileKnownSpell* (__thiscall *type_GetKnownSpellMage)(CGameSprite* pThis, int nSpellLevel, int nKnownSpellIndex);
 	static type_GetKnownSpellMage p_GetKnownSpellMage;
@@ -14009,52 +13985,39 @@ struct CGameSprite : CGameAIBase
 	typedef CCreatureFileKnownSpell* (__thiscall *type_GetKnownSpellPriest)(CGameSprite* pThis, int nSpellLevel, int nKnownSpellIndex);
 	static type_GetKnownSpellPriest p_GetKnownSpellPriest;
 
-	typedef CCreatureFileKnownSpell* (__thiscall *type_GetKnownSpellInnate)(CGameSprite* pThis, int nSpellLevel, int nKnownSpellIndex);
-	static type_GetKnownSpellInnate p_GetKnownSpellInnate;
+	typedef CItem* (__thiscall *type_GetLauncher)(CGameSprite* pThis, Item_ability_st* curAbility, short* launcherSlot);
+	static type_GetLauncher p_GetLauncher;
 
-	short GetCasterLevel(CSpell* pSpell, int includeWildMage)
-	{
-		return p_GetCasterLevel(this, pSpell, includeWildMage);
-	}
+	typedef short (__thiscall *type_GetLauncherSlot)(CGameSprite* pThis, short slotNum, short abilityNum);
+	static type_GetLauncherSlot p_GetLauncherSlot;
+
+	typedef CString* (__thiscall *type_GetName)(CGameSprite* pThis, int ignoreSTRREFON);
+	static type_GetName p_GetName;
+
+	typedef uint (__thiscall *type_GetNameRef)(CGameSprite* pThis);
+	static type_GetNameRef p_GetNameRef;
+
+	typedef CGameButtonList* (__thiscall *type_GetQuickButtons)(CGameSprite* pThis, unsigned __int16 buttonType, unsigned __int8 existanceCheck);
+	static type_GetQuickButtons p_GetQuickButtons;
+
+	typedef void (__thiscall *type_PlaySound)(CGameSprite* pThis, byte soundID, int showText, int showCircle, int overrideOption);
+	static type_PlaySound p_PlaySound;
+
+	typedef void (__thiscall *type_ReadyOffInternalList)(CGameSprite* pThis, CButtonData* button, bool firstCall);
+	static type_ReadyOffInternalList p_ReadyOffInternalList;
+
+	typedef void (__thiscall *type_ReadySpell)(CGameSprite* pThis, CButtonData* button, bool firstCall);
+	static type_ReadySpell p_ReadySpell;
+
+	typedef short (__thiscall *type_SpellPoint)(CGameSprite* pThis);
+	static type_SpellPoint p_SpellPoint;
+
+	typedef void (__thiscall *type_UpdateTarget)(CGameSprite* pThis, CGameObject* target);
+	static type_UpdateTarget p_UpdateTarget;
 
 	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero)
 	{
 		p_CheckQuickLists(this, ab, changeAmount, remove, removeSpellIfZero);
-	}
-
-	__int32 GetKitMask()
-	{
-		return p_GetKitMask(this);
-	}
-
-	short GetLauncherSlot(short slotNum, short abilityNum)
-	{
-		return p_GetLauncherSlot(this, slotNum, abilityNum);
-	}
-
-	CGameButtonList* GetQuickButtons(unsigned __int16 buttonType, unsigned __int8 existanceCheck)
-	{
-		return p_GetQuickButtons(this, buttonType, existanceCheck);
-	}
-
-	void ReadySpell(CButtonData* button, bool firstCall)
-	{
-		p_ReadySpell(this, button, firstCall);
-	}
-
-	void ReadyOffInternalList(CButtonData* button, bool firstCall)
-	{
-		p_ReadyOffInternalList(this, button, firstCall);
-	}
-
-	CGameButtonList* GetInternalButtonList()
-	{
-		return p_GetInternalButtonList(this);
-	}
-
-	CDerivedStats* GetActiveStats()
-	{
-		return p_GetActiveStats(this);
 	}
 
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn)
@@ -14062,29 +14025,29 @@ struct CGameSprite : CGameAIBase
 		p_FeedBack(this, feedBackId, int1, int2, int3, ref1, int4, stringIn);
 	}
 
-	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption)
+	CDerivedStats* GetActiveStats()
 	{
-		p_PlaySound(this, soundID, showText, showCircle, overrideOption);
+		return p_GetActiveStats(this);
 	}
 
-	void UpdateTarget(CGameObject* target)
+	short GetCasterLevel(CSpell* pSpell, int includeWildMage)
 	{
-		p_UpdateTarget(this, target);
+		return p_GetCasterLevel(this, pSpell, includeWildMage);
 	}
 
-	uint GetNameRef()
+	CGameButtonList* GetInternalButtonList()
 	{
-		return p_GetNameRef(this);
+		return p_GetInternalButtonList(this);
 	}
 
-	CString* GetName(int ignoreSTRREFON)
+	__int32 GetKitMask()
 	{
-		return p_GetName(this, ignoreSTRREFON);
+		return p_GetKitMask(this);
 	}
 
-	short SpellPoint()
+	CCreatureFileKnownSpell* GetKnownSpellInnate(int nSpellLevel, int nKnownSpellIndex)
 	{
-		return p_SpellPoint(this);
+		return p_GetKnownSpellInnate(this, nSpellLevel, nKnownSpellIndex);
 	}
 
 	CCreatureFileKnownSpell* GetKnownSpellMage(int nSpellLevel, int nKnownSpellIndex)
@@ -14097,9 +14060,54 @@ struct CGameSprite : CGameAIBase
 		return p_GetKnownSpellPriest(this, nSpellLevel, nKnownSpellIndex);
 	}
 
-	CCreatureFileKnownSpell* GetKnownSpellInnate(int nSpellLevel, int nKnownSpellIndex)
+	CItem* GetLauncher(Item_ability_st* curAbility, short* launcherSlot)
 	{
-		return p_GetKnownSpellInnate(this, nSpellLevel, nKnownSpellIndex);
+		return p_GetLauncher(this, curAbility, launcherSlot);
+	}
+
+	short GetLauncherSlot(short slotNum, short abilityNum)
+	{
+		return p_GetLauncherSlot(this, slotNum, abilityNum);
+	}
+
+	CString* GetName(int ignoreSTRREFON)
+	{
+		return p_GetName(this, ignoreSTRREFON);
+	}
+
+	uint GetNameRef()
+	{
+		return p_GetNameRef(this);
+	}
+
+	CGameButtonList* GetQuickButtons(unsigned __int16 buttonType, unsigned __int8 existanceCheck)
+	{
+		return p_GetQuickButtons(this, buttonType, existanceCheck);
+	}
+
+	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption)
+	{
+		p_PlaySound(this, soundID, showText, showCircle, overrideOption);
+	}
+
+	void ReadyOffInternalList(CButtonData* button, bool firstCall)
+	{
+		p_ReadyOffInternalList(this, button, firstCall);
+	}
+
+	void ReadySpell(CButtonData* button, bool firstCall)
+	{
+		p_ReadySpell(this, button, firstCall);
+	}
+
+	short SpellPoint()
+	{
+		return p_SpellPoint(this);
+	}
+
+	void UpdateTarget(CGameObject* target)
+	{
+		p_UpdateTarget(this, target);
 	}
 
 	virtual void virtual_SetTarget_2(const CPoint* _0, int _1)

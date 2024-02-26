@@ -938,7 +938,40 @@ class TypeReference:
 		return self.getHeaderName() == other.getHeaderName()
 
 
+	def getDereferenceStr(self: TypeReference, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, i: int):
 
+		dereferenceStr = ""
+		if self.getUserTypePointerLevel() == 0:
+			self = self.shallowCopy()
+			self.adjustUserTypePointerLevel(mainState, 1)
+			dereferenceStr = "*"
+
+		appliedParamName = self.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker)
+		appliedParamUsertype = self.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=True)
+		return f"{dereferenceStr}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")"
+
+
+	def debugDump(self: TypeReference, indent: str=""):
+		parts = []
+		parts.append(f"{indent}class: {type(self).__name__}\n")
+		parts.append(f"{indent}sourceString: {self.sourceString}\n")
+		parts.append(f"{indent}pointerLevel: {self.pointerLevel}\n")
+		parts.append(f"{indent}reference: {self.reference}\n")
+		parts.append(f"{indent}arrayParts: {self.arrayParts}\n")
+		parts.append(f"{indent}bitFieldPart: {self.bitFieldPart}\n")
+		parts.append(f"{indent}templateTypes: {self.templateTypes}\n")
+		parts.append(f"{indent}primitive: {self.primitive}\n")
+		parts.append(f"{indent}noconst: {self.noconst}\n")
+		parts.append(f"{indent}unsigned: {self.unsigned}\n")
+		parts.append(f"{indent}volatile: {self.volatile}\n")
+		parts.append(f"{indent}long: {self.long}\n")
+		parts.append(f"{indent}superRef: {self.superRef}\n")
+		parts.append(f"{indent}subRef: {self.subRef}\n")
+		return "".join(parts)
+
+
+
+class PointerReference: pass
 class PointerReference(TypeReference):
 
 	def __init__(self):
@@ -1088,6 +1121,24 @@ class PointerReference(TypeReference):
 		effectivePointerAdj = pointerLevelAdjust if self.getUserTypePointerLevel() == 0 else pointerLevelAdjust + 1
 		return self.originalRef.toString(pointerLevelAdjust=effectivePointerAdj, useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName,
 			iKnowWhatIAmDoing=iKnowWhatIAmDoing, typeManipulator=typeManipulator)
+
+
+	def getDereferenceStr(self: PointerReference, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, i: int):
+		if self.originalRef.isPrimitive():
+			extraDereference = 1 if self.originalRef.isPrimitive() else 0
+			appliedParamName = self.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=extraDereference)
+			appliedParamUsertype = self.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=True)
+			return f"{'*'*extraDereference}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")"
+		else:
+			return super().getDereferenceStr(mainState, sourceGroup, templateMappingTracker, i)
+
+
+	def debugDump(self: PointerReference, indent: str=""):
+		parts = []
+		parts.append(f"{indent}class: {type(self).__name__}\n")
+		parts.append(f"{indent}originalRef:\n")
+		parts.append(self.originalRef.debugDump(indent=f"{indent}\t"))
+		return "".join(parts)
 
 
 
@@ -3500,24 +3551,11 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				i += parameterIMod
 				paramType = parameter.type.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 				if not checkPrimitiveHandling(paramType, i):
-
 					if paramType.getName() == "VoidPointer" and paramType.getUserTypePointerLevel() == 0:
-
 						callArgParts.append(f"p_tolua_tousertype(L, {i}, 0)")
 						callArgParts.append(", ")
-
 					else:
-
-						dereferenceStr = ""
-						if paramType.getUserTypePointerLevel() == 0:
-							paramType = paramType.shallowCopy()
-							paramType.adjustUserTypePointerLevel(mainState, 1)
-							dereferenceStr = "*"
-
-						appliedParamName = paramType.getAppliedHeaderName(mainState, group, templateMappingTracker)
-						appliedParamUsertype = paramType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
-
-						callArgParts.append(f"{dereferenceStr}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")")
+						callArgParts.append(paramType.getDereferenceStr(mainState, group, templateMappingTracker, i))
 						callArgParts.append(", ")
 
 			if functionImplementation.customReturnCount or functionImplementation.passLuaState or len(functionImplementation.parameters) > 0:
