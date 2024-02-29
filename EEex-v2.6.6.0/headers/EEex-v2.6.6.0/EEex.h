@@ -105,6 +105,13 @@ namespace EEex {
 	void Opcode_Hook_AfterListsResolved(CGameSprite* pSprite);
 
 	////////////
+	// Sprite //
+	////////////
+
+	void Sprite_Hook_OnConstruct(CGameSprite* pSprite);
+	void Sprite_Hook_OnDestruct(CGameSprite* pSprite);
+
+	////////////
 	// Action //
 	////////////
 

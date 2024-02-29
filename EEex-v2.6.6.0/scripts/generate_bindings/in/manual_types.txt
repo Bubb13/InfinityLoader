@@ -250,6 +250,11 @@ struct Array
 	{
 		return data[index];
 	}
+
+	$nobinding operator T*()
+	{
+		return &data[0];
+	}
 };
 
 template<class T>

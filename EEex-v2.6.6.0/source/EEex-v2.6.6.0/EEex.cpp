@@ -137,6 +137,22 @@ std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
 
 std::unordered_map<uintptr_t, std::pair<const char*, EEex::ProjectileType>> projVFTableToType{};
 
+////////////
+// Sprite //
+////////////
+
+struct ExSpriteData {
+
+	Array<int, 3> oldDisabledSpellTypes;
+	int oldDisableSpells = 0;
+
+	ExSpriteData() {
+		std::fill_n(oldDisabledSpellTypes.data, 3, 0);
+	}
+};
+
+std::unordered_map<void*, ExSpriteData> exSpriteDataMap{};
+
 //-----------------------------//
 //          Math Util          //
 //-----------------------------//
@@ -2106,17 +2122,52 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_AfterListsResolved")
 
+	ExSpriteData& exData = exSpriteDataMap[pSprite];
+	CDerivedStats& stats = *pSprite->GetActiveStats();
+	lua_State *const L = luaState();
+
+	if
+	(
+		stats.m_disableSpells != exData.oldDisableSpells
+		||
+		!std::equal(
+			std::begin(stats.m_disabledSpellTypes.data),
+			std::end(stats.m_disabledSpellTypes.data),
+			std::begin(exData.oldDisabledSpellTypes.data)
+		)
+	)
+	{
+		exData.oldDisableSpells = stats.m_disableSpells;
+		std::copy_n(stats.m_disabledSpellTypes.data, 3, exData.oldDisabledSpellTypes.data);
+
+		luaCallProtected(L, 1, 0, [&](int _) {
+			lua_getglobal(L, "EEex_Sprite_LuaHook_OnSpellDisableStateChanged"); // 1 [ ..., EEex_Sprite_LuaHook_SpellDisableStateChanged ]
+			tolua_pushusertype_nocast(L, pSprite, "CGameSprite");               // 2 [ ..., EEex_Sprite_LuaHook_SpellDisableStateChanged, pSpriteUD ]
+		});
+	}
+
 	if (!EEex::Opcode_LuaHook_AfterListsResolved_Enabled) {
 		return;
 	}
 
-	lua_State *const L = luaState();
 	luaCallProtected(L, 1, 0, [&](int _) {
 		lua_getglobal(L, "EEex_Opcode_LuaHook_AfterListsResolved"); // 1 [ ..., EEex_Opcode_LuaHook_AfterListsResolved ]
 		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");       // 2 [ ..., EEex_Opcode_LuaHook_AfterListsResolved, pSpriteUD ]
 	});
 
 	STUTTER_LOG_END
+}
+
+////////////
+// Sprite //
+////////////
+
+void EEex::Sprite_Hook_OnConstruct(CGameSprite* pSprite) {
+	exSpriteDataMap.try_emplace(pSprite);
+}
+
+void EEex::Sprite_Hook_OnDestruct(CGameSprite* pSprite) {
+	exSpriteDataMap.erase(pSprite);
 }
 
 ////////////

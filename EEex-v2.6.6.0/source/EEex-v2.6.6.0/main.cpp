@@ -86,6 +86,13 @@ void exportPatterns() {
 	exportPattern(TEXT("EEex::Opcode_Hook_AfterListsResolved"), EEex::Opcode_Hook_AfterListsResolved);
 
 	////////////
+	// Sprite //
+	////////////
+
+	exportPattern(TEXT("EEex::Sprite_Hook_OnConstruct"), EEex::Sprite_Hook_OnConstruct);
+	exportPattern(TEXT("EEex::Sprite_Hook_OnDestruct"), EEex::Sprite_Hook_OnDestruct);
+
+	////////////
 	// Action //
 	////////////
 

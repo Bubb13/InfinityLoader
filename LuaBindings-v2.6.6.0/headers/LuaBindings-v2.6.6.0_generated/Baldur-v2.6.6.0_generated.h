@@ -6488,6 +6488,11 @@ struct Array
 	{
 		return data[index];
 	}
+
+	operator T*()
+	{
+		return &data[0];
+	}
 };
 
 struct uiItem

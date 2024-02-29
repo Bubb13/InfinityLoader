@@ -1248,6 +1248,7 @@ class FunctionImplementation:
 		self.isStatic: bool = None
 		self.returnType: TypeReference = None
 		self.callingConvention: str = None
+		self.operatorStr: str = None
 		self.name: str = None
 		self.funcPtrName: str = None
 		self.removedThisType: TypeReference = None
@@ -1298,12 +1299,13 @@ class FunctionImplementation:
 		self.lineGroupFlags.applyTo(copy.lineGroupFlags)
 		return copy
 
-	def setName(self, name: str):
+	def setName(self, name: str, wasOperator: bool = False):
 		self.name = name
 		# This is normally called after setBindingName().
 		# Only replace funcPtrName if it wasn't set by
 		# setBindingName().
 		if self.funcPtrName == None:
+			name = f"operator{name}" if wasOperator else name
 			self.funcPtrName = name.replace("=", "_equ")
 
 	def setBindingName(self, bindingName: str):
@@ -1347,9 +1349,11 @@ class FunctionImplementation:
 		if self.isFakeConstructor:
 			parts.append(f"{self.returnType.getHeaderName()} {namespace}Construct")
 		elif not self.isConstructor and not self.isDestructor:
-			parts.append(self.returnType.getHeaderName())
-			parts.append(" ")
+			if self.returnType != None:
+				parts.append(self.returnType.getHeaderName())
+				parts.append(" ")
 			parts.append(namespace)
+			if self.operatorStr != None: parts.append(self.operatorStr)
 			parts.append(self.name)
 		else:
 			parts.append(namespace)
@@ -1454,7 +1458,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 	isGlobal = group == mainState.globalGroup
 
-	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\))\\s+)*)(?:(static)\\s+){0,1}([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+){0,1}([_a-zA-Z0-9\\[\\]=]+)\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\))){0,1})*)\\s*\\)\\s*(const){0,1}\\s*(?:(;)){0,1}$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=* ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*\\)\\s*(const)?\\s*(?:(;))?$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1486,31 +1490,53 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 		state.currentFunctionImplementation.isStatic = functionImplementationMatch.group(2) != None
 
-		retTypeStr: str = functionImplementationMatch.group(3)
+		def processRetType(groupIndex):
+			nonlocal state
+			nonlocal functionImplementationMatch
+			nonlocal group
 
-		if customReturnMatch := re.match("^\\$custom_return_(\\d+)$", retTypeStr):
-			state.currentFunctionImplementation.customReturnCount = int(customReturnMatch.group(1))
-			retTypeStr = "void"
-		elif retTypeStr.startswith("$constructor"):
-			if retTypeStr == "$constructor_copy":
-				group.copyConstructor = state.currentFunctionImplementation
-				state.currentFunctionImplementation.isConstructor = True
-			elif retTypeStr == "$constructor_fake":
-				state.currentFunctionImplementation.isFakeConstructor = True
-			else:
-				assert retTypeStr == "$constructor", "Bad bindings directive"
-				state.currentFunctionImplementation.isConstructor = True
-			retTypeStr = "void"
-		elif retTypeStr.startswith("$destructor"):
-			state.currentFunctionImplementation.isDestructor = True
-			retTypeStr = "void"
+			retTypeStr: str = functionImplementationMatch.group(groupIndex)
+			if retTypeStr == None:
+				return None
 
-		state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, debugLine=f"processCommonGroupLines()-1 {line}")
-		state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(4)
+			if customReturnMatch := re.match("^\\$custom_return_(\\d+)$", retTypeStr):
+				state.currentFunctionImplementation.customReturnCount = int(customReturnMatch.group(1))
+				return "void"
+			
+			elif retTypeStr.startswith("$constructor"):
 
-		state.currentFunctionImplementation.setName(functionImplementationMatch.group(5))
+				if retTypeStr == "$constructor_copy":
+					group.copyConstructor = state.currentFunctionImplementation
+					state.currentFunctionImplementation.isConstructor = True
+				elif retTypeStr == "$constructor_fake":
+					state.currentFunctionImplementation.isFakeConstructor = True
+				else:
+					assert retTypeStr == "$constructor", "Bad bindings directive"
+					state.currentFunctionImplementation.isConstructor = True
 
-		parameterStr = functionImplementationMatch.group(6)
+				return "void"
+			
+			elif retTypeStr.startswith("$destructor"):
+				state.currentFunctionImplementation.isDestructor = True
+				return "void"
+			
+			return retTypeStr
+
+
+		if (operatorStr := functionImplementationMatch.group(5)) != None:
+			retTypeStr = processRetType(3)
+			if retTypeStr: state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, debugLine=f"processCommonGroupLines()-1 {line}")
+			state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(4)
+			state.currentFunctionImplementation.operatorStr = operatorStr
+			state.currentFunctionImplementation.setName(functionImplementationMatch.group(6), wasOperator=True)
+		else:
+			retTypeStr = processRetType(7)
+			state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, debugLine=f"processCommonGroupLines()-1 {line}")
+			state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(8)
+			state.currentFunctionImplementation.setName(functionImplementationMatch.group(9))
+
+
+		parameterStr = functionImplementationMatch.group(10)
 		if parameterStr != None and parameterStr != "":
 			for commaSplitPart in splitKeepBrackets(parameterStr, [","]):
 
@@ -1531,8 +1557,8 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 				state.currentFunctionImplementation.parameters.append(funcParameter)
 
-		state.currentFunctionImplementation.isConst = functionImplementationMatch.group(7) != None
-		state.currentFunctionImplementation.noBody = functionImplementationMatch.group(8) != None
+		state.currentFunctionImplementation.isConst = functionImplementationMatch.group(11) != None
+		state.currentFunctionImplementation.noBody = functionImplementationMatch.group(12) != None
 
 
 	if state.currentFunctionImplementation != None:
@@ -2351,7 +2377,14 @@ class Group:
 
 				if functionImp.noBody and not functionImp.externalImplementation:
 
-					funcName: str = functionImp.name if not functionImp.bindingName else functionImp.bindingName
+					funcName: str = None
+					if not functionImp.bindingName:
+						funcName = functionImp.name
+						if functionImp.operatorStr:
+							funcName = f"{functionImp.operatorStr}{funcName}"
+					else:
+						funcName = functionImp.bindingName
+
 					realVariableName: str = f"{group.name}::{funcName}" if isNormal else functionImp.name
 					pointerVariableName: str = f"{group.name}::p_{functionImp.funcPtrName}" if isNormal else f"p_{functionImp.funcPtrName}"
 
@@ -3460,9 +3493,11 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			isNormal: bool = group != mainState.globalGroup
 			functionOpenData = OpenFunctionData()
 
-			funcImpBindingName: str = functionImplementation.name \
-				if not functionImplementation.bindingName \
-				else functionImplementation.bindingName
+			funcImpBindingName: str = None
+			if not functionImplementation.bindingName:
+				funcImpBindingName = f"{functionImplementation.operatorStr}{functionImplementation.name}" if functionImplementation.operatorStr != None else functionImplementation.name
+			else:
+				funcImpBindingName = functionImplementation.bindingName
 
 			functionOpenData.functionName = funcImpBindingName
 			groupIden = f"{groupNameStrIden}_" if isNormal else ""
@@ -3521,6 +3556,8 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			functionNameHeader = f"p_{functionImplementation.funcPtrName}" \
 				if (not isNormal and functionImplementation.noBody and not functionImplementation.externalImplementation) \
 				else functionImplementation.name
+
+			functionNameHeader = f"{functionImplementation.operatorStr}{functionNameHeader}" if functionImplementation.operatorStr != None else functionNameHeader
 
 			if isNormal and group.groupType != "namespace" and not functionImplementation.isStatic:
 				parameterIMod = 2
