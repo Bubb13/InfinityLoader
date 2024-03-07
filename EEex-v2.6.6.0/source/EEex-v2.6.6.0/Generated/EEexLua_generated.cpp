@@ -85,6 +85,24 @@ static int tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters(lua_State* L
 	return 0;
 }
 
+static int tolua_function_EEex_DrawSlicedRectNum(lua_State* L)
+{
+	EEex::DrawSlicedRectNum(L);
+	return 0;
+}
+
+static int tolua_function_EEex_RegisterSlicedRect(lua_State* L)
+{
+	EEex::RegisterSlicedRect(L);
+	return 0;
+}
+
+static int tolua_function_EEex_DrawSlicedRect(lua_State* L)
+{
+	EEex::DrawSlicedRect(L);
+	return 0;
+}
+
 static void tolua_reg_types(lua_State* L)
 {
 	tolua_usertype(L, "EEex_MatchObjectFlags");
@@ -146,6 +164,9 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreStackRange", &tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
+		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
+		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
+		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");

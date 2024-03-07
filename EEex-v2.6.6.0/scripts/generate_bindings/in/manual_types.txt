@@ -257,6 +257,38 @@ struct Array
 	}
 };
 
+template<class T, size_t size>
+struct ConstArray
+{
+	nobinding const T data[size];
+
+	T get(size_t index)
+	{
+		if (index >= size) {
+			return (T)NULL;
+		}
+		return data[index];
+	}
+
+	const T* getReference(size_t index)
+	{
+		if (index >= size) {
+			return NULL;
+		}
+		return &data[index];
+	}
+
+	$nobinding const T& operator[](size_t index)
+	{
+		return data[index];
+	}
+
+	$nobinding operator const T*()
+	{
+		return &data[0];
+	}
+};
+
 template<class T>
 struct ArrayPointer
 {
@@ -280,6 +312,27 @@ struct ArrayPointer
 	$nobinding T& operator[](size_t index)
 	{
 		return data[index];
+	}
+};
+
+template<class T>
+struct VariableArray
+{
+	nobinding T data;
+
+	T get(size_t index)
+	{
+		return (&data)[index];
+	}
+
+	T* getReference(size_t index)
+	{
+		return &(&data)[index];
+	}
+
+	void set(size_t index, T value)
+	{
+		(&data)[index] = value;
 	}
 };
 
@@ -750,6 +803,12 @@ struct CResRef
 	}
 };
 
+struct $D98D369160A0DDA2B95F5D0F301081BB
+{
+	byte lhs;
+	byte nrhs;
+};
+
 /////////////////////////////
 // Local Function Bindings //
 /////////////////////////////
@@ -1139,6 +1198,48 @@ struct STR_RES
 	}
 };
 
+struct SDL_Rect
+{
+	$nobinding $constructor ConstructDefault()
+	{
+	}
+
+	$nobinding $constructor Construct(int x, int y, int w, int h)
+	{
+		this->x = x;
+		this->y = y;
+		this->w = w;
+		this->h = h;
+	}
+
+	$nobinding $constructor ConstructCopy(const SDL_Rect* pOther)
+	{
+		this->x = pOther->x;
+		this->y = pOther->y;
+		this->w = pOther->w;
+		this->h = pOther->h;
+	}
+};
+
+struct SDL_Point
+{
+	$nobinding $constructor ConstructDefault()
+	{
+	}
+};
+
+struct slicedRect
+{
+	$nobinding $constructor ConstructDefault()
+	{
+	}
+};
+
+struct CResPVR : CRes
+{
+	void* Demand();
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////
@@ -1155,20 +1256,41 @@ $nobinding int l_log_print(lua_State* L);
 $nobinding int panic(lua_State* L);
 $nobinding int Chitin_GetSectionCallback(lua_State* L);
 $nobinding _iobuf* __cdecl OpenIniFile(const char* path, const char* mode);
+$nobinding CRes* __cdecl dimmGetResObject(const CResRef* cResRef, int nType, bool createIfNotExists);
+$nobinding void DrawPushState();
+$nobinding void DrawBindTexture(int texture);
+$nobinding void DrawEnable(DrawFeature f);
+$nobinding void DrawBlendFunc(DrawBlend src, DrawBlend dst);
+$nobinding uint DrawColor(uint color);
+$nobinding uint DrawAlpha(uint alpha);
+$nobinding void DrawPopState();
+$nobinding void drawSlice(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool unused);
+$nobinding void drawSliceSide(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool wide);
+$nobinding int uiVariantAsInt(uiVariant* var);
+$nobinding void uiDrawSlicedRect(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
+$nobinding int uiExecLuaInt(int id);
 
 //////////////////////////////
 // Global Variable Bindings //
 //////////////////////////////
 
-int numMenus;
+char* afxPchNil;
+$9B9540D9920A90D57A3D80DDD1A70514 capture;
+keyword g_keywords[124];
+lua_State* g_lua;
+CBaldurChitin* g_pBaldurChitin;
+int menuLength;
 uiMenu menus[256];
+CResText* menuSrc;
 uiMenu* menuStack[256];
 int nextStackMenuIdx;
-CResText* menuSrc;
-int menuLength;
-CTypedPtrArray<CPtrArray,CRes*> resources;
-$9B9540D9920A90D57A3D80DDD1A70514 capture;
-CBaldurChitin* g_pBaldurChitin;
-lua_State* g_lua;
-char* afxPchNil;
+int numMenus;
 nobinding int optionsHaveChanged;
+CTypedPtrArray<CPtrArray,CRes*> resources;
+nobinding slicedRect slicedRects[6];
+const ushort yy_action[1765];
+const ushort yy_default[329];
+const byte yy_lookahead[1765];
+const short yy_reduce_ofst[122];
+const short yy_shift_ofst[174];
+const $D98D369160A0DDA2B95F5D0F301081BB yyRuleInfo[157];

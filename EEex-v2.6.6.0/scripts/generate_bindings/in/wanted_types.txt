@@ -45,3 +45,8 @@ CProjectileSpellHit
 CProjectileTravelDoor
 EEex
 EEex::ProjectileType
+VariableArray<$D98D369160A0DDA2B95F5D0F301081BB>
+VariableArray<byte>
+VariableArray<int>
+VariableArray<short>
+VariableArray<ushort>

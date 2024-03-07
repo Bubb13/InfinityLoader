@@ -653,6 +653,481 @@ bool parseInt(const char *const str, int& result) {
 //          EEex          //
 //------------------------//
 
+///////////////////
+// START Drawing //
+///////////////////
+
+typedef void(__cdecl *uiDrawSliceFunc)(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool wide);
+
+void __cdecl drawSlicedRect(const slicedRect& slicedRect, SDL_Rect* bounds, int alpha, SDL_Rect* rClip) {
+
+	const CResRef pvrzResref { slicedRect.name };
+	CResPVR *const pResPVR = reinterpret_cast<CResPVR*>(p_dimmGetResObject(&pvrzResref, 0x404, false));
+	pResPVR->filtering = 0x2600;
+
+	if (pResPVR->Demand() == nullptr) {
+		return;
+	}
+
+	p_DrawPushState();
+	p_DrawBindTexture(pResPVR->texture);
+	p_DrawEnable(DrawFeature::DRAW_TEXTURE_2D);
+	p_DrawEnable(DrawFeature::DRAW_BLEND);
+	p_DrawBlendFunc(DrawBlend::DRAW_SRC_ALPHA, DrawBlend::DRAW_ONE_MINUS_SRC_ALPHA);
+	p_DrawColor(0xFFFFFFFF);
+	p_DrawAlpha(alpha << 0x18);
+
+	const float scaleX = static_cast<float>(pResPVR->size.cx) / slicedRect.d.x;
+	const float scaleY = static_cast<float>(pResPVR->size.cy) / slicedRect.d.y;
+
+	// Draw Center
+
+	SDL_Rect drawRect { bounds };
+
+	if ((slicedRect.flags & 2) == 0) {
+		// Normal
+		drawRect.x += slicedRect.l.w;
+		drawRect.y += slicedRect.t.h;
+		drawRect.w -= slicedRect.l.w + slicedRect.r.w;
+		drawRect.h -= slicedRect.t.h + slicedRect.b.h;
+	}
+	else {
+		// Ugly hack for the tooltip box
+		drawRect.x += (slicedRect.l.w + (slicedRect.l.w < 0 ? 3 : 0)) / 4;
+		drawRect.y += (slicedRect.t.h + (slicedRect.t.h < 0 ? 3 : 0)) / 4;
+
+		drawRect.w -=
+			  (slicedRect.l.w + (slicedRect.l.w < 0 ? 3 : 0)) / 4
+			+ (slicedRect.r.w + (slicedRect.r.w < 0 ? 3 : 0)) / 4;
+
+		drawRect.h -=
+			  (slicedRect.t.h + (slicedRect.t.h < 0 ? 3 : 0)) / 4
+			+ (slicedRect.b.h + (slicedRect.b.h < 0 ? 3 : 0)) / 4;
+	}
+
+	p_drawSlice(&drawRect, &slicedRect.c, rClip, scaleX, scaleY, false);
+
+	// Calculate side flags...
+
+	int tileStartAdjust;
+	uiDrawSliceFunc uiDrawSliceFunc;
+
+	if ((slicedRect.flags & 1) == 0) {
+		tileStartAdjust = 0;           // Normal positioning
+		uiDrawSliceFunc = p_drawSlice; // Strech sides
+	}
+	else {
+		tileStartAdjust = slicedRect.tl.w / 2; // Sink into corner pieces
+		uiDrawSliceFunc = p_drawSliceSide;     // Tile sides
+	}
+
+	const int tileLengthAdjust = tileStartAdjust * 2;
+
+	// Draw Top
+	drawRect.x = bounds->x + slicedRect.tl.w - tileStartAdjust;
+	drawRect.y = bounds->y + slicedRect.t.y;
+	drawRect.w = bounds->w - slicedRect.tl.w - slicedRect.tr.w + tileLengthAdjust;
+	drawRect.h = slicedRect.t.h;
+	uiDrawSliceFunc(&drawRect, &slicedRect.t, rClip, scaleX, scaleY, true);
+
+	// Draw Right
+	drawRect.x = bounds->x + bounds->w - slicedRect.r.w;
+	drawRect.y = bounds->y + slicedRect.tl.h - tileStartAdjust;
+	drawRect.w = slicedRect.r.w;
+	drawRect.h = bounds->h - slicedRect.tr.h - slicedRect.br.h + tileLengthAdjust;
+	uiDrawSliceFunc(&drawRect, &slicedRect.r, rClip, scaleX, scaleY, false);
+
+	// Draw Bottom
+	drawRect.x = bounds->x + slicedRect.bl.w - tileStartAdjust;
+	drawRect.y = bounds->y + bounds->h - slicedRect.b.h;
+	drawRect.w = bounds->w - slicedRect.tl.w - slicedRect.tr.w + tileLengthAdjust;
+	drawRect.h = slicedRect.b.h;
+	uiDrawSliceFunc(&drawRect, &slicedRect.b, rClip, scaleX, scaleY, true);
+
+	// Draw Left
+	drawRect.x = bounds->x;
+	drawRect.y = bounds->y + slicedRect.tl.h - tileStartAdjust;
+	drawRect.w = slicedRect.l.w;
+	drawRect.h = bounds->h - slicedRect.tr.h - slicedRect.br.h + tileLengthAdjust;
+	uiDrawSliceFunc(&drawRect, &slicedRect.l, rClip, scaleX, scaleY, false);
+
+	// Draw Top-Left
+	drawRect.x = bounds->x + slicedRect.tl.x;
+	drawRect.y = bounds->y + slicedRect.tl.y;
+	drawRect.w = slicedRect.tl.w;
+	drawRect.h = slicedRect.tl.h;
+	p_drawSlice(&drawRect, &slicedRect.tl, rClip, scaleX, scaleY, false);
+
+	// Draw Top-Right
+	drawRect.x = bounds->x + bounds->w - slicedRect.tr.w;
+	drawRect.y = bounds->y + slicedRect.tr.y;
+	drawRect.w = slicedRect.tr.w;
+	drawRect.h = slicedRect.tr.h;
+	p_drawSlice(&drawRect, &slicedRect.tr, rClip, scaleX, scaleY, false);
+
+	// Draw Bottom-Right
+	drawRect.x = bounds->x + bounds->w - slicedRect.br.w;
+	drawRect.y = bounds->y + bounds->h - slicedRect.br.h;
+	drawRect.w = slicedRect.br.w;
+	drawRect.h = slicedRect.br.h;
+	p_drawSlice(&drawRect, &slicedRect.br, rClip, scaleX, scaleY, false);
+
+	// Draw Bottom-Left
+	drawRect.x = bounds->x + slicedRect.bl.x;
+	drawRect.y = bounds->y + bounds->h - slicedRect.bl.h;
+	drawRect.w = slicedRect.bl.w;
+	drawRect.h = slicedRect.bl.h;
+	p_drawSlice(&drawRect, &slicedRect.bl, rClip, scaleX, scaleY, false);
+
+	p_DrawPopState();
+}
+
+void drawSlicedRectNum(int rectNum, SDL_Rect* bounds, int alpha, SDL_Rect* rClip) {
+
+	if (rectNum < 0 || rectNum > 5) {
+		rectNum = 0;
+	}
+
+	const slicedRect& slicedRect = (*p_slicedRects)[rectNum];
+	drawSlicedRect(slicedRect, bounds, alpha, rClip);
+}
+
+// Expects: 4 [ rectNum, bounds, alpha, rClip ]
+// Returns: 0 [ ]
+void EEex::DrawSlicedRectNum(lua_State* L) {
+
+	for (int i = lua_gettop(L); i < 4; ++i) {
+		lua_pushnil(L);
+	}
+
+	/////////////
+	// rectNum //
+	/////////////
+
+	if (lua_type(L, 1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 1 (rectNum) must be a number");
+		return;
+	}
+	const int rectNum = static_cast<int>(lua_tointeger(L, 1));
+
+	////////////
+	// bounds //
+	////////////
+
+	if (lua_type(L, 2) != LUA_TTABLE) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 2 (bounds) must be a table");
+		return;
+	}
+
+	SDL_Rect bounds { 0, 0, 0, 0 };
+
+	lua_rawgeti(L, 2, 1);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 2, index 1 (bounds.x) must be a number");
+		return;
+	}
+	bounds.x = static_cast<int>(lua_tointeger(L, -1));
+
+	lua_rawgeti(L, 2, 2);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 2, index 2 (bounds.y) must be a number");
+		return;
+	}
+	bounds.y = static_cast<int>(lua_tointeger(L, -1));
+
+	lua_rawgeti(L, 2, 3);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 2, index 3 (bounds.w) must be a number");
+		return;
+	}
+	bounds.w = static_cast<int>(lua_tointeger(L, -1));
+
+	lua_rawgeti(L, 2, 4);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 2, index 4 (bounds.h) must be a number");
+		return;
+	}
+	bounds.h = static_cast<int>(lua_tointeger(L, -1));
+
+	///////////
+	// alpha //
+	///////////
+
+	int alpha = 255;
+	if (const int type = lua_type(L, 3); type == LUA_TNUMBER) {
+		alpha = static_cast<int>(lua_tointeger(L, 3));
+	}
+	else if (type != LUA_TNIL) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 3 (alpha) must be a number or nil");
+		return;
+	}
+
+	///////////
+	// rClip //
+	///////////
+
+	SDL_Rect rClip { bounds };
+
+	if (const int type = lua_type(L, 4); type == LUA_TTABLE) {
+
+		lua_rawgeti(L, 4, 1);
+		if (lua_type(L, -1) != LUA_TNUMBER) {
+			luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 4, index 1 (rClip.x) must be a number");
+			return;
+		}
+		rClip.x = static_cast<int>(lua_tointeger(L, -1));
+
+		lua_rawgeti(L, 4, 2);
+		if (lua_type(L, -1) != LUA_TNUMBER) {
+			luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 4, index 2 (rClip.y) must be a number");
+			return;
+		}
+		rClip.y = static_cast<int>(lua_tointeger(L, -1));
+
+		lua_rawgeti(L, 4, 3);
+		if (lua_type(L, -1) != LUA_TNUMBER) {
+			luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 4, index 3 (rClip.w) must be a number");
+			return;
+		}
+		rClip.w = static_cast<int>(lua_tointeger(L, -1));
+
+		lua_rawgeti(L, 4, 4);
+		if (lua_type(L, -1) != LUA_TNUMBER) {
+			luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 4, index 4 (rClip.h) must be a number");
+			return;
+		}
+		rClip.h = static_cast<int>(lua_tointeger(L, -1));
+	}
+	else if (type != LUA_TNIL) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRectNum() - arg 4 (rClip) must be a table or nil");
+		return;
+	}
+
+	/////////////
+	// Do Call //
+	/////////////
+
+	drawSlicedRectNum(rectNum, &bounds, alpha, &rClip);
+}
+
+bool readRectTable(lua_State* L, const char* funcName, int argIndex, const char* fieldName, int tIndex, SDL_Rect& rectOut, bool allowNil = false) {
+
+	tIndex = lua_absindex(L, tIndex);
+
+	if (const int type = lua_type(L, tIndex); allowNil && type == LUA_TNIL) {
+		return false;
+	}
+	else if (type != LUA_TTABLE) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d (%s) must be a table", funcName, argIndex, fieldName);
+		return false;
+	}
+
+	lua_rawgeti(L, tIndex, 1);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d, index 1 (%s.x) must be a number", funcName, argIndex, fieldName);
+		return false;
+	}
+	rectOut.x = static_cast<int>(lua_tointeger(L, -1));
+
+	lua_rawgeti(L, tIndex, 2);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d, index 2 (%s.y) must be a number", funcName, argIndex, fieldName);
+		return false;
+	}
+	rectOut.y = static_cast<int>(lua_tointeger(L, -1));
+
+	lua_rawgeti(L, tIndex, 3);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d, index 3 (%s.w) must be a number", funcName, argIndex, fieldName);
+		return false;
+	}
+	rectOut.w = static_cast<int>(lua_tointeger(L, -1));
+
+	lua_rawgeti(L, tIndex, 4);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d, index 4 (%s.h) must be a number", funcName, argIndex, fieldName);
+		return false;
+	}
+	rectOut.h = static_cast<int>(lua_tointeger(L, -1));
+	return true;
+}
+
+bool readTableRectTable(lua_State* L, const char* funcName, const char* fieldName, int tIndex, SDL_Rect& rectOut, bool allowNil = false) {
+	lua_pushstring(L, fieldName);
+	lua_rawget(L, tIndex);
+	return readRectTable(L, funcName, tIndex, fieldName, -1, rectOut, allowNil);
+}
+
+bool readPointTable(lua_State* L, const char* funcName, int argIndex, const char* fieldName, int tIndex, SDL_Point& pointOut, bool allowNil = false) {
+
+	tIndex = lua_absindex(L, tIndex);
+
+	if (const int type = lua_type(L, tIndex); allowNil && type == LUA_TNIL) {
+		return false;
+	}
+	else if (type != LUA_TTABLE) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d (%s) must be a table", funcName, argIndex, fieldName);
+		return false;
+	}
+
+	lua_rawgeti(L, tIndex, 1);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d, index 1 (%s.x) must be a number", funcName, argIndex, fieldName);
+		return false;
+	}
+	pointOut.x = static_cast<int>(lua_tointeger(L, -1));
+
+	lua_rawgeti(L, tIndex, 2);
+	if (lua_type(L, -1) != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d, index 2 (%s.y) must be a number", funcName, argIndex, fieldName);
+		return false;
+	}
+	pointOut.y = static_cast<int>(lua_tointeger(L, -1));
+	return true;
+}
+
+bool readTablePointTable(lua_State* L, const char* funcName, const char* fieldName, int tIndex, SDL_Point& pointOut, bool allowNil = false) {
+	lua_pushstring(L, fieldName);
+	lua_rawget(L, tIndex);
+	return readPointTable(L, funcName, tIndex, fieldName, -1, pointOut, allowNil);
+}
+
+bool readTableStringCopy(lua_State* L, const char* funcName, const char* fieldName, int tIndex, const char*& stringOut, bool allowNil = false) {
+
+	lua_pushstring(L, fieldName);
+	lua_rawget(L, tIndex);
+
+	if (const int type = lua_type(L, -1); allowNil && type == LUA_TNIL) {
+		return false;
+	}
+	else if (type != LUA_TSTRING) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d (%s) must be a string", funcName, tIndex, fieldName);
+		return false;
+	}
+
+	const char* str = lua_tostring(L, -1);
+	const size_t strLen = strlen(str) + 1;
+	char* strCopy = new char[strLen];
+	memcpy(strCopy, str, strLen);
+
+	stringOut = strCopy;
+	return true;
+}
+
+bool readTableInt(lua_State* L, const char* funcName, const char* fieldName, int tIndex, int& intOut, bool allowNil = false) {
+
+	lua_pushstring(L, fieldName);
+	lua_rawget(L, tIndex);
+
+	if (const int type = lua_type(L, -1); allowNil && type == LUA_TNIL) {
+		return false;
+	}
+	else if (type != LUA_TNUMBER) {
+		luaL_error(L, "[EEex.dll] %s() - arg %d (%s) must be a number", funcName, tIndex, fieldName);
+		return false;
+	}
+
+	intOut = static_cast<int>(lua_tointeger(L, -1));
+	return true;
+}
+
+std::unordered_map<std::string, slicedRect> rectInfos{};
+
+void EEex::RegisterSlicedRect(lua_State* L) {
+
+	//////////////
+	// rectName //
+	//////////////
+
+	if (lua_type(L, 1) != LUA_TSTRING) {
+		luaL_error(L, "[EEex.dll] EEex::RegisterSlicedRect() - arg 1 (rectName) must be a string");
+		return;
+	}
+
+	const char* rectName = lua_tostring(L, 1);
+
+	//////////////
+	// rectInfo //
+	//////////////
+
+	slicedRect& slicedRect = rectInfos[rectName];
+	readTableRectTable(  L, "EEex::RegisterSlicedRect", "topLeft",     2, slicedRect.tl    );
+	readTableRectTable(  L, "EEex::RegisterSlicedRect", "top",         2, slicedRect.t     );
+	readTableRectTable(  L, "EEex::RegisterSlicedRect", "topRight",    2, slicedRect.tr    );
+	readTableRectTable(  L, "EEex::RegisterSlicedRect", "right",       2, slicedRect.r     );
+	readTableRectTable(  L, "EEex::RegisterSlicedRect", "bottomRight", 2, slicedRect.br    );
+	readTableRectTable(  L, "EEex::RegisterSlicedRect", "bottom",      2, slicedRect.b     );
+	readTableRectTable(  L, "EEex::RegisterSlicedRect", "bottomLeft",  2, slicedRect.bl    );
+	readTableRectTable(  L, "EEex::RegisterSlicedRect", "left",        2, slicedRect.l     );
+	readTableRectTable(  L, "EEex::RegisterSlicedRect", "center",      2, slicedRect.c     );
+	readTablePointTable( L, "EEex::RegisterSlicedRect", "dimensions",  2, slicedRect.d     );
+	readTableStringCopy( L, "EEex::RegisterSlicedRect", "resref",      2, slicedRect.name  );
+	readTableInt(        L, "EEex::RegisterSlicedRect", "flags",       2, slicedRect.flags );
+}
+
+// Expects: 4 [ rectName, bounds, alpha, rClip ]
+void EEex::DrawSlicedRect(lua_State* L) {
+
+	for (int i = lua_gettop(L); i < 4; ++i) {
+		lua_pushnil(L);
+	}
+
+	//////////////
+	// rectName //
+	//////////////
+
+	if (lua_type(L, 1) != LUA_TSTRING) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRect() - arg 1 (rectName) must be a string");
+		return;
+	}
+
+	slicedRect* rectInfo;
+
+	if (auto rectInfoPair = rectInfos.find(lua_tostring(L, 1)); rectInfoPair != rectInfos.end()) {
+		rectInfo = &rectInfoPair->second;
+	}
+	else {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRect() - arg 1 (rectName) not registered");
+		return;
+	}
+
+	////////////
+	// bounds //
+	////////////
+
+	SDL_Rect bounds;
+	readRectTable(L, "EEex::DrawSlicedRect", 2, "bounds", 2, bounds);
+
+	///////////
+	// alpha //
+	///////////
+
+	int alpha = 255;
+	if (const int type = lua_type(L, 3); type == LUA_TNUMBER) {
+		alpha = static_cast<int>(lua_tointeger(L, 3));
+	}
+	else if (type != LUA_TNIL) {
+		luaL_error(L, "[EEex.dll] EEex::DrawSlicedRect() - arg 3 (alpha) must be a number or nil");
+		return;
+	}
+
+	///////////
+	// rClip //
+	///////////
+
+	SDL_Rect rClip;
+	if (!readRectTable(L, "EEex::DrawSlicedRect", 4, "rClip", 4, rClip, true)) {
+		rClip = bounds;
+	}
+
+	drawSlicedRect(*rectInfo, &bounds, alpha, &rClip);
+}
+
+/////////////////
+// END Drawing //
+/////////////////
+
+
 ///////////////////////
 // START MatchObject //
 ///////////////////////

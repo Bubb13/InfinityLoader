@@ -565,10 +565,12 @@ class TypeReference:
 
 	def __init__(self):
 
+		self.sourceGroup: Group = None
 		self.sourceString: str = None
+		self.isDirectlyWanted: bool = None
 
 		self.group: Group = None
-		self.sourceGroup: Group = None
+		
 		self.pointerLevel: int = 0
 		self.reference: bool = False
 		self.arrayParts: list = []
@@ -613,6 +615,14 @@ class TypeReference:
 		if self.unsigned: parts.append("unsigned ")
 		if self.long:     parts.append("long ")
 		return "".join(parts)
+
+
+	def isConst(self):
+		return self.const
+
+
+	def setConst(self, newVal: bool):
+		self.const = newVal
 
 
 	def removeFromGroupRefs(self):
@@ -757,6 +767,7 @@ class TypeReference:
 
 			toReturn.primitive = toReturn.primitive or self.primitive
 			toReturn.noconst = toReturn.noconst or self.noconst
+			toReturn.setConst(toReturn.isConst() or self.isConst())
 
 		return toReturn
 
@@ -955,6 +966,8 @@ class TypeReference:
 		parts = []
 		parts.append(f"{indent}class: {type(self).__name__}\n")
 		parts.append(f"{indent}sourceString: {self.sourceString}\n")
+		parts.append(f"{indent}group: {self.group.name if self.group else "None"}\n")
+		parts.append(f"{indent}sourceGroup: {self.sourceGroup.name if self.sourceGroup else "None"}\n")
 		parts.append(f"{indent}pointerLevel: {self.pointerLevel}\n")
 		parts.append(f"{indent}reference: {self.reference}\n")
 		parts.append(f"{indent}arrayParts: {self.arrayParts}\n")
@@ -963,6 +976,7 @@ class TypeReference:
 		parts.append(f"{indent}primitive: {self.primitive}\n")
 		parts.append(f"{indent}noconst: {self.noconst}\n")
 		parts.append(f"{indent}unsigned: {self.unsigned}\n")
+		parts.append(f"{indent}const: {self.const}\n")
 		parts.append(f"{indent}volatile: {self.volatile}\n")
 		parts.append(f"{indent}long: {self.long}\n")
 		parts.append(f"{indent}superRef: {self.superRef}\n")
@@ -1008,6 +1022,14 @@ class PointerReference(TypeReference):
 
 	def isGroupUsed(self, mainState: MainState):
 		return self.originalRef.isGroupUsed(mainState)
+
+
+	def isConst(self):
+		return self.originalRef.isConst()
+
+
+	def setConst(self, newVal: bool):
+		self.originalRef.setConst(newVal)
 
 
 	def isUnparameterized(self):
@@ -1502,7 +1524,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 			if customReturnMatch := re.match("^\\$custom_return_(\\d+)$", retTypeStr):
 				state.currentFunctionImplementation.customReturnCount = int(customReturnMatch.group(1))
 				return "void"
-			
+
 			elif retTypeStr.startswith("$constructor"):
 
 				if retTypeStr == "$constructor_copy":
@@ -1515,11 +1537,11 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 					state.currentFunctionImplementation.isConstructor = True
 
 				return "void"
-			
+
 			elif retTypeStr.startswith("$destructor"):
 				state.currentFunctionImplementation.isDestructor = True
 				return "void"
-			
+
 			return retTypeStr
 
 
@@ -1966,7 +1988,7 @@ class Group:
 		for typeRef in self.inwardTypeRefs:
 
 			# The Group that generated this TypeReference must be in-view
-			if not typeRef.sourceGroup or not typeRef.sourceGroup.isUsed(mainState):
+			if not typeRef.isDirectlyWanted and (not typeRef.sourceGroup or not typeRef.sourceGroup.isUsed(mainState)):
 				continue
 
 			templates = typeRef.getTemplates(mainState, askingGroup=self)
@@ -2134,9 +2156,9 @@ class Group:
 				while topRef.superRef:
 					topRef = topRef.superRef
 
-				lastRef: TypeReference = defineTypeRefPart(mainState, None, topRef.sourceGroup, parts[0], TypeRefSourceType.VARIABLE)
+				lastRef: TypeReference = defineTypeRefPart(mainState, None, topRef.sourceGroup, parts[0], TypeRefSourceType.VARIABLE, isDirectlyWanted=topRef.isDirectlyWanted)
 				for i in range(1, partsLen - 1):
-					lastRef = defineTypeRefPart(mainState, lastRef, lastRef.group, parts[i], TypeRefSourceType.VARIABLE)
+					lastRef = defineTypeRefPart(mainState, lastRef, topRef.sourceGroup, parts[i], TypeRefSourceType.VARIABLE, isDirectlyWanted=topRef.isDirectlyWanted)
 
 				inRef.sourceGroup = lastRef.group
 				lastRef.subRef = inRef
@@ -2513,7 +2535,7 @@ class Group:
 				parts.append("\n")
 				needExtraNewlineBeforeFuncImps = True
 
-			if not mainState.noCustomTypes and self.groupType not in ("enum", "namespace") and self.name not in ("Array",):
+			if not mainState.noCustomTypes and self.groupType not in ("enum", "namespace") and self.name not in ("Array", "ConstArray"):
 
 				deleteDefault: bool = True
 				for funcImp in self.functionImplementations:
@@ -2856,7 +2878,7 @@ class VariableField(Field):
 			parts.append("static ")
 
 		#TODO: Handle nested Arrays
-		if (not mainState.noCustomTypes) or self.variableType.getName() != "Array":
+		if (not mainState.noCustomTypes) or self.variableType.getName() not in ("Array", "ConstArray"):
 			pointerLevelAdjust: int = 1 if self.static and not self.nopointer else 0
 			parts.append(f"{self.variableType.getHeaderName(pointerLevelAdjust)}")
 			parts.append(" ")
@@ -2894,7 +2916,7 @@ class TypeRefSourceType(Enum):
 	FUNCTION = 2
 
 
-def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup: Group, inStr: str, src: TypeRefSourceType, arrayStr: str=None, debugLine: str=""):
+def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup: Group, inStr: str, src: TypeRefSourceType, arrayStr: str=None, isDirectlyWanted: bool=False, debugLine: str=""):
 
 	assert inStr != None
 	str = inStr
@@ -2914,11 +2936,15 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 	needArrayPart = False
 	# Transform arrays into Array types
 	if arrayStr != None:
-		if sourceGroup == None or sourceGroup.name != "Array":
+		if sourceGroup == None or sourceGroup.name not in ("Array", "ConstArray"):
 			allMatches = [x for x in re.finditer("\\[(\\d+)\\]", arrayStr)]
 			all = [x.group(0) for x in allMatches]
 			nextArrayStr = "".join(all[:-1]) if len(all) > 1 else None
-			return defineTypeRef(mainState, sourceGroup, f"Array<{str},{allMatches[-1].group(1)}>", src, nextArrayStr, debugLine=debugLine)
+			if constMatch := re.fullmatch("const\\s+(.*)", str):
+				str = constMatch.group(1)
+				return defineTypeRef(mainState, sourceGroup, f"ConstArray<{str},{allMatches[-1].group(1)}>", src, nextArrayStr, isDirectlyWanted, debugLine=debugLine)
+			else:
+				return defineTypeRef(mainState, sourceGroup, f"Array<{str},{allMatches[-1].group(1)}>", src, nextArrayStr, isDirectlyWanted, debugLine=debugLine)
 		else:
 			needArrayPart = True
 
@@ -2926,6 +2952,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 	typeRef = TypeReference()
 	typeRef.sourceGroup = sourceGroup
 	typeRef.sourceString = inStr
+	typeRef.isDirectlyWanted = isDirectlyWanted
 
 	hitName = False
 
@@ -2995,13 +3022,13 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 				name, parts = separateTemplateTypeParts(split, typeStartI)
 				doBaseProcess(name)
 				for templateType in splitKeepBrackets(parts, [","]):
-					typeRef.templateTypes.append(defineTypeRef(mainState, sourceGroup, templateType, TypeRefSourceType.VARIABLE, debugLine=debugLine))
+					typeRef.templateTypes.append(defineTypeRef(mainState, sourceGroup, templateType, TypeRefSourceType.VARIABLE, isDirectlyWanted=isDirectlyWanted, debugLine=debugLine))
 
 		elif split in ("*", "&"):
 
 			# HACK: Array's operator[] needs to return a reference
 			# even though I usually convert them to pointers
-			if split == "&" and sourceGroup.name in ("Array", "ArrayPointer", "EEex"):
+			if split == "&" and sourceGroup.name in ("Array", "ConstArray", "ArrayPointer", "EEex"):
 				assert not typeRef.reference, "Cannot handle rvalue reference"
 				typeRef.reference = True
 
@@ -3032,12 +3059,12 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 	# Transform pointers into PointerReference
 	else:
-		assert groupName != "Array" or len(typeRef.templateTypes) == 2, "defineTypeRefPart() created invalid Array"
+		assert groupName not in ("Array", "ConstArray") or len(typeRef.templateTypes) == 2, "defineTypeRefPart() created invalid Array"
 		return PointerReference.create(mainState, typeRef, debugLine=debugLine)
 
 
 
-def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeRefSourceType, arrayStr: str=None, debugLine: str=""):
+def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeRefSourceType, arrayStr: str=None, isDirectlyWanted: bool=False, debugLine: str=""):
 
 	if str == None:
 		return
@@ -3048,9 +3075,9 @@ def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeR
 	if numSplits == 0:
 		return
 
-	lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], src, arrayStr, debugLine=debugLine)
+	lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], src, arrayStr, isDirectlyWanted, debugLine=debugLine)
 	for i in range(1, numSplits):
-		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], src, None, debugLine=debugLine)
+		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], src, None, isDirectlyWanted, debugLine=debugLine)
 
 	return lastRef
 
@@ -3210,6 +3237,21 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			sizeofConstant.valueType = OpenConstantType.STRING
 			sizeofConstant.value = f"sizeof({groupOpenData.appliedHeaderName})"
 			groupOpenData.constantBindings.append(sizeofConstant)
+
+		# Writing size variable which returns the size of the array
+		if group.name in ("Array", "ConstArray") and not group.lineGroupFlags.isFlagged("noHardcodedBindings"):
+
+			sizeConstant = OpenConstantData()
+			sizeConstant.name = "size"
+			sizeConstant.valueType = OpenConstantType.INTEGER
+			sizeConstant.value = int(currentTemplate.tup[1].getHeaderName())
+			groupOpenData.constantBindings.append(sizeConstant)
+
+			lastIndexConstant = OpenConstantData()
+			lastIndexConstant.name = "lastIndex"
+			lastIndexConstant.valueType = OpenConstantType.INTEGER
+			lastIndexConstant.value = int(currentTemplate.tup[1].getHeaderName()) - 1
+			groupOpenData.constantBindings.append(lastIndexConstant)
 
 
 		def writeAccessSelf(errorMsg: str):
@@ -3588,10 +3630,10 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				i += parameterIMod
 				paramType = parameter.type.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 				if not checkPrimitiveHandling(paramType, i):
-					if paramType.getName() == "VoidPointer" and paramType.getUserTypePointerLevel() == 0:
-						callArgParts.append(f"p_tolua_tousertype(L, {i}, 0)")
-						callArgParts.append(", ")
-					else:
+					# if paramType.getName() == "VoidPointer" and paramType.getUserTypePointerLevel() == 0:
+					# 	callArgParts.append(f"tolua_tousertype(L, {i}, 0)")
+					# 	callArgParts.append(", ")
+					# else:
 						callArgParts.append(paramType.getDereferenceStr(mainState, group, templateMappingTracker, i))
 						callArgParts.append(", ")
 
@@ -3684,7 +3726,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				return
 
 			# Writing getInternalReference() function which returns the userdata's internal pointer
-			if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Array", "CharString", "ConstCharString"):
+			if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Array", "ConstArray", "CharString", "ConstCharString"):
 
 				skip: bool = False
 
@@ -3936,6 +3978,7 @@ def registerPointerTypes(mainState: MainState):
 	"""
 
 	array = mainState.getGroup("Array")
+	constarray = mainState.getGroup("ConstArray")
 	pointer = mainState.getGroup("Pointer")
 
 
@@ -3950,7 +3993,7 @@ def registerPointerTypes(mainState: MainState):
 
 	for group in mainState.filteredGroups:
 
-		if group in (mainState.globalGroup, array, pointer):
+		if group in (mainState.globalGroup, array, constarray, pointer):
 			continue
 
 		registerPointerTypesForGroup(group)
@@ -3987,16 +4030,17 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 	if mainState.noCustomTypes:
 		mainState.getGroup("Pointer").ignoreHeader = True
 		mainState.getGroup("Array").ignoreHeader = True
+		mainState.getGroup("ConstArray").ignoreHeader = True
 		mainState.getGroup("CharString").ignoreHeader = True
 		mainState.getGroup("ConstCharString").ignoreHeader = True
 		mainState.getGroup("VoidPointer").ignoreHeader = True
 
 	pendingProcessed: list[str] = []
 	for wantedName in wantedNames:
-		wantedGroup = mainState.tryGetGroup(wantedName)
-		if wantedGroup == None: continue
+		wantedRef: TypeReference = defineTypeRef(mainState, None, wantedName, TypeRefSourceType.VARIABLE, isDirectlyWanted=True)
+		wantedGroup: Group = wantedRef.group
 		wantedGroup.isDirectlyWanted = True
-		pendingProcessed.append(wantedName)
+		pendingProcessed.append(wantedGroup.name)
 
 	while len(pendingProcessed) > 0:
 
@@ -4649,7 +4693,7 @@ def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStruct
 				typeName = re.sub("([<>])", "\\\\\\1", typeName)
 				return f":ref:`{typeNameDisplay}<{typeName}>`", True
 			else:
-				if typeNameDisplay not in ("Array", "void") and typeNameDisplay not in primitives and not typeNameDisplay.isnumeric():
+				if typeNameDisplay not in ("Array", "ConstArray", "void") and typeNameDisplay not in primitives and not typeNameDisplay.isnumeric():
 					print(f"Unable to refify: \"{typeNameDisplay}\"")
 				return typeNameDisplay, False
 

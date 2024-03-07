@@ -1114,12 +1114,12 @@ int messageBoxInternalLua(lua_State* L) {
 }
 
 int printLua(lua_State* L) {
-	Print("%s\n", lua_tostring(L, 1));
+	Print("%s", lua_tostring(L, 1));
 	return 0;
 }
 
 int printErrLua(lua_State* L) {
-	PrintErr("%s\n", lua_tostring(L, 1));
+	PrintErr("%s", lua_tostring(L, 1));
 	return 0;
 }
 

@@ -46,6 +46,16 @@ int getUserTypeLua(lua_State* L) {
 	return 1;
 }
 
+int lightUserDataToPointerLua(lua_State* L) {
+	if (const void *const ptr = lua_touserdata(L, 1); ptr == nullptr) {
+		lua_pushnil(L);
+	}
+	else {
+		lua_pushinteger(L, reinterpret_cast<uintptr_t>(ptr));
+	}
+	return 1;
+}
+
 int memsetUserDataLua(lua_State* L) {
 	castLuaIntArg(2, int, Int, val)
 	castLuaIntArg(3, size_t, SizeT, size)
@@ -239,6 +249,9 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 
 		exposeToLua(L, "EEex_GetUserType", getUserTypeLua);
 		exposeToLua(L, "EEex_GetUT", getUserTypeLua);
+
+		exposeToLua(L, "EEex_LightUserDataToPointer", lightUserDataToPointerLua);
+		exposeToLua(L, "EEex_LightUDToPtr", lightUserDataToPointerLua);
 
 		exposeToLua(L, "EEex_MemsetUserData", memsetUserDataLua);
 		exposeToLua(L, "EEex_MemsetUD", memsetUserDataLua);

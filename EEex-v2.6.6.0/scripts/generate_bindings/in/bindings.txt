@@ -28,6 +28,9 @@ namespace EEex
 	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	bool Projectile_LuaHook_GlobalMutators_Enabled;
+	$external_implementation $pass_lua_state void DrawSlicedRectNum();
+	$external_implementation $pass_lua_state void RegisterSlicedRect();
+	$external_implementation $pass_lua_state void DrawSlicedRect();
 };
 
 enum EEex::ProjectileType : __int32

@@ -146,9 +146,10 @@ struct IDPProvider;
 struct Item_Header_st;
 struct Item_ability_st;
 struct Item_effect_st;
-struct SDL_BlitMap;
 union SDL_Event;
 struct SDL_PixelFormat;
+struct SDL_Rect;
+struct SDL_Surface;
 struct SDL_Window;
 struct STR_RES;
 struct Spell_Header_st;
@@ -1170,6 +1171,28 @@ enum class EItemPreviewType : __int32
 	k_EItemPreviewType_ReservedMax = 255,
 };
 
+enum class DrawFeature : __int32
+{
+	DRAW_TEXTURE_2D = 3553,
+	DRAW_BLEND = 3042,
+	DRAW_SCISSOR_TEST = 3089,
+	DRAW_RENDER_YUV = 3090,
+};
+
+enum class DrawBlend : __int32
+{
+	DRAW_ZERO = 0,
+	DRAW_ONE = 1,
+	DRAW_DST_COLOR = 2,
+	DRAW_SRC_COLOR = 3,
+	DRAW_ONE_MINUS_DST_COLOR = 4,
+	DRAW_ONE_MINUS_SRC_COLOR = 5,
+	DRAW_SRC_ALPHA = 6,
+	DRAW_ONE_MINUS_SRC_ALPHA = 7,
+	DRAW_DST_ALPHA = 8,
+	DRAW_ONE_MINUS_DST_ALPHA = 9,
+};
+
 enum class DP_ProviderID : __int32
 {
 	DP_PROVIDER_NONE = 0,
@@ -1412,6 +1435,14 @@ struct CreateItemResult_t
 	bool m_bUserNeedsToAcceptWorkshopLegalAgreement;
 
 	CreateItemResult_t() = delete;
+};
+
+struct _D98D369160A0DDA2B95F5D0F301081BB
+{
+	byte lhs;
+	byte nrhs;
+
+	_D98D369160A0DDA2B95F5D0F301081BB() = delete;
 };
 
 enum class importStateType : __int32
@@ -1682,48 +1713,12 @@ struct SDL_SysWMEvent
 	SDL_SysWMEvent() = delete;
 };
 
-struct SDL_Rect
-{
-	int x;
-	int y;
-	int w;
-	int h;
-
-	SDL_Rect() = delete;
-};
-
-struct SDL_Surface
-{
-	unsigned int flags;
-	SDL_PixelFormat* format;
-	int w;
-	int h;
-	int pitch;
-	void* pixels;
-	void* userdata;
-	int locked;
-	void* lock_data;
-	SDL_Rect clip_rect;
-	SDL_BlitMap* map;
-	int refcount;
-
-	SDL_Surface() = delete;
-};
-
 struct SDL_QuitEvent
 {
 	unsigned int type;
 	unsigned int timestamp;
 
 	SDL_QuitEvent() = delete;
-};
-
-struct SDL_Point
-{
-	int x;
-	int y;
-
-	SDL_Point() = delete;
 };
 
 struct SDL_Palette
@@ -2624,25 +2619,6 @@ union _9CC80BF4F2F1300360474CD60BF15E00
 	_9CC80BF4F2F1300360474CD60BF15E00() = delete;
 };
 
-struct _4BC756EB7537E12A00FC57C6BF2CCA8B
-{
-	_9CC80BF4F2F1300360474CD60BF15E00 selected;
-	SDL_Rect mouseOver;
-
-	_4BC756EB7537E12A00FC57C6BF2CCA8B() = delete;
-};
-
-struct _9B9540D9920A90D57A3D80DDD1A70514
-{
-	bool (__fastcall *f)(uiMenu*, const SDL_Rect*, SDL_Event*);
-	SDL_Point start;
-	uiItem* item;
-	uiMenu* m;
-	_4BC756EB7537E12A00FC57C6BF2CCA8B editor;
-
-	_9B9540D9920A90D57A3D80DDD1A70514() = delete;
-};
-
 struct mosHeader_st
 {
 	unsigned int nFileType;
@@ -2665,6 +2641,38 @@ struct sequenceTableEntry_st
 	unsigned __int16 nStartingFrame;
 
 	sequenceTableEntry_st() = delete;
+};
+
+template<class T, size_t size>
+struct ConstArray
+{
+	const T data[size];
+
+	T get(size_t index)
+	{
+		if (index >= size) {
+			return (T)NULL;
+		}
+		return data[index];
+	}
+
+	const T* getReference(size_t index)
+	{
+		if (index >= size) {
+			return NULL;
+		}
+		return &data[index];
+	}
+
+	const T& operator[](size_t index)
+	{
+		return data[index];
+	}
+
+	operator const T*()
+	{
+		return &data[0];
+	}
 };
 
 struct st_tiledef
@@ -2770,6 +2778,104 @@ struct CFileView
 	CFileView() = delete;
 };
 
+template<class T>
+struct VariableArray
+{
+	T data;
+
+	VariableArray() = delete;
+
+	T get(size_t index)
+	{
+		return (&data)[index];
+	}
+
+	T* getReference(size_t index)
+	{
+		return &(&data)[index];
+	}
+
+	void set(size_t index, T value)
+	{
+		(&data)[index] = value;
+	}
+};
+
+struct SDL_Rect
+{
+	int x;
+	int y;
+	int w;
+	int h;
+
+	SDL_Rect()
+	{
+	}
+
+	SDL_Rect(int x, int y, int w, int h)
+	{
+		this->x = x;
+		this->y = y;
+		this->w = w;
+		this->h = h;
+	}
+
+	SDL_Rect(const SDL_Rect* pOther)
+	{
+		this->x = pOther->x;
+		this->y = pOther->y;
+		this->w = pOther->w;
+		this->h = pOther->h;
+	}
+};
+
+struct SDL_Surface
+{
+	unsigned int flags;
+	SDL_PixelFormat* format;
+	int w;
+	int h;
+	int pitch;
+	void* pixels;
+	void* userdata;
+	int locked;
+	void* lock_data;
+	SDL_Rect clip_rect;
+	SDL_BlitMap* map;
+	int refcount;
+
+	SDL_Surface() = delete;
+};
+
+struct _4BC756EB7537E12A00FC57C6BF2CCA8B
+{
+	_9CC80BF4F2F1300360474CD60BF15E00 selected;
+	SDL_Rect mouseOver;
+
+	_4BC756EB7537E12A00FC57C6BF2CCA8B() = delete;
+};
+
+struct SDL_Point
+{
+	int x;
+	int y;
+
+	SDL_Point()
+	{
+	}
+};
+
+struct _9B9540D9920A90D57A3D80DDD1A70514
+{
+	bool (__fastcall *f)(uiMenu*, const SDL_Rect*, SDL_Event*);
+	SDL_Point start;
+	uiItem* item;
+	uiMenu* m;
+	_4BC756EB7537E12A00FC57C6BF2CCA8B editor;
+
+	_9B9540D9920A90D57A3D80DDD1A70514() = delete;
+};
+
 template<class POINTED_TO_TYPE>
 struct Pointer
 {
@@ -2858,6 +2964,34 @@ struct uiVariant
 	uiVariant::value_t value;
 
 	uiVariant() = delete;
+};
+
+struct slicedRect
+{
+	SDL_Rect tl;
+	SDL_Rect t;
+	SDL_Rect tr;
+	SDL_Rect r;
+	SDL_Rect br;
+	SDL_Rect b;
+	SDL_Rect bl;
+	SDL_Rect l;
+	SDL_Rect c;
+	SDL_Point d;
+	const char* name;
+	int flags;
+
+	slicedRect()
+	{
+	}
+};
+
+struct keyword
+{
+	const char* name;
+	int tt;
+
+	keyword() = delete;
 };
 
 struct Marker
@@ -4534,6 +4668,14 @@ struct CResPVR : CRes
 	CSize size;
 
 	CResPVR() = delete;
+
+	typedef void* (__thiscall *type_Demand)(CResPVR* pThis);
+	static type_Demand p_Demand;
+
+	void* Demand()
+	{
+		return p_Demand(this);
+	}
 };
 
 struct CResMosaic : CRes
@@ -7121,17 +7263,77 @@ extern type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
 typedef int (*type_rand)();
 extern type_rand p_rand;
 
-extern int* p_numMenus;
+typedef int (*type_l_log_print)(lua_State* L);
+extern type_l_log_print p_l_log_print;
+
+typedef int (*type_panic)(lua_State* L);
+extern type_panic p_panic;
+
+typedef int (*type_Chitin_GetSectionCallback)(lua_State* L);
+extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
+
+typedef _iobuf* (__cdecl *type_OpenIniFile)(const char* path, const char* mode);
+extern type_OpenIniFile p_OpenIniFile;
+
+typedef CRes* (__cdecl *type_dimmGetResObject)(const CResRef* cResRef, int nType, bool createIfNotExists);
+extern type_dimmGetResObject p_dimmGetResObject;
+
+typedef void (*type_DrawPushState)();
+extern type_DrawPushState p_DrawPushState;
+
+typedef void (*type_DrawBindTexture)(int texture);
+extern type_DrawBindTexture p_DrawBindTexture;
+
+typedef void (*type_DrawEnable)(DrawFeature f);
+extern type_DrawEnable p_DrawEnable;
+
+typedef void (*type_DrawBlendFunc)(DrawBlend src, DrawBlend dst);
+extern type_DrawBlendFunc p_DrawBlendFunc;
+
+typedef uint (*type_DrawColor)(uint color);
+extern type_DrawColor p_DrawColor;
+
+typedef uint (*type_DrawAlpha)(uint alpha);
+extern type_DrawAlpha p_DrawAlpha;
+
+typedef void (*type_DrawPopState)();
+extern type_DrawPopState p_DrawPopState;
+
+typedef void (*type_drawSlice)(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool unused);
+extern type_drawSlice p_drawSlice;
+
+typedef void (*type_drawSliceSide)(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool wide);
+extern type_drawSliceSide p_drawSliceSide;
+
+typedef int (*type_uiVariantAsInt)(uiVariant* var);
+extern type_uiVariantAsInt p_uiVariantAsInt;
+
+typedef void (*type_uiDrawSlicedRect)(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
+extern type_uiDrawSlicedRect p_uiDrawSlicedRect;
+
+typedef int (*type_uiExecLuaInt)(int id);
+extern type_uiExecLuaInt p_uiExecLuaInt;
+
+extern char** p_afxPchNil;
+extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
+extern Array<keyword,124>* p_g_keywords;
+extern lua_State** p_g_lua;
+extern CBaldurChitin** p_g_pBaldurChitin;
+extern int* p_menuLength;
 extern Array<uiMenu,256>* p_menus;
+extern CResText** p_menuSrc;
 extern Array<uiMenu*,256>* p_menuStack;
 extern int* p_nextStackMenuIdx;
-extern CResText** p_menuSrc;
-extern int* p_menuLength;
+extern int* p_numMenus;
+extern int* p_optionsHaveChanged;
 extern CTypedPtrArray<CPtrArray,CRes*>* p_resources;
-extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
-extern CBaldurChitin** p_g_pBaldurChitin;
-extern lua_State** p_g_lua;
-extern char** p_afxPchNil;
+extern Array<slicedRect,6>* p_slicedRects;
+extern ConstArray<ushort,1765>* p_yy_action;
+extern ConstArray<ushort,329>* p_yy_default;
+extern ConstArray<byte,1765>* p_yy_lookahead;
+extern ConstArray<short,122>* p_yy_reduce_ofst;
+extern ConstArray<short,174>* p_yy_shift_ofst;
+extern ConstArray<_D98D369160A0DDA2B95F5D0F301081BB,157>* p_yyRuleInfo;
 
 struct CWorldMapLinks
 {
