@@ -336,6 +336,12 @@ struct VariableArray
 	}
 };
 
+template<typename T>
+struct Primitive
+{
+	T value;
+};
+
 struct UnmappedUserType
 {
 	uintptr_t toPointer()

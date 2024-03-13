@@ -559,6 +559,7 @@ class TemplateTypeMode(Enum):
 
 
 primitives = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "wchar_t", "double", "long double"}
+handledPrimitives = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "double", "long double"}
 primitiveNumbers = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "float", "double", "long double"}
 
 class TypeReference:
@@ -4026,6 +4027,9 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 	wantedNames.add("Pointer") # WORKAROUND
 	wantedNames.add("VoidPointer") # WORKAROUND
 	wantedNames.add("UnmappedUserType")
+
+	for primitive in handledPrimitives:
+		wantedNames.add(f"Primitive<{primitive}>")
 
 	if mainState.noCustomTypes:
 		mainState.getGroup("Pointer").ignoreHeader = True

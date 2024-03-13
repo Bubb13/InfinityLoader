@@ -192,6 +192,14 @@ struct CVideo
 	CVideo() = delete;
 };
 
+template<typename T>
+struct Primitive
+{
+	T value;
+
+	Primitive() = delete;
+};
+
 struct SAreaFileWrapper
 {
 	CAreaFileContainer* pContainer;
