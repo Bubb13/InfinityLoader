@@ -225,6 +225,11 @@ struct SProjectileWrapper
 	SProjectileWrapper() = delete;
 };
 
+struct UnmappedUserType
+{
+	UnmappedUserType() = delete;
+};
+
 struct VoidPointer
 {
 	void* reference;
@@ -2797,16 +2802,6 @@ enum class uiVariantType : __int32
 	UIVAR_FUNCTION = 1,
 	UIVAR_STRING = 2,
 	UIVAR_FLOAT = 3,
-};
-
-struct UnmappedUserType
-{
-	UnmappedUserType() = delete;
-
-	uintptr_t toPointer()
-	{
-		return (uintptr_t)this;
-	}
 };
 
 struct view_t

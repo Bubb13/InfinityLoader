@@ -1140,8 +1140,13 @@ class PointerReference(TypeReference):
 			if len(self.templateTypes) == 0:
 				self.templateTypes.append(self.originalRef)
 
-			if self.originalRef.isVoid():
-				self.changeReferencedGroup(mainState.getGroup("VoidPointer"))
+			if self.originalRef.isVoid() and newVal <= 2:
+				if newVal == 1:
+					# Binding `ud->void` - No idea what type is on the other side
+					self.changeReferencedGroup(mainState.getGroup("UnmappedUserType"))
+				elif newVal == 2:
+					# Binding `ud->void*` - `VoidPointer` disallows dereferencing
+					self.changeReferencedGroup(mainState.getGroup("VoidPointer"))
 			else:
 				self.changeReferencedGroup(mainState.getGroup("Pointer"))
 
@@ -1168,14 +1173,19 @@ class PointerReference(TypeReference):
 		typeManipulator: Callable[[str], str]=None, forcePointer: bool=False):
 
 		if self.getUserTypePointerLevel() == 0:
+			assert not self.originalRef.isVoid(), "Literal 'void' should never appear"
 			if self.originalRef.isPrimitive() or self.originalRef.isEnum():
 				# Primitive<x>
-				return f"{manipulate(typeManipulator, self.group.name)}<{self.originalRef.group.name}>"
+				return f"{manipulate(typeManipulator, self.group.name)}<{manipulate(typeManipulator, self.originalRef.group.name)}>"
 			else:
 				return self.originalRef.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
 					typeManipulator=typeManipulator)
-		elif self.getUserTypePointerLevel() == 1 and self.group.name == "VoidPointer":
-			return "VoidPointer"
+		elif self.originalRef.isVoid() and self.getUserTypePointerLevel() <= 2:
+			if forcePointer and self.getUserTypePointerLevel() == 1:
+				return manipulate(typeManipulator, "VoidPointer")
+			else:
+				# 1 = UnmappedUserType, 2 = VoidPointer
+				return manipulate(typeManipulator, self.group.name)
 		else:
 			innerType = self.originalRef.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
 			innerStr: str = None
@@ -3357,7 +3367,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 			fieldOpenData = OpenFieldData()
 			isNormal: bool = group != mainState.globalGroup
-			shouldWritePointerCast = not isPointerCast and not group.name == "Pointer"
+			shouldWritePointerCast = not isPointerCast and not group.name in ("Pointer", "VoidPointer")
 
 			addressPrefix = "reference_" if isPointerCast else ""
 
@@ -4092,6 +4102,7 @@ def registerPointerTypes(mainState: MainState):
 	array = mainState.getGroup("Array")
 	constarray = mainState.getGroup("ConstArray")
 	pointer = mainState.getGroup("Pointer")
+	voidPointer = mainState.getGroup("VoidPointer")
 
 
 	def registerPointerTypesForGroup(group: Group):
@@ -4105,7 +4116,7 @@ def registerPointerTypes(mainState: MainState):
 
 	for group in mainState.filteredGroups:
 
-		if group in (mainState.globalGroup, array, constarray, pointer):
+		if group in (mainState.globalGroup, array, constarray, pointer, voidPointer):
 			continue
 
 		registerPointerTypesForGroup(group)
@@ -4150,6 +4161,7 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 		mainState.getGroup("ConstCharString").ignoreHeader = True
 		mainState.getGroup("VoidPointer").ignoreHeader = True
 		mainState.getGroup("Primitive").ignoreHeader = True
+		mainState.getGroup("UnmappedUserType").ignoreHeader = True
 
 	pendingProcessed: list[str] = []
 	for wantedName in wantedNames:
@@ -4350,11 +4362,11 @@ static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
 			break;
 		}}
 		case PatternValueType::INVALID: {{
-			PrintT(TEXT("[!][{dllName}] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game\\n"), patternName);
+			PrintT(TEXT("[!][{dllName}] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game\\n"), patternName.c_str());
 			break;
 		}}
 		default: {{
-			PrintT(TEXT("[!][{dllName}] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game\\n"), patternName);
+			PrintT(TEXT("[!][{dllName}] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game\\n"), patternName.c_str());
 			break;
 		}}
 	}}
@@ -4573,6 +4585,10 @@ struct ConstCharString
 
 template<typename T>
 struct Primitive
+{
+};
+
+struct UnmappedUserType
 {
 };
 		""")

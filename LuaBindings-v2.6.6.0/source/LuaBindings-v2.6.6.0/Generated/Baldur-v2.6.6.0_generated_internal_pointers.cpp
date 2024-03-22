@@ -176,11 +176,11 @@ static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
 			break;
 		}
 		case PatternValueType::INVALID: {
-			PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game\n"), patternName);
+			PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game\n"), patternName.c_str());
 			break;
 		}
 		default: {
-			PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game\n"), patternName);
+			PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game\n"), patternName.c_str());
 			break;
 		}
 	}

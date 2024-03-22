@@ -344,10 +344,6 @@ struct Primitive
 
 struct UnmappedUserType
 {
-	uintptr_t toPointer()
-	{
-		return (uintptr_t)this;
-	}
 };
 
 /////////////////////////////////////////////

@@ -344,10 +344,6 @@ struct Primitive
 
 struct UnmappedUserType
 {
-	uintptr_t toPointer()
-	{
-		return (uintptr_t)this;
-	}
 };
 
 /////////////////////////////////////////////
@@ -1316,6 +1312,9 @@ struct BindingsTest
 	CString TEST_LOCAL_STRUCT;
 	CString* TEST_LOCAL_STRUCT_PTR;
 	CString** TEST_LOCAL_STRUCT_PTRPTR;
+	void* TEST_LOCAL_VOID_PTR;
+	void** TEST_LOCAL_VOID_PTRPTR;
+	void*** TEST_LOCAL_VOID_PTRPTRPTR;
 
 	static int TEST_STATIC_NUMBER;
 	static int* TEST_STATIC_NUMBER_PTR;
@@ -1326,6 +1325,9 @@ struct BindingsTest
 	static CString TEST_STATIC_STRUCT;
 	static CString* TEST_STATIC_STRUCT_PTR;
 	static CString** TEST_STATIC_STRUCT_PTRPTR;
+	static void* TEST_STATIC_VOID_PTR;
+	static void** TEST_STATIC_VOID_PTRPTR;
+	static void*** TEST_STATIC_VOID_PTRPTRPTR;
 
 	void TEST_FUNC_NUMBER(int _0);
 	void TEST_FUNC_NUMBER_PTR(int* _0);
@@ -1336,4 +1338,7 @@ struct BindingsTest
 	void TEST_FUNC_STRUCT(CString _0);
 	void TEST_FUNC_STRUCT_PTR(CString* _0);
 	void TEST_FUNC_STRUCT_PTRPTR(CString** _0);
+	void TEST_FUNC_VOID_PTR(void* _0);
+	void TEST_FUNC_VOID_PTRPTR(void** _0);
+	void TEST_FUNC_VOID_PTRPTRPTR(void*** _0);
 };
