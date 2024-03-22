@@ -395,19 +395,6 @@ EXPORT void tolua_pushusertype_nocast(lua_State* L, void* value, const char* typ
 	}
 }
 
-EXPORT void tolua_pushusertypepointer(lua_State* L, void* value, const char* type) {
-	if (value == nullptr) {
-		lua_pushnil(L);
-	}
-	else {
-		void** block = (void**)lua_newuserdata(L, sizeof(void*) * 2);
-		block[0] = &block[1];
-		block[1] = value;
-		tolua_getmetatable(L, type);
-		lua_setmetatable(L, -2);
-	}
-}
-
 EXPORT void tolua_pushusertypestring(lua_State* L, int index) {
 	int tag = lua_type(L, index);
 	if (tag == LUA_TUSERDATA && lua_getmetatable(L, index)) {

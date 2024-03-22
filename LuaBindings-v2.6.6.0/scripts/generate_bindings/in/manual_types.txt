@@ -1300,3 +1300,40 @@ const byte yy_lookahead[1765];
 const short yy_reduce_ofst[122];
 const short yy_shift_ofst[174];
 const $D98D369160A0DDA2B95F5D0F301081BB yyRuleInfo[157];
+
+///////////
+// Debug //
+///////////
+
+struct BindingsTest
+{
+	int TEST_LOCAL_NUMBER;
+	int* TEST_LOCAL_NUMBER_PTR;
+	int** TEST_LOCAL_NUMBER_PTRPTR;
+	VertListType TEST_LOCAL_ENUM;
+	VertListType* TEST_LOCAL_ENUM_PTR;
+	VertListType** TEST_LOCAL_ENUM_PTRPTR;
+	CString TEST_LOCAL_STRUCT;
+	CString* TEST_LOCAL_STRUCT_PTR;
+	CString** TEST_LOCAL_STRUCT_PTRPTR;
+
+	static int TEST_STATIC_NUMBER;
+	static int* TEST_STATIC_NUMBER_PTR;
+	static int** TEST_STATIC_NUMBER_PTRPTR;
+	static VertListType TEST_STATIC_ENUM;
+	static VertListType* TEST_STATIC_ENUM_PTR;
+	static VertListType** TEST_STATIC_ENUM_PTRPTR;
+	static CString TEST_STATIC_STRUCT;
+	static CString* TEST_STATIC_STRUCT_PTR;
+	static CString** TEST_STATIC_STRUCT_PTRPTR;
+
+	void TEST_FUNC_NUMBER(int _0);
+	void TEST_FUNC_NUMBER_PTR(int* _0);
+	void TEST_FUNC_NUMBER_PTRPTR(int** _0);
+	void TEST_FUNC_ENUM(VertListType _0);
+	void TEST_FUNC_ENUM_PTR(VertListType* _0);
+	void TEST_FUNC_ENUM_PTRPTR(VertListType** _0);
+	void TEST_FUNC_STRUCT(CString _0);
+	void TEST_FUNC_STRUCT_PTR(CString* _0);
+	void TEST_FUNC_STRUCT_PTRPTR(CString** _0);
+};

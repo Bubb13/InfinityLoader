@@ -571,7 +571,7 @@ class TypeReference:
 		self.isDirectlyWanted: bool = None
 
 		self.group: Group = None
-		
+
 		self.pointerLevel: int = 0
 		self.reference: bool = False
 		self.arrayParts: list = []
@@ -726,6 +726,38 @@ class TypeReference:
 		return self.getName() in primitiveNumbers
 
 
+	def isEnum(self) -> bool:
+		"""
+		Returns `True` if `self` references an enum `Group`
+		"""
+		return self.group and self.group.groupType == "enum"
+
+
+	def getEnumName(self) -> str:
+		"""
+		Returns the name of the enum `Group` that `self` references
+		"""
+		assert self.isEnum(), "Not an enum"
+		return self.getName()
+
+
+	def getPrimitiveEnumType(self, mainState: MainState) -> TypeReference:
+		"""
+		Returns the primitive enum `TypeReference` that `self` references
+		"""
+		assert self.isEnum(), "Not an enum"
+		copy: TypeReference = self.shallowCopy()
+		copy.changeReferencedGroup(self.getExtends()[0].getGroup())
+		return copy
+
+
+	def getExtends(self) -> list[TypeReference]:
+		"""
+		Returns a `list[TypeReference]` that holds the `TypeReference`s that `self`'s `Group` extends
+		"""
+		return self.group.extends if self.group else []
+
+
 	def setUserTypePointerLevel(self, mainState: MainState, newVal: int) -> None:
 		assert newVal >= 0, "self.pointerLevel cannot be negative"
 		self.pointerLevel = newVal
@@ -874,7 +906,7 @@ class TypeReference:
 
 
 	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False,
-		typeManipulator: Callable[[str], str]=None):
+		typeManipulator: Callable[[str], str]=None, forcePointer: bool=False):
 
 		return self._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride, noModifiers=True,
 			templateTypeMode=TemplateTypeMode.HEADER, typeManipulator=typeManipulator)
@@ -954,12 +986,25 @@ class TypeReference:
 
 		dereferenceStr = ""
 		if self.getUserTypePointerLevel() == 0:
+			# UserData objects only hold pointers; parameters that are passed-by-value need to be dereferenced
 			self = self.shallowCopy()
 			self.adjustUserTypePointerLevel(mainState, 1)
 			dereferenceStr = "*"
 
+		adjustedRef = self
+		forcePointer: bool = False
+		primitiveLike: bool = self.isPrimitive() or self.isEnum()
+
+		if self.getUserTypePointerLevel() > (0 if primitiveLike else 1):
+			# UserData objects are initialized with the value of the pointer
+			# which essentially removes one pointer level from the type
+			# (TODO: this should probably be templated somewhere)
+			adjustedRef = self.shallowCopy()
+			adjustedRef.adjustUserTypePointerLevel(mainState, -1)
+			forcePointer = not primitiveLike
+
 		appliedParamName = self.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker)
-		appliedParamUsertype = self.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=True)
+		appliedParamUsertype = adjustedRef.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=True, forcePointer=forcePointer)
 		return f"{dereferenceStr}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")"
 
 
@@ -1025,6 +1070,25 @@ class PointerReference(TypeReference):
 		return self.originalRef.isGroupUsed(mainState)
 
 
+	def isEnum(self):
+		return self.originalRef.isEnum()
+
+
+	def getEnumName(self):
+		return self.originalRef.getEnumName()
+
+
+	def getPrimitiveEnumType(self, mainState: MainState):
+		# The wrapping PointerReference might have changed the contained enum TypeReference's pointer level
+		toReturn: TypeReference = self.originalRef.getPrimitiveEnumType(mainState)
+		toReturn.setUserTypePointerLevel(mainState, self.getUserTypePointerLevel()) # Correct the pointer level
+		return toReturn
+
+
+	def getExtends(self):
+		return self.originalRef.getExtends()
+
+
 	def isConst(self):
 		return self.originalRef.isConst()
 
@@ -1063,7 +1127,12 @@ class PointerReference(TypeReference):
 			if len(self.templateTypes) > 0:
 				self.templateTypes.pop()
 
-			self.changeReferencedGroup(self.originalRef.group)
+			if self.originalRef.isPrimitive() or self.originalRef.isEnum():
+				# Primitive and enum values (pointer level of 0) are exposed using the "Primitive" group when
+				# their value is being referenced instead of directly exported as a comparable Lua type.
+				self.changeReferencedGroup(mainState.getGroup("Primitive"))
+			else:
+				self.changeReferencedGroup(self.originalRef.group)
 
 		else:
 
@@ -1096,15 +1165,22 @@ class PointerReference(TypeReference):
 
 
 	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False,
-		typeManipulator: Callable[[str], str]=None):
+		typeManipulator: Callable[[str], str]=None, forcePointer: bool=False):
 
 		if self.getUserTypePointerLevel() == 0:
-			return self.originalRef.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
-				typeManipulator=typeManipulator)
+			if self.originalRef.isPrimitive() or self.originalRef.isEnum():
+				# Primitive<x>
+				return f"{manipulate(typeManipulator, self.group.name)}<{self.originalRef.group.name}>"
+			else:
+				return self.originalRef.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
+					typeManipulator=typeManipulator)
+		elif self.getUserTypePointerLevel() == 1 and self.group.name == "VoidPointer":
+			return "VoidPointer"
 		else:
 			innerType = self.originalRef.checkReplaceTemplateType(mainState, sourceGroup, templateMappingTracker)
 			innerStr: str = None
-			if innerType.getUserTypePointerLevel() == 0 and not innerType.isPrimitive():
+			# Primitives and Enums are only allowed to bind through Primitive<x>, not their raw type
+			if not forcePointer and innerType.getUserTypePointerLevel() == 0 and not innerType.isPrimitive() and not innerType.isEnum():
 				innerStr = innerType.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
 					typeManipulator=typeManipulator)
 			else:
@@ -1147,12 +1223,12 @@ class PointerReference(TypeReference):
 
 
 	def getDereferenceStr(self: PointerReference, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, i: int):
-		if self.originalRef.isPrimitive():
-			extraDereference = 1 if self.originalRef.isPrimitive() else 0
-			appliedParamName = self.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=extraDereference)
-			appliedParamUsertype = self.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=True)
-			return f"{'*'*extraDereference}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")"
-		else:
+		# if self.originalRef.isPrimitive():
+		# 	extraDereference = 1 if self.originalRef.isPrimitive() else 0
+		# 	appliedParamName = self.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=extraDereference)
+		# 	appliedParamUsertype = self.getAppliedUserTypeName(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=True)
+		# 	return f"{'*'*extraDereference}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")"
+		# else:
 			return super().getDereferenceStr(mainState, sourceGroup, templateMappingTracker, i)
 
 
@@ -1238,7 +1314,7 @@ class CharReference(TypeReference):
 
 
 	def getAppliedUserTypeName(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, useUsertypeOverride=False,
-		typeManipulator: Callable[[str], str]=None):
+		typeManipulator: Callable[[str], str]=None, forcePointer: bool=False):
 
 		charLevel = self.charPointerLevel
 		if charLevel == 0:
@@ -3281,8 +3357,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 			fieldOpenData = OpenFieldData()
 			isNormal: bool = group != mainState.globalGroup
-			shouldWritePointerCast = isNormal and not isPointerCast and not group.name == "Pointer"
-			primitiveReturned = False
+			shouldWritePointerCast = not isPointerCast and not group.name == "Pointer"
 
 			addressPrefix = "reference_" if isPointerCast else ""
 
@@ -3329,20 +3404,22 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 					checkType = varType
 
 					# Enums are fancy primitives!
-					if varType.group and varType.group.groupType == "enum":
-						checkType = varType.group.extends[0]
+					if varType.isEnum():
+						checkType = varType.getPrimitiveEnumType(mainState)
 
 					checkTypeName = checkType.getName()
 
 					if checkType.isPrimitiveNumber():
-						if checkTypeName in ("float", "double"):
-							out.write(f"\ttolua_pushnumber(L, (lua_Number){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
-						else:
-							out.write(f"\tlua_pushinteger(L, (lua_Integer){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
-						return True
+						if checkType.getUserTypePointerLevel() == 0:
+							if checkTypeName in ("float", "double"):
+								out.write(f"\ttolua_pushnumber(L, (lua_Number){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
+							else:
+								out.write(f"\tlua_pushinteger(L, (lua_Integer){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
+							return True
 					elif checkTypeName == "bool":
-						out.write(f"\ttolua_pushboolean(L, (bool){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
-						return True
+						if checkType.getUserTypePointerLevel() == 0:
+							out.write(f"\ttolua_pushboolean(L, (bool){'*'*effectivePtrLevel}{selfStr}{varNameHeader});\n")
+							return True
 					elif checkTypeName == "char":
 						if checkType.getUserTypePointerLevel() == 1:
 							out.write(f"\ttolua_pushstring(L, (const char*){'*'*(effectivePtrLevel - 1)}{selfStr}{varNameHeader});\n")
@@ -3356,33 +3433,42 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 				if not checkPrimitiveHandling(varType):
 
-					effectivePtrLevel = varType.getUserTypePointerLevel() if (isNormal and not variableField.static) else varType.getUserTypePointerLevel() + 1
+					extraDeref: bool = not isNormal or variableField.static
+					primitiveLike: bool = varType.isPrimitive() or varType.isEnum()
 
 					if isPointerCast:
-						out.write("\ttolua_pushusertypepointer(L, (void*)&")
+						assert varType.getUserTypePointerLevel() != 0 or primitiveLike, "pointer cast cannot be written"
+						out.write(f"\ttolua_pushusertype(L, (void*){'&' if not extraDeref else ''}")
 					else:
-						out.write("\ttolua_pushusertype(L, (void*)")
-						if effectivePtrLevel == 0:
-							out.write("&")
+						out.write(f"\ttolua_pushusertype(L, (void*){'&' if not extraDeref and varType.getUserTypePointerLevel() == 0 else ''}")
 
-					if isNormal:
-						out.write(f"{selfStr}{varNameHeader}")
-					else:
-						out.write(f"{'*'*varType.getUserTypePointerLevel()}{varNameHeader}")
+					out.write(f"{'*' if not isPointerCast and extraDeref and varType.getUserTypePointerLevel() != 0 else ''}{selfStr}{varNameHeader}")
 
 					if isPointerCast:
-						pointerRef = varType.shallowCopy()
-						pointerRef.adjustUserTypePointerLevel(mainState, 1)
-						pointerTypeName = pointerRef.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
+						pointerTypeName = varType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True, forcePointer=True)
 						out.write(f", \"{pointerTypeName}\"")
 					else:
-						primitiveReturned = varType.getUserTypePointerLevel() > 0
-						typeStr = varType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
+						if varType.getUserTypePointerLevel() == 0 and not primitiveLike:
+							# It is useless to write a reference to a non-pointer, non-primitive field
+							# since the default behavior is to bind it using a pointer (reference)
+							shouldWritePointerCast = False
+
+						pointerRef = varType
+						forcePointer: bool = False
+
+						if varType.getUserTypePointerLevel() > (0 if primitiveLike else 1):
+							# UserData objects are initialized with the value of the pointer
+							# which essentially removes one pointer level from the type
+							# (TODO: this should probably be templated somewhere)
+							pointerRef = varType.shallowCopy()
+							pointerRef.adjustUserTypePointerLevel(mainState, -1)
+							forcePointer = not primitiveLike
+
+						typeStr = pointerRef.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True, forcePointer=forcePointer)
 						out.write(f", \"{typeStr}\"")
 
 					out.write(");\n")
-				else:
-					primitiveReturned = True
+
 
 				out.write("\treturn 1;\n")
 
@@ -3408,8 +3494,8 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				varType: TypeReference = variableField.variableType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 
 				# Enums are fancy primitives!
-				if varType.group and varType.group.groupType == "enum":
-					varType = varType.group.extends[0]
+				if varType.isEnum():
+					varType = varType.getPrimitiveEnumType(mainState)
 
 				allowSetter = varType.isPrimitive() or varType.getUserTypePointerLevel() > 0
 
@@ -3443,9 +3529,9 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 						checkType = varType
 
 						# Enums are fancy primitives!
-						if varType.group and varType.group.groupType == "enum":
-							enumCastStr = f"({varType.group.name})"
-							checkType = varType.group.extends[0]
+						if varType.isEnum():
+							enumCastStr = f"({varType.getEnumName()})"
+							checkType = varType.getPrimitiveEnumType(mainState)
 
 						checkTypeName: str = checkType.getName()
 						checkTypeCastName = checkType.getCastName()
@@ -3496,7 +3582,19 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 						else:
 							selfStr = "*"
 
-						out.write(f"\t{selfStr}{varNameHeader} = ({varType.getAppliedHeaderName(mainState, group, templateMappingTracker)})tolua_tousertype_dynamic(L, 2, 0, \"{varType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)}\");\n")
+						pointerRef = varType
+						forcePointer: bool = False
+						primitiveLike: bool = varType.isPrimitive() or varType.isEnum()
+
+						if varType.getUserTypePointerLevel() > (0 if primitiveLike else 1):
+							# UserData objects are initialized with the value of the pointer
+							# which essentially removes one pointer level from the type
+							# (TODO: this should probably be templated somewhere)
+							pointerRef = varType.shallowCopy()
+							pointerRef.adjustUserTypePointerLevel(mainState, -1)
+							forcePointer = not primitiveLike
+
+						out.write(f"\t{selfStr}{varNameHeader} = ({varType.getAppliedHeaderName(mainState, group, templateMappingTracker)})tolua_tousertype_dynamic(L, 2, 0, \"{pointerRef.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True, forcePointer=forcePointer)}\");\n")
 
 					out.write("\treturn 0;\n")
 
@@ -3510,7 +3608,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 			# SETTER END
 
-			if shouldWritePointerCast and primitiveReturned:
+			if shouldWritePointerCast:
 				handleField(field, isPointerCast=True)
 
 
@@ -3521,7 +3619,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			returnType: TypeReference = functionImplementation.returnType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 
 			# Must be void, enum, primitive, or pointer
-			if not returnType.isVoid() and returnType.group.groupType != "enum" and not returnType.isPrimitive() and returnType.getUserTypePointerLevel() == 0:
+			if not returnType.isVoid() and not returnType.isEnum() and not returnType.isPrimitive() and returnType.getUserTypePointerLevel() == 0:
 				return
 
 			for param in functionImplementation.parameters:
@@ -3562,9 +3660,9 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				enumCastString = ""
 
 				# Enums are fancy primitives!
-				if paramType.group and paramType.group.groupType == "enum":
-					checkType = paramType.group.extends[0]
-					enumCastString = f"({paramType.getName()})"
+				if paramType.isEnum():
+					enumCastString = f"({paramType.getEnumName()})"
+					checkType = paramType.getPrimitiveEnumType(mainState)
 
 				checkTypeName = checkType.getName()
 				checkTypeCastName = checkType.getCastName()
@@ -3652,8 +3750,8 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				def checkPrimitiveHandling(varType: TypeReference):
 
 					# Enums are fancy primitives!
-					if varType.group and varType.group.groupType == "enum":
-						varType = varType.group.extends[0]
+					if varType.isEnum():
+						varType = varType.getPrimitiveEnumType(mainState)
 
 					varTypeName = varType.getName()
 
@@ -3678,9 +3776,22 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 
 				if not checkPrimitiveHandling(returnType):
-					out.write("tolua_pushusertype(L, (void*)returnVal, \"")
-					if mainState.tryGetGroup(returnType.getName()) != None:
-						returnUserTypeStr = returnType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)
+
+					adjustedReturnType = returnType
+					forcePointer: bool = False
+					primitiveLike: bool = returnType.isPrimitive() or returnType.isEnum()
+
+					if returnType.getUserTypePointerLevel() > (0 if primitiveLike else 1):
+						# UserData objects are initialized with the value of the pointer
+						# which essentially removes one pointer level from the type
+						# (TODO: this should probably be templated somewhere)
+						adjustedReturnType = returnType.shallowCopy()
+						adjustedReturnType.adjustUserTypePointerLevel(mainState, -1)
+						forcePointer = not primitiveLike
+
+					out.write(f"tolua_pushusertype(L, (void*)returnVal, \"")
+					if mainState.tryGetGroup(adjustedReturnType.getName()) != None:
+						returnUserTypeStr = adjustedReturnType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True, forcePointer=forcePointer)
 						out.write(returnUserTypeStr)
 					else:
 						out.write("UnmappedUserType")
@@ -3721,45 +3832,45 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			groupOpenData.constantBindings.append(openConstantData)
 
 
-		def handleHardcodedBindings():
+		# def handleHardcodedBindings():
 
-			if not groupOpenData.hasReasonForOutput or group.lineGroupFlags.isFlagged("noHardcodedBindings"):
-				return
+		# 	if not groupOpenData.hasReasonForOutput or group.lineGroupFlags.isFlagged("noHardcodedBindings"):
+		# 		return
 
-			# Writing getInternalReference() function which returns the userdata's internal pointer
-			if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Array", "ConstArray", "CharString", "ConstCharString"):
+		# 	# Writing getInternalReference() function which returns the userdata's internal pointer
+		# 	if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name not in ("Array", "ConstArray", "CharString", "ConstCharString"):
 
-				skip: bool = False
+		# 		skip: bool = False
 
-				if group.name == "Pointer":
-					innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
-					if innerRef.getUserTypePointerLevel() >= currentTemplate.maxPointerLevel:
-						skip = True
+		# 		if group.name == "Pointer":
+		# 			innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
+		# 			if innerRef.getUserTypePointerLevel() >= currentTemplate.maxPointerLevel:
+		# 				skip = True
 
-				if not skip:
+		# 		if not skip:
 
-					getTypeFunc = OpenFunctionData()
-					getTypeFunc.functionBindingName = resolveIdentifer(f"tolua_function_{groupNameStrIden}_getInternalReference")
-					getTypeFunc.functionName = "getInternalReference"
+		# 			getTypeFunc = OpenFunctionData()
+		# 			getTypeFunc.functionBindingName = resolveIdentifer(f"tolua_function_{groupNameStrIden}_getInternalReference")
+		# 			getTypeFunc.functionName = "getInternalReference"
 
-					out.write(f"static int {getTypeFunc.functionBindingName}(lua_State* L)\n")
-					out.write("{\n")
-					out.write(f"\tvoid** ptr = (void**)lua_touserdata(L, 1);\n")
+		# 			out.write(f"static int {getTypeFunc.functionBindingName}(lua_State* L)\n")
+		# 			out.write("{\n")
+		# 			out.write(f"\tvoid** ptr = (void**)lua_touserdata(L, 1);\n")
 
-					pointerName = f"Pointer<{groupOpenData.appliedHeaderName}>"
-					if group.name == "void":
-						pointerName = "VoidPointer"
-					elif group.name == "Pointer":
-						innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
-						pointerName = f"Pointer<{innerRef.getHeaderName(pointerLevelAdjust=1, useUsertypeOverride=True)}>"
-					elif group.name == "VoidPointer":
-						pointerName = "Pointer<void*>"
+		# 			pointerName = f"Pointer<{groupOpenData.appliedHeaderName}>"
+		# 			if group.name == "void":
+		# 				pointerName = "VoidPointer"
+		# 			elif group.name == "Pointer":
+		# 				innerRef: TypeReference = templateMappingTracker.getMapping("Pointer")[0]
+		# 				pointerName = f"Pointer<{innerRef.getHeaderName(pointerLevelAdjust=1, useUsertypeOverride=True)}>"
+		# 			elif group.name == "VoidPointer":
+		# 				pointerName = "Pointer<void*>"
 
-					out.write(f"\ttolua_pushusertype(L, ptr, \"{pointerName}\");\n")
-					out.write("\treturn 1;\n")
-					out.write("}\n\n")
+		# 			out.write(f"\ttolua_pushusertype(L, ptr, \"{pointerName}\");\n")
+		# 			out.write("\treturn 1;\n")
+		# 			out.write("}\n\n")
 
-					groupOpenData.functionBindings.append(getTypeFunc)
+		# 			groupOpenData.functionBindings.append(getTypeFunc)
 
 
 		for field in group.fields:
@@ -3777,7 +3888,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		if len(group.fields) == 0 and len(group.functionImplementations) == 0 and not group.lineGroupFlags.isFlagged("noBindings"):
 			groupOpenData.hasReasonForOutput = True
 
-		handleHardcodedBindings()
+		#handleHardcodedBindings()
 
 		for subGroup in group.subGroups:
 			writeGroup(subGroup, templateMappingTracker)
@@ -4038,11 +4149,12 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 		mainState.getGroup("CharString").ignoreHeader = True
 		mainState.getGroup("ConstCharString").ignoreHeader = True
 		mainState.getGroup("VoidPointer").ignoreHeader = True
+		mainState.getGroup("Primitive").ignoreHeader = True
 
 	pendingProcessed: list[str] = []
 	for wantedName in wantedNames:
 		wantedRef: TypeReference = defineTypeRef(mainState, None, wantedName, TypeRefSourceType.VARIABLE, isDirectlyWanted=True)
-		wantedGroup: Group = wantedRef.group
+		wantedGroup: Group = wantedRef.getGroup()
 		wantedGroup.isDirectlyWanted = True
 		pendingProcessed.append(wantedGroup.name)
 
@@ -4069,8 +4181,14 @@ def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, p
 			pendingProcessed.append(subGroup.name)
 			wantedNames.add(subGroup.name)
 
+	primitiveGroup: Group = mainState.getGroup("Primitive")
 	for groupNode in mainState.filteredGroups.nodes():
-		if not groupNode.value.isUsed(mainState):
+		group: Group = groupNode.value
+		if group.isUsed(mainState):
+			# Add primitive template for every used enum
+			if group.groupType == "enum":
+				primitiveGroup.addTemplateUse((defineTypeRef(mainState, None, group.name, TypeRefSourceType.VARIABLE),), 0)
+		else:
 			mainState.filteredGroups.remove(groupNode)
 
 	if ignoreHeaderFile:
@@ -4450,6 +4568,11 @@ struct CharString
 };
 
 struct ConstCharString
+{
+};
+
+template<typename T>
+struct Primitive
 {
 };
 		""")

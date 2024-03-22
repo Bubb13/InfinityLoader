@@ -17,7 +17,7 @@ static int tolua_set_EEex_Opcode_LuaHook_AfterListsResolved_Enabled(lua_State* L
 
 static int tolua_get_EEex_reference_Opcode_LuaHook_AfterListsResolved_Enabled(lua_State* L)
 {
-	tolua_pushusertypepointer(L, (void*)&EEex::Opcode_LuaHook_AfterListsResolved_Enabled, "Pointer<bool>");
+	tolua_pushusertype(L, (void*)&EEex::Opcode_LuaHook_AfterListsResolved_Enabled, "Primitive<bool>");
 	return 1;
 }
 
@@ -35,7 +35,7 @@ static int tolua_set_EEex_Projectile_LuaHook_GlobalMutators_Enabled(lua_State* L
 
 static int tolua_get_EEex_reference_Projectile_LuaHook_GlobalMutators_Enabled(lua_State* L)
 {
-	tolua_pushusertypepointer(L, (void*)&EEex::Projectile_LuaHook_GlobalMutators_Enabled, "Pointer<bool>");
+	tolua_pushusertype(L, (void*)&EEex::Projectile_LuaHook_GlobalMutators_Enabled, "Primitive<bool>");
 	return 1;
 }
 

@@ -63,14 +63,6 @@ int memsetUserDataLua(lua_State* L) {
 	return 0;
 }
 
-int newPointerUserDataLua(lua_State* L) {
-	static_assert(std::is_same<std::make_unsigned<lua_Integer>::type, uintptr_t>::value, "lua_Integer cannot hold a pointer");
-	castLuaIntArg(1, uintptr_t, UIntPtr, val)
-	StringA userTypeStr = StringA{ "Pointer<" }.append(lua_tostring(L, 2)).append(">");
-	tolua_pushusertypepointer(L, reinterpret_cast<void*>(val), userTypeStr.c_str());
-	return 1;
-}
-
 int newUserDataLua(lua_State* L) {
 	const char* userTypeStr = lua_tostring(L, 1);
 	lua_getglobal(L, userTypeStr);
@@ -255,9 +247,6 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 
 		exposeToLua(L, "EEex_MemsetUserData", memsetUserDataLua);
 		exposeToLua(L, "EEex_MemsetUD", memsetUserDataLua);
-
-		exposeToLua(L, "EEex_NewUserDataPointer", newPointerUserDataLua);
-		exposeToLua(L, "EEex_NewUDPtr", newPointerUserDataLua);
 
 		exposeToLua(L, "EEex_NewUserData", newUserDataLua);
 		exposeToLua(L, "EEex_NewUD", newUserDataLua);

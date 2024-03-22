@@ -107,7 +107,6 @@ EXPORT char tolua_setter_tochar(lua_State* L, const char* variableName);
 EXPORT void* tolua_tousertype_dynamic(lua_State* L, int narg, void* def, const char* targetUsertype);
 
 EXPORT void tolua_pushusertype_nocast(lua_State* L, void* value, const char* type);
-EXPORT void tolua_pushusertypepointer(lua_State* L, void* value, const char* type);
 EXPORT void tolua_pushusertypestring(lua_State* L, int lo);
 
 ///////////////////////////////////////////////////
