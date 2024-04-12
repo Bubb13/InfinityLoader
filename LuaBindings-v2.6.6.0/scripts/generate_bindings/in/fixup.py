@@ -62,6 +62,8 @@ def fixup(mainState):
 	mainState.getGroup("CGameTrigger").retypeField(mainState, "m_newEntryPoint", "LCharString<32>")
 	mainState.getGroup("CGameTrigger").retypeField(mainState, "m_scriptName", "LCharString<32>")
 	mainState.getGroup("CInfButtonArray").retypeField(mainState, "m_nSelectedButton", "CButtonType")
+	mainState.getGroup("CInfGame").retypeField(mainState, "m_allies", "CTypedPtrList<CPtrList,long>")
+	mainState.getGroup("CInfGame").retypeField(mainState, "m_familiars", "CTypedPtrList<CPtrList,long>")
 	mainState.getGroup("CProjectileArea").retypeField(mainState, "m_portraitNum", "__int8")
 	mainState.getGroup("CSavedGamePartyCreature").retypeField(mainState, "m_name", "LCharString<32>")
 	mainState.getGroup("CSavedGamePartyCreature").retypeField(mainState, "m_pad1", "Array<__int8,2>")

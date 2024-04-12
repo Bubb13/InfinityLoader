@@ -1589,6 +1589,58 @@ void EEex::DeepCopy(lua_State* L) {
 	return;
 }
 
+bool EEex::IsDefaultAttackCursor() {
+
+	CInfGame *const pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
+	CGameArea *const pArea = pGame->m_gameAreas[pGame->m_visibleArea];
+
+	if (pArea == nullptr) {
+		return false;
+	}
+
+	CGameObject* pObject;
+	if (CGameObjectArray::GetShare(pArea->m_iPicked, &pObject) || pObject->m_objectType != CGameObjectType::SPRITE) {
+		return false;
+	}
+
+	CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(pObject);
+
+	return
+	(
+		pGame->m_nState == 0
+		&&
+		pGame->m_group.m_memberList.m_nCount != 0
+		&&
+		(
+			(
+				pGame->GetCharacterPortraitNum(pSprite->m_id) == -1
+				&&
+				!pGame->m_allies.Find(pSprite->m_id, nullptr)
+				&&
+				!pGame->m_familiars.Find(pSprite->m_id, nullptr)
+				&&
+				(
+					pSprite->GetActiveStats()->m_nPuppetMasterId == -1
+					||
+					pSprite->m_typeAI.m_EnemyAlly > 15 // EA_CONTROLCUTOFF
+				)
+			)
+			||
+			(
+				pGame->m_gameSave.m_bArenaMode
+				&&
+				!pSprite->InControl()
+			)
+		)
+		&&
+		(
+			pSprite->m_typeAI.m_EnemyAlly >= 200 // EA_EVILCUTOFF
+			||
+			pSprite->m_typeAI.m_EnemyAlly == 28 // EA_GOODBUTRED
+		)
+	);
+}
+
 /////////////////////////////////
 //          Overrides          //
 /////////////////////////////////
@@ -2489,6 +2541,26 @@ int EEex::Opcode_Hook_ProjectileMutator_ApplyEffect(CGameEffect* pEffect, CGameS
 	return 1;
 
 	STUTTER_LOG_END
+}
+
+void removeProjectileMutatorCache(CDerivedStats& stats, const CGameEffect *const pEffect) {
+
+	ExStatData& exStatData = exStatDataMap[&stats];
+	std::vector<CGameEffect*>& projectileMutatorEffects = exStatData.projectileMutatorEffects;
+
+	const auto end = projectileMutatorEffects.end();
+	const auto pos = std::find(projectileMutatorEffects.begin(), end, pEffect);
+
+	if (pos != end) {
+		projectileMutatorEffects.erase(pos);
+	}
+}
+
+void EEex::Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
+	// The op408 effect is about to be destroyed - remove its cached values
+	removeProjectileMutatorCache(pSprite->m_derivedStats, pEffect);
+	removeProjectileMutatorCache(pSprite->m_tempStats, pEffect);
+	removeProjectileMutatorCache(pSprite->m_bonusStats, pEffect);
 }
 
 // New op409

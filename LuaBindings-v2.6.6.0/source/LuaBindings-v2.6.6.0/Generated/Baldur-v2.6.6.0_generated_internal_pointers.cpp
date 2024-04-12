@@ -21,6 +21,7 @@ CObList::type_RemoveHead CObList::p_RemoveHead;
 CObList::type_RemoveAt CObList::p_RemoveAt;
 CObList::type_Destruct CObList::p_Destruct;
 CObList::type_AddTail CObList::p_AddTail;
+CObList::type_Find CObList::p_Find;
 void* CMessageSetDirection::VFTable;
 void* CMessageDisplayTextRef::VFTable;
 void* CMessageDisplayText::VFTable;
@@ -111,6 +112,7 @@ CInfGame::type_SelectToolbar CInfGame::p_SelectToolbar;
 CInfGame::type_SetState CInfGame::p_SetState;
 CInfGame::type_SetIconIndex CInfGame::p_SetIconIndex;
 CInfGame::type_UnselectAll CInfGame::p_UnselectAll;
+CInfGame::type_GetCharacterPortraitNum CInfGame::p_GetCharacterPortraitNum;
 CGameEffect::type_DecodeEffect CGameEffect::p_DecodeEffect;
 CDerivedStats::type_Construct CDerivedStats::p_Construct;
 CDerivedStats::type_Destruct CDerivedStats::p_Destruct;
@@ -138,6 +140,7 @@ CAIAction::type_ConstructCopy CAIAction::p_ConstructCopy;
 CAIAction::type_Destruct CAIAction::p_Destruct;
 CAIAction::type_operator_equ CAIAction::p_operator_equ;
 CAIAction::type_Decode CAIAction::p_Decode;
+CGameObject::type_InControl CGameObject::p_InControl;
 Array<byte,16>* CGameObject::p_DEFAULT_VISIBLE_TERRAIN_TABLE;
 Array<byte,16>* CGameObject::p_DEFAULT_TERRAIN_TABLE;
 CProjectile::type_AddEffect CProjectile::p_AddEffect;
@@ -176,11 +179,11 @@ static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
 			break;
 		}
 		case PatternValueType::INVALID: {
-			PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game\n"), patternName.c_str());
+			PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] attemptFillPointer() - Binding pattern [%s] missing; using this binding will crash the game\n"), patternName.c_str());
 			break;
 		}
 		default: {
-			PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game\n"), patternName.c_str());
+			PrintT(TEXT("[!][LuaBindings-v2.6.6.0.dll] attemptFillPointer() - Binding pattern [%s].Type not SINGLE; using this binding will crash the game\n"), patternName.c_str());
 			break;
 		}
 	}
@@ -207,6 +210,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CObList::RemoveAt"), CObList::p_RemoveAt);
 	attemptFillPointer(TEXT("CObList::Destruct"), CObList::p_Destruct);
 	attemptFillPointer(TEXT("CObList::AddTail"), CObList::p_AddTail);
+	attemptFillPointer(TEXT("CObList::Find"), CObList::p_Find);
 	attemptFillPointer(TEXT("CMessageSetDirection::VFTable"), CMessageSetDirection::VFTable);
 	attemptFillPointer(TEXT("CMessageDisplayTextRef::VFTable"), CMessageDisplayTextRef::VFTable);
 	attemptFillPointer(TEXT("CMessageDisplayText::VFTable"), CMessageDisplayText::VFTable);
@@ -297,6 +301,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CInfGame::SetState"), CInfGame::p_SetState);
 	attemptFillPointer(TEXT("CInfGame::SetIconIndex"), CInfGame::p_SetIconIndex);
 	attemptFillPointer(TEXT("CInfGame::UnselectAll"), CInfGame::p_UnselectAll);
+	attemptFillPointer(TEXT("CInfGame::GetCharacterPortraitNum"), CInfGame::p_GetCharacterPortraitNum);
 	attemptFillPointer(TEXT("CGameEffect::DecodeEffect"), CGameEffect::p_DecodeEffect);
 	attemptFillPointer(TEXT("CDerivedStats::Construct"), CDerivedStats::p_Construct);
 	attemptFillPointer(TEXT("CDerivedStats::Destruct"), CDerivedStats::p_Destruct);
@@ -324,6 +329,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CAIAction::Destruct"), CAIAction::p_Destruct);
 	attemptFillPointer(TEXT("CAIAction::operator_equ"), CAIAction::p_operator_equ);
 	attemptFillPointer(TEXT("CAIAction::Decode"), CAIAction::p_Decode);
+	attemptFillPointer(TEXT("CGameObject::InControl"), CGameObject::p_InControl);
 	attemptFillPointer(TEXT("CGameObject::DEFAULT_VISIBLE_TERRAIN_TABLE"), CGameObject::p_DEFAULT_VISIBLE_TERRAIN_TABLE);
 	attemptFillPointer(TEXT("CGameObject::DEFAULT_TERRAIN_TABLE"), CGameObject::p_DEFAULT_TERRAIN_TABLE);
 	attemptFillPointer(TEXT("CProjectile::AddEffect"), CProjectile::p_AddEffect);

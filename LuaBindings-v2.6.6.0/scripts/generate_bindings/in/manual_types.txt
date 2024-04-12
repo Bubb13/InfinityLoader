@@ -246,11 +246,6 @@ struct Array
 		data[index] = value;
 	}
 
-	$nobinding T& operator[](size_t index)
-	{
-		return data[index];
-	}
-
 	$nobinding operator T*()
 	{
 		return &data[0];
@@ -427,6 +422,13 @@ struct CTypedPtrList : CObject
 	{
 		#pragma warning(disable:4312)
 		return (CTypedPtrList::CNode*)((CObList*)this)->AddTail((void*)newElement);
+		#pragma warning(default:4312)
+	}
+
+	CTypedPtrList::CNode* Find(T searchValue, __POSITION* startAfter)
+	{
+		#pragma warning(disable:4312)
+		return (CTypedPtrList::CNode*)((CObList*)this)->Find((void*)searchValue, startAfter);
 		#pragma warning(default:4312)
 	}
 
@@ -869,6 +871,7 @@ struct CObList : CObject
 	void RemoveAt(__POSITION* position);
 	void Destruct();
 	__POSITION* AddTail(void* newElement);
+	__POSITION* Find(void* searchValue, __POSITION* startAfter);
 };
 
 struct CGameObjectArray
@@ -935,6 +938,7 @@ struct CInfGame
 	void SetState(__int16 state, bool allowDead);
 	void SetIconIndex(unsigned __int8 iconIndex);
 	void UnselectAll();
+	short GetCharacterPortraitNum(int characterId);
 };
 
 struct CSpell : CResHelper<CResSpell,1006>
@@ -971,6 +975,7 @@ struct CGameObject
 {
 	static byte DEFAULT_VISIBLE_TERRAIN_TABLE[16];
 	static byte DEFAULT_TERRAIN_TABLE[16];
+	byte InControl();
 };
 
 struct CGameArea

@@ -16632,6 +16632,19 @@ struct CVideo
 
 extern CBaldurChitin** p_g_pBaldurChitin;
 
+template<typename T>
+struct Primitive
+{
+	T value;
+
+	Primitive() = delete;
+};
+
+struct UnmappedUserType
+{
+	UnmappedUserType() = delete;
+};
+
 struct VoidPointer
 {
 	void* reference;
@@ -22269,16 +22282,6 @@ struct CInfinity
 	undefined _0x31B;
 
 	CInfinity() = delete;
-};
-
-struct UnmappedUserType
-{
-	UnmappedUserType() = delete;
-
-	uintptr_t toPointer()
-	{
-		return (uintptr_t)this;
-	}
 };
 
 struct CGameTrigger
@@ -29590,9 +29593,9 @@ struct Array
 		data[index] = value;
 	}
 
-	T& operator[](size_t index)
+	operator T*()
 	{
-		return data[index];
+		return &data[0];
 	}
 };
 

@@ -103,6 +103,13 @@ static int tolua_function_EEex_DrawSlicedRect(lua_State* L)
 	return 0;
 }
 
+static int tolua_function_EEex_IsDefaultAttackCursor(lua_State* L)
+{
+	bool returnVal = EEex::IsDefaultAttackCursor();
+	tolua_pushboolean(L, (bool)returnVal);
+	return 1;
+}
+
 static void tolua_reg_types(lua_State* L)
 {
 	tolua_usertype(L, "EEex_MatchObjectFlags");
@@ -167,6 +174,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
 		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
+		tolua_function(L, "IsDefaultAttackCursor", &tolua_function_EEex_IsDefaultAttackCursor);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");

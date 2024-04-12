@@ -16,6 +16,7 @@ python %script_path%^
  -preludeFile=./in/prelude.txt^
  -suffixFile=./in/suffix.txt^
  -wantedFile=./in/wanted_types.txt^
+ -printFuncWideString=PrintT^
  > log.txt 2>&1
 
 copy /Y .\out\engine_structs_generated.h ..\..\headers\LuaBindings-PSTEE_generated

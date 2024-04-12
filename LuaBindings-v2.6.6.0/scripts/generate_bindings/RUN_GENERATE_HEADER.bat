@@ -16,6 +16,7 @@ python %script_path%^
  -packingFile=./in/packing.txt^
  -preludeFile=./in/prelude.txt^
  -wantedFile=./in/wanted_types.txt^
+ -printFuncWideString=PrintT^
  > log.txt 2>&1
 
 copy /Y .\out\Baldur-v2.6.6.0_generated.h ..\..\headers\LuaBindings-v2.6.6.0_generated\

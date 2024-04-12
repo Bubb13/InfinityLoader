@@ -462,6 +462,11 @@ class MainState:
 		self.globalGroup: Group = None
 		self.filteredGroups: UniqueList[Group] = UniqueList()
 		self.noCustomTypes: bool = None
+		self.manualPatternHandling: bool = False
+		self.forceByteStrings: bool = False
+		self.printFuncByteString: str = None
+		self.printFuncWideString: str = None
+		self.printFuncOmitNewline: bool = False
 		self.idaUnnamedScheme: bool = False
 		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 
@@ -1353,6 +1358,7 @@ class FunctionImplementationParameter:
 class FunctionImplementation:
 
 	def __init__(self):
+		self.hasVarargs: bool = None
 		self.isConst: bool = None
 		self.isStatic: bool = None
 		self.returnType: TypeReference = None
@@ -1379,6 +1385,7 @@ class FunctionImplementation:
 
 	def shallowCopy(self, copy=None):
 		copy = copy if copy != None else FunctionImplementation()
+		copy.hasVarargs = self.hasVarargs
 		copy.isConst = self.isConst
 		copy.isStatic = self.isStatic
 		copy.returnType = self.returnType.shallowCopy()
@@ -1441,6 +1448,15 @@ class FunctionImplementation:
 	def toString(self, mainState: MainState, indent="", eof: bool = False):
 
 		parts: list[str] = [indent]
+
+		if self.hasVarargs:
+
+			if not eof:
+				parts.append("\t")
+
+			parts.append("template<typename... VarArgs>\n")
+			parts.append(indent)
+
 		if self.group != mainState.globalGroup:
 			if not eof:
 				parts.append("\t")
@@ -1481,7 +1497,9 @@ class FunctionImplementation:
 			parts.append(parameter.name)
 			parts.append(", ")
 
-		if self.customReturnCount or self.passLuaState or len(self.parameters) > 0:
+		if self.hasVarargs:
+			parts.append("VarArgs... varArgs")
+		elif self.customReturnCount or self.passLuaState or len(self.parameters) > 0:
 			parts.pop()
 
 		parts.append(")")
@@ -1529,7 +1547,9 @@ class FunctionImplementation:
 				parts.append(parameter.name)
 				parts.append(", ")
 
-			if not self.isStatic or len(self.parameters) > 0:
+			if self.hasVarargs:
+				parts.append("varArgs...")
+			elif not self.isStatic or len(self.parameters) > 0:
 				del parts[-1]
 
 			parts.append(");\n")
@@ -1567,7 +1587,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 	isGlobal = group == mainState.globalGroup
 
-	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=* ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*\\)\\s*(const)?\\s*(?:(;))?$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=* ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1666,8 +1686,9 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 				state.currentFunctionImplementation.parameters.append(funcParameter)
 
-		state.currentFunctionImplementation.isConst = functionImplementationMatch.group(11) != None
-		state.currentFunctionImplementation.noBody = functionImplementationMatch.group(12) != None
+		state.currentFunctionImplementation.hasVarargs = functionImplementationMatch.group(11) != None
+		state.currentFunctionImplementation.isConst = functionImplementationMatch.group(12) != None
+		state.currentFunctionImplementation.noBody = functionImplementationMatch.group(13) != None
 
 
 	if state.currentFunctionImplementation != None:
@@ -1719,6 +1740,41 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 		variableField.variableName = variableMatch.group(3)
 
 		group.addField(variableField)
+
+
+	# Define function fields
+	functionVariableMatch: Match = re.match("^\\s*(?!typedef\\s+)((?:(?:nopointer)\\s+)*)([, _a-zA-Z0-9*:<>]+?)\\s*\\(\\s*(?:([_a-zA-Z]+?)\\s*){0,1}(\\*+)\\s*([_a-zA-Z0-9~]+)\\s*\\)\\s*\\((?:\\s*([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*this(?:\\s*,\\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*result(?:\\s*,\\s+){0,1}){0,1}\\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\\.\\.\\.(?=\\s*\\))){0,1}){0,1}\\s*\\)\\;$", line)
+	if functionVariableMatch != None:
+
+		functionField = FunctionField()
+		state.lineGroupFlags.applyTo(functionField.lineGroupFlags)
+
+		if keywordMatch := functionVariableMatch.group(1):
+			for keyword in keywordMatch.strip().split(" "):
+				if keyword == "nopointer":
+					assert not functionField.nopointer, "nopointer already defined"
+					functionField.nopointer = True
+
+		functionField.returnType = defineTypeRef(mainState, group, functionVariableMatch.group(2), TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-2 {line}")
+		functionField.callConvention = functionVariableMatch.group(3)
+		functionField.pointerLevel = len(functionVariableMatch.group(4))
+
+		functionField.functionName = functionVariableMatch.group(5)
+		if functionField.functionName.startswith("~"):
+			functionField.functionName = "Destruct"
+
+		if thisTypeNoPtrMatch := functionVariableMatch.group(6):
+			functionField.thisType = defineTypeRef(mainState, group, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-3 {line}")
+
+		if resultTypeNoPtrMatch := functionVariableMatch.group(7):
+			functionField.resultType = defineTypeRef(mainState, group, f"{resultTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-4 {line}")
+
+		parameterStr = functionVariableMatch.group(8)
+		if parameterStr != None and parameterStr != "":
+			for paramType in splitKeepBrackets(parameterStr, [","]):
+				functionField.parameterTypes.append(defineTypeRef(mainState, group, paramType, TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-5 {line}"))
+
+		group.addField(functionField)
 
 
 
@@ -1811,6 +1867,7 @@ class Group:
 		self.numOriginalVFuncs: int = None
 
 		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
+		self.allowDefaultConstruction: bool = False
 
 
 
@@ -1975,40 +2032,16 @@ class Group:
 				checkUnnamedStructs(mainState, unnamedStructsState, self, line)
 
 				# Define extends types
-				declMatch: Match = re.match("^(?:\\$pack_(\\d+)\\s+){0,1}(?:const\\s+){0,1}(?:struct|class|enum|union)\\s+(?:\\/\\*VFT\\*\\/\\s+){0,1}(?:__cppobj\\s+){0,1}(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}[^;]*?(?:\\s+\\:\\s+(.*?)){0,1}\\s*$", line)
+				declMatch: Match = re.match("^(?:(?:\\$pack_(\\d+)|\\$allow_default_construction\\((true|false)\\))\\s+)*(?:const\\s+){0,1}(?:struct|class|enum|union)\\s+(?:\\/\\*VFT\\*\\/\\s+){0,1}(?:__cppobj\\s+){0,1}(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}[^;]*?(?:\\s+\\:\\s+(.*?)){0,1}\\s*$", line)
 				if declMatch != None:
 					if packGroup := declMatch.group(1):
 						self.pack = int(packGroup)
-					extendsStr = declMatch.group(2)
+					if allowDefaultConstructionGroup := declMatch.group(2):
+						self.allowDefaultConstruction = allowDefaultConstructionGroup == "true"
+					extendsStr = declMatch.group(3)
 					if extendsStr != None:
 						for extendsType in splitKeepBrackets(extendsStr, [","]):
 							self.extends.append(defineTypeRef(mainState, self, extendsType, TypeRefSourceType.VARIABLE, debugLine=f"processLinesFillTypes()-1 {line}"))
-
-				# Define function fields
-				functionVariableMatch: Match = re.match("^\t([, _a-zA-Z0-9*:<>]+?)\\s*\\(\\s*(?:([_a-zA-Z]+?)\\s*){0,1}\\*\\s*([_a-zA-Z0-9~]+)\\s*\\)\\s*\\((?:\\s*([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*this(?:\\s*,\\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*result(?:\\s*,\\s+){0,1}){0,1}\\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\\.\\.\\.(?=\\s*\\))){0,1}){0,1}\\s*\\)\\;$", line)
-				if functionVariableMatch != None:
-
-					functionField = FunctionField()
-					functionField.returnType = defineTypeRef(mainState, self, functionVariableMatch.group(1), TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-2 {line}")
-					functionField.callConvention = functionVariableMatch.group(2)
-					functionField.functionName = functionVariableMatch.group(3)
-					state.lineGroupFlags.applyTo(functionField.lineGroupFlags)
-
-					if functionField.functionName.startswith("~"):
-						functionField.functionName = "Destruct"
-
-					if thisTypeNoPtrMatch := functionVariableMatch.group(4):
-						functionField.thisType = defineTypeRef(mainState, self, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-3 {line}")
-
-					if resultTypeNoPtrMatch := functionVariableMatch.group(5):
-						functionField.resultType = defineTypeRef(mainState, self, f"{resultTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-4 {line}")
-
-					parameterStr = functionVariableMatch.group(6)
-					if parameterStr != None and parameterStr != "":
-						for paramType in splitKeepBrackets(parameterStr, [","]):
-							functionField.parameterTypes.append(defineTypeRef(mainState, self, paramType, TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-5 {line}"))
-
-					self.addField(functionField)
 
 				processCommonGroupLines(mainState, state, line, self)
 
@@ -2494,7 +2527,7 @@ class Group:
 					else:
 						funcName = functionImp.bindingName
 
-					realVariableName: str = f"{group.name}::{funcName}" if isNormal else functionImp.name
+					realVariableName: str = f"{group.name}::{funcName}" if isNormal else funcName
 					pointerVariableName: str = f"{group.name}::p_{functionImp.funcPtrName}" if isNormal else f"p_{functionImp.funcPtrName}"
 
 					pointerVariableTypeName: str = f"type_{functionImp.funcPtrName}"
@@ -2520,7 +2553,9 @@ class Group:
 							parts.append(f"{param.type.getHeaderName()} {param.name}")
 							parts.append(", ")
 
-						if (isNormal and not functionImp.isStatic) or len(functionImp.parameters) > 0:
+						if functionImp.hasVarargs:
+							parts.append("...")
+						elif (isNormal and not functionImp.isStatic) or len(functionImp.parameters) > 0:
 							del parts[-1]
 
 						parts.append(");\n")
@@ -2548,14 +2583,23 @@ class Group:
 					if field.type == FieldType.VARIABLE:
 						varField: VariableField = field
 						pointerLevelAdjust: int = 0 if varField.nopointer else 1
-						varStr = f"{varField.variableType.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)} p_{varField.variableName};"
+						varStr = f"{varField.variableType.getHeaderName(pointerLevelAdjust=pointerLevelAdjust)} {'' if varField.nopointer else 'p_'}{varField.variableName};"
 						internalPointersOut.write(f"{varStr}\n")
-						internalPointersListOut.append((varField.variableName, f"p_{varField.variableName}"))
+						internalPointersListOut.append((varField.variableName, f"{'' if varField.nopointer else 'p_'}{varField.variableName}"))
+						parts.append(f"extern {varStr}")
+						parts.append("\n")
+						wroteSomething = True
+					elif field.type == FieldType.FUNCTION:
+						funcField: FunctionField = field
+						pointerLevelAdjust: int = 0 if funcField.nopointer else 1
+						varStr = f"{funcField.toString(mainState, pointerLevelAdjust=pointerLevelAdjust, addPointerPrefixToName=not funcField.nopointer)}"
+						internalPointersOut.write(f"{varStr}\n")
+						internalPointersListOut.append((funcField.getName(), f"{'' if funcField.nopointer else 'p_'}{funcField.getName()}"))
 						parts.append(f"extern {varStr}")
 						parts.append("\n")
 						wroteSomething = True
 					else:
-						print("BAD FIELD TYPE")
+						assert "BAD FIELD TYPE"
 
 			return wroteSomething
 
@@ -2622,7 +2666,7 @@ class Group:
 				parts.append("\n")
 				needExtraNewlineBeforeFuncImps = True
 
-			if not mainState.noCustomTypes and self.groupType not in ("enum", "namespace") and self.name not in ("Array", "ConstArray"):
+			if not mainState.noCustomTypes and not self.allowDefaultConstruction and self.groupType not in ("enum", "namespace") and self.name not in ("Array", "ConstArray"):
 
 				deleteDefault: bool = True
 				for funcImp in self.functionImplementations:
@@ -2812,10 +2856,12 @@ class FunctionField(Field):
 		self.type = FieldType.FUNCTION
 		self.returnType: TypeReference = None
 		self.callConvention: str = None
+		self.pointerLevel: int = None
 		self.functionName: str = None
 		self.thisType: TypeReference = None
 		self.resultType: TypeReference = None
 		self.parameterTypes: list[TypeReference] = []
+		self.nopointer: bool = False
 
 
 	def shallowCopy(self, copy=None):
@@ -2824,6 +2870,7 @@ class FunctionField(Field):
 		copy.type = self.type
 		copy.returnType = self.returnType.shallowCopy()
 		copy.callConvention = self.callConvention
+		copy.pointerLevel = self.pointerLevel
 		copy.functionName = self.functionName
 		copy.thisType = self.thisType.shallowCopy() if self.thisType != None else None
 		copy.resultType = self.resultType.shallowCopy() if self.resultType != None else None
@@ -2867,7 +2914,7 @@ class FunctionField(Field):
 		self.functionName = newName
 
 
-	def toString(self, mainState: MainState, typeManipulator: Callable[[str], str]=None, indent="") -> str:
+	def toString(self, mainState: MainState, typeManipulator: Callable[[str], str]=None, indent="", addPointerPrefixToName: bool=False, pointerLevelAdjust: int=0) -> str:
 
 		parts = [indent, self.returnType.getHeaderName(typeManipulator=typeManipulator), " ("]
 
@@ -2875,7 +2922,9 @@ class FunctionField(Field):
 			parts.append(self.callConvention)
 			parts.append(" ")
 
-		parts.append("*")
+		parts.append("*" * (self.pointerLevel + pointerLevelAdjust))
+		if addPointerPrefixToName:
+			parts.append("p_")
 		parts.append(self.functionName)
 		parts.append(")(")
 
@@ -4352,7 +4401,18 @@ def outputHeader(mainState: MainState, outputFileName: str, dllName: str, out: T
 
 		if internalPointersOut:
 
-			internalPointersOut.write(f"""
+			if mainState.manualPatternHandling:
+				out.write("\ntypedef std::function<uintptr_t(const char*)> type_attemptFillPointerCallback;\n")
+				out.write("void InitBindingsInternal(type_attemptFillPointerCallback);\n")
+
+			printFunc: str = mainState.printFuncWideString if not mainState.forceByteStrings else mainState.printFuncByteString
+			strStart: str = "TEXT(\"" if not mainState.forceByteStrings else "\""
+			strNewline: str = "\\n" if not mainState.printFuncOmitNewline else ""
+			strEnd: str = "\")" if not mainState.forceByteStrings else "\""
+
+			if not mainState.manualPatternHandling:
+
+				internalPointersOut.write(f"""
 template<typename OutType>
 static void attemptFillPointer(const String& patternName, OutType& pointerOut) {{
 	PatternValueHandle patternHandle;
@@ -4362,11 +4422,11 @@ static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
 			break;
 		}}
 		case PatternValueType::INVALID: {{
-			PrintT(TEXT("[!][{dllName}] attemptFillPointer() - Function pattern [%s] not present for bindings; calling this function will crash the game\\n"), patternName.c_str());
+			{printFunc}({strStart}[!][{dllName}] attemptFillPointer() - Binding pattern [%s] missing; using this binding will crash the game{strNewline}{strEnd}, patternName.c_str());
 			break;
 		}}
 		default: {{
-			PrintT(TEXT("[!][{dllName}] attemptFillPointer() - Function pattern [%s].Type must be SINGLE; calling this function will crash the game\\n"), patternName.c_str());
+			{printFunc}({strStart}[!][{dllName}] attemptFillPointer() - Binding pattern [%s].Type not SINGLE; using this binding will crash the game{strNewline}{strEnd}, patternName.c_str());
 			break;
 		}}
 	}}
@@ -4374,10 +4434,26 @@ static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
 
 void InitBindingsInternal() {{
 """
-			)
+				)
+			else:
+				internalPointersOut.write(f"""
+template<typename OutType>
+static void attemptFillPointer(const char *const patternName, OutType& pointerOut, type_attemptFillPointerCallback callback) {{
+	const uintptr_t patternValue = callback(patternName);
+	if (patternValue == 0x0) {{
+		{printFunc}({strStart}[!][{dllName}] attemptFillPointer() - Binding pattern [%s] missing; using this binding will crash the game{strNewline}{strEnd}, patternName);
+		return;
+	}}
+	pointerOut = reinterpret_cast<OutType>(patternValue);
+}}
 
+void InitBindingsInternal(type_attemptFillPointerCallback callback) {{
+"""
+				)
+
+			callbackArgument: str = "" if not mainState.manualPatternHandling else ", callback"
 			for internalPointerNameTup in internalPointersList:
-				internalPointersOut.write(f"\tattemptFillPointer(TEXT(\"{internalPointerNameTup[0]}\"), {internalPointerNameTup[1]});\n")
+				internalPointersOut.write(f"\tattemptFillPointer({strStart}{internalPointerNameTup[0]}{strEnd}, {internalPointerNameTup[1]}{callbackArgument});\n")
 
 			internalPointersOut.write("}\n")
 
@@ -4406,6 +4482,33 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 	hitFirstBracket = False
 	previousTemplate: str = None
 	alreadyExisted = False
+	ignoreGroup = False
+
+	def checkGroupLine(line: str) -> Tuple[bool,bool]:
+		nonlocal groupLevel
+		nonlocal hitFirstBracket
+		nonlocal alreadyExisted
+		openBracketCount: int = line.count("{")
+		groupLevel += openBracketCount
+		groupLevel -= line.count("}")
+		appendLine: bool = not alreadyExisted or (groupLevel > 0 and hitFirstBracket)
+		if openBracketCount > 0: hitFirstBracket = True
+		groupDone: bool = hitFirstBracket and groupLevel == 0
+		return (appendLine, groupDone)
+
+
+	def clearGroupState():
+		nonlocal currentGroup
+		nonlocal currentLineCollection
+		nonlocal hitFirstBracket
+		nonlocal alreadyExisted
+		nonlocal ignoreGroup
+		currentGroup = None
+		currentLineCollection = None
+		hitFirstBracket = False
+		alreadyExisted = False
+		ignoreGroup = False
+
 
 	def processLine(line: str):
 
@@ -4416,83 +4519,84 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 		nonlocal hitFirstBracket
 		nonlocal previousTemplate
 		nonlocal alreadyExisted
-
+		nonlocal ignoreGroup
 		line = line.rstrip()
-		leftOfExtends = None
-		try:
-			colonIndex = line.index(":")
-			leftOfExtends = line[:colonIndex].strip()
-		except ValueError:
-			leftOfExtends = line
+		
+		if not ignoreGroup:
+		
+			leftOfExtends = None
+			try:
+				colonIndex = line.index(":")
+				leftOfExtends = line[:colonIndex].strip()
+			except ValueError:
+				leftOfExtends = line
 
-		split = splitKeepBrackets(leftOfExtends, [" "])
-		declMatch: Match = re.match("^(?:\\$pack_\\d+\\s+){0,1}(?:const\\s+){0,1}(struct|class|enum|union|namespace)\\s+(?:\\/\\*VFT\\*\\/\\s+){0,1}(?:__cppobj\\s+){0,1}(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}([^;]*?)(?:\\s+\\:\\s+(.*?)){0,1}\\s*$", line)
+			split = splitKeepBrackets(leftOfExtends, [" "])
+			declMatch: Match = re.match("^(?:(?:\\$pack_\\d+|\\$allow_default_construction\\((?:true|false)\\))\\s+)*(?:const\\s+){0,1}(struct|class|enum|union|namespace)\\s+(?:\\/\\*VFT\\*\\/\\s+){0,1}(?:__cppobj\\s+){0,1}(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}([^;]*?)(?:\\s+\\:\\s+(.*?)){0,1}\\s*$", line)
 
-		# Attempt to start Group and fill .template, .groupType, .name, and .singleName
-		if declMatch != None:
+			# Attempt to start Group and fill .template, .groupType, .name, and .singleName
+			if declMatch != None:
 
-			nameStr: str = declMatch.group(2)
+				nameStr: str = declMatch.group(2)
 
-			existingGroup = mainState.tryGetGroup(nameStr)
-			if existingGroup and existingGroup.defined:
-				alreadyExisted = True
-				currentGroup = existingGroup
-			else:
-				# Don't add explicitly defined template types (these need to be defined manually by me)
-				nameParts = splitKeepBrackets(nameStr, ["::"])
-				needContinue = False
-				for namePart in nameParts:
-					if namePart.startswith("<"): continue
-					if namePart.find("<") != -1:
-						needContinue = True
-						break
+				existingGroup = mainState.tryGetGroup(nameStr)
+				if existingGroup and existingGroup.defined:
+					alreadyExisted = True
+					currentGroup = existingGroup
+				else:
+					# Don't add explicitly defined template types (these need to be defined manually by me)
+					nameParts = splitKeepBrackets(nameStr, ["::"])
+					for namePart in nameParts:
+						if namePart.startswith("<"): continue
+						if namePart.find("<") != -1:
+							ignoreGroup = True
+							break
 
-				if needContinue:
-					return
+					if not ignoreGroup:
+						currentGroup = Group()
+						currentGroup.template = previousTemplate
+						currentGroup.groupType = declMatch.group(1)
+						currentGroup.defined = True
+						mainState.lineGroupFlags.applyTo(currentGroup.lineGroupFlags)
+						currentGroup.updateSingleName(mainState, nameStr)
 
-				currentGroup = Group()
-				currentGroup.template = previousTemplate
-				currentGroup.groupType = declMatch.group(1)
-				currentGroup.defined = True
-				mainState.lineGroupFlags.applyTo(currentGroup.lineGroupFlags)
-				currentGroup.updateSingleName(mainState, nameStr)
+				if not ignoreGroup:
+					currentLineCollection = GroupLineCollection()
+					mainState.lineGroupFlags.applyTo(currentLineCollection.lineGroupFlags)
+					currentGroup.lineCollections.append(currentLineCollection)
 
-			currentLineCollection = GroupLineCollection()
-			mainState.lineGroupFlags.applyTo(currentLineCollection.lineGroupFlags)
-			currentGroup.lineCollections.append(currentLineCollection)
 
 		# Track template lines, (previousTemplate is only set if the previous line was a template declaration outside of a Group)
-		if currentGroup == None and len(split) >= 1 and stripTypeBrackets(split[0]) == "template":
+		if not ignoreGroup and currentGroup == None and len(split) >= 1 and stripTypeBrackets(split[0]) == "template":
 			previousTemplate = line
 		else:
 			previousTemplate = None
 
-		# Track Group lines
-		if currentGroup != None:
+		if not ignoreGroup:
 
-			openBracketCount = line.count("{")
-			groupLevel += openBracketCount
-			groupLevel -= line.count("}")
+			# Track Group lines
+			if currentGroup != None:
 
-			# TODO: Store struct declaration separately so separately definitions can override the previous ones
-			if (not alreadyExisted or (groupLevel > 0 and hitFirstBracket)):
-				currentLineCollection.lines.append(line)
+				appendLine, groupDone = checkGroupLine(line)
 
-			if openBracketCount > 0: hitFirstBracket = True
+				# TODO: Store struct declaration separately so separately definitions can override the previous ones
+				if appendLine:
+					currentLineCollection.lines.append(line)
 
-			if hitFirstBracket and groupLevel == 0:
-				# Register Group
-				if not alreadyExisted:
-					mainState.addGroup(currentGroup)
+				if groupDone:
+					if not alreadyExisted:
+						# Register Group
+						mainState.addGroup(currentGroup)
 
-				currentGroup = None
-				currentLineCollection = None
-				hitFirstBracket = False
-				alreadyExisted = False
-
+					clearGroupState()
+			else:
+				# Process the global group's lines
+				processCommonGroupLines(mainState, state, line, mainState.globalGroup)
 		else:
-			# Process the global group's lines
-			processCommonGroupLines(mainState, state, line, mainState.globalGroup)
+			_, groupDone = checkGroupLine(line)
+			if groupDone:
+				clearGroupState()
+
 
 	if filePath:
 		with open(filePath) as file:
@@ -4538,19 +4642,24 @@ def main():
 		if   k == "-normal":  assert False, "-normal removed"
 		elif k == "-cleaned": assert False, "-cleaned removed"
 		elif k == "-noCustomTypes": mainState.noCustomTypes = True
-		elif (v := re.search("-inFiles=(.+)",                     k)) != None: inputFileNames              = v.group(1)
-		elif (v := re.search("-outFile=(.+)",                     k)) != None: outputFileName              = v.group(1)
-		elif (v := re.search("-bindingsOutFile=(.+)",             k)) != None: bindingsFileName            = v.group(1)
-		elif (v := re.search("-fixupFile=(.+)",                   k)) != None: fixupFileName               = v.group(1)
-		elif (v := re.search("-preludeFile=(.+)",                 k)) != None: preludeFile                 = v.group(1)
-		elif (v := re.search("-suffixFile=(.+)",                  k)) != None: suffixFile                  = v.group(1)
-		elif (v := re.search("-bindingsPreludeFile=(.+)",         k)) != None: bindingsPreludeFile         = v.group(1)
-		elif (v := re.search("-ignoreHeaderFile=(.+)",            k)) != None: ignoreHeaderFile            = v.group(1)
-		elif (v := re.search("-wantedFile=(.+)",                  k)) != None: wantedFile                  = v.group(1)
-		elif (v := re.search("-manualTypesFile=(.+)",             k)) != None: manualTypesFile             = v.group(1)
-		elif (v := re.search("-alreadyDefinedUsertypesFile=(.+)", k)) != None: alreadyDefinedUsertypesFile = v.group(1)
-		elif (v := re.search("-packingFile=(.+)",                 k)) != None: packingFile                 = v.group(1)
-		elif (v := re.search("-dllName=(.+)",                     k)) != None: dllName                     = v.group(1)
+		elif k == "-manualPatternHandling": mainState.manualPatternHandling = True
+		elif k == "-forceByteStrings": mainState.forceByteStrings = True
+		elif k == "-printFuncOmitNewline": mainState.printFuncOmitNewline = True
+		elif (v := re.search("-inFiles=(.+)",                     k)) != None: inputFileNames                = v.group(1)
+		elif (v := re.search("-outFile=(.+)",                     k)) != None: outputFileName                = v.group(1)
+		elif (v := re.search("-bindingsOutFile=(.+)",             k)) != None: bindingsFileName              = v.group(1)
+		elif (v := re.search("-fixupFile=(.+)",                   k)) != None: fixupFileName                 = v.group(1)
+		elif (v := re.search("-preludeFile=(.+)",                 k)) != None: preludeFile                   = v.group(1)
+		elif (v := re.search("-suffixFile=(.+)",                  k)) != None: suffixFile                    = v.group(1)
+		elif (v := re.search("-bindingsPreludeFile=(.+)",         k)) != None: bindingsPreludeFile           = v.group(1)
+		elif (v := re.search("-ignoreHeaderFile=(.+)",            k)) != None: ignoreHeaderFile              = v.group(1)
+		elif (v := re.search("-wantedFile=(.+)",                  k)) != None: wantedFile                    = v.group(1)
+		elif (v := re.search("-manualTypesFile=(.+)",             k)) != None: manualTypesFile               = v.group(1)
+		elif (v := re.search("-alreadyDefinedUsertypesFile=(.+)", k)) != None: alreadyDefinedUsertypesFile   = v.group(1)
+		elif (v := re.search("-packingFile=(.+)",                 k)) != None: packingFile                   = v.group(1)
+		elif (v := re.search("-dllName=(.+)",                     k)) != None: dllName                       = v.group(1)
+		elif (v := re.search("-printFuncByteString=(.+)",         k)) != None: mainState.printFuncByteString = v.group(1)
+		elif (v := re.search("-printFuncWideString=(.+)",         k)) != None: mainState.printFuncWideString = v.group(1)
 
 
 	mainState.globalGroup = Group()

@@ -31,6 +31,7 @@ namespace EEex
 	$external_implementation $pass_lua_state void DrawSlicedRectNum();
 	$external_implementation $pass_lua_state void RegisterSlicedRect();
 	$external_implementation $pass_lua_state void DrawSlicedRect();
+	$external_implementation bool IsDefaultAttackCursor();
 };
 
 enum EEex::ProjectileType : __int32

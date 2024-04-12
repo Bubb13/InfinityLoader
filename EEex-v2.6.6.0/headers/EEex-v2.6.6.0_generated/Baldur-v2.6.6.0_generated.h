@@ -2979,6 +2979,7 @@ namespace EEex
 	void DrawSlicedRectNum(lua_State* L);
 	void RegisterSlicedRect(lua_State* L);
 	void DrawSlicedRect(lua_State* L);
+	bool IsDefaultAttackCursor();
 };
 
 struct ConstCharString
@@ -5224,6 +5225,13 @@ struct CTypedPtrList : CObject
 		#pragma warning(default:4312)
 	}
 
+	CTypedPtrList::CNode* Find(T searchValue, __POSITION* startAfter)
+	{
+		#pragma warning(disable:4312)
+		return (CTypedPtrList::CNode*)((CObList*)this)->Find((void*)searchValue, startAfter);
+		#pragma warning(default:4312)
+	}
+
 	T RemoveHead()
 	{
 		#pragma warning(disable:4302 4311)
@@ -5815,6 +5823,9 @@ struct CObList : CObject
 	typedef __POSITION* (__thiscall *type_AddTail)(CObList* pThis, void* newElement);
 	static type_AddTail p_AddTail;
 
+	typedef __POSITION* (__thiscall *type_Find)(CObList* pThis, void* searchValue, __POSITION* startAfter);
+	static type_Find p_Find;
+
 	void Construct(int size)
 	{
 		p_Construct(this, size);
@@ -5838,6 +5849,11 @@ struct CObList : CObject
 	__POSITION* AddTail(void* newElement)
 	{
 		return p_AddTail(this, newElement);
+	}
+
+	__POSITION* Find(void* searchValue, __POSITION* startAfter)
+	{
+		return p_Find(this, searchValue, startAfter);
 	}
 };
 
@@ -6711,11 +6727,6 @@ struct Array
 			return;
 		}
 		data[index] = value;
-	}
-
-	T& operator[](size_t index)
-	{
-		return data[index];
 	}
 
 	operator T*()
@@ -10751,8 +10762,8 @@ struct CInfGame
 	CPathNode** m_listGrid;
 	CPathNode** m_arrayOpenList;
 	CAIGroup m_group;
-	CTypedPtrList<CPtrList,long*> m_allies;
-	CTypedPtrList<CPtrList,long*> m_familiars;
+	CTypedPtrList<CPtrList,long> m_allies;
+	CTypedPtrList<CPtrList,long> m_familiars;
 	Array<Array<unsigned __int8,8>,9> m_resrefFamiliarsDefault;
 	Array<Array<CTypedPtrList<CPtrList,CResRef*>,9>,9> m_resrefFamiliars;
 	int m_bFamiliarBlock;
@@ -10852,6 +10863,9 @@ struct CInfGame
 	typedef void (__thiscall *type_UnselectAll)(CInfGame* pThis);
 	static type_UnselectAll p_UnselectAll;
 
+	typedef short (__thiscall *type_GetCharacterPortraitNum)(CInfGame* pThis, int characterId);
+	static type_GetCharacterPortraitNum p_GetCharacterPortraitNum;
+
 	void OnPortraitLDblClick(int index)
 	{
 		p_OnPortraitLDblClick(this, index);
@@ -10880,6 +10894,11 @@ struct CInfGame
 	void UnselectAll()
 	{
 		p_UnselectAll(this);
+	}
+
+	short GetCharacterPortraitNum(int characterId)
+	{
+		return p_GetCharacterPortraitNum(this, characterId);
 	}
 };
 
@@ -12739,6 +12758,14 @@ struct CGameObject
 	unsigned __int8 m_AIInhibitor;
 
 	CGameObject() = delete;
+
+	typedef byte (__thiscall *type_InControl)(CGameObject* pThis);
+	static type_InControl p_InControl;
+
+	byte InControl()
+	{
+		return p_InControl(this);
+	}
 
 	virtual void virtual_Destruct()
 	{

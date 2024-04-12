@@ -246,9 +246,41 @@ struct Array
 		data[index] = value;
 	}
 
-	$nobinding T& operator[](size_t index)
+	$nobinding operator T*()
+	{
+		return &data[0];
+	}
+};
+
+template<class T, size_t size>
+struct ConstArray
+{
+	nobinding const T data[size];
+
+	T get(size_t index)
+	{
+		if (index >= size) {
+			return (T)NULL;
+		}
+		return data[index];
+	}
+
+	const T* getReference(size_t index)
+	{
+		if (index >= size) {
+			return NULL;
+		}
+		return &data[index];
+	}
+
+	$nobinding const T& operator[](size_t index)
 	{
 		return data[index];
+	}
+
+	$nobinding operator const T*()
+	{
+		return &data[0];
 	}
 };
 
@@ -278,12 +310,35 @@ struct ArrayPointer
 	}
 };
 
+template<class T>
+struct VariableArray
+{
+	nobinding T data;
+
+	T get(size_t index)
+	{
+		return (&data)[index];
+	}
+
+	T* getReference(size_t index)
+	{
+		return &(&data)[index];
+	}
+
+	void set(size_t index, T value)
+	{
+		(&data)[index] = value;
+	}
+};
+
+template<typename T>
+struct Primitive
+{
+	T value;
+};
+
 struct UnmappedUserType
 {
-	uintptr_t toPointer()
-	{
-		return (uintptr_t)this;
-	}
 };
 
 /////////////////////////////////////////////
