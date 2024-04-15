@@ -2051,15 +2051,15 @@ class Group:
 					if enumLineMatch:
 						firstExtendName = self.extends[0].getName() if len(self.extends) > 0 else "__int32"
 						if firstExtendName == "__int8":
-							value = int(enumLineMatch.group(2), 16)
+							value = int(enumLineMatch.group(2), 0)
 							if value & 0x80 != 0: value = -1 - (0xFF - value)
 							self.enumTuples.append((enumLineMatch.group(1), value))
 						elif firstExtendName == "__int32":
-							value = int(enumLineMatch.group(2), 16)
+							value = int(enumLineMatch.group(2), 0)
 							if value & 0x80000000 != 0: value = -1 - (0xFFFFFFFF - value)
 							self.enumTuples.append((enumLineMatch.group(1), value))
 						elif firstExtendName == "__int64":
-							value = int(enumLineMatch.group(2), 16)
+							value = int(enumLineMatch.group(2), 0)
 							if value & 0x8000000000000000 != 0: value = -1 - (0xFFFFFFFFFFFFFFFF - value)
 							self.enumTuples.append((enumLineMatch.group(1), value))
 						else:
