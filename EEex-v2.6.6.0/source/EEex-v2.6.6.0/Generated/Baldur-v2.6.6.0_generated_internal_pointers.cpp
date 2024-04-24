@@ -81,6 +81,7 @@ ConstArray<short,174>* p_yy_shift_ofst;
 ConstArray<_D98D369160A0DDA2B95F5D0F301081BB,157>* p_yyRuleInfo;
 CTlkTable::type_Fetch CTlkTable::p_Fetch;
 CAIScript::type_Construct1 CAIScript::p_Construct1;
+CAIScript::type_Destruct CAIScript::p_Destruct;
 CAbilityId::type_Construct CAbilityId::p_Construct;
 C2DArray::type_Construct C2DArray::p_Construct;
 C2DArray::type_Load C2DArray::p_Load;
@@ -270,6 +271,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("yyRuleInfo"), p_yyRuleInfo);
 	attemptFillPointer(TEXT("CTlkTable::Fetch"), CTlkTable::p_Fetch);
 	attemptFillPointer(TEXT("CAIScript::Construct1"), CAIScript::p_Construct1);
+	attemptFillPointer(TEXT("CAIScript::Destruct"), CAIScript::p_Destruct);
 	attemptFillPointer(TEXT("CAbilityId::Construct"), CAbilityId::p_Construct);
 	attemptFillPointer(TEXT("C2DArray::Construct"), C2DArray::p_Construct);
 	attemptFillPointer(TEXT("C2DArray::Load"), C2DArray::p_Load);

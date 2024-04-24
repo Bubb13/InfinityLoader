@@ -7860,9 +7860,17 @@ struct CAIScript
 	typedef void (__thiscall *type_Construct1)(CAIScript* pThis, CResRef cNewResRef, int playerscript);
 	static type_Construct1 p_Construct1;
 
+	typedef void (__thiscall *type_Destruct)(CAIScript* pThis);
+	static type_Destruct p_Destruct;
+
 	void Construct(CResRef cNewResRef, int playerscript)
 	{
 		p_Construct1(this, cNewResRef, playerscript);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
 	}
 };
 

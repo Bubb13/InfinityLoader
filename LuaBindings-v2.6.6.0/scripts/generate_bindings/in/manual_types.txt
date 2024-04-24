@@ -1093,6 +1093,7 @@ struct CDerivedStats : CDerivedStatsTemplate
 struct CAIScript
 {
 	$constructor_fake Construct1(CResRef cNewResRef, int playerscript);
+	void Destruct();
 };
 
 struct CMessageSetDirection : CMessage

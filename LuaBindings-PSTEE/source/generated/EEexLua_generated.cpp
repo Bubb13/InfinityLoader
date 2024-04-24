@@ -213,54 +213,6 @@ static int tolua_get_Primitive_DrawFeature__reference_value(lua_State* L)
 	return 1;
 }
 
-static int tolua_get_Primitive_uint__value(lua_State* L)
-{
-	Primitive<uint>* self = (Primitive<uint>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uint>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	lua_pushinteger(L, (lua_Integer)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_uint__value(lua_State* L)
-{
-	Primitive<uint>* self = (Primitive<uint>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uint>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tointeger<uint>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_uint__reference_value(lua_State* L)
-{
-	Primitive<uint>* self = (Primitive<uint>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uint>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<uint>");
-	return 1;
-}
-
-static int tolua_get_Primitive_size_t__value(lua_State* L)
-{
-	Primitive<size_t>* self = (Primitive<size_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<size_t>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	lua_pushinteger(L, (lua_Integer)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_size_t__value(lua_State* L)
-{
-	Primitive<size_t>* self = (Primitive<size_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<size_t>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tointeger<size_t>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_size_t__reference_value(lua_State* L)
-{
-	Primitive<size_t>* self = (Primitive<size_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<size_t>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<size_t>");
-	return 1;
-}
-
 static int tolua_get_Primitive_byte__value(lua_State* L)
 {
 	Primitive<byte>* self = (Primitive<byte>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<byte>");
@@ -282,150 +234,6 @@ static int tolua_get_Primitive_byte__reference_value(lua_State* L)
 	Primitive<byte>* self = (Primitive<byte>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<byte>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
 	tolua_pushusertype(L, (void*)&self->value, "Primitive<byte>");
-	return 1;
-}
-
-static int tolua_get_Primitive_float__value(lua_State* L)
-{
-	Primitive<float>* self = (Primitive<float>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<float>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushnumber(L, (lua_Number)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_float__value(lua_State* L)
-{
-	Primitive<float>* self = (Primitive<float>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<float>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tonumber<float>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_float__reference_value(lua_State* L)
-{
-	Primitive<float>* self = (Primitive<float>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<float>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<float>");
-	return 1;
-}
-
-static int tolua_get_Primitive_int__value(lua_State* L)
-{
-	Primitive<int>* self = (Primitive<int>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<int>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	lua_pushinteger(L, (lua_Integer)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_int__value(lua_State* L)
-{
-	Primitive<int>* self = (Primitive<int>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<int>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tointeger<int>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_int__reference_value(lua_State* L)
-{
-	Primitive<int>* self = (Primitive<int>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<int>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<int>");
-	return 1;
-}
-
-static int tolua_get_Primitive_bool__value(lua_State* L)
-{
-	Primitive<bool>* self = (Primitive<bool>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<bool>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushboolean(L, (bool)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_bool__value(lua_State* L)
-{
-	Primitive<bool>* self = (Primitive<bool>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<bool>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_toboolean(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_bool__reference_value(lua_State* L)
-{
-	Primitive<bool>* self = (Primitive<bool>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<bool>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<bool>");
-	return 1;
-}
-
-static int tolua_get_Primitive_long__value(lua_State* L)
-{
-	Primitive<long>* self = (Primitive<long>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	lua_pushinteger(L, (lua_Integer)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_long__value(lua_State* L)
-{
-	Primitive<long>* self = (Primitive<long>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tointeger<long>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_long__reference_value(lua_State* L)
-{
-	Primitive<long>* self = (Primitive<long>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<long>");
-	return 1;
-}
-
-static int tolua_get_Primitive_double__value(lua_State* L)
-{
-	Primitive<double>* self = (Primitive<double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<double>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushnumber(L, (lua_Number)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_double__value(lua_State* L)
-{
-	Primitive<double>* self = (Primitive<double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<double>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tonumber<double>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_double__reference_value(lua_State* L)
-{
-	Primitive<double>* self = (Primitive<double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<double>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<double>");
-	return 1;
-}
-
-static int tolua_get_Primitive_short__value(lua_State* L)
-{
-	Primitive<short>* self = (Primitive<short>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<short>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	lua_pushinteger(L, (lua_Integer)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_short__value(lua_State* L)
-{
-	Primitive<short>* self = (Primitive<short>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<short>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tointeger<short>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_short__reference_value(lua_State* L)
-{
-	Primitive<short>* self = (Primitive<short>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<short>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<short>");
 	return 1;
 }
 
@@ -453,27 +261,147 @@ static int tolua_get_Primitive___int16__reference_value(lua_State* L)
 	return 1;
 }
 
-static int tolua_get_Primitive_uintptr_t__value(lua_State* L)
+static int tolua_get_Primitive_double__value(lua_State* L)
 {
-	Primitive<uintptr_t>* self = (Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uintptr_t>");
+	Primitive<double>* self = (Primitive<double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<double>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushnumber(L, (lua_Number)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_double__value(lua_State* L)
+{
+	Primitive<double>* self = (Primitive<double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<double>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tonumber<double>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_double__reference_value(lua_State* L)
+{
+	Primitive<double>* self = (Primitive<double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<double>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<double>");
+	return 1;
+}
+
+static int tolua_get_Primitive___int64__value(lua_State* L)
+{
+	Primitive<__int64>* self = (Primitive<__int64>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int64>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
 	lua_pushinteger(L, (lua_Integer)self->value);
 	return 1;
 }
 
-static int tolua_set_Primitive_uintptr_t__value(lua_State* L)
+static int tolua_set_Primitive___int64__value(lua_State* L)
 {
-	Primitive<uintptr_t>* self = (Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uintptr_t>");
+	Primitive<__int64>* self = (Primitive<__int64>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int64>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tointeger<uintptr_t>(L, "value");
+	self->value = tolua_setter_tointeger<__int64>(L, "value");
 	return 0;
 }
 
-static int tolua_get_Primitive_uintptr_t__reference_value(lua_State* L)
+static int tolua_get_Primitive___int64__reference_value(lua_State* L)
 {
-	Primitive<uintptr_t>* self = (Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uintptr_t>");
+	Primitive<__int64>* self = (Primitive<__int64>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int64>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<uintptr_t>");
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<__int64>");
+	return 1;
+}
+
+static int tolua_get_Primitive_int__value(lua_State* L)
+{
+	Primitive<int>* self = (Primitive<int>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<int>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	lua_pushinteger(L, (lua_Integer)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_int__value(lua_State* L)
+{
+	Primitive<int>* self = (Primitive<int>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<int>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tointeger<int>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_int__reference_value(lua_State* L)
+{
+	Primitive<int>* self = (Primitive<int>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<int>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<int>");
+	return 1;
+}
+
+static int tolua_get_Primitive_uint__value(lua_State* L)
+{
+	Primitive<uint>* self = (Primitive<uint>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uint>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	lua_pushinteger(L, (lua_Integer)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_uint__value(lua_State* L)
+{
+	Primitive<uint>* self = (Primitive<uint>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uint>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tointeger<uint>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_uint__reference_value(lua_State* L)
+{
+	Primitive<uint>* self = (Primitive<uint>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uint>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<uint>");
+	return 1;
+}
+
+static int tolua_get_Primitive_long_double__value(lua_State* L)
+{
+	Primitive<long double>* self = (Primitive<long double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long double>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushnumber(L, (lua_Number)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_long_double__value(lua_State* L)
+{
+	Primitive<long double>* self = (Primitive<long double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long double>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tonumber<long double>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_long_double__reference_value(lua_State* L)
+{
+	Primitive<long double>* self = (Primitive<long double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long double>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<double>");
+	return 1;
+}
+
+static int tolua_get_Primitive_intptr_t__value(lua_State* L)
+{
+	Primitive<intptr_t>* self = (Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<intptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	lua_pushinteger(L, (lua_Integer)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_intptr_t__value(lua_State* L)
+{
+	Primitive<intptr_t>* self = (Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<intptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tointeger<intptr_t>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_intptr_t__reference_value(lua_State* L)
+{
+	Primitive<intptr_t>* self = (Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<intptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<intptr_t>");
 	return 1;
 }
 
@@ -501,6 +429,150 @@ static int tolua_get_Primitive_char__reference_value(lua_State* L)
 	return 1;
 }
 
+static int tolua_get_Primitive_bool__value(lua_State* L)
+{
+	Primitive<bool>* self = (Primitive<bool>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<bool>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushboolean(L, (bool)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_bool__value(lua_State* L)
+{
+	Primitive<bool>* self = (Primitive<bool>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<bool>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_toboolean(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_bool__reference_value(lua_State* L)
+{
+	Primitive<bool>* self = (Primitive<bool>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<bool>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<bool>");
+	return 1;
+}
+
+static int tolua_get_Primitive_float__value(lua_State* L)
+{
+	Primitive<float>* self = (Primitive<float>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<float>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushnumber(L, (lua_Number)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_float__value(lua_State* L)
+{
+	Primitive<float>* self = (Primitive<float>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<float>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tonumber<float>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_float__reference_value(lua_State* L)
+{
+	Primitive<float>* self = (Primitive<float>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<float>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<float>");
+	return 1;
+}
+
+static int tolua_get_Primitive_short__value(lua_State* L)
+{
+	Primitive<short>* self = (Primitive<short>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<short>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	lua_pushinteger(L, (lua_Integer)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_short__value(lua_State* L)
+{
+	Primitive<short>* self = (Primitive<short>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<short>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tointeger<short>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_short__reference_value(lua_State* L)
+{
+	Primitive<short>* self = (Primitive<short>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<short>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<short>");
+	return 1;
+}
+
+static int tolua_get_Primitive_uintptr_t__value(lua_State* L)
+{
+	Primitive<uintptr_t>* self = (Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uintptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	lua_pushinteger(L, (lua_Integer)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_uintptr_t__value(lua_State* L)
+{
+	Primitive<uintptr_t>* self = (Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uintptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tointeger<uintptr_t>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_uintptr_t__reference_value(lua_State* L)
+{
+	Primitive<uintptr_t>* self = (Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<uintptr_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<uintptr_t>");
+	return 1;
+}
+
+static int tolua_get_Primitive___int32__value(lua_State* L)
+{
+	Primitive<__int32>* self = (Primitive<__int32>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int32>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	lua_pushinteger(L, (lua_Integer)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive___int32__value(lua_State* L)
+{
+	Primitive<__int32>* self = (Primitive<__int32>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int32>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tointeger<__int32>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive___int32__reference_value(lua_State* L)
+{
+	Primitive<__int32>* self = (Primitive<__int32>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int32>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<__int32>");
+	return 1;
+}
+
+static int tolua_get_Primitive_size_t__value(lua_State* L)
+{
+	Primitive<size_t>* self = (Primitive<size_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<size_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	lua_pushinteger(L, (lua_Integer)self->value);
+	return 1;
+}
+
+static int tolua_set_Primitive_size_t__value(lua_State* L)
+{
+	Primitive<size_t>* self = (Primitive<size_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<size_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	self->value = tolua_setter_tointeger<size_t>(L, "value");
+	return 0;
+}
+
+static int tolua_get_Primitive_size_t__reference_value(lua_State* L)
+{
+	Primitive<size_t>* self = (Primitive<size_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<size_t>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<size_t>");
+	return 1;
+}
+
 static int tolua_get_Primitive_ushort__value(lua_State* L)
 {
 	Primitive<ushort>* self = (Primitive<ushort>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<ushort>");
@@ -522,30 +594,6 @@ static int tolua_get_Primitive_ushort__reference_value(lua_State* L)
 	Primitive<ushort>* self = (Primitive<ushort>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<ushort>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
 	tolua_pushusertype(L, (void*)&self->value, "Primitive<ushort>");
-	return 1;
-}
-
-static int tolua_get_Primitive___int64__value(lua_State* L)
-{
-	Primitive<__int64>* self = (Primitive<__int64>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int64>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	lua_pushinteger(L, (lua_Integer)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive___int64__value(lua_State* L)
-{
-	Primitive<__int64>* self = (Primitive<__int64>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int64>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tointeger<__int64>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive___int64__reference_value(lua_State* L)
-{
-	Primitive<__int64>* self = (Primitive<__int64>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int64>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<__int64>");
 	return 1;
 }
 
@@ -597,75 +645,27 @@ static int tolua_get_Primitive___int8__reference_value(lua_State* L)
 	return 1;
 }
 
-static int tolua_get_Primitive_long_double__value(lua_State* L)
+static int tolua_get_Primitive_long__value(lua_State* L)
 {
-	Primitive<long double>* self = (Primitive<long double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long double>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushnumber(L, (lua_Number)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_long_double__value(lua_State* L)
-{
-	Primitive<long double>* self = (Primitive<long double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long double>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tonumber<long double>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_long_double__reference_value(lua_State* L)
-{
-	Primitive<long double>* self = (Primitive<long double>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long double>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<double>");
-	return 1;
-}
-
-static int tolua_get_Primitive___int32__value(lua_State* L)
-{
-	Primitive<__int32>* self = (Primitive<__int32>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int32>");
+	Primitive<long>* self = (Primitive<long>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
 	lua_pushinteger(L, (lua_Integer)self->value);
 	return 1;
 }
 
-static int tolua_set_Primitive___int32__value(lua_State* L)
+static int tolua_set_Primitive_long__value(lua_State* L)
 {
-	Primitive<__int32>* self = (Primitive<__int32>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int32>");
+	Primitive<long>* self = (Primitive<long>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tointeger<__int32>(L, "value");
+	self->value = tolua_setter_tointeger<long>(L, "value");
 	return 0;
 }
 
-static int tolua_get_Primitive___int32__reference_value(lua_State* L)
+static int tolua_get_Primitive_long__reference_value(lua_State* L)
 {
-	Primitive<__int32>* self = (Primitive<__int32>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<__int32>");
+	Primitive<long>* self = (Primitive<long>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<long>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<__int32>");
-	return 1;
-}
-
-static int tolua_get_Primitive_intptr_t__value(lua_State* L)
-{
-	Primitive<intptr_t>* self = (Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<intptr_t>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	lua_pushinteger(L, (lua_Integer)self->value);
-	return 1;
-}
-
-static int tolua_set_Primitive_intptr_t__value(lua_State* L)
-{
-	Primitive<intptr_t>* self = (Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<intptr_t>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	self->value = tolua_setter_tointeger<intptr_t>(L, "value");
-	return 0;
-}
-
-static int tolua_get_Primitive_intptr_t__reference_value(lua_State* L)
-{
-	Primitive<intptr_t>* self = (Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 1, 0, "Primitive<intptr_t>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'value'", NULL);
-	tolua_pushusertype(L, (void*)&self->value, "Primitive<intptr_t>");
+	tolua_pushusertype(L, (void*)&self->value, "Primitive<long>");
 	return 1;
 }
 
@@ -4145,54 +4145,6 @@ static int tolua_function_Pointer___int32__setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_get_Pointer_Primitive_uint___reference(lua_State* L)
-{
-	Pointer<Primitive<uint>>* self = (Pointer<Primitive<uint>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uint>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<uint>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive_uint___reference(lua_State* L)
-{
-	Pointer<Primitive<uint>>* self = (Pointer<Primitive<uint>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uint>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<uint>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<uint>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive_uint___setValue(lua_State* L)
-{
-	Pointer<Primitive<uint>>* self = (Pointer<Primitive<uint>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uint>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<uint>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<uint>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive_size_t___reference(lua_State* L)
-{
-	Pointer<Primitive<size_t>>* self = (Pointer<Primitive<size_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<size_t>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<size_t>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive_size_t___reference(lua_State* L)
-{
-	Pointer<Primitive<size_t>>* self = (Pointer<Primitive<size_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<size_t>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<size_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<size_t>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive_size_t___setValue(lua_State* L)
-{
-	Pointer<Primitive<size_t>>* self = (Pointer<Primitive<size_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<size_t>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<size_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<size_t>"));
-	return 0;
-}
-
 static int tolua_get_Pointer_Primitive_byte___reference(lua_State* L)
 {
 	Pointer<Primitive<byte>>* self = (Pointer<Primitive<byte>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<byte>>");
@@ -4214,150 +4166,6 @@ static int tolua_function_Pointer_Primitive_byte___setValue(lua_State* L)
 	Pointer<Primitive<byte>>* self = (Pointer<Primitive<byte>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<byte>>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
 	self->setValue(*(Primitive<byte>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<byte>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive_float___reference(lua_State* L)
-{
-	Pointer<Primitive<float>>* self = (Pointer<Primitive<float>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<float>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<float>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive_float___reference(lua_State* L)
-{
-	Pointer<Primitive<float>>* self = (Pointer<Primitive<float>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<float>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<float>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<float>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive_float___setValue(lua_State* L)
-{
-	Pointer<Primitive<float>>* self = (Pointer<Primitive<float>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<float>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<float>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<float>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive_int___reference(lua_State* L)
-{
-	Pointer<Primitive<int>>* self = (Pointer<Primitive<int>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<int>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<int>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive_int___reference(lua_State* L)
-{
-	Pointer<Primitive<int>>* self = (Pointer<Primitive<int>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<int>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<int>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<int>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive_int___setValue(lua_State* L)
-{
-	Pointer<Primitive<int>>* self = (Pointer<Primitive<int>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<int>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<int>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<int>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive_bool___reference(lua_State* L)
-{
-	Pointer<Primitive<bool>>* self = (Pointer<Primitive<bool>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<bool>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<bool>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive_bool___reference(lua_State* L)
-{
-	Pointer<Primitive<bool>>* self = (Pointer<Primitive<bool>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<bool>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<bool>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<bool>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive_bool___setValue(lua_State* L)
-{
-	Pointer<Primitive<bool>>* self = (Pointer<Primitive<bool>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<bool>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<bool>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<bool>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive_long___reference(lua_State* L)
-{
-	Pointer<Primitive<long>>* self = (Pointer<Primitive<long>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<long>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive_long___reference(lua_State* L)
-{
-	Pointer<Primitive<long>>* self = (Pointer<Primitive<long>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<long>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<long>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive_long___setValue(lua_State* L)
-{
-	Pointer<Primitive<long>>* self = (Pointer<Primitive<long>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<long>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<long>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive_double___reference(lua_State* L)
-{
-	Pointer<Primitive<double>>* self = (Pointer<Primitive<double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<double>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<double>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive_double___reference(lua_State* L)
-{
-	Pointer<Primitive<double>>* self = (Pointer<Primitive<double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<double>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<double>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<double>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive_double___setValue(lua_State* L)
-{
-	Pointer<Primitive<double>>* self = (Pointer<Primitive<double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<double>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<double>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<double>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive_short___reference(lua_State* L)
-{
-	Pointer<Primitive<short>>* self = (Pointer<Primitive<short>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<short>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<short>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive_short___reference(lua_State* L)
-{
-	Pointer<Primitive<short>>* self = (Pointer<Primitive<short>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<short>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<short>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<short>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive_short___setValue(lua_State* L)
-{
-	Pointer<Primitive<short>>* self = (Pointer<Primitive<short>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<short>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<short>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<short>"));
 	return 0;
 }
 
@@ -4385,27 +4193,147 @@ static int tolua_function_Pointer_Primitive___int16___setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_get_Pointer_Primitive_uintptr_t___reference(lua_State* L)
+static int tolua_get_Pointer_Primitive_double___reference(lua_State* L)
 {
-	Pointer<Primitive<uintptr_t>>* self = (Pointer<Primitive<uintptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uintptr_t>>");
+	Pointer<Primitive<double>>* self = (Pointer<Primitive<double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<double>>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<uintptr_t>");
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<double>");
 	return 1;
 }
 
-static int tolua_set_Pointer_Primitive_uintptr_t___reference(lua_State* L)
+static int tolua_set_Pointer_Primitive_double___reference(lua_State* L)
 {
-	Pointer<Primitive<uintptr_t>>* self = (Pointer<Primitive<uintptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uintptr_t>>");
+	Pointer<Primitive<double>>* self = (Pointer<Primitive<double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<double>>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<uintptr_t>");
+	self->reference = (Primitive<double>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<double>");
 	return 0;
 }
 
-static int tolua_function_Pointer_Primitive_uintptr_t___setValue(lua_State* L)
+static int tolua_function_Pointer_Primitive_double___setValue(lua_State* L)
 {
-	Pointer<Primitive<uintptr_t>>* self = (Pointer<Primitive<uintptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uintptr_t>>");
+	Pointer<Primitive<double>>* self = (Pointer<Primitive<double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<double>>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<uintptr_t>"));
+	self->setValue(*(Primitive<double>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<double>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive___int64___reference(lua_State* L)
+{
+	Pointer<Primitive<__int64>>* self = (Pointer<Primitive<__int64>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int64>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<__int64>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive___int64___reference(lua_State* L)
+{
+	Pointer<Primitive<__int64>>* self = (Pointer<Primitive<__int64>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int64>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<__int64>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<__int64>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive___int64___setValue(lua_State* L)
+{
+	Pointer<Primitive<__int64>>* self = (Pointer<Primitive<__int64>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int64>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<__int64>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<__int64>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive_int___reference(lua_State* L)
+{
+	Pointer<Primitive<int>>* self = (Pointer<Primitive<int>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<int>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<int>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive_int___reference(lua_State* L)
+{
+	Pointer<Primitive<int>>* self = (Pointer<Primitive<int>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<int>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<int>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<int>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive_int___setValue(lua_State* L)
+{
+	Pointer<Primitive<int>>* self = (Pointer<Primitive<int>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<int>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<int>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<int>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive_uint___reference(lua_State* L)
+{
+	Pointer<Primitive<uint>>* self = (Pointer<Primitive<uint>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uint>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<uint>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive_uint___reference(lua_State* L)
+{
+	Pointer<Primitive<uint>>* self = (Pointer<Primitive<uint>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uint>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<uint>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<uint>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive_uint___setValue(lua_State* L)
+{
+	Pointer<Primitive<uint>>* self = (Pointer<Primitive<uint>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uint>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<uint>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<uint>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive_long_double___reference(lua_State* L)
+{
+	Pointer<Primitive<long double>>* self = (Pointer<Primitive<long double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long double>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<long double>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive_long_double___reference(lua_State* L)
+{
+	Pointer<Primitive<long double>>* self = (Pointer<Primitive<long double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long double>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<long double>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<long double>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive_long_double___setValue(lua_State* L)
+{
+	Pointer<Primitive<long double>>* self = (Pointer<Primitive<long double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long double>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<long double>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<long double>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive_intptr_t___reference(lua_State* L)
+{
+	Pointer<Primitive<intptr_t>>* self = (Pointer<Primitive<intptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<intptr_t>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<intptr_t>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive_intptr_t___reference(lua_State* L)
+{
+	Pointer<Primitive<intptr_t>>* self = (Pointer<Primitive<intptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<intptr_t>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<intptr_t>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive_intptr_t___setValue(lua_State* L)
+{
+	Pointer<Primitive<intptr_t>>* self = (Pointer<Primitive<intptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<intptr_t>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<intptr_t>"));
 	return 0;
 }
 
@@ -4433,6 +4361,150 @@ static int tolua_function_Pointer_Primitive_char___setValue(lua_State* L)
 	return 0;
 }
 
+static int tolua_get_Pointer_Primitive_bool___reference(lua_State* L)
+{
+	Pointer<Primitive<bool>>* self = (Pointer<Primitive<bool>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<bool>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<bool>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive_bool___reference(lua_State* L)
+{
+	Pointer<Primitive<bool>>* self = (Pointer<Primitive<bool>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<bool>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<bool>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<bool>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive_bool___setValue(lua_State* L)
+{
+	Pointer<Primitive<bool>>* self = (Pointer<Primitive<bool>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<bool>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<bool>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<bool>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive_float___reference(lua_State* L)
+{
+	Pointer<Primitive<float>>* self = (Pointer<Primitive<float>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<float>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<float>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive_float___reference(lua_State* L)
+{
+	Pointer<Primitive<float>>* self = (Pointer<Primitive<float>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<float>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<float>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<float>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive_float___setValue(lua_State* L)
+{
+	Pointer<Primitive<float>>* self = (Pointer<Primitive<float>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<float>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<float>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<float>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive_short___reference(lua_State* L)
+{
+	Pointer<Primitive<short>>* self = (Pointer<Primitive<short>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<short>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<short>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive_short___reference(lua_State* L)
+{
+	Pointer<Primitive<short>>* self = (Pointer<Primitive<short>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<short>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<short>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<short>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive_short___setValue(lua_State* L)
+{
+	Pointer<Primitive<short>>* self = (Pointer<Primitive<short>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<short>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<short>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<short>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive_uintptr_t___reference(lua_State* L)
+{
+	Pointer<Primitive<uintptr_t>>* self = (Pointer<Primitive<uintptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uintptr_t>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<uintptr_t>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive_uintptr_t___reference(lua_State* L)
+{
+	Pointer<Primitive<uintptr_t>>* self = (Pointer<Primitive<uintptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uintptr_t>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<uintptr_t>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive_uintptr_t___setValue(lua_State* L)
+{
+	Pointer<Primitive<uintptr_t>>* self = (Pointer<Primitive<uintptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<uintptr_t>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<uintptr_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<uintptr_t>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive___int32___reference(lua_State* L)
+{
+	Pointer<Primitive<__int32>>* self = (Pointer<Primitive<__int32>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int32>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<__int32>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive___int32___reference(lua_State* L)
+{
+	Pointer<Primitive<__int32>>* self = (Pointer<Primitive<__int32>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int32>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<__int32>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<__int32>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive___int32___setValue(lua_State* L)
+{
+	Pointer<Primitive<__int32>>* self = (Pointer<Primitive<__int32>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int32>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<__int32>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<__int32>"));
+	return 0;
+}
+
+static int tolua_get_Pointer_Primitive_size_t___reference(lua_State* L)
+{
+	Pointer<Primitive<size_t>>* self = (Pointer<Primitive<size_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<size_t>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<size_t>");
+	return 1;
+}
+
+static int tolua_set_Pointer_Primitive_size_t___reference(lua_State* L)
+{
+	Pointer<Primitive<size_t>>* self = (Pointer<Primitive<size_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<size_t>>");
+	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
+	self->reference = (Primitive<size_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<size_t>");
+	return 0;
+}
+
+static int tolua_function_Pointer_Primitive_size_t___setValue(lua_State* L)
+{
+	Pointer<Primitive<size_t>>* self = (Pointer<Primitive<size_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<size_t>>");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
+	self->setValue(*(Primitive<size_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<size_t>"));
+	return 0;
+}
+
 static int tolua_get_Pointer_Primitive_ushort___reference(lua_State* L)
 {
 	Pointer<Primitive<ushort>>* self = (Pointer<Primitive<ushort>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<ushort>>");
@@ -4454,30 +4526,6 @@ static int tolua_function_Pointer_Primitive_ushort___setValue(lua_State* L)
 	Pointer<Primitive<ushort>>* self = (Pointer<Primitive<ushort>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<ushort>>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
 	self->setValue(*(Primitive<ushort>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<ushort>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive___int64___reference(lua_State* L)
-{
-	Pointer<Primitive<__int64>>* self = (Pointer<Primitive<__int64>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int64>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<__int64>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive___int64___reference(lua_State* L)
-{
-	Pointer<Primitive<__int64>>* self = (Pointer<Primitive<__int64>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int64>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<__int64>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<__int64>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive___int64___setValue(lua_State* L)
-{
-	Pointer<Primitive<__int64>>* self = (Pointer<Primitive<__int64>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int64>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<__int64>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<__int64>"));
 	return 0;
 }
 
@@ -4529,75 +4577,27 @@ static int tolua_function_Pointer_Primitive___int8___setValue(lua_State* L)
 	return 0;
 }
 
-static int tolua_get_Pointer_Primitive_long_double___reference(lua_State* L)
+static int tolua_get_Pointer_Primitive_long___reference(lua_State* L)
 {
-	Pointer<Primitive<long double>>* self = (Pointer<Primitive<long double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long double>>");
+	Pointer<Primitive<long>>* self = (Pointer<Primitive<long>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long>>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<long double>");
+	tolua_pushusertype(L, (void*)self->reference, "Primitive<long>");
 	return 1;
 }
 
-static int tolua_set_Pointer_Primitive_long_double___reference(lua_State* L)
+static int tolua_set_Pointer_Primitive_long___reference(lua_State* L)
 {
-	Pointer<Primitive<long double>>* self = (Pointer<Primitive<long double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long double>>");
+	Pointer<Primitive<long>>* self = (Pointer<Primitive<long>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long>>");
 	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<long double>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<long double>");
+	self->reference = (Primitive<long>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<long>");
 	return 0;
 }
 
-static int tolua_function_Pointer_Primitive_long_double___setValue(lua_State* L)
+static int tolua_function_Pointer_Primitive_long___setValue(lua_State* L)
 {
-	Pointer<Primitive<long double>>* self = (Pointer<Primitive<long double>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long double>>");
+	Pointer<Primitive<long>>* self = (Pointer<Primitive<long>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<long>>");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<long double>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<long double>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive___int32___reference(lua_State* L)
-{
-	Pointer<Primitive<__int32>>* self = (Pointer<Primitive<__int32>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int32>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<__int32>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive___int32___reference(lua_State* L)
-{
-	Pointer<Primitive<__int32>>* self = (Pointer<Primitive<__int32>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int32>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<__int32>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<__int32>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive___int32___setValue(lua_State* L)
-{
-	Pointer<Primitive<__int32>>* self = (Pointer<Primitive<__int32>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<__int32>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<__int32>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<__int32>"));
-	return 0;
-}
-
-static int tolua_get_Pointer_Primitive_intptr_t___reference(lua_State* L)
-{
-	Pointer<Primitive<intptr_t>>* self = (Pointer<Primitive<intptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<intptr_t>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	tolua_pushusertype(L, (void*)self->reference, "Primitive<intptr_t>");
-	return 1;
-}
-
-static int tolua_set_Pointer_Primitive_intptr_t___reference(lua_State* L)
-{
-	Pointer<Primitive<intptr_t>>* self = (Pointer<Primitive<intptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<intptr_t>>");
-	if (!self) tolua_error(L, "invalid 'self' in accessing variable 'reference'", NULL);
-	self->reference = (Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<intptr_t>");
-	return 0;
-}
-
-static int tolua_function_Pointer_Primitive_intptr_t___setValue(lua_State* L)
-{
-	Pointer<Primitive<intptr_t>>* self = (Pointer<Primitive<intptr_t>>*)tolua_tousertype_dynamic(L, 1, 0, "Pointer<Primitive<intptr_t>>");
-	if (!self) tolua_error(L, "invalid 'self' in calling function 'setValue'", NULL);
-	self->setValue(*(Primitive<intptr_t>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<intptr_t>"));
+	self->setValue(*(Primitive<long>*)tolua_tousertype_dynamic(L, 2, 0, "Primitive<long>"));
 	return 0;
 }
 
@@ -13245,25 +13245,25 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "Primitive<CGameObjectType>");
 	tolua_usertype(L, "Primitive<VertListType>");
 	tolua_usertype(L, "Primitive<DrawFeature>");
-	tolua_usertype(L, "Primitive<uint>");
-	tolua_usertype(L, "Primitive<size_t>");
 	tolua_usertype(L, "Primitive<byte>");
-	tolua_usertype(L, "Primitive<float>");
-	tolua_usertype(L, "Primitive<int>");
-	tolua_usertype(L, "Primitive<bool>");
-	tolua_usertype(L, "Primitive<long>");
-	tolua_usertype(L, "Primitive<double>");
-	tolua_usertype(L, "Primitive<short>");
 	tolua_usertype(L, "Primitive<__int16>");
-	tolua_usertype(L, "Primitive<uintptr_t>");
-	tolua_usertype(L, "Primitive<char>");
-	tolua_usertype(L, "Primitive<ushort>");
+	tolua_usertype(L, "Primitive<double>");
 	tolua_usertype(L, "Primitive<__int64>");
+	tolua_usertype(L, "Primitive<int>");
+	tolua_usertype(L, "Primitive<uint>");
+	tolua_usertype(L, "Primitive<long double>");
+	tolua_usertype(L, "Primitive<intptr_t>");
+	tolua_usertype(L, "Primitive<char>");
+	tolua_usertype(L, "Primitive<bool>");
+	tolua_usertype(L, "Primitive<float>");
+	tolua_usertype(L, "Primitive<short>");
+	tolua_usertype(L, "Primitive<uintptr_t>");
+	tolua_usertype(L, "Primitive<__int32>");
+	tolua_usertype(L, "Primitive<size_t>");
+	tolua_usertype(L, "Primitive<ushort>");
 	tolua_usertype(L, "Primitive<ptrdiff_t>");
 	tolua_usertype(L, "Primitive<__int8>");
-	tolua_usertype(L, "Primitive<long double>");
-	tolua_usertype(L, "Primitive<__int32>");
-	tolua_usertype(L, "Primitive<intptr_t>");
+	tolua_usertype(L, "Primitive<long>");
 	tolua_usertype(L, "UnmappedUserType");
 	tolua_usertype(L, "VoidPointer");
 	tolua_usertype(L, "__POSITION");
@@ -13365,25 +13365,25 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "Pointer<double>");
 	tolua_usertype(L, "Pointer<float>");
 	tolua_usertype(L, "Pointer<__int32>");
-	tolua_usertype(L, "Pointer<Primitive<uint>>");
-	tolua_usertype(L, "Pointer<Primitive<size_t>>");
 	tolua_usertype(L, "Pointer<Primitive<byte>>");
-	tolua_usertype(L, "Pointer<Primitive<float>>");
-	tolua_usertype(L, "Pointer<Primitive<int>>");
-	tolua_usertype(L, "Pointer<Primitive<bool>>");
-	tolua_usertype(L, "Pointer<Primitive<long>>");
-	tolua_usertype(L, "Pointer<Primitive<double>>");
-	tolua_usertype(L, "Pointer<Primitive<short>>");
 	tolua_usertype(L, "Pointer<Primitive<__int16>>");
-	tolua_usertype(L, "Pointer<Primitive<uintptr_t>>");
-	tolua_usertype(L, "Pointer<Primitive<char>>");
-	tolua_usertype(L, "Pointer<Primitive<ushort>>");
+	tolua_usertype(L, "Pointer<Primitive<double>>");
 	tolua_usertype(L, "Pointer<Primitive<__int64>>");
+	tolua_usertype(L, "Pointer<Primitive<int>>");
+	tolua_usertype(L, "Pointer<Primitive<uint>>");
+	tolua_usertype(L, "Pointer<Primitive<long double>>");
+	tolua_usertype(L, "Pointer<Primitive<intptr_t>>");
+	tolua_usertype(L, "Pointer<Primitive<char>>");
+	tolua_usertype(L, "Pointer<Primitive<bool>>");
+	tolua_usertype(L, "Pointer<Primitive<float>>");
+	tolua_usertype(L, "Pointer<Primitive<short>>");
+	tolua_usertype(L, "Pointer<Primitive<uintptr_t>>");
+	tolua_usertype(L, "Pointer<Primitive<__int32>>");
+	tolua_usertype(L, "Pointer<Primitive<size_t>>");
+	tolua_usertype(L, "Pointer<Primitive<ushort>>");
 	tolua_usertype(L, "Pointer<Primitive<ptrdiff_t>>");
 	tolua_usertype(L, "Pointer<Primitive<__int8>>");
-	tolua_usertype(L, "Pointer<Primitive<long double>>");
-	tolua_usertype(L, "Pointer<Primitive<__int32>>");
-	tolua_usertype(L, "Pointer<Primitive<intptr_t>>");
+	tolua_usertype(L, "Pointer<Primitive<long>>");
 	tolua_usertype(L, "Pointer<void*>");
 	tolua_usertype(L, "Pointer<UnmappedUserType>");
 	tolua_usertype(L, "Pointer<DrawFeature>");
@@ -13549,59 +13549,11 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_value", tolua_get_Primitive_DrawFeature__reference_value, NULL);
 		tolua_constant(L, "sizeof", sizeof(Primitive<DrawFeature>));
 	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<uint>", "Primitive<uint>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<uint>");
-		tolua_variable(L, "value", tolua_get_Primitive_uint__value, tolua_set_Primitive_uint__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_uint__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<uint>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<size_t>", "Primitive<size_t>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<size_t>");
-		tolua_variable(L, "value", tolua_get_Primitive_size_t__value, tolua_set_Primitive_size_t__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_size_t__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<size_t>));
-	tolua_endmodule(L);
 	tolua_cclass(L, "Primitive<byte>", "Primitive<byte>", {}, NULL);
 	tolua_beginmodule(L, "Primitive<byte>");
 		tolua_variable(L, "value", tolua_get_Primitive_byte__value, tolua_set_Primitive_byte__value);
 		tolua_variable(L, "reference_value", tolua_get_Primitive_byte__reference_value, NULL);
 		tolua_constant(L, "sizeof", sizeof(Primitive<byte>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<float>", "Primitive<float>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<float>");
-		tolua_variable(L, "value", tolua_get_Primitive_float__value, tolua_set_Primitive_float__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_float__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<float>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<int>", "Primitive<int>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<int>");
-		tolua_variable(L, "value", tolua_get_Primitive_int__value, tolua_set_Primitive_int__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_int__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<int>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<bool>", "Primitive<bool>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<bool>");
-		tolua_variable(L, "value", tolua_get_Primitive_bool__value, tolua_set_Primitive_bool__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_bool__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<bool>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<long>", "Primitive<long>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<long>");
-		tolua_variable(L, "value", tolua_get_Primitive_long__value, tolua_set_Primitive_long__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_long__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<long>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<double>", "Primitive<double>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<double>");
-		tolua_variable(L, "value", tolua_get_Primitive_double__value, tolua_set_Primitive_double__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_double__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<double>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<short>", "Primitive<short>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<short>");
-		tolua_variable(L, "value", tolua_get_Primitive_short__value, tolua_set_Primitive_short__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_short__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<short>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Primitive<__int16>", "Primitive<__int16>", {}, NULL);
 	tolua_beginmodule(L, "Primitive<__int16>");
@@ -13609,11 +13561,41 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_value", tolua_get_Primitive___int16__reference_value, NULL);
 		tolua_constant(L, "sizeof", sizeof(Primitive<__int16>));
 	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<uintptr_t>", "Primitive<uintptr_t>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<uintptr_t>");
-		tolua_variable(L, "value", tolua_get_Primitive_uintptr_t__value, tolua_set_Primitive_uintptr_t__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_uintptr_t__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<uintptr_t>));
+	tolua_cclass(L, "Primitive<double>", "Primitive<double>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<double>");
+		tolua_variable(L, "value", tolua_get_Primitive_double__value, tolua_set_Primitive_double__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_double__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<double>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<__int64>", "Primitive<__int64>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<__int64>");
+		tolua_variable(L, "value", tolua_get_Primitive___int64__value, tolua_set_Primitive___int64__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive___int64__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<__int64>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<int>", "Primitive<int>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<int>");
+		tolua_variable(L, "value", tolua_get_Primitive_int__value, tolua_set_Primitive_int__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_int__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<int>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<uint>", "Primitive<uint>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<uint>");
+		tolua_variable(L, "value", tolua_get_Primitive_uint__value, tolua_set_Primitive_uint__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_uint__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<uint>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<long double>", "Primitive<long double>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<long double>");
+		tolua_variable(L, "value", tolua_get_Primitive_long_double__value, tolua_set_Primitive_long_double__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_long_double__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<long double>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<intptr_t>", "Primitive<intptr_t>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<intptr_t>");
+		tolua_variable(L, "value", tolua_get_Primitive_intptr_t__value, tolua_set_Primitive_intptr_t__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_intptr_t__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<intptr_t>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Primitive<char>", "Primitive<char>", {}, NULL);
 	tolua_beginmodule(L, "Primitive<char>");
@@ -13621,17 +13603,47 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_value", tolua_get_Primitive_char__reference_value, NULL);
 		tolua_constant(L, "sizeof", sizeof(Primitive<char>));
 	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<bool>", "Primitive<bool>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<bool>");
+		tolua_variable(L, "value", tolua_get_Primitive_bool__value, tolua_set_Primitive_bool__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_bool__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<bool>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<float>", "Primitive<float>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<float>");
+		tolua_variable(L, "value", tolua_get_Primitive_float__value, tolua_set_Primitive_float__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_float__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<float>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<short>", "Primitive<short>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<short>");
+		tolua_variable(L, "value", tolua_get_Primitive_short__value, tolua_set_Primitive_short__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_short__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<short>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<uintptr_t>", "Primitive<uintptr_t>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<uintptr_t>");
+		tolua_variable(L, "value", tolua_get_Primitive_uintptr_t__value, tolua_set_Primitive_uintptr_t__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_uintptr_t__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<uintptr_t>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<__int32>", "Primitive<__int32>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<__int32>");
+		tolua_variable(L, "value", tolua_get_Primitive___int32__value, tolua_set_Primitive___int32__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive___int32__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<__int32>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Primitive<size_t>", "Primitive<size_t>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<size_t>");
+		tolua_variable(L, "value", tolua_get_Primitive_size_t__value, tolua_set_Primitive_size_t__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_size_t__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<size_t>));
+	tolua_endmodule(L);
 	tolua_cclass(L, "Primitive<ushort>", "Primitive<ushort>", {}, NULL);
 	tolua_beginmodule(L, "Primitive<ushort>");
 		tolua_variable(L, "value", tolua_get_Primitive_ushort__value, tolua_set_Primitive_ushort__value);
 		tolua_variable(L, "reference_value", tolua_get_Primitive_ushort__reference_value, NULL);
 		tolua_constant(L, "sizeof", sizeof(Primitive<ushort>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<__int64>", "Primitive<__int64>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<__int64>");
-		tolua_variable(L, "value", tolua_get_Primitive___int64__value, tolua_set_Primitive___int64__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive___int64__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<__int64>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Primitive<ptrdiff_t>", "Primitive<ptrdiff_t>", {}, NULL);
 	tolua_beginmodule(L, "Primitive<ptrdiff_t>");
@@ -13645,23 +13657,11 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_value", tolua_get_Primitive___int8__reference_value, NULL);
 		tolua_constant(L, "sizeof", sizeof(Primitive<__int8>));
 	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<long double>", "Primitive<long double>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<long double>");
-		tolua_variable(L, "value", tolua_get_Primitive_long_double__value, tolua_set_Primitive_long_double__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_long_double__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<long double>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<__int32>", "Primitive<__int32>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<__int32>");
-		tolua_variable(L, "value", tolua_get_Primitive___int32__value, tolua_set_Primitive___int32__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive___int32__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<__int32>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Primitive<intptr_t>", "Primitive<intptr_t>", {}, NULL);
-	tolua_beginmodule(L, "Primitive<intptr_t>");
-		tolua_variable(L, "value", tolua_get_Primitive_intptr_t__value, tolua_set_Primitive_intptr_t__value);
-		tolua_variable(L, "reference_value", tolua_get_Primitive_intptr_t__reference_value, NULL);
-		tolua_constant(L, "sizeof", sizeof(Primitive<intptr_t>));
+	tolua_cclass(L, "Primitive<long>", "Primitive<long>", {}, NULL);
+	tolua_beginmodule(L, "Primitive<long>");
+		tolua_variable(L, "value", tolua_get_Primitive_long__value, tolua_set_Primitive_long__value);
+		tolua_variable(L, "reference_value", tolua_get_Primitive_long__reference_value, NULL);
+		tolua_constant(L, "sizeof", sizeof(Primitive<long>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "UnmappedUserType", "UnmappedUserType", {}, NULL);
 	tolua_beginmodule(L, "UnmappedUserType");
@@ -14388,59 +14388,11 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "setValue", &tolua_function_Pointer___int32__setValue);
 		tolua_constant(L, "sizeof", sizeof(Pointer<__int32>));
 	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<uint>>", "Pointer<Primitive<uint>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<uint>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_uint___reference, tolua_set_Pointer_Primitive_uint___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_uint___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<uint>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<size_t>>", "Pointer<Primitive<size_t>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<size_t>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_size_t___reference, tolua_set_Pointer_Primitive_size_t___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_size_t___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<size_t>>));
-	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<Primitive<byte>>", "Pointer<Primitive<byte>>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<Primitive<byte>>");
 		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_byte___reference, tolua_set_Pointer_Primitive_byte___reference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_byte___setValue);
 		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<byte>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<float>>", "Pointer<Primitive<float>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<float>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_float___reference, tolua_set_Pointer_Primitive_float___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_float___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<float>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<int>>", "Pointer<Primitive<int>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<int>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_int___reference, tolua_set_Pointer_Primitive_int___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_int___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<int>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<bool>>", "Pointer<Primitive<bool>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<bool>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_bool___reference, tolua_set_Pointer_Primitive_bool___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_bool___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<bool>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<long>>", "Pointer<Primitive<long>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<long>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_long___reference, tolua_set_Pointer_Primitive_long___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_long___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<long>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<double>>", "Pointer<Primitive<double>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<double>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_double___reference, tolua_set_Pointer_Primitive_double___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_double___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<double>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<short>>", "Pointer<Primitive<short>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<short>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_short___reference, tolua_set_Pointer_Primitive_short___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_short___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<short>>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<Primitive<__int16>>", "Pointer<Primitive<__int16>>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<Primitive<__int16>>");
@@ -14448,11 +14400,41 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive___int16___setValue);
 		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<__int16>>));
 	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<uintptr_t>>", "Pointer<Primitive<uintptr_t>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<uintptr_t>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_uintptr_t___reference, tolua_set_Pointer_Primitive_uintptr_t___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_uintptr_t___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<uintptr_t>>));
+	tolua_cclass(L, "Pointer<Primitive<double>>", "Pointer<Primitive<double>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<double>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_double___reference, tolua_set_Pointer_Primitive_double___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_double___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<double>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<__int64>>", "Pointer<Primitive<__int64>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<__int64>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive___int64___reference, tolua_set_Pointer_Primitive___int64___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive___int64___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<__int64>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<int>>", "Pointer<Primitive<int>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<int>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_int___reference, tolua_set_Pointer_Primitive_int___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_int___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<int>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<uint>>", "Pointer<Primitive<uint>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<uint>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_uint___reference, tolua_set_Pointer_Primitive_uint___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_uint___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<uint>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<long double>>", "Pointer<Primitive<long double>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<long double>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_long_double___reference, tolua_set_Pointer_Primitive_long_double___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_long_double___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<long double>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<intptr_t>>", "Pointer<Primitive<intptr_t>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<intptr_t>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_intptr_t___reference, tolua_set_Pointer_Primitive_intptr_t___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_intptr_t___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<intptr_t>>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<Primitive<char>>", "Pointer<Primitive<char>>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<Primitive<char>>");
@@ -14460,17 +14442,47 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_char___setValue);
 		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<char>>));
 	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<bool>>", "Pointer<Primitive<bool>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<bool>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_bool___reference, tolua_set_Pointer_Primitive_bool___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_bool___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<bool>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<float>>", "Pointer<Primitive<float>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<float>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_float___reference, tolua_set_Pointer_Primitive_float___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_float___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<float>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<short>>", "Pointer<Primitive<short>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<short>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_short___reference, tolua_set_Pointer_Primitive_short___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_short___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<short>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<uintptr_t>>", "Pointer<Primitive<uintptr_t>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<uintptr_t>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_uintptr_t___reference, tolua_set_Pointer_Primitive_uintptr_t___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_uintptr_t___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<uintptr_t>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<__int32>>", "Pointer<Primitive<__int32>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<__int32>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive___int32___reference, tolua_set_Pointer_Primitive___int32___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive___int32___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<__int32>>));
+	tolua_endmodule(L);
+	tolua_cclass(L, "Pointer<Primitive<size_t>>", "Pointer<Primitive<size_t>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<size_t>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_size_t___reference, tolua_set_Pointer_Primitive_size_t___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_size_t___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<size_t>>));
+	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<Primitive<ushort>>", "Pointer<Primitive<ushort>>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<Primitive<ushort>>");
 		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_ushort___reference, tolua_set_Pointer_Primitive_ushort___reference);
 		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_ushort___setValue);
 		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<ushort>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<__int64>>", "Pointer<Primitive<__int64>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<__int64>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive___int64___reference, tolua_set_Pointer_Primitive___int64___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive___int64___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<__int64>>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<Primitive<ptrdiff_t>>", "Pointer<Primitive<ptrdiff_t>>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<Primitive<ptrdiff_t>>");
@@ -14484,23 +14496,11 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive___int8___setValue);
 		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<__int8>>));
 	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<long double>>", "Pointer<Primitive<long double>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<long double>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_long_double___reference, tolua_set_Pointer_Primitive_long_double___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_long_double___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<long double>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<__int32>>", "Pointer<Primitive<__int32>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<__int32>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive___int32___reference, tolua_set_Pointer_Primitive___int32___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive___int32___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<__int32>>));
-	tolua_endmodule(L);
-	tolua_cclass(L, "Pointer<Primitive<intptr_t>>", "Pointer<Primitive<intptr_t>>", {}, NULL);
-	tolua_beginmodule(L, "Pointer<Primitive<intptr_t>>");
-		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_intptr_t___reference, tolua_set_Pointer_Primitive_intptr_t___reference);
-		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_intptr_t___setValue);
-		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<intptr_t>>));
+	tolua_cclass(L, "Pointer<Primitive<long>>", "Pointer<Primitive<long>>", {}, NULL);
+	tolua_beginmodule(L, "Pointer<Primitive<long>>");
+		tolua_variable(L, "reference", tolua_get_Pointer_Primitive_long___reference, tolua_set_Pointer_Primitive_long___reference);
+		tolua_function(L, "setValue", &tolua_function_Pointer_Primitive_long___setValue);
+		tolua_constant(L, "sizeof", sizeof(Pointer<Primitive<long>>));
 	tolua_endmodule(L);
 	tolua_cclass(L, "Pointer<void*>", "Pointer<void*>", {}, NULL);
 	tolua_beginmodule(L, "Pointer<void*>");
