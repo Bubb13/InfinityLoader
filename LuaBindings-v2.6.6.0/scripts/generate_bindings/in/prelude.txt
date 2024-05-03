@@ -24,7 +24,7 @@ struct hasDestruct {
 	static constexpr bool value = check<T>(nullptr);
 };
 
-template<typename A>
+template<typename A, bool bDestruct = true>
 struct EngineVal
 {
 
@@ -35,6 +35,14 @@ private:
 	};
 
 public:
+
+	operator A*() {
+		return &val;
+	}
+
+	operator A() {
+		return val;
+	}
 
 	A* operator->() {
 		return &val;
@@ -50,7 +58,7 @@ public:
 	}
 
 	~EngineVal() {
-		if constexpr (hasDestruct<decltype(val)>::value) {
+		if constexpr (bDestruct && hasDestruct<decltype(val)>::value) {
 			val.Destruct();
 		}
 	}

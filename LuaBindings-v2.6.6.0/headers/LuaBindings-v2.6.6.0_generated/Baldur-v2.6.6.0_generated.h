@@ -24,7 +24,7 @@ struct hasDestruct {
 	static constexpr bool value = check<T>(nullptr);
 };
 
-template<typename A>
+template<typename A, bool bDestruct = true>
 struct EngineVal
 {
 
@@ -35,6 +35,14 @@ private:
 	};
 
 public:
+
+	operator A*() {
+		return &val;
+	}
+
+	operator A() {
+		return val;
+	}
 
 	A* operator->() {
 		return &val;
@@ -50,7 +58,7 @@ public:
 	}
 
 	~EngineVal() {
-		if constexpr (hasDestruct<decltype(val)>::value) {
+		if constexpr (bDestruct && hasDestruct<decltype(val)>::value) {
 			val.Destruct();
 		}
 	}
@@ -5258,9 +5266,17 @@ struct CAICondition
 	typedef int (__thiscall *type_Hold)(CAICondition* pThis, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
 	static type_Hold p_Hold;
 
+	typedef int (__thiscall *type_TriggerHolds)(CAICondition* pThis, CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+	static type_TriggerHolds p_TriggerHolds;
+
 	int Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller)
 	{
 		return p_Hold(this, triggerList, caller);
+	}
+
+	int TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller)
+	{
+		return p_TriggerHolds(this, pTrigger, triggerList, caller);
 	}
 };
 
@@ -12378,6 +12394,9 @@ struct CAIObjectType
 	typedef CGameObject* (__thiscall *type_GetShare)(CAIObjectType* pThis, CGameAIBase* caller, int checkBackList);
 	static type_GetShare p_GetShare;
 
+	typedef CGameObject* (__thiscall *type_GetShareType)(CAIObjectType* pThis, CGameAIBase* caller, byte type, int checkBackList);
+	static type_GetShareType p_GetShareType;
+
 	typedef byte (__thiscall *type_OfType)(const CAIObjectType* pThis, const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance);
 	static type_OfType p_OfType;
 
@@ -12397,6 +12416,11 @@ struct CAIObjectType
 	CGameObject* GetShare(CGameAIBase* caller, int checkBackList)
 	{
 		return p_GetShare(this, caller, checkBackList);
+	}
+
+	CGameObject* GetShareType(CGameAIBase* caller, byte type, int checkBackList)
+	{
+		return p_GetShareType(this, caller, type, checkBackList);
 	}
 
 	byte OfType(const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance) const
@@ -13537,6 +13561,14 @@ struct CAITrigger
 	CString m_string2;
 
 	CAITrigger() = delete;
+
+	typedef byte (__thiscall *type_OfType)(CAITrigger* pThis, const CAITrigger* trigger);
+	static type_OfType p_OfType;
+
+	byte OfType(const CAITrigger* trigger)
+	{
+		return p_OfType(this, trigger);
+	}
 };
 
 struct CGameAIBase : CGameObject

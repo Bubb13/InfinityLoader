@@ -15,6 +15,7 @@ CRes::type_Demand CRes::p_Demand;
 CResPVR::type_Demand CResPVR::p_Demand;
 CMessageHandler::type_AddMessage CMessageHandler::p_AddMessage;
 CAICondition::type_Hold CAICondition::p_Hold;
+CAICondition::type_TriggerHolds CAICondition::p_TriggerHolds;
 CImmunitiesAIType::type_OnList CImmunitiesAIType::p_OnList;
 CObList::type_Construct CObList::p_Construct;
 CObList::type_RemoveHead CObList::p_RemoveHead;
@@ -133,6 +134,7 @@ CGameArea::type_OnActionButtonClickGround CGameArea::p_OnActionButtonClickGround
 CAIObjectType::type_Construct1 CAIObjectType::p_Construct1;
 CAIObjectType::type_Decode CAIObjectType::p_Decode;
 CAIObjectType::type_GetShare CAIObjectType::p_GetShare;
+CAIObjectType::type_GetShareType CAIObjectType::p_GetShareType;
 CAIObjectType::type_OfType CAIObjectType::p_OfType;
 CAIObjectType::type_Set CAIObjectType::p_Set;
 CAIObjectType* CAIObjectType::p_NOONE;
@@ -146,6 +148,7 @@ Array<byte,16>* CGameObject::p_DEFAULT_VISIBLE_TERRAIN_TABLE;
 Array<byte,16>* CGameObject::p_DEFAULT_TERRAIN_TABLE;
 CProjectile::type_AddEffect CProjectile::p_AddEffect;
 CProjectile::type_ClearEffects CProjectile::p_ClearEffects;
+CAITrigger::type_OfType CAITrigger::p_OfType;
 CGameAIBase::type_ApplyEffectToParty CGameAIBase::p_ApplyEffectToParty;
 CGameAIBase::type_GetTargetShare CGameAIBase::p_GetTargetShare;
 CGameAIBase::type_GetTargetShareType1 CGameAIBase::p_GetTargetShareType1;
@@ -205,6 +208,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CResPVR::Demand"), CResPVR::p_Demand);
 	attemptFillPointer(TEXT("CMessageHandler::AddMessage"), CMessageHandler::p_AddMessage);
 	attemptFillPointer(TEXT("CAICondition::Hold"), CAICondition::p_Hold);
+	attemptFillPointer(TEXT("CAICondition::TriggerHolds"), CAICondition::p_TriggerHolds);
 	attemptFillPointer(TEXT("CImmunitiesAIType::OnList"), CImmunitiesAIType::p_OnList);
 	attemptFillPointer(TEXT("CObList::Construct"), CObList::p_Construct);
 	attemptFillPointer(TEXT("CObList::RemoveHead"), CObList::p_RemoveHead);
@@ -323,6 +327,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CAIObjectType::Construct1"), CAIObjectType::p_Construct1);
 	attemptFillPointer(TEXT("CAIObjectType::Decode"), CAIObjectType::p_Decode);
 	attemptFillPointer(TEXT("CAIObjectType::GetShare"), CAIObjectType::p_GetShare);
+	attemptFillPointer(TEXT("CAIObjectType::GetShareType"), CAIObjectType::p_GetShareType);
 	attemptFillPointer(TEXT("CAIObjectType::OfType"), CAIObjectType::p_OfType);
 	attemptFillPointer(TEXT("CAIObjectType::Set"), CAIObjectType::p_Set);
 	attemptFillPointer(TEXT("CAIObjectType::NOONE"), CAIObjectType::p_NOONE);
@@ -336,6 +341,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CGameObject::DEFAULT_TERRAIN_TABLE"), CGameObject::p_DEFAULT_TERRAIN_TABLE);
 	attemptFillPointer(TEXT("CProjectile::AddEffect"), CProjectile::p_AddEffect);
 	attemptFillPointer(TEXT("CProjectile::ClearEffects"), CProjectile::p_ClearEffects);
+	attemptFillPointer(TEXT("CAITrigger::OfType"), CAITrigger::p_OfType);
 	attemptFillPointer(TEXT("CGameAIBase::ApplyEffectToParty"), CGameAIBase::p_ApplyEffectToParty);
 	attemptFillPointer(TEXT("CGameAIBase::GetTargetShare"), CGameAIBase::p_GetTargetShare);
 	attemptFillPointer(TEXT("CGameAIBase::GetTargetShareType1"), CGameAIBase::p_GetTargetShareType1);

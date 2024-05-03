@@ -8,6 +8,9 @@ constexpr uintptr_t offsetofbase() {
 
 void registerBaseclasses() {
 	RegisterBaseclassOffsets({
+		{"CGameSprite", {
+			{"CGameAIBase", offsetofbase<CGameSprite, CGameAIBase>()},
+		}},
 	});
 }
 

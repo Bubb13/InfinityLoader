@@ -15,7 +15,7 @@ python %script_path%^
  -dllName=LuaBindings-PSTEE.dll^
  -preludeFile=./in/prelude.txt^
  -suffixFile=./in/suffix.txt^
- -wantedFile=./in/wanted_types.txt^
+ -wantedFiles=./in/wanted_types.txt^
  -printFuncWideString=PrintT^
  > log.txt 2>&1
 
@@ -29,7 +29,7 @@ python %script_path%^
  -noCustomTypes^
  -outFile=./out/Baldur-v2.5.17.0_lua_generated.h^
  -preludeFile=./in_lua/prelude.txt^
- -wantedFile=./in_lua/wanted_types.txt^
+ -wantedFiles=./in_lua/wanted_types.txt^
  > log_lua.txt 2>&1
 
 copy /Y .\out\Baldur-v2.5.17.0_lua_generated.h ..\..\headers\LuaBindings-PSTEE_generated

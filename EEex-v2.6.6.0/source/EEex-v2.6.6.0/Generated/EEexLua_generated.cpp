@@ -110,12 +110,30 @@ static int tolua_function_EEex_IsDefaultAttackCursor(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_GetSpriteFromUUID(lua_State* L)
+{
+	CGameSprite* returnVal = EEex::GetSpriteFromUUID(tolua_function_tointeger<uint64_t>(L, 1, "GetSpriteFromUUID"));
+	tolua_pushusertype(L, (void*)returnVal, "CGameSprite");
+	return 1;
+}
+
+static int tolua_function_CGameSprite_getUUID(lua_State* L)
+{
+	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
+	if (!self) tolua_error(L, "invalid 'self' in calling function 'getUUID'", NULL);
+	uint64_t returnVal = self->GetUUID();
+	lua_pushinteger(L, (lua_Integer)returnVal);
+	return 1;
+}
+
 static void tolua_reg_types(lua_State* L)
 {
+	tolua_usertype(L, "EEex_OnBeforeEffectUnmarshalledRet");
 	tolua_usertype(L, "EEex_MatchObjectFlags");
 	tolua_usertype(L, "EEex_HookIntegrityWatchdogRegister");
 	tolua_usertype(L, "EEex");
 	tolua_usertype(L, "EEex::ProjectileType");
+	tolua_usertype(L, "CGameSprite");
 }
 
 void registerBaseclasses();
@@ -126,6 +144,12 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_reg_types(L);
 	tolua_module(L, NULL, 0);
 	tolua_beginmodule(L, NULL);
+	tolua_cclass(L, "EEex_OnBeforeEffectUnmarshalledRet", "EEex_OnBeforeEffectUnmarshalledRet", {"__int32"}, NULL);
+	tolua_beginmodule(L, "EEex_OnBeforeEffectUnmarshalledRet");
+		tolua_constant(L, "NORMAL", 0);
+		tolua_constant(L, "CONTINUE", 1);
+		tolua_constant(L, "BREAK", 2);
+	tolua_endmodule(L);
 	tolua_cclass(L, "EEex_MatchObjectFlags", "EEex_MatchObjectFlags", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex_MatchObjectFlags");
 		tolua_constant(L, "IGNORE_LOS", 1);
@@ -175,6 +199,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
 		tolua_function(L, "IsDefaultAttackCursor", &tolua_function_EEex_IsDefaultAttackCursor);
+		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");
@@ -198,6 +223,10 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_constant(L, "CProjectileSkyStrikeBAM", 131072);
 		tolua_constant(L, "CProjectileSpellHit", 262144);
 		tolua_constant(L, "CProjectileTravelDoor", 524288);
+	tolua_endmodule(L);
+	tolua_cclass(L, "CGameSprite", "CGameSprite", {"CGameAIBase"}, NULL);
+	tolua_beginmodule(L, "CGameSprite");
+		tolua_function(L, "getUUID", &tolua_function_CGameSprite_getUUID);
 	tolua_endmodule(L);
 	tolua_endmodule(L);
 	return 1;

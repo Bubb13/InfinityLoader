@@ -21,6 +21,7 @@
     <ClCompile Include="source\EEex-v2.6.6.0\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\common\eeex_api.h" />
     <ClInclude Include="headers\EEex-v2.6.6.0\EEex.h" />
     <ClInclude Include="headers\EEex-v2.6.6.0\EEexLua_generated.h" />
     <ClInclude Include="headers\EEex-v2.6.6.0\util.hpp" />

@@ -670,3 +670,106 @@ int CGameArea::Override_GetNearest(int startObject, const CAIObjectType* type, s
 		? returnVal
 		: 0;
 }
+
+int Reference_CAICondition_Hold(CAICondition* pThis, CTypedPtrList<CPtrList, CAITrigger*>* pTriggerList, CGameAIBase* pCaller)
+{
+	auto pNode = pThis->m_triggerList.m_pNodeHead;
+	if (pNode == nullptr) {
+		return 1;
+	}
+
+	int nRet = 0;
+	int nORCounter = 0;
+
+	bool bNextTriggerObject = false;
+	CGameAIBase* pNextTriggerObject = nullptr;
+
+	do
+	{
+		if (nORCounter <= 0) {
+			nRet = 0;
+		}
+
+		CAITrigger* const pTrigger = pNode->data;
+		const short nTriggerID = pTrigger->m_triggerID;
+
+		if (nTriggerID == 0x4089) // OR
+		{
+			nORCounter = pTrigger->m_specificID;
+		}
+		else if (nTriggerID == 0x40E0) // NextTriggerObject
+		{
+			EngineVal<CAIObjectType> nextTriggerObjectType{ &pTrigger->m_triggerCause };
+			nextTriggerObjectType->Decode(pCaller);
+
+			bNextTriggerObject = true;
+			pNextTriggerObject = reinterpret_cast<CGameAIBase*>(nextTriggerObjectType->GetShareType(pCaller, 1, 0));
+
+			if (pNextTriggerObject != nullptr && nORCounter < 1) {
+				nRet = 1;
+			}
+		}
+		else {
+			--nORCounter;
+		}
+
+		if (nTriggerID != 0x40E0) // NOT NextTriggerObject
+		{
+			if (bNextTriggerObject)
+			{
+				if (pNextTriggerObject != nullptr)
+				{
+					bNextTriggerObject = false;
+					nRet |= pThis->TriggerHolds(pTrigger, pTriggerList, pNextTriggerObject);
+				}
+			}
+			else
+			{
+				nRet |= pThis->TriggerHolds(pTrigger, pTriggerList, pCaller);
+			}
+		}
+
+		if (nRet == 0 && nORCounter < 1) // Fail
+		{
+			break;
+		}
+
+		pNode = pNode->pNext;
+	} while (pNode != nullptr);
+
+	return nRet;
+}
+
+int Reference_CAICondition_TriggerHolds(CAICondition* pThis, CAITrigger* pTrigger, CTypedPtrList<CPtrList, CAITrigger*>* pTriggerList, CGameAIBase* pCaller)
+{
+	bool nRet = false;
+
+	if ((pTrigger->m_triggerID & 0x4000) == 0) // Event-driven trigger
+	{
+		for (auto pNode = pTriggerList->m_pNodeHead; pNode != nullptr; pNode = pNode->pNext)
+		{
+			pTrigger->m_triggerCause.Decode(pCaller);
+			nRet = pNode->data->OfType(pTrigger);
+
+			if ((pTrigger->m_flags & 1) != 0) // Inverted
+			{
+				nRet = !nRet;
+			}
+
+			if (nRet) {
+				break;
+			}
+		}
+	}
+	else // Status trigger
+	{
+		nRet = pCaller->virtual_EvaluateStatusTrigger(pTrigger);
+
+		if ((pTrigger->m_flags & 1) != 0) // Inverted
+		{
+			nRet = !nRet;
+		}
+	}
+
+	return nRet;
+}

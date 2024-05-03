@@ -14,6 +14,12 @@ void exportPattern(const String& name, void* value) {
 	sharedState().SetSinglePatternValue(handle, value);
 }
 
+// Ugly hack to get a member-function pointer
+template<typename T>
+constexpr void* GetMemberPtr(T func) {
+	return reinterpret_cast<void*&>(func);
+}
+
 void exportPatterns() {
 
 	///////////////////////////////////////////////
@@ -31,6 +37,8 @@ void exportPatterns() {
 	exportPattern(TEXT("EEex::Override_CGameEffect_CheckSave"), EEex::Override_CGameEffect_CheckSave);
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);
+	exportPattern(TEXT("CAICondition::Override_Hold"), GetMemberPtr(&CAICondition::Override_Hold));
+	exportPattern(TEXT("CAICondition::Override_TriggerHolds"), GetMemberPtr(&CAICondition::Override_TriggerHolds));
 
 	/////////////////////////////
 	//          Hooks          //
@@ -41,6 +49,7 @@ void exportPatterns() {
 	////////////////
 
 	exportPattern(TEXT("EEex::GameState_Hook_OnInitialized"), EEex::GameState_Hook_OnInitialized);
+	exportPattern(TEXT("EEex::GameState_Hook_OnAfterGlobalVariablesUnmarshalled"), EEex::GameState_Hook_OnAfterGlobalVariablesUnmarshalled);
 
 	///////////
 	// Stats //
@@ -92,6 +101,9 @@ void exportPatterns() {
 
 	exportPattern(TEXT("EEex::Sprite_Hook_OnConstruct"), EEex::Sprite_Hook_OnConstruct);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnDestruct"), EEex::Sprite_Hook_OnDestruct);
+	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeEffectUnmarshalled"), EEex::Sprite_Hook_OnBeforeEffectUnmarshalled);
+	exportPattern(TEXT("EEex::Sprite_Hook_OnAfterEffectListUnmarshalled"), EEex::Sprite_Hook_OnAfterEffectListUnmarshalled);
+	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeEffectListMarshalled"), EEex::Sprite_Hook_OnBeforeEffectListMarshalled);
 
 	////////////
 	// Action //
@@ -121,6 +133,21 @@ void exportPatterns() {
 
 	exportPattern(TEXT("EEex::Fix_Hook_ShouldTransformSpellImmunityStrref"), EEex::Fix_Hook_ShouldTransformSpellImmunityStrref);
 	exportPattern(TEXT("EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing"), EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing);
+
+	/////////////
+	// Trigger //
+	/////////////
+
+	exportPattern(TEXT("EEex::Trigger_Hook_OnScriptLevelHit"), EEex::Trigger_Hook_OnScriptLevelHit);
+	exportPattern(TEXT("EEex::Trigger_Hook_OnConditionResponseHit"), EEex::Trigger_Hook_OnConditionResponseHit);
+
+	///////////////////////////////
+	//          Globals          //
+	///////////////////////////////
+
+	exportPattern(TEXT("EEex::bInTrackedResponse"), &EEex::bInTrackedResponse);
+	exportPattern(TEXT("EEex::bStripUUID"), &EEex::bStripUUID);
+	exportPattern(TEXT("EEex::bNoUUID"), &EEex::bNoUUID);
 }
 
 void __stdcall InitBindings(SharedState argSharedState) {

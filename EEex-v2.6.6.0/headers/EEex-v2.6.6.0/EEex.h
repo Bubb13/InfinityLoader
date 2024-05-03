@@ -60,6 +60,7 @@ namespace EEex {
 	////////////////
 
 	void GameState_Hook_OnInitialized();
+	void GameState_Hook_OnAfterGlobalVariablesUnmarshalled();
 
 	///////////
 	// Stats //
@@ -111,6 +112,9 @@ namespace EEex {
 
 	void Sprite_Hook_OnConstruct(CGameSprite* pSprite);
 	void Sprite_Hook_OnDestruct(CGameSprite* pSprite);
+	EEex_OnBeforeEffectUnmarshalledRet Sprite_Hook_OnBeforeEffectUnmarshalled(CGameSprite* pSprite, CGameEffectBase* pEffectBase);
+	void Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite);
+	void Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite);
 
 	////////////
 	// Action //
@@ -140,4 +144,20 @@ namespace EEex {
 
 	bool Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell);
 	bool Fix_Hook_SpellImmunityShouldSkipItemIndexing(CGameObject* pGameObject);
+
+	/////////////
+	// Trigger //
+	/////////////
+
+	void Trigger_Hook_OnScriptLevelHit(CGameAIBase* pCaller, unsigned char nScriptLevel);
+	void Trigger_Hook_OnConditionResponseHit(int16_t nResponseSetNum);
+
+	//---------------------------//
+	//          Exports          //
+	//---------------------------//
+
+	EXPORT void RegisterScriptLevelHitCallback(std::function<void(CGameAIBase*, unsigned char)> callback);
+	EXPORT void RegisterConditionResponseHitCallback(std::function<void(int16_t)> callback);
+	EXPORT void RegisterTriggerHitCallback(std::function<void(int32_t)> callback);
+	EXPORT void RegisterTriggerEvaluatedCallback(std::function<void(bool)> callback);
 }

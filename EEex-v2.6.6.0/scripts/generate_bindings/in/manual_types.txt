@@ -844,6 +844,7 @@ struct CAIObjectType
 	$constructor_fake Construct1(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
 	void Decode(CGameAIBase* caller);
 	CGameObject* GetShare(CGameAIBase* caller, int checkBackList);
+	CGameObject* GetShareType(CGameAIBase* caller, byte type, int checkBackList);
 	byte OfType(const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance) const;
 	void Set(const CAIObjectType* that);
 
@@ -1039,6 +1040,7 @@ struct CAIAction
 struct CAICondition
 {
 	int Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+	int TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
 };
 
 struct CVidMode
@@ -1246,6 +1248,11 @@ struct slicedRect
 struct CResPVR : CRes
 {
 	void* Demand();
+};
+
+struct CAITrigger
+{
+	byte OfType(const CAITrigger* trigger);
 };
 
 //////////////////////////////

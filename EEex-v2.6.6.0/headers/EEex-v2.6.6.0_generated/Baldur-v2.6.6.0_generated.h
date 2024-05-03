@@ -25,7 +25,7 @@ struct hasDestruct {
 	static constexpr bool value = check<T>(nullptr);
 };
 
-template<typename A>
+template<typename A, bool bDestruct = true>
 struct EngineVal
 {
 
@@ -59,7 +59,7 @@ public:
 	}
 
 	~EngineVal() {
-		if constexpr (hasDestruct<decltype(val)>::value) {
+		if constexpr (bDestruct && hasDestruct<decltype(val)>::value) {
 			val.Destruct();
 		}
 	}
@@ -1191,6 +1191,13 @@ enum class EItemPreviewType : __int32
 	k_EItemPreviewType_EnvironmentMap_HorizontalCross = 3,
 	k_EItemPreviewType_EnvironmentMap_LatLong = 4,
 	k_EItemPreviewType_ReservedMax = 255,
+};
+
+enum class EEex_OnBeforeEffectUnmarshalledRet : __int32
+{
+	NORMAL = 0,
+	CONTINUE = 1,
+	BREAK = 2,
 };
 
 enum class EEex_MatchObjectFlags : __int32
@@ -2968,6 +2975,9 @@ namespace EEex
 
 	extern bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	extern bool Projectile_LuaHook_GlobalMutators_Enabled;
+	extern bool bInTrackedResponse;
+	extern bool bStripUUID;
+	extern bool bNoUUID;
 
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 	void DeepCopy(lua_State* L);
@@ -2980,6 +2990,7 @@ namespace EEex
 	void RegisterSlicedRect(lua_State* L);
 	void DrawSlicedRect(lua_State* L);
 	bool IsDefaultAttackCursor();
+	CGameSprite* GetSpriteFromUUID(uint64_t uuid);
 };
 
 struct ConstCharString
@@ -5343,10 +5354,21 @@ struct CAICondition
 	typedef int (__thiscall *type_Hold)(CAICondition* pThis, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
 	static type_Hold p_Hold;
 
+	typedef int (__thiscall *type_TriggerHolds)(CAICondition* pThis, CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+	static type_TriggerHolds p_TriggerHolds;
+
 	int Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller)
 	{
 		return p_Hold(this, triggerList, caller);
 	}
+
+	int TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller)
+	{
+		return p_TriggerHolds(this, pTrigger, triggerList, caller);
+	}
+
+	int Override_Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+	int Override_TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
 };
 
 struct CAIResponseSet
@@ -12463,6 +12485,9 @@ struct CAIObjectType
 	typedef CGameObject* (__thiscall *type_GetShare)(CAIObjectType* pThis, CGameAIBase* caller, int checkBackList);
 	static type_GetShare p_GetShare;
 
+	typedef CGameObject* (__thiscall *type_GetShareType)(CAIObjectType* pThis, CGameAIBase* caller, byte type, int checkBackList);
+	static type_GetShareType p_GetShareType;
+
 	typedef byte (__thiscall *type_OfType)(const CAIObjectType* pThis, const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance);
 	static type_OfType p_OfType;
 
@@ -12482,6 +12507,11 @@ struct CAIObjectType
 	CGameObject* GetShare(CGameAIBase* caller, int checkBackList)
 	{
 		return p_GetShare(this, caller, checkBackList);
+	}
+
+	CGameObject* GetShareType(CGameAIBase* caller, byte type, int checkBackList)
+	{
+		return p_GetShareType(this, caller, type, checkBackList);
 	}
 
 	byte OfType(const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance) const
@@ -13622,6 +13652,14 @@ struct CAITrigger
 	CString m_string2;
 
 	CAITrigger() = delete;
+
+	typedef byte (__thiscall *type_OfType)(CAITrigger* pThis, const CAITrigger* trigger);
+	static type_OfType p_OfType;
+
+	byte OfType(const CAITrigger* trigger)
+	{
+		return p_OfType(this, trigger);
+	}
 };
 
 struct CGameAIBase : CGameObject
@@ -14438,6 +14476,8 @@ struct CGameSprite : CGameAIBase
 	{
 		p_UpdateTarget(this, target);
 	}
+
+	uint64_t GetUUID();
 
 	virtual void virtual_SetTarget_2(const CPoint* _0, int _1)
 	{

@@ -15,7 +15,7 @@ python %script_path%^
  -dllName=EEex.dll^
  -packingFile=./in/packing.txt^
  -preludeFile=./in/prelude.txt^
- -wantedFile=./in/wanted_types.txt^
+ -wantedFiles=./in/wanted_types.txt^
  -printFuncWideString=PrintT^
  > log.txt 2>&1
 
@@ -31,7 +31,7 @@ python %script_path%^
  -outFile=./out/Baldur-v2.6.6.0_lua_generated.h^
  -packingFile=./in/packing.txt^
  -preludeFile=./in_lua/prelude.txt^
- -wantedFile=./in_lua/wanted_types.txt^
+ -wantedFiles=./in_lua/wanted_types.txt^
  > log_lua.txt 2>&1
 
 copy /Y .\out\Baldur-v2.6.6.0_lua_generated.h ..\..\headers\EEex-v2.6.6.0_generated\

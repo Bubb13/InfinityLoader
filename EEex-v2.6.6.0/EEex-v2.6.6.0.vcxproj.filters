@@ -31,6 +31,9 @@
     <Filter Include="Build Tasks">
       <UniqueIdentifier>{7401bc95-18bd-4d13-b4a5-17df07b7b7f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{f6929204-ca97-478a-84cb-cbaacb13c33d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\EEex-v2.6.6.0\main.cpp">
@@ -73,6 +76,9 @@
     </ClInclude>
     <ClInclude Include="headers\EEex-v2.6.6.0\EEex.h">
       <Filter>Header Files\EEex-v2.6.6.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\eeex_api.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

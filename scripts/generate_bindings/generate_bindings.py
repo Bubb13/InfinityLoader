@@ -563,9 +563,9 @@ class TemplateTypeMode(Enum):
 
 
 
-primitives = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "wchar_t", "double", "long double"}
-handledPrimitives = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "bool", "char", "float", "double", "long double"}
-primitiveNumbers = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "long", "float", "double", "long double"}
+primitives        = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t", "long", "bool", "char", "float", "wchar_t", "double", "long double" }
+handledPrimitives = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t", "long", "bool", "char", "float",            "double", "long double" }
+primitiveNumbers  = {"byte", "short", "ushort", "uint", "ptrdiff_t", "intptr_t", "uintptr_t", "size_t", "int", "__int8", "__int16", "__int32", "__int64", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t", "long",                 "float",            "double", "long double" }
 
 class TypeReference:
 
@@ -4180,6 +4180,15 @@ def fileAsSet(filePath):
 	return s
 
 
+def filesAsSet(filePaths):
+	s = set()
+	for filePath in filePaths:
+		with open(filePath) as fileIn:
+			for line in fileIn:
+				s.add(line.strip())
+	return s
+
+
 def outputFile(filePath, out: TextIOWrapper):
 	if filePath != None:
 		with open(filePath) as fileIn:
@@ -4187,13 +4196,13 @@ def outputFile(filePath, out: TextIOWrapper):
 				out.write(line)
 
 
-def filterGroups(mainState: MainState, wantedFile: str, ignoreHeaderFile: str, packingFile: str):
+def filterGroups(mainState: MainState, wantedFiles: list[str], ignoreHeaderFile: str, packingFile: str):
 
 	"""
 	Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
 	"""
 
-	wantedNames = fileAsSet(wantedFile)
+	wantedNames = filesAsSet(wantedFiles)
 	wantedNames.add("EngineGlobals")
 	wantedNames.add("Pointer") # WORKAROUND
 	wantedNames.add("VoidPointer") # WORKAROUND
@@ -4632,7 +4641,7 @@ def main():
 	suffixFile: str = None
 	bindingsPreludeFile: str = None
 	ignoreHeaderFile: str = None
-	wantedFile: str = None
+	wantedFiles: str = ""
 	manualTypesFile: str = None
 	alreadyDefinedUsertypesFile: str = None
 	packingFile: str = None
@@ -4653,7 +4662,7 @@ def main():
 		elif (v := re.search("-suffixFile=(.+)",                  k)) != None: suffixFile                    = v.group(1)
 		elif (v := re.search("-bindingsPreludeFile=(.+)",         k)) != None: bindingsPreludeFile           = v.group(1)
 		elif (v := re.search("-ignoreHeaderFile=(.+)",            k)) != None: ignoreHeaderFile              = v.group(1)
-		elif (v := re.search("-wantedFile=(.+)",                  k)) != None: wantedFile                    = v.group(1)
+		elif (v := re.search("-wantedFiles=(.+)",                 k)) != None: wantedFiles                   = v.group(1)
 		elif (v := re.search("-manualTypesFile=(.+)",             k)) != None: manualTypesFile               = v.group(1)
 		elif (v := re.search("-alreadyDefinedUsertypesFile=(.+)", k)) != None: alreadyDefinedUsertypesFile   = v.group(1)
 		elif (v := re.search("-packingFile=(.+)",                 k)) != None: packingFile                   = v.group(1)
@@ -4751,7 +4760,7 @@ struct UnmappedUserType
 			group.mapDependsOn(mainState)   # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
 
 		# Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
-		filterGroups(mainState, wantedFile, ignoreHeaderFile, packingFile)
+		filterGroups(mainState, wantedFiles.split(","), ignoreHeaderFile, packingFile)
 
 		# Fill templateUses and uniqueUseRepresentations
 		for group in mainState.filteredGroups:

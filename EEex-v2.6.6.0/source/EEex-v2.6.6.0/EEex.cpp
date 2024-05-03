@@ -145,6 +145,7 @@ struct ExSpriteData {
 
 	Array<int, 3> oldDisabledSpellTypes;
 	int oldDisableSpells = 0;
+	uint64_t uuid = 0;
 
 	ExSpriteData() {
 		std::fill_n(oldDisabledSpellTypes.data, 3, 0);
@@ -152,6 +153,22 @@ struct ExSpriteData {
 };
 
 std::unordered_map<void*, ExSpriteData> exSpriteDataMap{};
+std::unordered_map<uint64_t, CGameSprite*> uuidToSprite{};
+
+////////////////
+// Game State //
+////////////////
+
+uint64_t nextUUID = 0;
+
+/////////////
+// Exports //
+/////////////
+
+std::vector<std::function<void(CGameAIBase*, unsigned char)>> scriptLevelHitCallbacks;
+std::vector<std::function<void(int16_t)>> conditionResponseHitCallbacks{};
+std::vector<std::function<void(int32_t)>> triggerHitCallbacks{};
+std::vector<std::function<void(bool)>> triggerEvaluatedCallbacks{};
 
 //-----------------------------//
 //          Math Util          //
@@ -297,6 +314,20 @@ void EEex::HookIntegrityWatchdogExit(const uintptr_t hookAddress, const size_t i
 	}
 
 	hookIntegrityWatchdogSnapshotVector.pop_back();
+}
+
+uint64_t CGameSprite::GetUUID() {
+	if (auto itr = exSpriteDataMap.find(this); itr != exSpriteDataMap.end()) {
+		return itr->second.uuid;
+	}
+	return 0;
+}
+
+CGameSprite* EEex::GetSpriteFromUUID(uint64_t uuid) {
+	if (auto itr = uuidToSprite.find(uuid); itr != uuidToSprite.end()) {
+		return itr->second;
+	}
+	return nullptr;
 }
 
 //--------------------------------//
@@ -2164,6 +2195,150 @@ int __cdecl EEex::Override_Infinity_WriteINILine(lua_State* L) {
 	return 0;
 }
 
+int CAICondition::Override_Hold(CTypedPtrList<CPtrList, CAITrigger*>* pTriggerList, CGameAIBase* pCaller)
+{
+	auto pNode = this->m_triggerList.m_pNodeHead;
+	if (pNode == nullptr) {
+		return 1;
+	}
+
+	bool bRet = false;
+	int nORCounter = 0;
+
+	bool bNextTriggerObject = false;
+	CGameAIBase* pNextTriggerObject = nullptr;
+
+	// EEex
+	int nTrigger = 0;
+
+	do
+	{
+		if (nORCounter <= 0) {
+			bRet = false;
+		}
+
+		CAITrigger *const pTrigger = pNode->data;
+		const short nTriggerID = pTrigger->m_triggerID;
+
+		if (nTriggerID == 0x4089) // OR
+		{
+			nORCounter = pTrigger->m_specificID;
+		}
+		else if (nTriggerID == 0x40E0) // NextTriggerObject
+		{
+			EngineVal<CAIObjectType> nextTriggerObjectType{ &pTrigger->m_triggerCause };
+			nextTriggerObjectType->Decode(pCaller);
+
+			bNextTriggerObject = true;
+			pNextTriggerObject = reinterpret_cast<CGameAIBase*>(nextTriggerObjectType->GetShareType(pCaller, 1, 0));
+
+			if (pNextTriggerObject != nullptr && nORCounter < 1) {
+				bRet = true;
+			}
+		}
+		else {
+			--nORCounter;
+		}
+
+		if (nTriggerID != 0x40E0) // NOT NextTriggerObject
+		{
+			if (bNextTriggerObject)
+			{
+				if (pNextTriggerObject != nullptr)
+				{
+					// EEex
+					if (EEex::bInTrackedResponse)
+					{
+						for (auto callback : triggerHitCallbacks) {
+							callback(nTrigger);
+						}
+					}
+
+					bNextTriggerObject = false;
+					const bool bTriggerHolds = this->TriggerHolds(pTrigger, pTriggerList, pNextTriggerObject);
+					bRet |= bTriggerHolds;
+
+					// EEex
+					if (EEex::bInTrackedResponse)
+					{
+						for (auto callback : triggerEvaluatedCallbacks) {
+							callback(bTriggerHolds);
+						}
+					}
+				}
+			}
+			else
+			{
+				// EEex
+				if (EEex::bInTrackedResponse)
+				{
+					for (auto callback : triggerHitCallbacks) {
+						callback(nTrigger);
+					}
+				}
+
+				const bool bTriggerHolds = this->TriggerHolds(pTrigger, pTriggerList, pCaller);
+				bRet |= bTriggerHolds;
+
+				// EEex
+				if (EEex::bInTrackedResponse)
+				{
+					for (auto callback : triggerEvaluatedCallbacks) {
+						callback(bTriggerHolds);
+					}
+				}
+			}
+		}
+
+		if (!bRet && nORCounter < 1) // Fail
+		{
+			break;
+		}
+
+		pNode = pNode->pNext;
+
+		// EEex
+		++nTrigger;
+	}
+	while (pNode != nullptr);
+
+	return bRet;
+}
+
+int CAICondition::Override_TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList, CAITrigger*>* pTriggerList, CGameAIBase* pCaller)
+{
+	bool nRet = false;
+
+	if ((pTrigger->m_triggerID & 0x4000) == 0) // Event-driven trigger
+	{
+		for (auto pNode = pTriggerList->m_pNodeHead; pNode != nullptr; pNode = pNode->pNext)
+		{
+			pTrigger->m_triggerCause.Decode(pCaller);
+			nRet = pNode->data->OfType(pTrigger);
+
+			if ((pTrigger->m_flags & 1) != 0) // Inverted
+			{
+				nRet = !nRet;
+			}
+
+			if (nRet) {
+				break;
+			}
+		}
+	}
+	else // Status trigger
+	{
+		nRet = pCaller->virtual_EvaluateStatusTrigger(pTrigger);
+
+		if ((pTrigger->m_flags & 1) != 0) // Inverted
+		{
+			nRet = !nRet;
+		}
+	}
+
+	return nRet;
+}
+
 /////////////////////////////
 //          Hooks          //
 /////////////////////////////
@@ -2186,6 +2361,42 @@ void EEex::GameState_Hook_OnInitialized() {
 	});
 
 	STUTTER_LOG_END
+}
+
+void addNextUUIDLocal(CVariableHash* pVariables) {
+	EngineVal<CVariable> variable;
+	variable->m_name.set("EEEX_NEXTUUID");
+	variable->m_intValue = static_cast<int>(nextUUID);
+	variable->m_dWValue = static_cast<unsigned int>(nextUUID >> 32);
+	pVariables->AddKey(variable);
+}
+
+void updateNextUUIDLocal() {
+
+	CVariableHash *const pGlobalVariables = &(*p_g_pBaldurChitin)->m_pObjectGame->m_variables;
+	CVariable *const pVariable = pGlobalVariables->FindKey(EngineVal<CString, false>{"EEEX_NEXTUUID"});
+
+	if (pVariable == nullptr) {
+		addNextUUIDLocal(pGlobalVariables);
+	}
+	else {
+		pVariable->m_intValue = static_cast<int>(nextUUID);
+		pVariable->m_dWValue = static_cast<unsigned int>(nextUUID >> 32);
+	}
+}
+
+void EEex::GameState_Hook_OnAfterGlobalVariablesUnmarshalled() {
+
+	CVariableHash *const pGlobalVariables = &(*p_g_pBaldurChitin)->m_pObjectGame->m_variables;
+	CVariable *const pVariable = pGlobalVariables->FindKey(EngineVal<CString, false>{"EEEX_NEXTUUID"});
+
+	if (pVariable == nullptr) {
+		nextUUID = 0;
+		addNextUUIDLocal(pGlobalVariables);
+	}
+	else {
+		nextUUID = (static_cast<uint64_t>(pVariable->m_dWValue) << 32) | pVariable->m_intValue;
+	}
 }
 
 ///////////
@@ -2714,7 +2925,94 @@ void EEex::Sprite_Hook_OnConstruct(CGameSprite* pSprite) {
 }
 
 void EEex::Sprite_Hook_OnDestruct(CGameSprite* pSprite) {
-	exSpriteDataMap.erase(pSprite);
+	if (auto itr = exSpriteDataMap.find(pSprite); itr != exSpriteDataMap.end()) {
+		ExSpriteData& exData = itr->second;
+		if (exData.uuid != 0) {
+			//Print("Erased UUID %llu association\n", exData.uuid);
+			uuidToSprite.erase(exData.uuid);
+		}
+		exSpriteDataMap.erase(itr);
+	}
+}
+
+void updateUUIDLocal(CGameSprite* pSprite, ExSpriteData& exData) {
+
+	CVariableHash *const pLocalVariables = pSprite->m_pLocalVariables;
+	CVariable *const pVariable = pLocalVariables->FindKey(EngineVal<CString, false>{"EEEX_UUID"});
+
+	if (pVariable == nullptr) {
+		EngineVal<CVariable> variable;
+		variable->m_name.set("EEEX_UUID");
+		variable->m_intValue = static_cast<int>(exData.uuid);
+		variable->m_dWValue = static_cast<unsigned int>(exData.uuid >> 32);
+		pLocalVariables->AddKey(variable);
+	}
+	else {
+		pVariable->m_intValue = static_cast<int>(exData.uuid);
+		pVariable->m_dWValue = static_cast<unsigned int>(exData.uuid >> 32);
+	}
+}
+
+EEex_OnBeforeEffectUnmarshalledRet EEex::Sprite_Hook_OnBeforeEffectUnmarshalled(CGameSprite* pSprite, CGameEffectBase* pEffectBase) {
+
+	if (EEex::bNoUUID) {
+		return EEex_OnBeforeEffectUnmarshalledRet::NORMAL;
+	}
+
+	ExSpriteData& exData = exSpriteDataMap[pSprite];
+
+	if (pEffectBase->m_effectId == 187) {
+
+		if (strncmp(pEffectBase->m_scriptName.data, "EEEX_UUID", 32) == 0) {
+			exData.uuid = (static_cast<uint64_t>(pEffectBase->m_dWFlags) << 32) | pEffectBase->m_effectAmount;
+		}
+	}
+
+	return EEex_OnBeforeEffectUnmarshalledRet::NORMAL;
+}
+
+void EEex::Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite) {
+
+	if (EEex::bNoUUID) {
+		return;
+	}
+
+	ExSpriteData& exData = exSpriteDataMap[pSprite];
+
+	if (exData.uuid == 0) {
+		exData.uuid = ++nextUUID;
+		//Print("Generated UUID for %s: %llu\n", pSprite->GetName(true)->m_pchData, exData.uuid);
+		updateNextUUIDLocal();
+	}
+	else {
+		//Print("Using existing UUID for %s: %llu\n", pSprite->GetName(true)->m_pchData, exData.uuid);
+	}
+
+	uuidToSprite[exData.uuid] = pSprite;
+	updateUUIDLocal(pSprite, exData);
+}
+
+void EEex::Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite) {
+
+	if (!EEex::bNoUUID && !EEex::bStripUUID) {
+		return;
+	}
+
+	CGameEffectList *const pEffectList = &pSprite->m_timedEffectList;
+
+	for (auto* pNode = pEffectList->m_pNodeHead; pNode != nullptr;) {
+
+		auto *const pNext = pNode->pNext;
+		CGameEffect* pEffect = pNode->data;
+
+		if (pEffect->m_effectId == 187 && strncmp(pEffect->m_scriptName.data, "EEEX_UUID", 32) == 0) {
+			pEffectList->RemoveAt(reinterpret_cast<__POSITION*>(pNode));
+			pEffect->virtual_OnRemove(pSprite);
+			pEffect->virtual_Destruct(1);
+		}
+
+		pNode = pNext;
+	}
 }
 
 ////////////
@@ -3103,6 +3401,42 @@ bool EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing(CGameObject* pGameObject
 	return pGameObject->m_objectType != CGameObjectType::SPRITE;
 
 	STUTTER_LOG_END
+}
+
+/////////////
+// Trigger //
+/////////////
+
+void EEex::Trigger_Hook_OnScriptLevelHit(CGameAIBase* pCaller, unsigned char nScriptLevel) {
+	for (auto callback : scriptLevelHitCallbacks) {
+		callback(pCaller, nScriptLevel);
+	}
+}
+
+void EEex::Trigger_Hook_OnConditionResponseHit(int16_t nResponseSetNum) {
+	for (auto callback : conditionResponseHitCallbacks) {
+		callback(nResponseSetNum);
+	}
+}
+
+//---------------------------//
+//          Exports          //
+//---------------------------//
+
+void EEex::RegisterScriptLevelHitCallback(std::function<void(CGameAIBase*, unsigned char)> callback) {
+	scriptLevelHitCallbacks.emplace_back(callback);
+}
+
+void EEex::RegisterConditionResponseHitCallback(std::function<void(int16_t)> callback) {
+	conditionResponseHitCallbacks.emplace_back(callback);
+}
+
+void EEex::RegisterTriggerHitCallback(std::function<void(int32_t)> callback) {
+	triggerHitCallbacks.emplace_back(callback);
+}
+
+void EEex::RegisterTriggerEvaluatedCallback(std::function<void(bool)> callback) {
+	triggerEvaluatedCallbacks.emplace_back(callback);
 }
 
 //------------------------//
