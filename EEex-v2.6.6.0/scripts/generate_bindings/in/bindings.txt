@@ -36,6 +36,7 @@ namespace EEex
 	nobinding bool bStripUUID;
 	nobinding bool bNoUUID;
 	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
+	$external_implementation bool IsMarshallingCopy();
 };
 
 struct CGameSprite : CGameAIBase
@@ -117,4 +118,18 @@ enum EEex_HookIntegrityWatchdogRegister : __int32
 	R13 = 0x20000,
 	R14 = 0x40000,
 	R15 = 0x80000,
+};
+
+enum EEex_ScriptingObject : __int32
+{
+	ATTACKER = 0,
+	ORDERED_BY = 1,
+	HITTER = 2,
+	HELP = 3,
+	TRIGGER = 4,
+	SEEN = 5,
+	TALKED_TO = 6,
+	HEARD = 7,
+	SUMMONED_BY = 8,
+	KILLED = 9,
 };

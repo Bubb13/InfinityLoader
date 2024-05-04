@@ -1198,6 +1198,20 @@ enum class EItemPreviewType : __int32
 	k_EItemPreviewType_ReservedMax = 255,
 };
 
+enum class EEex_ScriptingObject : __int32
+{
+	ATTACKER = 0,
+	ORDERED_BY = 1,
+	HITTER = 2,
+	HELP = 3,
+	TRIGGER = 4,
+	SEEN = 5,
+	TALKED_TO = 6,
+	HEARD = 7,
+	SUMMONED_BY = 8,
+	KILLED = 9,
+};
+
 enum class EEex_OnBeforeEffectUnmarshalledRet : __int32
 {
 	NORMAL = 0,
@@ -2996,6 +3010,7 @@ namespace EEex
 	void DrawSlicedRect(lua_State* L);
 	bool IsDefaultAttackCursor();
 	CGameSprite* GetSpriteFromUUID(uint64_t uuid);
+	bool IsMarshallingCopy();
 };
 
 struct ConstCharString

@@ -33,12 +33,15 @@ void exportPatterns() {
 	//          Overrides          //
 	/////////////////////////////////
 
+	exportPattern(TEXT("CAICondition::Override_Hold"), GetMemberPtr(&CAICondition::Override_Hold));
+	exportPattern(TEXT("CAICondition::Override_TriggerHolds"), GetMemberPtr(&CAICondition::Override_TriggerHolds));
+	exportPattern(TEXT("CGameAIBase::Override_ApplyTriggers"), GetMemberPtr(&CGameAIBase::Override_ApplyTriggers));
+	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), GetMemberPtr(&CGameAIBase::Override_SetTrigger));
+	exportPattern(TEXT("CMessageSetLastObject::Override_Run"), GetMemberPtr(&CMessageSetLastObject::Override_Run));
 	exportPattern(TEXT("EEex::Override_bootstrapLua"), EEex::Override_bootstrapLua);
 	exportPattern(TEXT("EEex::Override_CGameEffect_CheckSave"), EEex::Override_CGameEffect_CheckSave);
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);
-	exportPattern(TEXT("CAICondition::Override_Hold"), GetMemberPtr(&CAICondition::Override_Hold));
-	exportPattern(TEXT("CAICondition::Override_TriggerHolds"), GetMemberPtr(&CAICondition::Override_TriggerHolds));
 
 	/////////////////////////////
 	//          Hooks          //

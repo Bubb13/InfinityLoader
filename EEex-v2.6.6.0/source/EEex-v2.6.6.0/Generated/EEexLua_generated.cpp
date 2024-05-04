@@ -117,6 +117,13 @@ static int tolua_function_EEex_GetSpriteFromUUID(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_IsMarshallingCopy(lua_State* L)
+{
+	bool returnVal = EEex::IsMarshallingCopy();
+	tolua_pushboolean(L, (bool)returnVal);
+	return 1;
+}
+
 static int tolua_function_CGameSprite_getUUID(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
@@ -128,6 +135,7 @@ static int tolua_function_CGameSprite_getUUID(lua_State* L)
 
 static void tolua_reg_types(lua_State* L)
 {
+	tolua_usertype(L, "EEex_ScriptingObject");
 	tolua_usertype(L, "EEex_OnBeforeEffectUnmarshalledRet");
 	tolua_usertype(L, "EEex_MatchObjectFlags");
 	tolua_usertype(L, "EEex_HookIntegrityWatchdogRegister");
@@ -144,6 +152,19 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_reg_types(L);
 	tolua_module(L, NULL, 0);
 	tolua_beginmodule(L, NULL);
+	tolua_cclass(L, "EEex_ScriptingObject", "EEex_ScriptingObject", {"__int32"}, NULL);
+	tolua_beginmodule(L, "EEex_ScriptingObject");
+		tolua_constant(L, "ATTACKER", 0);
+		tolua_constant(L, "ORDERED_BY", 1);
+		tolua_constant(L, "HITTER", 2);
+		tolua_constant(L, "HELP", 3);
+		tolua_constant(L, "TRIGGER", 4);
+		tolua_constant(L, "SEEN", 5);
+		tolua_constant(L, "TALKED_TO", 6);
+		tolua_constant(L, "HEARD", 7);
+		tolua_constant(L, "SUMMONED_BY", 8);
+		tolua_constant(L, "KILLED", 9);
+	tolua_endmodule(L);
 	tolua_cclass(L, "EEex_OnBeforeEffectUnmarshalledRet", "EEex_OnBeforeEffectUnmarshalledRet", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex_OnBeforeEffectUnmarshalledRet");
 		tolua_constant(L, "NORMAL", 0);
@@ -200,6 +221,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
 		tolua_function(L, "IsDefaultAttackCursor", &tolua_function_EEex_IsDefaultAttackCursor);
 		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
+		tolua_function(L, "IsMarshallingCopy", &tolua_function_EEex_IsMarshallingCopy);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");

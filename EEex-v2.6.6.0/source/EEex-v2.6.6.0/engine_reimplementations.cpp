@@ -851,7 +851,7 @@ void Reference_CMessageSetLastObject_Run(CMessageSetLastObject* pThis) {
 	}
 }
 
-void Reference_CGameAIBase_SetTrigger(CGameAIBase* pThis, CAITrigger* pTrigger) {
+void Reference_CGameAIBase_SetTrigger(CGameAIBase* pThis, const CAITrigger* pTrigger) {
 
 	CAITrigger *const pTriggerCopy = newEngineObj<CAITrigger>(pTrigger);
 
@@ -989,7 +989,7 @@ void Reference_CGameAIBase_ApplyTriggers(CGameAIBase* pThis) {
 		pSprite->GetActiveStats()->m_cContingencyList.Process(pSprite);
 	}
 
-	for (auto pNode = (pThis->m_pendingTriggers).m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+	for (auto pNode = pThis->m_pendingTriggers.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
 
 		CAITrigger *const pTrigger = pNode->data;
 		if ((pTrigger->m_flags & 4) != 0) {
