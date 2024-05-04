@@ -835,7 +835,7 @@ struct CAIIdList : CResHelper<CResText,1008>
 	$constructor_fake Construct1();
 	void Destruct();
 	void LoadList2(CResRef id, int faster);
-	CAIId* Find1(int id);
+	$binding_name(FindID) $pattern_name(Find(int)) CAIId* Find(int id);
 };
 
 struct CAIObjectType
@@ -844,9 +844,10 @@ struct CAIObjectType
 	$constructor_fake Construct1(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
 	void Decode(CGameAIBase* caller);
 	CGameObject* GetShare(CGameAIBase* caller, int checkBackList);
-	CGameObject* GetShareType(CGameAIBase* caller, byte type, int checkBackList);
+	CGameObject* GetShareType(CGameAIBase* caller, CGameObjectType type, int checkBackList);
 	byte OfType(const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance) const;
 	void Set(const CAIObjectType* that);
+	$nobinding bool operator==(const CAIObjectType* y);
 
 	$constructor_fake ConstructCopy(const CAIObjectType* toCopy)
 	{
@@ -1253,6 +1254,41 @@ struct CResPVR : CRes
 struct CAITrigger
 {
 	byte OfType(const CAITrigger* trigger);
+	$constructor_fake ConstructCopy(const CAITrigger* trigger);
+};
+
+struct CGameTrigger : CGameAIBase
+{
+	void SetDrawPoly(short time);
+};
+
+struct CGameDoor : CGameAIBase
+{
+	void SetDrawPoly(short time);
+};
+
+struct CGameContainer : CGameAIBase
+{
+	void SetDrawPoly(short time);
+};
+
+struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
+{
+	void ProcessTrigger(CGameSprite* pSprite, CAITrigger* trigger);
+	void Process(CGameSprite* pSprite);
+};
+
+struct CMessageUpdateReaction : CMessage
+{
+	nobinding nopointer static void* VFTable;
+
+	$constructor_fake Construct(long nReaction, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_nReaction = nReaction;
+	}
 };
 
 //////////////////////////////

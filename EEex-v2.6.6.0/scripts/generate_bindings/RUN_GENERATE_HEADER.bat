@@ -15,6 +15,7 @@ python %script_path%^
  -dllName=EEex.dll^
  -packingFile=./in/packing.txt^
  -preludeFile=./in/prelude.txt^
+ -suffixFile=./in/suffix.txt^
  -wantedFiles=./in/wanted_types.txt^
  -printFuncWideString=PrintT^
  > log.txt 2>&1

@@ -152,8 +152,12 @@ struct ExSpriteData {
 	}
 };
 
+struct ExUUIDData {
+	CGameSprite* pSprite;
+};
+
 std::unordered_map<void*, ExSpriteData> exSpriteDataMap{};
-std::unordered_map<uint64_t, CGameSprite*> uuidToSprite{};
+std::unordered_map<uint64_t, ExUUIDData> exUUIDDataMap{};
 
 ////////////////
 // Game State //
@@ -324,8 +328,8 @@ uint64_t CGameSprite::GetUUID() {
 }
 
 CGameSprite* EEex::GetSpriteFromUUID(uint64_t uuid) {
-	if (auto itr = uuidToSprite.find(uuid); itr != uuidToSprite.end()) {
-		return itr->second;
+	if (auto itr = exUUIDDataMap.find(uuid); itr != exUUIDDataMap.end()) {
+		return itr->second.pSprite;
 	}
 	return nullptr;
 }
@@ -2230,7 +2234,7 @@ int CAICondition::Override_Hold(CTypedPtrList<CPtrList, CAITrigger*>* pTriggerLi
 			nextTriggerObjectType->Decode(pCaller);
 
 			bNextTriggerObject = true;
-			pNextTriggerObject = reinterpret_cast<CGameAIBase*>(nextTriggerObjectType->GetShareType(pCaller, 1, 0));
+			pNextTriggerObject = reinterpret_cast<CGameAIBase*>(nextTriggerObjectType->GetShareType(pCaller, CGameObjectType::AIBASE, 0));
 
 			if (pNextTriggerObject != nullptr && nORCounter < 1) {
 				bRet = true;
@@ -2929,7 +2933,7 @@ void EEex::Sprite_Hook_OnDestruct(CGameSprite* pSprite) {
 		ExSpriteData& exData = itr->second;
 		if (exData.uuid != 0) {
 			//Print("Erased UUID %llu association\n", exData.uuid);
-			uuidToSprite.erase(exData.uuid);
+			exUUIDDataMap.erase(exData.uuid);
 		}
 		exSpriteDataMap.erase(itr);
 	}
@@ -2988,8 +2992,16 @@ void EEex::Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite) {
 		//Print("Using existing UUID for %s: %llu\n", pSprite->GetName(true)->m_pchData, exData.uuid);
 	}
 
-	uuidToSprite[exData.uuid] = pSprite;
+	ExUUIDData& exUUIDData = exUUIDDataMap[exData.uuid];
+
+	exUUIDData.pSprite = pSprite;
 	updateUUIDLocal(pSprite, exData);
+
+	lua_State *const L = *p_g_lua;
+	luaCallProtected(L, 1, 0, [&](int _) {
+		lua_getglobal(L, "EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled"); // 1 [ ..., EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled ]
+		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                  // 2 [ ..., EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled, pSpriteUD ]
+	});
 }
 
 void EEex::Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite) {

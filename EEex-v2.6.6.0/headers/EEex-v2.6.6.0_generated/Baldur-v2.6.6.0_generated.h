@@ -94,6 +94,7 @@ struct CBaldurChitin;
 struct CButtonData;
 struct CChitin;
 struct CContingency;
+struct CContingencyList;
 struct CCreatureFileHeader;
 struct CCreatureFileItem;
 struct CCriticalEntry;
@@ -101,12 +102,15 @@ struct CDerivedStats;
 struct CGameAIBase;
 struct CGameAnimationType;
 struct CGameArea;
+struct CGameContainer;
 struct CGameDialogReply;
+struct CGameDoor;
 struct CGameEffect;
 struct CGameEffectUsability;
 struct CGameFile;
 struct CGameObject;
 struct CGameSprite;
+struct CGameTrigger;
 struct CImmunitiesAIType;
 struct CImmunitiesItemEquip;
 struct CImmunitySpell;
@@ -118,6 +122,7 @@ struct CMemINISection;
 struct CMemINIValue;
 struct CMessage;
 struct CMessageHandler;
+struct CMessageSetLastObject;
 struct CMoveListEntry;
 struct CObList;
 struct CObjectMarker;
@@ -5505,16 +5510,6 @@ struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
 	CColorRanges() = delete;
 };
 
-struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CContingency*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CContingencyList() = delete;
-};
-
 struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
 {
 	struct vtbl : CTypedPtrList<CPtrList,CCriticalEntry*>::vtbl
@@ -6239,6 +6234,27 @@ struct CMessage
 	}
 };
 
+struct CMessageUpdateReaction : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	int m_nReaction;
+
+	CMessageUpdateReaction() = delete;
+
+	void Construct(long nReaction, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_nReaction = nReaction;
+	}
+};
+
 struct CMessageSetDirection : CMessage
 {
 	struct vtbl : CMessage::vtbl
@@ -6473,6 +6489,32 @@ struct CFile : CObject
 	virtual unsigned int virtual_GetBufferPtr(unsigned int _0, unsigned int _1, void** _2, void** _3)
 	{
 		return *(unsigned int*)nullptr;
+	}
+};
+
+struct CContingencyList : CTypedPtrList<CPtrList,CContingency*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CContingency*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CContingencyList() = delete;
+
+	typedef void (__thiscall *type_ProcessTrigger)(CContingencyList* pThis, CGameSprite* pSprite, CAITrigger* trigger);
+	static type_ProcessTrigger p_ProcessTrigger;
+
+	typedef void (__thiscall *type_Process)(CContingencyList* pThis, CGameSprite* pSprite);
+	static type_Process p_Process;
+
+	void ProcessTrigger(CGameSprite* pSprite, CAITrigger* trigger)
+	{
+		p_ProcessTrigger(this, pSprite, trigger);
+	}
+
+	void Process(CGameSprite* pSprite)
+	{
+		p_Process(this, pSprite);
 	}
 };
 
@@ -8447,8 +8489,8 @@ struct CAIIdList : CResHelper<CResText,1008>
 	typedef void (__thiscall *type_LoadList2)(CAIIdList* pThis, CResRef id, int faster);
 	static type_LoadList2 p_LoadList2;
 
-	typedef CAIId* (__thiscall *type_Find1)(CAIIdList* pThis, int id);
-	static type_Find1 p_Find1;
+	typedef CAIId* (__thiscall *type_FindID)(CAIIdList* pThis, int id);
+	static type_FindID p_FindID;
 
 	void Construct()
 	{
@@ -8465,9 +8507,9 @@ struct CAIIdList : CResHelper<CResText,1008>
 		p_LoadList2(this, id, faster);
 	}
 
-	CAIId* Find1(int id)
+	CAIId* Find(int id)
 	{
-		return p_Find1(this, id);
+		return p_FindID(this, id);
 	}
 
 	virtual void virtual_Destruct()
@@ -12485,7 +12527,7 @@ struct CAIObjectType
 	typedef CGameObject* (__thiscall *type_GetShare)(CAIObjectType* pThis, CGameAIBase* caller, int checkBackList);
 	static type_GetShare p_GetShare;
 
-	typedef CGameObject* (__thiscall *type_GetShareType)(CAIObjectType* pThis, CGameAIBase* caller, byte type, int checkBackList);
+	typedef CGameObject* (__thiscall *type_GetShareType)(CAIObjectType* pThis, CGameAIBase* caller, CGameObjectType type, int checkBackList);
 	static type_GetShareType p_GetShareType;
 
 	typedef byte (__thiscall *type_OfType)(const CAIObjectType* pThis, const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance);
@@ -12493,6 +12535,9 @@ struct CAIObjectType
 
 	typedef void (__thiscall *type_Set)(CAIObjectType* pThis, const CAIObjectType* that);
 	static type_Set p_Set;
+
+	typedef bool (__thiscall *type_operator_equ_equ)(CAIObjectType* pThis, const CAIObjectType* y);
+	static type_operator_equ_equ p_operator_equ_equ;
 
 	void Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name)
 	{
@@ -12509,7 +12554,7 @@ struct CAIObjectType
 		return p_GetShare(this, caller, checkBackList);
 	}
 
-	CGameObject* GetShareType(CGameAIBase* caller, byte type, int checkBackList)
+	CGameObject* GetShareType(CGameAIBase* caller, CGameObjectType type, int checkBackList)
 	{
 		return p_GetShareType(this, caller, type, checkBackList);
 	}
@@ -12522,6 +12567,11 @@ struct CAIObjectType
 	void Set(const CAIObjectType* that)
 	{
 		p_Set(this, that);
+	}
+
+	bool operator==(const CAIObjectType* y)
+	{
+		return p_operator_equ_equ(this, y);
 	}
 
 	void Construct(const CAIObjectType* toCopy)
@@ -12742,6 +12792,21 @@ struct CScreenStore : CBaldurEngine
 	float m_fPanStorage;
 
 	CScreenStore() = delete;
+};
+
+struct CMessageSetLastObject : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CAIObjectType m_lAttacker;
+	unsigned __int16 m_type;
+
+	CMessageSetLastObject() = delete;
+
+	void Override_Run();
 };
 
 struct CGameObject
@@ -13656,9 +13721,17 @@ struct CAITrigger
 	typedef byte (__thiscall *type_OfType)(CAITrigger* pThis, const CAITrigger* trigger);
 	static type_OfType p_OfType;
 
+	typedef void (__thiscall *type_ConstructCopy)(CAITrigger* pThis, const CAITrigger* trigger);
+	static type_ConstructCopy p_ConstructCopy;
+
 	byte OfType(const CAITrigger* trigger)
 	{
 		return p_OfType(this, trigger);
+	}
+
+	void Construct(const CAITrigger* trigger)
+	{
+		p_ConstructCopy(this, trigger);
 	}
 };
 
@@ -13803,6 +13876,9 @@ struct CGameAIBase : CGameObject
 		return p_ForceSpellPoint(this);
 	}
 
+	void Override_ApplyTriggers();
+	void Override_SetTrigger(const CAITrigger* trigger);
+
 	virtual void virtual_ClearActions(int _0)
 	{
 	}
@@ -13933,6 +14009,14 @@ struct CGameTrigger : CGameAIBase
 	CPoint m_ptWalkTo;
 
 	CGameTrigger() = delete;
+
+	typedef void (__thiscall *type_SetDrawPoly)(CGameTrigger* pThis, short time);
+	static type_SetDrawPoly p_SetDrawPoly;
+
+	void SetDrawPoly(short time)
+	{
+		p_SetDrawPoly(this, time);
+	}
 
 	virtual int virtual_IsOverActivate(const CPoint* _0)
 	{
@@ -14548,6 +14632,14 @@ struct CGameDoor : CGameAIBase
 	unsigned __int8 m_probabilityRoll;
 
 	CGameDoor() = delete;
+
+	typedef void (__thiscall *type_SetDrawPoly)(CGameDoor* pThis, short time);
+	static type_SetDrawPoly p_SetDrawPoly;
+
+	void SetDrawPoly(short time)
+	{
+		p_SetDrawPoly(this, time);
+	}
 };
 
 struct CGameContainer : CGameAIBase
@@ -14588,6 +14680,14 @@ struct CGameContainer : CGameAIBase
 	unsigned __int8 m_probabilityRoll;
 
 	CGameContainer() = delete;
+
+	typedef void (__thiscall *type_SetDrawPoly)(CGameContainer* pThis, short time);
+	static type_SetDrawPoly p_SetDrawPoly;
+
+	void SetDrawPoly(short time)
+	{
+		p_SetDrawPoly(this, time);
+	}
 
 	virtual CPoint* virtual_GetPoly()
 	{
@@ -14639,4 +14739,8 @@ struct CContingency
 inline void CString::Construct()
 {
 	m_pchData = *p_afxPchNil;
+}
+
+__forceinline int operator&(const CGameObjectType a, const CGameObjectType b) {
+	return static_cast<__int8>(a) & static_cast<__int8>(b);
 }

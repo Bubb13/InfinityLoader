@@ -46,11 +46,18 @@ struct CGameSprite : CGameAIBase
 struct CAICondition
 {
 	$nobinding $external_implementation int Override_Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+	$nobinding $external_implementation int Override_TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
 };
 
-struct CAICondition
+struct CGameAIBase : CGameObject
 {
-	$nobinding $external_implementation int Override_TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+	$nobinding $external_implementation void Override_ApplyTriggers();
+	$nobinding $external_implementation void Override_SetTrigger(const CAITrigger* trigger);
+};
+
+struct CMessageSetLastObject : CMessage
+{
+	$nobinding $external_implementation void Override_Run();
 };
 
 enum EEex::ProjectileType : __int32

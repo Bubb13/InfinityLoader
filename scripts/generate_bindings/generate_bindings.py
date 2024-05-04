@@ -1381,6 +1381,7 @@ class FunctionImplementation:
 		self.passLuaState: bool = False
 		self.eofBody: bool = False
 		self.bindingName: str = None
+		self.patternName: str = None
 		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 
 	def shallowCopy(self, copy=None):
@@ -1412,6 +1413,7 @@ class FunctionImplementation:
 		copy.passLuaState = self.passLuaState
 		copy.eofBody = self.eofBody
 		copy.bindingName = self.bindingName
+		copy.patternName = self.patternName
 		self.lineGroupFlags.applyTo(copy.lineGroupFlags)
 		return copy
 
@@ -1587,7 +1589,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 	isGlobal = group == mainState.globalGroup
 
-	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=* ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=* ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1614,6 +1616,9 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 				elif bindingNameMatch := re.match("^\\$binding_name\\((\\S+)\\)$", keyword):
 					assert not state.currentFunctionImplementation.bindingName, "bindingName already defined"
 					state.currentFunctionImplementation.setBindingName(bindingNameMatch.group(1))
+				elif patternNameMatch := re.match("^\\$pattern_name\\((\\S+)\\)$", keyword):
+					assert not state.currentFunctionImplementation.patternName, "pattern_name already defined"
+					state.currentFunctionImplementation.patternName = patternNameMatch.group(1)
 				else:
 					assert False, "Bad bindings directive"
 
@@ -1654,7 +1659,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 		if (operatorStr := functionImplementationMatch.group(5)) != None:
 			retTypeStr = processRetType(3)
-			if retTypeStr: state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, debugLine=f"processCommonGroupLines()-1 {line}")
+			if retTypeStr: state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, allowReference=True, debugLine=f"processCommonGroupLines()-1 {line}")
 			state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(4)
 			state.currentFunctionImplementation.operatorStr = operatorStr
 			state.currentFunctionImplementation.setName(functionImplementationMatch.group(6), wasOperator=True)
@@ -1681,7 +1686,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 				typeStr = "".join(parts)
 				funcParameter = FunctionImplementationParameter()
-				funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION, debugLine=f"processCommonGroupLines()-2 {line}")
+				funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION, allowReference=state.currentFunctionImplementation.operatorStr != None, debugLine=f"processCommonGroupLines()-2 {line}")
 				funcParameter.name = spaceSplit[-1]
 
 				state.currentFunctionImplementation.parameters.append(funcParameter)
@@ -2276,9 +2281,9 @@ class Group:
 				while topRef.superRef:
 					topRef = topRef.superRef
 
-				lastRef: TypeReference = defineTypeRefPart(mainState, None, topRef.sourceGroup, parts[0], TypeRefSourceType.VARIABLE, isDirectlyWanted=topRef.isDirectlyWanted)
+				lastRef: TypeReference = defineTypeRefPart(mainState, None, topRef.sourceGroup, parts[0], TypeRefSourceType.VARIABLE, isDirectlyWanted=topRef.isDirectlyWanted, allowReference=topRef.reference)
 				for i in range(1, partsLen - 1):
-					lastRef = defineTypeRefPart(mainState, lastRef, topRef.sourceGroup, parts[i], TypeRefSourceType.VARIABLE, isDirectlyWanted=topRef.isDirectlyWanted)
+					lastRef = defineTypeRefPart(mainState, lastRef, topRef.sourceGroup, parts[i], TypeRefSourceType.VARIABLE, isDirectlyWanted=topRef.isDirectlyWanted, allowReference=topRef.reference)
 
 				inRef.sourceGroup = lastRef.group
 				lastRef.subRef = inRef
@@ -2519,22 +2524,25 @@ class Group:
 
 				if functionImp.noBody and not functionImp.externalImplementation:
 
-					funcName: str = None
-					if not functionImp.bindingName:
-						funcName = functionImp.name
-						if functionImp.operatorStr:
-							funcName = f"{functionImp.operatorStr}{funcName}"
+					patternName: str = None
+					if not functionImp.patternName:
+						if not functionImp.bindingName:
+							patternName = functionImp.name
+							if functionImp.operatorStr:
+								patternName = f"{functionImp.operatorStr}{patternName}"
+						else:
+							patternName = functionImp.bindingName
 					else:
-						funcName = functionImp.bindingName
+						patternName = functionImp.patternName
 
-					realVariableName: str = f"{group.name}::{funcName}" if isNormal else funcName
+					patternName = f"{group.name}::{patternName}" if isNormal else patternName
 					pointerVariableName: str = f"{group.name}::p_{functionImp.funcPtrName}" if isNormal else f"p_{functionImp.funcPtrName}"
 
 					pointerVariableTypeName: str = f"type_{functionImp.funcPtrName}"
 					pointerVariableFullTypeName: str = f"{group.name}::{pointerVariableTypeName}" if isNormal else pointerVariableTypeName
 
 					internalPointersOut.write(f"{pointerVariableFullTypeName} {pointerVariableName};\n")
-					internalPointersListOut.append((f"{realVariableName}", f"{pointerVariableName}"))
+					internalPointersListOut.append((patternName, f"{pointerVariableName}"))
 
 					if not functionImp.noDeclaration:
 
@@ -3052,7 +3060,7 @@ class TypeRefSourceType(Enum):
 	FUNCTION = 2
 
 
-def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup: Group, inStr: str, src: TypeRefSourceType, arrayStr: str=None, isDirectlyWanted: bool=False, debugLine: str=""):
+def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup: Group, inStr: str, src: TypeRefSourceType, arrayStr: str=None, isDirectlyWanted: bool=False, allowReference: bool=False, debugLine: str=""):
 
 	assert inStr != None
 	str = inStr
@@ -3164,7 +3172,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 			# HACK: Array's operator[] needs to return a reference
 			# even though I usually convert them to pointers
-			if split == "&" and sourceGroup.name in ("Array", "ConstArray", "ArrayPointer", "EEex"):
+			if split == "&" and (allowReference or sourceGroup.name in ("Array", "ConstArray", "ArrayPointer", "EEex")):
 				assert not typeRef.reference, "Cannot handle rvalue reference"
 				typeRef.reference = True
 
@@ -3200,7 +3208,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 
 
-def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeRefSourceType, arrayStr: str=None, isDirectlyWanted: bool=False, debugLine: str=""):
+def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeRefSourceType, arrayStr: str=None, isDirectlyWanted: bool=False, allowReference: bool=False, debugLine: str=""):
 
 	if str == None:
 		return
@@ -3211,9 +3219,9 @@ def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeR
 	if numSplits == 0:
 		return
 
-	lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], src, arrayStr, isDirectlyWanted, debugLine=debugLine)
+	lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], src, arrayStr, isDirectlyWanted, allowReference=allowReference, debugLine=debugLine)
 	for i in range(1, numSplits):
-		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], src, None, isDirectlyWanted, debugLine=debugLine)
+		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], src, None, isDirectlyWanted, allowReference=allowReference, debugLine=debugLine)
 
 	return lastRef
 

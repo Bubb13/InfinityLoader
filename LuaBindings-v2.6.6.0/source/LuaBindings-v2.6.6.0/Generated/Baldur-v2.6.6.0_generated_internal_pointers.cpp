@@ -27,6 +27,8 @@ void* CMessageSetDirection::VFTable;
 void* CMessageDisplayTextRef::VFTable;
 void* CMessageDisplayText::VFTable;
 void* CMessageAddEffect::VFTable;
+CContingencyList::type_ProcessTrigger CContingencyList::p_ProcessTrigger;
+CContingencyList::type_Process CContingencyList::p_Process;
 CAIGroup::type_FollowLeader CAIGroup::p_FollowLeader;
 CAIGroup::type_RemoveFromSearch CAIGroup::p_RemoveFromSearch;
 CAIGroup::type_AddToSearch CAIGroup::p_AddToSearch;
@@ -89,7 +91,7 @@ C2DArray::type_Destruct C2DArray::p_Destruct;
 CAIIdList::type_Construct1 CAIIdList::p_Construct1;
 CAIIdList::type_Destruct CAIIdList::p_Destruct;
 CAIIdList::type_LoadList2 CAIIdList::p_LoadList2;
-CAIIdList::type_Find1 CAIIdList::p_Find1;
+CAIIdList::type_FindID CAIIdList::p_FindID;
 CRuleTables::type_MapCharacterSpecializationToSchool CRuleTables::p_MapCharacterSpecializationToSchool;
 CAIScriptFile::type_Construct CAIScriptFile::p_Construct;
 CAIScriptFile::type_Destruct CAIScriptFile::p_Destruct;
@@ -137,6 +139,7 @@ CAIObjectType::type_GetShare CAIObjectType::p_GetShare;
 CAIObjectType::type_GetShareType CAIObjectType::p_GetShareType;
 CAIObjectType::type_OfType CAIObjectType::p_OfType;
 CAIObjectType::type_Set CAIObjectType::p_Set;
+CAIObjectType::type_operator_equ_equ CAIObjectType::p_operator_equ_equ;
 CAIObjectType* CAIObjectType::p_NOONE;
 CAIAction::type_Construct1 CAIAction::p_Construct1;
 CAIAction::type_ConstructCopy CAIAction::p_ConstructCopy;
@@ -149,11 +152,13 @@ Array<byte,16>* CGameObject::p_DEFAULT_TERRAIN_TABLE;
 CProjectile::type_AddEffect CProjectile::p_AddEffect;
 CProjectile::type_ClearEffects CProjectile::p_ClearEffects;
 CAITrigger::type_OfType CAITrigger::p_OfType;
+CAITrigger::type_ConstructCopy CAITrigger::p_ConstructCopy;
 CGameAIBase::type_ApplyEffectToParty CGameAIBase::p_ApplyEffectToParty;
 CGameAIBase::type_GetTargetShare CGameAIBase::p_GetTargetShare;
 CGameAIBase::type_GetTargetShareType1 CGameAIBase::p_GetTargetShareType1;
 CGameAIBase::type_GetTargetShareType2 CGameAIBase::p_GetTargetShareType2;
 CGameAIBase::type_ForceSpellPoint CGameAIBase::p_ForceSpellPoint;
+CGameTrigger::type_SetDrawPoly CGameTrigger::p_SetDrawPoly;
 CGameSprite::type_CheckQuickLists CGameSprite::p_CheckQuickLists;
 CGameSprite::type_FeedBack CGameSprite::p_FeedBack;
 CGameSprite::type_GetActiveStats CGameSprite::p_GetActiveStats;
@@ -173,6 +178,8 @@ CGameSprite::type_ReadyOffInternalList CGameSprite::p_ReadyOffInternalList;
 CGameSprite::type_ReadySpell CGameSprite::p_ReadySpell;
 CGameSprite::type_SpellPoint CGameSprite::p_SpellPoint;
 CGameSprite::type_UpdateTarget CGameSprite::p_UpdateTarget;
+CGameDoor::type_SetDrawPoly CGameDoor::p_SetDrawPoly;
+CGameContainer::type_SetDrawPoly CGameContainer::p_SetDrawPoly;
 
 template<typename OutType>
 static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
@@ -220,6 +227,8 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CMessageDisplayTextRef::VFTable"), CMessageDisplayTextRef::VFTable);
 	attemptFillPointer(TEXT("CMessageDisplayText::VFTable"), CMessageDisplayText::VFTable);
 	attemptFillPointer(TEXT("CMessageAddEffect::VFTable"), CMessageAddEffect::VFTable);
+	attemptFillPointer(TEXT("CContingencyList::ProcessTrigger"), CContingencyList::p_ProcessTrigger);
+	attemptFillPointer(TEXT("CContingencyList::Process"), CContingencyList::p_Process);
 	attemptFillPointer(TEXT("CAIGroup::FollowLeader"), CAIGroup::p_FollowLeader);
 	attemptFillPointer(TEXT("CAIGroup::RemoveFromSearch"), CAIGroup::p_RemoveFromSearch);
 	attemptFillPointer(TEXT("CAIGroup::AddToSearch"), CAIGroup::p_AddToSearch);
@@ -282,7 +291,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CAIIdList::Construct1"), CAIIdList::p_Construct1);
 	attemptFillPointer(TEXT("CAIIdList::Destruct"), CAIIdList::p_Destruct);
 	attemptFillPointer(TEXT("CAIIdList::LoadList2"), CAIIdList::p_LoadList2);
-	attemptFillPointer(TEXT("CAIIdList::Find1"), CAIIdList::p_Find1);
+	attemptFillPointer(TEXT("CAIIdList::Find(int)"), CAIIdList::p_FindID);
 	attemptFillPointer(TEXT("CRuleTables::MapCharacterSpecializationToSchool"), CRuleTables::p_MapCharacterSpecializationToSchool);
 	attemptFillPointer(TEXT("CAIScriptFile::Construct"), CAIScriptFile::p_Construct);
 	attemptFillPointer(TEXT("CAIScriptFile::Destruct"), CAIScriptFile::p_Destruct);
@@ -330,6 +339,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CAIObjectType::GetShareType"), CAIObjectType::p_GetShareType);
 	attemptFillPointer(TEXT("CAIObjectType::OfType"), CAIObjectType::p_OfType);
 	attemptFillPointer(TEXT("CAIObjectType::Set"), CAIObjectType::p_Set);
+	attemptFillPointer(TEXT("CAIObjectType::operator=="), CAIObjectType::p_operator_equ_equ);
 	attemptFillPointer(TEXT("CAIObjectType::NOONE"), CAIObjectType::p_NOONE);
 	attemptFillPointer(TEXT("CAIAction::Construct1"), CAIAction::p_Construct1);
 	attemptFillPointer(TEXT("CAIAction::ConstructCopy"), CAIAction::p_ConstructCopy);
@@ -342,11 +352,13 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CProjectile::AddEffect"), CProjectile::p_AddEffect);
 	attemptFillPointer(TEXT("CProjectile::ClearEffects"), CProjectile::p_ClearEffects);
 	attemptFillPointer(TEXT("CAITrigger::OfType"), CAITrigger::p_OfType);
+	attemptFillPointer(TEXT("CAITrigger::ConstructCopy"), CAITrigger::p_ConstructCopy);
 	attemptFillPointer(TEXT("CGameAIBase::ApplyEffectToParty"), CGameAIBase::p_ApplyEffectToParty);
 	attemptFillPointer(TEXT("CGameAIBase::GetTargetShare"), CGameAIBase::p_GetTargetShare);
 	attemptFillPointer(TEXT("CGameAIBase::GetTargetShareType1"), CGameAIBase::p_GetTargetShareType1);
 	attemptFillPointer(TEXT("CGameAIBase::GetTargetShareType2"), CGameAIBase::p_GetTargetShareType2);
 	attemptFillPointer(TEXT("CGameAIBase::ForceSpellPoint"), CGameAIBase::p_ForceSpellPoint);
+	attemptFillPointer(TEXT("CGameTrigger::SetDrawPoly"), CGameTrigger::p_SetDrawPoly);
 	attemptFillPointer(TEXT("CGameSprite::CheckQuickLists"), CGameSprite::p_CheckQuickLists);
 	attemptFillPointer(TEXT("CGameSprite::FeedBack"), CGameSprite::p_FeedBack);
 	attemptFillPointer(TEXT("CGameSprite::GetActiveStats"), CGameSprite::p_GetActiveStats);
@@ -366,4 +378,6 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CGameSprite::ReadySpell"), CGameSprite::p_ReadySpell);
 	attemptFillPointer(TEXT("CGameSprite::SpellPoint"), CGameSprite::p_SpellPoint);
 	attemptFillPointer(TEXT("CGameSprite::UpdateTarget"), CGameSprite::p_UpdateTarget);
+	attemptFillPointer(TEXT("CGameDoor::SetDrawPoly"), CGameDoor::p_SetDrawPoly);
+	attemptFillPointer(TEXT("CGameContainer::SetDrawPoly"), CGameContainer::p_SetDrawPoly);
 }

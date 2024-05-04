@@ -703,7 +703,7 @@ int Reference_CAICondition_Hold(CAICondition* pThis, CTypedPtrList<CPtrList, CAI
 			nextTriggerObjectType->Decode(pCaller);
 
 			bNextTriggerObject = true;
-			pNextTriggerObject = reinterpret_cast<CGameAIBase*>(nextTriggerObjectType->GetShareType(pCaller, 1, 0));
+			pNextTriggerObject = reinterpret_cast<CGameAIBase*>(nextTriggerObjectType->GetShareType(pCaller, CGameObjectType::AIBASE, 0));
 
 			if (pNextTriggerObject != nullptr && nORCounter < 1) {
 				nRet = 1;
@@ -772,4 +772,302 @@ int Reference_CAICondition_TriggerHolds(CAICondition* pThis, CAITrigger* pTrigge
 	}
 
 	return nRet;
+}
+
+void Reference_CMessageSetLastObject_Run(CMessageSetLastObject* pThis) {
+
+	CGameObject* pObject;
+	if
+	(
+		CGameObjectArray::GetShare(pThis->m_targetId, &pObject) != 0
+		||
+		(pObject->virtual_GetObjectType() & CGameObjectType::AIBASE) == 0
+	)
+	{
+		return;
+	}
+
+	if (pObject->virtual_GetObjectType() == CGameObjectType::SPRITE) {
+		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(pObject);
+		if ((pSprite->m_derivedStats.m_generalState & 0x80) != 0 || (pSprite->m_baseStats.m_generalState & 0x80) != 0) {
+			// STONE_DEATH
+			return;
+		}
+	}
+
+	CGameAIBase *const pAIBase = reinterpret_cast<CGameAIBase*>(pObject);
+
+	switch (pThis->m_type) {
+		case 0x0002: { // AttackedBy
+			pAIBase->m_lAttacker.Set(&pThis->m_lAttacker);
+			pAIBase->m_lAttackerSent.Set(&pThis->m_lAttacker);
+			break;
+		}
+		case 0x0003: { // Help
+			pAIBase->m_lHelp.Set(&pThis->m_lAttacker);
+			pAIBase->m_lHelpSent.Set(&pThis->m_lAttacker);
+			break;
+		}
+		case 0x0006: { // ReceivedOrder
+			pAIBase->m_lOrderedBy.Set(&pThis->m_lAttacker);
+			pAIBase->m_lOrderedBySent.Set(&pThis->m_lAttacker);
+			break;
+		}
+		case 0x0007: { // Said
+			pAIBase->m_lTalkedTo.Set(&pThis->m_lAttacker);
+			pAIBase->m_lTalkedToSent.Set(&pThis->m_lAttacker);
+			break;
+		}
+		case 0x0020: { // HitBy
+			pAIBase->m_lHitter.Set(&pThis->m_lAttacker);
+			pAIBase->m_lHitterSent.Set(&pThis->m_lAttacker);
+			break;
+		}
+		case 0x002F: { // Heard
+			pAIBase->m_lHeard.Set(&pThis->m_lAttacker);
+			pAIBase->m_lHeardSent.Set(&pThis->m_lAttacker);
+			break;
+		}
+		case 0x004B: { // Killed
+			pAIBase->m_lKilled.Set(&pThis->m_lAttacker);
+			pAIBase->m_lKilledSent.Set(&pThis->m_lAttacker);
+			break;
+		}
+		case 0x0097: { // Summoned
+			pAIBase->m_lSummonedBy.Set(&pThis->m_lAttacker);
+			pAIBase->m_lSummonedBySent.Set(&pThis->m_lAttacker);
+			break;
+		}
+		case 0x401C: { // See
+			pAIBase->m_lSeen.Set(&pThis->m_lAttacker);
+			pAIBase->m_lSeenSent.Set(&pThis->m_lAttacker);
+			break;
+		}
+		default: {
+			pAIBase->m_lTrigger.Set(&pThis->m_lAttacker);
+			pAIBase->m_lTriggerSent.Set(&pThis->m_lAttacker);
+			break;
+		}
+	}
+}
+
+void Reference_CGameAIBase_SetTrigger(CGameAIBase* pThis, CAITrigger* pTrigger) {
+
+	CAITrigger *const pTriggerCopy = newEngineObj<CAITrigger>(pTrigger);
+
+	pThis->m_pendingTriggers.AddTail(pTriggerCopy);
+	pThis->m_bNewTrigger = 1;
+
+	if ((pTriggerCopy->m_flags & 4) != 0) {
+		return;
+	}
+	pTriggerCopy->m_flags |= 4;
+
+	CInfGame *const pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
+
+	switch (pTriggerCopy->m_triggerID) {
+
+		case 0x0002: { // AttackedBy
+
+			pThis->virtual_AutoPause(2);
+
+			CGameSprite* pSprite = reinterpret_cast<CGameSprite*>(pTriggerCopy->m_triggerCause.GetShareType(pThis, CGameObjectType::SPRITE, 0));
+			if (pSprite != nullptr) {
+				// I don't know why the engine repeats this
+				pSprite = reinterpret_cast<CGameSprite*>(pTriggerCopy->m_triggerCause.GetShareType(pThis, CGameObjectType::SPRITE, 0));
+				if ((pSprite->GetActiveStats()->m_generalState & 0x800) != 0) {
+					break;
+				}
+			}
+
+			pThis->m_lAttackStyle = pTriggerCopy->m_specificID;
+			if
+			(
+				pThis->m_lAttacker != &pTriggerCopy->m_triggerCause
+				&&
+				(
+					pGame->GetCharacterPortraitNum(pThis->m_id) == -1
+					||
+					pGame->GetCharacterPortraitNum(pTriggerCopy->m_triggerCause.m_Instance) == -1
+				)
+			)
+			{
+				pThis->m_lAttacker.Set(&pTriggerCopy->m_triggerCause);
+			}
+			break;
+		}
+		case 0x0003: { // Help
+			if (pThis->m_lHelp != &pTriggerCopy->m_triggerCause) {
+				pThis->m_lHelp.Set(&pTriggerCopy->m_triggerCause);
+			}
+			break;
+		}
+		case 0x0006: { // ReceivedOrder
+			if (pThis->m_lOrderedBy != &pTriggerCopy->m_triggerCause) {
+				pThis->m_lOrderedBy.Set(&pTriggerCopy->m_triggerCause);
+			}
+			break;
+		}
+		case 0x0007: { // Said
+			if (pThis->m_lTalkedTo != &pTriggerCopy->m_triggerCause) {
+				pThis->m_lTalkedTo.Set(&pTriggerCopy->m_triggerCause);
+			}
+			break;
+		}
+		case 0x0020: { // HitBy
+
+			pThis->virtual_AutoPause(4);
+			pThis->m_lAttackStyle = pTriggerCopy->m_specificID;
+
+			if (pThis->m_lHitter != &pTriggerCopy->m_triggerCause) {
+				pThis->m_lHitter.Set(&pTriggerCopy->m_triggerCause);
+			}
+			break;
+		}
+		case 0x002F: { // Heard
+			if (pThis->m_lHeard != &pTriggerCopy->m_triggerCause) {
+				pThis->m_lHeard.Set(&pTriggerCopy->m_triggerCause);
+			}
+			break;
+		}
+		case 0x004C: { // Entered
+			if (pThis->virtual_GetObjectType() == CGameObjectType::TRIGGER) {
+				CGameTrigger *const pTrigger = reinterpret_cast<CGameTrigger*>(pThis);
+				if ((pTrigger->m_dwFlags & 2) == 0) {
+					pTrigger->SetDrawPoly(0);
+				}
+			}
+			break;
+		}
+		case 0x0052: { // Opened
+			if (pThis->virtual_GetObjectType() == CGameObjectType::DOOR) {
+				CGameDoor *const pDoor = reinterpret_cast<CGameDoor*>(pThis);
+				if ((pDoor->m_dwFlags & 4) == 0) {
+					pDoor->SetDrawPoly(0);
+				}
+			}
+			else {
+				if (pThis->virtual_GetObjectType() == CGameObjectType::CONTAINER) {
+					CGameContainer *const pContainer = reinterpret_cast<CGameContainer*>(pThis);
+					if ((pContainer->m_dwFlags & 8) == 0) {
+						pContainer->SetDrawPoly(0);
+					}
+				}
+			}
+			break;
+		}
+		case 0x0097: { // Summoned
+			if (pThis->m_lSummonedBy != &pTriggerCopy->m_triggerCause) {
+				pThis->m_lSummonedBy.Set(&pTriggerCopy->m_triggerCause);
+			}
+			break;
+		}
+	}
+
+	if (pGame->SAVE_OBJECT_LIST.Find(pTriggerCopy->m_triggerID) != nullptr && pThis->m_lTrigger != &pTriggerCopy->m_triggerCause) {
+		pThis->m_lTrigger.Set(&pTriggerCopy->m_triggerCause);
+	}
+
+	if (pThis->virtual_GetObjectType() == CGameObjectType::SPRITE) {
+		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(pThis);
+		pSprite->GetActiveStats()->m_cContingencyList.ProcessTrigger(pSprite, pTriggerCopy);
+	}
+}
+
+void Reference_CGameAIBase_ApplyTriggers(CGameAIBase* pThis) {
+
+	CBaldurChitin *const pBaldurChitin = *p_g_pBaldurChitin;
+	CInfGame *const pGame = pBaldurChitin->m_pObjectGame;
+
+	if (pGame->m_worldTime.m_gameTime % 3600 == 0) {
+		CMessageUpdateReaction *const pMessage = newEngineObj<CMessageUpdateReaction>(11, pThis->m_id, pThis->m_id);
+		pBaldurChitin->m_cMessageHandler.AddMessage(pMessage, 0);
+	}
+
+	if (pThis->virtual_GetObjectType() == CGameObjectType::SPRITE) {
+		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(pThis);
+		pSprite->GetActiveStats()->m_cContingencyList.Process(pSprite);
+	}
+
+	for (auto pNode = (pThis->m_pendingTriggers).m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+
+		CAITrigger *const pTrigger = pNode->data;
+		if ((pTrigger->m_flags & 4) != 0) {
+			continue;
+		}
+		pTrigger->m_flags |= 4;
+
+		switch (pTrigger->m_triggerID) {
+
+			case 0x0002: { // AttackedBy
+
+				pThis->virtual_AutoPause(2);
+				pThis->m_lAttackStyle = pTrigger->m_specificID;
+				
+				if
+				(
+					pThis->m_lAttacker != &pTrigger->m_triggerCause
+					&&
+					(
+						pGame->GetCharacterPortraitNum(pThis->m_id) == -1
+						||
+						pGame->GetCharacterPortraitNum(pTrigger->m_triggerCause.m_Instance) == -1
+					)
+				)
+				{
+					pThis->m_lAttacker.Set(&pTrigger->m_triggerCause);
+				}
+				break;
+			}
+			case 0x0003: { // Help
+				if (pThis->m_lHelp != &pTrigger->m_triggerCause) {
+					pThis->m_lHelp.Set(&pTrigger->m_triggerCause);
+				}
+				break;
+			}
+			case 0x0006: { // ReceivedOrder
+				if (pThis->m_lOrderedBy != &pTrigger->m_triggerCause) {
+					pThis->m_lOrderedBy.Set(&pTrigger->m_triggerCause);
+				}
+				break;
+			}
+			case 0x0007: { // Said
+				if (pThis->m_lTalkedTo != &pTrigger->m_triggerCause) {
+					pThis->m_lTalkedTo.Set(&pTrigger->m_triggerCause);
+				}
+				break;
+			}
+			case 0x0020: { // HitBy
+
+				pThis->virtual_AutoPause(4);
+				pThis->m_lAttackStyle = pTrigger->m_specificID;
+
+				if (pThis->m_lHitter != &pTrigger->m_triggerCause) {
+					pThis->m_lHitter.Set(&pTrigger->m_triggerCause);
+				}
+				break;
+			}
+			case 0x002F: { // Heard
+				if (pThis->m_lHeard != &pTrigger->m_triggerCause) {
+					pThis->m_lHeard.Set(&pTrigger->m_triggerCause);
+				}
+				break;
+			}
+			case 0x0097: { // Summoned
+				if (pThis->m_lSummonedBy != &pTrigger->m_triggerCause) {
+					pThis->m_lSummonedBy.Set(&pTrigger->m_triggerCause);
+				}
+				break;
+			}
+		}
+
+		if (pGame->SAVE_OBJECT_LIST.Find(pTrigger->m_triggerID) != nullptr && pThis->m_lTrigger != &pTrigger->m_triggerCause) {
+			pThis->m_lTrigger.Set(&pTrigger->m_triggerCause);
+		}
+
+		if (pThis->virtual_GetObjectType() == CGameObjectType::SPRITE) {
+			CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(pThis);
+			pSprite->GetActiveStats()->m_cContingencyList.ProcessTrigger(pSprite, pTrigger);
+		}
+	}
 }

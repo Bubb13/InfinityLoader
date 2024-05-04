@@ -1,0 +1,4 @@
+
+__forceinline int operator&(const CGameObjectType a, const CGameObjectType b) {
+	return static_cast<__int8>(a) & static_cast<__int8>(b);
+}

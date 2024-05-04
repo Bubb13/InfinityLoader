@@ -293,6 +293,18 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CDeathSound*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CDeathSound*>::vtbl, CObject::vtbl>()},
 		}},
+		{"CTypedPtrList<CPtrList,CItem*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CItem*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CItem*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CItem*>::vtbl, CObject::vtbl>()},
+		}},
+		{"CTypedPtrList<CPtrList,CContingency*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CContingency*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CContingency*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CContingency*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>, CObject>()},
 		}},
@@ -407,12 +419,6 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>::vtbl, CObject::vtbl>()},
 		}},
-		{"CTypedPtrList<CPtrList,CContingency*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CContingency*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CContingency*>::vtbl", {
-			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CContingency*>::vtbl, CObject::vtbl>()},
-		}},
 		{"CTypedPtrList<CPtrList,CPersistantEffect*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CPersistantEffect*>, CObject>()},
 		}},
@@ -472,12 +478,6 @@ void registerBaseclasses() {
 		}},
 		{"CTypedPtrList<CPtrList,CButtonData*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CButtonData*>::vtbl, CObject::vtbl>()},
-		}},
-		{"CTypedPtrList<CPtrList,CItem*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CItem*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CItem*>::vtbl", {
-			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CItem*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CParticle*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CParticle*>, CObject>()},
@@ -622,12 +622,6 @@ void registerBaseclasses() {
 		}},
 		{"CColorRanges::vtbl", {
 			{"CTypedPtrList<CPtrList,CColorRange*>::vtbl", offsetofbase<CColorRanges::vtbl, CTypedPtrList<CPtrList,CColorRange*>::vtbl>()},
-		}},
-		{"CContingencyList", {
-			{"CTypedPtrList<CPtrList,CContingency*>", offsetofbase<CContingencyList, CTypedPtrList<CPtrList,CContingency*>>()},
-		}},
-		{"CContingencyList::vtbl", {
-			{"CTypedPtrList<CPtrList,CContingency*>::vtbl", offsetofbase<CContingencyList::vtbl, CTypedPtrList<CPtrList,CContingency*>::vtbl>()},
 		}},
 		{"CCriticalEntryList", {
 			{"CTypedPtrList<CPtrList,CCriticalEntry*>", offsetofbase<CCriticalEntryList, CTypedPtrList<CPtrList,CCriticalEntry*>>()},
@@ -808,6 +802,12 @@ void registerBaseclasses() {
 		}},
 		{"CFile::vtbl", {
 			{"CObject::vtbl", offsetofbase<CFile::vtbl, CObject::vtbl>()},
+		}},
+		{"CContingencyList", {
+			{"CTypedPtrList<CPtrList,CContingency*>", offsetofbase<CContingencyList, CTypedPtrList<CPtrList,CContingency*>>()},
+		}},
+		{"CContingencyList::vtbl", {
+			{"CTypedPtrList<CPtrList,CContingency*>::vtbl", offsetofbase<CContingencyList::vtbl, CTypedPtrList<CPtrList,CContingency*>::vtbl>()},
 		}},
 		{"CCallResult<CSteam,CreateItemResult_t>", {
 			{"CCallbackBase", offsetofbase<CCallResult<CSteam,CreateItemResult_t>, CCallbackBase>()},
