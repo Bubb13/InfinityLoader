@@ -74,7 +74,8 @@ private:
 	long long initTime;
 	lua_State* L;
 	std::vector<std::function<void()>> luaStateInitializedCallbacks;
-	HMODULE luaLibrary = reinterpret_cast<HMODULE>(-1);
+	HMODULE luaLibrary = reinterpret_cast<HMODULE>(INVALID_HANDLE_VALUE);
+	HMODULE toLuaLibrary = reinterpret_cast<HMODULE>(INVALID_HANDLE_VALUE);
 	LuaMode luaMode;
 	std::map<String, Pattern::Entry> patterns;
 	std::vector<std::function<void(const PatternValueHandle valueHandle, uintptr_t)>> afterPatternSetListeners;
@@ -109,6 +110,7 @@ public:
 	EXPORT void AddLuaStateInitializedCallback(std::function<void()> callback);
 	EXPORT lua_State* LuaState();
 	EXPORT HMODULE LuaLibrary();
+	EXPORT HMODULE ToLuaLibrary();
 	EXPORT LuaMode LuaMode();
 
 	EXPORT void AddAfterPatternModifiedListener(std::function<void(PatternValueHandle, uintptr_t)> listener);

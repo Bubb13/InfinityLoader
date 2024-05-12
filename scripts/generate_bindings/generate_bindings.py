@@ -4173,7 +4173,7 @@ def registerPointerTypes(mainState: MainState):
 
 	for group in mainState.filteredGroups:
 
-		if group in (mainState.globalGroup, array, constarray, pointer, voidPointer):
+		if group in (mainState.globalGroup, array, constarray, pointer, voidPointer) or group.groupType == "namespace":
 			continue
 
 		registerPointerTypesForGroup(group)

@@ -46,6 +46,7 @@ public:
 	IMPORT void AddLuaStateInitializedCallback(std::function<void()> callback);
 	IMPORT lua_State* LuaState();
 	IMPORT HMODULE LuaLibrary();
+	IMPORT HMODULE ToLuaLibrary();
 	IMPORT LuaMode LuaMode();
 
 	IMPORT void AddAfterPatternModifiedListener(std::function<void(PatternValueHandle, uintptr_t)> listener);

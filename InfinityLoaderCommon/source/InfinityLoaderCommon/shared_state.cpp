@@ -212,6 +212,29 @@ DWORD loadLuaLibrary(const String& iniPath, const String& luaModeStr, HMODULE& l
 	return ERROR_SUCCESS;
 }
 
+DWORD loadToLuaLibrary(const String& iniPath, const String& luaModeStr, HMODULE& toLuaLibraryOut) {
+
+	String toLuaLibraryName;
+
+	bool filled;
+	TryRetErr( GetINIStr(iniPath, TEXT("General"), TEXT("ToLuaLibrary"), toLuaLibraryName, filled) )
+
+	if (!filled) {
+		return ERROR_SUCCESS;
+	}
+
+	if (HMODULE hToLuaLibrary = LoadLibrary(toLuaLibraryName.c_str())) {
+		toLuaLibraryOut = hToLuaLibrary;
+	}
+	else {
+		DWORD lastError = GetLastError();
+		PrintT(TEXT("[!][InfinityLoaderCommon.dll] loadToLuaLibrary() - LoadLibrary() failed (%d) to load [General].LuaLibrary \"%s\"\n"), lastError, toLuaLibraryName.c_str());
+		return lastError;
+	}
+
+	return ERROR_SUCCESS;
+}
+
 DWORD findModuleWithPath(HANDLE process, const String& path, HMODULE& foundModule) {
 
 	HMODULE modules[1024];
@@ -282,6 +305,9 @@ EXPORT DWORD SharedState::InitState() {
 		Print("[!][InfinityLoaderCommon.dll] SharedState::InitState() - [General].LuaPatchMode must be either \"INTERNAL\", \"EXTERNAL\", or \"REPLACE_INTERNAL_WITH_EXTERNAL\"\n");
 		return -1;
 	}
+
+	// Init toLuaLibrary
+	TryRetErr( loadToLuaLibrary(paths.iniPath, luaModeStr, state.toLuaLibrary) )
 
 	// Init imageBase
 	HMODULE foundModule;
@@ -361,6 +387,10 @@ EXPORT lua_State* SharedState::LuaState() {
 
 EXPORT HMODULE SharedState::LuaLibrary() {
 	return data()->state.luaLibrary;
+}
+
+EXPORT HMODULE SharedState::ToLuaLibrary() {
+	return data()->state.toLuaLibrary;
 }
 
 EXPORT LuaMode SharedState::LuaMode() {

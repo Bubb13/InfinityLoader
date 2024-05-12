@@ -1,6 +1,7 @@
 
 #include "infinity_loader_common_api.h"
 #include "to_lua_pointers.h"
+#include "shared_state_api.h"
 
 /////////////
 // Globals //
@@ -151,6 +152,16 @@ void exportPattern(const String& name, void* value) {
 	sharedState().SetSinglePatternValue(handle, value);
 }
 
+template<typename out_type>
+DWORD getToLuaProc(HMODULE toLuaLibrary, const char* name, out_type& out) {
+	if (out = reinterpret_cast<out_type>(GetProcAddress(toLuaLibrary, name)); out == 0) {
+		DWORD lastError = GetLastError();
+		Print("[!][LuaBindingsCore.dll] getToLuaProc() - GetProcAddress() failed (%d) to find ToLua function \"%s\"\n", lastError, name);
+		return lastError;
+	}
+	return 0;
+}
+
 EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 
 #define setNamedPointer(patternName, funcName, ptrName) \
@@ -169,18 +180,25 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 		} \
 	}
 
-#define setPointer(patternName, funcName) \
-	switch (sharedState().GetPatternValue(TEXT(patternName), patternHandle)) { \
-		case PatternValueType::SINGLE: { \
-			##funcName = (type_##funcName)(sharedState().GetSinglePatternValue(patternHandle)); \
-			break; \
+#define setPointer(patternName, functionNameStr, funcName) \
+	if (toLuaLibrary == INVALID_HANDLE_VALUE) { \
+		switch (sharedState().GetPatternValue(TEXT(patternName), patternHandle)) { \
+			case PatternValueType::SINGLE: { \
+				##funcName = (type_##funcName)(sharedState().GetSinglePatternValue(patternHandle)); \
+				break; \
+			} \
+			case PatternValueType::INVALID: { \
+				Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - ToLua pattern [%s] missing; initialization failed\n", patternName); \
+				return; \
+			} \
+			default: { \
+				Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - ToLua pattern [%s].Type not SINGLE; initialization failed\n", patternName); \
+				return; \
+			} \
 		} \
-		case PatternValueType::INVALID: { \
-			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed\n", patternName); \
-			return; \
-		} \
-		default: { \
-			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed\n", patternName); \
+	} \
+	else { \
+		if (DWORD lastError = getToLuaProc(toLuaLibrary, functionNameStr, ##funcName)) { \
 			return; \
 		} \
 	}
@@ -200,35 +218,36 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 			return;
 		}
 
+		HMODULE toLuaLibrary = toLuaLibrary();
 		PatternValueHandle patternHandle;
 
 		// Read required function pointers from the pattern map
-		setNamedPointer("Hardcoded_free", free, p_free);
-		setNamedPointer("Hardcoded_malloc", malloc, p_malloc);
-		setPointer("Hardcoded_tolua_bnd_cast", tolua_bnd_cast);
-		setPointer("Hardcoded_tolua_bnd_release", tolua_bnd_release);
-		setPointer("Hardcoded_tolua_bnd_releaseownership", tolua_bnd_releaseownership);
-		setPointer("Hardcoded_tolua_bnd_takeownership", tolua_bnd_takeownership);
-		setPointer("Hardcoded_tolua_bnd_type", tolua_bnd_type);
-		setPointer("Hardcoded_tolua_constant", tolua_constant);
-		setPointer("Hardcoded_tolua_endmodule", tolua_endmodule);
-		setPointer("Hardcoded_tolua_error", tolua_error);
-		setPointer("Hardcoded_tolua_function", tolua_function);
-		setPointer("Hardcoded_tolua_getmetatable", tolua_getmetatable);
-		setPointer("Hardcoded_tolua_isboolean", tolua_isboolean);
-		setPointer("Hardcoded_tolua_ismodulemetatable", tolua_ismodulemetatable);
-		setPointer("Hardcoded_tolua_isnumber", tolua_isnumber);
-		setPointer("Hardcoded_tolua_isstring", tolua_isstring);
-		setPointer("Hardcoded_tolua_isusertype", tolua_isusertype);
-		setPointer("Hardcoded_tolua_moduleevents", tolua_moduleevents);
-		setPointer("Hardcoded_tolua_newmetatable", tolua_newmetatable);
-		setPointer("Hardcoded_tolua_pushboolean", tolua_pushboolean);
-		setPointer("Hardcoded_tolua_pushnumber", tolua_pushnumber);
-		setPointer("Hardcoded_tolua_pushstring", tolua_pushstring);
-		setPointer("Hardcoded_tolua_tostring", tolua_tostring);
-		setPointer("Hardcoded_tolua_tousertype", tolua_tousertype);
-		setPointer("Hardcoded_tolua_typename", tolua_typename);
-		setPointer("Hardcoded_tolua_variable", tolua_variable);
+		setNamedPointer("Hardcoded_free", free, p_free)
+		setNamedPointer("Hardcoded_malloc", malloc, p_malloc)
+		setPointer("Hardcoded_tolua_bnd_cast", "tolua_bnd_cast", tolua_bnd_cast)
+		setPointer("Hardcoded_tolua_bnd_release", "tolua_bnd_release", tolua_bnd_release)
+		setPointer("Hardcoded_tolua_bnd_releaseownership", "tolua_bnd_releaseownership", tolua_bnd_releaseownership)
+		setPointer("Hardcoded_tolua_bnd_takeownership", "tolua_bnd_takeownership", tolua_bnd_takeownership)
+		setPointer("Hardcoded_tolua_bnd_type", "tolua_bnd_type", tolua_bnd_type)
+		setPointer("Hardcoded_tolua_constant", "tolua_constant", tolua_constant)
+		setPointer("Hardcoded_tolua_endmodule", "tolua_endmodule", tolua_endmodule)
+		setPointer("Hardcoded_tolua_error", "tolua_error", tolua_error)
+		setPointer("Hardcoded_tolua_function", "tolua_function", tolua_function)
+		setPointer("Hardcoded_tolua_getmetatable", "tolua_getmetatable", tolua_getmetatable)
+		setPointer("Hardcoded_tolua_isboolean", "tolua_isboolean", tolua_isboolean)
+		setPointer("Hardcoded_tolua_ismodulemetatable", "tolua_ismodulemetatable", tolua_ismodulemetatable)
+		setPointer("Hardcoded_tolua_isnumber", "tolua_isnumber", tolua_isnumber)
+		setPointer("Hardcoded_tolua_isstring", "tolua_isstring", tolua_isstring)
+		setPointer("Hardcoded_tolua_isusertype", "tolua_isusertype", tolua_isusertype)
+		setPointer("Hardcoded_tolua_moduleevents", "tolua_moduleevents", tolua_moduleevents)
+		setPointer("Hardcoded_tolua_newmetatable", "tolua_newmetatable", tolua_newmetatable)
+		setPointer("Hardcoded_tolua_pushboolean", "tolua_pushboolean", tolua_pushboolean)
+		setPointer("Hardcoded_tolua_pushnumber", "tolua_pushnumber", tolua_pushnumber)
+		setPointer("Hardcoded_tolua_pushstring", "tolua_pushstring", tolua_pushstring)
+		setPointer("Hardcoded_tolua_tostring", "tolua_tostring", tolua_tostring)
+		setPointer("Hardcoded_tolua_tousertype", "tolua_tousertype", tolua_tousertype)
+		setPointer("Hardcoded_tolua_typename", "tolua_typename", tolua_typename)
+		setPointer("Hardcoded_tolua_variable", "tolua_variable", tolua_variable)
 
 		// Export Lua functions that deal with user data / user types
 		exposeToLua(L, "EEex_CastUserData", castUserDataLua);

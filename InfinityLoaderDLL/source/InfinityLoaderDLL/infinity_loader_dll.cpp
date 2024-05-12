@@ -537,6 +537,82 @@ DWORD resolveAliasTarget(const String aliasList, String& toTransform) {
 	return result;
 }
 
+DWORD processINICategoryPatternValue(
+	const String& iniPath,
+	const String& originalINICategoryName,
+	const String& iniCategoryName,
+	const PatternValueType type,
+	const TCHAR *const singleKey,
+	const TCHAR *const listKey,
+	PatternValueHandle& valueHandleOut,
+	bool& filledOut)
+{
+	filledOut = false;
+
+	if (type == PatternValueType::SINGLE) {
+
+		uintptr_t address;
+		TryRetErr( GetINIUIntPtrDef(iniPath, iniCategoryName.c_str(), singleKey, 0, address) )
+
+		if (address != 0) {
+
+			PatternValueHandle handle;
+			if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::SINGLE, handle)) {
+				PrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
+				return -1;
+			}
+
+			sharedState().SetSinglePatternValue(handle, address);
+			valueHandleOut = handle;
+			filledOut = true;
+			return 0;
+		}
+	}
+	else if (type == PatternValueType::LIST) {
+
+		String addresses;
+		bool filled;
+		TryRetErr( GetINIStr(iniPath, iniCategoryName.c_str(), listKey, addresses, filled) )
+
+		if (filled) {
+
+			PatternValueHandle handle;
+			if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::LIST, handle)) {
+				PrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
+				return -1;
+			}
+
+			bool success = false;
+
+			ForEveryCharSplit(addresses, TCHAR{ ',' }, [&](String addressStr) {
+
+				uintptr_t address;
+				if (!DecStrToUIntPtr(addressStr, address)) {
+					success = false;
+					PrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Failed to parse [%s].%s\n"), iniCategoryName.c_str(), listKey);
+					return true;
+				}
+
+				success = true;
+				sharedState().AddListPatternValue(handle, address);
+				return false;
+			});
+
+			if (success) {
+				valueHandleOut = handle;
+				filledOut = true;
+				return 0;
+			}
+		}
+	}
+	else {
+		PrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Invalid [%s].Type\n"), iniCategoryName.c_str());
+		return -1;
+	}
+
+	return 0;
+}
+
 DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& iniPath,
 	const String& originalINICategoryName, PatternValueHandle& valueHandleOut)
 {
@@ -577,64 +653,41 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 		return -1;
 	}
 
+	bool hadValue;
+	TryRetErr(processINICategoryPatternValue(
+		iniPath,
+		originalINICategoryName,
+		iniCategoryName,
+		type,
+		TEXT("Value"),
+		TEXT("Values"),
+		valueHandleOut,
+		hadValue
+	))
+
+	if (hadValue) {
+		return 0;
+	}
+
 	bool noCache;
 	TryRetErr( GetINIBoolDef(iniPath, iniCategoryName.c_str(), TEXT("NoCache"), false, noCache) )
 
 	if (!noCache && attemptUseCached) {
 
-		if (type == PatternValueType::SINGLE) {
+		bool filled;
+		TryRetErr(processINICategoryPatternValue(
+			iniPath,
+			originalINICategoryName,
+			iniCategoryName,
+			type,
+			TEXT("CachedAddress"),
+			TEXT("CachedAddresses"),
+			valueHandleOut,
+			filled
+		))
 
-			uintptr_t cachedAddress;
-			TryRetErr( GetINIUIntPtrDef(iniPath, iniCategoryName.c_str(), TEXT("CachedAddress"), 0, cachedAddress) )
-
-			if (cachedAddress != 0) {
-
-				PatternValueHandle handle;
-				if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::SINGLE, handle)) {
-					PrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
-					return -1;
-				}
-
-				sharedState().SetSinglePatternValue(handle, cachedAddress);
-				valueHandleOut = handle;
-				return 0;
-			}
-		}
-		else if (type == PatternValueType::LIST) {
-
-			String cachedAddresses;
-			bool filled;
-			TryRetErr( GetINIStr(iniPath, iniCategoryName.c_str(), TEXT("CachedAddresses"), cachedAddresses, filled) )
-
-			if (filled) {
-
-				PatternValueHandle handle;
-				if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::LIST, handle)) {
-					PrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
-					return -1;
-				}
-
-				bool success = false;
-
-				ForEveryCharSplit(cachedAddresses, TCHAR{','}, [&](String addressStr) {
-
-					uintptr_t address;
-					if (!DecStrToUIntPtr(addressStr, address)) {
-						success = false;
-						PrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Failed to parse [%s].CachedAddresses\n"), iniCategoryName.c_str());
-						return true;
-					}
-
-					success = true;
-					sharedState().AddListPatternValue(handle, address);
-					return false;
-				});
-
-				if (success) {
-					valueHandleOut = handle;
-					return 0;
-				}
-			}
+		if (filled) {
+			return 0;
 		}
 	}
 
@@ -764,8 +817,13 @@ DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
 
 	const long long exeLastModifiedTime = getFileLastModifiedTime(exePath());
 
-	if (alreadyCached && exeLastModifiedTime == cachedExeTime) {
-		attemptUseCached = true;
+	if (alreadyCached) {
+		if (debug()) {
+			Print("[?][InfinityLoaderDLL.dll] findPatterns() - exeLastModifiedTime: %lld, CachedExeTime: %lld\n", exeLastModifiedTime, cachedExeTime);
+		}
+		if (exeLastModifiedTime == cachedExeTime) {
+			attemptUseCached = true;
+		}
 	}
 
 	if (!attemptUseCached) {
@@ -1715,6 +1773,11 @@ bool fillLuaPointer(void* segmentPtr, DWORD segmentSize, const String& name, poi
 	return fillLuaPointer(segmentPtr, segmentSize, name, pointer, [](uintptr_t& address) {});
 }
 
+int temporaryPrintReplacement(lua_State* L) {
+	Print("%s\n", lua_tostring(L, 1));
+	return 0;
+}
+
 void initLua() {
 
 	if (debug()) {
@@ -1777,7 +1840,7 @@ void initLua() {
 		// Since non-internal modes initialize the Lua state immediately, the engine's print() function isn't set when EEex's initial
 		// Lua file is executed, which means print() must be redirected to InfinityLoader's FPrint() to get console output from the
 		// initial file.
-		lua_pushcfunction(L, printLua);
+		lua_pushcfunction(L, temporaryPrintReplacement);
 		lua_setglobal(L, "print");
 	}
 
@@ -2133,18 +2196,28 @@ DWORD loadExeNameForPatterns() {
 
 DWORD patchExe() {
 
-	TryRetErr( loadExeNameForPatterns() )
+	#pragma push_macro("printInitFailed")
+	#pragma push_macro("attemptElseRetErr")
+	#define printInitFailed() Print("[!][InfinityLoaderDLL.dll] patchExe() - Initialization failed; the main Lua file will not be executed\n");
+	#define attemptElseRetErr(call) TryElseRetErr( call, printInitFailed() )
+
+	attemptElseRetErr( loadExeNameForPatterns() )
 
 	void* sectionPtr;
 	DWORD sectionSize;
 	if (sharedState().GetSegmentPointerAndSize(".text", sectionPtr, sectionSize)) {
 		Print("[!][InfinityLoaderDLL.dll] patchExe() - Failed to fetch .text pointer and size\n");
+		printInitFailed()
 		return -1;
 	}
 
-	TryRetErr( findPatterns(sectionPtr, sectionSize) )
-	TryRetErr( InitLuaProvider(sharedState()) )
-	return setUpLuaInitialization(sectionPtr, sectionSize);
+	attemptElseRetErr( findPatterns(sectionPtr, sectionSize) )
+	attemptElseRetErr( InitLuaProvider(sharedState()) )
+	attemptElseRetErr( setUpLuaInitialization(sectionPtr, sectionSize) )
+	return ERROR_SUCCESS;
+
+	#pragma pop_macro("attemptElseRetErr")
+	#pragma pop_macro("printInitFailed")
 }
 
 // Return:

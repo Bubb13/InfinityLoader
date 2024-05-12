@@ -25,6 +25,9 @@ EXTERN_EXPORT type_lua_atpanic lua_atpanic;
 typedef void (*type_lua_callk)(lua_State* L, int nargs, int nresults, int ctx, lua_CFunction k);
 EXTERN_EXPORT type_lua_callk lua_callk;
 
+typedef void (*type_lua_concat)(lua_State* L, int n);
+EXTERN_EXPORT type_lua_concat lua_concat;
+
 typedef void (*type_lua_createtable)(lua_State* L, int narr, int nrec);
 EXTERN_EXPORT type_lua_createtable lua_createtable;
 
@@ -51,6 +54,9 @@ EXTERN_EXPORT type_lua_iscfunction lua_iscfunction;
 
 typedef int (*type_lua_isnumber)(lua_State* L, int index);
 EXTERN_EXPORT type_lua_isnumber lua_isnumber;
+
+typedef int (*type_lua_isstring)(lua_State* L, int index);
+EXTERN_EXPORT type_lua_isstring lua_isstring;
 
 typedef int (*type_lua_isuserdata)(lua_State* L, int index);
 EXTERN_EXPORT type_lua_isuserdata lua_isuserdata;
@@ -87,6 +93,9 @@ EXTERN_EXPORT type_lua_pushstring lua_pushstring;
 
 typedef void (*type_lua_pushvalue)(lua_State* L, int index);
 EXTERN_EXPORT type_lua_pushvalue lua_pushvalue;
+
+typedef int (*type_lua_rawequal)(lua_State* L, int index1, int index2);
+EXTERN_EXPORT type_lua_rawequal lua_rawequal;
 
 typedef void (*type_lua_rawget)(lua_State* L, int index);
 EXTERN_EXPORT type_lua_rawget lua_rawget;
@@ -139,6 +148,9 @@ EXTERN_EXPORT type_lua_touserdata lua_touserdata;
 typedef int (*type_lua_type)(lua_State* L, int index);
 EXTERN_EXPORT type_lua_type lua_type;
 
+typedef const char* (*type_lua_typename)(lua_State* L, int tp);
+EXTERN_EXPORT type_lua_typename lua_typename;
+
 typedef int (*type_luaL_error)(lua_State* L, const char* fmt, ...);
 EXTERN_EXPORT type_luaL_error luaL_error;
 
@@ -147,6 +159,9 @@ EXTERN_EXPORT type_luaL_loadfilex luaL_loadfilex;
 
 typedef int (*type_luaL_loadstring)(lua_State* L, const char* s);
 EXTERN_EXPORT type_luaL_loadstring luaL_loadstring;
+
+typedef int (*type_luaL_newmetatable)(lua_State* L, const char* tname);
+EXTERN_EXPORT type_luaL_newmetatable luaL_newmetatable;
 
 typedef int (*type_luaL_ref)(lua_State* L, int t);
 EXTERN_EXPORT type_luaL_ref luaL_ref;
