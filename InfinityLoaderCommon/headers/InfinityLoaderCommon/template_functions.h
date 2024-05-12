@@ -41,12 +41,12 @@ bool decimalStrToIntegerTemplate(const String& decimalStr, IntegerType& accumula
 	}
 
 	accumulator = 0;
-	size_t curPow = 1;
+	IntegerType curPow = 1;
 	size_t i = strLen - 1;
 	do {
 		for (auto& entry : aDecimalDigitToByte) {
 			if (characters[i] == entry.first) {
-				accumulator += static_cast<IntegerType>(entry.second * curPow);
+				accumulator += entry.second * curPow;
 				curPow *= 10;
 				goto loop_continue;
 			}
