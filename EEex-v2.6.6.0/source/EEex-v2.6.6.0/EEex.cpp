@@ -174,6 +174,27 @@ std::vector<std::function<void(int16_t)>> conditionResponseHitCallbacks{};
 std::vector<std::function<void(int32_t)>> triggerHitCallbacks{};
 std::vector<std::function<void(bool)>> triggerEvaluatedCallbacks{};
 
+//--------------------------------//
+//          Globals Util          //
+//--------------------------------//
+
+template<typename T>
+void removeCachedEffect(CDerivedStats& stats, std::vector<T> ExStatData::*const vectorPtr, std::function<bool(const T&)> compare) {
+
+	std::vector<T>& vector = exStatDataMap[&stats].*vectorPtr;
+	const auto end = vector.end();
+	const auto pos = std::find_if(vector.begin(), end, compare);
+
+	if (pos != end) {
+		vector.erase(pos);
+	}
+}
+
+void removeCachedEffect(CDerivedStats& stats, std::vector<CGameEffect*> ExStatData::*const vectorPtr, const CGameEffect *const pEffect) {
+	const auto compare = [&](const CGameEffect *const &data) -> bool { return data == pEffect; };
+	removeCachedEffect<CGameEffect*>(stats, vectorPtr, compare);
+}
+
 //-----------------------------//
 //          Math Util          //
 //-----------------------------//
@@ -2575,7 +2596,7 @@ void CGameAIBase::Override_ApplyTriggers() {
 
 				this->virtual_AutoPause(2);
 				this->m_lAttackStyle = pTrigger->m_specificID;
-				
+
 				if
 				(
 					pGame->GetCharacterPortraitNum(this->m_id) == -1
@@ -3032,6 +3053,13 @@ int EEex::Opcode_Hook_ScreenEffects_ApplyEffect(CGameEffect* pEffect, CGameSprit
 	STUTTER_LOG_END
 }
 
+void EEex::Opcode_Hook_ScreenEffects_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
+	// The op403 effect is about to be destroyed - remove its cached values
+	removeCachedEffect(pSprite->m_derivedStats, &ExStatData::screenEffects, pEffect);
+	removeCachedEffect(pSprite->m_tempStats,    &ExStatData::screenEffects, pEffect);
+	removeCachedEffect(pSprite->m_bonusStats,   &ExStatData::screenEffects, pEffect);
+}
+
 // New op408
 int EEex::Opcode_Hook_ProjectileMutator_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
@@ -3043,24 +3071,11 @@ int EEex::Opcode_Hook_ProjectileMutator_ApplyEffect(CGameEffect* pEffect, CGameS
 	STUTTER_LOG_END
 }
 
-void removeProjectileMutatorCache(CDerivedStats& stats, const CGameEffect *const pEffect) {
-
-	ExStatData& exStatData = exStatDataMap[&stats];
-	std::vector<CGameEffect*>& projectileMutatorEffects = exStatData.projectileMutatorEffects;
-
-	const auto end = projectileMutatorEffects.end();
-	const auto pos = std::find(projectileMutatorEffects.begin(), end, pEffect);
-
-	if (pos != end) {
-		projectileMutatorEffects.erase(pos);
-	}
-}
-
 void EEex::Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
 	// The op408 effect is about to be destroyed - remove its cached values
-	removeProjectileMutatorCache(pSprite->m_derivedStats, pEffect);
-	removeProjectileMutatorCache(pSprite->m_tempStats, pEffect);
-	removeProjectileMutatorCache(pSprite->m_bonusStats, pEffect);
+	removeCachedEffect(pSprite->m_derivedStats, &ExStatData::projectileMutatorEffects, pEffect);
+	removeCachedEffect(pSprite->m_tempStats,    &ExStatData::projectileMutatorEffects, pEffect);
+	removeCachedEffect(pSprite->m_bonusStats,   &ExStatData::projectileMutatorEffects, pEffect);
 }
 
 // New op409
@@ -3074,6 +3089,14 @@ int EEex::Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGa
 	return 1;
 
 	STUTTER_LOG_END
+}
+
+void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
+	// The op409 effect is about to be destroyed - remove its cached values
+	const auto compare = [&](const EnabledActionListenerData& data) -> bool { return data.pEffect == pEffect; };
+	removeCachedEffect<EnabledActionListenerData>(pSprite->m_derivedStats, &ExStatData::enableActionListenerEffects, compare);
+	removeCachedEffect<EnabledActionListenerData>(pSprite->m_tempStats,    &ExStatData::enableActionListenerEffects, compare);
+	removeCachedEffect<EnabledActionListenerData>(pSprite->m_bonusStats,   &ExStatData::enableActionListenerEffects, compare);
 }
 
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
@@ -3337,7 +3360,7 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 				lua_rawget(L, -2);                                                   // 4 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName] ]
 
 				if (lua_isfunction(L, -1)) {
-					luaCallProtected(L, 1, 0, [&](int base) {
+					luaCallProtected(L, 3, 0, [&](int base) {
 																					 // 4 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ... ]
 						lua_pushvalue(L, base);                                      // 5 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName] ]
 						lua_pushvalue(L, base - 3);                                  // 6 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD ]
