@@ -2697,6 +2697,8 @@ void updateNextUUIDLocal() {
 
 void EEex::GameState_Hook_OnAfterGlobalVariablesUnmarshalled() {
 
+	STUTTER_LOG_START(void, "EEex::GameState_Hook_OnAfterGlobalVariablesUnmarshalled")
+
 	CVariableHash *const pGlobalVariables = &(*p_g_pBaldurChitin)->m_pObjectGame->m_variables;
 	CVariable *const pVariable = pGlobalVariables->FindKey(EngineVal<CString, false>{"EEEX_NEXTUUID"});
 
@@ -2707,6 +2709,8 @@ void EEex::GameState_Hook_OnAfterGlobalVariablesUnmarshalled() {
 	else {
 		nextUUID = (static_cast<uint64_t>(pVariable->m_dWValue) << 32) | pVariable->m_intValue;
 	}
+
+	STUTTER_LOG_END
 }
 
 ///////////
@@ -3054,10 +3058,15 @@ int EEex::Opcode_Hook_ScreenEffects_ApplyEffect(CGameEffect* pEffect, CGameSprit
 }
 
 void EEex::Opcode_Hook_ScreenEffects_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_ScreenEffects_OnRemove")
+
 	// The op403 effect is about to be destroyed - remove its cached values
 	removeCachedEffect(pSprite->m_derivedStats, &ExStatData::screenEffects, pEffect);
 	removeCachedEffect(pSprite->m_tempStats,    &ExStatData::screenEffects, pEffect);
 	removeCachedEffect(pSprite->m_bonusStats,   &ExStatData::screenEffects, pEffect);
+
+	STUTTER_LOG_END
 }
 
 // New op408
@@ -3072,10 +3081,15 @@ int EEex::Opcode_Hook_ProjectileMutator_ApplyEffect(CGameEffect* pEffect, CGameS
 }
 
 void EEex::Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_ProjectileMutator_OnRemove")
+
 	// The op408 effect is about to be destroyed - remove its cached values
 	removeCachedEffect(pSprite->m_derivedStats, &ExStatData::projectileMutatorEffects, pEffect);
 	removeCachedEffect(pSprite->m_tempStats,    &ExStatData::projectileMutatorEffects, pEffect);
 	removeCachedEffect(pSprite->m_bonusStats,   &ExStatData::projectileMutatorEffects, pEffect);
+
+	STUTTER_LOG_END
 }
 
 // New op409
@@ -3092,11 +3106,16 @@ int EEex::Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGa
 }
 
 void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_EnableActionListener_OnRemove")
+
 	// The op409 effect is about to be destroyed - remove its cached values
 	const auto compare = [&](const EnabledActionListenerData& data) -> bool { return data.pEffect == pEffect; };
 	removeCachedEffect<EnabledActionListenerData>(pSprite->m_derivedStats, &ExStatData::enableActionListenerEffects, compare);
 	removeCachedEffect<EnabledActionListenerData>(pSprite->m_tempStats,    &ExStatData::enableActionListenerEffects, compare);
 	removeCachedEffect<EnabledActionListenerData>(pSprite->m_bonusStats,   &ExStatData::enableActionListenerEffects, compare);
+
+	STUTTER_LOG_END
 }
 
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
@@ -3233,10 +3252,18 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 ////////////
 
 void EEex::Sprite_Hook_OnConstruct(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnConstruct")
+
 	exSpriteDataMap.try_emplace(pSprite);
+
+	STUTTER_LOG_END
 }
 
 void EEex::Sprite_Hook_OnDestruct(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnDestruct")
+
 	if (auto itr = exSpriteDataMap.find(pSprite); itr != exSpriteDataMap.end()) {
 		ExSpriteData& exData = itr->second;
 		if (exData.uuid != 0) {
@@ -3245,6 +3272,8 @@ void EEex::Sprite_Hook_OnDestruct(CGameSprite* pSprite) {
 		}
 		exSpriteDataMap.erase(itr);
 	}
+
+	STUTTER_LOG_END
 }
 
 void updateUUIDLocal(CGameSprite* pSprite, ExSpriteData& exData) {
@@ -3267,6 +3296,8 @@ void updateUUIDLocal(CGameSprite* pSprite, ExSpriteData& exData) {
 
 EEex_OnBeforeEffectUnmarshalledRet EEex::Sprite_Hook_OnBeforeEffectUnmarshalled(CGameSprite* pSprite, CGameEffectBase* pEffectBase) {
 
+	STUTTER_LOG_START(EEex_OnBeforeEffectUnmarshalledRet, "EEex::Sprite_Hook_OnBeforeEffectUnmarshalled")
+
 	if (EEex::bNoUUID) {
 		return EEex_OnBeforeEffectUnmarshalledRet::NORMAL;
 	}
@@ -3281,9 +3312,13 @@ EEex_OnBeforeEffectUnmarshalledRet EEex::Sprite_Hook_OnBeforeEffectUnmarshalled(
 	}
 
 	return EEex_OnBeforeEffectUnmarshalledRet::NORMAL;
+
+	STUTTER_LOG_END
 }
 
 void EEex::Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnAfterEffectListUnmarshalled")
 
 	if (EEex::bNoUUID) {
 		return;
@@ -3310,9 +3345,13 @@ void EEex::Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite) {
 		lua_getglobal(L, "EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled"); // 1 [ ..., EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled ]
 		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                  // 2 [ ..., EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled, pSpriteUD ]
 	});
+
+	STUTTER_LOG_END
 }
 
 void EEex::Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnBeforeEffectListMarshalled")
 
 	if (!EEex::bNoUUID && !EEex::bStripUUID) {
 		return;
@@ -3333,6 +3372,8 @@ void EEex::Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite) {
 
 		pNode = pNext;
 	}
+
+	STUTTER_LOG_END
 }
 
 ////////////
@@ -3728,15 +3769,25 @@ bool EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing(CGameObject* pGameObject
 /////////////
 
 void EEex::Trigger_Hook_OnScriptLevelHit(CGameAIBase* pCaller, unsigned char nScriptLevel) {
+
+	STUTTER_LOG_START(void, "EEex::Trigger_Hook_OnScriptLevelHit")
+
 	for (auto callback : scriptLevelHitCallbacks) {
 		callback(pCaller, nScriptLevel);
 	}
+
+	STUTTER_LOG_END
 }
 
 void EEex::Trigger_Hook_OnConditionResponseHit(int16_t nResponseSetNum) {
+
+	STUTTER_LOG_START(void, "EEex::Trigger_Hook_OnConditionResponseHit")
+
 	for (auto callback : conditionResponseHitCallbacks) {
 		callback(nResponseSetNum);
 	}
+
+	STUTTER_LOG_END
 }
 
 //---------------------------//
