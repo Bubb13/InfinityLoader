@@ -2997,6 +2997,7 @@ namespace EEex
 	extern bool bInTrackedResponse;
 	extern bool bStripUUID;
 	extern bool bNoUUID;
+	extern bool StutterDetector_Enabled;
 
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 	void DeepCopy(lua_State* L);

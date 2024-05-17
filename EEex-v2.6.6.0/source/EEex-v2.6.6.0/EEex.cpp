@@ -21,7 +21,7 @@ constexpr uintptr_t HOOK_INTEGRITY_WATCHDOG_STACK_SNAPSHOT_SIZE = 256;
 // Stutter Util //
 //////////////////
 
-//#define STUTTER_LOGGING
+#define STUTTER_LOGGING
 
 #ifdef STUTTER_LOGGING
 	#define STUTTER_LOG_START(retType, stutterLogName) return logStutter<retType>(stutterLogName, [&]() -> retType {
@@ -420,6 +420,11 @@ void exitStutterLog(const char *const name, long long timeTaken) {
 
 template<typename RetType>
 RetType logStutter(const char* name, std::function<RetType()> func) {
+
+	if (!EEex::StutterDetector_Enabled) {
+		return func();
+	}
+
 	bool oldTopLevel = topLevel;
 	topLevel = false;
 	long long startTime = currentMicroseconds();
@@ -432,6 +437,12 @@ RetType logStutter(const char* name, std::function<RetType()> func) {
 
 template<>
 void logStutter<void>(const char* name, std::function<void()> func) {
+
+	if (!EEex::StutterDetector_Enabled) {
+		func();
+		return;
+	}
+
 	bool oldTopLevel = topLevel;
 	topLevel = false;
 	long long startTime = currentMicroseconds();
@@ -3919,6 +3930,7 @@ void EEex::InitEEex() {
 	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = false;
 	EEex::Projectile_LuaHook_GlobalMutators_Enabled = false;
 	initProjectileMutator();
+	EEex::StutterDetector_Enabled = false;
 
 	if (luaMode() == LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL) {
 		getLuaProc("wrapper_fclose", wrapper_fclose);

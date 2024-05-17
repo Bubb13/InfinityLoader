@@ -37,6 +37,7 @@ namespace EEex
 	nobinding bool bNoUUID;
 	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
 	$external_implementation bool IsMarshallingCopy();
+	bool StutterDetector_Enabled;
 };
 
 struct CGameSprite : CGameAIBase
