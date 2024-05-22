@@ -3172,7 +3172,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 			# HACK: Array's operator[] needs to return a reference
 			# even though I usually convert them to pointers
-			if split == "&" and (allowReference or sourceGroup.name in ("Array", "ConstArray", "ArrayPointer", "EEex")):
+			if split == "&" and (allowReference or sourceGroup.name in ("Array", "ConstArray", "EEex")):
 				assert not typeRef.reference, "Cannot handle rvalue reference"
 				typeRef.reference = True
 
@@ -4538,9 +4538,9 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 		nonlocal alreadyExisted
 		nonlocal ignoreGroup
 		line = line.rstrip()
-		
+
 		if not ignoreGroup:
-		
+
 			leftOfExtends = None
 			try:
 				colonIndex = line.index(":")
@@ -4843,6 +4843,15 @@ struct CharString
 struct ConstCharString
 {
 };
+
+template<typename T>
+struct Primitive
+{
+};
+
+struct UnmappedUserType
+{
+};
 		""")
 
 	if manualTypesFile != None:
@@ -4945,7 +4954,7 @@ def readIdaStructFieldOffsets(idaStructsPath: str) -> dict[str,int]:
 	return toReturn
 
 
-def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStructsPath: str, fixupFileName: str, manualTypesFile: str):
+def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStructsPath: str, fixupFileName: str, manualTypesFile: str, noRefify: bool):
 
 	idaStructFieldOffsets: dict[str,IDAStructFields] = readIdaStructFieldOffsets(idaStructsPath)
 	mainState = loadMinimumMainState(requestHeaderPath, fixupFileName=fixupFileName, manualTypesFile=manualTypesFile, checkRename=False, idaUnnamedScheme=True)
@@ -4954,17 +4963,21 @@ def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStruct
 
 		taggedTypes = fileAsSet(requestTypesPath)
 
-
-		def refify(typeName: str) -> str:
-			typeNameDisplay = re.sub("<unnamed_type_(.+?)>", "\\1_t", typeName)
-			if typeName in taggedTypes:
-				typeNameDisplay = re.sub("([<>])", "\\\\\\1", typeNameDisplay)
-				typeName = re.sub("([<>])", "\\\\\\1", typeName)
-				return f":ref:`{typeNameDisplay}<{typeName}>`", True
-			else:
-				if typeNameDisplay not in ("Array", "ConstArray", "void") and typeNameDisplay not in primitives and not typeNameDisplay.isnumeric():
-					print(f"Unable to refify: \"{typeNameDisplay}\"")
+		if noRefify:
+			def refify(typeName: str) -> str:
+				typeNameDisplay = re.sub("<unnamed_type_(.+?)>", "\\1_t", typeName)
 				return typeNameDisplay, False
+		else:
+			def refify(typeName: str) -> str:
+				typeNameDisplay = re.sub("<unnamed_type_(.+?)>", "\\1_t", typeName)
+				if typeName in taggedTypes:
+					typeNameDisplay = re.sub("([<>])", "\\\\\\1", typeNameDisplay)
+					typeName = re.sub("([<>])", "\\\\\\1", typeName)
+					return f":ref:`{typeNameDisplay}<{typeName}>`", True
+				else:
+					if typeNameDisplay not in ("Array", "ConstArray", "void") and typeNameDisplay not in primitives and not typeNameDisplay.isnumeric():
+						print(f"Unable to refify: \"{typeNameDisplay}\"")
+					return typeNameDisplay, False
 
 
 		for typeName in taggedTypes:
@@ -4978,10 +4991,16 @@ def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStruct
 				out.write(f":{typeName}|{idaFieldOffsets.size}\n")
 
 				if group.hadVfptrField:
-					out.write(f"vfptr|0|qword\n")
+					if noRefify:
+						out.write(f"<vfptr>|0|qword\n")
+					else:
+						out.write(f"vfptr|0|qword\n")
 
 				for i, extendRef in enumerate(group.extends):
-					fieldName = f"baseclass_{i}"
+					if noRefify:
+						fieldName = f"<baseclass>"
+					else:
+						fieldName = f"baseclass_{i}"
 					offsetHex = str.format("{:X}", idaFieldOffsets.baseclassOffsets[i])
 					typeDisplayName = extendRef.getHeaderName(typeManipulator=refify)
 					typeDisplayName = re.sub(",:ref:", ", :ref:", typeDisplayName)
@@ -5004,7 +5023,10 @@ def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStruct
 
 							if firstPaddingOffset:
 								offsetHex = str.format("{:X}", firstPaddingOffset)
-								out.write(f"``<padding>``|{offsetHex}|<blank>\n")
+								if noRefify:
+									out.write(f"<padding>|{offsetHex}|<blank>\n")
+								else:
+									out.write(f"``<padding>``|{offsetHex}|<blank>\n")
 
 							break
 
@@ -5061,7 +5083,10 @@ def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStruct
 
 				if firstPaddingOffset:
 					offsetHex = str.format("{:X}", firstPaddingOffset)
-					out.write(f"``<padding>``|{offsetHex}|<blank>\n")
+					if noRefify:
+						out.write(f"<padding>|{offsetHex}|<blank>\n")
+					else:
+						out.write(f"``<padding>``|{offsetHex}|<blank>\n")
 
 				out.write(":end\n")
 
@@ -5077,6 +5102,7 @@ def mainSwitch():
 	idaStructs: str = None
 	fixupFileName: str = None
 	manualTypesFile: str = None
+	noRefify: bool = False
 
 	for k in islice(sys.argv, 1, None):
 		if (v := re.search("-requestHeaderFile=(.+)", k)) != None: requestHeader = v.group(1)
@@ -5084,9 +5110,10 @@ def mainSwitch():
 		elif (v := re.search("-idaStructsFile=(.+)", k)) != None: idaStructs = v.group(1)
 		elif (v := re.search("-fixupFile=(.+)",  k)) != None: fixupFileName = v.group(1)
 		elif (v := re.search("-manualTypesFile=(.+)", k)) != None: manualTypesFile = v.group(1)
+		elif (v := re.search("-noRefify", k)) != None: noRefify = True
 
 	if requestTypes and idaStructs:
-		doRequestFieldTypes(requestHeader, requestTypes, idaStructs, fixupFileName, manualTypesFile)
+		doRequestFieldTypes(requestHeader, requestTypes, idaStructs, fixupFileName, manualTypesFile, noRefify)
 		return
 
 	compare1: str = None

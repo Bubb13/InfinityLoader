@@ -6623,34 +6623,6 @@ struct CAIGroup
 	}
 };
 
-template<class T>
-struct ArrayPointer
-{
-	T* data;
-
-	ArrayPointer() = delete;
-
-	T get(size_t index)
-	{
-		return data[index];
-	}
-
-	T* getReference(size_t index)
-	{
-		return &data[index];
-	}
-
-	void set(size_t index, T value)
-	{
-		data[index] = value;
-	}
-
-	T& operator[](size_t index)
-	{
-		return data[index];
-	}
-};
-
 template<class T, size_t size>
 struct Array
 {
@@ -8308,9 +8280,9 @@ struct CResHelper
 
 struct C2DArray : CResHelper<CResText,1012>
 {
-	ArrayPointer<CString> m_pNamesX;
-	ArrayPointer<CString> m_pNamesY;
-	ArrayPointer<CString> m_pArray;
+	VariableArray<CString>* m_pNamesX;
+	VariableArray<CString>* m_pNamesY;
+	VariableArray<CString>* m_pArray;
 	CString m_default;
 	__int16 m_nSizeX;
 	__int16 m_nSizeY;
@@ -8362,7 +8334,7 @@ struct CAIIdList : CResHelper<CResText,1008>
 	CString m_fileName;
 	CTypedPtrList<CPtrList,CAIId*> m_idList;
 	int m_faster;
-	ArrayPointer<CAIId*> m_pIdArray;
+	VariableArray<CAIId*>* m_pIdArray;
 	int m_nArray;
 
 	CAIIdList() = delete;

@@ -285,32 +285,6 @@ struct ConstArray
 };
 
 template<class T>
-struct ArrayPointer
-{
-	nobinding T* data;
-
-	T get(size_t index)
-	{
-		return data[index];
-	}
-
-	T* getReference(size_t index)
-	{
-		return &data[index];
-	}
-
-	void set(size_t index, T value)
-	{
-		data[index] = value;
-	}
-
-	$nobinding T& operator[](size_t index)
-	{
-		return data[index];
-	}
-};
-
-template<class T>
 struct VariableArray
 {
 	nobinding T data;

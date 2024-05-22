@@ -5,11 +5,11 @@ def fixup(mainState):
 
 	relocateGroup(mainState, "$C3D261E28D53B12983426B9B0D118A61", "frameTableEntry_st::$C3D261E28D53B12983426B9B0D118A61")
 
-	mainState.getGroup("C2DArray").retypeField(mainState, "m_pArray", "ArrayPointer<CString>")
-	mainState.getGroup("C2DArray").retypeField(mainState, "m_pNamesX", "ArrayPointer<CString>")
-	mainState.getGroup("C2DArray").retypeField(mainState, "m_pNamesY", "ArrayPointer<CString>")
+	mainState.getGroup("C2DArray").retypeField(mainState, "m_pArray", "VariableArray<CString>*")
+	mainState.getGroup("C2DArray").retypeField(mainState, "m_pNamesX", "VariableArray<CString>*")
+	mainState.getGroup("C2DArray").retypeField(mainState, "m_pNamesY", "VariableArray<CString>*")
 	mainState.getGroup("CAIGroup").retypeField(mainState, "m_memberList", "CTypedPtrList<CPtrList,long>")
-	mainState.getGroup("CAIIdList").retypeField(mainState, "m_pIdArray", "ArrayPointer<CAIId*>")
+	mainState.getGroup("CAIIdList").retypeField(mainState, "m_pIdArray", "VariableArray<CAIId*>*")
 	mainState.getGroup("CAreaFileCharacterEntryPoint").retypeField(mainState, "m_entryName", "LCharString<32>")
 	mainState.getGroup("CAreaFileContainer").retypeField(mainState, "m_ownedBy", "LCharString<32>")
 	mainState.getGroup("CAreaFileContainer").retypeField(mainState, "m_scriptName", "LCharString<32>")
