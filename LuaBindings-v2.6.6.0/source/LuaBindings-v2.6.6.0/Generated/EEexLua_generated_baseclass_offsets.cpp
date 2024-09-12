@@ -26,6 +26,12 @@ void registerBaseclasses() {
 		{"CSpawnPointVar", {
 			{"CSpawnVar", offsetofbase<CSpawnPointVar, CSpawnVar>()},
 		}},
+		{"CResWorldMap", {
+			{"CRes", offsetofbase<CResWorldMap, CRes>()},
+		}},
+		{"CResWorldMap::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResWorldMap::vtbl, CRes::vtbl>()},
+		}},
 		{"CResWebm", {
 			{"CRes", offsetofbase<CResWebm, CRes>()},
 		}},
@@ -44,6 +50,12 @@ void registerBaseclasses() {
 		{"CResWED::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResWED::vtbl, CRes::vtbl>()},
 		}},
+		{"CResUI", {
+			{"CRes", offsetofbase<CResUI, CRes>()},
+		}},
+		{"CResUI::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResUI::vtbl, CRes::vtbl>()},
+		}},
 		{"CResTileSet", {
 			{"CRes", offsetofbase<CResTileSet, CRes>()},
 		}},
@@ -56,17 +68,35 @@ void registerBaseclasses() {
 		{"CResText::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResText::vtbl, CRes::vtbl>()},
 		}},
+		{"CResStore", {
+			{"CRes", offsetofbase<CResStore, CRes>()},
+		}},
+		{"CResStore::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResStore::vtbl, CRes::vtbl>()},
+		}},
 		{"CResSpell", {
 			{"CRes", offsetofbase<CResSpell, CRes>()},
 		}},
 		{"CResSpell::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResSpell::vtbl, CRes::vtbl>()},
 		}},
+		{"CResPng", {
+			{"CRes", offsetofbase<CResPng, CRes>()},
+		}},
+		{"CResPng::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResPng::vtbl, CRes::vtbl>()},
+		}},
 		{"CResPVR", {
 			{"CRes", offsetofbase<CResPVR, CRes>()},
 		}},
 		{"CResPVR::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResPVR::vtbl, CRes::vtbl>()},
+		}},
+		{"CResPLT", {
+			{"CRes", offsetofbase<CResPLT, CRes>()},
+		}},
+		{"CResPLT::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResPLT::vtbl, CRes::vtbl>()},
 		}},
 		{"CResMosaic", {
 			{"CRes", offsetofbase<CResMosaic, CRes>()},
@@ -80,6 +110,12 @@ void registerBaseclasses() {
 		{"CResItem::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResItem::vtbl, CRes::vtbl>()},
 		}},
+		{"CResINI", {
+			{"CRes", offsetofbase<CResINI, CRes>()},
+		}},
+		{"CResINI::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResINI::vtbl, CRes::vtbl>()},
+		}},
 		{"CResGame", {
 			{"CRes", offsetofbase<CResGame, CRes>()},
 		}},
@@ -92,17 +128,53 @@ void registerBaseclasses() {
 		{"CResFont::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResFont::vtbl, CRes::vtbl>()},
 		}},
+		{"CResEffect", {
+			{"CRes", offsetofbase<CResEffect, CRes>()},
+		}},
+		{"CResEffect::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResEffect::vtbl, CRes::vtbl>()},
+		}},
+		{"CResDLG", {
+			{"CRes", offsetofbase<CResDLG, CRes>()},
+		}},
+		{"CResDLG::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResDLG::vtbl, CRes::vtbl>()},
+		}},
 		{"CResCell", {
 			{"CRes", offsetofbase<CResCell, CRes>()},
 		}},
 		{"CResCell::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResCell::vtbl, CRes::vtbl>()},
 		}},
+		{"CResCRE", {
+			{"CRes", offsetofbase<CResCRE, CRes>()},
+		}},
+		{"CResCRE::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResCRE::vtbl, CRes::vtbl>()},
+		}},
+		{"CResCHR", {
+			{"CRes", offsetofbase<CResCHR, CRes>()},
+		}},
+		{"CResCHR::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResCHR::vtbl, CRes::vtbl>()},
+		}},
 		{"CResBitmap", {
 			{"CRes", offsetofbase<CResBitmap, CRes>()},
 		}},
 		{"CResBitmap::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResBitmap::vtbl, CRes::vtbl>()},
+		}},
+		{"CResBIO", {
+			{"CRes", offsetofbase<CResBIO, CRes>()},
+		}},
+		{"CResBIO::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResBIO::vtbl, CRes::vtbl>()},
+		}},
+		{"CResArea", {
+			{"CRes", offsetofbase<CResArea, CRes>()},
+		}},
+		{"CResArea::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResArea::vtbl, CRes::vtbl>()},
 		}},
 		{"CArray<CRect,CRect*>", {
 			{"CObject", offsetofbase<CArray<CRect,CRect*>, CObject>()},
@@ -1017,6 +1089,12 @@ void registerBaseclasses() {
 		}},
 		{"CScreenWorld::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorld::vtbl, CBaldurEngine::vtbl>()},
+		}},
+		{"CResBinary", {
+			{"CRes", offsetofbase<CResBinary, CRes>()},
+		}},
+		{"CResBinary::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResBinary::vtbl, CRes::vtbl>()},
 		}},
 		{"CItem", {
 			{"CResHelper<CResItem,1005>", offsetofbase<CItem, CResHelper<CResItem,1005>>()},
