@@ -16,6 +16,7 @@ CMessage
 CAITrigger
 CBaldurChitin
 CGameDoor
+CInfButtonArray
 CResHelper<CResCell,1000>
 CPersistantEffectColorEffect
 CProjectileBAM
@@ -29,6 +30,7 @@ CInfGame
 CVideo
 CGameAIBase
 CProjectile205
+PlayerScriptNameOrdinal
 CTypedPtrList<CPtrList,int>
 CPtrList
 CGameObjectArray

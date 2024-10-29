@@ -9,7 +9,7 @@ void __stdcall InitBindings(SharedState argSharedState) {
 
 void __stdcall OpenBindings() {
 
-	InitLuaBindingsCommon(sharedState());
+	InitBindingsInternal();
 
 	// Export lua bindings
 	OpenBindingsInternal(luaState());

@@ -300,6 +300,25 @@ enum class SDL_bool : __int32
 	SDL_TRUE = 1,
 };
 
+enum class SDL_WindowFlags : __int32
+{
+	SDL_WINDOW_FULLSCREEN = 1,
+	SDL_WINDOW_OPENGL = 2,
+	SDL_WINDOW_SHOWN = 4,
+	SDL_WINDOW_HIDDEN = 8,
+	SDL_WINDOW_BORDERLESS = 16,
+	SDL_WINDOW_RESIZABLE = 32,
+	SDL_WINDOW_MINIMIZED = 64,
+	SDL_WINDOW_MAXIMIZED = 128,
+	SDL_WINDOW_INPUT_GRABBED = 256,
+	SDL_WINDOW_INPUT_FOCUS = 512,
+	SDL_WINDOW_MOUSE_FOCUS = 1024,
+	SDL_WINDOW_FULLSCREEN_DESKTOP = 4097,
+	SDL_WINDOW_FOREIGN = 2048,
+	SDL_WINDOW_ALLOW_HIGHDPI = 8192,
+	SDL_WINDOW_MOUSE_CAPTURE = 16384,
+};
+
 enum class SDL_Scancode : __int32
 {
 	SDL_SCANCODE_UNKNOWN = 0,
@@ -7363,39 +7382,6 @@ union SDL_Event
 };
 
 #pragma pack(push, 1)
-struct Item_ability_st
-{
-	unsigned __int16 type;
-	unsigned __int8 quickSlotType;
-	unsigned __int8 largeDamageDice;
-	Array<unsigned __int8,8> quickSlotIcon;
-	unsigned __int8 actionType;
-	unsigned __int8 actionCount;
-	unsigned __int16 range;
-	unsigned __int8 launcherType;
-	unsigned __int8 largeDamageDiceCount;
-	unsigned __int8 speedFactor;
-	unsigned __int8 largeDamageDiceBonus;
-	__int16 thac0Bonus;
-	unsigned __int8 damageDice;
-	unsigned __int8 school;
-	unsigned __int8 damageDiceCount;
-	unsigned __int8 secondaryType;
-	__int16 damageDiceBonus;
-	unsigned __int16 damageType;
-	unsigned __int16 effectCount;
-	unsigned __int16 startingEffect;
-	unsigned __int16 maxUsageCount;
-	unsigned __int16 usageFlags;
-	unsigned int abilityFlags;
-	unsigned __int16 missileType;
-	Array<unsigned __int16,6> attackProbability;
-
-	Item_ability_st() = delete;
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
 struct Item_Header_st
 {
 	unsigned int nFileType;
@@ -7514,6 +7500,12 @@ extern type_uiDrawSlicedRect p_uiDrawSlicedRect;
 
 typedef int (*type_uiExecLuaInt)(int id);
 extern type_uiExecLuaInt p_uiExecLuaInt;
+
+typedef SDL_Window* (*type_SDL_GetWindowFromID)(uint id);
+extern type_SDL_GetWindowFromID p_SDL_GetWindowFromID;
+
+typedef uint (*type_SDL_GetWindowFlags)(SDL_Window* window);
+extern type_SDL_GetWindowFlags p_SDL_GetWindowFlags;
 
 extern char** p_afxPchNil;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
@@ -8264,6 +8256,39 @@ struct Item_effect_st
 	unsigned int special;
 
 	Item_effect_st() = delete;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct Item_ability_st
+{
+	unsigned __int16 type;
+	unsigned __int8 quickSlotType;
+	unsigned __int8 largeDamageDice;
+	CResRef quickSlotIcon;
+	unsigned __int8 actionType;
+	unsigned __int8 actionCount;
+	unsigned __int16 range;
+	unsigned __int8 launcherType;
+	unsigned __int8 largeDamageDiceCount;
+	unsigned __int8 speedFactor;
+	unsigned __int8 largeDamageDiceBonus;
+	__int16 thac0Bonus;
+	unsigned __int8 damageDice;
+	unsigned __int8 school;
+	unsigned __int8 damageDiceCount;
+	unsigned __int8 secondaryType;
+	__int16 damageDiceBonus;
+	unsigned __int16 damageType;
+	unsigned __int16 effectCount;
+	unsigned __int16 startingEffect;
+	unsigned __int16 maxUsageCount;
+	unsigned __int16 usageFlags;
+	unsigned int abilityFlags;
+	unsigned __int16 missileType;
+	Array<unsigned __int16,6> attackProbability;
+
+	Item_ability_st() = delete;
 };
 #pragma pack(pop)
 

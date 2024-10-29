@@ -206,6 +206,10 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 		return lastError;
 	}
 
+	if (debug()) {
+		Print("[!][InfinityLoader.exe] patchMainThread() - threadStart: %p\n", threadStart);
+	}
+
 	return 0;
 }
 
@@ -276,7 +280,7 @@ DWORD startGame() {
 	}
 
 	if (pause()) {
-		MessageBox(NULL, TEXT("[?] startGame() - Pause"), TEXT("InfinityLoader.exe"), MB_ICONINFORMATION);
+		MessageBox(NULL, TEXT("[?] startGame() - Pause (Before Patch)"), TEXT("InfinityLoader.exe"), MB_ICONINFORMATION);
 	}
 
 	if (lastError = patchMainThread(processInfo.hProcess, processInfo.hThread)) {
@@ -286,6 +290,10 @@ DWORD startGame() {
 	//if (DWORD lastError = remoteThread(processInfo.hProcess)) {
 	//	return lastError;
 	//}
+
+	if (pause()) {
+		MessageBox(NULL, TEXT("[?] startGame() - Pause (Before Resume)"), TEXT("InfinityLoader.exe"), MB_ICONINFORMATION);
+	}
 
 	if (ResumeThread(processInfo.hThread) == -1) {
 		lastError = GetLastError();

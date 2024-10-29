@@ -1589,12 +1589,14 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 	isGlobal = group == mainState.globalGroup
 
-	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=* ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\)|\\$allow_references)\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=* ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
 		state.currentFunctionImplementation.group = group
 		state.lineGroupFlags.applyTo(state.currentFunctionImplementation.lineGroupFlags)
+
+		allowReferences: bool = False
 
 		if keywordMatch := functionImplementationMatch.group(1):
 			for keyword in keywordMatch.strip().split(" "):
@@ -1619,6 +1621,8 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 				elif patternNameMatch := re.match("^\\$pattern_name\\((\\S+)\\)$", keyword):
 					assert not state.currentFunctionImplementation.patternName, "pattern_name already defined"
 					state.currentFunctionImplementation.patternName = patternNameMatch.group(1)
+				elif keyword == "$allow_references":
+					allowReferences = True
 				else:
 					assert False, "Bad bindings directive"
 
@@ -1665,7 +1669,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 			state.currentFunctionImplementation.setName(functionImplementationMatch.group(6), wasOperator=True)
 		else:
 			retTypeStr = processRetType(7)
-			state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, debugLine=f"processCommonGroupLines()-1 {line}")
+			state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, allowReference=allowReferences, debugLine=f"processCommonGroupLines()-1 {line}")
 			state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(8)
 			state.currentFunctionImplementation.setName(functionImplementationMatch.group(9))
 
@@ -1686,7 +1690,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 				typeStr = "".join(parts)
 				funcParameter = FunctionImplementationParameter()
-				funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION, allowReference=state.currentFunctionImplementation.operatorStr != None, debugLine=f"processCommonGroupLines()-2 {line}")
+				funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION, allowReference=allowReferences or state.currentFunctionImplementation.operatorStr != None, debugLine=f"processCommonGroupLines()-2 {line}")
 				funcParameter.name = spaceSplit[-1]
 
 				state.currentFunctionImplementation.parameters.append(funcParameter)

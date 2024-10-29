@@ -60,6 +60,8 @@ type_drawSliceSide p_drawSliceSide;
 type_uiVariantAsInt p_uiVariantAsInt;
 type_uiDrawSlicedRect p_uiDrawSlicedRect;
 type_uiExecLuaInt p_uiExecLuaInt;
+type_SDL_GetWindowFromID p_SDL_GetWindowFromID;
+type_SDL_GetWindowFlags p_SDL_GetWindowFlags;
 char** p_afxPchNil;
 _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 Array<keyword,124>* p_g_keywords;
@@ -260,6 +262,8 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("uiVariantAsInt"), p_uiVariantAsInt);
 	attemptFillPointer(TEXT("uiDrawSlicedRect"), p_uiDrawSlicedRect);
 	attemptFillPointer(TEXT("uiExecLuaInt"), p_uiExecLuaInt);
+	attemptFillPointer(TEXT("SDL_GetWindowFromID"), p_SDL_GetWindowFromID);
+	attemptFillPointer(TEXT("SDL_GetWindowFlags"), p_SDL_GetWindowFlags);
 	attemptFillPointer(TEXT("afxPchNil"), p_afxPchNil);
 	attemptFillPointer(TEXT("capture"), p_capture);
 	attemptFillPointer(TEXT("g_keywords"), p_g_keywords);

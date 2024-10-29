@@ -72,6 +72,7 @@ def fixup(mainState):
 	mainState.getGroup("CWorldMapLinks").retypeField(mainState, "m_entryPoint", "LCharString<32>")
 	mainState.getGroup("DP_Player").retypeField(mainState, "name", "LCharString<32>")
 	mainState.getGroup("DP_Player").retypeField(mainState, "remoteAddr", "LCharString<32>")
+	mainState.getGroup("Item_ability_st").retypeField(mainState, "quickSlotIcon", "CResRef")
 	mainState.getGroup("Item_effect_st").retypeField(mainState, "res", "CResRef")
 	mainState.getGroup("SDL_Event").retypeField(mainState, "type", "SDL_EventType")
 	mainState.getGroup("SDL_Keysym").retypeField(mainState, "sym", "SDL_Keycode")
