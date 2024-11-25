@@ -86,6 +86,7 @@ CTlkTable::type_Fetch CTlkTable::p_Fetch;
 CAIScript::type_Construct1 CAIScript::p_Construct1;
 CAIScript::type_Destruct CAIScript::p_Destruct;
 CAbilityId::type_Construct CAbilityId::p_Construct;
+CButtonData::type_Construct CButtonData::p_Construct;
 C2DArray::type_Construct C2DArray::p_Construct;
 C2DArray::type_Load C2DArray::p_Load;
 C2DArray::type_GetAtLabels C2DArray::p_GetAtLabels;
@@ -288,6 +289,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CAIScript::Construct1"), CAIScript::p_Construct1);
 	attemptFillPointer(TEXT("CAIScript::Destruct"), CAIScript::p_Destruct);
 	attemptFillPointer(TEXT("CAbilityId::Construct"), CAbilityId::p_Construct);
+	attemptFillPointer(TEXT("CButtonData::Construct"), CButtonData::p_Construct);
 	attemptFillPointer(TEXT("C2DArray::Construct"), C2DArray::p_Construct);
 	attemptFillPointer(TEXT("C2DArray::Load"), C2DArray::p_Load);
 	attemptFillPointer(TEXT("C2DArray::GetAtLabels"), C2DArray::p_GetAtLabels);

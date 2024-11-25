@@ -8087,6 +8087,14 @@ struct CButtonData
 	unsigned __int8 m_bDisplayCount;
 
 	CButtonData() = delete;
+
+	typedef void (__thiscall *type_Construct)(CButtonData* pThis);
+	static type_Construct p_Construct;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
 };
 
 struct CGameDialogReply

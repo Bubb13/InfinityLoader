@@ -1265,6 +1265,11 @@ struct CMessageUpdateReaction : CMessage
 	}
 };
 
+struct CButtonData
+{
+	$constructor_fake Construct();
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////
