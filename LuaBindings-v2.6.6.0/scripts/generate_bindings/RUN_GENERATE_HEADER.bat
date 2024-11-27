@@ -4,7 +4,8 @@ if not exist "./out" mkdir "./out"
 
 set script_path="../../../scripts/generate_bindings/generate_bindings.py"
 
-python %script_path%^
+python %PYTHON_OPTIONS% %script_path%^
+ -allowDebug^
  -alreadyDefinedUsertypesFile=./in/already_defined_usertypes.txt^
  -bindingsOutFile=./out/EEexLua_generated.cpp^
  -bindingsPreludeFile=./in/bindings_prelude.txt^
@@ -24,7 +25,7 @@ copy /Y .\out\Baldur-v2.6.6.0_generated_internal_pointers.cpp ..\..\source\LuaBi
 copy /Y .\out\EEexLua_generated.cpp ..\..\source\LuaBindings-v2.6.6.0\Generated
 copy /Y .\out\EEexLua_generated_baseclass_offsets.cpp ..\..\source\LuaBindings-v2.6.6.0\Generated
 
-python %script_path%^
+python %PYTHON_OPTIONS% %script_path%^
  -ignoreHeaderFile=./in_lua/ignore_header_types.txt^
  -inFiles=./in_lua/manual_types.txt,./in/Baldur-v2.6.6.0.h^
  -noCustomTypes^

@@ -1,4 +1,30 @@
 
+//////////////////////////////////////////////////////////////////////////
+// Custom Binding Types                                                 //
+// (These have hardcoded uses and MUST be the first thing in this file) //
+//////////////////////////////////////////////////////////////////////////
+
+template<class T>
+struct VariableArray
+{
+	nobinding T data;
+
+	T get(size_t index)
+	{
+		return (&data)[index];
+	}
+
+	T* getReference(size_t index)
+	{
+		return &(&data)[index];
+	}
+
+	void set(size_t index, T value)
+	{
+		(&data)[index] = value;
+	}
+};
+
 /////////////////////////////////////////////
 // Manual Engine Template Type Definitions //
 /////////////////////////////////////////////
@@ -48,7 +74,7 @@ struct CResHelper
 template<class BASE_CLASS, class T>
 struct CTypedPtrArray : CObject
 {
-	T* m_pData;
+	VariableArray<T>* m_pData;
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;

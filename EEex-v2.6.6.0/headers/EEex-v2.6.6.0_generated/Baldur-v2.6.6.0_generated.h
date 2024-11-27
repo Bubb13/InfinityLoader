@@ -5290,7 +5290,7 @@ struct CTypedPtrArray : CObject
 		vtbl() = delete;
 	};
 
-	T* m_pData;
+	VariableArray<T>* m_pData;
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;

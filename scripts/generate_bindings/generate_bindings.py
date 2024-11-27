@@ -10,8 +10,10 @@ from io import TextIOWrapper
 from itertools import islice
 from typing import Callable, Generic, Match, Pattern, Tuple, TypeVar
 import importlib.util
+import os
 import re
 import sys
+import threading # type: ignore - For attaching debugger 
 
 
 T = TypeVar("T")
@@ -490,7 +492,7 @@ class MainState:
 
 				for inRef in existingGroup.inwardTypeRefs:
 					inRef.group = group
-					group.inwardTypeRefs.addUnique(inRef)
+					group.addInwardTypeRef(inRef)
 
 				for k, v in existingGroup.uniqueUseRepresentations.items():
 					group.uniqueUseRepresentations[k] = v
@@ -595,6 +597,10 @@ class TypeReference:
 		self.subRef: TypeReference = None
 
 
+	def __repr__(self):
+		return self.getHeaderName()
+
+
 	def copyTrivialFields(self, other):
 		self.const = other.const
 		self.long = other.long
@@ -641,10 +647,10 @@ class TypeReference:
 			self.removeFromGroupRefs()
 			self.group = newGroup
 			if newGroup != None:
-				self.group.inwardTypeRefs.addUnique(self)
+				self.group.addInwardTypeRef(self)
 
 
-	def shallowCopy(self, copyObj: TypeReference=None) -> TypeReference:
+	def shallowCopy(self, copyObj: TypeReference=None, noTemplateTypes=False) -> TypeReference:
 
 		copyObj = copyObj or TypeReference()
 		copyObj.copyTrivialFields(self)
@@ -656,10 +662,13 @@ class TypeReference:
 		copyObj.superRef = self.superRef
 
 		copyTemplateTypes: list[TypeReference] = []
-		for templateRef in self.templateTypes:
-			copyTemplateTypes.append(templateRef.shallowCopy())
 
-		copyObj.templateTypes = copyTemplateTypes
+		if not noTemplateTypes:
+			for templateRef in self.templateTypes:
+				copyTemplateTypes.append(templateRef.shallowCopy())
+
+			copyObj.templateTypes = copyTemplateTypes
+
 		return copyObj
 
 
@@ -695,6 +704,10 @@ class TypeReference:
 		return self.templateTypes
 
 
+	def getTemplateList(self) -> list[TypeReference]:
+		return self.templateTypes
+
+
 	def isVoid(self):
 		return self.getUserTypePointerLevel() == 0 and self.getName() == "void"
 
@@ -720,7 +733,25 @@ class TypeReference:
 
 
 	def isUnparameterized(self):
-		return self.group and ((len(self.group.templateTypeNames) > 0 and len(self.templateTypes) == 0) or (self.superRef and self.superRef.isUnparameterized()))
+		return self.group and len(self.group.templateTypeNames) > 0 and len(self.templateTypes) == 0
+
+
+	def isTemplateIncomplete(self, mainState: MainState, askingGroup: Group=None):
+
+		"""
+		Returns true if any part of the TypeReference is either:
+		1) Unparameterized (should have templates, but doesn't)
+		2) Generic (a template type placeholder)
+		"""
+
+		if self.isUnparameterized():
+			return True
+
+		for templateRef in self.getTemplates(mainState, askingGroup=askingGroup):
+			if templateRef.isGenericTemplate() or templateRef.isTemplateIncomplete(mainState, askingGroup=askingGroup):
+				return True
+
+		return self.superRef is not None and self.superRef.isTemplateIncomplete(mainState, askingGroup=askingGroup)
 
 
 	def isPrimitive(self):
@@ -782,6 +813,10 @@ class TypeReference:
 
 	def replaceTemplateType(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker) -> TypeReference:
 
+		"""
+		Replaces this type reference with a template mapping stored in `templateMappingTracker`, else returns None.
+		"""
+
 		toReturn: TypeReference = None
 		selfName: str = self.getName()
 
@@ -813,6 +848,45 @@ class TypeReference:
 	def checkReplaceTemplateType(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker) -> TypeReference:
 		toReturn: TypeReference = self.replaceTemplateType(mainState, sourceGroup, templateMappingTracker)
 		return toReturn if toReturn else self
+
+
+	def resolveTemplateTypes(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker) -> TypeReference:
+
+		"""
+		Completely resolves template types for the current TypeReference as mapped by `templateMappingTracker`.
+		Returns None if no substitution occurs.
+		"""
+
+		# Is the type itself generic?
+		topLevelAttempt: TypeReference = self.replaceTemplateType(mainState, sourceGroup, templateMappingTracker)
+		if topLevelAttempt is not None:
+			return topLevelAttempt
+
+		resolvedTemplateRefs: list[TypeReference] = []
+		replacedSomething: bool = False
+
+		# Try to resolve each template parameter
+		for templateRef in self.getTemplates(mainState, askingGroup=self.getGroup()):
+
+			# Attempt resolve of template parameter (recursive)
+			templateReplaceAttempt: TypeReference = templateRef.resolveTemplateTypes(mainState, sourceGroup, templateMappingTracker)
+
+			if templateReplaceAttempt is not None:
+				# Template parameter replaced, track replacement
+				resolvedTemplateRefs.append(templateReplaceAttempt)
+				replacedSomething = True
+			else:
+				# Template parameter NOT replaced, track original
+				resolvedTemplateRefs.append(templateRef.shallowCopy())
+
+		if not replacedSomething:
+			# Nothing replaced, return None
+			return None
+
+		# Copy self and replace template types with resolved references
+		selfCopy: TypeReference = self.shallowCopy(noTemplateTypes=True)
+		selfCopy.getTemplateList().extend(resolvedTemplateRefs)
+		return selfCopy
 
 
 	def _getAppliedNameInternal(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker,
@@ -1055,15 +1129,16 @@ class PointerReference(TypeReference):
 		obj.setUserTypePointerLevel(mainState, originalRef.getUserTypePointerLevel())
 
 		if originalRef.group:
-			originalRef.group.inwardTypeRefs.addUnique(originalRef)
+			originalRef.group.addInwardTypeRef(originalRef)
 
 		return obj
 
 
-	def shallowCopy(self, copyObj=None):
+	def shallowCopy(self, copyObj=None, noTemplateTypes=False):
 		copyObj = copyObj or PointerReference()
 		super().shallowCopy(copyObj)
-		copyObj.originalRef = len(copyObj.templateTypes) > 0 and copyObj.templateTypes[0] or self.originalRef.shallowCopy()
+		originalRef: TypeReference = copyObj.templateTypes[0] if len(copyObj.templateTypes) > 0 else self.originalRef
+		copyObj.originalRef = originalRef.shallowCopy(noTemplateTypes=noTemplateTypes)
 		return copyObj
 
 
@@ -1204,7 +1279,7 @@ class PointerReference(TypeReference):
 
 
 	def getTemplates(self, mainState: MainState, askingGroup: Group=None):
-		if askingGroup.name in ("Pointer", "VoidPointer"):
+		if askingGroup is not None and askingGroup.name in ("Pointer", "VoidPointer"):
 			return self.templateTypes
 		elif self.getUserTypePointerLevel() == 0:
 			return self.originalRef.getTemplates(mainState)
@@ -1212,6 +1287,10 @@ class PointerReference(TypeReference):
 			realRef = self.originalRef.shallowCopy()
 			realRef.adjustUserTypePointerLevel(mainState, 1)
 			return realRef.getTemplates(mainState)
+
+
+	def getTemplateList(self) -> list[TypeReference]:
+		return self.originalRef.templateTypes
 
 
 	def getAllTypeReferences(self, mainState: MainState):
@@ -1285,9 +1364,9 @@ class CharReference(TypeReference):
 		return obj
 
 
-	def shallowCopy(self, copyObj=None):
+	def shallowCopy(self, copyObj=None, noTemplateTypes=False):
 		copyObj = copyObj or CharReference()
-		super().shallowCopy(copyObj)
+		super().shallowCopy(copyObj, noTemplateTypes=noTemplateTypes)
 		copyObj.mode = self.mode
 		copyObj.charPointerLevel = self.charPointerLevel
 		return copyObj
@@ -1879,6 +1958,9 @@ class Group:
 		self.allowDefaultConstruction: bool = False
 
 
+	def addInwardTypeRef(self, typeRef: TypeReference):
+		self.inwardTypeRefs.addUnique(typeRef)
+
 
 	def isSubgroup(self):
 
@@ -1904,12 +1986,16 @@ class Group:
 		return self.name in primitives
 
 
-	def hasDefinedTop(self):
+	def getTopGroup(self):
 		topGroup = self
 		while temp := topGroup.superGroup:
 			topGroup = temp
 
-		return topGroup.groupType != "undefined"
+		return topGroup
+
+
+	def hasDefinedTop(self):
+		return self.getTopGroup().groupType != "undefined"
 
 
 	def getField(self, fieldName) -> Field | None:
@@ -2087,12 +2173,13 @@ class Group:
 		def process(group: Group):
 			if group.superGroup: process(group.superGroup)
 			for templateTypeName in group.templateTypeNames:
+				#print(f"templateTypeNameMapping[{templateTypeName}] = {group.name}")
 				self.templateTypeNameMapping[templateTypeName] = group
 
 		process(self)
 
 
-	def addTemplateUse(self, useTup: tuple[TypeReference], pointerLevel: int):
+	def addTemplateUse(self, useTup: tuple[TypeReference], pointerLevel: int) -> bool:
 
 		templateUse = TemplateUse(useTup, pointerLevel)
 		if existing := self.templateUses.getUnique(templateUse):
@@ -2100,6 +2187,9 @@ class Group:
 				existing.maxPointerLevel = pointerLevel
 		else:
 			self.templateUses.addUnique(templateUse)
+			return True
+
+		return False
 
 
 	def scanInwardTypeRefs(self, mainState: MainState):
@@ -2114,48 +2204,70 @@ class Group:
 		Also fills uniqueUseRepresentations, which is a series of TypeRefs representing every unique way this group has been used.
 		"""
 
+		#print(f"scanInwardTypeRefs() - Group: {self.name}")
+
 		for typeRef in self.inwardTypeRefs:
 
 			# The Group that generated this TypeReference must be in-view
 			if not typeRef.isDirectlyWanted and (not typeRef.sourceGroup or not typeRef.sourceGroup.isUsed(mainState)):
 				continue
 
-			templates = typeRef.getTemplates(mainState, askingGroup=self)
+			# Reference templates must be parameterized and non-generic
+			if typeRef.isTemplateIncomplete(mainState, askingGroup=self):
+				continue
 
-			if len(templates) > 0:
-
-				# Groups used as templates must be non-generic and parameterized
-				needContinue = False
-				for templateRef in templates:
-					if templateRef.isGenericTemplate() or templateRef.isUnparameterized():
-						needContinue = True
-						break
-
-				if needContinue:
-					continue
-
+			if (templates := typeRef.getTemplates(mainState, askingGroup=self)) and len(templates) > 0:
 				self.addTemplateUse(tuple(templates), typeRef.getUserTypePointerLevel())
 
+			#print(f"  Group: {self.name}, appliedHeaderName: {typeRef.getHeaderName()}")
 			self.uniqueUseRepresentations[typeRef.getHeaderName()] = typeRef
 
 
-	def resolveTemplateUseRepresentations(self, mainState: MainState, templateMappingTracker: TemplateMappingTracker):
+	def resolveTemplateUseRepresentations(self, mainState: MainState, pending: set[str], templateMappingTracker: TemplateMappingTracker) -> bool:
+
+		"""
+		Fills:
+			templateUses \n
+			uniqueUseRepresentations
+
+		Scans templateUses to iterate all unique instances of this Group's template uses, and applies these templates to
+		each TypeReference held by this Group (fetched via `getAllTypeReferences`) to fill `uniqueUseRepresentations`
+		with the resolved templated representations.
+		"""
 
 		for templateUse in self.templateUses:
+
+			#print(f"resolveTemplateUseRepresentations() - Group: {self.name}, templateUse.tup: {templateUse.tup}")
 
 			templateMappingTracker.registerMapping(self.name, templateUse.tup)
 
 			for typeRef in self.getAllTypeReferences(mainState, noGroups=True):
-				if (replacedType := typeRef.replaceTemplateType(mainState, self, templateMappingTracker)) and (group := replacedType.getGroup()):
-					group.uniqueUseRepresentations[replacedType.getAppliedHeaderName(mainState, self, templateMappingTracker)] = replacedType
+				if (replacedType := typeRef.resolveTemplateTypes(mainState, typeRef.sourceGroup, templateMappingTracker)) and (group := replacedType.getGroup()):
+
+					if (templates := replacedType.getTemplates(mainState, askingGroup=group)) and len(templates) > 0:
+						if group.addTemplateUse(tuple(templates), typeRef.getUserTypePointerLevel()):
+							pending.add(group.getTopGroup().name) # TODO: Overzealous
+
+					appliedHeaderName: str = replacedType.getAppliedHeaderName(mainState, typeRef.sourceGroup, templateMappingTracker)
+					#print(f"  Group: {group.name}, appliedHeaderName: {appliedHeaderName}")
+					group.uniqueUseRepresentations[appliedHeaderName] = replacedType
 
 			for subGroup in self.subGroups:
-				subGroup.resolveTemplateUseRepresentations(mainState, templateMappingTracker)
+				subGroup.resolveTemplateUseRepresentations(mainState, pending, templateMappingTracker)
 
 			templateMappingTracker.deregisterMapping(self.name)
 
 
 	def getAllTypeReferences(self, mainState: MainState, noGroups: bool=False):
+
+		"""
+		Returns all TypeReference instances held by this Group. This includes:
+		1) If noGroup=False, a newly-created TypeReference to the Group itself. This reference is NOT added to `inwardTypeRefs`.
+		2) If noGroup=False, all TypeReference instances held by `subGroups` (groups that this group immediately contains).
+		3) All TypeReference instances held by `extends` (subclasses).
+		4) All TypeReference instances held by `fields` (variables, including function pointers).
+		5) All TypeReference instances held by `functionImplementations` (functions).
+		"""
 
 		parts: list[TypeReference] = []
 
@@ -2310,12 +2422,12 @@ class Group:
 
 			if templateTypeMode == TemplateTypeMode.USER_TYPE:
 				for typeRef in v:
-					parts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).getAppliedUserTypeName(mainState, self,
+					parts.append(typeRef.checkReplaceTemplateType(mainState, typeRef.sourceGroup, templateMappingTracker).getAppliedUserTypeName(mainState, typeRef.sourceGroup,
 						templateMappingTracker, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator))
 					parts.append(",")
 			elif templateTypeMode == TemplateTypeMode.HEADER:
 				for typeRef in v:
-					parts.append(typeRef.checkReplaceTemplateType(mainState, self, templateMappingTracker).getAppliedHeaderName(mainState, self,
+					parts.append(typeRef.checkReplaceTemplateType(mainState, typeRef.sourceGroup, templateMappingTracker).getAppliedHeaderName(mainState, typeRef.sourceGroup,
 						templateMappingTracker, useUsertypeOverride=useUsertypeOverride, typeManipulator=typeManipulator))
 					parts.append(",")
 
@@ -3227,6 +3339,7 @@ def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeR
 	for i in range(1, numSplits):
 		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], src, None, isDirectlyWanted, allowReference=allowReference, debugLine=debugLine)
 
+	#print(f"Created ref {lastRef.getHeaderName()} with sourceGroup: {lastRef.sourceGroup.name if lastRef.sourceGroup != None else "None"}")
 	return lastRef
 
 
@@ -3292,6 +3405,17 @@ def tryResolveDependencyOrder(groups: UniqueList[Group]):
 	for group in groups:
 		tryResolveDependencyOrder(group.subGroups)
 
+
+def resolveTemplateUseRepresentations(mainState: MainState):
+
+	pending: set[str] = set()
+	for group in mainState.filteredGroups:
+		if group.isSubgroup(): continue
+		pending.add(group.name)
+
+	while len(pending) > 0:
+		group: Group = mainState.getGroup(pending.pop())
+		group.resolveTemplateUseRepresentations(mainState, pending, TemplateMappingTracker())
 
 
 def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[Group], out: TextIOWrapper, baseclassOut: TextIOWrapper) -> None:
@@ -4168,7 +4292,7 @@ def registerPointerTypes(mainState: MainState):
 
 	def registerPointerTypesForGroup(group: Group):
 		for uniqueRepresentation in group.uniqueUseRepresentations.values():
-			if uniqueRepresentation.isVoid() or uniqueRepresentation.isUnparameterized(): continue
+			if uniqueRepresentation.isVoid(): continue
 			specialRef = uniqueRepresentation.shallowCopy()
 			pointer.addTemplateUse( (specialRef,), 0 )
 
@@ -4778,8 +4902,7 @@ struct UnmappedUserType
 		for group in mainState.filteredGroups:
 			group.scanInwardTypeRefs(mainState)
 
-		for group in mainState.filteredGroups:
-			group.resolveTemplateUseRepresentations(mainState, TemplateMappingTracker())
+		resolveTemplateUseRepresentations(mainState)
 
 		# Try to fix dependency order (SLOW)
 		tryResolveDependencyOrder(mainState.filteredGroups)
@@ -5107,6 +5230,7 @@ def mainSwitch():
 	fixupFileName: str = None
 	manualTypesFile: str = None
 	noRefify: bool = False
+	allowDebug: bool = False
 
 	for k in islice(sys.argv, 1, None):
 		if (v := re.search("-requestHeaderFile=(.+)", k)) != None: requestHeader = v.group(1)
@@ -5115,6 +5239,10 @@ def mainSwitch():
 		elif (v := re.search("-fixupFile=(.+)",  k)) != None: fixupFileName = v.group(1)
 		elif (v := re.search("-manualTypesFile=(.+)", k)) != None: manualTypesFile = v.group(1)
 		elif (v := re.search("-noRefify", k)) != None: noRefify = True
+		elif (v := re.search("-allowDebug", k)) != None: allowDebug = True
+
+	if allowDebug and os.environ.get("DEBUGGING") == "1":
+		input("Press any key to continue . . .\n")
 
 	if requestTypes and idaStructs:
 		doRequestFieldTypes(requestHeader, requestTypes, idaStructs, fixupFileName, manualTypesFile, noRefify)

@@ -364,7 +364,7 @@ struct CResHelper
 template<class BASE_CLASS, class T>
 struct CTypedPtrArray : CObject
 {
-	T* m_pData;
+	VariableArray<T>* m_pData;
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;
