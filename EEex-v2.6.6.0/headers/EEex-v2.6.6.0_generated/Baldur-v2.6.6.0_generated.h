@@ -170,6 +170,7 @@ struct STR_RES;
 struct Spell_Header_st;
 struct Spell_ability_st;
 struct SteamUGCDetails_t;
+struct UI_PanelHeader_st;
 struct WED_LayerHeader_st;
 struct st_tiledef;
 struct uiItem;
@@ -300,6 +301,25 @@ enum class SDL_bool : __int32
 {
 	SDL_FALSE = 0,
 	SDL_TRUE = 1,
+};
+
+enum class SDL_WindowFlags : __int32
+{
+	SDL_WINDOW_FULLSCREEN = 1,
+	SDL_WINDOW_OPENGL = 2,
+	SDL_WINDOW_SHOWN = 4,
+	SDL_WINDOW_HIDDEN = 8,
+	SDL_WINDOW_BORDERLESS = 16,
+	SDL_WINDOW_RESIZABLE = 32,
+	SDL_WINDOW_MINIMIZED = 64,
+	SDL_WINDOW_MAXIMIZED = 128,
+	SDL_WINDOW_INPUT_GRABBED = 256,
+	SDL_WINDOW_INPUT_FOCUS = 512,
+	SDL_WINDOW_MOUSE_FOCUS = 1024,
+	SDL_WINDOW_FULLSCREEN_DESKTOP = 4097,
+	SDL_WINDOW_FOREIGN = 2048,
+	SDL_WINDOW_ALLOW_HIGHDPI = 8192,
+	SDL_WINDOW_MOUSE_CAPTURE = 16384,
 };
 
 enum class SDL_Scancode : __int32
@@ -1698,6 +1718,25 @@ struct WAV_Header
 };
 #pragma pack(pop)
 
+struct UI_Header_st
+{
+	unsigned int nFileType;
+	unsigned int nFileVersion;
+	unsigned int nPanels;
+	unsigned int nOffsetToControlTable;
+	unsigned int nOffsetToPanelTable;
+
+	UI_Header_st() = delete;
+};
+
+struct UI_ControlTableEntry_st
+{
+	unsigned int nControlOffset;
+	unsigned int nControlSize;
+
+	UI_ControlTableEntry_st() = delete;
+};
+
 struct SteamParamStringArray_t
 {
 	const char** m_ppStrings;
@@ -2092,6 +2131,18 @@ struct ResFixedHeader_st
 	unsigned int nTableOffset;
 
 	ResFixedHeader_st() = delete;
+};
+
+struct PLTHeader_st
+{
+	unsigned int nType;
+	unsigned int nVersion;
+	unsigned int nLayers;
+	unsigned int nCompressed;
+	unsigned int nWidth;
+	unsigned int nHeight;
+
+	PLTHeader_st() = delete;
 };
 
 struct MOSAICQUAD
@@ -4678,6 +4729,16 @@ struct CRes
 	}
 };
 
+struct CResWorldMap : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResWorldMap() = delete;
+};
+
 struct CResWebm : CRes
 {
 	struct vtbl : CRes::vtbl
@@ -4738,6 +4799,20 @@ struct CResWED : CRes
 	CResWED() = delete;
 };
 
+struct CResUI : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	UI_Header_st* pHeader;
+	UI_PanelHeader_st* pPanels;
+	UI_ControlTableEntry_st* pControlTable;
+
+	CResUI() = delete;
+};
+
 struct CResTileSet : CRes
 {
 	struct vtbl : CRes::vtbl
@@ -4762,6 +4837,16 @@ struct CResText : CRes
 	CResText() = delete;
 };
 
+struct CResStore : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResStore() = delete;
+};
+
 struct CResSpell : CRes
 {
 	struct vtbl : CRes::vtbl
@@ -4774,6 +4859,19 @@ struct CResSpell : CRes
 	Spell_Header_st* pHeader;
 
 	CResSpell() = delete;
+};
+
+struct CResPng : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CSize sz;
+	int texture;
+
+	CResPng() = delete;
 };
 
 struct CResPVR : CRes
@@ -4797,6 +4895,19 @@ struct CResPVR : CRes
 	{
 		return p_Demand(this);
 	}
+};
+
+struct CResPLT : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8* m_pData;
+	PLTHeader_st* m_pHeader;
+
+	CResPLT() = delete;
 };
 
 struct CResMosaic : CRes
@@ -4833,6 +4944,18 @@ struct CResItem : CRes
 	CResItem() = delete;
 };
 
+struct CResINI : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int bLoaded;
+
+	CResINI() = delete;
+};
+
 struct CResGame : CRes
 {
 	struct vtbl : CRes::vtbl
@@ -4853,6 +4976,26 @@ struct CResFont : CRes
 	void* font;
 
 	CResFont() = delete;
+};
+
+struct CResEffect : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResEffect() = delete;
+};
+
+struct CResDLG : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResDLG() = delete;
 };
 
 struct CResCell : CRes
@@ -4877,6 +5020,26 @@ struct CResCell : CRes
 	CResCell() = delete;
 };
 
+struct CResCRE : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResCRE() = delete;
+};
+
+struct CResCHR : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResCHR() = delete;
+};
+
 struct CResBitmap : CRes
 {
 	struct vtbl : CRes::vtbl
@@ -4894,6 +5057,26 @@ struct CResBitmap : CRes
 	tagRGBQUAD* pColorTable;
 
 	CResBitmap() = delete;
+};
+
+struct CResBIO : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResBIO() = delete;
+};
+
+struct CResArea : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResArea() = delete;
 };
 
 struct CPoint
@@ -6037,6 +6220,23 @@ struct CSpawnFile : CTypedPtrList<CPtrList,void*>
 	CSpawnFile() = delete;
 };
 
+struct CSoundChannel : CObject
+{
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CTypedPtrList<CPtrList,CSound*> lQueue;
+	int m_nVolumeInit;
+	int nVolume;
+	int nType;
+	bool bDucked;
+	int m_nDuckingAmount;
+
+	CSoundChannel() = delete;
+};
+
 struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
 {
 	struct vtbl : CTypedPtrList<CPtrList,CSequenceSound*>::vtbl
@@ -6222,23 +6422,6 @@ struct CObList : CObject
 	{
 		return p_Find(this, searchValue, startAfter);
 	}
-};
-
-struct CSoundChannel : CObject
-{
-	struct vtbl : CObject::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CObList lQueue;
-	int m_nVolumeInit;
-	int nVolume;
-	int nType;
-	bool bDucked;
-	int m_nDuckingAmount;
-
-	CSoundChannel() = delete;
 };
 
 struct CMessage
@@ -7083,6 +7266,22 @@ struct WED_LayerHeader_st
 	unsigned int nOffsetToTileList;
 
 	WED_LayerHeader_st() = delete;
+};
+
+struct UI_PanelHeader_st
+{
+	unsigned int nPanelID;
+	unsigned __int16 x;
+	unsigned __int16 y;
+	unsigned __int16 nWidth;
+	unsigned __int16 nHeight;
+	unsigned __int16 nType;
+	unsigned __int16 nControls;
+	Array<unsigned __int8,8> refMosaic;
+	unsigned __int16 nFirstControl;
+	unsigned __int16 wFlags;
+
+	UI_PanelHeader_st() = delete;
 };
 
 #pragma pack(push, 1)
@@ -9952,6 +10151,18 @@ struct CScreenWorld : CBaldurEngine
 	{
 		return p_TogglePauseGame(this, visualPause, bSendMessage, idPlayerPause, bLogPause, bRequireHostUnpause);
 	}
+};
+
+struct CResBinary : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<char,4> m_resVersion;
+
+	CResBinary() = delete;
 };
 
 struct CProgressBar

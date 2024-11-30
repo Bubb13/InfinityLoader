@@ -23,6 +23,7 @@ CObList::type_RemoveAt CObList::p_RemoveAt;
 CObList::type_Destruct CObList::p_Destruct;
 CObList::type_AddTail CObList::p_AddTail;
 CObList::type_Find CObList::p_Find;
+void* CMessageUpdateReaction::VFTable;
 void* CMessageSetDirection::VFTable;
 void* CMessageDisplayTextRef::VFTable;
 void* CMessageDisplayText::VFTable;
@@ -226,6 +227,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CObList::Destruct"), CObList::p_Destruct);
 	attemptFillPointer(TEXT("CObList::AddTail"), CObList::p_AddTail);
 	attemptFillPointer(TEXT("CObList::Find"), CObList::p_Find);
+	attemptFillPointer(TEXT("CMessageUpdateReaction::VFTable"), CMessageUpdateReaction::VFTable);
 	attemptFillPointer(TEXT("CMessageSetDirection::VFTable"), CMessageSetDirection::VFTable);
 	attemptFillPointer(TEXT("CMessageDisplayTextRef::VFTable"), CMessageDisplayTextRef::VFTable);
 	attemptFillPointer(TEXT("CMessageDisplayText::VFTable"), CMessageDisplayText::VFTable);

@@ -93,6 +93,7 @@ def fixup(mainState):
 	mainState.getGroup("CScreenStore").retypeField(mainState, "m_lSpellItems", "CTypedPtrList<CPtrList,CScreenStoreItem*>")
 	mainState.getGroup("CScreenStore").retypeField(mainState, "m_lStoreItems", "CTypedPtrList<CPtrList,CScreenStoreItem*>")
 	mainState.getGroup("CScreenWorld").retypeField(mainState, "m_otherTalkers", "CTypedPtrList<CPtrList,long>")
+	mainState.getGroup("CSoundChannel").retypeField(mainState, "lQueue", "CTypedPtrList<CPtrList,CSound*>")
 	mainState.getGroup("CSoundMixerImp").retypeField(mainState, "aChannels", "CTypedPtrArray<CPtrArray,CSoundChannel*>")
 	mainState.getGroup("CSoundMixerImp").retypeField(mainState, "lLooping", "CTypedPtrList<CPtrList,CSound*>")
 	mainState.getGroup("CSoundMixerImp").retypeField(mainState, "lVoices", "CTypedPtrList<CPtrList,CVoice*>")

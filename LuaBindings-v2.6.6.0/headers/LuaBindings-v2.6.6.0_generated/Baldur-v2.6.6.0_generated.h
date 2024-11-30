@@ -6112,6 +6112,23 @@ struct CSpawnFile : CTypedPtrList<CPtrList,void*>
 	CSpawnFile() = delete;
 };
 
+struct CSoundChannel : CObject
+{
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CTypedPtrList<CPtrList,CSound*> lQueue;
+	int m_nVolumeInit;
+	int nVolume;
+	int nType;
+	bool bDucked;
+	int m_nDuckingAmount;
+
+	CSoundChannel() = delete;
+};
+
 struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
 {
 	struct vtbl : CTypedPtrList<CPtrList,CSequenceSound*>::vtbl
@@ -6299,23 +6316,6 @@ struct CObList : CObject
 	}
 };
 
-struct CSoundChannel : CObject
-{
-	struct vtbl : CObject::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CObList lQueue;
-	int m_nVolumeInit;
-	int nVolume;
-	int nType;
-	bool bDucked;
-	int m_nDuckingAmount;
-
-	CSoundChannel() = delete;
-};
-
 struct CMessage
 {
 	struct vtbl
@@ -6366,6 +6366,27 @@ struct CMessage
 
 	virtual void virtual_Run()
 	{
+	}
+};
+
+struct CMessageUpdateReaction : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	int m_nReaction;
+
+	CMessageUpdateReaction() = delete;
+
+	void Construct(long nReaction, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_nReaction = nReaction;
 	}
 };
 
@@ -12936,6 +12957,19 @@ struct CScreenStore : CBaldurEngine
 	float m_fPanStorage;
 
 	CScreenStore() = delete;
+};
+
+struct CMessageSetLastObject : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CAIObjectType m_lAttacker;
+	unsigned __int16 m_type;
+
+	CMessageSetLastObject() = delete;
 };
 
 struct CGameObject

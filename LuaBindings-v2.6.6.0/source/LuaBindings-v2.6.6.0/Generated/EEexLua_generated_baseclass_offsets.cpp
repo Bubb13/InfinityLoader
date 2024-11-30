@@ -839,6 +839,12 @@ void registerBaseclasses() {
 		{"CSpawnFile::vtbl", {
 			{"CTypedPtrList<CPtrList,void*>::vtbl", offsetofbase<CSpawnFile::vtbl, CTypedPtrList<CPtrList,void*>::vtbl>()},
 		}},
+		{"CSoundChannel", {
+			{"CObject", offsetofbase<CSoundChannel, CObject>()},
+		}},
+		{"CSoundChannel::vtbl", {
+			{"CObject::vtbl", offsetofbase<CSoundChannel::vtbl, CObject::vtbl>()},
+		}},
 		{"CSequenceSoundList", {
 			{"CTypedPtrList<CPtrList,CSequenceSound*>", offsetofbase<CSequenceSoundList, CTypedPtrList<CPtrList,CSequenceSound*>>()},
 		}},
@@ -887,11 +893,11 @@ void registerBaseclasses() {
 		{"CObList::vtbl", {
 			{"CObject::vtbl", offsetofbase<CObList::vtbl, CObject::vtbl>()},
 		}},
-		{"CSoundChannel", {
-			{"CObject", offsetofbase<CSoundChannel, CObject>()},
+		{"CMessageUpdateReaction", {
+			{"CMessage", offsetofbase<CMessageUpdateReaction, CMessage>()},
 		}},
-		{"CSoundChannel::vtbl", {
-			{"CObject::vtbl", offsetofbase<CSoundChannel::vtbl, CObject::vtbl>()},
+		{"CMessageUpdateReaction::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageUpdateReaction::vtbl, CMessage::vtbl>()},
 		}},
 		{"CMessageSetDirection", {
 			{"CMessage", offsetofbase<CMessageSetDirection, CMessage>()},
@@ -1176,6 +1182,12 @@ void registerBaseclasses() {
 		}},
 		{"CScreenStore::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenStore::vtbl, CBaldurEngine::vtbl>()},
+		}},
+		{"CMessageSetLastObject", {
+			{"CMessage", offsetofbase<CMessageSetLastObject, CMessage>()},
+		}},
+		{"CMessageSetLastObject::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetLastObject::vtbl, CMessage::vtbl>()},
 		}},
 		{"CGameFireball3d", {
 			{"CGameObject", offsetofbase<CGameFireball3d, CGameObject>()},

@@ -16,6 +16,9 @@ CMessageAddEffect
 CMessageDisplayText
 CMessageDisplayTextRef
 CMessageSetDirection
+CMessageSetLastObject
+CMessageUpdateReaction
+CObList
 CProjectile
 CProjectileAmbiant
 CProjectileArea
