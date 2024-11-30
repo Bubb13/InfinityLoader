@@ -348,7 +348,7 @@ struct CList : CObject
 template<class TYPE, class ARG_TYPE>
 struct CArray : CObject
 {
-	TYPE* m_pData;
+	VariableArray<TYPE>* m_pData;
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;

@@ -152,6 +152,7 @@ struct CVariable;
 struct CVariableHash;
 struct CVidCellFont;
 struct CVidMode;
+struct CWarp;
 struct DP_Player;
 struct IDPPeer;
 struct IDPProvider;
@@ -5176,7 +5177,7 @@ struct CObject
 template<class TYPE, class ARG_TYPE>
 struct CArray : CObject
 {
-	TYPE* m_pData;
+	VariableArray<TYPE>* m_pData;
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;
@@ -5191,7 +5192,7 @@ struct CDWordArray : CObject
 		vtbl() = delete;
 	};
 
-	unsigned int* m_pData;
+	VariableArray<int>* m_pData;
 	int m_nSize;
 	int m_nMaxSize;
 	int m_nGrowBy;
@@ -5282,19 +5283,21 @@ struct CMapStringToString : CObject
 	CMapStringToString() = delete;
 };
 
-struct CObArray : CObject
+struct CVoice : CObject
 {
 	struct vtbl : CObject::vtbl
 	{
 		vtbl() = delete;
 	};
 
-	CObject** m_pData;
-	int m_nSize;
-	int m_nMaxSize;
-	int m_nGrowBy;
+	CSound* m_pSound;
+	unsigned int m_nBuffer;
+	unsigned int m_nSource;
+	int m_nChannel;
+	int m_nPriority;
+	bool m_bDuckedOthers;
 
-	CObArray() = delete;
+	CVoice() = delete;
 };
 
 template<class BASE_CLASS, class T>
@@ -5376,6 +5379,30 @@ struct CTypedPtrArray : CObject
 	CTypedPtrArray() = delete;
 };
 
+struct CTimer : CObject
+{
+	struct vtbl : CObject::vtbl
+	{
+		void (__fastcall *TimerElapsed)(CTimer*);
+
+		vtbl() = delete;
+	};
+
+	int bEveryIteration;
+	int bOnceOnly;
+	int bTimerStarted;
+	CWarp* pEngine;
+	__POSITION* pos;
+	int nTimerInterval;
+	int nElaspedTime;
+
+	CTimer() = delete;
+
+	virtual void virtual_TimerElapsed()
+	{
+	}
+};
+
 struct CStringList : CObject
 {
 	struct CNode
@@ -5442,6 +5469,26 @@ struct CMessageHandler
 	{
 		return p_AddMessage(this, message, bForcePassThrough);
 	}
+};
+
+struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long>
+{
+	struct vtbl : CTypedPtrList<CPtrList,long>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesProjectile() = delete;
+};
+
+struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long>
+{
+	struct vtbl : CTypedPtrList<CPtrList,long>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesSchoolAndSecondary() = delete;
 };
 
 struct CAICondition
@@ -5561,410 +5608,6 @@ struct CAIResponse
 	CAIResponse() = delete;
 };
 
-struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CGameEffect*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CApplyEffectList() = delete;
-};
-
-struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CBounceEntry*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CBounceList() = delete;
-};
-
-struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CColorEffect*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CColorEffects() = delete;
-};
-
-struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CColorRange*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CColorRanges() = delete;
-};
-
-struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CCriticalEntry*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CCriticalEntryList() = delete;
-};
-
-struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CGameEffectUsability*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CGameEffectUsabilityList() = delete;
-};
-
-struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CGameEffect*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CImmunitiesEffect() = delete;
-};
-
-struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CImmunitiesItemEquipList() = delete;
-};
-
-struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CImmunitiesItemTypeEquipList() = delete;
-};
-
-struct CImmunitiesProjectile : CTypedPtrList<CPtrList,long*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,long*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CImmunitiesProjectile() = delete;
-};
-
-struct CImmunitiesSchoolAndSecondary : CTypedPtrList<CPtrList,long*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,long*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CImmunitiesSchoolAndSecondary() = delete;
-};
-
-struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CImmunitiesSchoolAndSecondaryDecrementing() = delete;
-};
-
-struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CImmunitySpell*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CImmunitiesSpellList() = delete;
-};
-
-struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CImmunitiesWeapon() = delete;
-};
-
-struct CMemINI : CTypedPtrList<CPtrList,void*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,void*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CString mFileName;
-	CMemINISection* mpLastSection;
-
-	CMemINI() = delete;
-};
-
-struct CMemINISection : CTypedPtrList<CPtrList,CMemINIValue*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CMemINIValue*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CString mSectionName;
-
-	CMemINISection() = delete;
-};
-
-struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CMoveListEntry*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CMoveList() = delete;
-};
-
-struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CPersistantEffect*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CPersistantEffectList() = delete;
-};
-
-struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CSpawn*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CString mSectionAlias;
-	int ReceivedFirstSpawnCall;
-	unsigned int LastSpawnTime;
-	int CheckSpawnTimes;
-	unsigned int SpawnTimeOfDay;
-	unsigned int mInterval;
-	CSpawnVar* pControlVar;
-
-	CSpawnList() = delete;
-};
-
-struct CSpawnFile : CTypedPtrList<CPtrList,void*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,void*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CSpawnList* mpExitList;
-	CSpawnList* mpEnterList;
-	int m_bInSpawn;
-
-	CSpawnFile() = delete;
-};
-
-struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CSequenceSound*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	__POSITION* m_currentSound;
-	int m_soundPlaying;
-	int m_channel;
-
-	CSequenceSoundList() = delete;
-};
-
-struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CSelectiveWeaponType*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CSelectiveWeaponTypeList() = delete;
-};
-
-struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CSelectiveBonus*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CSelectiveBonusList() = delete;
-};
-
-struct CPtrArray : CObject
-{
-	struct vtbl : CObject::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	void** m_pData;
-	int m_nSize;
-	int m_nMaxSize;
-	int m_nGrowBy;
-
-	CPtrArray() = delete;
-};
-
-struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
-{
-	struct vtbl : CTypedPtrArray<CPtrArray,CGameDialogReply*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	unsigned int m_dialogText;
-	CAICondition m_startCondition;
-	int m_picked;
-	unsigned int m_conditionPriority;
-	unsigned int m_dialogIndex;
-	unsigned __int8 m_bDisplayButton;
-
-	CGameDialogEntry() = delete;
-};
-
-struct CGameJournal
-{
-	int IWD_TimeCheat;
-	CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*> m_aChapters;
-
-	CGameJournal() = delete;
-};
-
-struct CImportGame
-{
-	unsigned __int8 m_bDrizztDead;
-	CGameFile* m_pGame;
-	unsigned __int8 m_nVersion;
-	CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*> m_aPartyCreatures;
-	CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*> m_aNonPartyCreatures;
-	CTypedPtrArray<CPtrArray,unsigned char*> m_aCreatureData;
-	CTypedPtrArray<CPtrArray,unsigned char*> m_aNPCData;
-	int m_nGlobalVariables;
-	unsigned __int8* m_pGlobalVariables;
-	unsigned int m_nPartyGold;
-	unsigned int m_nReputation;
-
-	CImportGame() = delete;
-};
-
-struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
-{
-	struct vtbl : CTypedPtrArray<CPtrArray,CAbilityData*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CGameAbilityList() = delete;
-};
-
-struct CSpawnPointArray : CTypedPtrArray<CPtrArray,CSpawnPoint*>
-{
-	struct vtbl : CTypedPtrArray<CPtrArray,CSpawnPoint*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	int mDefaultFacing;
-
-	CSpawnPointArray() = delete;
-};
-
-struct CObList : CObject
-{
-	struct CNode
-	{
-		CObList::CNode* pNext;
-		CObList::CNode* pPrev;
-		CObject* data;
-
-		CNode() = delete;
-	};
-
-	struct vtbl : CObject::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CObList::CNode* m_pNodeHead;
-	CObList::CNode* m_pNodeTail;
-	int m_nCount;
-	CObList::CNode* m_pNodeFree;
-	CPlex* m_pBlocks;
-	int m_nBlockSize;
-
-	CObList() = delete;
-
-	typedef void (__thiscall *type_Construct)(CObList* pThis, int size);
-	static type_Construct p_Construct;
-
-	typedef CObject* (__thiscall *type_RemoveHead)(CObList* pThis);
-	static type_RemoveHead p_RemoveHead;
-
-	typedef void (__thiscall *type_RemoveAt)(CObList* pThis, __POSITION* position);
-	static type_RemoveAt p_RemoveAt;
-
-	typedef void (__thiscall *type_Destruct)(CObList* pThis);
-	static type_Destruct p_Destruct;
-
-	typedef __POSITION* (__thiscall *type_AddTail)(CObList* pThis, void* newElement);
-	static type_AddTail p_AddTail;
-
-	typedef __POSITION* (__thiscall *type_Find)(CObList* pThis, void* searchValue, __POSITION* startAfter);
-	static type_Find p_Find;
-
-	void Construct(int size)
-	{
-		p_Construct(this, size);
-	}
-
-	CObject* RemoveHead()
-	{
-		return p_RemoveHead(this);
-	}
-
-	void RemoveAt(__POSITION* position)
-	{
-		p_RemoveAt(this, position);
-	}
-
-	void Destruct()
-	{
-		p_Destruct(this);
-	}
-
-	__POSITION* AddTail(void* newElement)
-	{
-		return p_AddTail(this, newElement);
-	}
-
-	__POSITION* Find(void* searchValue, __POSITION* startAfter)
-	{
-		return p_Find(this, searchValue, startAfter);
-	}
-};
-
 struct CWarp : CObject
 {
 	struct vtbl : CObject::vtbl
@@ -6029,7 +5672,7 @@ struct CWarp : CObject
 	};
 
 	CWarp* pLastEngine;
-	CObList lTimers;
+	CTypedPtrList<CPtrList,CTimer*> lTimers;
 
 	CWarp() = delete;
 
@@ -6270,6 +5913,407 @@ struct CWarp : CObject
 	virtual void virtual_RenderUI()
 	{
 	}
+};
+
+struct CApplyEffectList : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CGameEffect*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CApplyEffectList() = delete;
+};
+
+struct CBounceList : CTypedPtrList<CPtrList,CBounceEntry*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CBounceEntry*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CBounceList() = delete;
+};
+
+struct CColorEffects : CTypedPtrList<CPtrList,CColorEffect*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CColorEffect*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CColorEffects() = delete;
+};
+
+struct CColorRanges : CTypedPtrList<CPtrList,CColorRange*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CColorRange*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CColorRanges() = delete;
+};
+
+struct CCriticalEntryList : CTypedPtrList<CPtrList,CCriticalEntry*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CCriticalEntry*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CCriticalEntryList() = delete;
+};
+
+struct CGameEffectUsabilityList : CTypedPtrList<CPtrList,CGameEffectUsability*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CGameEffectUsability*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CGameEffectUsabilityList() = delete;
+};
+
+struct CImmunitiesEffect : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CGameEffect*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesEffect() = delete;
+};
+
+struct CImmunitiesItemEquipList : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CImmunitiesItemEquip*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesItemEquipList() = delete;
+};
+
+struct CImmunitiesItemTypeEquipList : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesItemTypeEquipList() = delete;
+};
+
+struct CImmunitiesSchoolAndSecondaryDecrementing : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesSchoolAndSecondaryDecrementing() = delete;
+};
+
+struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CImmunitySpell*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesSpellList() = delete;
+};
+
+struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesWeapon() = delete;
+};
+
+struct CMemINI : CTypedPtrList<CPtrList,void*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,void*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString mFileName;
+	CMemINISection* mpLastSection;
+
+	CMemINI() = delete;
+};
+
+struct CMemINISection : CTypedPtrList<CPtrList,CMemINIValue*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CMemINIValue*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString mSectionName;
+
+	CMemINISection() = delete;
+};
+
+struct CMoveList : CTypedPtrList<CPtrList,CMoveListEntry*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CMoveListEntry*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMoveList() = delete;
+};
+
+struct CPersistantEffectList : CTypedPtrList<CPtrList,CPersistantEffect*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CPersistantEffect*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CPersistantEffectList() = delete;
+};
+
+struct CSpawnList : CTypedPtrList<CPtrList,CSpawn*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CSpawn*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString mSectionAlias;
+	int ReceivedFirstSpawnCall;
+	unsigned int LastSpawnTime;
+	int CheckSpawnTimes;
+	unsigned int SpawnTimeOfDay;
+	unsigned int mInterval;
+	CSpawnVar* pControlVar;
+
+	CSpawnList() = delete;
+};
+
+struct CSpawnFile : CTypedPtrList<CPtrList,void*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,void*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CSpawnList* mpExitList;
+	CSpawnList* mpEnterList;
+	int m_bInSpawn;
+
+	CSpawnFile() = delete;
+};
+
+struct CSequenceSoundList : CTypedPtrList<CPtrList,CSequenceSound*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CSequenceSound*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__POSITION* m_currentSound;
+	int m_soundPlaying;
+	int m_channel;
+
+	CSequenceSoundList() = delete;
+};
+
+struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CSelectiveWeaponType*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CSelectiveWeaponTypeList() = delete;
+};
+
+struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CSelectiveBonus*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CSelectiveBonusList() = delete;
+};
+
+struct CPtrArray : CObject
+{
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	VariableArray<void*>* m_pData;
+	int m_nSize;
+	int m_nMaxSize;
+	int m_nGrowBy;
+
+	CPtrArray() = delete;
+};
+
+struct CGameDialogEntry : CTypedPtrArray<CPtrArray,CGameDialogReply*>
+{
+	struct vtbl : CTypedPtrArray<CPtrArray,CGameDialogReply*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_dialogText;
+	CAICondition m_startCondition;
+	int m_picked;
+	unsigned int m_conditionPriority;
+	unsigned int m_dialogIndex;
+	unsigned __int8 m_bDisplayButton;
+
+	CGameDialogEntry() = delete;
+};
+
+struct CGameJournal
+{
+	int IWD_TimeCheat;
+	CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*> m_aChapters;
+
+	CGameJournal() = delete;
+};
+
+struct CImportGame
+{
+	unsigned __int8 m_bDrizztDead;
+	CGameFile* m_pGame;
+	unsigned __int8 m_nVersion;
+	CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*> m_aPartyCreatures;
+	CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*> m_aNonPartyCreatures;
+	CTypedPtrArray<CPtrArray,unsigned char*> m_aCreatureData;
+	CTypedPtrArray<CPtrArray,unsigned char*> m_aNPCData;
+	int m_nGlobalVariables;
+	unsigned __int8* m_pGlobalVariables;
+	unsigned int m_nPartyGold;
+	unsigned int m_nReputation;
+
+	CImportGame() = delete;
+};
+
+struct CGameAbilityList : CTypedPtrArray<CPtrArray,CAbilityData*>
+{
+	struct vtbl : CTypedPtrArray<CPtrArray,CAbilityData*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CGameAbilityList() = delete;
+};
+
+struct CSpawnPointArray : CTypedPtrArray<CPtrArray,CSpawnPoint*>
+{
+	struct vtbl : CTypedPtrArray<CPtrArray,CSpawnPoint*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int mDefaultFacing;
+
+	CSpawnPointArray() = delete;
+};
+
+struct CObList : CObject
+{
+	struct CNode
+	{
+		CObList::CNode* pNext;
+		CObList::CNode* pPrev;
+		CObject* data;
+
+		CNode() = delete;
+	};
+
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CObList::CNode* m_pNodeHead;
+	CObList::CNode* m_pNodeTail;
+	int m_nCount;
+	CObList::CNode* m_pNodeFree;
+	CPlex* m_pBlocks;
+	int m_nBlockSize;
+
+	CObList() = delete;
+
+	typedef void (__thiscall *type_Construct)(CObList* pThis, int size);
+	static type_Construct p_Construct;
+
+	typedef CObject* (__thiscall *type_RemoveHead)(CObList* pThis);
+	static type_RemoveHead p_RemoveHead;
+
+	typedef void (__thiscall *type_RemoveAt)(CObList* pThis, __POSITION* position);
+	static type_RemoveAt p_RemoveAt;
+
+	typedef void (__thiscall *type_Destruct)(CObList* pThis);
+	static type_Destruct p_Destruct;
+
+	typedef __POSITION* (__thiscall *type_AddTail)(CObList* pThis, void* newElement);
+	static type_AddTail p_AddTail;
+
+	typedef __POSITION* (__thiscall *type_Find)(CObList* pThis, void* searchValue, __POSITION* startAfter);
+	static type_Find p_Find;
+
+	void Construct(int size)
+	{
+		p_Construct(this, size);
+	}
+
+	CObject* RemoveHead()
+	{
+		return p_RemoveHead(this);
+	}
+
+	void RemoveAt(__POSITION* position)
+	{
+		p_RemoveAt(this, position);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
+
+	__POSITION* AddTail(void* newElement)
+	{
+		return p_AddTail(this, newElement);
+	}
+
+	__POSITION* Find(void* searchValue, __POSITION* startAfter)
+	{
+		return p_Find(this, searchValue, startAfter);
+	}
+};
+
+struct CSoundChannel : CObject
+{
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CObList lQueue;
+	int m_nVolumeInit;
+	int nVolume;
+	int nType;
+	bool bDucked;
+	int m_nDuckingAmount;
+
+	CSoundChannel() = delete;
 };
 
 struct CMessage
@@ -7809,10 +7853,10 @@ struct CSoundMixerImp
 	CDWordArray m_aMusicSlots;
 	Array<unsigned __int8,10001> m_tSqrtTable;
 	int nMaxVoices;
-	CObList lVoices;
-	CObList lWaiting;
-	CObList lLooping;
-	CObArray aChannels;
+	CTypedPtrList<CPtrList,CVoice*> lVoices;
+	CTypedPtrList<CPtrList,CSound*> lWaiting;
+	CTypedPtrList<CPtrList,CSound*> lLooping;
+	CTypedPtrArray<CPtrArray,CSoundChannel*> aChannels;
 	int nMaxChannels;
 	int nGlobalVolume;
 	int nPanRange;
@@ -8383,6 +8427,22 @@ struct CScreenWizSpell : CBaldurEngine
 	CResRef m_resEraseSpell;
 
 	CScreenWizSpell() = delete;
+};
+
+struct CScreenStoreItem
+{
+	CResRef m_cResSpell;
+	CItem* m_pItem;
+	int m_bSelected;
+	int m_bEnabled;
+	int m_nSlot;
+	int m_nValue;
+	int m_nSingleValue;
+	unsigned int m_nCount;
+	unsigned int m_nMaxCount;
+	unsigned int m_nStoreCount;
+
+	CScreenStoreItem() = delete;
 };
 
 struct CScreenPriestSpell : CBaldurEngine
@@ -9935,7 +9995,7 @@ struct CScreenWorld : CBaldurEngine
 	int m_bLeftPanel;
 	int m_bRightPanel;
 	unsigned __int8 m_bCheckRestrict;
-	CTypedPtrList<CPtrList,long*> m_otherTalkers;
+	CTypedPtrList<CPtrList,long> m_otherTalkers;
 	int m_nInteractionBlockCnt;
 	int m_bInteractionBlock;
 	int m_nStateOverride;
@@ -10189,7 +10249,7 @@ struct CChitin
 	int bEngineActive;
 	int bServicingEnabled;
 	int bMessagesEnabled;
-	CObList lEngines;
+	CTypedPtrList<CPtrList,CWarp*> lEngines;
 	unsigned int nIterations;
 	CWarp* pStartingEngine;
 	unsigned int nTimer;
@@ -10221,7 +10281,7 @@ struct CChitin
 	int m_bSoundInitialized;
 	unsigned __int8 padding;
 	int m_bInMouseWheelQueue;
-	CTypedPtrList<CPtrList,long*> m_lstMouseWheel;
+	CTypedPtrList<CPtrList,long> m_lstMouseWheel;
 	unsigned int m_wheelScrollLines;
 	int m_bIsMouseInWindow;
 	int m_bFrameOutline;
@@ -10883,7 +10943,7 @@ struct CInfGame
 	unsigned __int8 m_bAnotherPlayerJoinedGame;
 	unsigned __int8 m_bInAreaTransition;
 	int m_bStartedDeathSequence;
-	CTypedPtrList<CPtrList,long*> m_lstTargetIds;
+	CTypedPtrList<CPtrList,long> m_lstTargetIds;
 	CTypedPtrList<CPtrList,CPoint*> m_lstTargetPts;
 	__int16 m_nState;
 	int m_iconCount;
@@ -10910,8 +10970,8 @@ struct CInfGame
 	Array<int,6> m_characters;
 	Array<int,6> m_charactersPortrait;
 	__int16 m_nCharacters;
-	CTypedPtrList<CPtrList,long*> m_lstGlobalCreatures;
-	CTypedPtrArray<CPtrArray,long*> m_characterOverflow;
+	CTypedPtrList<CPtrList,long> m_lstGlobalCreatures;
+	CTypedPtrArray<CPtrArray,long> m_characterOverflow;
 	__int16 m_nCharacterOverflowCount;
 	__int16 m_nReputation;
 	CPathSearch* m_pathSearch;
@@ -10942,7 +11002,7 @@ struct CInfGame
 	CTypedPtrList<CPtrList,CSearchRequest*> m_searchRequestsBack;
 	int m_searchRequestListEmpty;
 	int m_searchShutdown;
-	CPtrList m_lDisposableItems;
+	CTypedPtrList<CPtrList,CItem*> m_lDisposableItems;
 	__int16 m_currArmor;
 	__int16 m_currAnimation;
 	CAIIdList SAVE_OBJECT_LIST;
@@ -12423,17 +12483,17 @@ struct CGameArea
 	CTypedPtrList<CPtrList,long> m_lVertSortBack;
 	CTypedPtrList<CPtrList,long> m_lVertSortFlight;
 	CTypedPtrList<CPtrList,long> m_lVertSortUnder;
-	CTypedPtrList<CPtrList,long*> m_lVertSortAdd;
-	CTypedPtrList<CPtrList,long*> m_lVertSortBackAdd;
-	CTypedPtrList<CPtrList,long*> m_lVertSortFlightAdd;
-	CTypedPtrList<CPtrList,long*> m_lVertSortUnderAdd;
+	CTypedPtrList<CPtrList,long> m_lVertSortAdd;
+	CTypedPtrList<CPtrList,long> m_lVertSortBackAdd;
+	CTypedPtrList<CPtrList,long> m_lVertSortFlightAdd;
+	CTypedPtrList<CPtrList,long> m_lVertSortUnderAdd;
 	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortRemove;
 	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortBackRemove;
 	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortFlightRemove;
 	CTypedPtrList<CPtrList,__POSITION*> m_lVertSortUnderRemove;
 	CTypedPtrList<CPtrList,CTiledObject*> m_lTiledObjects;
-	CTypedPtrList<CPtrList,long*> m_lGameTextObjects;
-	CTypedPtrList<CPtrList,long*> m_lVertSortTransition;
+	CTypedPtrList<CPtrList,long> m_lGameTextObjects;
+	CTypedPtrList<CPtrList,long> m_lVertSortTransition;
 	CPoint m_ptOldViewPos;
 	CVariableHash m_variables;
 	CVariableHash m_namedCreatures;
@@ -12445,7 +12505,7 @@ struct CGameArea
 	__int16 m_nScreenFlashFade;
 	unsigned int m_screenFlashRGB;
 	CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*> m_lClairvoyanceObjects;
-	CTypedPtrList<CPtrList,long*> m_lContainersNeedingUpdate;
+	CTypedPtrList<CPtrList,long> m_lContainersNeedingUpdate;
 	int m_bAnySpritesInActions;
 	int m_nMPSynchCounter;
 	unsigned __int8 m_nMPSignalType;
@@ -12832,13 +12892,13 @@ struct CScreenStore : CBaldurEngine
 	unsigned __int8 m_bShiftKeyDown;
 	int m_bCapsLockKeyOn;
 	int m_nTopGroupItem;
-	CPtrList m_lGroupItems;
+	CTypedPtrList<CPtrList,CScreenStoreItem*> m_lGroupItems;
 	int m_nTopStoreItem;
-	CPtrList m_lStoreItems;
+	CTypedPtrList<CPtrList,CScreenStoreItem*> m_lStoreItems;
 	int m_nTopSpellItem;
-	CPtrList m_lSpellItems;
+	CTypedPtrList<CPtrList,CScreenStoreItem*> m_lSpellItems;
 	int m_nTopIdentifyItem;
-	CPtrList m_lIdentifyItems;
+	CTypedPtrList<CPtrList,CScreenStoreItem*> m_lIdentifyItems;
 	int m_nTopDrinkItem;
 	CResRef m_cResStore;
 	CResRef m_cResBag;
@@ -14250,7 +14310,7 @@ struct CGameSprite : CGameAIBase
 	__int16 m_nPath;
 	unsigned __int8 m_bCheckMove;
 	CTypedPtrList<CPtrList,long*> m_pPathTemp;
-	CTypedPtrList<CPtrList,long*> m_nPathTemp;
+	CTypedPtrList<CPtrList,long> m_nPathTemp;
 	__int16 m_currPath;
 	int m_walkBackwards;
 	int m_turningAbout;
@@ -14429,7 +14489,7 @@ struct CGameSprite : CGameAIBase
 	int m_effectStoreInitialized;
 	unsigned __int8 m_nLevellingUp;
 	int m_bHasDeathSequence;
-	CTypedPtrList<CPtrList,long*> m_lstTargetIds;
+	CTypedPtrList<CPtrList,long> m_lstTargetIds;
 	CTypedPtrList<CPtrList,CPoint*> m_lstTargetPts;
 	int m_bInStoreState;
 	int m_bInDialogState;

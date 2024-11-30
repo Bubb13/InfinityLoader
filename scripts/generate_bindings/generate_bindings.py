@@ -13,7 +13,7 @@ import importlib.util
 import os
 import re
 import sys
-import threading # type: ignore - For attaching debugger 
+import threading # type: ignore - For attaching debugger
 
 
 T = TypeVar("T")
@@ -2004,6 +2004,16 @@ class Group:
 
 	def hasField(self, fieldName) -> bool:
 		return self.fieldsMap.get(fieldName) != None
+
+
+	def retypeExtendsIndex(self, mainState: MainState, extendsIndex: int, newTypeStr: str):
+
+		existingRef: TypeReference = self.extends[extendsIndex]
+
+		for ref in existingRef.getAllTypeReferences(mainState):
+			ref.removeFromGroupRefs()
+
+		self.extends[extendsIndex] = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE, debugLine="retypeExtendsIndex()")
 
 
 	def retypeField(self, mainState: MainState, fieldName: str, newTypeStr: str):

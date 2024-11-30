@@ -209,11 +209,11 @@ void registerBaseclasses() {
 		{"CMapStringToString::vtbl", {
 			{"CObject::vtbl", offsetofbase<CMapStringToString::vtbl, CObject::vtbl>()},
 		}},
-		{"CObArray", {
-			{"CObject", offsetofbase<CObArray, CObject>()},
+		{"CVoice", {
+			{"CObject", offsetofbase<CVoice, CObject>()},
 		}},
-		{"CObArray::vtbl", {
-			{"CObject::vtbl", offsetofbase<CObArray::vtbl, CObject::vtbl>()},
+		{"CVoice::vtbl", {
+			{"CObject::vtbl", offsetofbase<CVoice::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CAIId*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIId*>, CObject>()},
@@ -569,17 +569,41 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CProjectile*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CProjectile*>::vtbl, CObject::vtbl>()},
 		}},
+		{"CTypedPtrList<CPtrList,EEex_CWarp*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CWarp*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CWarp*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CWarp*>::vtbl, CObject::vtbl>()},
+		}},
+		{"CTypedPtrList<CPtrList,CScreenStoreItem*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CScreenStoreItem*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CScreenStoreItem*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CScreenStoreItem*>::vtbl, CObject::vtbl>()},
+		}},
+		{"CTypedPtrList<CPtrList,CSound*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSound*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CSound*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSound*>::vtbl, CObject::vtbl>()},
+		}},
+		{"CTypedPtrList<CPtrList,CVoice*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CVoice*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CVoice*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CVoice*>::vtbl, CObject::vtbl>()},
+		}},
+		{"CTypedPtrList<CPtrList,CTimer*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CTimer*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CTimer*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CTimer*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,CRes*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CRes*>, CObject>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,CRes*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CRes*>::vtbl, CObject::vtbl>()},
-		}},
-		{"CTypedPtrArray<CPtrArray,long*>", {
-			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,long*>, CObject>()},
-		}},
-		{"CTypedPtrArray<CPtrArray,long*>::vtbl", {
-			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,long*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>, CObject>()},
@@ -629,11 +653,29 @@ void registerBaseclasses() {
 		{"CTypedPtrArray<CPtrArray,CGameDialogReply*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogReply*>::vtbl, CObject::vtbl>()},
 		}},
+		{"CTypedPtrArray<CPtrArray,long>", {
+			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,long>, CObject>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,long>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,long>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,__int8>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,__int8>, CObject>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,__int8>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,__int8>::vtbl, CObject::vtbl>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,CSoundChannel*>", {
+			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CSoundChannel*>, CObject>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,CSoundChannel*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CSoundChannel*>::vtbl, CObject::vtbl>()},
+		}},
+		{"CTimer", {
+			{"CObject", offsetofbase<CTimer, CObject>()},
+		}},
+		{"CTimer::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTimer::vtbl, CObject::vtbl>()},
 		}},
 		{"CStringList", {
 			{"CObject", offsetofbase<CStringList, CObject>()},
@@ -646,6 +688,18 @@ void registerBaseclasses() {
 		}},
 		{"CPtrList::vtbl", {
 			{"CObject::vtbl", offsetofbase<CPtrList::vtbl, CObject::vtbl>()},
+		}},
+		{"CImmunitiesProjectile", {
+			{"CTypedPtrList<CPtrList,long>", offsetofbase<CImmunitiesProjectile, CTypedPtrList<CPtrList,long>>()},
+		}},
+		{"CImmunitiesProjectile::vtbl", {
+			{"CTypedPtrList<CPtrList,long>::vtbl", offsetofbase<CImmunitiesProjectile::vtbl, CTypedPtrList<CPtrList,long>::vtbl>()},
+		}},
+		{"CImmunitiesSchoolAndSecondary", {
+			{"CTypedPtrList<CPtrList,long>", offsetofbase<CImmunitiesSchoolAndSecondary, CTypedPtrList<CPtrList,long>>()},
+		}},
+		{"CImmunitiesSchoolAndSecondary::vtbl", {
+			{"CTypedPtrList<CPtrList,long>::vtbl", offsetofbase<CImmunitiesSchoolAndSecondary::vtbl, CTypedPtrList<CPtrList,long>::vtbl>()},
 		}},
 		{"CGameButtonList", {
 			{"CTypedPtrList<CPtrList,CButtonData*>", offsetofbase<CGameButtonList, CTypedPtrList<CPtrList,CButtonData*>>()},
@@ -670,6 +724,12 @@ void registerBaseclasses() {
 		}},
 		{"CPersistantEffectListRegenerated::vtbl", {
 			{"CTypedPtrList<CPtrList,CPersistantEffect*>::vtbl", offsetofbase<CPersistantEffectListRegenerated::vtbl, CTypedPtrList<CPtrList,CPersistantEffect*>::vtbl>()},
+		}},
+		{"EEex_CWarp", {
+			{"CObject", offsetofbase<CWarp, CObject>()},
+		}},
+		{"CWarp::vtbl", {
+			{"CObject::vtbl", offsetofbase<CWarp::vtbl, CObject::vtbl>()},
 		}},
 		{"CApplyEffectList", {
 			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CApplyEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
@@ -724,18 +784,6 @@ void registerBaseclasses() {
 		}},
 		{"CImmunitiesItemTypeEquipList::vtbl", {
 			{"CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>::vtbl", offsetofbase<CImmunitiesItemTypeEquipList::vtbl, CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>::vtbl>()},
-		}},
-		{"CImmunitiesProjectile", {
-			{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesProjectile, CTypedPtrList<CPtrList,long*>>()},
-		}},
-		{"CImmunitiesProjectile::vtbl", {
-			{"CTypedPtrList<CPtrList,long*>::vtbl", offsetofbase<CImmunitiesProjectile::vtbl, CTypedPtrList<CPtrList,long*>::vtbl>()},
-		}},
-		{"CImmunitiesSchoolAndSecondary", {
-			{"CTypedPtrList<CPtrList,long*>", offsetofbase<CImmunitiesSchoolAndSecondary, CTypedPtrList<CPtrList,long*>>()},
-		}},
-		{"CImmunitiesSchoolAndSecondary::vtbl", {
-			{"CTypedPtrList<CPtrList,long*>::vtbl", offsetofbase<CImmunitiesSchoolAndSecondary::vtbl, CTypedPtrList<CPtrList,long*>::vtbl>()},
 		}},
 		{"CImmunitiesSchoolAndSecondaryDecrementing", {
 			{"CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>", offsetofbase<CImmunitiesSchoolAndSecondaryDecrementing, CTypedPtrList<CPtrList,CSchoolAndSecondaryDecrementing*>>()},
@@ -839,11 +887,11 @@ void registerBaseclasses() {
 		{"CObList::vtbl", {
 			{"CObject::vtbl", offsetofbase<CObList::vtbl, CObject::vtbl>()},
 		}},
-		{"EEex_CWarp", {
-			{"CObject", offsetofbase<CWarp, CObject>()},
+		{"CSoundChannel", {
+			{"CObject", offsetofbase<CSoundChannel, CObject>()},
 		}},
-		{"CWarp::vtbl", {
-			{"CObject::vtbl", offsetofbase<CWarp::vtbl, CObject::vtbl>()},
+		{"CSoundChannel::vtbl", {
+			{"CObject::vtbl", offsetofbase<CSoundChannel::vtbl, CObject::vtbl>()},
 		}},
 		{"CMessageSetDirection", {
 			{"CMessage", offsetofbase<CMessageSetDirection, CMessage>()},
