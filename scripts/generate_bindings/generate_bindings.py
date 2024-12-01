@@ -4766,56 +4766,27 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 		mainState.addGroup(currentGroup)
 
 
-def runModule(mainState: MainState, modulePath: str):
+def runModule(mainState: MainState, modulePath: str, functionName: str):
 	_, moduleName = separatePathNoExt(modulePath)
 	spec = importlib.util.spec_from_file_location(moduleName, modulePath)
 	module = importlib.util.module_from_spec(spec)
 	sys.modules[spec.name] = module
 	spec.loader.exec_module(module)
-	module.fixup(mainState)
+	getattr(module, functionName)(mainState)
 
 
-def main():
-
-	mainState = MainState()
-
-	inputFileName: str = None
-	outputFileName: str = None
-	bindingsFileName: str = None
-	fixupFileName: str = None
-	preludeFile: str = None
-	suffixFile: str = None
-	bindingsPreludeFile: str = None
-	ignoreHeaderFile: str = None
+def loadMaximumMainState(
+	mainState: MainState = None,
+	alreadyDefinedUsertypesFile: str = None,
+	fixupFileName: str = None,
+	ignoreHeaderFile: str = None,
+	inputFileNames: str = None,
+	manualTypesFile: str = None,
+	packingFile: str = None,
 	wantedFiles: str = ""
-	manualTypesFile: str = None
-	alreadyDefinedUsertypesFile: str = None
-	packingFile: str = None
-	dllName: str = None
+) -> MainState:
 
-	for k in islice(sys.argv, 1, None):
-		if   k == "-normal":  assert False, "-normal removed"
-		elif k == "-cleaned": assert False, "-cleaned removed"
-		elif k == "-noCustomTypes": mainState.noCustomTypes = True
-		elif k == "-manualPatternHandling": mainState.manualPatternHandling = True
-		elif k == "-forceByteStrings": mainState.forceByteStrings = True
-		elif k == "-printFuncOmitNewline": mainState.printFuncOmitNewline = True
-		elif (v := re.search("-inFiles=(.+)",                     k)) != None: inputFileNames                = v.group(1)
-		elif (v := re.search("-outFile=(.+)",                     k)) != None: outputFileName                = v.group(1)
-		elif (v := re.search("-bindingsOutFile=(.+)",             k)) != None: bindingsFileName              = v.group(1)
-		elif (v := re.search("-fixupFile=(.+)",                   k)) != None: fixupFileName                 = v.group(1)
-		elif (v := re.search("-preludeFile=(.+)",                 k)) != None: preludeFile                   = v.group(1)
-		elif (v := re.search("-suffixFile=(.+)",                  k)) != None: suffixFile                    = v.group(1)
-		elif (v := re.search("-bindingsPreludeFile=(.+)",         k)) != None: bindingsPreludeFile           = v.group(1)
-		elif (v := re.search("-ignoreHeaderFile=(.+)",            k)) != None: ignoreHeaderFile              = v.group(1)
-		elif (v := re.search("-wantedFiles=(.+)",                 k)) != None: wantedFiles                   = v.group(1)
-		elif (v := re.search("-manualTypesFile=(.+)",             k)) != None: manualTypesFile               = v.group(1)
-		elif (v := re.search("-alreadyDefinedUsertypesFile=(.+)", k)) != None: alreadyDefinedUsertypesFile   = v.group(1)
-		elif (v := re.search("-packingFile=(.+)",                 k)) != None: packingFile                   = v.group(1)
-		elif (v := re.search("-dllName=(.+)",                     k)) != None: dllName                       = v.group(1)
-		elif (v := re.search("-printFuncByteString=(.+)",         k)) != None: mainState.printFuncByteString = v.group(1)
-		elif (v := re.search("-printFuncWideString=(.+)",         k)) != None: mainState.printFuncWideString = v.group(1)
-
+	mainState = mainState or MainState()
 
 	mainState.globalGroup = Group()
 	mainState.globalGroup.defined = True
@@ -4857,71 +4828,124 @@ struct UnmappedUserType
 };
 		""")
 
+	if manualTypesFile != None:
+		processInputHeader(mainState, manualTypesFile)
+
+	for inputFileName in inputFileNames.split(","):
+
+		parts = inputFileName.split(":")
+		numParts = len(parts)
+		if numParts not in (1, 2):
+			assert False, "inFiles malformed"
+
+		flags = parts[0] if numParts == 2 else ""
+		fileName = parts[1] if numParts == 2 else parts[0]
+
+		oldFlagValues = []
+		for flag in flags.split(";"):
+			if flag == "NO_BINDINGS":
+				oldFlagValues.append(("noBindings", mainState.lineGroupFlags.getFlag("noBindings")))
+				mainState.lineGroupFlags.setFlag("noBindings", FlagSource.DEFAULT)
+			elif flag == "NO_HARDCODED_BINDINGS":
+				oldFlagValues.append(("noHardcodedBindings", mainState.lineGroupFlags.getFlag("noHardcodedBindings")))
+				mainState.lineGroupFlags.setFlag("noHardcodedBindings", FlagSource.DEFAULT)
+
+		processInputHeader(mainState, fileName)
+
+		for flagName, oldFlagValue in oldFlagValues:
+			mainState.lineGroupFlags.setFlag(flagName, oldFlagValue)
+
+
+	# Process Group lines to derive types
+	for group in mainState.groups:
+		if group.linesProcessed: continue
+		group.processLinesFillTypes(mainState)
+
+	# Move multi-layer structs so that they nest properly
+	for group in mainState.groups:
+		group.updateNesting(mainState)
+
+	# Run fixup file to make some necessary changes
+	if fixupFileName != None:
+		runModule(mainState, fixupFileName, "fixup")
+
+	for group in mainState.groups:
+		group.checkForVGroup(mainState) # Fills vGroup and removes __vftable field if present.
+		group.mapTemplateTypeNames()    # Maps the template names that appear in this Group's inheritance hierarchy to their originating Group.
+		group.mapDependsOn(mainState)   # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
+
+	# Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
+	filterGroups(mainState, wantedFiles.split(","), ignoreHeaderFile, packingFile)
+
+	# Fill templateUses and uniqueUseRepresentations
+	for group in mainState.filteredGroups:
+		group.scanInwardTypeRefs(mainState)
+
+	resolveTemplateUseRepresentations(mainState)
+
+	# Try to fix dependency order (SLOW)
+	tryResolveDependencyOrder(mainState.filteredGroups)
+
+	# Rename groups to remove invalid characters / improve autogenerated names, fix clashing function fields, and fix clashing usertype names.
+	checkRename(mainState, alreadyDefinedUsertypesFile)
+
+	# Registers pointer types for every group, (for reference_ functions)
+	registerPointerTypes(mainState)
+
+	return mainState
+
+
+def doGenerateHeader():
+
+	mainState = MainState()
+
+	alreadyDefinedUsertypesFile: str = None
+	bindingsFileName: str = None
+	bindingsPreludeFile: str = None
+	dllName: str = None
+	fixupFileName: str = None
+	ignoreHeaderFile: str = None
+	inputFileNames: str = None
+	manualTypesFile: str = None
+	outputFileName: str = None
+	packingFile: str = None
+	preludeFile: str = None
+	suffixFile: str = None
+	wantedFiles: str = ""
+
+	for k in islice(sys.argv, 1, None):
+		if   (v := re.search("-alreadyDefinedUsertypesFile=(.+)", k)) != None: alreadyDefinedUsertypesFile     = v.group(1)
+		elif (v := re.search("-bindingsOutFile=(.+)",             k)) != None: bindingsFileName                = v.group(1)
+		elif (v := re.search("-bindingsPreludeFile=(.+)",         k)) != None: bindingsPreludeFile             = v.group(1)
+		elif (v := re.search("-dllName=(.+)",                     k)) != None: dllName                         = v.group(1)
+		elif (v := re.search("-fixupFile=(.+)",                   k)) != None: fixupFileName                   = v.group(1)
+		elif (v := re.search("-forceByteStrings",                 k)) != None: mainState.forceByteStrings      = True
+		elif (v := re.search("-ignoreHeaderFile=(.+)",            k)) != None: ignoreHeaderFile                = v.group(1)
+		elif (v := re.search("-inFiles=(.+)",                     k)) != None: inputFileNames                  = v.group(1)
+		elif (v := re.search("-manualPatternHandling",            k)) != None: mainState.manualPatternHandling = True
+		elif (v := re.search("-manualTypesFile=(.+)",             k)) != None: manualTypesFile                 = v.group(1)
+		elif (v := re.search("-noCustomTypes",                    k)) != None: mainState.noCustomTypes         = True
+		elif (v := re.search("-outFile=(.+)",                     k)) != None: outputFileName                  = v.group(1)
+		elif (v := re.search("-packingFile=(.+)",                 k)) != None: packingFile                     = v.group(1)
+		elif (v := re.search("-preludeFile=(.+)",                 k)) != None: preludeFile                     = v.group(1)
+		elif (v := re.search("-printFuncByteString=(.+)",         k)) != None: mainState.printFuncByteString   = v.group(1)
+		elif (v := re.search("-printFuncOmitNewline",             k)) != None: mainState.printFuncOmitNewline  = True
+		elif (v := re.search("-printFuncWideString=(.+)",         k)) != None: mainState.printFuncWideString   = v.group(1)
+		elif (v := re.search("-suffixFile=(.+)",                  k)) != None: suffixFile                      = v.group(1)
+		elif (v := re.search("-wantedFiles=(.+)",                 k)) != None: wantedFiles                     = v.group(1)
+
+	loadMaximumMainState(
+		mainState = mainState,
+		alreadyDefinedUsertypesFile = alreadyDefinedUsertypesFile,
+		fixupFileName = fixupFileName,
+		ignoreHeaderFile = ignoreHeaderFile,
+		inputFileNames = inputFileNames,
+		manualTypesFile = manualTypesFile,
+		packingFile = packingFile,
+		wantedFiles = wantedFiles
+	)
+
 	with open(outputFileName, "w") as out:
-
-		if manualTypesFile != None:
-			processInputHeader(mainState, manualTypesFile)
-
-		for inputFileName in inputFileNames.split(","):
-
-			parts = inputFileName.split(":")
-			numParts = len(parts)
-			if numParts not in (1, 2):
-				assert False, "inFiles malformed"
-
-			flags = parts[0] if numParts == 2 else ""
-			fileName = parts[1] if numParts == 2 else parts[0]
-
-			oldFlagValues = []
-			for flag in flags.split(";"):
-				if flag == "NO_BINDINGS":
-					oldFlagValues.append(("noBindings", mainState.lineGroupFlags.getFlag("noBindings")))
-					mainState.lineGroupFlags.setFlag("noBindings", FlagSource.DEFAULT)
-				elif flag == "NO_HARDCODED_BINDINGS":
-					oldFlagValues.append(("noHardcodedBindings", mainState.lineGroupFlags.getFlag("noHardcodedBindings")))
-					mainState.lineGroupFlags.setFlag("noHardcodedBindings", FlagSource.DEFAULT)
-
-			processInputHeader(mainState, fileName)
-
-			for flagName, oldFlagValue in oldFlagValues:
-				mainState.lineGroupFlags.setFlag(flagName, oldFlagValue)
-
-
-		# Process Group lines to derive types
-		for group in mainState.groups:
-			if group.linesProcessed: continue
-			group.processLinesFillTypes(mainState)
-
-		# Move multi-layer structs so that they nest properly
-		for group in mainState.groups:
-			group.updateNesting(mainState)
-
-		# Run fixup file to make some necessary changes
-		if fixupFileName != None:
-			runModule(mainState, fixupFileName)
-
-		for group in mainState.groups:
-			group.checkForVGroup(mainState) # Fills vGroup and removes __vftable field if present.
-			group.mapTemplateTypeNames()    # Maps the template names that appear in this Group's inheritance hierarchy to their originating Group.
-			group.mapDependsOn(mainState)   # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
-
-		# Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
-		filterGroups(mainState, wantedFiles.split(","), ignoreHeaderFile, packingFile)
-
-		# Fill templateUses and uniqueUseRepresentations
-		for group in mainState.filteredGroups:
-			group.scanInwardTypeRefs(mainState)
-
-		resolveTemplateUseRepresentations(mainState)
-
-		# Try to fix dependency order (SLOW)
-		tryResolveDependencyOrder(mainState.filteredGroups)
-
-		# Rename groups to remove invalid characters / improve autogenerated names, fix clashing function fields, and fix clashing usertype names.
-		checkRename(mainState, alreadyDefinedUsertypesFile)
-
-		# Registers pointer types for every group, (for reference_ functions)
-		registerPointerTypes(mainState)
 
 		# Write bindings file
 		if bindingsFileName:
@@ -4943,7 +4967,6 @@ struct UnmappedUserType
 
 		# Write header suffix
 		outputFile(suffixFile, out)
-
 
 
 def loadMinimumMainState(inputFileName: str, fixupFileName: str=None, manualTypesFile: str=None, checkRename=True, idaUnnamedScheme=False) -> MainState:
@@ -5007,7 +5030,7 @@ struct UnmappedUserType
 
 	# Run fixup file to make some necessary changes
 	if fixupFileName != None:
-		runModule(mainState, fixupFileName)
+		runModule(mainState, fixupFileName, "fixup")
 
 	for group in mainState.groups:
 		group.checkForVGroup(mainState) # Fills vGroup and removes __vftable field if present.
@@ -5231,46 +5254,99 @@ def doRequestFieldTypes(requestHeaderPath: str, requestTypesPath: str, idaStruct
 				print(f"* Failed to find group with name: \"{typeName}\" *")
 
 
+def doCustomModule():
+
+	mainState = MainState()
+
+	alreadyDefinedUsertypesFile: str = None
+	customModuleFile: str = None
+	fixupFileName: str = None
+	ignoreHeaderFile: str = None
+	inputFileNames: str = None
+	manualTypesFile: str = None
+	packingFile: str = None
+	wantedFiles: str = ""
+
+	for k in islice(sys.argv, 1, None):
+		if   (v := re.search("-alreadyDefinedUsertypesFile=(.+)", k)) != None: alreadyDefinedUsertypesFile   = v.group(1)
+		elif (v := re.search("-customModuleFile=(.+)",            k)) != None: customModuleFile              = v.group(1)
+		elif (v := re.search("-fixupFile=(.+)",                   k)) != None: fixupFileName                 = v.group(1)
+		elif (v := re.search("-ignoreHeaderFile=(.+)",            k)) != None: ignoreHeaderFile              = v.group(1)
+		elif (v := re.search("-inFiles=(.+)",                     k)) != None: inputFileNames                = v.group(1)
+		elif (v := re.search("-manualTypesFile=(.+)",             k)) != None: manualTypesFile               = v.group(1)
+		elif (v := re.search("-noCustomTypes",                    k)) != None: mainState.noCustomTypes       = True
+		elif (v := re.search("-packingFile=(.+)",                 k)) != None: packingFile                   = v.group(1)
+		elif (v := re.search("-wantedFiles=(.+)",                 k)) != None: wantedFiles                   = v.group(1)
+
+	loadMaximumMainState(
+		mainState = mainState,
+		alreadyDefinedUsertypesFile = alreadyDefinedUsertypesFile,
+		fixupFileName = fixupFileName,
+		ignoreHeaderFile = ignoreHeaderFile,
+		inputFileNames = inputFileNames,
+		manualTypesFile = manualTypesFile,
+		packingFile = packingFile,
+		wantedFiles = wantedFiles
+	)
+
+	runModule(mainState, customModuleFile, "run")
+
 
 def mainSwitch():
 
-	requestHeader: str = None
-	requestTypes: str = None
-	idaStructs: str = None
-	fixupFileName: str = None
-	manualTypesFile: str = None
-	noRefify: bool = False
+	mode: str = None
 	allowDebug: bool = False
 
 	for k in islice(sys.argv, 1, None):
-		if (v := re.search("-requestHeaderFile=(.+)", k)) != None: requestHeader = v.group(1)
-		elif (v := re.search("-requestTypesFile=(.+)", k)) != None: requestTypes = v.group(1)
-		elif (v := re.search("-idaStructsFile=(.+)", k)) != None: idaStructs = v.group(1)
-		elif (v := re.search("-fixupFile=(.+)",  k)) != None: fixupFileName = v.group(1)
-		elif (v := re.search("-manualTypesFile=(.+)", k)) != None: manualTypesFile = v.group(1)
-		elif (v := re.search("-noRefify", k)) != None: noRefify = True
+		if   (v := re.search("-mode=(.+)",  k)) != None: mode       = v.group(1)
 		elif (v := re.search("-allowDebug", k)) != None: allowDebug = True
 
 	if allowDebug and os.environ.get("DEBUGGING") == "1":
 		input("Press any key to continue . . .\n")
 
-	if requestTypes and idaStructs:
+	assert mode is not None, "-mode must be specified"
+
+	if mode == "RequestTypes":
+
+		fixupFileName: str = None
+		idaStructs: str = None
+		manualTypesFile: str = None
+		noRefify: bool = False
+		requestHeader: str = None
+		requestTypes: str = None
+
+		for k in islice(sys.argv, 1, None):
+			if   (v := re.search("-fixupFile=(.+)",         k)) != None: fixupFileName   = v.group(1)
+			elif (v := re.search("-idaStructsFile=(.+)",    k)) != None: idaStructs      = v.group(1)
+			elif (v := re.search("-manualTypesFile=(.+)",   k)) != None: manualTypesFile = v.group(1)
+			elif (v := re.search("-noRefify",               k)) != None: noRefify        = True
+			elif (v := re.search("-requestHeaderFile=(.+)", k)) != None: requestHeader   = v.group(1)
+			elif (v := re.search("-requestTypesFile=(.+)",  k)) != None: requestTypes    = v.group(1)
+
 		doRequestFieldTypes(requestHeader, requestTypes, idaStructs, fixupFileName, manualTypesFile, noRefify)
-		return
 
-	compare1: str = None
-	compare2: str = None
+	elif mode == "Compare":
 
-	for k in islice(sys.argv, 1, None):
-		if   (v := re.search("-compare1=(.+)", k)) != None: compare1 = v.group(1)
-		elif (v := re.search("-compare2=(.+)", k)) != None: compare2 = v.group(1)
+		compare1: str = None
+		compare2: str = None
 
-	if compare1 and compare2:
+		for k in islice(sys.argv, 1, None):
+			if   (v := re.search("-compare1=(.+)", k)) != None: compare1 = v.group(1)
+			elif (v := re.search("-compare2=(.+)", k)) != None: compare2 = v.group(1)
+
 		doCompare(compare1, compare2)
-		return
 
-	main()
+	elif mode == "GenerateHeader":
+
+		doGenerateHeader()
+
+	elif mode == "CustomModule":
+
+		doCustomModule()
+
+	else:
+		assert False, "Bad -mode"
 
 
 if __name__ == "__main__":
-	mainSwitch()
+	assert False, "generate_bindings.py cannot be invoked directly - import it and call mainSwitch()"
