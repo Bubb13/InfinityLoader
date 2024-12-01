@@ -959,6 +959,12 @@ void registerBaseclasses() {
 		{"CDungeonMaster::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CDungeonMaster::vtbl, CBaldurEngine::vtbl>()},
 		}},
+		{"CResBinary", {
+			{"CRes", offsetofbase<CResBinary, CRes>()},
+		}},
+		{"CResBinary::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResBinary::vtbl, CRes::vtbl>()},
+		}},
 		{"CVariable", {
 			{"CAreaVariable", offsetofbase<CVariable, CAreaVariable>()},
 		}},
@@ -1143,12 +1149,6 @@ void registerBaseclasses() {
 		}},
 		{"CScreenWorld::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorld::vtbl, CBaldurEngine::vtbl>()},
-		}},
-		{"CResBinary", {
-			{"CRes", offsetofbase<CResBinary, CRes>()},
-		}},
-		{"CResBinary::vtbl", {
-			{"CRes::vtbl", offsetofbase<CResBinary::vtbl, CRes::vtbl>()},
 		}},
 		{"CItem", {
 			{"CResHelper<CResItem,1005>", offsetofbase<CItem, CResHelper<CResItem,1005>>()},

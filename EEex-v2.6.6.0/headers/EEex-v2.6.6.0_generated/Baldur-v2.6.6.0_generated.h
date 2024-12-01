@@ -7255,81 +7255,6 @@ struct uiItem
 	uiItem() = delete;
 };
 
-struct WED_LayerHeader_st
-{
-	unsigned __int16 nTilesAcross;
-	unsigned __int16 nTilesDown;
-	Array<unsigned __int8,8> rrTileSet;
-	unsigned __int16 nNumUniqueTiles;
-	unsigned __int16 nLayerFlags;
-	unsigned int nOffsetToTileData;
-	unsigned int nOffsetToTileList;
-
-	WED_LayerHeader_st() = delete;
-};
-
-struct UI_PanelHeader_st
-{
-	unsigned int nPanelID;
-	unsigned __int16 x;
-	unsigned __int16 y;
-	unsigned __int16 nWidth;
-	unsigned __int16 nHeight;
-	unsigned __int16 nType;
-	unsigned __int16 nControls;
-	Array<unsigned __int8,8> refMosaic;
-	unsigned __int16 nFirstControl;
-	unsigned __int16 wFlags;
-
-	UI_PanelHeader_st() = delete;
-};
-
-#pragma pack(push, 1)
-struct Spell_Header_st
-{
-	unsigned int nFileType;
-	unsigned int nFileVersion;
-	unsigned int genericName;
-	unsigned int identifiedName;
-	Array<unsigned __int8,8> usedUpItemID;
-	unsigned int itemFlags;
-	unsigned __int16 itemType;
-	unsigned int notUsableBy;
-	unsigned __int16 castingAnimationType;
-	unsigned __int8 minLevelRequired;
-	unsigned __int8 school;
-	unsigned __int8 minSTRRequired;
-	unsigned __int8 secondaryType;
-	unsigned __int8 minSTRBonusRequired;
-	unsigned __int8 notUsableBy2a;
-	unsigned __int8 minINTRequired;
-	unsigned __int8 notUsableBy2b;
-	unsigned __int8 minDEXRequired;
-	unsigned __int8 notUsableBy2c;
-	unsigned __int8 minWISRequired;
-	unsigned __int8 notUsableBy2d;
-	unsigned __int16 minCONRequired;
-	unsigned __int16 minCHRRequired;
-	unsigned int spellLevel;
-	unsigned __int16 maxStackable;
-	Array<unsigned __int8,8> itemIcon;
-	unsigned __int16 loreValue;
-	Array<unsigned __int8,8> groundIcon;
-	unsigned int baseWeight;
-	unsigned int genericDescription;
-	unsigned int identifiedDescription;
-	Array<unsigned __int8,8> descriptionPicture;
-	unsigned int attributes;
-	unsigned int abilityOffset;
-	unsigned __int16 abilityCount;
-	unsigned int effectsOffset;
-	unsigned __int16 castingStartingEffect;
-	unsigned __int16 castingEffectCount;
-
-	Spell_Header_st() = delete;
-};
-#pragma pack(pop)
-
 struct SDL_PixelFormat
 {
 	unsigned int format;
@@ -7404,6 +7329,18 @@ struct LCharString
 		localCopy[i] = '\0';
 		lua_pushstring(L, localCopy);
 	}
+};
+
+struct CResBinary : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	LCharString<4> m_resVersion;
+
+	CResBinary() = delete;
 };
 
 #pragma pack(push, 1)
@@ -7554,51 +7491,6 @@ union SDL_Event
 	SDL_Event() = delete;
 };
 
-#pragma pack(push, 1)
-struct Item_Header_st
-{
-	unsigned int nFileType;
-	unsigned int nFileVersion;
-	unsigned int genericName;
-	unsigned int identifiedName;
-	Array<unsigned __int8,8> usedUpItemID;
-	unsigned int itemFlags;
-	unsigned __int16 itemType;
-	unsigned int notUsableBy;
-	Array<unsigned __int8,2> animationType;
-	unsigned __int16 minLevelRequired;
-	unsigned __int16 minSTRRequired;
-	unsigned __int8 minSTRBonusRequired;
-	unsigned __int8 notUsableBy2a;
-	unsigned __int8 minINTRequired;
-	unsigned __int8 notUsableBy2b;
-	unsigned __int8 minDEXRequired;
-	unsigned __int8 notUsableBy2c;
-	unsigned __int8 minWISRequired;
-	unsigned __int8 notUsableBy2d;
-	unsigned __int8 minCONRequired;
-	unsigned __int8 proficiencyType;
-	unsigned __int16 minCHRRequired;
-	unsigned int baseValue;
-	unsigned __int16 maxStackable;
-	Array<unsigned __int8,8> itemIcon;
-	unsigned __int16 loreValue;
-	Array<unsigned __int8,8> groundIcon;
-	unsigned int baseWeight;
-	unsigned int genericDescription;
-	unsigned int identifiedDescription;
-	Array<unsigned __int8,8> descriptionPicture;
-	unsigned int attributes;
-	unsigned int abilityOffset;
-	unsigned __int16 abilityCount;
-	unsigned int effectsOffset;
-	unsigned __int16 equipedStartingEffect;
-	unsigned __int16 equipedEffectCount;
-
-	Item_Header_st() = delete;
-};
-#pragma pack(pop)
-
 typedef uiMenu* (*type_findMenu)(const char* name, int panel, int state);
 extern type_findMenu p_findMenu;
 
@@ -7695,68 +7587,6 @@ extern ConstArray<short,122>* p_yy_reduce_ofst;
 extern ConstArray<short,174>* p_yy_shift_ofst;
 extern ConstArray<_D98D369160A0DDA2B95F5D0F301081BB,157>* p_yyRuleInfo;
 
-struct CWorldMapLinks
-{
-	unsigned int m_nArea;
-	LCharString<32> m_entryPoint;
-	unsigned int m_nDistanceScale;
-	unsigned int m_dwLinkFlags;
-	Array<unsigned __int8,8> m_resRandomEncounterArea0;
-	Array<unsigned __int8,8> m_resRandomEncounterArea1;
-	Array<unsigned __int8,8> m_resRandomEncounterArea2;
-	Array<unsigned __int8,8> m_resRandomEncounterArea3;
-	Array<unsigned __int8,8> m_resRandomEncounterArea4;
-	unsigned int m_nEncounterProbability;
-	Array<unsigned int,32> nUnused;
-
-	CWorldMapLinks() = delete;
-};
-
-struct CWorldMapData
-{
-	Array<unsigned __int8,8> m_resMosaic;
-	unsigned int m_nWidth;
-	unsigned int m_nHeight;
-	unsigned int m_nMapID;
-	unsigned int m_strTitle;
-	unsigned int m_nStartCenteredOnX;
-	unsigned int m_nStartCenteredOnY;
-	unsigned int m_nAreas;
-	unsigned int m_nAreasOffset;
-	unsigned int m_nOffsetToLinks;
-	unsigned int m_nLinks;
-	Array<unsigned __int8,8> m_resAreaIcons;
-	unsigned int m_dwFlags;
-	Array<unsigned int,31> nUnused;
-
-	CWorldMapData() = delete;
-};
-
-struct CWorldMapArea
-{
-	Array<unsigned __int8,8> m_resCurrentArea;
-	Array<unsigned __int8,8> m_resOriginalArea;
-	LCharString<32> m_strName;
-	unsigned int m_dwFlags;
-	unsigned int m_sequence;
-	unsigned int m_mapLocationX;
-	unsigned int m_mapLocationY;
-	unsigned int m_strLabel;
-	unsigned int m_strAreaName;
-	Array<unsigned __int8,8> m_resAreaLoadMosaic;
-	unsigned int m_nNorthEdgeStartingLink;
-	unsigned int m_nNorthEdgeCount;
-	unsigned int m_nWestEdgeStartingLink;
-	unsigned int m_nWestEdgeCount;
-	unsigned int m_nSouthEdgeStartingLink;
-	unsigned int m_nSouthEdgeCount;
-	unsigned int m_nEastEdgeStartingLink;
-	unsigned int m_nEastEdgeCount;
-	Array<unsigned int,32> nUnused;
-
-	CWorldMapArea() = delete;
-};
-
 struct CVisibilityMapTreeNode
 {
 	CPoint m_relativePos;
@@ -7848,77 +7678,6 @@ struct CTlkTable
 	{
 		return p_Fetch(this, strId, strRes, ignoreSTRREFON);
 	}
-};
-
-struct CStoreFileSpell
-{
-	Array<unsigned __int8,8> m_spell;
-	unsigned int m_cost;
-
-	CStoreFileSpell() = delete;
-};
-
-struct CStoreFileItem
-{
-	Array<unsigned __int8,8> m_itemId;
-	unsigned __int16 m_wear;
-	Array<unsigned __int16,3> m_usageCount;
-	unsigned int m_dynamicFlags;
-	unsigned int m_nInStock;
-	unsigned int m_nStoreFlags;
-
-	CStoreFileItem() = delete;
-};
-
-struct CStoreFileHeader
-{
-	unsigned int m_nStoreType;
-	unsigned int m_strName;
-	unsigned int m_nStoreFlags;
-	unsigned int m_nBuyMarkUp;
-	unsigned int m_nSellMarkDown;
-	unsigned int m_nAdditionalMarkDown;
-	unsigned __int16 m_nStealDifficulty;
-	unsigned __int16 m_nMaxItems;
-	Array<unsigned __int8,8> m_script;
-	unsigned int m_nbuyTypesOffset;
-	unsigned int m_nbuyTypesCount;
-	unsigned int m_nInventoryOffset;
-	unsigned int m_nInventoryCount;
-	unsigned int m_nLore;
-	unsigned int m_nIdentifyCost;
-	Array<unsigned __int8,8> m_resRumor;
-	unsigned int m_drinkOffset;
-	unsigned int m_drinkCount;
-	Array<unsigned __int8,8> m_resDonation;
-	unsigned int m_nInnFlags;
-	unsigned int m_nRoomCostPeasant;
-	unsigned int m_nRoomCostMerchant;
-	unsigned int m_nRoomCostNoble;
-	unsigned int m_nRoomCostRoyal;
-	unsigned int m_spellOffset;
-	unsigned int m_spellCount;
-	unsigned int m_rouletMaxBet;
-	unsigned int m_crapsMaxBet;
-	unsigned int m_wheelMaxBet;
-	unsigned int m_rouletWinChance;
-	unsigned int m_crapsWinChance;
-	unsigned int m_wheelWinChance;
-	unsigned int m_rouletWinAmount;
-	unsigned int m_crapsWinAmount;
-	unsigned int m_wheelWinAmount;
-
-	CStoreFileHeader() = delete;
-};
-
-struct CStoreFileDrinks
-{
-	Array<unsigned __int8,8> m_icon;
-	unsigned int m_strName;
-	unsigned int m_nCost;
-	unsigned int m_nRumorChance;
-
-	CStoreFileDrinks() = delete;
 };
 
 struct CSteam
@@ -8082,58 +7841,6 @@ struct CScreenConnection : CBaldurEngine
 	CScreenConnection() = delete;
 };
 
-struct CSavedGameStoredLocation
-{
-	Array<unsigned __int8,8> m_areaName;
-	unsigned __int16 m_xPos;
-	unsigned __int16 m_yPos;
-
-	CSavedGameStoredLocation() = delete;
-};
-
-struct CSavedGamePartyCreature
-{
-	unsigned __int16 m_wFlags;
-	unsigned __int16 m_portraitId;
-	unsigned int m_creatureOffset;
-	unsigned int m_creatureSize;
-	Array<unsigned __int8,8> m_creatureResRef;
-	unsigned int m_creatureFacing;
-	Array<unsigned __int8,8> m_areaName;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	unsigned __int16 m_posViewX;
-	unsigned __int16 m_posViewY;
-	unsigned __int16 m_nModalState;
-	__int16 m_nHappiness;
-	Array<int,24> m_nNumberOfTimesInteractedWith;
-	Array<__int16,4> m_quickWeaponsItemNum;
-	Array<__int16,4> m_quickWeaponsAbilityNum;
-	Array<Array<unsigned __int8,8>,3> m_quickSpellsSpellId;
-	Array<__int16,3> m_quickItemsItemNum;
-	Array<__int16,3> m_quickItemsAbilityNum;
-	LCharString<32> m_name;
-	unsigned int m_numberTimesTalkedTo;
-	unsigned int m_strStrongestKillName;
-	unsigned int m_nStrongestKillXPValue;
-	unsigned int m_nPreviousTimeWithParty;
-	unsigned int m_nJoinPartyTime;
-	unsigned __int8 m_bWithParty;
-	Array<__int8,2> m_pad1;
-	char m_cFirstResSlot;
-	unsigned int m_nChapterKillsXPValue;
-	unsigned int m_nChapterKillsNumber;
-	unsigned int m_nGameKillsXPValue;
-	unsigned int m_nGameKillsNumber;
-	Array<Array<unsigned __int8,8>,4> m_lSpellStatsName;
-	Array<__int16,4> m_lSpellStatsCount;
-	Array<Array<unsigned __int8,8>,4> m_lWeaponStatsName;
-	Array<__int16,4> m_lWeaponStatsCount;
-	Array<unsigned __int8,8> m_secondarySounds;
-
-	CSavedGamePartyCreature() = delete;
-};
-
 struct CResRef
 {
 	Array<unsigned __int8,8> m_resRef;
@@ -8292,6 +7999,68 @@ struct CAbilityData
 	CAbilityData() = delete;
 };
 
+struct CAreaFileHeader
+{
+	CResRef m_areaName;
+	unsigned int m_lastSaved;
+	unsigned int m_flags;
+	CResRef m_areaEdgeNorth;
+	unsigned int m_flagsEdgeNorth;
+	CResRef m_areaEdgeEast;
+	unsigned int m_flagsEdgeEast;
+	CResRef m_areaEdgeSouth;
+	unsigned int m_flagsEdgeSouth;
+	CResRef m_areaEdgeWest;
+	unsigned int m_flagsEdgeWest;
+	unsigned __int16 m_areaType;
+	unsigned __int16 m_rainProbability;
+	unsigned __int16 m_snowProbability;
+	unsigned __int16 m_fogProbability;
+	unsigned __int16 m_lightningProbability;
+	unsigned __int8 m_waterAlpha;
+	unsigned __int8 m_unused;
+
+	CAreaFileHeader() = delete;
+};
+
+struct CAreaFileProjectileObject
+{
+	CResRef m_resref;
+	unsigned int m_effectListOffset;
+	unsigned __int16 m_effectListCount;
+	unsigned __int16 m_projectileID;
+	__int16 m_nDelayCount;
+	__int16 m_nRepetitionCount;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned __int16 m_posZ;
+	unsigned __int8 m_targetType;
+	__int8 m_portraitNum;
+
+	CAreaFileProjectileObject() = delete;
+};
+
+struct CAreaFileStaticObject
+{
+	LCharString<32> m_scriptName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned int m_timeOfDayVisible;
+	CResRef m_resref;
+	unsigned int m_nSequence;
+	unsigned int m_dwFlags;
+	__int16 m_height;
+	unsigned __int16 m_translucency;
+	unsigned __int16 m_startFrameRange;
+	unsigned __int8 m_probability;
+	unsigned __int8 m_period;
+	CResRef m_paletteResref;
+	unsigned __int16 m_sizeX;
+	unsigned __int16 m_sizeY;
+
+	CAreaFileStaticObject() = delete;
+};
+
 struct CCriticalEntry
 {
 	CResRef m_res;
@@ -8379,6 +8148,35 @@ struct CGameStatsRes : CObject
 	CGameStatsRes() = delete;
 };
 
+struct WED_LayerHeader_st
+{
+	unsigned __int16 nTilesAcross;
+	unsigned __int16 nTilesDown;
+	CResRef rrTileSet;
+	unsigned __int16 nNumUniqueTiles;
+	unsigned __int16 nLayerFlags;
+	unsigned int nOffsetToTileData;
+	unsigned int nOffsetToTileList;
+
+	WED_LayerHeader_st() = delete;
+};
+
+struct UI_PanelHeader_st
+{
+	unsigned int nPanelID;
+	unsigned __int16 x;
+	unsigned __int16 y;
+	unsigned __int16 nWidth;
+	unsigned __int16 nHeight;
+	unsigned __int16 nType;
+	unsigned __int16 nControls;
+	CResRef refMosaic;
+	unsigned __int16 nFirstControl;
+	unsigned __int16 wFlags;
+
+	UI_PanelHeader_st() = delete;
+};
+
 struct Spell_ability_st
 {
 	unsigned __int16 type;
@@ -8402,6 +8200,52 @@ struct Spell_ability_st
 
 	Spell_ability_st() = delete;
 };
+
+#pragma pack(push, 1)
+struct Spell_Header_st
+{
+	unsigned int nFileType;
+	unsigned int nFileVersion;
+	unsigned int genericName;
+	unsigned int identifiedName;
+	CResRef usedUpItemID;
+	unsigned int itemFlags;
+	unsigned __int16 itemType;
+	unsigned int notUsableBy;
+	unsigned __int16 castingAnimationType;
+	unsigned __int8 minLevelRequired;
+	unsigned __int8 school;
+	unsigned __int8 minSTRRequired;
+	unsigned __int8 secondaryType;
+	unsigned __int8 minSTRBonusRequired;
+	unsigned __int8 notUsableBy2a;
+	unsigned __int8 minINTRequired;
+	unsigned __int8 notUsableBy2b;
+	unsigned __int8 minDEXRequired;
+	unsigned __int8 notUsableBy2c;
+	unsigned __int8 minWISRequired;
+	unsigned __int8 notUsableBy2d;
+	unsigned __int16 minCONRequired;
+	unsigned __int16 minCHRRequired;
+	unsigned int spellLevel;
+	unsigned __int16 maxStackable;
+	CResRef itemIcon;
+	unsigned __int16 loreValue;
+	CResRef groundIcon;
+	unsigned int baseWeight;
+	unsigned int genericDescription;
+	unsigned int identifiedDescription;
+	CResRef descriptionPicture;
+	unsigned int attributes;
+	unsigned int abilityOffset;
+	unsigned __int16 abilityCount;
+	unsigned int effectsOffset;
+	unsigned __int16 castingStartingEffect;
+	unsigned __int16 castingEffectCount;
+
+	Spell_Header_st() = delete;
+};
+#pragma pack(pop)
 
 #pragma pack(push, 1)
 struct Item_effect_st
@@ -8459,6 +8303,113 @@ struct Item_ability_st
 };
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+struct Item_Header_st
+{
+	unsigned int nFileType;
+	unsigned int nFileVersion;
+	unsigned int genericName;
+	unsigned int identifiedName;
+	CResRef usedUpItemID;
+	unsigned int itemFlags;
+	unsigned __int16 itemType;
+	unsigned int notUsableBy;
+	LCharString<2> animationType;
+	unsigned __int16 minLevelRequired;
+	unsigned __int16 minSTRRequired;
+	unsigned __int8 minSTRBonusRequired;
+	unsigned __int8 notUsableBy2a;
+	unsigned __int8 minINTRequired;
+	unsigned __int8 notUsableBy2b;
+	unsigned __int8 minDEXRequired;
+	unsigned __int8 notUsableBy2c;
+	unsigned __int8 minWISRequired;
+	unsigned __int8 notUsableBy2d;
+	unsigned __int8 minCONRequired;
+	unsigned __int8 proficiencyType;
+	unsigned __int16 minCHRRequired;
+	unsigned int baseValue;
+	unsigned __int16 maxStackable;
+	CResRef itemIcon;
+	unsigned __int16 loreValue;
+	CResRef groundIcon;
+	unsigned int baseWeight;
+	unsigned int genericDescription;
+	unsigned int identifiedDescription;
+	CResRef descriptionPicture;
+	unsigned int attributes;
+	unsigned int abilityOffset;
+	unsigned __int16 abilityCount;
+	unsigned int effectsOffset;
+	unsigned __int16 equipedStartingEffect;
+	unsigned __int16 equipedEffectCount;
+
+	Item_Header_st() = delete;
+};
+#pragma pack(pop)
+
+struct CWorldMapLinks
+{
+	unsigned int m_nArea;
+	LCharString<32> m_entryPoint;
+	unsigned int m_nDistanceScale;
+	unsigned int m_dwLinkFlags;
+	CResRef m_resRandomEncounterArea0;
+	CResRef m_resRandomEncounterArea1;
+	CResRef m_resRandomEncounterArea2;
+	CResRef m_resRandomEncounterArea3;
+	CResRef m_resRandomEncounterArea4;
+	unsigned int m_nEncounterProbability;
+	Array<unsigned int,32> nUnused;
+
+	CWorldMapLinks() = delete;
+};
+
+struct CWorldMapData
+{
+	CResRef m_resMosaic;
+	unsigned int m_nWidth;
+	unsigned int m_nHeight;
+	unsigned int m_nMapID;
+	unsigned int m_strTitle;
+	unsigned int m_nStartCenteredOnX;
+	unsigned int m_nStartCenteredOnY;
+	unsigned int m_nAreas;
+	unsigned int m_nAreasOffset;
+	unsigned int m_nOffsetToLinks;
+	unsigned int m_nLinks;
+	CResRef m_resAreaIcons;
+	unsigned int m_dwFlags;
+	Array<unsigned int,31> nUnused;
+
+	CWorldMapData() = delete;
+};
+
+struct CWorldMapArea
+{
+	CResRef m_resCurrentArea;
+	CResRef m_resOriginalArea;
+	LCharString<32> m_strName;
+	unsigned int m_dwFlags;
+	unsigned int m_sequence;
+	unsigned int m_mapLocationX;
+	unsigned int m_mapLocationY;
+	unsigned int m_strLabel;
+	unsigned int m_strAreaName;
+	CResRef m_resAreaLoadMosaic;
+	unsigned int m_nNorthEdgeStartingLink;
+	unsigned int m_nNorthEdgeCount;
+	unsigned int m_nWestEdgeStartingLink;
+	unsigned int m_nWestEdgeCount;
+	unsigned int m_nSouthEdgeStartingLink;
+	unsigned int m_nSouthEdgeCount;
+	unsigned int m_nEastEdgeStartingLink;
+	unsigned int m_nEastEdgeCount;
+	Array<unsigned int,32> nUnused;
+
+	CWorldMapArea() = delete;
+};
+
 struct CWorldMap
 {
 	CResRef m_cResRef;
@@ -8492,6 +8443,77 @@ struct CTiledObject
 	CTiledObject() = delete;
 };
 
+struct CStoreFileSpell
+{
+	CResRef m_spell;
+	unsigned int m_cost;
+
+	CStoreFileSpell() = delete;
+};
+
+struct CStoreFileItem
+{
+	CResRef m_itemId;
+	unsigned __int16 m_wear;
+	Array<unsigned __int16,3> m_usageCount;
+	unsigned int m_dynamicFlags;
+	unsigned int m_nInStock;
+	unsigned int m_nStoreFlags;
+
+	CStoreFileItem() = delete;
+};
+
+struct CStoreFileHeader
+{
+	unsigned int m_nStoreType;
+	unsigned int m_strName;
+	unsigned int m_nStoreFlags;
+	unsigned int m_nBuyMarkUp;
+	unsigned int m_nSellMarkDown;
+	unsigned int m_nAdditionalMarkDown;
+	unsigned __int16 m_nStealDifficulty;
+	unsigned __int16 m_nMaxItems;
+	CResRef m_script;
+	unsigned int m_nbuyTypesOffset;
+	unsigned int m_nbuyTypesCount;
+	unsigned int m_nInventoryOffset;
+	unsigned int m_nInventoryCount;
+	unsigned int m_nLore;
+	unsigned int m_nIdentifyCost;
+	CResRef m_resRumor;
+	unsigned int m_drinkOffset;
+	unsigned int m_drinkCount;
+	CResRef m_resDonation;
+	unsigned int m_nInnFlags;
+	unsigned int m_nRoomCostPeasant;
+	unsigned int m_nRoomCostMerchant;
+	unsigned int m_nRoomCostNoble;
+	unsigned int m_nRoomCostRoyal;
+	unsigned int m_spellOffset;
+	unsigned int m_spellCount;
+	unsigned int m_rouletMaxBet;
+	unsigned int m_crapsMaxBet;
+	unsigned int m_wheelMaxBet;
+	unsigned int m_rouletWinChance;
+	unsigned int m_crapsWinChance;
+	unsigned int m_wheelWinChance;
+	unsigned int m_rouletWinAmount;
+	unsigned int m_crapsWinAmount;
+	unsigned int m_wheelWinAmount;
+
+	CStoreFileHeader() = delete;
+};
+
+struct CStoreFileDrinks
+{
+	CResRef m_icon;
+	unsigned int m_strName;
+	unsigned int m_nCost;
+	unsigned int m_nRumorChance;
+
+	CStoreFileDrinks() = delete;
+};
+
 struct CStore
 {
 	CResRef m_resRef;
@@ -8503,7 +8525,7 @@ struct CStore
 	unsigned int m_nDrinks;
 	CStoreFileSpell* m_pSpells;
 	unsigned int m_nSpells;
-	Array<unsigned __int8,8> m_pVersion;
+	LCharString<8> m_pVersion;
 	int m_bLocalCopy;
 
 	CStore() = delete;
@@ -8635,6 +8657,58 @@ struct CScreenCharacter : CBaldurEngine
 	int m_bIsCharGenMenu;
 
 	CScreenCharacter() = delete;
+};
+
+struct CSavedGameStoredLocation
+{
+	CResRef m_areaName;
+	unsigned __int16 m_xPos;
+	unsigned __int16 m_yPos;
+
+	CSavedGameStoredLocation() = delete;
+};
+
+struct CSavedGamePartyCreature
+{
+	unsigned __int16 m_wFlags;
+	unsigned __int16 m_portraitId;
+	unsigned int m_creatureOffset;
+	unsigned int m_creatureSize;
+	CResRef m_creatureResRef;
+	unsigned int m_creatureFacing;
+	CResRef m_areaName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	unsigned __int16 m_posViewX;
+	unsigned __int16 m_posViewY;
+	unsigned __int16 m_nModalState;
+	__int16 m_nHappiness;
+	Array<int,24> m_nNumberOfTimesInteractedWith;
+	Array<__int16,4> m_quickWeaponsItemNum;
+	Array<__int16,4> m_quickWeaponsAbilityNum;
+	Array<CResRef,3> m_quickSpellsSpellId;
+	Array<__int16,3> m_quickItemsItemNum;
+	Array<__int16,3> m_quickItemsAbilityNum;
+	LCharString<32> m_name;
+	unsigned int m_numberTimesTalkedTo;
+	unsigned int m_strStrongestKillName;
+	unsigned int m_nStrongestKillXPValue;
+	unsigned int m_nPreviousTimeWithParty;
+	unsigned int m_nJoinPartyTime;
+	unsigned __int8 m_bWithParty;
+	Array<__int8,2> m_pad1;
+	char m_cFirstResSlot;
+	unsigned int m_nChapterKillsXPValue;
+	unsigned int m_nChapterKillsNumber;
+	unsigned int m_nGameKillsXPValue;
+	unsigned int m_nGameKillsNumber;
+	Array<CResRef,4> m_lSpellStatsName;
+	Array<__int16,4> m_lSpellStatsCount;
+	Array<CResRef,4> m_lWeaponStatsName;
+	Array<__int16,4> m_lWeaponStatsCount;
+	CResRef m_secondarySounds;
+
+	CSavedGamePartyCreature() = delete;
 };
 
 struct CSaveGameSlot
@@ -10076,11 +10150,11 @@ struct CScreenWorld : CBaldurEngine
 	unsigned __int8 m_bEndMajorEventPauseStatus;
 	unsigned __int8 m_bChapterTransitionPending;
 	int m_nChapterTransition;
-	Array<unsigned __int8,8> m_szChapterTransitionResRef;
+	CResRef m_szChapterTransitionResRef;
 	unsigned __int8 m_bTextScreenTransitionPending;
-	Array<unsigned __int8,8> m_szTextScreenTransitionResRef;
+	CResRef m_szTextScreenTransitionResRef;
 	unsigned __int8 m_bMoviePending;
-	Array<unsigned __int8,8> m_szMovieResRef;
+	CResRef m_szMovieResRef;
 	unsigned __int8 m_bPendingMapWorld;
 	int m_idPendingMapWorldController;
 	__int16 m_nPendingMapWorldDirection;
@@ -10151,18 +10225,6 @@ struct CScreenWorld : CBaldurEngine
 	{
 		return p_TogglePauseGame(this, visualPause, bSendMessage, idPlayerPause, bLogPause, bRequireHostUnpause);
 	}
-};
-
-struct CResBinary : CRes
-{
-	struct vtbl : CRes::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<char,4> m_resVersion;
-
-	CResBinary() = delete;
 };
 
 struct CProgressBar
@@ -11095,7 +11157,7 @@ struct CInfGame
 	CAIGroup m_group;
 	CTypedPtrList<CPtrList,long> m_allies;
 	CTypedPtrList<CPtrList,long> m_familiars;
-	Array<Array<unsigned __int8,8>,9> m_resrefFamiliarsDefault;
+	Array<CResRef,9> m_resrefFamiliarsDefault;
 	Array<Array<CTypedPtrList<CPtrList,CResRef*>,9>,9> m_resrefFamiliars;
 	int m_bFamiliarBlock;
 	unsigned int m_nFamiliarSummoner;
@@ -12079,7 +12141,7 @@ struct CCreatureFileMemorizedSpell
 
 struct CCreatureFileItem
 {
-	Array<unsigned __int8,8> m_itemId;
+	CResRef m_itemId;
 	unsigned __int16 m_wear;
 	Array<unsigned __int16,3> m_usageCount;
 	unsigned int m_dynamicFlags;
@@ -12101,8 +12163,8 @@ struct CCreatureFileHeader
 	unsigned int m_animationType;
 	Array<unsigned __int8,7> m_colors;
 	unsigned __int8 m_effectVersion;
-	Array<unsigned __int8,8> m_portraitSmall;
-	Array<unsigned __int8,8> m_portraitLarge;
+	CResRef m_portraitSmall;
+	CResRef m_portraitLarge;
 	unsigned __int8 m_reputation;
 	unsigned __int8 m_hideInShadowsBase;
 	__int16 m_armorClass;
@@ -12166,11 +12228,11 @@ struct CCreatureFileHeader
 	unsigned __int16 m_moraleRecoveryTime;
 	unsigned __int16 m_mageSpecUpperWord;
 	unsigned __int16 m_mageSpecialization;
-	Array<unsigned __int8,8> m_scriptOverRide;
-	Array<unsigned __int8,8> m_scriptClass;
-	Array<unsigned __int8,8> m_scriptRace;
-	Array<unsigned __int8,8> m_scriptGeneral;
-	Array<unsigned __int8,8> m_scriptDefault;
+	CResRef m_scriptOverRide;
+	CResRef m_scriptClass;
+	CResRef m_scriptRace;
+	CResRef m_scriptGeneral;
+	CResRef m_scriptDefault;
 
 	CCreatureFileHeader() = delete;
 };
@@ -12386,36 +12448,15 @@ struct CAreaSoundsAndMusic
 	unsigned int m_alt1Music2;
 	unsigned int m_alt1Music3;
 	unsigned int m_alt1Music4;
-	Array<unsigned __int8,8> m_dayAmbient;
-	Array<unsigned __int8,8> m_dayAmbientExtended;
+	CResRef m_dayAmbient;
+	CResRef m_dayAmbientExtended;
 	unsigned int m_dayAmbientVolume;
-	Array<unsigned __int8,8> m_nightAmbient;
-	Array<unsigned __int8,8> m_nightAmbientExtended;
+	CResRef m_nightAmbient;
+	CResRef m_nightAmbientExtended;
 	unsigned int m_nightAmbientVolume;
 	Array<unsigned int,16> m_notUsed;
 
 	CAreaSoundsAndMusic() = delete;
-};
-
-struct CAreaFileStaticObject
-{
-	LCharString<32> m_scriptName;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	unsigned int m_timeOfDayVisible;
-	Array<unsigned __int8,8> m_resref;
-	unsigned int m_nSequence;
-	unsigned int m_dwFlags;
-	__int16 m_height;
-	unsigned __int16 m_translucency;
-	unsigned __int16 m_startFrameRange;
-	unsigned __int8 m_probability;
-	unsigned __int8 m_period;
-	Array<unsigned __int8,8> m_paletteResref;
-	unsigned __int16 m_sizeX;
-	unsigned __int16 m_sizeY;
-
-	CAreaFileStaticObject() = delete;
 };
 
 struct CAreaFileSoundObject
@@ -12428,7 +12469,7 @@ struct CAreaFileSoundObject
 	unsigned int m_pitchVariance;
 	unsigned __int16 m_volumeVariance;
 	unsigned __int16 m_volume;
-	Array<Array<unsigned __int8,8>,10> m_soundObject;
+	Array<CResRef,10> m_soundObject;
 	unsigned __int16 m_soundObjectNum;
 	Array<unsigned __int8,2> structureAlignment2;
 	unsigned int m_period;
@@ -12444,7 +12485,7 @@ struct CAreaFileRestEncounter
 {
 	LCharString<32> m_scriptName;
 	Array<unsigned int,10> m_randomCreatureString;
-	Array<Array<unsigned __int8,8>,10> m_randomCreature;
+	Array<CResRef,10> m_randomCreature;
 	unsigned __int16 m_randomCreatureNum;
 	unsigned __int16 m_difficulty;
 	unsigned int m_lifeSpan;
@@ -12459,73 +12500,6 @@ struct CAreaFileRestEncounter
 	Array<unsigned int,11> m_notUsed;
 
 	CAreaFileRestEncounter() = delete;
-};
-
-struct CAreaFileRandomMonsterSpawningPoint
-{
-	LCharString<32> m_scriptName;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	Array<Array<unsigned __int8,8>,10> m_randomCreature;
-	unsigned __int16 m_randomCreatureNum;
-	unsigned __int16 m_difficulty;
-	unsigned __int16 m_spawningRate;
-	unsigned __int16 m_wFlags;
-	unsigned int m_lifeSpan;
-	unsigned __int16 m_huntingRange;
-	unsigned __int16 m_followRange;
-	unsigned __int16 m_maxTypeNum;
-	unsigned __int16 m_activated;
-	unsigned int m_timeOfDayVisible;
-	unsigned __int16 m_probDay;
-	unsigned __int16 m_probNight;
-	unsigned int m_frequency;
-	unsigned int m_countdown;
-	Array<unsigned __int8,10> m_weights;
-	Array<unsigned __int16,19> m_notUsed;
-
-	CAreaFileRandomMonsterSpawningPoint() = delete;
-};
-
-struct CAreaFileProjectileObject
-{
-	Array<unsigned __int8,8> m_resref;
-	unsigned int m_effectListOffset;
-	unsigned __int16 m_effectListCount;
-	unsigned __int16 m_projectileID;
-	__int16 m_nDelayCount;
-	__int16 m_nRepetitionCount;
-	unsigned __int16 m_posX;
-	unsigned __int16 m_posY;
-	unsigned __int16 m_posZ;
-	unsigned __int8 m_targetType;
-	__int8 m_portraitNum;
-
-	CAreaFileProjectileObject() = delete;
-};
-
-struct CAreaFileHeader
-{
-	Array<unsigned __int8,8> m_areaName;
-	unsigned int m_lastSaved;
-	unsigned int m_flags;
-	Array<unsigned __int8,8> m_areaEdgeNorth;
-	unsigned int m_flagsEdgeNorth;
-	Array<unsigned __int8,8> m_areaEdgeEast;
-	unsigned int m_flagsEdgeEast;
-	Array<unsigned __int8,8> m_areaEdgeSouth;
-	unsigned int m_flagsEdgeSouth;
-	Array<unsigned __int8,8> m_areaEdgeWest;
-	unsigned int m_flagsEdgeWest;
-	unsigned __int16 m_areaType;
-	unsigned __int16 m_rainProbability;
-	unsigned __int16 m_snowProbability;
-	unsigned __int16 m_fogProbability;
-	unsigned __int16 m_lightningProbability;
-	unsigned __int8 m_waterAlpha;
-	unsigned __int8 m_unused;
-
-	CAreaFileHeader() = delete;
 };
 
 struct CGameArea
@@ -12717,6 +12691,32 @@ struct CGameArea
 	}
 };
 
+struct CAreaFileRandomMonsterSpawningPoint
+{
+	LCharString<32> m_scriptName;
+	unsigned __int16 m_posX;
+	unsigned __int16 m_posY;
+	Array<CResRef,10> m_randomCreature;
+	unsigned __int16 m_randomCreatureNum;
+	unsigned __int16 m_difficulty;
+	unsigned __int16 m_spawningRate;
+	unsigned __int16 m_wFlags;
+	unsigned int m_lifeSpan;
+	unsigned __int16 m_huntingRange;
+	unsigned __int16 m_followRange;
+	unsigned __int16 m_maxTypeNum;
+	unsigned __int16 m_activated;
+	unsigned int m_timeOfDayVisible;
+	unsigned __int16 m_probDay;
+	unsigned __int16 m_probNight;
+	unsigned int m_frequency;
+	unsigned int m_countdown;
+	Array<unsigned __int8,10> m_weights;
+	Array<unsigned __int16,19> m_notUsed;
+
+	CAreaFileRandomMonsterSpawningPoint() = delete;
+};
+
 struct CAreaFileContainer
 {
 	LCharString<32> m_scriptName;
@@ -12737,12 +12737,12 @@ struct CAreaFileContainer
 	unsigned __int16 m_boundingRectBottom;
 	unsigned int m_startingItem;
 	unsigned int m_itemCount;
-	Array<unsigned __int8,8> m_script;
+	CResRef m_script;
 	unsigned int m_pickPointStart;
 	unsigned __int16 m_pickPointCount;
 	unsigned __int16 m_triggerRange;
 	LCharString<32> m_ownedBy;
-	Array<unsigned __int8,8> m_keyType;
+	CResRef m_keyType;
 	unsigned int m_breakDifficulty;
 	unsigned int m_strNotPickable;
 	Array<unsigned int,14> m_notUsed;
@@ -14248,14 +14248,14 @@ struct CGameTrigger : CGameAIBase
 	unsigned __int16 m_triggerType;
 	CRect m_rBounding;
 	unsigned int m_cursorType;
-	Array<unsigned __int8,8> m_newArea;
+	CResRef m_newArea;
 	LCharString<32> m_newEntryPoint;
 	unsigned int m_dwFlags;
 	unsigned int m_description;
 	CPoint* m_pPolygon;
 	unsigned __int16 m_nPolygon;
 	unsigned __int16 m_boundingRange;
-	Array<unsigned __int8,8> m_scriptRes;
+	CResRef m_scriptRes;
 	LCharString<32> m_scriptName;
 	unsigned __int16 m_trapDetectionDifficulty;
 	unsigned __int16 m_trapDisarmingDifficulty;
@@ -14865,7 +14865,7 @@ struct CGameDoor : CGameAIBase
 	unsigned __int16 m_nClosedSearch;
 	CPoint m_ptDest1;
 	CPoint m_ptDest2;
-	Array<unsigned __int8,8> m_scriptRes;
+	CResRef m_scriptRes;
 	CTiledObject m_tiledObject;
 	LCharString<32> m_scriptName;
 	LCharString<32> m_triggerName;
@@ -14920,7 +14920,7 @@ struct CGameContainer : CGameAIBase
 	Array<CVidCell,3> m_pileVidCell;
 	unsigned __int8 m_nPileVidCell;
 	unsigned __int8 m_bDeleteMe;
-	Array<unsigned __int8,8> m_scriptRes;
+	CResRef m_scriptRes;
 	unsigned __int16 m_lockDifficulty;
 	unsigned int m_dwFlags;
 	unsigned __int16 m_trapDetectionDifficulty;
