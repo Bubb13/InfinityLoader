@@ -574,6 +574,7 @@ class TypeReference:
 	def __init__(self):
 
 		self.sourceGroup: Group = None
+		self.sourceType: TypeRefSourceType = None
 		self.sourceString: str = None
 		self.isDirectlyWanted: bool = None
 
@@ -608,6 +609,7 @@ class TypeReference:
 		self.primitive = other.primitive
 		self.sourceGroup = other.sourceGroup
 		self.sourceString = other.sourceString
+		self.sourceType = other.sourceType
 		self.unsigned = other.unsigned
 		self.volatile = other.volatile
 
@@ -833,7 +835,7 @@ class TypeReference:
 			# HACK a PointerReference.                                                        HACK
 			# HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
 			if sourceGroup.name == "Pointer":
-				toReturn = defineTypeRef(mainState, sourceGroup, mapped.getHeaderName(pointerLevelAdjust=self.getUserTypePointerLevel()), TypeRefSourceType.VARIABLE, debugLine="checkReplaceTemplateType()")
+				toReturn = defineTypeRef(mainState, sourceGroup, mapped.getHeaderName(pointerLevelAdjust=self.getUserTypePointerLevel()), self.sourceType, debugLine="checkReplaceTemplateType()")
 			else:
 				toReturn = mapped.shallowCopy()
 				toReturn.adjustUserTypePointerLevel(mainState, self.getUserTypePointerLevel())
@@ -1742,13 +1744,13 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 		if (operatorStr := functionImplementationMatch.group(5)) != None:
 			retTypeStr = processRetType(3)
-			if retTypeStr: state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, allowReference=True, debugLine=f"processCommonGroupLines()-1 {line}")
+			if retTypeStr: state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION_RETURN, allowReference=True, debugLine=f"processCommonGroupLines()-1 {line}")
 			state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(4)
 			state.currentFunctionImplementation.operatorStr = operatorStr
 			state.currentFunctionImplementation.setName(functionImplementationMatch.group(6), wasOperator=True)
 		else:
 			retTypeStr = processRetType(7)
-			state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION, allowReference=allowReferences, debugLine=f"processCommonGroupLines()-1 {line}")
+			state.currentFunctionImplementation.returnType = defineTypeRef(mainState, group, retTypeStr, TypeRefSourceType.FUNCTION_RETURN, allowReference=allowReferences, debugLine=f"processCommonGroupLines()-1 {line}")
 			state.currentFunctionImplementation.callingConvention = functionImplementationMatch.group(8)
 			state.currentFunctionImplementation.setName(functionImplementationMatch.group(9))
 
@@ -1769,7 +1771,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 				typeStr = "".join(parts)
 				funcParameter = FunctionImplementationParameter()
-				funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION, allowReference=allowReferences or state.currentFunctionImplementation.operatorStr != None, debugLine=f"processCommonGroupLines()-2 {line}")
+				funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION_PARAMETER, allowReference=allowReferences or state.currentFunctionImplementation.operatorStr != None, debugLine=f"processCommonGroupLines()-2 {line}")
 				funcParameter.name = spaceSplit[-1]
 
 				state.currentFunctionImplementation.parameters.append(funcParameter)
@@ -1843,7 +1845,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 					assert not functionField.nopointer, "nopointer already defined"
 					functionField.nopointer = True
 
-		functionField.returnType = defineTypeRef(mainState, group, functionVariableMatch.group(2), TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-2 {line}")
+		functionField.returnType = defineTypeRef(mainState, group, functionVariableMatch.group(2), TypeRefSourceType.FUNCTION_RETURN, debugLine=f"processLinesFillTypes()-2 {line}")
 		functionField.callConvention = functionVariableMatch.group(3)
 		functionField.pointerLevel = len(functionVariableMatch.group(4))
 
@@ -1852,15 +1854,15 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 			functionField.functionName = "Destruct"
 
 		if thisTypeNoPtrMatch := functionVariableMatch.group(6):
-			functionField.thisType = defineTypeRef(mainState, group, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-3 {line}")
+			functionField.thisType = defineTypeRef(mainState, group, f"{thisTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION_PARAMETER, debugLine=f"processLinesFillTypes()-3 {line}")
 
 		if resultTypeNoPtrMatch := functionVariableMatch.group(7):
-			functionField.resultType = defineTypeRef(mainState, group, f"{resultTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-4 {line}")
+			functionField.resultType = defineTypeRef(mainState, group, f"{resultTypeNoPtrMatch}*", TypeRefSourceType.FUNCTION_PARAMETER, debugLine=f"processLinesFillTypes()-4 {line}")
 
 		parameterStr = functionVariableMatch.group(8)
 		if parameterStr != None and parameterStr != "":
 			for paramType in splitKeepBrackets(parameterStr, [","]):
-				functionField.parameterTypes.append(defineTypeRef(mainState, group, paramType, TypeRefSourceType.FUNCTION, debugLine=f"processLinesFillTypes()-5 {line}"))
+				functionField.parameterTypes.append(defineTypeRef(mainState, group, paramType, TypeRefSourceType.FUNCTION_PARAMETER, debugLine=f"processLinesFillTypes()-5 {line}"))
 
 		group.addField(functionField)
 
@@ -2013,7 +2015,7 @@ class Group:
 		for ref in existingRef.getAllTypeReferences(mainState):
 			ref.removeFromGroupRefs()
 
-		self.extends[extendsIndex] = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE, debugLine="retypeExtendsIndex()")
+		self.extends[extendsIndex] = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.EXTENDS, debugLine="retypeExtendsIndex()")
 
 
 	def retypeField(self, mainState: MainState, fieldName: str, newTypeStr: str):
@@ -2039,14 +2041,14 @@ class Group:
 		for ref in functionField.returnType.getAllTypeReferences(mainState):
 			ref.removeFromGroupRefs()
 
-		functionField.returnType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE, debugLine="retypeFunctionFieldRet()")
+		functionField.returnType = defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.FUNCTION_RETURN, debugLine="retypeFunctionFieldRet()")
 
 
 	def addFunctionFieldParameter(self, mainState: MainState, fieldName: str, newTypeStr: str):
 		field = self.fieldsMap[fieldName]
 		assert field.type == FieldType.FUNCTION, "Unhandled field.type in Group.retypeField()"
 		functionField: FunctionField = field
-		functionField.parameterTypes.append(defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.VARIABLE, debugLine="addFunctionFieldParameter()"))
+		functionField.parameterTypes.append(defineTypeRef(mainState, self, newTypeStr, TypeRefSourceType.FUNCTION_PARAMETER, debugLine="addFunctionFieldParameter()"))
 
 
 	def removeField(self, mainState: MainState, field: Field) -> None:
@@ -2146,7 +2148,7 @@ class Group:
 					extendsStr = declMatch.group(3)
 					if extendsStr != None:
 						for extendsType in splitKeepBrackets(extendsStr, [","]):
-							self.extends.append(defineTypeRef(mainState, self, extendsType, TypeRefSourceType.VARIABLE, debugLine=f"processLinesFillTypes()-1 {line}"))
+							self.extends.append(defineTypeRef(mainState, self, extendsType, TypeRefSourceType.EXTENDS, debugLine=f"processLinesFillTypes()-1 {line}"))
 
 				processCommonGroupLines(mainState, state, line, self)
 
@@ -2407,9 +2409,9 @@ class Group:
 				while topRef.superRef:
 					topRef = topRef.superRef
 
-				lastRef: TypeReference = defineTypeRefPart(mainState, None, topRef.sourceGroup, parts[0], TypeRefSourceType.VARIABLE, isDirectlyWanted=topRef.isDirectlyWanted, allowReference=topRef.reference)
+				lastRef: TypeReference = defineTypeRefPart(mainState, None, topRef.sourceGroup, parts[0], TypeRefSourceType.INTERMEDIATE, isDirectlyWanted=topRef.isDirectlyWanted, allowReference=topRef.reference)
 				for i in range(1, partsLen - 1):
-					lastRef = defineTypeRefPart(mainState, lastRef, topRef.sourceGroup, parts[i], TypeRefSourceType.VARIABLE, isDirectlyWanted=topRef.isDirectlyWanted, allowReference=topRef.reference)
+					lastRef = defineTypeRefPart(mainState, lastRef, topRef.sourceGroup, parts[i], TypeRefSourceType.INTERMEDIATE, isDirectlyWanted=topRef.isDirectlyWanted, allowReference=topRef.reference)
 
 				inRef.sourceGroup = lastRef.group
 				lastRef.subRef = inRef
@@ -2582,7 +2584,7 @@ class Group:
 						templateMappingTracker.registerMapping(extendRef.group.name, tuple(extendTemplateTypes))
 						superVGroupRefStr = superVGroup.getAppliedName(mainState, templateMappingTracker, templateTypeMode=TemplateTypeMode.HEADER)
 
-					vtblStruct.extends.append(defineTypeRef(mainState, vtblStruct, superVGroupRefStr, TypeRefSourceType.VARIABLE, debugLine=f"checkForVGroup()"))
+					vtblStruct.extends.append(defineTypeRef(mainState, vtblStruct, superVGroupRefStr, TypeRefSourceType.EXTENDS, debugLine=f"checkForVGroup()"))
 				else:
 					# print(f"[!] Failed to fully create vtbl struct for {self.name}. Code can only handle one superclass having a vftable.")
 
@@ -3182,8 +3184,13 @@ class VariableField(Field):
 
 
 class TypeRefSourceType(Enum):
-	VARIABLE = 1
-	FUNCTION = 2
+	EXTENDS = 1
+	FUNCTION_PARAMETER = 2
+	FUNCTION_RETURN = 3
+	INTERMEDIATE = 4
+	TEMPLATE = 5
+	VARIABLE = 6
+	WANTED = 7
 
 
 def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup: Group, inStr: str, src: TypeRefSourceType, arrayStr: str=None, isDirectlyWanted: bool=False, allowReference: bool=False, debugLine: str=""):
@@ -3221,6 +3228,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 	splits = splitKeepBrackets(stripUnnecessaryTypeSpaces(str), ["*", "&"], includeToSplit=True)
 	typeRef = TypeReference()
 	typeRef.sourceGroup = sourceGroup
+	typeRef.sourceType = src
 	typeRef.sourceString = inStr
 	typeRef.isDirectlyWanted = isDirectlyWanted
 
@@ -3292,7 +3300,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 				name, parts = separateTemplateTypeParts(split, typeStartI)
 				doBaseProcess(name)
 				for templateType in splitKeepBrackets(parts, [","]):
-					typeRef.templateTypes.append(defineTypeRef(mainState, sourceGroup, templateType, TypeRefSourceType.VARIABLE, isDirectlyWanted=isDirectlyWanted, debugLine=debugLine))
+					typeRef.templateTypes.append(defineTypeRef(mainState, sourceGroup, templateType, TypeRefSourceType.TEMPLATE, isDirectlyWanted=isDirectlyWanted, debugLine=debugLine))
 
 		elif split in ("*", "&"):
 
@@ -3340,14 +3348,24 @@ def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeR
 		return
 
 	splits = splitKeepBrackets(stripUnnecessaryTypeSpaces(str), ["::"])
-	numSplits = len(splits)
+	lastSplitIndex: int = len(splits) - 1
 
-	if numSplits == 0:
+	if lastSplitIndex < 0:
 		return
 
-	lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], src, arrayStr, isDirectlyWanted, allowReference=allowReference, debugLine=debugLine)
-	for i in range(1, numSplits):
-		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], src, None, isDirectlyWanted, allowReference=allowReference, debugLine=debugLine)
+	lastRef: TypeReference = None
+
+	# First type part
+	if lastSplitIndex > 0:
+		lastRef = defineTypeRefPart(mainState, None, sourceGroup, splits[0], TypeRefSourceType.INTERMEDIATE, arrayStr, isDirectlyWanted, allowReference=allowReference, debugLine=debugLine)
+		arrayStr = None
+
+	# Intermediate type parts
+	for i in range(1, lastSplitIndex):
+		lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[i], TypeRefSourceType.INTERMEDIATE, None, isDirectlyWanted, allowReference=allowReference, debugLine=debugLine)
+
+	# Last type part
+	lastRef = defineTypeRefPart(mainState, lastRef, sourceGroup, splits[lastSplitIndex], src, arrayStr, isDirectlyWanted, allowReference=allowReference, debugLine=debugLine)
 
 	#print(f"Created ref {lastRef.getHeaderName()} with sourceGroup: {lastRef.sourceGroup.name if lastRef.sourceGroup != None else "None"}")
 	return lastRef
@@ -3448,8 +3466,8 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 
 	class OpenConstantType(Enum):
-		INTEGER = 1,
-		STRING = 2,
+		INTEGER = 1
+		STRING = 2
 
 	class OpenConstantData:
 		def __init__(self) -> None:
@@ -4303,7 +4321,7 @@ def registerPointerTypes(mainState: MainState):
 	def registerPointerTypesForGroup(group: Group):
 		for uniqueRepresentation in group.uniqueUseRepresentations.values():
 			if uniqueRepresentation.isVoid(): continue
-			specialRef = uniqueRepresentation.shallowCopy()
+			specialRef: TypeReference = uniqueRepresentation.shallowCopy()
 			pointer.addTemplateUse( (specialRef,), 0 )
 
 
@@ -4315,6 +4333,38 @@ def registerPointerTypes(mainState: MainState):
 			continue
 
 		registerPointerTypesForGroup(group)
+
+
+def registerVariableArrayTypes(mainState: MainState):
+
+	"""
+	Registers VariableArray types for every Group (and every pointer level > 0). Since pointer-as-array fixups
+	are difficult to establish without a massive review, provide all possible VariableArray specializations
+	for Lua code to be able to cast to.
+	"""
+
+	array = mainState.getGroup("Array")
+	constarray = mainState.getGroup("ConstArray")
+	pointer = mainState.getGroup("Pointer")
+	variableArray = mainState.getGroup("VariableArray")
+	voidPointer = mainState.getGroup("VoidPointer")
+
+	def registerVariableArrayTypesForGroup(group: Group):
+		for uniqueRepresentation in group.uniqueUseRepresentations.values():
+			if uniqueRepresentation.getUserTypePointerLevel() == 0: continue
+			if uniqueRepresentation.isVoid(): continue
+			if uniqueRepresentation.sourceType not in (TypeRefSourceType.FUNCTION_RETURN, TypeRefSourceType.VARIABLE): continue
+
+			specialRef: TypeReference = uniqueRepresentation.shallowCopy()
+			specialRef.adjustUserTypePointerLevel(mainState, -1)
+			variableArray.addTemplateUse( (specialRef,), 0 )
+
+	for group in mainState.filteredGroups:
+
+		if group in (mainState.globalGroup, array, constarray, pointer, variableArray, voidPointer) or group.groupType == "namespace":
+			continue
+
+		registerVariableArrayTypesForGroup(group)
 
 
 def fileAsSet(filePath):
@@ -4369,7 +4419,7 @@ def filterGroups(mainState: MainState, wantedFiles: list[str], ignoreHeaderFile:
 
 	pendingProcessed: list[str] = []
 	for wantedName in wantedNames:
-		wantedRef: TypeReference = defineTypeRef(mainState, None, wantedName, TypeRefSourceType.VARIABLE, isDirectlyWanted=True)
+		wantedRef: TypeReference = defineTypeRef(mainState, None, wantedName, TypeRefSourceType.WANTED, isDirectlyWanted=True)
 		wantedGroup: Group = wantedRef.getGroup()
 		wantedGroup.isDirectlyWanted = True
 		pendingProcessed.append(wantedGroup.name)
@@ -4403,7 +4453,7 @@ def filterGroups(mainState: MainState, wantedFiles: list[str], ignoreHeaderFile:
 		if group.isUsed(mainState):
 			# Add primitive template for every used enum
 			if group.groupType == "enum":
-				primitiveGroup.addTemplateUse((defineTypeRef(mainState, None, group.name, TypeRefSourceType.VARIABLE),), 0)
+				primitiveGroup.addTemplateUse((defineTypeRef(mainState, None, group.name, TypeRefSourceType.TEMPLATE),), 0)
 		else:
 			mainState.filteredGroups.remove(groupNode)
 
@@ -4889,8 +4939,13 @@ struct UnmappedUserType
 	# Rename groups to remove invalid characters / improve autogenerated names, fix clashing function fields, and fix clashing usertype names.
 	checkRename(mainState, alreadyDefinedUsertypesFile)
 
-	# Registers pointer types for every group, (for reference_ functions)
+	# Registers Pointer types for every group, (for reference_ functions)
 	registerPointerTypes(mainState)
+
+	# Registers VariableArray types for every Group (and every pointer level > 0). Since pointer-as-array fixups
+	# are difficult to establish without a massive review, provide all possible VariableArray specializations
+	# for Lua code to be able to cast to.
+	registerVariableArrayTypes(mainState)
 
 	return mainState
 

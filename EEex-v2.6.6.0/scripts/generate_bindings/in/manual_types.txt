@@ -299,7 +299,7 @@ struct VariableArray
 		return &(&data)[index];
 	}
 
-	void set(size_t index, T value)
+	void set(size_t index, noconst T value)
 	{
 		(&data)[index] = value;
 	}
