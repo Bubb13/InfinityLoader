@@ -4473,29 +4473,29 @@ struct CString
 
 	CString() = delete;
 
-	typedef void (__thiscall *type_ConstructFromChars)(CString* pThis, const char* lpsz);
-	static type_ConstructFromChars p_ConstructFromChars;
+	typedef void (__thiscall *type_Construct_Overload_String)(CString* pThis, const char* lpsz);
+	static type_Construct_Overload_String p_Construct_Overload_String;
 
-	typedef void (__thiscall *type_ConstructFromCString)(CString* pThis, const CString* other);
-	static type_ConstructFromCString p_ConstructFromCString;
+	typedef void (__thiscall *type_Construct_Overload_CString)(CString* pThis, const CString* other);
+	static type_Construct_Overload_CString p_Construct_Overload_CString;
 
 	typedef void (__thiscall *type_Destruct)(CString* pThis);
 	static type_Destruct p_Destruct;
 
-	typedef void (__thiscall *type_SetFromChars)(const CString* pThis, const char* lpsz);
-	static type_SetFromChars p_SetFromChars;
+	typedef void (__thiscall *type_AssignmentOperator_Overload_String)(const CString* pThis, const char* lpsz);
+	static type_AssignmentOperator_Overload_String p_AssignmentOperator_Overload_String;
 
-	typedef void (__thiscall *type_SetFromCString)(const CString* pThis, const CString* other);
-	static type_SetFromCString p_SetFromCString;
+	typedef void (__thiscall *type_AssignmentOperator_Overload_CString)(const CString* pThis, const CString* other);
+	static type_AssignmentOperator_Overload_CString p_AssignmentOperator_Overload_CString;
 
 	void Construct(const char* lpsz)
 	{
-		p_ConstructFromChars(this, lpsz);
+		p_Construct_Overload_String(this, lpsz);
 	}
 
 	void Construct(const CString* other)
 	{
-		p_ConstructFromCString(this, other);
+		p_Construct_Overload_CString(this, other);
 	}
 
 	void Destruct()
@@ -4507,12 +4507,12 @@ struct CString
 
 	void operator=(const char* lpsz) const
 	{
-		p_SetFromChars(this, lpsz);
+		p_AssignmentOperator_Overload_String(this, lpsz);
 	}
 
 	void operator=(const CString* other) const
 	{
-		p_SetFromCString(this, other);
+		p_AssignmentOperator_Overload_CString(this, other);
 	}
 };
 
@@ -7809,15 +7809,15 @@ struct CAIScript
 
 	CAIScript() = delete;
 
-	typedef void (__thiscall *type_Construct1)(CAIScript* pThis, CResRef cNewResRef, int playerscript);
-	static type_Construct1 p_Construct1;
+	typedef void (__thiscall *type_Construct_Overload_Manual)(CAIScript* pThis, CResRef cNewResRef, int playerscript);
+	static type_Construct_Overload_Manual p_Construct_Overload_Manual;
 
 	typedef void (__thiscall *type_Destruct)(CAIScript* pThis);
 	static type_Destruct p_Destruct;
 
 	void Construct(CResRef cNewResRef, int playerscript)
 	{
-		p_Construct1(this, cNewResRef, playerscript);
+		p_Construct_Overload_Manual(this, cNewResRef, playerscript);
 	}
 
 	void Destruct()
@@ -8707,21 +8707,21 @@ struct CAIIdList : CResHelper<CResText,1008>
 
 	CAIIdList() = delete;
 
-	typedef void (__thiscall *type_Construct1)(CAIIdList* pThis);
-	static type_Construct1 p_Construct1;
+	typedef void (__thiscall *type_Construct_Overload_Default)(CAIIdList* pThis);
+	static type_Construct_Overload_Default p_Construct_Overload_Default;
 
 	typedef void (__thiscall *type_Destruct)(CAIIdList* pThis);
 	static type_Destruct p_Destruct;
 
-	typedef void (__thiscall *type_LoadList2)(CAIIdList* pThis, CResRef id, int faster);
-	static type_LoadList2 p_LoadList2;
+	typedef void (__thiscall *type_LoadList_Overload_Resref)(CAIIdList* pThis, CResRef id, int faster);
+	static type_LoadList_Overload_Resref p_LoadList_Overload_Resref;
 
-	typedef CAIId* (__thiscall *type_FindID)(CAIIdList* pThis, int id);
-	static type_FindID p_FindID;
+	typedef CAIId* (__thiscall *type_Find_Overload_ID)(CAIIdList* pThis, int id);
+	static type_Find_Overload_ID p_Find_Overload_ID;
 
 	void Construct()
 	{
-		p_Construct1(this);
+		p_Construct_Overload_Default(this);
 	}
 
 	void Destruct()
@@ -8729,14 +8729,14 @@ struct CAIIdList : CResHelper<CResText,1008>
 		p_Destruct(this);
 	}
 
-	void LoadList2(CResRef id, int faster)
+	void LoadList(CResRef id, int faster)
 	{
-		p_LoadList2(this, id, faster);
+		p_LoadList_Overload_Resref(this, id, faster);
 	}
 
 	CAIId* Find(int id)
 	{
-		return p_FindID(this, id);
+		return p_Find_Overload_ID(this, id);
 	}
 
 	virtual void virtual_Destruct()
@@ -10689,12 +10689,12 @@ struct CItem : CResHelper<CResItem,1005>
 
 	CItem() = delete;
 
-	typedef void (__thiscall *type_Construct3)(CItem* pThis, CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
-	static type_Construct3 p_Construct3;
+	typedef void (__thiscall *type_Construct_Overload_Manual)(CItem* pThis, CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
+	static type_Construct_Overload_Manual p_Construct_Overload_Manual;
 
 	void Construct(CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags)
 	{
-		p_Construct3(this, id, useCount1, useCount2, useCount3, wear, flags);
+		p_Construct_Overload_Manual(this, id, useCount1, useCount2, useCount3, wear, flags);
 	}
 
 	virtual void virtual_Destruct()
@@ -12528,8 +12528,8 @@ struct CGameArea
 
 	CGameArea() = delete;
 
-	typedef int (__thiscall *type_GetNearest2)(CGameArea* pThis, CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
-	static type_GetNearest2 p_GetNearest2;
+	typedef int (__thiscall *type_GetNearest_Overload_Point)(CGameArea* pThis, CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
+	static type_GetNearest_Overload_Point p_GetNearest_Overload_Point;
 
 	typedef int (__thiscall *type_AdjustTarget)(CGameArea* pThis, CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 	static type_AdjustTarget p_AdjustTarget;
@@ -12540,11 +12540,11 @@ struct CGameArea
 	typedef int (__thiscall *type_CheckLOS)(CGameArea* pThis, const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
 	static type_CheckLOS p_CheckLOS;
 
-	typedef void (__thiscall *type_GetAllInRange1)(CGameArea* pThis, const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
-	static type_GetAllInRange1 p_GetAllInRange1;
+	typedef void (__thiscall *type_GetAllInRange_Overload_Point)(CGameArea* pThis, const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+	static type_GetAllInRange_Overload_Point p_GetAllInRange_Overload_Point;
 
-	typedef void (__thiscall *type_GetAllInRange2)(CGameArea* pThis, __POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
-	static type_GetAllInRange2 p_GetAllInRange2;
+	typedef void (__thiscall *type_GetAllInRange_Overload_VertListPos)(CGameArea* pThis, __POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+	static type_GetAllInRange_Overload_VertListPos p_GetAllInRange_Overload_VertListPos;
 
 	typedef void (__thiscall *type_ApplyEffect)(CGameArea* pThis, CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore);
 	static type_ApplyEffect p_ApplyEffect;
@@ -12556,9 +12556,9 @@ struct CGameArea
 	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
 	int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
 
-	int GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest)
+	int GetNearest(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest)
 	{
-		return p_GetNearest2(this, center, type, range, terrainTable, lineOfSight, seeInvisible, nNearest);
+		return p_GetNearest_Overload_Point(this, center, type, range, terrainTable, lineOfSight, seeInvisible, nNearest);
 	}
 
 	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance)
@@ -12576,14 +12576,14 @@ struct CGameArea
 		return p_CheckLOS(this, start, goal, terrainTable, bCheckIfExplored, nVisualRange);
 	}
 
-	void GetAllInRange1(const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites)
+	void GetAllInRange(const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites)
 	{
-		p_GetAllInRange1(this, center, type, range, terrainTable, targets, lineOfSight, checkForNonSprites);
+		p_GetAllInRange_Overload_Point(this, center, type, range, terrainTable, targets, lineOfSight, checkForNonSprites);
 	}
 
-	void GetAllInRange2(__POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites)
+	void GetAllInRange(__POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites)
 	{
-		p_GetAllInRange2(this, posVertList, ptStart, type, range, terrainTable, targets, lineOfSight, checkForNonSprites);
+		p_GetAllInRange_Overload_VertListPos(this, posVertList, ptStart, type, range, terrainTable, targets, lineOfSight, checkForNonSprites);
 	}
 
 	void ApplyEffect(CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore)
@@ -12683,8 +12683,8 @@ struct CAIObjectType
 
 	CAIObjectType() = delete;
 
-	typedef void (__thiscall *type_Construct1)(CAIObjectType* pThis, byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
-	static type_Construct1 p_Construct1;
+	typedef void (__thiscall *type_Construct_Overload_Manual)(CAIObjectType* pThis, byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
+	static type_Construct_Overload_Manual p_Construct_Overload_Manual;
 
 	typedef void (__thiscall *type_Decode)(CAIObjectType* pThis, CGameAIBase* caller);
 	static type_Decode p_Decode;
@@ -12706,7 +12706,7 @@ struct CAIObjectType
 
 	void Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name)
 	{
-		p_Construct1(this, EnemyAlly, General, Race, Class, Specifics, Gender, Alignment, Instance, SpecialCase, name);
+		p_Construct_Overload_Manual(this, EnemyAlly, General, Race, Class, Specifics, Gender, Alignment, Instance, SpecialCase, name);
 	}
 
 	void Decode(CGameAIBase* caller)
@@ -12768,29 +12768,29 @@ struct CAIAction
 
 	CAIAction() = delete;
 
-	typedef void (__thiscall *type_Construct1)(CAIAction* pThis, short actionID, CPoint* dest, int specificID, int sp2);
-	static type_Construct1 p_Construct1;
+	typedef void (__thiscall *type_Construct_Overload_ActionID_DestPoint_SpecificID_SpecificID2)(CAIAction* pThis, short actionID, CPoint* dest, int specificID, int sp2);
+	static type_Construct_Overload_ActionID_DestPoint_SpecificID_SpecificID2 p_Construct_Overload_ActionID_DestPoint_SpecificID_SpecificID2;
 
-	typedef void (__thiscall *type_ConstructCopy)(CAIAction* pThis, const CAIAction* that);
-	static type_ConstructCopy p_ConstructCopy;
+	typedef void (__thiscall *type_Construct_Overload_Copy)(CAIAction* pThis, const CAIAction* that);
+	static type_Construct_Overload_Copy p_Construct_Overload_Copy;
 
 	typedef void (__thiscall *type_Destruct)(CAIAction* pThis);
 	static type_Destruct p_Destruct;
 
-	typedef CAIAction* (__thiscall *type_operator_equ)(CAIAction* pThis, const CAIAction* y);
-	static type_operator_equ p_operator_equ;
+	typedef CAIAction* (__thiscall *type_AssignmentOperator)(CAIAction* pThis, const CAIAction* y);
+	static type_AssignmentOperator p_AssignmentOperator;
 
 	typedef void (__thiscall *type_Decode)(CAIAction* pThis, CGameAIBase* caller);
 	static type_Decode p_Decode;
 
 	void Construct(short actionID, CPoint* dest, int specificID, int sp2)
 	{
-		p_Construct1(this, actionID, dest, specificID, sp2);
+		p_Construct_Overload_ActionID_DestPoint_SpecificID_SpecificID2(this, actionID, dest, specificID, sp2);
 	}
 
 	void Construct(const CAIAction* that)
 	{
-		p_ConstructCopy(this, that);
+		p_Construct_Overload_Copy(this, that);
 	}
 
 	void Destruct()
@@ -12798,9 +12798,9 @@ struct CAIAction
 		p_Destruct(this);
 	}
 
-	CAIAction* operator_equ(const CAIAction* y)
+	CAIAction* operator=(const CAIAction* y)
 	{
-		return p_operator_equ(this, y);
+		return p_AssignmentOperator(this, y);
 	}
 
 	void Decode(CGameAIBase* caller)
@@ -13884,8 +13884,8 @@ struct CAITrigger
 	typedef byte (__thiscall *type_OfType)(CAITrigger* pThis, const CAITrigger* trigger);
 	static type_OfType p_OfType;
 
-	typedef void (__thiscall *type_ConstructCopy)(CAITrigger* pThis, const CAITrigger* trigger);
-	static type_ConstructCopy p_ConstructCopy;
+	typedef void (__thiscall *type_Construct_Overload_Copy)(CAITrigger* pThis, const CAITrigger* trigger);
+	static type_Construct_Overload_Copy p_Construct_Overload_Copy;
 
 	byte OfType(const CAITrigger* trigger)
 	{
@@ -13894,7 +13894,7 @@ struct CAITrigger
 
 	void Construct(const CAITrigger* trigger)
 	{
-		p_ConstructCopy(this, trigger);
+		p_Construct_Overload_Copy(this, trigger);
 	}
 };
 
@@ -14002,21 +14002,34 @@ struct CGameAIBase : CGameObject
 	typedef void (__thiscall *type_ApplyEffectToParty)(CGameAIBase* pThis, CGameEffect* effect);
 	static type_ApplyEffectToParty p_ApplyEffectToParty;
 
-	typedef CGameObject* (__thiscall *type_GetTargetShare)(CGameAIBase* pThis);
-	static type_GetTargetShare p_GetTargetShare;
-
-	typedef CGameObject* (__thiscall *type_GetTargetShareType1)(CGameAIBase* pThis, CAIObjectType* AItype, byte type);
-	static type_GetTargetShareType1 p_GetTargetShareType1;
-
-	typedef CGameObject* (__thiscall *type_GetTargetShareType2)(CGameAIBase* pThis, byte type);
-	static type_GetTargetShareType2 p_GetTargetShareType2;
+	typedef short (__thiscall *type_ForceSpell)(CGameAIBase* pThis, CGameSprite* target);
+	static type_ForceSpell p_ForceSpell;
 
 	typedef short (__thiscall *type_ForceSpellPoint)(CGameAIBase* pThis);
 	static type_ForceSpellPoint p_ForceSpellPoint;
 
+	typedef CGameObject* (__thiscall *type_GetTargetShare)(CGameAIBase* pThis);
+	static type_GetTargetShare p_GetTargetShare;
+
+	typedef CGameObject* (__thiscall *type_GetTargetShareType_Overload_AIType_ObjectType)(CGameAIBase* pThis, CAIObjectType* AItype, byte type);
+	static type_GetTargetShareType_Overload_AIType_ObjectType p_GetTargetShareType_Overload_AIType_ObjectType;
+
+	typedef CGameObject* (__thiscall *type_GetTargetShareType_Overload_ObjectType)(CGameAIBase* pThis, byte type);
+	static type_GetTargetShareType_Overload_ObjectType p_GetTargetShareType_Overload_ObjectType;
+
 	void ApplyEffectToParty(CGameEffect* effect)
 	{
 		p_ApplyEffectToParty(this, effect);
+	}
+
+	short ForceSpell(CGameSprite* target)
+	{
+		return p_ForceSpell(this, target);
+	}
+
+	short ForceSpellPoint()
+	{
+		return p_ForceSpellPoint(this);
 	}
 
 	CGameObject* GetTargetShare()
@@ -14024,19 +14037,14 @@ struct CGameAIBase : CGameObject
 		return p_GetTargetShare(this);
 	}
 
-	CGameObject* GetTargetShareType1(CAIObjectType* AItype, byte type)
+	CGameObject* GetTargetShareType(CAIObjectType* AItype, byte type)
 	{
-		return p_GetTargetShareType1(this, AItype, type);
+		return p_GetTargetShareType_Overload_AIType_ObjectType(this, AItype, type);
 	}
 
-	CGameObject* GetTargetShareType2(byte type)
+	CGameObject* GetTargetShareType(byte type)
 	{
-		return p_GetTargetShareType2(this, type);
-	}
-
-	short ForceSpellPoint()
-	{
-		return p_ForceSpellPoint(this);
+		return p_GetTargetShareType_Overload_ObjectType(this, type);
 	}
 
 	virtual void virtual_ClearActions(int _0)

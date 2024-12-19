@@ -3877,7 +3877,7 @@ int getExtendedStatField(C2DArray* pXStats2DA, const char* name, int id, const c
 void initStats() {
 
 	EngineVal<CAIIdList> pStatsIDS{};
-	pStatsIDS->LoadList2("STATS", false);
+	pStatsIDS->LoadList("STATS", false);
 
 	EngineVal<C2DArray> pXStats2DA{};
 	{

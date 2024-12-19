@@ -806,16 +806,16 @@ struct CAbilityId
 
 struct CAIIdList : CResHelper<CResText,1008>
 {
-	$constructor_fake Construct1();
+	$binding_name(Construct_Overload_Default) $pattern_name(Construct()) $constructor_fake Construct();
 	void Destruct();
-	void LoadList2(CResRef id, int faster);
-	$binding_name(FindID) $pattern_name(Find(int)) CAIId* Find(int id);
+	$binding_name(LoadList_Overload_Resref) $pattern_name(LoadList(CResRef,int)) void LoadList(CResRef id, int faster);
+	$binding_name(Find_Overload_ID) $pattern_name(Find(int)) CAIId* Find(int id);
 };
 
 struct CAIObjectType
 {
 	static CAIObjectType NOONE;
-	$constructor_fake Construct1(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
+	$binding_name(Construct_Overload_Manual) $pattern_name(Construct(byte,byte,byte,byte,byte,byte,byte,int)) $constructor_fake Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
 	void Decode(CGameAIBase* caller);
 	CGameObject* GetShare(CGameAIBase* caller, int checkBackList);
 	CGameObject* GetShareType(CGameAIBase* caller, CGameObjectType type, int checkBackList);
@@ -823,7 +823,7 @@ struct CAIObjectType
 	void Set(const CAIObjectType* that);
 	$nobinding bool operator==(const CAIObjectType* y);
 
-	$constructor_fake ConstructCopy(const CAIObjectType* toCopy)
+	$binding_name(Construct_Overload_Copy) $constructor_fake Construct(const CAIObjectType* toCopy)
 	{
 		m_name.Construct();
 		Set(toCopy);
@@ -858,10 +858,11 @@ struct CGameObjectArray
 struct CGameAIBase : CGameObject
 {
 	void ApplyEffectToParty(CGameEffect* effect);
-	CGameObject* GetTargetShare();
-	CGameObject* GetTargetShareType1(CAIObjectType* AItype, byte type);
-	CGameObject* GetTargetShareType2(byte type);
+	short ForceSpell(CGameSprite* target);
 	short ForceSpellPoint();
+	CGameObject* GetTargetShare();
+	$binding_name(GetTargetShareType_Overload_AIType_ObjectType) $pattern_name(GetTargetShareType(CAIObjectType*,byte)) CGameObject* GetTargetShareType(CAIObjectType* AItype, byte type);
+	$binding_name(GetTargetShareType_Overload_ObjectType) $pattern_name(GetTargetShareType(byte)) CGameObject* GetTargetShareType(byte type);
 };
 
 struct CGameSprite : CGameAIBase
@@ -924,13 +925,13 @@ struct CSpell : CResHelper<CResSpell,1006>
 
 struct CItem : CResHelper<CResItem,1005>
 {
-	$constructor_fake Construct3(CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
+	$binding_name(Construct_Overload_Manual) $pattern_name(Construct(CResRef,ushort,ushort,ushort,ushort,uint)) $constructor_fake Construct(CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
 };
 
 struct CString
 {
-	$constructor_fake ConstructFromChars(primitive const char* lpsz);
-	$constructor_fake ConstructFromCString(const CString* other);
+	$binding_name(Construct_Overload_String) $pattern_name(Construct(char*)) $constructor_fake Construct(primitive const char* lpsz);
+	$binding_name(Construct_Overload_CString) $pattern_name(Construct(CString*)) $constructor_fake Construct(const CString* other);
 	void Destruct();
 
 	$eof_body $constructor_fake Construct()
@@ -938,8 +939,8 @@ struct CString
 		m_pchData = *p_afxPchNil;
 	}
 
-	$binding_name(SetFromChars) void operator=(primitive const char* lpsz) const;
-	$binding_name(SetFromCString) void operator=(const CString* other) const;
+	$binding_name(AssignmentOperator_Overload_String) $pattern_name(operator=(char*)) void operator=(primitive const char* lpsz) const;
+	$binding_name(AssignmentOperator_Overload_CString) $pattern_name(operator=(CString*)) void operator=(const CString* other) const;
 };
 
 struct CSearchBitmap
@@ -959,12 +960,12 @@ struct CGameArea
 	$external_implementation int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 	$external_implementation int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
 	$external_implementation int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
-	int GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
+	$binding_name(GetNearest_Overload_Point) $pattern_name(GetNearest(CPoint,CAIObjectType*,short,byte*,int,int,byte)) int GetNearest(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
 	int AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 	int CheckWalkable(CPoint* start, CPoint* goal, byte* terrainTable, byte personalSpace, byte bCheckIfExplored);
 	int CheckLOS(const CPoint* start, const CPoint* goal, const byte* terrainTable, byte bCheckIfExplored, short nVisualRange);
-	void GetAllInRange1(const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
-	void GetAllInRange2(__POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+	$binding_name(GetAllInRange_Overload_Point) $pattern_name(GetAllInRange(CPoint*,CAIObjectType*,short,byte*,CTypedPtrList<CPtrList,long>*,int,int)) void GetAllInRange(const CPoint* center, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
+	$binding_name(GetAllInRange_Overload_VertListPos) $pattern_name(GetAllInRange(__POSITION*,CPoint*,CAIObjectType*,short,byte*,CTypedPtrList<CPtrList,long>*,int,int)) void GetAllInRange(__POSITION* posVertList, const CPoint* ptStart, const CAIObjectType* type, short range, const byte* terrainTable, CTypedPtrList<CPtrList,long>* targets, int lineOfSight, int checkForNonSprites);
 	void ApplyEffect(CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore);
 	void OnActionButtonClickGround(CPoint* pt);
 };
@@ -1005,10 +1006,10 @@ struct CPoint
 
 struct CAIAction
 {
-	$constructor_fake Construct1(short actionID, CPoint* dest, int specificID, int sp2);
-	$constructor_fake ConstructCopy(const CAIAction* that);
+	$binding_name(Construct_Overload_ActionID_DestPoint_SpecificID_SpecificID2) $pattern_name(Construct(short,CPoint*,int,int)) $constructor_fake Construct(short actionID, CPoint* dest, int specificID, int sp2);
+	$binding_name(Construct_Overload_Copy) $pattern_name(Construct(CAIAction*)) $constructor_fake Construct(const CAIAction* that);
 	void Destruct();
-	CAIAction* operator_equ(const CAIAction* y);
+	$binding_name(AssignmentOperator) $pattern_name(operator=) CAIAction* operator=(const CAIAction* y);
 	void Decode(CGameAIBase* caller);
 };
 
@@ -1069,7 +1070,7 @@ struct CDerivedStats : CDerivedStatsTemplate
 
 struct CAIScript
 {
-	$constructor_fake Construct1(CResRef cNewResRef, int playerscript);
+	$binding_name(Construct_Overload_Manual) $pattern_name(Construct(CResRef,int)) $constructor_fake Construct(CResRef cNewResRef, int playerscript);
 	void Destruct();
 };
 
@@ -1228,7 +1229,7 @@ struct CResPVR : CRes
 struct CAITrigger
 {
 	byte OfType(const CAITrigger* trigger);
-	$constructor_fake ConstructCopy(const CAITrigger* trigger);
+	$binding_name(Construct_Overload_Copy) $pattern_name(Construct(CAITrigger*)) $constructor_fake Construct(const CAITrigger* trigger);
 };
 
 struct CGameTrigger : CGameAIBase

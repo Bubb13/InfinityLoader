@@ -594,7 +594,7 @@ int CGameArea::Override_GetNearest(int startObject, const CAIObjectType* type, s
 	}
 
 	if (pCaller->virtual_GetVertListType() != VertListType::LIST_FRONT) {
-		return this->GetNearest2(pCaller->m_pos, type, range, terrainTable, checkLOS, seeInvisible, nNearest);
+		return this->GetNearest(pCaller->m_pos, type, range, terrainTable, checkLOS, seeInvisible, nNearest);
 	}
 
 	const CTypedPtrList<CPtrList,long>::CNode *const pVertListPos { pCaller->virtual_GetVertListPos() };
