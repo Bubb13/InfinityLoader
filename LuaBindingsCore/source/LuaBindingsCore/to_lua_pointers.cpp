@@ -239,7 +239,12 @@ static void storeatpeer(lua_State* L, int index) {
 ////////////
 
 EXPORT void tolua_cclass_translate(lua_State* L, const char* lname, const char* name, const char* base, lua_CFunction col) {
-	tolua_cclass(L, lname, name, { base }, col);
+	if (base[0] == '\0') {
+		tolua_cclass(L, lname, name, {}, col);
+	}
+	else {
+		tolua_cclass(L, lname, name, { base }, col);
+	}
 }
 
 EXPORT bool tolua_function_toboolean(lua_State *const L, const int narg, const char *const functionName) {
