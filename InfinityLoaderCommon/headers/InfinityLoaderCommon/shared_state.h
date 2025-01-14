@@ -2,6 +2,7 @@
 #pragma once
 
 #include <map>
+#include <shared_mutex>
 
 #include "dll_api.h"
 #include "infinity_loader_common_types.h"
@@ -77,6 +78,7 @@ private:
 	HMODULE luaLibrary = reinterpret_cast<HMODULE>(INVALID_HANDLE_VALUE);
 	HMODULE toLuaLibrary = reinterpret_cast<HMODULE>(INVALID_HANDLE_VALUE);
 	LuaMode luaMode;
+	std::shared_mutex patternsModifyMutex;
 	std::map<String, Pattern::Entry> patterns;
 	std::vector<std::function<void(const PatternValueHandle valueHandle, uintptr_t)>> afterPatternSetListeners;
 	uintptr_t imageBase;

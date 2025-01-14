@@ -72,7 +72,7 @@ typedef void * (*lua_Alloc) (void *ud, void *ptr, size_t osize, size_t nsize);
 /*
 ** basic types
 */
-#define LUA_TNONE		(-1)
+//#define LUA_TNONE		(-1)
 
 #define LUA_TNIL		0
 #define LUA_TBOOLEAN		1
@@ -388,23 +388,23 @@ typedef void (*lua_Hook) (lua_State *L, lua_Debug *ar);
 //LUA_API int (lua_gethookcount) (lua_State *L);
 
 
-struct lua_Debug {
-  int event;
-  const char *name;	/* (n) */
-  const char *namewhat;	/* (n) 'global', 'local', 'field', 'method' */
-  const char *what;	/* (S) 'Lua', 'C', 'main', 'tail' */
-  const char *source;	/* (S) */
-  int currentline;	/* (l) */
-  int linedefined;	/* (S) */
-  int lastlinedefined;	/* (S) */
-  unsigned char nups;	/* (u) number of upvalues */
-  unsigned char nparams;/* (u) number of parameters */
-  char isvararg;        /* (u) */
-  char istailcall;	/* (t) */
-  char short_src[LUA_IDSIZE]; /* (S) */
-  /* private part */
-  struct CallInfo *i_ci;  /* active function */
-};
+//struct lua_Debug {
+//  int event;
+//  const char *name;	/* (n) */
+//  const char *namewhat;	/* (n) 'global', 'local', 'field', 'method' */
+//  const char *what;	/* (S) 'Lua', 'C', 'main', 'tail' */
+//  const char *source;	/* (S) */
+//  int currentline;	/* (l) */
+//  int linedefined;	/* (S) */
+//  int lastlinedefined;	/* (S) */
+//  unsigned char nups;	/* (u) number of upvalues */
+//  unsigned char nparams;/* (u) number of parameters */
+//  char isvararg;        /* (u) */
+//  char istailcall;	/* (t) */
+//  char short_src[LUA_IDSIZE]; /* (S) */
+//  /* private part */
+//  struct CallInfo *i_ci;  /* active function */
+//};
 
 /* }====================================================================== */
 

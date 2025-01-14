@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "lua/lua.h"
-
 union Closure;
 union GCObject;
 struct LocVar;
@@ -197,6 +195,24 @@ struct _E5A33DB2916B5DB2588AEA3BDEEB641C
 {
 	_CB571E694056FA675660E83E845BA3E5 u;
 	Node* next;
+};
+
+struct lua_Debug
+{
+	int event;
+	const char* name;
+	const char* namewhat;
+	const char* what;
+	const char* source;
+	int currentline;
+	int linedefined;
+	int lastlinedefined;
+	char nups;
+	char nparams;
+	char isvararg;
+	char istailcall;
+	char short_src[60];
+	CallInfo* i_ci;
 };
 
 struct lua_TValue

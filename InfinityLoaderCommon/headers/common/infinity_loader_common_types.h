@@ -63,6 +63,11 @@ typedef std::ostringstream OStringStreamA;
 		return error; \
 	}
 
+#define TryRetDefErrCode(expression) \
+	if (!expression) { \
+		return -1; \
+	}
+
 #define TryAssignRetErr(toAssign, expression) \
 	if (toAssign = expression) { \
 		return toAssign; \
@@ -81,7 +86,17 @@ typedef std::ostringstream OStringStreamA;
 		return lastError; \
 	}
 
-#define TryRet(expression) \
+#define TryRetFalsey(expression) \
+	if (!expression) { \
+		return; \
+	}
+
+#define TryRetErrFalsey(expression) \
+	if (const auto result = expression; !result) { \
+		return result; \
+	}
+
+#define TryRetTruthy(expression) \
 	if (expression) { \
 		return; \
 	}

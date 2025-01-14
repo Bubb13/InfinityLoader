@@ -61,7 +61,7 @@ typedef void * (*lua_Alloc) (void *ud, void *ptr, size_t osize, size_t nsize);
 /*
 ** basic types
 */
-#define LUA_TNONE (-1)
+//#define LUA_TNONE (-1)
 #define LUA_TNIL 0
 #define LUA_TBOOLEAN 1
 #define LUA_TLIGHTUSERDATA 2

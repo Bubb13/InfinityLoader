@@ -28,7 +28,6 @@ copy /Y .\out\EEexLua_generated_baseclass_offsets.cpp ..\..\source\LuaBindings-v
 
 python %PYTHON_OPTIONS% %script_path%^
  -mode=GenerateHeader^
- -ignoreHeaderFile=./in_lua/ignore_header_types.txt^
  -inFiles=./in_lua/manual_types.txt,./in/Baldur-v2.6.6.0.h^
  -noCustomTypes^
  -outFile=./out/Baldur-v2.6.6.0_lua_generated.h^

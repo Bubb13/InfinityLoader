@@ -32,11 +32,6 @@ int castUserDataLua(lua_State* g_lua) {
 	return 1;
 }
 
-int exposeToLuaLua(lua_State* L) {
-	exposeToLua(L, lua_tostring(L, 2), reinterpret_cast<lua_CFunction>(lua_tointeger(L, 1)));
-	return 0;
-}
-
 int freeUserDataLua(lua_State* g_lua) {
 	p_free(tolua_tousertype(g_lua, 1, nullptr));
 	return 0;
@@ -252,8 +247,6 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 		// Export Lua functions that deal with user data / user types
 		exposeToLua(L, "EEex_CastUserData", castUserDataLua);
 		exposeToLua(L, "EEex_CastUD", castUserDataLua);
-
-		exposeToLua(L, "EEex_ExposeToLua", exposeToLuaLua);
 
 		exposeToLua(L, "EEex_FreeUserData", freeUserDataLua);
 		exposeToLua(L, "EEex_FreeUD", freeUserDataLua);

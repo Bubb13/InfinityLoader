@@ -20,157 +20,186 @@ EXTERN_EXPORT int LUA_GLOBALSINDEX;
 //////////////
 
 typedef lua_CFunction (*type_lua_atpanic)(lua_State* L, lua_CFunction panicf);
-EXTERN_EXPORT type_lua_atpanic lua_atpanic;
+extern type_lua_atpanic p_lua_atpanic;
 
 typedef void (*type_lua_callk)(lua_State* L, int nargs, int nresults, int ctx, lua_CFunction k);
-EXTERN_EXPORT type_lua_callk lua_callk;
+extern type_lua_callk p_lua_callk;
 
 typedef void (*type_lua_concat)(lua_State* L, int n);
-EXTERN_EXPORT type_lua_concat lua_concat;
+extern type_lua_concat p_lua_concat;
 
 typedef void (*type_lua_createtable)(lua_State* L, int narr, int nrec);
-EXTERN_EXPORT type_lua_createtable lua_createtable;
+extern type_lua_createtable p_lua_createtable;
 
 typedef void (*type_lua_getfield)(lua_State* L, int idx, const char* k);
-EXTERN_EXPORT type_lua_getfield lua_getfield;
+extern type_lua_getfield p_lua_getfield;
 
 typedef void (*type_lua_getglobal)(lua_State* L, const char* name);
-EXTERN_EXPORT type_lua_getglobal lua_getglobal;
+extern type_lua_getglobal p_lua_getglobal;
 
 typedef int (*type_lua_getmetatable)(lua_State* L, int objindex);
-EXTERN_EXPORT type_lua_getmetatable lua_getmetatable;
+extern type_lua_getmetatable p_lua_getmetatable;
 
 typedef void (*type_lua_gettable)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_gettable lua_gettable;
+extern type_lua_gettable p_lua_gettable;
 
 typedef int (*type_lua_gettop)(lua_State* L);
-EXTERN_EXPORT type_lua_gettop lua_gettop;
+extern type_lua_gettop p_lua_gettop;
 
 typedef void (*type_lua_insert)(lua_State* L, int idx);
-EXTERN_EXPORT type_lua_insert lua_insert;
+extern type_lua_insert p_lua_insert;
 
 typedef int (*type_lua_iscfunction)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_iscfunction lua_iscfunction;
+extern type_lua_iscfunction p_lua_iscfunction;
 
 typedef int (*type_lua_isnumber)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_isnumber lua_isnumber;
+extern type_lua_isnumber p_lua_isnumber;
 
 typedef int (*type_lua_isstring)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_isstring lua_isstring;
+extern type_lua_isstring p_lua_isstring;
 
 typedef int (*type_lua_isuserdata)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_isuserdata lua_isuserdata;
+extern type_lua_isuserdata p_lua_isuserdata;
 
 typedef void* (*type_lua_newuserdata)(lua_State* L, size_t size);
-EXTERN_EXPORT type_lua_newuserdata lua_newuserdata;
+extern type_lua_newuserdata p_lua_newuserdata;
 
 typedef int (*type_lua_next)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_next lua_next;
+extern type_lua_next p_lua_next;
+
+typedef int (*type_lua_pcall)(lua_State* L, int nargs, int nresults, int msgh);
+extern type_lua_pcall p_lua_pcall;
 
 typedef int (*type_lua_pcallk)(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k);
-EXTERN_EXPORT type_lua_pcallk lua_pcallk;
+extern type_lua_pcallk p_lua_pcallk;
 
 typedef void (*type_lua_pushboolean)(lua_State* L, int b);
-EXTERN_EXPORT type_lua_pushboolean lua_pushboolean;
+extern type_lua_pushboolean p_lua_pushboolean;
 
 typedef void (*type_lua_pushcclosure)(lua_State* L, lua_CFunction fn, int n);
-EXTERN_EXPORT type_lua_pushcclosure lua_pushcclosure;
+extern type_lua_pushcclosure p_lua_pushcclosure;
 
 typedef void (*type_lua_pushinteger)(lua_State* L, lua_Integer n);
-EXTERN_EXPORT type_lua_pushinteger lua_pushinteger;
+extern type_lua_pushinteger p_lua_pushinteger;
 
 typedef void (*type_lua_pushlightuserdata)(lua_State* L, void* p);
-EXTERN_EXPORT type_lua_pushlightuserdata lua_pushlightuserdata;
+extern type_lua_pushlightuserdata p_lua_pushlightuserdata;
 
 typedef const char* (*type_lua_pushlstring)(lua_State* L, const char* s, size_t len);
-EXTERN_EXPORT type_lua_pushlstring lua_pushlstring;
+extern type_lua_pushlstring p_lua_pushlstring;
 
 typedef void (*type_lua_pushnil)(lua_State* L);
-EXTERN_EXPORT type_lua_pushnil lua_pushnil;
-
-typedef const char* (*type_lua_pushstring)(lua_State* L, const char* s);
-EXTERN_EXPORT type_lua_pushstring lua_pushstring;
-
-typedef void (*type_lua_pushvalue)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_pushvalue lua_pushvalue;
-
-typedef int (*type_lua_rawequal)(lua_State* L, int index1, int index2);
-EXTERN_EXPORT type_lua_rawequal lua_rawequal;
-
-typedef void (*type_lua_rawget)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_rawget lua_rawget;
-
-typedef void (*type_lua_rawgeti)(lua_State* L, int index, int n);
-EXTERN_EXPORT type_lua_rawgeti lua_rawgeti;
-
-typedef size_t (*type_lua_rawlen)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_rawlen lua_rawlen;
-
-typedef void (*type_lua_rawset)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_rawset lua_rawset;
-
-typedef void (*type_lua_rawseti)(lua_State* L, int index, int n);
-EXTERN_EXPORT type_lua_rawseti lua_rawseti;
-
-typedef void (*type_lua_remove)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_remove lua_remove;
-
-typedef void (*type_lua_setglobal)(lua_State* L, const char* name);
-EXTERN_EXPORT type_lua_setglobal lua_setglobal;
-
-typedef void (*type_lua_setmetatable)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_setmetatable lua_setmetatable;
-
-typedef void (*type_lua_settable)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_settable lua_settable;
-
-typedef void (*type_lua_settop)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_settop lua_settop;
-
-typedef int (*type_lua_toboolean)(lua_State* L, int idx);
-EXTERN_EXPORT type_lua_toboolean lua_toboolean;
-
-typedef lua_CFunction (*type_lua_tocfunction)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_tocfunction lua_tocfunction;
-
-typedef lua_Integer (*type_lua_tointegerx)(lua_State* L, int index, int* isnum);
-EXTERN_EXPORT type_lua_tointegerx lua_tointegerx;
-
-typedef const char* (*type_lua_tolstring)(lua_State* L, int index, size_t* len);
-EXTERN_EXPORT type_lua_tolstring lua_tolstring;
-
-typedef lua_Number (*type_lua_tonumberx)(lua_State* L, int index, int* isnum);
-EXTERN_EXPORT type_lua_tonumberx lua_tonumberx;
-
-typedef void* (*type_lua_touserdata)(lua_State* L, int idx);
-EXTERN_EXPORT type_lua_touserdata lua_touserdata;
-
-typedef int (*type_lua_type)(lua_State* L, int index);
-EXTERN_EXPORT type_lua_type lua_type;
-
-typedef const char* (*type_lua_typename)(lua_State* L, int tp);
-EXTERN_EXPORT type_lua_typename lua_typename;
-
-typedef int (*type_luaL_error)(lua_State* L, const char* fmt, ...);
-EXTERN_EXPORT type_luaL_error luaL_error;
-
-typedef int (*type_luaL_loadfilex)(lua_State* L, const char* fileName, const char* mode);
-EXTERN_EXPORT type_luaL_loadfilex luaL_loadfilex;
-
-typedef int (*type_luaL_loadstring)(lua_State* L, const char* s);
-EXTERN_EXPORT type_luaL_loadstring luaL_loadstring;
-
-typedef int (*type_luaL_newmetatable)(lua_State* L, const char* tname);
-EXTERN_EXPORT type_luaL_newmetatable luaL_newmetatable;
-
-typedef int (*type_luaL_ref)(lua_State* L, int t);
-EXTERN_EXPORT type_luaL_ref luaL_ref;
+extern type_lua_pushnil p_lua_pushnil;
 
 typedef void (*type_lua_pushnumber)(lua_State* L, lua_Number n);
-EXTERN_EXPORT type_lua_pushnumber lua_pushnumber;
+extern type_lua_pushnumber p_lua_pushnumber;
 
-///////////////////////
-// Reimplementations //
-///////////////////////
+typedef const char* (*type_lua_pushstring)(lua_State* L, const char* s);
+extern type_lua_pushstring p_lua_pushstring;
 
-EXPORT int lua_absindex(lua_State* L, int idx);
+typedef void (*type_lua_pushvalue)(lua_State* L, int index);
+extern type_lua_pushvalue p_lua_pushvalue;
+
+typedef int (*type_lua_rawequal)(lua_State* L, int index1, int index2);
+extern type_lua_rawequal p_lua_rawequal;
+
+typedef void (*type_lua_rawget)(lua_State* L, int index);
+extern type_lua_rawget p_lua_rawget;
+
+typedef void (*type_lua_rawgeti)(lua_State* L, int index, int n);
+extern type_lua_rawgeti p_lua_rawgeti;
+
+typedef size_t (*type_lua_rawlen)(lua_State* L, int index);
+extern type_lua_rawlen p_lua_rawlen;
+
+typedef void (*type_lua_rawset)(lua_State* L, int index);
+extern type_lua_rawset p_lua_rawset;
+
+typedef void (*type_lua_rawseti)(lua_State* L, int index, int n);
+extern type_lua_rawseti p_lua_rawseti;
+
+typedef void (*type_lua_remove)(lua_State* L, int index);
+extern type_lua_remove p_lua_remove;
+
+typedef void (*type_lua_setfield)(lua_State* L, int index, const char* k);
+extern type_lua_setfield p_lua_setfield;
+
+typedef void (*type_lua_setglobal)(lua_State* L, const char* name);
+extern type_lua_setglobal p_lua_setglobal;
+
+typedef void (*type_lua_setmetatable)(lua_State* L, int index);
+extern type_lua_setmetatable p_lua_setmetatable;
+
+typedef void (*type_lua_settable)(lua_State* L, int index);
+extern type_lua_settable p_lua_settable;
+
+typedef void (*type_lua_settop)(lua_State* L, int index);
+extern type_lua_settop p_lua_settop;
+
+typedef int (*type_lua_toboolean)(lua_State* L, int idx);
+extern type_lua_toboolean p_lua_toboolean;
+
+typedef lua_CFunction (*type_lua_tocfunction)(lua_State* L, int index);
+extern type_lua_tocfunction p_lua_tocfunction;
+
+typedef lua_Integer (*type_lua_tointegerx)(lua_State* L, int index, int* isnum);
+extern type_lua_tointegerx p_lua_tointegerx;
+
+typedef const char* (*type_lua_tolstring)(lua_State* L, int index, size_t* len);
+extern type_lua_tolstring p_lua_tolstring;
+
+typedef lua_Number (*type_lua_tonumber)(lua_State* L, int index);
+extern type_lua_tonumber p_lua_tonumber;
+
+typedef lua_Number (*type_lua_tonumberx)(lua_State* L, int index, int* isnum);
+extern type_lua_tonumberx p_lua_tonumberx;
+
+typedef void* (*type_lua_touserdata)(lua_State* L, int idx);
+extern type_lua_touserdata p_lua_touserdata;
+
+typedef int (*type_lua_type)(lua_State* L, int index);
+extern type_lua_type p_lua_type;
+
+typedef const char* (*type_lua_typename)(lua_State* L, int tp);
+extern type_lua_typename p_lua_typename;
+
+typedef int (*type_luaL_error)(lua_State* L, const char* fmt, ...);
+extern "C" type_luaL_error p_luaL_error;
+
+typedef int (*type_luaL_loadfilex)(lua_State* L, const char* fileName, const char* mode);
+extern type_luaL_loadfilex p_luaL_loadfilex;
+
+typedef int (*type_luaL_loadstring)(lua_State* L, const char* s);
+extern type_luaL_loadstring p_luaL_loadstring;
+
+typedef int (*type_luaL_newmetatable)(lua_State* L, const char* tname);
+extern type_luaL_newmetatable p_luaL_newmetatable;
+
+typedef lua_State* (*type_luaL_newstate)();
+extern type_luaL_newstate p_luaL_newstate;
+
+typedef void (*type_luaL_openlibs)(lua_State* L);
+extern type_luaL_openlibs p_luaL_openlibs;
+
+typedef int (*type_luaL_ref)(lua_State* L, int t);
+extern type_luaL_ref p_luaL_ref;
+
+////////////////////////////////
+// Switchable Implementations //
+////////////////////////////////
+
+extern type_lua_pcall imp_lua_pcall;
+int lua51_pcall(lua_State* L, int nargs, int nresults, int msgh);
+int lua52_pcall(lua_State* L, int nargs, int nresults, int msgh);
+
+extern type_lua_pcallk imp_lua_pcallk;
+int lua51_pcallk(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k);
+int lua52_pcallk(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k);
+
+extern type_lua_tonumber imp_lua_tonumber;
+lua_Number lua51_tonumber(lua_State* L, int index);
+lua_Number lua52_tonumber(lua_State* L, int index);
+
+extern type_lua_tonumberx imp_lua_tonumberx;
+lua_Number lua51_tonumberx(lua_State* L, int index, int* isnum);
+lua_Number lua52_tonumberx(lua_State* L, int index, int* isnum);

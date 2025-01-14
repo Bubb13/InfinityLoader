@@ -419,27 +419,42 @@ EXPORT void SharedState::AddListPatternValue(PatternValueHandle valueHandle, voi
 }
 
 EXPORT bool SharedState::GetOrCreatePatternValue(const String& name, PatternValueType valueType, PatternValueHandle& out) {
-	auto& patterns = data()->state.patterns;
+
+	SharedDLLState& state = data()->state;
+	auto& patterns = state.patterns;
+
+	std::unique_lock<std::shared_mutex> lk { state.patternsModifyMutex };
+
 	if (auto itr = patterns.find(name); itr != patterns.end()) {
+
 		Pattern::Entry* pEntry = &itr->second;
+
 		if (static_cast<PatternValueType>(pEntry->valueType) == valueType) {
 			out = pEntry;
 			return false;
 		}
+
 		out = nullptr;
 		return true;
 	}
+
 	out = &patterns.try_emplace(name, name, static_cast<Pattern::ValueType>(valueType)).first->second;
 	return false;
 }
 
 EXPORT PatternValueType SharedState::GetPatternValue(const String& name, PatternValueHandle& out) {
-	auto& patterns = data()->state.patterns;
+
+	SharedDLLState& state = data()->state;
+	auto& patterns = state.patterns;
+
+	std::shared_lock<std::shared_mutex> lk { state.patternsModifyMutex };
+
 	if (auto itr = patterns.find(name); itr != patterns.end()) {
 		Pattern::Entry* pEntry = &itr->second;
 		out = pEntry;
 		return static_cast<PatternValueType>(pEntry->valueType);
 	}
+
 	out = nullptr;
 	return PatternValueType::INVALID;
 }

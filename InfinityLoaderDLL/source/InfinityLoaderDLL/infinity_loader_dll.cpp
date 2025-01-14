@@ -44,6 +44,10 @@ bool attemptUseCached = false;
 asmjit::JitRuntime rt;
 std::unordered_map<StringA, LoadedBindings> loadedBindingsMap{};
 
+StringA extenderName;
+StringA luaGlobalsPrefix;
+#define prefixed(str) std::format("{}"##str, luaGlobalsPrefix).c_str()  
+
 const std::tuple<const TCHAR*, const TCHAR*, const unsigned char> aHexLetterToByte[] = {
 	std::tuple{TEXT("0"), TEXT("0"), 0},
 	std::tuple{TEXT("1"), TEXT("1"), 1},
@@ -537,6 +541,24 @@ DWORD resolveAliasTarget(const String aliasList, String& toTransform) {
 	return result;
 }
 
+template<typename AddressType>
+bool setSinglePatternValue(const String& name, AddressType address, PatternValueHandle& patternHandleOut) {
+
+	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, patternHandleOut)) {
+		PrintT(TEXT("[!][InfinityLoaderDLL.dll] setSinglePatternValue() - [%s].Type must be SINGLE\n"), name.c_str());
+		return false;
+	}
+
+	sharedState().SetSinglePatternValue(patternHandleOut, (uintptr_t)address);
+	return true;
+}
+
+template<typename AddressType>
+bool setSinglePatternValue(const String& name, AddressType address) {
+	PatternValueHandle patternHandle;
+	return setSinglePatternValue(name, address, patternHandle);
+}
+
 DWORD processINICategoryPatternValue(
 	const String& iniPath,
 	const String& originalINICategoryName,
@@ -552,17 +574,13 @@ DWORD processINICategoryPatternValue(
 	if (type == PatternValueType::SINGLE) {
 
 		uintptr_t address;
-		TryRetErr( GetINIUIntPtrDef(iniPath, iniCategoryName.c_str(), singleKey, 0, address) )
+		TryRetErr( GetINIUIntPtrDef(iniPath, iniCategoryName.c_str(), singleKey, -1, address) )
 
-		if (address != 0) {
+		if (address != -1) {
 
 			PatternValueHandle handle;
-			if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::SINGLE, handle)) {
-				PrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
-				return -1;
-			}
+			TryRetDefErrCode( setSinglePatternValue(originalINICategoryName, address, handle) )
 
-			sharedState().SetSinglePatternValue(handle, address);
 			valueHandleOut = handle;
 			filledOut = true;
 			return 0;
@@ -636,6 +654,13 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 		}
 
 		iniCategoryName.insert(0, String{ TEXT("!ExeSwitch-") }.append(exeSwitchName).append(TEXT("-")));
+	}
+
+	bool unsupported;
+	TryRetErr( GetINIBoolDef(iniPath, iniCategoryName.c_str(), TEXT("Unsupported"), false, unsupported) )
+
+	if (unsupported) {
+		return 0;
 	}
 
 	String typeStr;
@@ -721,11 +746,8 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 		}
 
 		PatternValueHandle handle;
-		if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::SINGLE, handle)) {
-			PrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
-			return -1;
-		}
-		sharedState().SetSinglePatternValue(handle, foundAddress);
+		TryRetDefErrCode( setSinglePatternValue(originalINICategoryName, foundAddress, handle) )
+
 		valueHandleOut = handle;
 	}
 	else if (type == PatternValueType::LIST) {
@@ -916,6 +938,11 @@ int enableCodeProtectionLua(lua_State* L) {
 	return 0;
 }
 
+int exposeToLuaLua(lua_State* L) {
+	exposeToLua(L, lua_tostring(L, 2), reinterpret_cast<lua_CFunction>(lua_tointeger(L, 1)));
+	return 0;
+}
+
 int extractLua(lua_State* L) {
 	UnsignedLuaInt num = lua_tointeger(L, 1);
 	UnsignedLuaInt start = lua_tointeger(L, 2);
@@ -932,6 +959,13 @@ int freeLua(lua_State* L) {
 	void* ptr = reinterpret_cast<void*>(lua_tointeger(L, 1));
 	p_free(ptr);
 	return 0;
+}
+
+int getProcAddressLua(lua_State* L) {
+	const HMODULE hModule = reinterpret_cast<HMODULE>(lua_tointeger(L, 1));
+	const FARPROC proc = GetProcAddress(hModule, lua_tostring(L, 2));
+	lua_pushinteger(L, reinterpret_cast<lua_Integer>(proc));
+	return 1;
 }
 
 int getLuaRegistryIndexLua(lua_State* L) {
@@ -995,7 +1029,7 @@ int iterateRegexLua(lua_State* L) {
 
 		if (lua_pcallk(L, 4, 1, -6, 0, nullptr) != LUA_OK) {
 																								 // [ debug, traceback, errorMessage ]
-			Print("[!][InfinityLoaderDLL.dll] EEex_IterateRegex() - %s\n", lua_tostring(L, -1));
+			Print("[!][InfinityLoaderDLL.dll] %sIterateRegex() - %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
 			lua_pop(L, 1);                                                                       // [ debug, traceback ]
 			break;
 		}
@@ -1022,13 +1056,13 @@ int jitLua(lua_State* L) {
 	asmtk::AsmParser p(&a);
 
 	if (asmjit::Error err = p.parse(lua_tostring(L, 1))) {
-		Print("[!][InfinityLoaderDLL.dll] EEex_JIT() - AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
+		Print("[!][InfinityLoaderDLL.dll] %sJIT() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
 	void* ptr;
 	if (asmjit::Error err = rt.add(&ptr, &code)) {
-		Print("[!][InfinityLoaderDLL.dll] EEex_JIT() - AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
+		Print("[!][InfinityLoaderDLL.dll] %sJIT() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
@@ -1045,7 +1079,7 @@ int jitAtInternalLua(lua_State* L) {
 	asmtk::AsmParser p(&a);
 
 	if (asmjit::Error err = p.parse(lua_tostring(L, 3))) {
-		Print("[!][InfinityLoaderDLL.dll] EEex_JITAtInternal() - AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
+		Print("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
@@ -1058,7 +1092,7 @@ int jitAtInternalLua(lua_State* L) {
 		lua_pushinteger(L, size);                                                                                               // [ debug, traceback, func, size ]
 		if (lua_pcallk(L, 1, 1, -3, 0, nullptr) != LUA_OK) {
 																																// [ debug, traceback, errorMessage ]
-			Print("[!][InfinityLoaderDLL.dll] EEex_JITAtInternal() - AsmJit failed: %s\n", lua_tostring(L, -1));
+			Print("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
 			lua_pop(L, 3);                                                                                                      // [ ]
 			return reinterpret_cast<uint8_t*>(-1);
 		}
@@ -1069,7 +1103,7 @@ int jitAtInternalLua(lua_State* L) {
 	};
 
 	if (asmjit::Error err = jitAt(reinterpret_cast<uint8_t*>(lua_tointeger(L, 1)), &code, checkFunc)) {
-		Print("[!][InfinityLoaderDLL.dll] EEex_JITAtInternal() - AsmJit failed: %s\n", asmjit::DebugUtils::errorAsString(err));
+		Print("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
@@ -1099,6 +1133,12 @@ bool initializeLuaBindings(const char* bindingsFileName, LoadedBindings& loadedB
 	return false;
 }
 
+int loadLibraryLua(lua_State* L) {
+	const HMODULE hModule = LoadLibraryA(lua_tostring(L, 1));
+	lua_pushinteger(L, reinterpret_cast<lua_Integer>(hModule));
+	return 1;
+}
+
 int openLuaBindingsLua(lua_State* L) {
 
 	const char* bindingsFileName = lua_tolstring(L, 1, nullptr);
@@ -1114,7 +1154,7 @@ int openLuaBindingsLua(lua_State* L) {
 
 		FARPROC openBindingsProcFar;
 		if (openBindingsProcFar = GetProcAddress(loadedBindings.hHandle, "OpenBindings"); !openBindingsProcFar) {
-			Print("[!][InfinityLoaderDLL.dll] EEex_OpenLuaBindings() - GetProcAddress() failed (%d)\n", GetLastError());
+			Print("[!][InfinityLoaderDLL.dll] %sOpenLuaBindings() - GetProcAddress() failed (%d)\n", luaGlobalsPrefix.c_str(), GetLastError());
 			return 0;
 		}
 
@@ -1148,7 +1188,7 @@ int lshiftLua(lua_State* L) {
 
 int mallocLua(lua_State* L) {
 	castLuaIntArg(1, size_t, SizeT, size)
-	lua_pushinteger(L, reinterpret_cast<lua_Integer>(malloc(size)));
+	lua_pushinteger(L, reinterpret_cast<lua_Integer>(p_malloc(size)));
 	return 1;
 }
 
@@ -1167,7 +1207,7 @@ int memsetLua(lua_State* L) {
 
 int messageBoxInternalLua(lua_State* L) {
 	castLuaIntArg(2, UINT, UInt, uType)
-	MessageBoxA(NULL, lua_tostring(L, 1), "EEex", uType);
+	MessageBoxA(NULL, lua_tostring(L, 1), extenderName.c_str(), uType);
 	return 0;
 }
 
@@ -1270,7 +1310,7 @@ int runWithStackLua(lua_State* L) {
 
 	if (lua_pcallk(L, 1, 0, -3, 0, nullptr) != LUA_OK) {
 																							 // [ debug, traceback, errorMessage ]
-		Print("[!][InfinityLoaderDLL.dll] EEex_RunWithStack() - %s\n", lua_tostring(L, -1));
+		Print("[!][InfinityLoaderDLL.dll] %sRunWithStack() - %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
 		lua_pop(L, 3);                                                                       // [ ]
 	}
 	else {
@@ -1402,16 +1442,25 @@ int writeU8Lua(lua_State* L) {
 }
 
 int writeLStringLua(lua_State* L) {
-	char* dest = reinterpret_cast<char*>(lua_tointeger(L, 1));
+
+	char* dst = reinterpret_cast<char*>(lua_tointeger(L, 1));
 	const char* src = lua_tostring(L, 2);
 	castLuaIntArg(3, size_t, SizeT, limit)
-	size_t i = 0;
-	for (; i < limit; ++i) {
-		*dest++ = *src++;
+
+	const char *const dstLimit = dst + limit;
+
+	for (; dst < dstLimit; ++src) {
+		const char srcChar = *src;
+		*dst++ = srcChar;
+		if (srcChar == '\0') {
+			break;
+		}
 	}
-	if (i < limit) {
-		*dest = '\0';
+
+	for (; dst < dstLimit; ++dst) {
+		*dst = '\0';
 	}
+
 	return 0;
 }
 
@@ -1440,6 +1489,154 @@ int writeStringAutoLua(lua_State* L) {
 	lua_pushinteger(L, reinterpret_cast<uintptr_t>(newStr));
 	return 1;
 }
+
+////////////////////////////
+// START Pattern Tracking //
+////////////////////////////
+
+// Expects: 0 [ t, k, v ]
+int onPatternMapChanged(lua_State* L) {
+
+	const char *const patternName = lua_tostring(L, 2);
+	const uintptr_t patternValue = lua_tointeger(L, 3);
+
+	setSinglePatternValue(NulTermStrToStr(patternName), patternValue);
+	lua_rawset(L, 1);
+	return 0;
+}
+
+// Expects:   0 [ ... ]
+// End Stack: 1 [ ..., registry["InfinityLoader_Patterns"] ]
+void pushPatternsTable(lua_State* L) {
+
+	lua_pushstring(L, "InfinityLoader_Patterns");     // 1 [ ..., "InfinityLoader_Patterns" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);                 // 1 [ ..., registry["InfinityLoader_Patterns"] ]
+
+	if (lua_isnil(L, -1)) {
+
+		lua_pop(L, 1);                                // 0 [ ... ]
+		lua_newtable(L);                              // 1 [ ..., t ]
+
+		lua_newtable(L);                              // 2 [ ..., t, mt ]
+		lua_pushstring(L, "__newindex");              // 3 [ ..., t, mt, "__newindex" ]
+		lua_pushcfunction(L, onPatternMapChanged);    // 4 [ ..., t, mt, "__newindex", onPatternMapChanged ]
+		lua_rawset(L, -3);                            // 2 [ ..., t, mt ]
+
+		lua_setmetatable(L, -2);                      // 1 [ ..., t ]
+
+		lua_pushstring(L, "InfinityLoader_Patterns"); // 2 [ ..., t, "InfinityLoader_Patterns" ]
+		lua_pushvalue(L, -2);                         // 3 [ ..., t, "InfinityLoader_Patterns", t ]
+		lua_rawset(L, LUA_REGISTRYINDEX);             // 1 [ ..., t -> registry["InfinityLoader_Patterns"] ]
+	}
+}
+
+// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] -> patternsT ]
+// End Stack: 1 [ ..., patternsT ]
+void rawsetSinglePatternValue(lua_State *const L, const PatternValueHandle handle, const uintptr_t newAddress) {
+	const String& name = sharedState().GetPatternValueName(handle);
+	const StringA nameA = StrToStrA(name);
+	lua_pushstring(L, nameA.c_str());                               // 2 [ ..., patternsT, name ]
+	lua_pushinteger(L, newAddress);                                 // 3 [ ..., patternsT, name, value ]
+	lua_rawset(L, -3);                                              // 1 [ ..., patternsT ]
+}
+
+// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] -> patternsT ]
+// End Stack: 2 [ ..., patternsT, patternsT[patternName(handle)] ]
+void pushListPatternTable(lua_State *const L, const PatternValueHandle handle) {
+
+	const String& name = sharedState().GetPatternValueName(handle);
+	const StringA nameA = StrToStrA(name);
+
+	lua_pushstring(L, nameA.c_str());                               // 2 [ ..., patternsT, name ]
+	lua_rawget(L, -2);                                              // 2 [ ..., patternsT, patternsT[name] -> listT ]
+
+	if (!lua_istable(L, -1)) {
+		lua_pop(L, 1);                                              // 1 [ ..., patternsT ]
+		lua_newtable(L);                                            // 2 [ ..., patternsT, newT ]
+		lua_pushstring(L, nameA.c_str());                           // 3 [ ..., patternsT, newT, name ]
+		lua_pushvalue(L, -2);                                       // 4 [ ..., patternsT, newT, name, newT ]
+		lua_rawset(L, -4);                                          // 2 [ ..., patternsT, newT -> listT ]
+		lua_pushinteger(L, 0);                                      // 3 [ ..., patternsT, listT, size ]
+		lua_rawseti(L, -2, 0);                                      // 2 [ ..., patternsT, listT ]
+	}
+}
+
+// Expects:   0 [ ... ]
+// End Stack: 0 [ ... ]
+void exportExistingPatterns(lua_State *const L) {
+
+	pushPatternsTable(L);                                                             // 1 [ ..., patternsT ]
+
+	sharedState().IteratePatternValues([&](const PatternValueHandle handle) -> bool {
+
+		const PatternValueType type = sharedState().GetPatternValueType(handle);
+		if (type == PatternValueType::SINGLE) {
+			const uintptr_t value = sharedState().GetSinglePatternValue(handle);
+			rawsetSinglePatternValue(L, handle, value);
+		}
+		else if (type == PatternValueType::LIST) {
+
+			pushListPatternTable(L, handle);                                          // 2 [ ..., patternsT, listT ]
+			lua_rawgeti(L, -1, 0);                                                    // 3 [ ..., patternsT, listT, size ]
+			int size = static_cast<int>(lua_tointeger(L, -1));
+
+			sharedState().IteratePatternList(handle, [&](uintptr_t newAddress) {
+				lua_pushinteger(L, newAddress);                                       // 4 [ ..., patternsT, listT, size, newAddress ]
+				lua_rawseti(L, -3, ++size);                                           // 3 [ ..., patternsT, listT, size ]
+				return false;
+			});
+																					  // 3 [ ..., patternsT, listT, size ]
+			lua_pushinteger(L, size);                                                 // 4 [ ..., patternsT, listT, size, newSize ]
+			lua_rawseti(L, -3, 0);                                                    // 3 [ ..., patternsT, listT, size ]
+			lua_pop(L, 2);                                                            // 1 [ ..., patternsT ]
+		}
+
+		return false;
+	});
+
+	lua_pop(L, 1);                                                                    // 0 [ ... ]
+}
+
+void onLuaStateInitialized() {
+	exportExistingPatterns(luaState());
+}
+
+void onAfterPatternModified(const PatternValueHandle handle, const uintptr_t newAddress) {
+
+	if (lua_State *const L = luaState(); L != nullptr) {
+
+		pushPatternsTable(L);                                                    // 1 [ ..., patternsT ]
+
+		const PatternValueType type = sharedState().GetPatternValueType(handle);
+		if (type == PatternValueType::SINGLE) {
+			uintptr_t value = sharedState().GetSinglePatternValue(handle);
+			rawsetSinglePatternValue(L, handle, value);
+		}
+		else if (type == PatternValueType::LIST) {
+			pushListPatternTable(L, handle);                                     // 2 [ ..., patternsT, listT ]
+			lua_rawgeti(L, -1, 0);                                               // 3 [ ..., patternsT, listT, size ]
+			const int newSize = static_cast<int>(lua_tointeger(L, -1)) + 1;
+			lua_pushinteger(L, newSize);                                         // 4 [ ..., patternsT, listT, size, newSize ]
+			lua_pushinteger(L, newAddress);                                      // 5 [ ..., patternsT, listT, size, newSize, newAddress ]
+			lua_rawseti(L, -4, newSize);                                         // 4 [ ..., patternsT, listT, size, newSize ]
+			lua_rawseti(L, -3, 0);                                               // 3 [ ..., patternsT, listT, size ]
+			lua_pop(L, 3);                                                       // 0 [ ... ]
+		}
+
+		lua_pop(L, 1);                                                           // 0 [ ... ]
+	}
+}
+
+void initPatternTracking() {
+	// Callback that exports all existing patterns
+	sharedState().AddLuaStateInitializedCallback(onLuaStateInitialized);
+	// Listener that exports future patterns when they are set
+	sharedState().AddAfterPatternModifiedListener(onAfterPatternModified);
+}
+
+//////////////////////////
+// END Pattern Tracking //
+//////////////////////////
 
 ////////////////////
 // Initialization //
@@ -1701,21 +1898,15 @@ cleanup:;
 }
 
 template<typename pointer_type>
-void fillExportedPointer(const String& name, pointer_type& pointer, uintptr_t address) {
-
-	PatternValueHandle patternHandle;
-	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, patternHandle)) {
-		PrintT(TEXT("[!][InfinityLoaderDLL.dll] fillExportedPointer() - [%s].Type must be SINGLE\n"), name.c_str());
-		return;
-	}
-
-	sharedState().SetSinglePatternValue(patternHandle, address);
+bool fillExportedPointer(const String& name, pointer_type& pointer, uintptr_t address) {
+	if (!setSinglePatternValue(name, address)) return false;
 	pointer = reinterpret_cast<pointer_type>(address);
+	return true;
 }
 
 template<typename pointer_type>
-void fillExportedPointer(const String& name, pointer_type& pointer, void* address) {
-	fillExportedPointer(name, pointer, reinterpret_cast<uintptr_t>(address));
+bool fillExportedPointer(const String& name, pointer_type& pointer, void* address) {
+	return fillExportedPointer(name, pointer, reinterpret_cast<uintptr_t>(address));
 }
 
 template<typename pointer_type, typename operations_type>
@@ -1741,41 +1932,116 @@ bool fillPatternPointer(void* segmentPtr, DWORD segmentSize, const String& name,
 	return fillPatternPointer(segmentPtr, segmentSize, name, pointer, [](uintptr_t& address){});
 }
 
-template<typename pointer_type, typename operations_type>
-DWORD fillLuaPointer(void* segmentPtr, DWORD segmentSize, const String& name, pointer_type& pointer, const operations_type& operations) {
-
-	const String hardcodedName = TEXT("Hardcoded_") + name;
-	uintptr_t address;
-
-	if (luaMode() == LuaMode::INTERNAL) {
-
-		PatternValueHandle patternHandle;
-		TryRetErr( findINICategoryPattern(segmentPtr, segmentSize, iniPath(), hardcodedName, patternHandle) )
-
-		if (sharedState().GetPatternValueType(patternHandle) != PatternValueType::SINGLE) {
-			PrintT(TEXT("[!][InfinityLoaderDLL.dll] fillLuaPointer() - [%s].Type must be SINGLE\n"), name.c_str());
-			return true;
-		}
-
-		address = sharedState().GetSinglePatternValue(patternHandle);
-		operations(address);
-	}
-	else {
-		TryRetErr( getLuaProc(StrToStrA(name).c_str(), address) )
-	}
-
-	fillExportedPointer(hardcodedName, pointer, address);
-	return 0;
-}
-
-template<typename pointer_type>
-bool fillLuaPointer(void* segmentPtr, DWORD segmentSize, const String& name, pointer_type& pointer) {
-	return fillLuaPointer(segmentPtr, segmentSize, name, pointer, [](uintptr_t& address) {});
-}
-
 int temporaryPrintReplacement(lua_State* L) {
 	Print("%s\n", lua_tostring(L, 1));
 	return 0;
+}
+
+void simpleLog(const char *const str) {
+	Print("%s", str);
+}
+
+void initLuaState(lua_State *const L) {
+
+	if (luaMode() != LuaMode::INTERNAL) {
+
+		luaL_openlibs(L);
+
+		// Since non-internal modes initialize the Lua state immediately, the engine's print() function isn't set when EEex's initial
+		// Lua file is executed, which means print() must be redirected to InfinityLoader's FPrint() to get console output from the
+		// initial file.
+		lua_pushcfunction(L, temporaryPrintReplacement);
+		lua_setglobal(L, "print");
+	}
+
+	////////////////////////
+	// Export Lua Globals //
+	////////////////////////
+
+	lua_pushinteger(L, sizeof(void*));
+	lua_setglobal(L, prefixed("PointerSize"));
+
+	lua_pushinteger(L, sizeof(void*));
+	lua_setglobal(L, prefixed("PtrSize"));
+
+	//////////////////////////
+	// Export Lua Functions //
+	//////////////////////////
+
+	exposeToLua(L, prefixed("AddToLuaRegistry"), addToLuaRegistryLua);
+	exposeToLua(L, prefixed("AllocCodePageInternal"), allocCodePageInternalLua);
+	exposeToLua(L, prefixed("BAnd"), bandLua);
+	exposeToLua(L, prefixed("BNot"), bnotLua);
+	exposeToLua(L, prefixed("BOr"), borLua);
+	exposeToLua(L, prefixed("CFunctionToPointer"), cFunctionToPointerLua);
+	exposeToLua(L, prefixed("CFuncToPtr"), cFunctionToPointerLua);
+	exposeToLua(L, prefixed("DisableCodeProtection"), disableCodeProtectionLua);
+	exposeToLua(L, prefixed("DoFile"), doFileLua);
+	exposeToLua(L, prefixed("EnableCodeProtection"), enableCodeProtectionLua);
+	exposeToLua(L, prefixed("ExposeToLua"), exposeToLuaLua);
+	exposeToLua(L, prefixed("Extract"), extractLua);
+	exposeToLua(L, prefixed("Free"), freeLua);
+	exposeToLua(L, prefixed("GetLuaRegistryIndex"), getLuaRegistryIndexLua);
+	exposeToLua(L, prefixed("GetLuaLibraryProc"), getLuaLibraryProcLua);
+	exposeToLua(L, prefixed("GetMicroseconds"), getMicrosecondsLua);
+	exposeToLua(L, prefixed("GetPatternMap"), getPatternMapLua);
+	exposeToLua(L, prefixed("GetProcAddressInternal"), getProcAddressLua);
+	exposeToLua(L, prefixed("InitializeLuaBindings"), initializeLuaBindingsLua);
+	exposeToLua(L, prefixed("InitLuaBindings"), initializeLuaBindingsLua);
+	exposeToLua(L, prefixed("IterateRegex"), iterateRegexLua);
+	exposeToLua(L, prefixed("JIT"), jitLua);
+	exposeToLua(L, prefixed("JITAtInternal"), jitAtInternalLua);
+	exposeToLua(L, prefixed("LoadLibrary"), loadLibraryLua);
+	exposeToLua(L, prefixed("LShift"), lshiftLua);
+	exposeToLua(L, prefixed("Malloc"), mallocLua);
+	exposeToLua(L, prefixed("Memcpy"), memcpyLua);
+	exposeToLua(L, prefixed("Memset"), memsetLua);
+	exposeToLua(L, prefixed("MessageBoxInternal"), messageBoxInternalLua);
+	exposeToLua(L, prefixed("OpenLuaBindings"), openLuaBindingsLua);
+	exposeToLua(L, prefixed("Print"), printLua);
+	exposeToLua(L, prefixed("PrintErr"), printErrLua);
+	exposeToLua(L, prefixed("Read16"), read16Lua);
+	exposeToLua(L, prefixed("Read32"), read32Lua);
+#if defined(_WIN64)
+	exposeToLua(L, prefixed("Read64"), read64Lua);
+#endif
+	exposeToLua(L, prefixed("Read8"), read8Lua);
+	exposeToLua(L, prefixed("ReadPointer"), readPointerLua);
+	exposeToLua(L, prefixed("ReadPtr"), readPointerLua);
+	exposeToLua(L, prefixed("ReadU16"), readU16Lua);
+	exposeToLua(L, prefixed("ReadU32"), readU32Lua);
+#if defined(_WIN64)
+	exposeToLua(L, prefixed("ReadU64"), readU64Lua);
+#endif
+	exposeToLua(L, prefixed("ReadU8"), readU8Lua);
+	exposeToLua(L, prefixed("ReadLString"), readLString);
+	exposeToLua(L, prefixed("ReadString"), readString);
+	exposeToLua(L, prefixed("RShift"), rshiftLua);
+	exposeToLua(L, prefixed("RunWithStack"), runWithStackLua);
+	exposeToLua(L, prefixed("SelectFromTables"), selectFromTablesLua);
+	exposeToLua(L, prefixed("SetLuaRegistryIndex"), setLuaRegistryIndexLua);
+	exposeToLua(L, prefixed("ToDecimalString"), toDecimalStringLua);
+	exposeToLua(L, prefixed("ToDecStr"), toDecimalStringLua);
+	exposeToLua(L, prefixed("Write16"), write16Lua);
+	exposeToLua(L, prefixed("Write32"), write32Lua);
+#if defined(_WIN64)
+	exposeToLua(L, prefixed("Write64"), write64Lua);
+#endif
+	exposeToLua(L, prefixed("Write8"), write8Lua);
+	exposeToLua(L, prefixed("WritePointer"), writePointerLua);
+	exposeToLua(L, prefixed("WritePtr"), writePointerLua);
+	exposeToLua(L, prefixed("WriteU16"), writeU16Lua);
+	exposeToLua(L, prefixed("WriteU32"), writeU32Lua);
+	exposeToLua(L, prefixed("WriteU64"), writeU64Lua);
+	exposeToLua(L, prefixed("WriteU8"), writeU8Lua);
+	exposeToLua(L, prefixed("WriteLString"), writeLStringLua);
+	exposeToLua(L, prefixed("WriteString"), writeStringLua);
+	exposeToLua(L, prefixed("WriteStringAuto"), writeStringAutoLua);
+}
+
+void __stdcall initLuaStateExport(lua_State* L) {
+	initLuaState(L);
+	exportExistingPatterns(L);
 }
 
 void initLua() {
@@ -1793,8 +2059,18 @@ void initLua() {
 		Print("[?][InfinityLoaderDLL.dll] initLua() - Debug output 5 (Windows: Yes, Proton: Yes)...\n");
 	}
 
-#define fillPatternPointerLookup(name, outName) \
+#define fillPatternPointerCleanup(name, outName) \
 	if (fillPatternPointer(sectionPtr, sectionSize, TEXT(name), p_##outName)) { \
+		goto cleanup; \
+	}
+
+#define fillExportedPointerCleanup(name, pointer, address) \
+	if (!fillExportedPointer(name, pointer, address)) { \
+		goto cleanup; \
+	}
+
+#define setSinglePatternValueCleanup(name, address) \
+	if (!setSinglePatternValue(name, address)) { \
 		goto cleanup; \
 	}
 
@@ -1804,10 +2080,26 @@ void initLua() {
 
 	void* sectionPtr;
 	DWORD sectionSize;
+
+	String extenderNameW;
+	String luaGlobalsPrefixW;
+
 	if (sharedState().GetSegmentPointerAndSize(".text", sectionPtr, sectionSize)) {
 		Print("[!][InfinityLoaderDLL.dll] initLua() - Failed to fetch .text pointer and size\n");
-		return;
+		goto cleanup;
 	}
+
+	if (GetINIStrDef(iniPath(), TEXT("General"), TEXT("ExtenderName"), TEXT("EEex"), extenderNameW) != ERROR_SUCCESS) {
+		Print("[!][InfinityLoaderDLL.dll] initLua() - Failed to read [General].ExtenderName\n");
+		goto cleanup;
+	}
+	extenderName = StrToStrA(extenderNameW);
+
+	if (GetINIStrDef(iniPath(), TEXT("General"), TEXT("LuaGlobalsPrefix"), TEXT("EEex_"), luaGlobalsPrefixW) != ERROR_SUCCESS) {
+		Print("[!][InfinityLoaderDLL.dll] initLua() - Failed to read [General].LuaGlobalsPrefix\n");
+		goto cleanup;
+	}
+	luaGlobalsPrefix = StrToStrA(luaGlobalsPrefixW);
 
 	lua_State* L;
 
@@ -1819,122 +2111,28 @@ void initLua() {
 		}
 	}
 	else {
-
-		typedef lua_State* (__cdecl* type_luaL_newstate)();
-		type_luaL_newstate p_luaL_newstate;
-
-		typedef void (__cdecl* type_luaL_openlibs)(lua_State*);
-		type_luaL_openlibs p_luaL_openlibs;
-
-		if (getLuaProc("luaL_newstate", p_luaL_newstate)) {
-			goto cleanup;
-		}
-
-		if (getLuaProc("luaL_openlibs", p_luaL_openlibs)) {
-			goto cleanup;
-		}
-
-		fillExportedPointer(TEXT("Hardcoded_InternalLuaState"), L, p_luaL_newstate());
-		p_luaL_openlibs(L);
-
-		// Since non-internal modes initialize the Lua state immediately, the engine's print() function isn't set when EEex's initial
-		// Lua file is executed, which means print() must be redirected to InfinityLoader's FPrint() to get console output from the
-		// initial file.
-		lua_pushcfunction(L, temporaryPrintReplacement);
-		lua_setglobal(L, "print");
+		L = luaL_newstate();
+		setSinglePatternValueCleanup(TEXT("Hardcoded_InternalLuaState"), L)
 	}
 
 	sharedState().InitLuaState(L);
+	initLuaState(L);
 
-	////////////////////////
-	// Export Lua Globals //
-	////////////////////////
+	/////////////////////////////////////
+	// Export Hardcoded Pattern Values //
+	/////////////////////////////////////
 
-	lua_pushinteger(L, sizeof(void*));
-	lua_setglobal(L, "EEex_PointerSize");
-
-	lua_pushinteger(L, sizeof(void*));
-	lua_setglobal(L, "EEex_PtrSize");
-
-	//////////////////////////
-	// Export Lua Functions //
-	//////////////////////////
-
-	exposeToLua(L, "EEex_AddToLuaRegistry", addToLuaRegistryLua);
-	exposeToLua(L, "EEex_AllocCodePageInternal", allocCodePageInternalLua);
-	exposeToLua(L, "EEex_BAnd", bandLua);
-	exposeToLua(L, "EEex_BNot", bnotLua);
-	exposeToLua(L, "EEex_BOr", borLua);
-	exposeToLua(L, "EEex_CFunctionToPointer", cFunctionToPointerLua);
-	exposeToLua(L, "EEex_CFuncToPtr", cFunctionToPointerLua);
-	exposeToLua(L, "EEex_DisableCodeProtection", disableCodeProtectionLua);
-	exposeToLua(L, "EEex_DoFile", doFileLua);
-	exposeToLua(L, "EEex_EnableCodeProtection", enableCodeProtectionLua);
-	exposeToLua(L, "EEex_Extract", extractLua);
-	exposeToLua(L, "EEex_Free", freeLua);
-	exposeToLua(L, "EEex_GetLuaRegistryIndex", getLuaRegistryIndexLua);
-	exposeToLua(L, "EEex_GetLuaLibraryProc", getLuaLibraryProcLua);
-	exposeToLua(L, "EEex_GetMicroseconds", getMicrosecondsLua);
-	exposeToLua(L, "EEex_GetPatternMap", getPatternMapLua);
-	exposeToLua(L, "EEex_InitializeLuaBindings", initializeLuaBindingsLua);
-	exposeToLua(L, "EEex_InitLuaBindings", initializeLuaBindingsLua);
-	exposeToLua(L, "EEex_IterateRegex", iterateRegexLua);
-	exposeToLua(L, "EEex_JIT", jitLua);
-	exposeToLua(L, "EEex_JITAtInternal", jitAtInternalLua);
-	exposeToLua(L, "EEex_LShift", lshiftLua);
-	exposeToLua(L, "EEex_Malloc", mallocLua);
-	exposeToLua(L, "EEex_Memcpy", memcpyLua);
-	exposeToLua(L, "EEex_Memset", memsetLua);
-	exposeToLua(L, "EEex_MessageBoxInternal", messageBoxInternalLua);
-	exposeToLua(L, "EEex_OpenLuaBindings", openLuaBindingsLua);
-	exposeToLua(L, "EEex_Print", printLua);
-	exposeToLua(L, "EEex_PrintErr", printErrLua);
-	exposeToLua(L, "EEex_Read16", read16Lua);
-	exposeToLua(L, "EEex_Read32", read32Lua);
-#if defined(_WIN64)
-	exposeToLua(L, "EEex_Read64", read64Lua);
-#endif
-	exposeToLua(L, "EEex_Read8", read8Lua);
-	exposeToLua(L, "EEex_ReadPointer", readPointerLua);
-	exposeToLua(L, "EEex_ReadPtr", readPointerLua);
-	exposeToLua(L, "EEex_ReadU16", readU16Lua);
-	exposeToLua(L, "EEex_ReadU32", readU32Lua);
-#if defined(_WIN64)
-	exposeToLua(L, "EEex_ReadU64", readU64Lua);
-#endif
-	exposeToLua(L, "EEex_ReadU8", readU8Lua);
-	exposeToLua(L, "EEex_ReadLString", readLString);
-	exposeToLua(L, "EEex_ReadString", readString);
-	exposeToLua(L, "EEex_RShift", rshiftLua);
-	exposeToLua(L, "EEex_RunWithStack", runWithStackLua);
-	exposeToLua(L, "EEex_SelectFromTables", selectFromTablesLua);
-	exposeToLua(L, "EEex_SetLuaRegistryIndex", setLuaRegistryIndexLua);
-	exposeToLua(L, "EEex_ToDecimalString", toDecimalStringLua);
-	exposeToLua(L, "EEex_ToDecStr", toDecimalStringLua);
-	exposeToLua(L, "EEex_Write16", write16Lua);
-	exposeToLua(L, "EEex_Write32", write32Lua);
-#if defined(_WIN64)
-	exposeToLua(L, "EEex_Write64", write64Lua);
-#endif
-	exposeToLua(L, "EEex_Write8", write8Lua);
-	exposeToLua(L, "EEex_WritePointer", writePointerLua);
-	exposeToLua(L, "EEex_WritePtr", writePointerLua);
-	exposeToLua(L, "EEex_WriteU16", writeU16Lua);
-	exposeToLua(L, "EEex_WriteU32", writeU32Lua);
-	exposeToLua(L, "EEex_WriteU64", writeU64Lua);
-	exposeToLua(L, "EEex_WriteU8", writeU8Lua);
-	exposeToLua(L, "EEex_WriteLString", writeLStringLua);
-	exposeToLua(L, "EEex_WriteString", writeStringLua);
-	exposeToLua(L, "EEex_WriteStringAuto", writeStringAutoLua);
+	setSinglePatternValueCleanup(TEXT("Hardcoded_log"), simpleLog)
+	setSinglePatternValueCleanup(TEXT("Hardcoded_initLuaState"), initLuaStateExport)
 
 	///////////////////////
 	// Run Main Lua File //
 	///////////////////////
 
 	if (luaMode() == LuaMode::INTERNAL) {
-		fillPatternPointerLookup("Hardcoded_free", free);
-		fillPatternPointerLookup("Hardcoded_malloc", malloc);
-		callOverrideFile(L, "EEex_Main");
+		fillPatternPointerCleanup("Hardcoded_free", free)
+		fillPatternPointerCleanup("Hardcoded_malloc", malloc);
+		callOverrideFile(L, prefixed("Main"));
 	}
 	else {
 
@@ -1947,18 +2145,18 @@ void initLua() {
 		// memory allocated during initialization results in the wrong heap
 		// being modified.
 
-		fillExportedPointer(TEXT("Hardcoded_free"), p_free, free);
-		fillExportedPointer(TEXT("Hardcoded_malloc"), p_malloc, malloc);
+		fillExportedPointerCleanup(TEXT("Hardcoded_free"), p_free, free);
+		fillExportedPointerCleanup(TEXT("Hardcoded_malloc"), p_malloc, malloc);
 
 		if (luaMode() == LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL) {
-			callOverrideFile(L, "EEex_EarlyMain");
+			callOverrideFile(L, prefixed("EarlyMain"));
 		}
 		else {
-			callOverrideFile(L, "EEex_Main");
+			callOverrideFile(L, prefixed("Main"));
 		}
 
-		fillPatternPointerLookup("Hardcoded_free", free);
-		fillPatternPointerLookup("Hardcoded_malloc", malloc);
+		fillPatternPointerCleanup("Hardcoded_free", free);
+		fillPatternPointerCleanup("Hardcoded_malloc", malloc);
 	}
 
 cleanup:;
@@ -1966,9 +2164,9 @@ cleanup:;
 }
 
 void delayedMainCall() {
-	TryRet( attachToConsole() )
-	callOverrideFile(luaState(), "EEex_Main");
-	TryRet( detatchFromConsole() )
+	TryRetTruthy( attachToConsole() )
+	callOverrideFile(luaState(), prefixed("Main"));
+	TryRetTruthy( detatchFromConsole() )
 }
 
 void writeCallHookProcAfterCall(AssemblyWriter& writer, uintptr_t& curAllocatedPtr, uintptr_t patchAddress, void* targetProc) {
@@ -2019,133 +2217,6 @@ DWORD writeInternalPatch(AssemblyWriter& writer, uintptr_t& curAllocatedPtr, voi
 	writeCallHookProcAfterCall(writer, curAllocatedPtr, patchAddress, funcPtr);
 	return ERROR_SUCCESS;
 }
-
-////////////////////////////
-// START Pattern Tracking //
-////////////////////////////
-
-// Expects:   0 [ ... ]
-// End Stack: 1 [ ..., registry["InfinityLoader_Patterns"] ]
-void pushPatternsTable(lua_State* L) {
-	lua_pushstring(L, "InfinityLoader_Patterns");     // 1 [ ..., "InfinityLoader_Patterns" ]
-	lua_rawget(L, LUA_REGISTRYINDEX);                 // 1 [ ..., registry["InfinityLoader_Patterns"] ]
-	if (lua_isnil(L, -1)) {
-		lua_pop(L, 1);                                // 0 [ ... ]
-		lua_newtable(L);                              // 1 [ ..., t ]
-		lua_pushstring(L, "InfinityLoader_Patterns"); // 2 [ ..., t, "InfinityLoader_Patterns" ]
-		lua_pushvalue(L, -2);                         // 3 [ ..., t, "InfinityLoader_Patterns", t ]
-		lua_rawset(L, LUA_REGISTRYINDEX);             // 1 [ ..., t -> registry["InfinityLoader_Patterns"] ]
-	}
-}
-
-// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] -> patternsT ]
-// End Stack: 1 [ ..., patternsT ]
-void exportSinglePatternValue(lua_State *const L, const PatternValueHandle handle, const uintptr_t newAddress) {
-	const String& name = sharedState().GetPatternValueName(handle);
-	const StringA nameA = StrToStrA(name);
-	lua_pushstring(L, nameA.c_str());                               // 2 [ ..., patternsT, name ]
-	lua_pushinteger(L, newAddress);                                 // 3 [ ..., patternsT, name, value ]
-	lua_rawset(L, -3);                                              // 1 [ ..., patternsT ]
-}
-
-// Expects:   1 [ ..., registry["InfinityLoader_Patterns"] -> patternsT ]
-// End Stack: 2 [ ..., patternsT, patternsT[patternName(handle)] ]
-void pushListPatternTable(lua_State *const L, const PatternValueHandle handle) {
-
-	const String& name = sharedState().GetPatternValueName(handle);
-	const StringA nameA = StrToStrA(name);
-
-	lua_pushstring(L, nameA.c_str());                               // 2 [ ..., patternsT, name ]
-	lua_rawget(L, -2);                                              // 2 [ ..., patternsT, patternsT[name] -> listT ]
-
-	if (!lua_istable(L, -1)) {
-		lua_pop(L, 1);                                              // 1 [ ..., patternsT ]
-		lua_newtable(L);                                            // 2 [ ..., patternsT, newT ]
-		lua_pushstring(L, nameA.c_str());                           // 3 [ ..., patternsT, newT, name ]
-		lua_pushvalue(L, -2);                                       // 4 [ ..., patternsT, newT, name, newT ]
-		lua_rawset(L, -4);                                          // 2 [ ..., patternsT, newT -> listT ]
-		lua_pushinteger(L, 0);                                      // 3 [ ..., patternsT, listT, size ]
-		lua_rawseti(L, -2, 0);                                      // 2 [ ..., patternsT, listT ]
-	}
-}
-
-// Expects:   0 [ ... ]
-// End Stack: 0 [ ... ]
-void exportExistingPatterns() {
-
-	lua_State *const L = luaState();
-	pushPatternsTable(L);                                                             // 1 [ ..., patternsT ]
-
-	sharedState().IteratePatternValues([&](const PatternValueHandle handle) -> bool {
-
-		const PatternValueType type = sharedState().GetPatternValueType(handle);
-		if (type == PatternValueType::SINGLE) {
-			const uintptr_t value = sharedState().GetSinglePatternValue(handle);
-			exportSinglePatternValue(L, handle, value);
-		}
-		else if (type == PatternValueType::LIST) {
-
-			pushListPatternTable(L, handle);                                          // 2 [ ..., patternsT, listT ]
-			lua_rawgeti(L, -1, 0);                                                    // 3 [ ..., patternsT, listT, size ]
-			int size = static_cast<int>(lua_tointeger(L, -1));
-
-			sharedState().IteratePatternList(handle, [&](uintptr_t newAddress) {
-				lua_pushinteger(L, newAddress);                                       // 4 [ ..., patternsT, listT, size, newAddress ]
-				lua_rawseti(L, -3, ++size);                                           // 3 [ ..., patternsT, listT, size ]
-				return false;
-			});
-																					  // 3 [ ..., patternsT, listT, size ]
-			lua_pushinteger(L, size);                                                 // 4 [ ..., patternsT, listT, size, newSize ]
-			lua_rawseti(L, -3, 0);                                                    // 3 [ ..., patternsT, listT, size ]
-			lua_pop(L, 2);                                                            // 1 [ ..., patternsT ]
-		}
-
-		return false;
-	});
-
-	lua_pop(L, 1);                                                                    // 0 [ ... ]
-}
-
-void onLuaStateInitialized() {
-	exportExistingPatterns();
-}
-
-void onAfterPatternModified(const PatternValueHandle handle, const uintptr_t newAddress) {
-
-	if (lua_State *const L = luaState(); L != nullptr) {
-
-		pushPatternsTable(L);                                                    // 1 [ ..., patternsT ]
-
-		const PatternValueType type = sharedState().GetPatternValueType(handle);
-		if (type == PatternValueType::SINGLE) {
-			uintptr_t value = sharedState().GetSinglePatternValue(handle);
-			exportSinglePatternValue(L, handle, value);
-		}
-		else if (type == PatternValueType::LIST) {
-			pushListPatternTable(L, handle);                                     // 2 [ ..., patternsT, listT ]
-			lua_rawgeti(L, -1, 0);                                               // 3 [ ..., patternsT, listT, size ]
-			const int newSize = static_cast<int>(lua_tointeger(L, -1)) + 1;
-			lua_pushinteger(L, newSize);                                         // 4 [ ..., patternsT, listT, size, newSize ]
-			lua_pushinteger(L, newAddress);                                      // 5 [ ..., patternsT, listT, size, newSize, newAddress ]
-			lua_rawseti(L, -4, newSize);                                         // 4 [ ..., patternsT, listT, size, newSize ]
-			lua_rawseti(L, -3, 0);                                               // 3 [ ..., patternsT, listT, size ]
-			lua_pop(L, 3);                                                       // 0 [ ... ]
-		}
-
-		lua_pop(L, 1);                                                           // 0 [ ... ]
-	}
-}
-
-void initPatternTracking() {
-	// Callback that exports all existing patterns
-	sharedState().AddLuaStateInitializedCallback(onLuaStateInitialized);
-	// Listener that exports future patterns when they are set
-	sharedState().AddAfterPatternModifiedListener(onAfterPatternModified);
-}
-
-//////////////////////////
-// END Pattern Tracking //
-//////////////////////////
 
 DWORD setUpLuaInitialization(void* sectionPtr, DWORD sectionSize) {
 

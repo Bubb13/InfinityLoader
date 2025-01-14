@@ -65,7 +65,7 @@ struct HookIntegrityWatchdogSnapshotData {
 
 struct HookIntegrityWatchdogIgnoreInstance {
 	EEex_HookIntegrityWatchdogRegister registers;
-	std::vector<std::pair<int, int>> stackRanges;
+	std::vector<std::pair<uintptr_t, uintptr_t>> stackRanges;
 };
 
 struct HookIntegrityWatchdogIgnoreData {
@@ -370,51 +370,51 @@ long long currentMicroseconds() {
 void exitStutterLog(const char *const name, long long timeTaken) {
 
 	lua_State *const L = *p_g_lua;
-	lua_getglobal(L, "EEex_StutterDetector_Private_Times");            // 1 [ ..., EEex_StutterDetector_Private_Times ]
+	lua_getglobal(L, "EEex_StutterDetector_Private_Times");                       // 1 [ ..., EEex_StutterDetector_Private_Times ]
 
-	lua_pushstring(L, name);                                           // 2 [ ..., EEex_StutterDetector_Private_Times, name ]
-	lua_rawget(L, -2);                                                 // 2 [ ..., EEex_StutterDetector_Private_Times, EEex_StutterDetector_Private_Times[name] -> timeEntry ]
+	lua_pushstring(L, name);                                                      // 2 [ ..., EEex_StutterDetector_Private_Times, name ]
+	lua_rawget(L, -2);                                                            // 2 [ ..., EEex_StutterDetector_Private_Times, EEex_StutterDetector_Private_Times[name] -> timeEntry ]
 
 	if (!lua_isnil(L, -1)) {
 
-		lua_rawgeti(L, -1, 1);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, timeEntry[1] -> count ]
+		lua_rawgeti(L, -1, 1);                                                    // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, timeEntry[1] -> count ]
 		const lua_Integer count = lua_tointeger(L, -1);
-		lua_pop(L, 1);                                                 // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
-		lua_pushinteger(L, count + 1);                                 // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, newCount ]
-		lua_rawseti(L, -2, 1);                                         // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
+		lua_pop(L, 1);                                                            // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
+		lua_pushinteger(L, count + 1);                                            // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, newCount ]
+		lua_rawseti(L, -2, 1);                                                    // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
 
-		lua_rawgeti(L, -1, 2);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, timeEntry[1] -> totalTimeTaken ]
+		lua_rawgeti(L, -1, 2);                                                    // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, timeEntry[1] -> totalTimeTaken ]
 		const lua_Integer totalTimeTaken = lua_tointeger(L, -1);
-		lua_pop(L, 1);                                                 // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
-		lua_pushinteger(L, totalTimeTaken + timeTaken);                // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, newTotalTimeTaken ]
-		lua_rawseti(L, -2, 2);                                         // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
+		lua_pop(L, 1);                                                            // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
+		lua_pushinteger(L, static_cast<lua_Integer>(totalTimeTaken + timeTaken)); // 3 [ ..., EEex_StutterDetector_Private_Times, timeEntry, newTotalTimeTaken ]
+		lua_rawseti(L, -2, 2);                                                    // 2 [ ..., EEex_StutterDetector_Private_Times, timeEntry ]
 
-		lua_pop(L, 2);                                                 // 0 [ ... ]
+		lua_pop(L, 2);                                                            // 0 [ ... ]
 	}
 	else {
 
-		lua_pop(L, 1);                                                 // 1 [ ..., EEex_StutterDetector_Private_Times ]
-		lua_pushstring(L, name);                                       // 2 [ ..., EEex_StutterDetector_Private_Times, name ]
-		lua_newtable(L);                                               // 3 [ ..., EEex_StutterDetector_Private_Times, name, {} -> timeEntry ]
+		lua_pop(L, 1);                                                            // 1 [ ..., EEex_StutterDetector_Private_Times ]
+		lua_pushstring(L, name);                                                  // 2 [ ..., EEex_StutterDetector_Private_Times, name ]
+		lua_newtable(L);                                                          // 3 [ ..., EEex_StutterDetector_Private_Times, name, {} -> timeEntry ]
 
-		lua_pushinteger(L, 1);                                         // 4 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry, 1 ]
-		lua_rawseti(L, -2, 1);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry ]
+		lua_pushinteger(L, 1);                                                    // 4 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry, 1 ]
+		lua_rawseti(L, -2, 1);                                                    // 3 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry ]
 
-		lua_pushinteger(L, timeTaken);                                 // 4 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry, timeTaken ]
-		lua_rawseti(L, -2, 2);                                         // 3 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry ]
+		lua_pushinteger(L, static_cast<lua_Integer>(timeTaken));                  // 4 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry, timeTaken ]
+		lua_rawseti(L, -2, 2);                                                    // 3 [ ..., EEex_StutterDetector_Private_Times, name, timeEntry ]
 
-		lua_rawset(L, -3);                                             // 1 [ ..., EEex_StutterDetector_Private_Times ]
+		lua_rawset(L, -3);                                                        // 1 [ ..., EEex_StutterDetector_Private_Times ]
 
-		lua_pop(L, 1);                                                 // 0 [ ... ]
+		lua_pop(L, 1);                                                            // 0 [ ... ]
 	}
 
 	if (topLevel) {
 
-		lua_getglobal(L, "EEex_StutterDetector_Private_TopLevelTime"); // 1 [ ..., EEex_StutterDetector_Private_TopLevelTime ]
+		lua_getglobal(L, "EEex_StutterDetector_Private_TopLevelTime");            // 1 [ ..., EEex_StutterDetector_Private_TopLevelTime ]
 		const lua_Integer topLevelTime = lua_tointeger(L, -1);
-		lua_pop(L, 1);                                                 // 0 [ ... ]
-		lua_pushinteger(L, topLevelTime + timeTaken);                  // 1 [ ..., newTopLevelTime ]
-		lua_setglobal(L, "EEex_StutterDetector_Private_TopLevelTime"); // 0 [ ... ]
+		lua_pop(L, 1);                                                            // 0 [ ... ]
+		lua_pushinteger(L, static_cast<lua_Integer>(topLevelTime + timeTaken));   // 1 [ ..., newTopLevelTime ]
+		lua_setglobal(L, "EEex_StutterDetector_Private_TopLevelTime");            // 0 [ ... ]
 	}
 }
 

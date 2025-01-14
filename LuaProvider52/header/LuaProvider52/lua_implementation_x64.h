@@ -3,8 +3,6 @@
 
 #include <setjmp.h>
 
-#include "lua/lua.h"
-
 union Closure;
 union GCObject;
 struct LocVar;
@@ -175,6 +173,24 @@ struct CallInfo
 	unsigned __int8 callstatus;
 	__int64 extra;
 	CallInfo::u_t u;
+};
+
+struct lua_Debug
+{
+	int event;
+	const char* name;
+	const char* namewhat;
+	const char* what;
+	const char* source;
+	int currentline;
+	int linedefined;
+	int lastlinedefined;
+	unsigned __int8 nups;
+	unsigned __int8 nparams;
+	char isvararg;
+	char istailcall;
+	char short_src[60];
+	CallInfo* i_ci;
 };
 
 struct lua_TValue
