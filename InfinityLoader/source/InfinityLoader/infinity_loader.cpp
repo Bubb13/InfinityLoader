@@ -347,7 +347,7 @@ static DWORD getDLLVersion(const wchar_t *const filePath, DWORD& majorOut, DWORD
 
 	if (size == 0) {
 		const DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoSizeW() failed (%d)", lastError);
+		Print("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoSizeW() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -355,7 +355,7 @@ static DWORD getDLLVersion(const wchar_t *const filePath, DWORD& majorOut, DWORD
 
 	if (!GetFileVersionInfoW(filePath, handle, size, versionData.data())) {
 		const DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoW() failed (%d)", lastError);
+		Print("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoW() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -364,7 +364,7 @@ static DWORD getDLLVersion(const wchar_t *const filePath, DWORD& majorOut, DWORD
 
 	if (!VerQueryValueW(versionData.data(), L"\\", reinterpret_cast<LPVOID*>(&fileInfo), &len)) {
 		const DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] getDLLVersion() - VerQueryValueW() failed (%d)", lastError);
+		Print("[!][InfinityLoader.exe] getDLLVersion() - VerQueryValueW() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -385,11 +385,11 @@ static void processLoadedModulePath(const HMODULE module, DWORD& lastError, std:
 
 		[&](wchar_t *const buffer, const size_t bufferSize) {
 
-			const DWORD pathSize = GetModuleFileNameW(module, buffer, bufferSize);
+			const DWORD pathSize = GetModuleFileNameW(module, buffer, static_cast<DWORD>(bufferSize));
 
 			if (pathSize == 0) {
 				lastError = GetLastError();
-				Print("[!][InfinityLoader.exe] processLoadedModulePath() - GetModuleFileNameW() failed (%d)", lastError);
+				Print("[!][InfinityLoader.exe] processLoadedModulePath() - GetModuleFileNameW() failed (%d)\n", lastError);
 				return TryFillBufferResult::ABORT;
 			}
 
@@ -405,7 +405,7 @@ static DWORD getLoadedDLLVersion(const wchar_t *const dllName, DWORD& majorOut, 
 
 	if (hModule == NULL) {
 		const DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] getLoadedDLLVersion() - GetModuleHandleW() failed (%d)", lastError);
+		Print("[!][InfinityLoader.exe] getLoadedDLLVersion() - GetModuleHandleW() failed (%d)\n", lastError);
 		return lastError;
 	}
 

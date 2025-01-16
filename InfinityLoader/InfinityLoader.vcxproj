@@ -63,7 +63,6 @@
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
       <AdditionalDependencies>version.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
