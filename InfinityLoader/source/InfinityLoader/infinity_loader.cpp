@@ -1,7 +1,9 @@
 
+#include <array>
 #include <iostream>
 
 #include "infinity_loader_common_api.h"
+#include "util.h"
 
 /////////////
 // Globals //
@@ -18,24 +20,24 @@ StringA workingFolderA;
 // Code //
 //////////
 
-bool inheritedConsole() {
+static bool inheritedConsole() {
 	HWND consoleWnd = GetConsoleWindow();
 	DWORD dwProcessId;
 	GetWindowThreadProcessId(consoleWnd, &dwProcessId);
 	return GetCurrentProcessId() != dwProcessId;
 }
 
-void hideConsole()
+static void hideConsole()
 {
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
 }
 
-void showConsole()
+static void showConsole()
 {
 	ShowWindow(GetConsoleWindow(), SW_SHOW);
 }
 
-/*DWORD GetThreadStartAddress(HANDLE hThread)
+/*static DWORD GetThreadStartAddress(HANDLE hThread)
 {
 	NTSTATUS ntStatus;
 	HANDLE hDupHandle;
@@ -55,7 +57,7 @@ void showConsole()
 }*/
 
 template<typename CharType>
-DWORD writeProcessString(HANDLE hProcess, const CharType* str, uintptr_t& memoryPtr) {
+static DWORD writeProcessString(HANDLE hProcess, const CharType* str, uintptr_t& memoryPtr) {
 
 	size_t strSizeBytes;
 	if constexpr (std::is_same<CharType, char>::value) {
@@ -83,7 +85,7 @@ DWORD writeProcessString(HANDLE hProcess, const CharType* str, uintptr_t& memory
 	return 0;
 }
 
-DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
+static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 
 	CONTEXT context;
 	memset(&context, 0, sizeof(CONTEXT));
@@ -213,7 +215,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	return 0;
 }
 
-/*DWORD remoteThread(HANDLE hProcess) {
+/*static DWORD remoteThread(HANDLE hProcess) {
 
 	//////////////////////
 	// Write DLL string //
@@ -251,7 +253,7 @@ DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	return 0;
 }*/
 
-DWORD startGame() {
+static DWORD startGame() {
 
 	STARTUPINFO startupInfo{};
 	startupInfo.cb = sizeof(STARTUPINFO);
@@ -334,7 +336,116 @@ errorFinally:;
 	return lastError;
 }
 
-DWORD init() {
+////////////////////////////////////////
+// Microsoft C++ STL Version Checking //
+////////////////////////////////////////
+
+static DWORD getDLLVersion(const wchar_t *const filePath, DWORD& majorOut, DWORD& minorOut, DWORD& buildOut, DWORD& revisionOut) {
+
+	DWORD handle = NULL;
+	const DWORD size = GetFileVersionInfoSizeW(filePath, &handle);
+
+	if (size == 0) {
+		const DWORD lastError = GetLastError();
+		Print("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoSizeW() failed (%d)", lastError);
+		return lastError;
+	}
+
+	std::vector<unsigned char> versionData(size);
+
+	if (!GetFileVersionInfoW(filePath, handle, size, versionData.data())) {
+		const DWORD lastError = GetLastError();
+		Print("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoW() failed (%d)", lastError);
+		return lastError;
+	}
+
+	VS_FIXEDFILEINFO* fileInfo = nullptr;
+	UINT len;
+
+	if (!VerQueryValueW(versionData.data(), L"\\", reinterpret_cast<LPVOID*>(&fileInfo), &len)) {
+		const DWORD lastError = GetLastError();
+		Print("[!][InfinityLoader.exe] getDLLVersion() - VerQueryValueW() failed (%d)", lastError);
+		return lastError;
+	}
+
+	if (fileInfo == nullptr) {
+		return -1;
+	}
+
+	majorOut = HIWORD(fileInfo->dwFileVersionMS);
+	minorOut = LOWORD(fileInfo->dwFileVersionMS);
+	buildOut = HIWORD(fileInfo->dwFileVersionLS);
+	revisionOut = LOWORD(fileInfo->dwFileVersionLS);
+	return ERROR_SUCCESS;
+}
+
+static void processLoadedModulePath(const HMODULE module, DWORD& lastError, std::function<void(wchar_t*, size_t)> callback) {
+
+	RunWithGrowingBuffer<wchar_t>(
+
+		[&](wchar_t *const buffer, const size_t bufferSize) {
+
+			const DWORD pathSize = GetModuleFileNameW(module, buffer, bufferSize);
+
+			if (pathSize == 0) {
+				lastError = GetLastError();
+				Print("[!][InfinityLoader.exe] processLoadedModulePath() - GetModuleFileNameW() failed (%d)", lastError);
+				return TryFillBufferResult::ABORT;
+			}
+
+			return pathSize == bufferSize ? TryFillBufferResult::GROW : TryFillBufferResult::DONE;
+		},
+		callback
+	);
+}
+
+static DWORD getLoadedDLLVersion(const wchar_t *const dllName, DWORD& majorOut, DWORD& minorOut, DWORD& buildOut, DWORD& revisionOut) {
+
+	const HMODULE hModule = GetModuleHandleW(dllName);
+
+	if (hModule == NULL) {
+		const DWORD lastError = GetLastError();
+		Print("[!][InfinityLoader.exe] getLoadedDLLVersion() - GetModuleHandleW() failed (%d)", lastError);
+		return lastError;
+	}
+
+	DWORD lastError = ERROR_SUCCESS;
+	processLoadedModulePath(hModule, lastError, [&](const wchar_t *const modulePath, const size_t) {
+		lastError = getDLLVersion(modulePath, majorOut, minorOut, buildOut, revisionOut);
+	});
+
+	return lastError;
+}
+
+template<std::size_t N>
+static bool checkVersion(const std::array<DWORD, N>& targetVersion, const std::array<DWORD, N>& checkVersion) {
+	for (std::size_t i = 0; i < N; ++i) {
+		const DWORD checkPart = checkVersion[i];
+		const DWORD targetPart = targetVersion[i];
+		if (checkPart > targetPart) {
+			break;
+		}
+		else if (checkPart < targetPart) {
+			return false;
+		}
+	}
+	return true;
+}
+
+////////////////////
+// Initialization //
+////////////////////
+
+static DWORD init() {
+
+	std::array<DWORD, 4> version;
+	TryRetErr( getLoadedDLLVersion(L"msvcp140.dll", version[0], version[1], version[2], version[3]) )
+
+	if (!checkVersion({ 14, 42, 34433, 0 }, version)) {
+		MessageBoxA(NULL, "Please update your Microsoft Visual C++ Redistributable", "InfinityLoader", MB_ICONERROR);
+		return -2;
+	}
+
 	TryRetErr( CreateMappedMemory(mappedMemoryHandle(), mappedMemory()) )
 	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
@@ -344,7 +455,7 @@ DWORD init() {
 	return ERROR_SUCCESS;
 }
 
-int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
+static int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
 	String dmpLocation = WriteDump(workingFolder, pointers);
 	MessageBoxFormat(TEXT("InfinityLoader.exe"), MB_ICONERROR, TEXT("[!] Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
 	exit(code);
@@ -358,8 +469,11 @@ int main(int argc, char* argv[]) {
 			hideConsole();
 		}
 
-		if (init()) {
-			goto error;
+		if (const DWORD lastError = init()) {
+			if (lastError != -2) {
+				goto error;
+			}
+			return 0;
 		}
 
 		if (startGame()) {
