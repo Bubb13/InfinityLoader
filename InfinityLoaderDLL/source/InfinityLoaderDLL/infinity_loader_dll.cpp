@@ -119,14 +119,14 @@ void callOverrideFile(lua_State* L, const char* name) {
 			return;
 		}
 																														  // [ debug, traceback, errorMessage, errorMessageTraceback ]
-		Print("[!][InfinityLoaderDLL.dll] callOverrideFile() - %s\n", lua_tostring(L, -1));
+		FPrint("[!][InfinityLoaderDLL.dll] callOverrideFile() - %s\n", lua_tostring(L, -1));
 		lua_pop(L, 4);                                                                                                    // [ ]
 		return;
 	}
 																														  // [ debug, traceback, chunk ]
 	if (lua_pcallk(L, 0, 0, -2, 0, nullptr) != LUA_OK) {
 																														  // [ debug, traceback, errorMessage ]
-		Print("[!][InfinityLoaderDLL.dll] callOverrideFile() - %s\n", lua_tostring(L, -1));
+		FPrint("[!][InfinityLoaderDLL.dll] callOverrideFile() - %s\n", lua_tostring(L, -1));
 		lua_pop(L, 3);                                                                                                    // [ ]
 	}
 	else {
@@ -188,7 +188,7 @@ template<typename out_type>
 DWORD getLuaProc(const char* name, out_type& out) {
 	if (out = reinterpret_cast<out_type>(GetProcAddress(luaLibrary(), name)); out == 0) {
 		DWORD lastError = GetLastError();
-		Print("[!][InfinityLoaderDLL.dll] getLuaProc() - GetProcAddress() failed (%d) to find Lua function \"%s\"\n", lastError, name);
+		FPrint("[!][InfinityLoaderDLL.dll] getLuaProc() - GetProcAddress() failed (%d) to find Lua function \"%s\"\n", lastError, name);
 		return lastError;
 	}
 	return 0;
@@ -280,7 +280,7 @@ bool checkOperationsArgCount(const String& iniCategoryName, const String& operat
 {
 	size_t numArgs = parts.size() - 1;
 	if (!condition(numArgs)) {
-		PrintT(TEXT("[!][InfinityLoaderDLL.dll] checkOperationsArgCount() - Invalid number of arguments in %s operation for [%s].Operations: %d\n"), iniCategoryName.c_str(),
+		FPrintT(TEXT("[!][InfinityLoaderDLL.dll] checkOperationsArgCount() - Invalid number of arguments in %s operation for [%s].Operations: %d\n"), iniCategoryName.c_str(),
 				operationStr.c_str(), static_cast<int>(numArgs));
 		return false;
 	}
@@ -292,7 +292,7 @@ bool checkOperationsStackCount(const String& iniCategoryName, const String& oper
 {
 	size_t stackSize = stack.size();
 	if (stackSize < neededStackSize) {
-		PrintT(TEXT("[!][InfinityLoaderDLL.dll] checkOperationsStackCount() - Not enough values pushed onto stack in %s operation for [%s].Operations: %d < %d\n"),
+		FPrintT(TEXT("[!][InfinityLoaderDLL.dll] checkOperationsStackCount() - Not enough values pushed onto stack in %s operation for [%s].Operations: %d < %d\n"),
 				operationStr.c_str(), iniCategoryName.c_str(), static_cast<int>(stackSize), static_cast<int>(neededStackSize));
 		return false;
 	}
@@ -304,7 +304,7 @@ bool tryOperationsConvertToDecimal(const String& iniCategoryName, const String& 
 {
 	String arg = parts[argI];
 	if (!DecStrToIntPtr(arg, out)) {
-		PrintT(TEXT("[!][InfinityLoaderDLL.dll] tryOperationsConvertToDecimal() - Failed to convert %s argument to decimal for [%s].Operations: \"%s\"\n"),
+		FPrintT(TEXT("[!][InfinityLoaderDLL.dll] tryOperationsConvertToDecimal() - Failed to convert %s argument to decimal for [%s].Operations: \"%s\"\n"),
 				operationStr.c_str(), iniCategoryName.c_str(), arg.c_str());
 		return false;
 	}
@@ -345,7 +345,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, uintp
 		});
 
 		if (curParts.size() == 0) {
-			PrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Operation missing for [%s].Operations\n"), iniCategoryName.c_str());
+			FPrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Operation missing for [%s].Operations\n"), iniCategoryName.c_str());
 			result = false;
 			return true;
 		}
@@ -395,7 +395,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, uintp
 			}
 #endif
 			else {
-				PrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Invalid READ argument for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), arg1.c_str());
+				FPrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Invalid READ argument for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), arg1.c_str());
 				result = false;
 				return true;
 			}
@@ -414,7 +414,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, uintp
 				std::list<PatternByteEntry> byteList;
 				String errorStr;
 				if (!decodeByteString(arg2, byteList, errorStr)) {
-					PrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Failed to decode BYTES value for [%s].Operations: \"%s\", %s\n"), iniCategoryName.c_str(), arg2.c_str(), errorStr.c_str());
+					FPrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Failed to decode BYTES value for [%s].Operations: \"%s\", %s\n"), iniCategoryName.c_str(), arg2.c_str(), errorStr.c_str());
 					return true;
 				}
 
@@ -447,7 +447,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, uintp
 				}
 #endif
 				else {
-					PrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Invalid WRITE argument for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), arg1.c_str());
+					FPrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Invalid WRITE argument for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), arg1.c_str());
 					result = false;
 					return true;
 				}
@@ -464,7 +464,7 @@ bool handlePatternOperations(String iniCategoryName, String operationsStr, uintp
 			enableCodeProtection();
 		}
 		else {
-			PrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Invalid operation for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), operationName.c_str());
+			FPrintT(TEXT("[!][InfinityLoaderDLL.dll] handlePatternOperations() - Invalid operation for [%s].Operations: \"%s\"\n"), iniCategoryName.c_str(), operationName.c_str());
 			result = false;
 			return true;
 		}
@@ -516,7 +516,7 @@ DWORD resolveAliasTarget(const String aliasList, String& toTransform) {
 		const size_t colonI = str.find(TCHAR{':'});
 
 		if (colonI == std::string::npos) {
-			PrintT(TEXT("[!][InfinityLoaderDLL.dll] resolveAliasTarget() - Invalid ExeSwitchAlias: \"%s\"\n"), str.c_str());
+			FPrintT(TEXT("[!][InfinityLoaderDLL.dll] resolveAliasTarget() - Invalid ExeSwitchAlias: \"%s\"\n"), str.c_str());
 			result = -1;
 			return true;
 		}
@@ -525,7 +525,7 @@ DWORD resolveAliasTarget(const String aliasList, String& toTransform) {
 		const String target = str.substr(colonI + 1);
 
 		if (target.find(TCHAR{':'}) != std::string::npos) {
-			PrintT(TEXT("[!][InfinityLoaderDLL.dll] resolveAliasTarget() - Invalid ExeSwitchAlias: \"%s\"\n"), str.c_str());
+			FPrintT(TEXT("[!][InfinityLoaderDLL.dll] resolveAliasTarget() - Invalid ExeSwitchAlias: \"%s\"\n"), str.c_str());
 			result = -1;
 			return true;
 		}
@@ -545,7 +545,7 @@ template<typename AddressType>
 bool setSinglePatternValue(const String& name, AddressType address, PatternValueHandle& patternHandleOut) {
 
 	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, patternHandleOut)) {
-		PrintT(TEXT("[!][InfinityLoaderDLL.dll] setSinglePatternValue() - [%s].Type must be SINGLE\n"), name.c_str());
+		FPrintT(TEXT("[!][InfinityLoaderDLL.dll] setSinglePatternValue() - [%s].Type must be SINGLE\n"), name.c_str());
 		return false;
 	}
 
@@ -596,7 +596,7 @@ DWORD processINICategoryPatternValue(
 
 			PatternValueHandle handle;
 			if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::LIST, handle)) {
-				PrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
+				FPrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
 				return -1;
 			}
 
@@ -607,7 +607,7 @@ DWORD processINICategoryPatternValue(
 				uintptr_t address;
 				if (!DecStrToUIntPtr(addressStr, address)) {
 					success = false;
-					PrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Failed to parse [%s].%s\n"), iniCategoryName.c_str(), listKey);
+					FPrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Failed to parse [%s].%s\n"), iniCategoryName.c_str(), listKey);
 					return true;
 				}
 
@@ -624,7 +624,7 @@ DWORD processINICategoryPatternValue(
 		}
 	}
 	else {
-		PrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Invalid [%s].Type\n"), iniCategoryName.c_str());
+		FPrintT(TEXT("[!][InfinityLoaderDLL.dll] processINICategoryPatternValue() - Invalid [%s].Type\n"), iniCategoryName.c_str());
 		return -1;
 	}
 
@@ -674,7 +674,7 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 		type = PatternValueType::LIST;
 	}
 	else {
-		PrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Invalid [%s].Type\n"), iniCategoryName.c_str());
+		FPrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Invalid [%s].Type\n"), iniCategoryName.c_str());
 		return -1;
 	}
 
@@ -724,7 +724,7 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 	std::list<PatternByteEntry> byteList;
 	String errorStr;
 	if (!decodeByteString(pattern, byteList, errorStr)) {
-		PrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Failed to decode [%s].Pattern: \"%s\"\n"), iniCategoryName.c_str(), errorStr.c_str());
+		FPrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Failed to decode [%s].Pattern: \"%s\"\n"), iniCategoryName.c_str(), errorStr.c_str());
 		return -1;
 	}
 
@@ -732,7 +732,7 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 
 		uintptr_t foundAddress;
 		if (!findByteList(sectionPtr, sectionSize, byteList, foundAddress)) {
-			PrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Could not find [%s].Pattern\n"), iniCategoryName.c_str());
+			FPrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Could not find [%s].Pattern\n"), iniCategoryName.c_str());
 			return -1;
 		}
 
@@ -754,7 +754,7 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 
 		PatternValueHandle handle;
 		if (sharedState().GetOrCreatePatternValue(originalINICategoryName, PatternValueType::LIST, handle)) {
-			PrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
+			FPrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Conflicting pattern [%s].Type\n"), originalINICategoryName.c_str());
 			return -1;
 		}
 
@@ -779,7 +779,7 @@ DWORD findINICategoryPattern(void* sectionPtr, DWORD sectionSize, const String& 
 		}
 
 		if (curAddress == sectionPtr) {
-			PrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Could not find [%s].Pattern\n"), iniCategoryName.c_str());
+			FPrintT(TEXT("[!][InfinityLoaderDLL.dll] findINICategoryPattern() - Could not find [%s].Pattern\n"), iniCategoryName.c_str());
 			return -1;
 		}
 
@@ -841,7 +841,7 @@ DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
 
 	if (alreadyCached) {
 		if (debug()) {
-			Print("[?][InfinityLoaderDLL.dll] findPatterns() - exeLastModifiedTime: %lld, CachedExeTime: %lld\n", exeLastModifiedTime, cachedExeTime);
+			FPrint("[?][InfinityLoaderDLL.dll] findPatterns() - exeLastModifiedTime: %lld, CachedExeTime: %lld\n", exeLastModifiedTime, cachedExeTime);
 		}
 		if (exeLastModifiedTime == cachedExeTime) {
 			attemptUseCached = true;
@@ -855,7 +855,7 @@ DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
 	}
 
 	if (debug()) {
-		Print("[?][InfinityLoaderDLL.dll] findPatterns() - Using cached pattern addresses: %s\n", attemptUseCached ? "true" : "false");
+		FPrint("[?][InfinityLoaderDLL.dll] findPatterns() - Using cached pattern addresses: %s\n", attemptUseCached ? "true" : "false");
 	}
 
 	DWORD returnVal = 0;
@@ -1029,7 +1029,7 @@ int iterateRegexLua(lua_State* L) {
 
 		if (lua_pcallk(L, 4, 1, -6, 0, nullptr) != LUA_OK) {
 																								 // [ debug, traceback, errorMessage ]
-			Print("[!][InfinityLoaderDLL.dll] %sIterateRegex() - %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
+			FPrint("[!][InfinityLoaderDLL.dll] %sIterateRegex() - %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
 			lua_pop(L, 1);                                                                       // [ debug, traceback ]
 			break;
 		}
@@ -1056,13 +1056,13 @@ int jitLua(lua_State* L) {
 	asmtk::AsmParser p(&a);
 
 	if (asmjit::Error err = p.parse(lua_tostring(L, 1))) {
-		Print("[!][InfinityLoaderDLL.dll] %sJIT() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
+		FPrint("[!][InfinityLoaderDLL.dll] %sJIT() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
 	void* ptr;
 	if (asmjit::Error err = rt.add(&ptr, &code)) {
-		Print("[!][InfinityLoaderDLL.dll] %sJIT() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
+		FPrint("[!][InfinityLoaderDLL.dll] %sJIT() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
@@ -1079,7 +1079,7 @@ int jitAtInternalLua(lua_State* L) {
 	asmtk::AsmParser p(&a);
 
 	if (asmjit::Error err = p.parse(lua_tostring(L, 3))) {
-		Print("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
+		FPrint("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
@@ -1092,7 +1092,7 @@ int jitAtInternalLua(lua_State* L) {
 		lua_pushinteger(L, size);                                                                                               // [ debug, traceback, func, size ]
 		if (lua_pcallk(L, 1, 1, -3, 0, nullptr) != LUA_OK) {
 																																// [ debug, traceback, errorMessage ]
-			Print("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
+			FPrint("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
 			lua_pop(L, 3);                                                                                                      // [ ]
 			return reinterpret_cast<uint8_t*>(-1);
 		}
@@ -1103,7 +1103,7 @@ int jitAtInternalLua(lua_State* L) {
 	};
 
 	if (asmjit::Error err = jitAt(reinterpret_cast<uint8_t*>(lua_tointeger(L, 1)), &code, checkFunc)) {
-		Print("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
+		FPrint("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
 		return 0;
 	}
 
@@ -1115,13 +1115,13 @@ bool initializeLuaBindings(const char* bindingsFileName, LoadedBindings& loadedB
 	StringA bindingsPath = StringA{ workingFolderA() }.append(bindingsFileName).append(".dll");
 
 	if (loadedBindings.hHandle = LoadLibraryA(bindingsPath.c_str()); !loadedBindings.hHandle) {
-		Print("[!][InfinityLoaderDLL.dll] initializeLuaBindings() - LoadLibraryA(\"%s\") failed (%d)\n", bindingsPath.c_str(), GetLastError());
+		FPrint("[!][InfinityLoaderDLL.dll] initializeLuaBindings() - LoadLibraryA(\"%s\") failed (%d)\n", bindingsPath.c_str(), GetLastError());
 		return true;
 	}
 
 	FARPROC initProcFar;
 	if (initProcFar = GetProcAddress(loadedBindings.hHandle, "InitBindings"); !initProcFar) {
-		Print("[!][InfinityLoaderDLL.dll] initializeLuaBindings() - GetProcAddress() failed (%d)\n", GetLastError());
+		FPrint("[!][InfinityLoaderDLL.dll] initializeLuaBindings() - GetProcAddress() failed (%d)\n", GetLastError());
 		return true;
 	}
 
@@ -1154,7 +1154,7 @@ int openLuaBindingsLua(lua_State* L) {
 
 		FARPROC openBindingsProcFar;
 		if (openBindingsProcFar = GetProcAddress(loadedBindings.hHandle, "OpenBindings"); !openBindingsProcFar) {
-			Print("[!][InfinityLoaderDLL.dll] %sOpenLuaBindings() - GetProcAddress() failed (%d)\n", luaGlobalsPrefix.c_str(), GetLastError());
+			FPrint("[!][InfinityLoaderDLL.dll] %sOpenLuaBindings() - GetProcAddress() failed (%d)\n", luaGlobalsPrefix.c_str(), GetLastError());
 			return 0;
 		}
 
@@ -1212,12 +1212,12 @@ int messageBoxInternalLua(lua_State* L) {
 }
 
 int printLua(lua_State* L) {
-	Print("%s", lua_tostring(L, 1));
+	Print(lua_tostring(L, 1));
 	return 0;
 }
 
 int printErrLua(lua_State* L) {
-	PrintErr("%s", lua_tostring(L, 1));
+	PrintErr(lua_tostring(L, 1));
 	return 0;
 }
 
@@ -1310,7 +1310,7 @@ int runWithStackLua(lua_State* L) {
 
 	if (lua_pcallk(L, 1, 0, -3, 0, nullptr) != LUA_OK) {
 																							 // [ debug, traceback, errorMessage ]
-		Print("[!][InfinityLoaderDLL.dll] %sRunWithStack() - %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
+		FPrint("[!][InfinityLoaderDLL.dll] %sRunWithStack() - %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
 		lua_pop(L, 3);                                                                       // [ ]
 	}
 	else {
@@ -1700,7 +1700,7 @@ DWORD attachToConsole(bool force = false) {
 	attachedToConsole = true;
 
 	if (debug()) {
-		Print("[?][InfinityLoaderDLL.dll] attachToConsole() - force = %s\n", force ? "true" : "false");
+		FPrint("[?][InfinityLoaderDLL.dll] attachToConsole() - force = %s\n", force ? "true" : "false");
 	}
 
 	return ERROR_SUCCESS;
@@ -1727,7 +1727,7 @@ DWORD detatchFromConsole(bool force = false) {
 	}
 
 	if (debug()) {
-		Print("[?][InfinityLoaderDLL.dll] detatchFromConsole() - force = %s\n", force ? "true" : "false");
+		FPrint("[?][InfinityLoaderDLL.dll] detatchFromConsole() - force = %s\n", force ? "true" : "false");
 	}
 
 	if (!FreeConsole()) {
@@ -1782,7 +1782,7 @@ int logShim(FILE* stream, const char* format, const char* level, const char* mes
 		return fprintf(stderr, format, level, message);
 	}
 	else {
-		FPrint(stderr, format, level, message);
+		FPrintErr(format, level, message);
 		return 0;
 	}
 }
@@ -1852,9 +1852,9 @@ void winMainHook() {
 
 		Print("[?][InfinityLoaderDLL.dll] winMainHook() - Debug output 3 (Windows: Yes, Proton: Yes)...\n");
 
-		Print("[?][InfinityLoaderDLL.dll] winMainHook() - Game hStdInput: %d\n", GetStdHandle(STD_INPUT_HANDLE));
-		Print("[?][InfinityLoaderDLL.dll] winMainHook() - Game hStdOutput: %d\n", GetStdHandle(STD_OUTPUT_HANDLE));
-		Print("[?][InfinityLoaderDLL.dll] winMainHook() - Game hStdError: %d\n", GetStdHandle(STD_ERROR_HANDLE));
+		FPrint("[?][InfinityLoaderDLL.dll] winMainHook() - Game hStdInput: %d\n", GetStdHandle(STD_INPUT_HANDLE));
+		FPrint("[?][InfinityLoaderDLL.dll] winMainHook() - Game hStdOutput: %d\n", GetStdHandle(STD_OUTPUT_HANDLE));
+		FPrint("[?][InfinityLoaderDLL.dll] winMainHook() - Game hStdError: %d\n", GetStdHandle(STD_ERROR_HANDLE));
 	}
 
 	bool installLogRedirect = false;
@@ -1884,11 +1884,11 @@ void winMainHook() {
 	if (installLogRedirect) {
 
 		if (debug()) {
-			Print("[?][InfinityLoaderDLL.dll] winMainHook() - Redirecting output, disable_fprintf: %s\n", disable_fprintf ? "true" : "false");
+			FPrint("[?][InfinityLoaderDLL.dll] winMainHook() - Redirecting output, disable_fprintf: %s\n", disable_fprintf ? "true" : "false");
 		}
 
 		if (DWORD redirectResult = writeReplaceLogFunction(disable_fprintf)) {
-			Print("[!][InfinityLoaderDLL.dll] winMainHook() - Console redirection failed (%d)\n", redirectResult);
+			FPrint("[!][InfinityLoaderDLL.dll] winMainHook() - Console redirection failed (%d)\n", redirectResult);
 			goto cleanup;
 		}
 	}
@@ -1916,7 +1916,7 @@ bool fillPatternPointer(void* segmentPtr, DWORD segmentSize, const String& name,
 	TryRetErr( findINICategoryPattern(segmentPtr, segmentSize, iniPath(), name, patternHandle) )
 
 	if (sharedState().GetPatternValueType(patternHandle) != PatternValueType::SINGLE) {
-		PrintT(TEXT("[!][InfinityLoaderDLL.dll] fillPatternPointer() - [%s].Type must be SINGLE\n"), name.c_str());
+		FPrintT(TEXT("[!][InfinityLoaderDLL.dll] fillPatternPointer() - [%s].Type must be SINGLE\n"), name.c_str());
 		return true;
 	}
 
@@ -1933,12 +1933,13 @@ bool fillPatternPointer(void* segmentPtr, DWORD segmentSize, const String& name,
 }
 
 int temporaryPrintReplacement(lua_State* L) {
-	Print("%s\n", lua_tostring(L, 1));
+	Print(lua_tostring(L, 1));
+	Print("\n");
 	return 0;
 }
 
 void simpleLog(const char *const str) {
-	Print("%s", str);
+	Print(str);
 }
 
 void initLuaState(lua_State *const L) {
@@ -2314,13 +2315,13 @@ byte init(HANDLE mappedMemoryHandle) {
 
 	if (protonCompatibility()) {
 		if (int error = UnbufferCrtStreams()) {
-			Print("[!][InfinityLoaderDLL.dll] init() - UnbufferCrtStreams() failed (%d)\n", error);
+			FPrint("[!][InfinityLoaderDLL.dll] init() - UnbufferCrtStreams() failed (%d)\n", error);
 			return 2;
 		}
 	}
 
 	if (int error = InitFPrint()) {
-		Print("[!][InfinityLoaderDLL.dll] init() - InitFPrint() failed (%d)\n", error);
+		FPrint("[!][InfinityLoaderDLL.dll] init() - InitFPrint() failed (%d)\n", error);
 		return 2;
 	}
 
@@ -2328,9 +2329,9 @@ byte init(HANDLE mappedMemoryHandle) {
 
 		Print("[?][InfinityLoaderDLL.dll] init() - Debug output 1 (Windows: Yes, Proton: Yes)...\n");
 
-		Print("[?][InfinityLoaderDLL.dll] init() - DLL hStdInput: %d\n", GetStdHandle(STD_INPUT_HANDLE));
-		Print("[?][InfinityLoaderDLL.dll] init() - DLL hStdOutput: %d\n", GetStdHandle(STD_OUTPUT_HANDLE));
-		Print("[?][InfinityLoaderDLL.dll] init() - DLL hStdError: %d\n", GetStdHandle(STD_ERROR_HANDLE));
+		FPrint("[?][InfinityLoaderDLL.dll] init() - DLL hStdInput: %d\n", GetStdHandle(STD_INPUT_HANDLE));
+		FPrint("[?][InfinityLoaderDLL.dll] init() - DLL hStdOutput: %d\n", GetStdHandle(STD_OUTPUT_HANDLE));
+		FPrint("[?][InfinityLoaderDLL.dll] init() - DLL hStdError: %d\n", GetStdHandle(STD_ERROR_HANDLE));
 	}
 
 	if (sharedState().InitState()) {

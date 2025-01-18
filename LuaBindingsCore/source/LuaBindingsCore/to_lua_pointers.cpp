@@ -94,7 +94,7 @@ void dumpStackIndex(lua_State* L, const char* label, int index) {
 
 	if (lua_pcallk(L, 2, 0, -4, 0, nullptr) != LUA_OK) {
 																						// [ debug, traceback, errorMessage ]
-		Print("[?][LuaBindingsCore.dll] dumpStackIndex() - %s\n", lua_tostring(L, -1));
+		FPrint("[?][LuaBindingsCore.dll] dumpStackIndex() - %s\n", lua_tostring(L, -1));
 		lua_pop(L, 3);                                                                  // [ ]
 	}
 	else {

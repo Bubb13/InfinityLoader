@@ -13,6 +13,34 @@
 
 #include <dbghelp.h>
 
+/////////////
+// Globals //
+/////////////
+
+FILE* consoleOut;
+
+typedef void(*type_FilePrint)(FILE* file, const char* str);
+type_FilePrint p_FilePrint = reinterpret_cast<type_FilePrint>(fputs);
+
+typedef void(*type_FilePrintT)(FILE* file, const TCHAR* str);
+type_FilePrintT p_FilePrintT = reinterpret_cast<type_FilePrintT>(fputsT);
+
+#undef fprintf
+#undef fprintfT
+
+#ifndef UNICODE
+#define fprintfT fprintf
+#else
+#define fprintfT fwprintf
+#endif
+
+EXPORT type_FFilePrint FFilePrint = reinterpret_cast<type_FFilePrint>(fprintf);
+EXPORT type_FFilePrintT FFilePrintT = reinterpret_cast<type_FFilePrintT>(fprintfT);
+
+#define fprintf error
+#undef fprintfT
+#define fprintfT error
+
 //////////
 // Init //
 //////////
@@ -35,46 +63,41 @@ EXPORT DWORD InitMappedMemory(HANDLE mappedMemoryHandle, SharedStateMappedMemory
 // Logging //
 /////////////
 
-#undef fprintf
-#undef fprintfT
+//-----------//
+// FilePrint //
+//-----------//
 
-#ifndef UNICODE
-#define fprintfT fprintf
-#else
-#define fprintfT fwprintf
-#endif
-
-FILE* consoleOut;
-EXPORT type_FPrint FPrint = reinterpret_cast<type_FPrint>(fprintf);
-EXPORT type_FPrintT FPrintT = reinterpret_cast<type_FPrintT>(fprintfT);
-
-void FPrintT_NoConsole(FILE* file, const TCHAR* formatText, ...) {
-
-	va_list args;
-	TCHAR buffer[printBufferCount];
-
-	va_start(args, formatText);
-	int bytesWritten = _vsnprintfT_s(buffer, _countof(buffer), _TRUNCATE, formatText, args);
-	va_end(args);
-
-	fprintfT(file, TEXT("%s"), buffer);
+static void FilePrint_NoConsole(FILE* file, const char* str) {
+	fputs(str, file);
 }
 
-void FPrintT_Console(FILE* file, const TCHAR* formatText, ...) {
-
-	va_list args;
-	TCHAR buffer[printBufferCount];
-	constexpr DWORD count = _countof(buffer);
-
-	va_start(args, formatText);
-	int bytesWritten = _vsnprintfT_s(buffer, count, _TRUNCATE, formatText, args);
-	va_end(args);
-
-	fprintfT(consoleOut, TEXT("%s"), buffer);
-	fprintfT(file, TEXT("%s"), buffer);
+static void FilePrint_Console(FILE* file, const char* str) {
+	fputs(str, consoleOut);
+	fputs(str, file);
 }
 
-void FPrint_NoConsole(FILE* file, const char* formatText, ...) {
+static void FilePrintT_NoConsole(FILE* file, const TCHAR* str) {
+	fputws(str, file);
+}
+
+static void FilePrintT_Console(FILE* file, const TCHAR* str) {
+	fputws(str, consoleOut);
+	fputws(str, file);
+}
+
+EXPORT void FilePrint(FILE* file, const char* str) {
+	p_FilePrint(file, str);
+}
+
+EXPORT void FilePrintT(FILE* file, const TCHAR* str) {
+	p_FilePrintT(file, str);
+}
+
+//------------//
+// FFilePrint //
+//------------//
+
+static void FFilePrint_NoConsole(FILE* file, const char* formatText, ...) {
 
 	va_list args;
 	char buffer[printBufferCount];
@@ -83,10 +106,10 @@ void FPrint_NoConsole(FILE* file, const char* formatText, ...) {
 	int bytesWritten = _vsnprintf_s(buffer, _countof(buffer), _TRUNCATE, formatText, args);
 	va_end(args);
 
-	fprintf(file, "%s", buffer);
+	fputs(buffer, file);
 }
 
-void FPrint_Console(FILE* file, const char* formatText, ...) {
+static void FFilePrint_Console(FILE* file, const char* formatText, ...) {
 
 	va_list args;
 	char buffer[printBufferCount];
@@ -96,28 +119,57 @@ void FPrint_Console(FILE* file, const char* formatText, ...) {
 	int bytesWritten = _vsnprintf_s(buffer, count, _TRUNCATE, formatText, args);
 	va_end(args);
 
-	fprintf(consoleOut, "%s", buffer);
-	fprintf(file, "%s", buffer);
+	fputs(buffer, consoleOut);
+	fputs(buffer, file);
 }
 
-#define fprintf error
-#undef fprintfT
-#define fprintfT error
+static void FFilePrintT_NoConsole(FILE* file, const TCHAR* formatText, ...) {
+
+	va_list args;
+	TCHAR buffer[printBufferCount];
+
+	va_start(args, formatText);
+	int bytesWritten = _vsnprintfT_s(buffer, _countof(buffer), _TRUNCATE, formatText, args);
+	va_end(args);
+
+	fputsT(buffer, file);
+}
+
+static void FFilePrintT_Console(FILE* file, const TCHAR* formatText, ...) {
+
+	va_list args;
+	TCHAR buffer[printBufferCount];
+	constexpr DWORD count = _countof(buffer);
+
+	va_start(args, formatText);
+	int bytesWritten = _vsnprintfT_s(buffer, count, _TRUNCATE, formatText, args);
+	va_end(args);
+
+	fputsT(buffer, consoleOut);
+	fputsT(buffer, file);
+}
+
+//----------------//
+// END FFilePrint //
+//----------------//
 
 EXPORT int InitFPrint() {
 
 	if (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_CHAR) {
 
-		FPrint = FPrint_Console;
-		FPrintT = FPrintT_Console;
+		p_FilePrint = FilePrint_Console;
+		p_FilePrintT = FilePrintT_Console;
+
+		FFilePrint = FFilePrint_Console;
+		FFilePrintT = FFilePrintT_Console;
 
 		if (errno_t error = fopen_s(&consoleOut, "CONOUT$", "w")) {
-			Print("[!][InfinityLoaderCommon.dll] InitFPrint() - fopen_s() failed (%d)\n", error);
+			FPrint("[!][InfinityLoaderCommon.dll] InitFPrint() - fopen_s() failed (%d)\n", error);
 			return error;
 		}
 
 		if (int error = setvbuf(consoleOut, NULL, _IONBF, 0)) {
-			Print("[!][InfinityLoaderCommon.dll] InitFPrint() - setvbuf() failed (%d)\n", error);
+			FPrint("[!][InfinityLoaderCommon.dll] InitFPrint() - setvbuf() failed (%d)\n", error);
 			return error;
 		}
 
@@ -127,8 +179,11 @@ EXPORT int InitFPrint() {
 	}
 	else {
 
-		FPrint = FPrint_NoConsole;
-		FPrintT = FPrintT_NoConsole;
+		p_FilePrint = FilePrint_NoConsole;
+		p_FilePrintT = FilePrintT_NoConsole;
+
+		FFilePrint = FFilePrint_NoConsole;
+		FFilePrintT = FFilePrintT_NoConsole;
 
 		if (debug()) {
 			Print("[?][InfinityLoaderCommon.dll] InitFPrint() - NoConsole\n");
@@ -200,17 +255,17 @@ EXPORT void MessageBoxFormatA(StringA caption, UINT uType, StringA formatText, .
 EXPORT int UnbufferCrtStreams() {
 
 	if (int error = setvbuf(stdin, NULL, _IONBF, 0)) {
-		Print("[!][InfinityLoaderCommon.dll] UnbufferCrtStreams() - setvbuf() failed (%d)\n", error);
+		FPrint("[!][InfinityLoaderCommon.dll] UnbufferCrtStreams() - setvbuf() failed (%d)\n", error);
 		return error;
 	}
 
 	if (int error = setvbuf(stdout, NULL, _IONBF, 0)) {
-		Print("[!][InfinityLoaderCommon.dll] UnbufferCrtStreams() - setvbuf() failed (%d)\n", error);
+		FPrint("[!][InfinityLoaderCommon.dll] UnbufferCrtStreams() - setvbuf() failed (%d)\n", error);
 		return error;
 	}
 
 	if (int error = setvbuf(stderr, NULL, _IONBF, 0)) {
-		Print("[!][InfinityLoaderCommon.dll] UnbufferCrtStreams() - setvbuf() failed (%d)\n", error);
+		FPrint("[!][InfinityLoaderCommon.dll] UnbufferCrtStreams() - setvbuf() failed (%d)\n", error);
 		return error;
 	}
 
@@ -478,13 +533,13 @@ EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR* section, const TCHAR*
 			}
 			else {
 				delete[] curBuffer;
-				Print("[!][InfinityLoaderCommon.dll] GetINIStr() - GetPrivateProfileString() failed (%d)\n", lastError);
+				FPrint("[!][InfinityLoaderCommon.dll] GetINIStr() - GetPrivateProfileString() failed (%d)\n", lastError);
 				return lastError;
 			}
 		}
 	}
 	else {
-		Print("[!][InfinityLoaderCommon.dll] GetINIStr() - GetPrivateProfileString() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoaderCommon.dll] GetINIStr() - GetPrivateProfileString() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -502,7 +557,7 @@ EXPORT DWORD GetINIStrDef(const String& iniPath, const TCHAR* section, const TCH
 
 EXPORT DWORD SetINIStr(const String& iniPath, const TCHAR *const section, const TCHAR *const key, const String& toSet) {
 	if (!WritePrivateProfileString(section, key, toSet.c_str(), iniPath.c_str())) {
-		PrintT(TEXT("[!][InfinityLoaderCommon.dll] SetINIStr() - Failed to set [%s].%s = %s\n"), section, key, toSet.c_str());
+		FPrintT(TEXT("[!][InfinityLoaderCommon.dll] SetINIStr() - Failed to set [%s].%s = %s\n"), section, key, toSet.c_str());
 		return GetLastError();
 	}
 	return ERROR_SUCCESS;
@@ -585,7 +640,7 @@ EXPORT DWORD AllocateNear(uintptr_t address, size_t size, uintptr_t& allocatedOu
 		}
 
 		if (DWORD lastError = GetLastError(); lastError != ERROR_INVALID_ADDRESS) {
-			Print("[!][InfinityLoaderCommon.dll] AllocateNear() - VirtualAlloc() failed (%d)\n", lastError);
+			FPrint("[!][InfinityLoaderCommon.dll] AllocateNear() - VirtualAlloc() failed (%d)\n", lastError);
 			return lastError;
 		}
 

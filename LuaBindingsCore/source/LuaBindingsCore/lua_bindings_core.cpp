@@ -121,7 +121,7 @@ void runCallback(lua_State* L) {
 
 	if (lua_pcallk(L, 0, 0, -2, 0, nullptr) != LUA_OK) {
 																					 // [ debug, traceback, errorMessage ]
-		Print("[!][LuaBindingsCore.dll] runCallback() - %s\n", lua_tostring(L, -1));
+		FPrint("[!][LuaBindingsCore.dll] runCallback() - %s\n", lua_tostring(L, -1));
 		lua_pop(L, 3);                                                               // [ ]
 	}
 	else {
@@ -140,7 +140,7 @@ void exportPattern(const String& name, void* value) {
 
 	PatternValueHandle handle;
 	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, handle)) {
-		PrintT(TEXT("[!][LuaBindingsCore.dll] exportPattern() - [%s].Type must be SINGLE\n"), name.c_str());
+		FPrintT(TEXT("[!][LuaBindingsCore.dll] exportPattern() - [%s].Type must be SINGLE\n"), name.c_str());
 		return;
 	}
 
@@ -151,7 +151,7 @@ template<typename out_type>
 DWORD getToLuaProc(HMODULE toLuaLibrary, const char* name, out_type& out) {
 	if (out = reinterpret_cast<out_type>(GetProcAddress(toLuaLibrary, name)); out == 0) {
 		DWORD lastError = GetLastError();
-		Print("[!][LuaBindingsCore.dll] getToLuaProc() - GetProcAddress() failed (%d) to find ToLua function \"%s\"\n", lastError, name);
+		FPrint("[!][LuaBindingsCore.dll] getToLuaProc() - GetProcAddress() failed (%d) to find ToLua function \"%s\"\n", lastError, name);
 		return lastError;
 	}
 	return 0;
@@ -166,11 +166,11 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 			break; \
 		} \
 		case PatternValueType::INVALID: { \
-			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed\n", patternName); \
+			FPrint("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed\n", patternName); \
 			return; \
 		} \
 		default: { \
-			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed\n", patternName); \
+			FPrint("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed\n", patternName); \
 			return; \
 		} \
 	}
@@ -183,11 +183,11 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 				break; \
 			} \
 			case PatternValueType::INVALID: { \
-				Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - ToLua pattern [%s] missing; initialization failed\n", patternName); \
+				FPrint("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - ToLua pattern [%s] missing; initialization failed\n", patternName); \
 				return; \
 			} \
 			default: { \
-				Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - ToLua pattern [%s].Type not SINGLE; initialization failed\n", patternName); \
+				FPrint("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - ToLua pattern [%s].Type not SINGLE; initialization failed\n", patternName); \
 				return; \
 			} \
 		} \
@@ -209,7 +209,7 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 		alreadyInitialized = true;
 
 		if (int error = InitFPrint()) {
-			Print("[!][LuaBindingsCore.dll] InitFPrint() failed (%d)\n", error);
+			FPrint("[!][LuaBindingsCore.dll] InitFPrint() failed (%d)\n", error);
 			return;
 		}
 

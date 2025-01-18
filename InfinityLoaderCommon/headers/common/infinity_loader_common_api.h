@@ -42,8 +42,8 @@ public:
 // Globals //
 /////////////
 
-EXTERN_IMPORT type_FPrint FPrint;
-EXTERN_IMPORT type_FPrintT FPrintT;
+EXTERN_IMPORT type_FFilePrint FFilePrint;
+EXTERN_IMPORT type_FFilePrintT FFilePrintT;
 
 //////////
 // Init //
@@ -57,6 +57,8 @@ IMPORT DWORD InitMappedMemory(HANDLE mappedMemoryHandle, SharedStateMappedMemory
 /////////////
 
 IMPORT int InitFPrint();
+IMPORT void FilePrint(FILE* file, const char* str);
+IMPORT void FilePrintT(FILE* file, const TCHAR* str);
 IMPORT void LogMessageBox(const TCHAR* toLog);
 IMPORT void LogPrint(const TCHAR* toLog);
 

@@ -71,13 +71,13 @@ static DWORD writeProcessString(HANDLE hProcess, const CharType* str, uintptr_t&
 	LPVOID allocPtr = VirtualAllocEx(hProcess, NULL, strSizeBytes, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	if (!allocPtr) {
 		DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] writeProcessString() - VirtualAllocEx() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] writeProcessString() - VirtualAllocEx() failed (%d)\n", lastError);
 		return lastError;
 	}
 
 	if (!WriteProcessMemory(hProcess, allocPtr, str, strSizeBytes, NULL)) {
 		DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] writeProcessString() - WriteProcessMemory() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] writeProcessString() - WriteProcessMemory() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -92,7 +92,7 @@ static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	context.ContextFlags = CONTEXT_INTEGER;
 	if (!GetThreadContext(hThread, &context)) {
 		DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] patchMainThread() - GetThreadContext() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] patchMainThread() - GetThreadContext() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -118,7 +118,7 @@ static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	LPVOID codeMem = VirtualAllocEx(hProcess, NULL, 1024, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (!codeMem) {
 		DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] patchMainThread() - VirtualAllocEx() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] patchMainThread() - VirtualAllocEx() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -188,7 +188,7 @@ static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	//writer.printBuffer();
 	if (!WriteProcessMemory(hProcess, codeMem, writer.GetBuffer(), writer.GetSize(), NULL)) {
 		DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] patchMainThread() - WriteProcessMemory() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] patchMainThread() - WriteProcessMemory() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -204,12 +204,12 @@ static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 
 	if (!SetThreadContext(hThread, &context)) {
 		DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] patchMainThread() - SetThreadContext() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] patchMainThread() - SetThreadContext() failed (%d)\n", lastError);
 		return lastError;
 	}
 
 	if (debug()) {
-		Print("[!][InfinityLoader.exe] patchMainThread() - threadStart: %p\n", threadStart);
+		FPrint("[!][InfinityLoader.exe] patchMainThread() - threadStart: %p\n", threadStart);
 	}
 
 	return 0;
@@ -266,14 +266,14 @@ static DWORD startGame() {
 	HANDLE hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
 	if (debug()) {
-		Print("[?][InfinityLoader.exe] startGame() - Parent hStdInput: %d\n", hStdInput);
-		Print("[?][InfinityLoader.exe] startGame() - Parent hStdOutput: %d\n", hStdOutput);
-		Print("[?][InfinityLoader.exe] startGame() - Parent hStdError: %d\n", hStdError);
+		FPrint("[?][InfinityLoader.exe] startGame() - Parent hStdInput: %d\n", hStdInput);
+		FPrint("[?][InfinityLoader.exe] startGame() - Parent hStdOutput: %d\n", hStdOutput);
+		FPrint("[?][InfinityLoader.exe] startGame() - Parent hStdError: %d\n", hStdError);
 	}
 
 	if (!CreateProcess(exePath.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
 		lastError = GetLastError();
-		PrintT(TEXT("[!][InfinityLoader.exe] startGame() - CreateProcess() failed (%d) attempting to start \"%s\"\n"), lastError, exePath.c_str());
+		FPrintT(TEXT("[!][InfinityLoader.exe] startGame() - CreateProcess() failed (%d) attempting to start \"%s\"\n"), lastError, exePath.c_str());
 		return lastError;
 	}
 
@@ -299,24 +299,24 @@ static DWORD startGame() {
 
 	if (ResumeThread(processInfo.hThread) == -1) {
 		lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] startGame() - ResumeThread() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] startGame() - ResumeThread() failed (%d)\n", lastError);
 		goto errorFinally;
 	}
 
 	if (WaitForSingleObject(processInfo.hProcess, INFINITE) == WAIT_FAILED) {
 		lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] startGame() - WaitForSingleObject() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] startGame() - WaitForSingleObject() failed (%d)\n", lastError);
 		goto errorFinally;
 	}
 
 	if (!CloseHandle(processInfo.hProcess)) {
 		lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] startGame() - CloseHandle() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] startGame() - CloseHandle() failed (%d)\n", lastError);
 	}
 
 	if (!CloseHandle(processInfo.hThread)) {
 		lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] startGame() - CloseHandle() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] startGame() - CloseHandle() failed (%d)\n", lastError);
 	}
 
 	return lastError;
@@ -347,7 +347,7 @@ static DWORD getDLLVersion(const wchar_t *const filePath, DWORD& majorOut, DWORD
 
 	if (size == 0) {
 		const DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoSizeW() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoSizeW() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -355,7 +355,7 @@ static DWORD getDLLVersion(const wchar_t *const filePath, DWORD& majorOut, DWORD
 
 	if (!GetFileVersionInfoW(filePath, handle, size, versionData.data())) {
 		const DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoW() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] getDLLVersion() - GetFileVersionInfoW() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -364,7 +364,7 @@ static DWORD getDLLVersion(const wchar_t *const filePath, DWORD& majorOut, DWORD
 
 	if (!VerQueryValueW(versionData.data(), L"\\", reinterpret_cast<LPVOID*>(&fileInfo), &len)) {
 		const DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] getDLLVersion() - VerQueryValueW() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] getDLLVersion() - VerQueryValueW() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -389,7 +389,7 @@ static void processLoadedModulePath(const HMODULE module, DWORD& lastError, std:
 
 			if (pathSize == 0) {
 				lastError = GetLastError();
-				Print("[!][InfinityLoader.exe] processLoadedModulePath() - GetModuleFileNameW() failed (%d)\n", lastError);
+				FPrint("[!][InfinityLoader.exe] processLoadedModulePath() - GetModuleFileNameW() failed (%d)\n", lastError);
 				return TryFillBufferResult::ABORT;
 			}
 
@@ -405,7 +405,7 @@ static DWORD getLoadedDLLVersion(const wchar_t *const dllName, DWORD& majorOut, 
 
 	if (hModule == NULL) {
 		const DWORD lastError = GetLastError();
-		Print("[!][InfinityLoader.exe] getLoadedDLLVersion() - GetModuleHandleW() failed (%d)\n", lastError);
+		FPrint("[!][InfinityLoader.exe] getLoadedDLLVersion() - GetModuleHandleW() failed (%d)\n", lastError);
 		return lastError;
 	}
 
@@ -450,8 +450,8 @@ static DWORD init() {
 	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility()) )
-	TryElseRetErr( UnbufferCrtStreams(), Print("[!][InfinityLoader.exe] init() - UnbufferCrtStreams() failed (%d)\n", error) )
-	TryElseRetErr( InitFPrint(), Print("[!][InfinityLoader.exe] init() - InitFPrint() failed (%d)\n", error) )
+	TryElseRetErr( UnbufferCrtStreams(), FPrint("[!][InfinityLoader.exe] init() - UnbufferCrtStreams() failed (%d)\n", error) )
+	TryElseRetErr( InitFPrint(), FPrint("[!][InfinityLoader.exe] init() - InitFPrint() failed (%d)\n", error) )
 	return ERROR_SUCCESS;
 }
 

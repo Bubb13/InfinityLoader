@@ -29,6 +29,7 @@ typedef std::ifstream IFStream;
 #define strcmpT strcmp
 #define strlenT strlen
 #define _vsnprintfT_s _vsnprintf_s
+#define fputsT fputs
 #define toLowerT tolower
 #else
 typedef std::wstring String;
@@ -40,13 +41,18 @@ typedef std::wifstream IFStream;
 #define strcmpT wcscmp
 #define strlenT wcslen
 #define _vsnprintfT_s _vsnwprintf_s
+#define fputsT fputws
 #define toLowerT towlower
 #endif
 
-#define Print(...) FPrint(stdout, ##__VA_ARGS__)
-#define PrintErr(...) FPrint(stderr, ##__VA_ARGS__)
-#define PrintT(...) FPrintT(stdout, ##__VA_ARGS__)
-#define PrintTErr(...) FPrintT(stderr, ##__VA_ARGS__)
+#define Print(str) FilePrint(stdout, str)
+#define PrintErr(str) FilePrint(stderr, str)
+#define PrintT(str) FilePrintT(stdout, str)
+#define PrintTErr(str) FilePrintT(stderr, str)
+#define FPrint(...) FFilePrint(stdout, ##__VA_ARGS__)
+#define FPrintErr(...) FFilePrint(stderr, ##__VA_ARGS__)
+#define FPrintT(...) FFilePrintT(stdout, ##__VA_ARGS__)
+#define FPrintTErr(...) FFilePrintT(stderr, ##__VA_ARGS__)
 typedef void (LogFuncT)(const TCHAR* toLog);
 
 #define printf error
@@ -123,5 +129,5 @@ typedef std::ostringstream OStringStreamA;
 // Logging //
 /////////////
 
-typedef void(*type_FPrint)(FILE* file, const char* formatText, ...);
-typedef void(*type_FPrintT)(FILE* file, const TCHAR* formatText, ...);
+typedef void(*type_FFilePrint)(FILE* file, const char* formatText, ...);
+typedef void(*type_FFilePrintT)(FILE* file, const TCHAR* formatText, ...);

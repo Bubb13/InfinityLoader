@@ -104,9 +104,9 @@ EXPORT void AssemblyWriter::PopVolatileRegisters() {
 
 EXPORT void AssemblyWriter::PrintBuffer() {
 	AssemblyWriterData *const data = this->data();
-	Print("[?][InfinityLoaderCommon.dll] AssemblyWriter::PrintBuffer() - Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(data->startMemAddress));
+	FPrint("[?][InfinityLoaderCommon.dll] AssemblyWriter::PrintBuffer() - Debug dump of AssemblyWriter located at %p: ", reinterpret_cast<void*>(data->startMemAddress));
 	for (size_t i = 0; i < data->curI; ++i) {
-		Print("%02X ", data->buffer[i]);
+		FPrint("%02X ", data->buffer[i]);
 	}
 	Print("\n");
 }

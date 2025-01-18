@@ -285,7 +285,7 @@ void EEex::HookIntegrityWatchdogExit(const uintptr_t hookAddress, const size_t i
 		if (hookIntegrityWatchdogSnapshot.registers.reg != registers->reg \
 			&& (hookIntegrityWatchdogIgnoreInstance == nullptr || (hookIntegrityWatchdogIgnoreInstance->registers & ignoreFlag) == 0)) \
 		{ \
-			Print("[!][EEex.dll] EEex::HookIntegrityWatchdogExit() - [%p] (instance %llu) %s changed from 0x%X to 0x%X\n", \
+			FPrint("[!][EEex.dll] EEex::HookIntegrityWatchdogExit() - [%p] (instance %llu) %s changed from 0x%X to 0x%X\n", \
 				hookAddress, instance, regStr, hookIntegrityWatchdogSnapshot.registers.reg, registers->reg); \
 		}
 
@@ -333,7 +333,7 @@ void EEex::HookIntegrityWatchdogExit(const uintptr_t hookAddress, const size_t i
 		}
 
 		if (!ignore) {
-			Print("[!][EEex.dll] EEex::HookIntegrityWatchdogExit() - [%p] (instance %llu) Stack[+0x%X] Changed from 0x%X to 0x%X\n",
+			FPrint("[!][EEex.dll] EEex::HookIntegrityWatchdogExit() - [%p] (instance %llu) Stack[+0x%X] Changed from 0x%X to 0x%X\n",
 				hookAddress, instance, i, hookIntegrityWatchdogStackSnapshotByte, stackByte);
 		}
 	}
@@ -475,7 +475,7 @@ bool luaCallProtected(lua_State* L, int nArg, int nReturn, std::function<void(in
 	}
 	else {
 																			   //           3 [ debug, traceback, errorMessage ]
-		Print("[!][EEex.dll] luaCallProtected() - %s\n", lua_tostring(L, -1));
+		FPrint("[!][EEex.dll] luaCallProtected() - %s\n", lua_tostring(L, -1));
 		lua_pop(L, 3);                                                         //           0 [ ]
 		return false;
 	}
@@ -576,11 +576,11 @@ void registerProjVFTableType(const TCHAR* patternName, std::pair<const char*, EE
 			break;
 		}
 		case PatternValueType::INVALID: {
-			PrintT(TEXT("[!][EEex.dll] registerProjVFTableType() - Pattern [%s] missing, EEex will not work as expected\n"), patternName);
+			FPrintT(TEXT("[!][EEex.dll] registerProjVFTableType() - Pattern [%s] missing, EEex will not work as expected\n"), patternName);
 			break;
 		}
 		default: {
-			PrintT(TEXT("[!][EEex.dll] registerProjVFTableType() - [%s].Type must be SINGLE\n"), patternName);
+			FPrintT(TEXT("[!][EEex.dll] registerProjVFTableType() - [%s].Type must be SINGLE\n"), patternName);
 			break;
 		}
 	}
@@ -1225,7 +1225,7 @@ bool EEex_RunMatchFunction(lua_State *const L, CGameObject *const pObject)
 	if (lua_pcallk(L, 0, 1, -2, 0, nullptr) != LUA_OK)
 	{
 																					   // 4 [ ..., matchFunc, debug, traceback, error ]
-		Print("[!][EEex.dll] MatchObject - Runtime error: %s\n", lua_tostring(L, -1));
+		FPrint("[!][EEex.dll] MatchObject - Runtime error: %s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);                                                                 // 3 [ ..., matchFunc, debug, traceback ]
 		return false;
 	}
@@ -1369,7 +1369,7 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 
 	if (nth < 0 || nth >= MAXBYTE)
 	{
-		Print("[!][EEex.dll] MatchObject - Nth %d invalid, must be [0-255]\n", nth);
+		FPrint("[!][EEex.dll] MatchObject - Nth %d invalid, must be [0-255]\n", nth);
 		return -1;
 	}
 
@@ -1388,7 +1388,7 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 		}
 		else
 		{
-			Print("[!][EEex.dll] MatchObject - Range %d invalid, use -1 to ignore\n", range);
+			FPrint("[!][EEex.dll] MatchObject - Range %d invalid, use -1 to ignore\n", range);
 			return -1;
 		}
 	}
@@ -1406,13 +1406,13 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 	}
 	else
 	{
-		Print("[!][EEex.dll] MatchObject - Range %d too large, use -1 to ignore\n", range);
+		FPrint("[!][EEex.dll] MatchObject - Range %d too large, use -1 to ignore\n", range);
 		return -1;
 	}
 
 	if (luaL_loadstring(L, matchChunk) != LUA_OK)
 	{                                                                              // 1 [ ..., error ]
-		Print("[!][EEex.dll] MatchObject - Compile error: %s\n", lua_tostring(L, -1));
+		FPrint("[!][EEex.dll] MatchObject - Compile error: %s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);                                                             // 0 [ ... ]
 		return -1;
 	}
@@ -1544,7 +1544,7 @@ int EEex::GetExtendedStatValue(CGameSprite* pSprite, int exStatId) {
 		return exStatValuePair->second;
 	}
 
-	Print("[!][EEex.dll] EEex.GetExtendedStatValue() - Attempted to get invalid extended stat id: %d\n", exStatId);
+	FPrint("[!][EEex.dll] EEex.GetExtendedStatValue() - Attempted to get invalid extended stat id: %d\n", exStatId);
 	return 0;
 }
 
@@ -3026,7 +3026,7 @@ int EEex::Opcode_Hook_SetExtendedStat_ApplyEffect(CGameEffect* pEffect, CGameSpr
 
 	ExStatInfo* exStatInfo;
 	if (auto exStatInfoPair = exStatInfoMap.find(exStatId); exStatInfoPair == exStatInfoMap.end()) {
-		Print("[!][EEex.dll] op401 (SetExtendedStat) - Invalid special (extended stat id) value: %d\n", exStatId);
+		FPrint("[!][EEex.dll] op401 (SetExtendedStat) - Invalid special (extended stat id) value: %d\n", exStatId);
 		return 1;
 	}
 	else {
@@ -3047,7 +3047,7 @@ int EEex::Opcode_Hook_SetExtendedStat_ApplyEffect(CGameEffect* pEffect, CGameSpr
 			newVal = clampedPercent(exStatValues[exStatId], param1);
 			break;
 		default:
-			Print("[!][EEex.dll] op401 (SetExtendedStat) - Invalid param2 (modification type) value: %d\n", modType);
+			FPrint("[!][EEex.dll] op401 (SetExtendedStat) - Invalid param2 (modification type) value: %d\n", modType);
 			return 1;
 	}
 
@@ -3182,14 +3182,14 @@ int EEex::Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite) {
 					}
 				}
 				else {
-					Print("[!][EEex.dll] op403 (ScreenEffects) - immunityFunc \"%s\" returned invalid type\n", immunityFunc);
+					FPrint("[!][EEex.dll] op403 (ScreenEffects) - immunityFunc \"%s\" returned invalid type\n", immunityFunc);
 				}
 
 				lua_pop(L, 2);                                              // 2 [ ..., pEffectUD, pSpriteUD ]
 			}
 		}
 		else {
-			Print("[!][EEex.dll] op403 (ScreenEffects) - immunityFunc \"%s\" has invalid type\n", immunityFunc);
+			FPrint("[!][EEex.dll] op403 (ScreenEffects) - immunityFunc \"%s\" has invalid type\n", immunityFunc);
 			lua_pop(L, 1);                                                  // 2 [ ..., pEffectUD, pSpriteUD ]
 		}
 	}
@@ -3421,7 +3421,7 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 					});
 				}
 				else {
-					Print("[!][EEex.dll] op409 (EnableActionListener) - Attempted to call invalid function \"%s\"\n", data.funcName);
+					FPrint("[!][EEex.dll] op409 (EnableActionListener) - Attempted to call invalid function \"%s\"\n", data.funcName);
 				}
 
 				lua_pop(L, 1);                                                       // 3 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners ]
@@ -3473,12 +3473,12 @@ LuaTypeContainer callMutatorFunction(
 													   // 2 [ ..., mutatorTable, mutatorFunction ]
 		}
 		else if (mutatorFuncType != LUA_TNIL) {
-			Print("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid \"%s\" value under: \"%s\"\n", mutatorFunctionName, mutatorTableName);
+			FPrint("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid \"%s\" value under: \"%s\"\n", mutatorFunctionName, mutatorTableName);
 		}
 		lua_pop(L, 2);                                 // 0 [ ... ]
 	}
 	else {
-		Print("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid mutator table: \"%s\"\n", mutatorTableName);
+		FPrint("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid mutator table: \"%s\"\n", mutatorTableName);
 		lua_pop(L, 1);                                 // 0 [ ... ]
 	}
 
@@ -3597,7 +3597,7 @@ ushort EEex::Projectile_Hook_OnBeforeDecode(ushort nProjectileType, CGameAIBase*
 				return newType;
 			}
 			else {
-				Print("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid return value from typeMutator under: \"%s\"\n", mutatorTableName);
+				FPrint("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid return value from typeMutator under: \"%s\"\n", mutatorTableName);
 			}
 		}
 
@@ -3651,7 +3651,7 @@ void EEex::Projectile_Hook_OnAfterDecode(CProjectile* pProjectile, CGameAIBase* 
 				}
 			}
 			else {
-				Print("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid return value from projectileMutator under: \"%s\"\n", mutatorTableName);
+				FPrint("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid return value from projectileMutator under: \"%s\"\n", mutatorTableName);
 			}
 		}
 
@@ -3706,7 +3706,7 @@ void EEex::Projectile_Hook_OnBeforeAddEffect(CProjectile* pProjectile, CGameAIBa
 				}
 			}
 			else {
-				Print("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid return value from effectMutator under: \"%s\"\n", mutatorTableName);
+				FPrint("[!][EEex.dll] op408 (ProjectileMutator) - Attempted to use an invalid return value from effectMutator under: \"%s\"\n", mutatorTableName);
 			}
 		}
 
@@ -3866,7 +3866,7 @@ int getExtendedStatField(C2DArray* pXStats2DA, const char* name, int id, const c
 
 	int val;
 	if (!parseInt(strVal->m_pchData, val)) {
-		Print("[!][EEex.dll] X-STATS.2DA - Invalid %s(#%d) %s value: \"%s\"\n", name, id, field, strVal->m_pchData);
+		FPrint("[!][EEex.dll] X-STATS.2DA - Invalid %s(#%d) %s value: \"%s\"\n", name, id, field, strVal->m_pchData);
 		return false;
 	}
 
@@ -3919,7 +3919,7 @@ template<typename out_type>
 DWORD getLuaProc(const char* name, out_type& out) {
 	if (out = reinterpret_cast<out_type>(GetProcAddress(luaLibrary(), name)); out == 0) {
 		DWORD lastError = GetLastError();
-		Print("[!][EEex.dll] getLuaProc() - GetProcAddress() failed (%d) to find Lua function \"%s\", the game will probably crash\n", lastError, name);
+		FPrint("[!][EEex.dll] getLuaProc() - GetProcAddress() failed (%d) to find Lua function \"%s\", the game will probably crash\n", lastError, name);
 		return lastError;
 	}
 	return 0;

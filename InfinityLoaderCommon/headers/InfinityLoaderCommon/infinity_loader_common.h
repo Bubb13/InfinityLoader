@@ -10,8 +10,11 @@
 
 constexpr size_t printBufferCount = 4096;
 
-EXTERN_EXPORT type_FPrint FPrint;
-EXTERN_EXPORT type_FPrintT FPrintT;
+EXPORT void FilePrint(FILE* file, const char* str);
+EXPORT void FilePrintT(FILE* file, const TCHAR* str);
+
+EXTERN_EXPORT type_FFilePrint FFilePrint;
+EXTERN_EXPORT type_FFilePrintT FFilePrintT;
 
 EXPORT void LogPrint(const TCHAR* toLog);
 

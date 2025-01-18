@@ -15,7 +15,7 @@ python %script_path%^
  -inFiles=./in/manual_types.txt,./in/engine_structs.h^
  -outFile=./out/engine_structs_generated.h^
  -preludeFile=./in/prelude.txt^
- -printFuncWideString=PrintT^
+ -printFuncWideString=FPrintT^
  -suffixFile=./in/suffix.txt^
  -wantedFiles=./in/wanted_types.txt^
  > log.txt 2>&1

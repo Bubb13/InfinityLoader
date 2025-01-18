@@ -54,20 +54,22 @@ void dumpLuaStack(lua_State *const L)
 			default:                 typeStr = "UNKNOWN";            break;
 		}
 
-		Print("%d    %s    ", i, typeStr);
+		FPrint("%d    %s    ", i, typeStr);
 		switch (type)
 		{
 			case LUA_TNUMBER:
-				Print("%g\n", lua_tonumberx(L, i, nullptr));
+				FPrint("%g\n", lua_tonumberx(L, i, nullptr));
 				break;
 			case LUA_TSTRING:
-				Print("%s\n", lua_tostring(L, i));
+				Print(lua_tostring(L, i));
+				Print("\n");
 				break;
 			case LUA_TBOOLEAN:
-				Print("%s\n", lua_toboolean(L, i) ? "true" : "false");
+				Print(lua_toboolean(L, i) ? "true" : "false");
+				Print("\n");
 				break;
 			case LUA_TNIL:
-				Print("%s\n", "nil");
+				Print("nil\n");
 				break;
 			default:
 				Print("<no representation>\n");

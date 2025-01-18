@@ -16,7 +16,7 @@ static bool checkExportPattern(const String& name, FunctionPtr value) {
 
 	PatternValueHandle handle;
 	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, handle)) {
-		PrintT(TEXT("[!][LuaProvider.dll] exportPattern() - [%s].Type must be SINGLE; initialization failed\n"), name.c_str());
+		FPrintT(TEXT("[!][LuaProvider.dll] exportPattern() - [%s].Type must be SINGLE; initialization failed\n"), name.c_str());
 		return false;
 	}
 
@@ -28,7 +28,7 @@ template<typename out_type>
 static DWORD getLuaProc(const HMODULE luaLibrary, const char *const name, out_type& out) {
 	if (out = reinterpret_cast<out_type>(GetProcAddress(luaLibrary, name)); out == 0) {
 		const DWORD lastError = GetLastError();
-		Print("[!][LuaProvider.dll] getLuaProc() - GetProcAddress() failed (%d) to find Lua function \"%s\"; initialization failed\n", lastError, name);
+		FPrint("[!][LuaProvider.dll] getLuaProc() - GetProcAddress() failed (%d) to find Lua function \"%s\"; initialization failed\n", lastError, name);
 		return lastError;
 	}
 	return 0;
@@ -56,14 +56,14 @@ static DWORD setLuaPointerInternal(
 				TryRetErr( GetINIBoolDef(dbPath(), luaPatternName, TEXT("Unsupported"), false, unsupported) )
 
 				if (!unsupported) {
-					PrintT(TEXT("[!][LuaProvider.dll] %s() - Lua pattern [%s] missing; initialization failed\n"), containingFuncName, luaPatternName);
+					FPrintT(TEXT("[!][LuaProvider.dll] %s() - Lua pattern [%s] missing; initialization failed\n"), containingFuncName, luaPatternName);
 					return -1;
 				}
 
 				break;
 			}
 			default: {
-				PrintT(TEXT("[!][LuaProvider.dll] %s() - Lua pattern [%s].Type not SINGLE; initialization failed\n"), containingFuncName, luaPatternName);
+				FPrintT(TEXT("[!][LuaProvider.dll] %s() - Lua pattern [%s].Type not SINGLE; initialization failed\n"), containingFuncName, luaPatternName);
 				return -1;
 			}
 		}

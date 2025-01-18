@@ -7,7 +7,7 @@ void exportPattern(const String& name, void* value) {
 
 	PatternValueHandle handle;
 	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, handle)) {
-		PrintT(TEXT("[!][EEex.dll] exportPattern() - [%s].Type must be SINGLE\n"), name.c_str());
+		FPrintT(TEXT("[!][EEex.dll] exportPattern() - [%s].Type must be SINGLE\n"), name.c_str());
 		return;
 	}
 

@@ -17,7 +17,7 @@ python %PYTHON_OPTIONS% %script_path%^
  -outFile=./out/Baldur-v2.6.6.0_generated.h^
  -packingFile=./in/packing.txt^
  -preludeFile=./in/prelude.txt^
- -printFuncWideString=PrintT^
+ -printFuncWideString=FPrintT^
  -wantedFiles=./in/wanted_types.txt^
  > log.txt 2>&1
 

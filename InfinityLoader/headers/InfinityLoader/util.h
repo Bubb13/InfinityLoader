@@ -33,7 +33,7 @@ void RunWithGrowingBuffer(
         return;
     }
     else if (result != TryFillBufferResult::GROW) {
-        Print("[!][InfinityLoader.exe] RunWithGrowingBuffer() - Bad TryFillBufferResult (%d)\n", result);
+        FPrint("[!][InfinityLoader.exe] RunWithGrowingBuffer() - Bad TryFillBufferResult (%d)\n", result);
         return;
     }
 
@@ -53,7 +53,7 @@ void RunWithGrowingBuffer(
             return;
         }
         else if (result != TryFillBufferResult::GROW) {
-            Print("[!][InfinityLoader.exe] RunWithGrowingBuffer() - Bad TryFillBufferResult (%d)\n", result);
+            FPrint("[!][InfinityLoader.exe] RunWithGrowingBuffer() - Bad TryFillBufferResult (%d)\n", result);
             return;
         }
 

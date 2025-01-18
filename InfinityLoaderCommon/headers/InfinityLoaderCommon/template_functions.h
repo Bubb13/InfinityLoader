@@ -198,7 +198,7 @@ DWORD setINIIntegerTemplate(const String& iniPath, const TCHAR *const section, c
 {
 	const String toSetStr = integerToDecimalStrTemplate<String>(toSet);
 	if (!WritePrivateProfileString(section, key, toSetStr.c_str(), iniPath.c_str())) {
-		PrintT(TEXT("[!][InfinityLoaderCommon.dll] setINIIntegerTemplate() - Failed to set [%s].%s = %s\n"), section, key, toSetStr.c_str());
+		FPrintT(TEXT("[!][InfinityLoaderCommon.dll] setINIIntegerTemplate() - Failed to set [%s].%s = %s\n"), section, key, toSetStr.c_str());
 		return GetLastError();
 	}
 	return ERROR_SUCCESS;
