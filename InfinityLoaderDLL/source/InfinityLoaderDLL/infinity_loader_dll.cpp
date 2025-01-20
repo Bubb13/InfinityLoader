@@ -1950,7 +1950,7 @@ int temporaryPrintReplacement(lua_State* L)
 	return 0;
 }
 
-static void simpleLog(const char *const str) {
+static void __stdcall simpleLog(const char *const str) {
 	Print(str);
 }
 
