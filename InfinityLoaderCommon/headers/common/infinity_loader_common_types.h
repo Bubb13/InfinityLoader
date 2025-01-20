@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 
 #include "dll_api.h"
@@ -131,3 +132,79 @@ typedef std::ostringstream OStringStreamA;
 
 typedef void(*type_FFilePrint)(FILE* file, const char* formatText, ...);
 typedef void(*type_FFilePrintT)(FILE* file, const TCHAR* formatText, ...);
+
+INFINITY_LOADER_COMMON_API_VAR type_FFilePrint FFilePrint;
+INFINITY_LOADER_COMMON_API_VAR type_FFilePrintT FFilePrintT;
+
+/////////////
+// Utility //
+/////////////
+
+enum class TryFillBufferResult {
+	GROW,
+	DONE,
+	ABORT,
+};
+
+template<typename BufferType>
+void RunWithGrowingBuffer(
+	const std::function<TryFillBufferResult(BufferType*, size_t)> tryFillBuffer,
+	const std::function<size_t(size_t)> growSizeCompute,
+	const std::function<void(BufferType*, size_t)> useBuffer)
+{
+	// Try to use a stack buffer at first
+	const size_t initialBufferSize = 1024;
+	BufferType stackBuffer[initialBufferSize];
+
+	// If the stack buffer is too small allocate one on the heap
+	BufferType* curBuffer = stackBuffer;
+	size_t curBufferSize = initialBufferSize;
+
+	if (const TryFillBufferResult result = tryFillBuffer(curBuffer, curBufferSize); result == TryFillBufferResult::DONE) {
+		useBuffer(curBuffer, curBufferSize);
+		return;
+	}
+	else if (result == TryFillBufferResult::ABORT) {
+		return;
+	}
+	else if (result != TryFillBufferResult::GROW) {
+		FPrint("[!][InfinityLoaderCommon.dll] RunWithGrowingBuffer() - Bad TryFillBufferResult (%d)\n", result);
+		return;
+	}
+
+	// Stack buffer too small
+	curBufferSize = growSizeCompute(curBufferSize);
+	curBuffer = new BufferType[curBufferSize];
+
+	while (true) {
+
+		// Try again with the larger buffer
+		if (const TryFillBufferResult result = tryFillBuffer(curBuffer, curBufferSize); result == TryFillBufferResult::DONE) {
+			useBuffer(curBuffer, curBufferSize);
+			delete[] curBuffer;
+			return;
+		}
+		else if (result == TryFillBufferResult::ABORT) {
+			return;
+		}
+		else if (result != TryFillBufferResult::GROW) {
+			FPrint("[!][InfinityLoaderCommon.dll] RunWithGrowingBuffer() - Bad TryFillBufferResult (%d)\n", result);
+			return;
+		}
+
+		// Still too small
+		delete[] curBuffer;
+		curBufferSize = growSizeCompute(curBufferSize);
+		curBuffer = new BufferType[curBufferSize];
+	}
+}
+
+INFINITY_LOADER_COMMON_API size_t GrowDouble(size_t size);
+
+template<typename BufferType>
+void RunWithGrowingBuffer(
+	const std::function<TryFillBufferResult(BufferType*, size_t)> tryFillBuffer,
+	const std::function<void(BufferType*, size_t)> useBuffer)
+{
+	RunWithGrowingBuffer(tryFillBuffer, GrowDouble, useBuffer);
+}

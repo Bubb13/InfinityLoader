@@ -42,14 +42,8 @@
     <ClCompile Include="source\InfinityLoader\infinity_loader.cpp">
       <Filter>Source Files\InfinityLoader</Filter>
     </ClCompile>
-    <ClCompile Include="source\InfinityLoader\util.cpp">
-      <Filter>Source Files\InfinityLoader</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\InfinityLoader\util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\InfinityLoader\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>

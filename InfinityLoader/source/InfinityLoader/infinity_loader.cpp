@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include "infinity_loader_common_api.h"
-#include "util.h"
 
 /////////////
 // Globals //

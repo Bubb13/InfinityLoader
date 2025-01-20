@@ -38,13 +38,6 @@ public:
 	IMPORT void WriteRelativeToBuffer32(uintptr_t relAddress);
 };
 
-/////////////
-// Globals //
-/////////////
-
-EXTERN_IMPORT type_FFilePrint FFilePrint;
-EXTERN_IMPORT type_FFilePrintT FFilePrintT;
-
 //////////
 // Init //
 //////////

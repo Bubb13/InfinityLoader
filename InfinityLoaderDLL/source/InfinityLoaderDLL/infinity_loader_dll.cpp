@@ -1950,8 +1950,26 @@ int temporaryPrintReplacement(lua_State* L)
 	return 0;
 }
 
-void simpleLog(const char *const str) {
+static void simpleLog(const char *const str) {
 	Print(str);
+}
+
+static void logV(const char* formatText, ...) {
+
+	va_list args;
+	va_start(args, formatText);
+
+	RunWithGrowingBuffer<char>(
+		[&](char *const buffer, const size_t bufferSize) {
+			const int result = _vsnprintf_s(buffer, bufferSize, _TRUNCATE, formatText, args);
+			return result == -1 ? TryFillBufferResult::GROW : TryFillBufferResult::DONE;
+		},
+		[&](char *const buffer, const size_t) {
+			Print(buffer);
+		}
+	);
+
+	va_end(args);
 }
 
 void initLuaState(lua_State *const L) {
@@ -2143,6 +2161,7 @@ void initLua() {
 	/////////////////////////////////////
 
 	setSinglePatternValueCleanup(TEXT("Hardcoded_log"), simpleLog)
+	setSinglePatternValueCleanup(TEXT("Hardcoded_logV"), logV)
 	setSinglePatternValueCleanup(TEXT("Hardcoded_initLuaState"), initLuaStateExport)
 
 	///////////////////////

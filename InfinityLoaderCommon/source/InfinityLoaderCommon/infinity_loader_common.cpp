@@ -520,6 +520,10 @@ EXPORT long long CurrentMicroseconds() {
 	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
+EXPORT size_t GrowDouble(const size_t size) {
+	return size * 2;
+}
+
 //////////////////
 // INI Handling //
 //////////////////

@@ -113,11 +113,9 @@
   <ItemGroup>
     <ClCompile Include="source\InfinityLoader\common.cpp" />
     <ClCompile Include="source\InfinityLoader\infinity_loader.cpp" />
-    <ClCompile Include="source\InfinityLoader\util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\InfinityLoader\resource.h" />
-    <ClInclude Include="headers\InfinityLoader\util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
