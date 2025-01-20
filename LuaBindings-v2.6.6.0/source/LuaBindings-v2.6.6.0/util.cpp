@@ -35,12 +35,10 @@ void dumpLuaStack(lua_State *const L)
 				FPrint("%g\n", lua_tonumberx(L, i, nullptr));
 				break;
 			case LUA_TSTRING:
-				Print(lua_tostring(L, i));
-				Print("\n");
+				FPrint("%s\n", lua_tostring(L, i));
 				break;
 			case LUA_TBOOLEAN:
-				Print(lua_toboolean(L, i) ? "true" : "false");
-				Print("\n");
+				FPrint("%s\n", lua_toboolean(L, i) ? "true" : "false");
 				break;
 			case LUA_TNIL:
 				Print("nil\n");

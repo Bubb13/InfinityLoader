@@ -3278,7 +3278,7 @@ void EEex::Sprite_Hook_OnDestruct(CGameSprite* pSprite) {
 	if (auto itr = exSpriteDataMap.find(pSprite); itr != exSpriteDataMap.end()) {
 		ExSpriteData& exData = itr->second;
 		if (exData.uuid != 0) {
-			//Print("Erased UUID %llu association\n", exData.uuid);
+			//FPrint("Erased UUID %llu association\n", exData.uuid);
 			exUUIDDataMap.erase(exData.uuid);
 		}
 		exSpriteDataMap.erase(itr);
@@ -3339,11 +3339,11 @@ void EEex::Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite) {
 
 	if (exData.uuid == 0) {
 		exData.uuid = ++nextUUID;
-		//Print("Generated UUID for %s: %llu\n", pSprite->GetName(true)->m_pchData, exData.uuid);
+		//FPrint("Generated UUID for %s: %llu\n", pSprite->GetName(true)->m_pchData, exData.uuid);
 		updateNextUUIDLocal();
 	}
 	else {
-		//Print("Using existing UUID for %s: %llu\n", pSprite->GetName(true)->m_pchData, exData.uuid);
+		//FPrint("Using existing UUID for %s: %llu\n", pSprite->GetName(true)->m_pchData, exData.uuid);
 	}
 
 	ExUUIDData& exUUIDData = exUUIDDataMap[exData.uuid];

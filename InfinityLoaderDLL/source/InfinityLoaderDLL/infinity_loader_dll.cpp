@@ -1932,9 +1932,20 @@ bool fillPatternPointer(void* segmentPtr, DWORD segmentSize, const String& name,
 	return fillPatternPointer(segmentPtr, segmentSize, name, pointer, [](uintptr_t& address){});
 }
 
-int temporaryPrintReplacement(lua_State* L) {
-	Print(lua_tostring(L, 1));
-	Print("\n");
+int temporaryPrintReplacement(lua_State* L)
+{
+	const int top = lua_gettop(L);
+	for (int index = 1; index <= top; ++index)
+	{
+		if (!lua_isstring(L, index))
+		{
+			FPrint("Unable to convert arg %d a %s to string\n", index, lua_typename(L, index));
+		}
+		else
+		{
+			FPrint("LPRINT: %s\n", lua_tolstring(L, index, nullptr));
+		}
+	}
 	return 0;
 }
 

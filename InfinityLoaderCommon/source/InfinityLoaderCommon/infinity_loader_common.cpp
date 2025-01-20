@@ -198,8 +198,7 @@ EXPORT void LogMessageBox(const TCHAR* toLog) {
 }
 
 EXPORT void LogPrint(const TCHAR* toLog) {
-	PrintT(toLog);
-	Print("\n");
+	FPrintT(TEXT("%s\n"), toLog);
 }
 
 /////////////
