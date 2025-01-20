@@ -44,6 +44,7 @@ bool attemptUseCached = false;
 asmjit::JitRuntime rt;
 std::unordered_map<StringA, LoadedBindings> loadedBindingsMap{};
 
+StringA earlyPrintPrefix;
 StringA extenderName;
 StringA luaGlobalsPrefix;
 #define prefixed(str) std::format("{}"##str, luaGlobalsPrefix).c_str()  
@@ -1943,7 +1944,7 @@ int temporaryPrintReplacement(lua_State* L)
 		}
 		else
 		{
-			FPrint("LPRINT: %s\n", lua_tolstring(L, index, nullptr));
+			FPrint("%s%s\n", earlyPrintPrefix.c_str(), lua_tolstring(L, index, nullptr));
 		}
 	}
 	return 0;
@@ -2093,6 +2094,7 @@ void initLua() {
 	void* sectionPtr;
 	DWORD sectionSize;
 
+	String earlyPrintPrefixW;
 	String extenderNameW;
 	String luaGlobalsPrefixW;
 
@@ -2112,6 +2114,12 @@ void initLua() {
 		goto cleanup;
 	}
 	luaGlobalsPrefix = StrToStrA(luaGlobalsPrefixW);
+
+	if (GetINIStrDef(iniPath(), TEXT("General"), TEXT("EarlyPrintPrefix"), TEXT(""), earlyPrintPrefixW) != ERROR_SUCCESS) {
+		Print("[!][InfinityLoaderDLL.dll] initLua() - Failed to read [General].EarlyPrintPrefixW\n");
+		goto cleanup;
+	}
+	earlyPrintPrefix = StrToStrA(earlyPrintPrefixW);
 
 	lua_State* L;
 
