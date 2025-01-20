@@ -272,6 +272,99 @@ EXPORT int UnbufferCrtStreams() {
 	return 0;
 }
 
+// Note 1)
+//   * If:
+//     * Application is of type 'console'
+//     * The fileno is 0 (stdin), 1 (stdout), or 2 (stderr) and the os handle is valid
+//     -> SetStdHandle(STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/STD_ERROR_HANDLE, NULL)
+//
+// Note 2)
+//   * If:
+//     * Application is of type 'console'
+//     * The fileno is 0 (stdin), 1 (stdout), or 2 (stderr) and the os handle is valid
+//     -> SetStdHandle(STD_INPUT_HANDLE/STD_OUTPUT_HANDLE/STD_ERROR_HANDLE, <HANDLE>)
+//
+// Note 3)
+//   * If:
+//     * The fileno is 1 (stdout) or 2 (stderr) and the os handle is valid
+//     * STD_OUTPUT_HANDLE != STD_ERROR_HANDLE
+//     -> CloseHandle()
+//
+// Note 4)
+//   * Only as error
+
+////////////////////////////
+// SetStdHandle() callers //
+////////////////////////////
+//------//
+// Base //
+//------//
+// _close          | [Note 1]
+// _dup            | [Note 2]
+// _dup2           | [Note 1, Note 2]
+// _fclose_nolock  | [Note 1]
+// _open           | [Note 2]
+// _open_osfhandle | [Note 2]
+// _pipe           | [Note 2]
+// _sopen          | [Note 2]
+// _sopen_s        | [Note 2]
+// _wopen          | [Note 2]
+// _wsopen         | [Note 2]
+// _wsopen_s       | [Note 2]
+// fclose          | [Note 1]
+//---------//
+// Derived //
+//---------//
+// _creat          | [Note 2]
+// _fcloseall      | [Note 1]
+// _rmtmp          | [Note 1]
+// _wcreat         | [Note 2]
+// _wfopen         | [Note 2]
+// _wfopen_s       | [Note 2]
+// _wfreopen       | [Note 1, Note 2]
+// _wfreopen_s     | [Note 1, Note 2]
+// fopen           | [Note 2]
+// fopen_s         | [Note 2]
+// freopen         | [Note 1, Note 2]
+// freopen_s       | [Note 1, Note 2]
+// tmpfile         | [Note 1] 
+// tmpfile_s       | [Note 1]
+
+///////////////////////////
+// CloseHandle() callers //
+///////////////////////////
+//------//
+// Base //
+//------//
+// _close         | [Note 3]
+// _dup2          | [Note 3]
+// _fclose_nolock | [Note 3]
+// _open          | [Note 3, Note 4]
+// _pipe          | [Note 4]
+// _sopen         | [Note 3, Note 4]
+// _sopen_s       | [Note 3, Note 4]
+// _wopen         | [Note 3, Note 4]
+// _wsopen        | [Note 3, Note 4]
+// _wsopen_s      | [Note 3, Note 4]
+// fclose         | [Note 3]
+//---------//
+// Derived //
+//---------//
+// _creat         | [Note 3, Note 4]
+// _fcloseall     | [Note 3]
+// _rmtmp         | [Note 3]
+// _wcreat        | [Note 3, Note 4]
+// _wfopen        | [Note 3, Note 4]
+// _wfopen_s      | [Note 3, Note 4]
+// _wfreopen      | [Note 3]
+// _wfreopen_s    | [Note 3]
+// fopen          | [Note 3, Note 4]
+// fopen_s        | [Note 3, Note 4]
+// freopen        | [Note 3]
+// freopen_s      | [Note 3]
+// tmpfile        | [Note 3, Note 4]
+// tmpfile_s      | [Note 3, Note 4]
+
 EXPORT void NulCrtStreams() {
 	FILE* dummyFile;
 	freopen_s(&dummyFile, "nul", "r", stdin);
@@ -328,6 +421,12 @@ EXPORT void BindCrtStreamsToOSHandles() {
 	//
 	//   7) Clear any error states from the C++ stream objects so they start working with the new file descriptor.
 
+	// NulCrtStreams() will wipe these if the application type is 'console' - save them to restore later.
+	// The crt is trying to be smart and keep the handles synchronized, but it just causes problems.
+	const HANDLE stdInHandle = GetStdHandle(STD_INPUT_HANDLE);
+	const HANDLE stdOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	const HANDLE stdErrHandle = GetStdHandle(STD_ERROR_HANDLE);
+
 	NulCrtStreams();
 
 #define DupHandle(srcProcess,srcHandle,targetProcess,targetHandle)\
@@ -343,7 +442,6 @@ EXPORT void BindCrtStreamsToOSHandles() {
 
 	HANDLE handleDuplicate;
 
-	HANDLE stdInHandle = GetStdHandle(STD_INPUT_HANDLE);
 	if (stdInHandle != INVALID_HANDLE_VALUE) {
 		DupHandle(GetCurrentProcess(), stdInHandle, GetCurrentProcess(), handleDuplicate);
 		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handleDuplicate), _O_TEXT); fd != -1) {
@@ -354,7 +452,6 @@ EXPORT void BindCrtStreamsToOSHandles() {
 		}
 	}
 
-	HANDLE stdOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (stdOutHandle != INVALID_HANDLE_VALUE) {
 		DupHandle(GetCurrentProcess(), stdOutHandle, GetCurrentProcess(), handleDuplicate);
 		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handleDuplicate), _O_TEXT); fd != -1) {
@@ -365,7 +462,6 @@ EXPORT void BindCrtStreamsToOSHandles() {
 		}
 	}
 
-	HANDLE stdErrHandle = GetStdHandle(STD_ERROR_HANDLE);
 	if (stdErrHandle != INVALID_HANDLE_VALUE) {
 		DupHandle(GetCurrentProcess(), stdErrHandle, GetCurrentProcess(), handleDuplicate);
 		if (int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handleDuplicate), _O_TEXT); fd != -1) {
@@ -375,6 +471,11 @@ EXPORT void BindCrtStreamsToOSHandles() {
 			_close(fd);
 		}
 	}
+
+	// Restore these in case NulCrtStreams() wiped them
+	SetStdHandle(STD_INPUT_HANDLE, stdInHandle);
+	SetStdHandle(STD_OUTPUT_HANDLE, stdOutHandle);
+	SetStdHandle(STD_ERROR_HANDLE, stdErrHandle);
 }
 
 void TrimString(String& str) {

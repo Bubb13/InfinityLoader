@@ -436,18 +436,67 @@ static bool checkVersion(const std::array<DWORD, N>& targetVersion, const std::a
 // Initialization //
 ////////////////////
 
+static DWORD checkAutoRedirectToFile() {
+
+	String logName{};
+	bool filled;
+	TryRetErr( GetINIStr(iniPath, TEXT("General"), TEXT("LogFile"), logName, filled) )
+
+	if (!filled) {
+		return ERROR_SUCCESS;
+	}
+
+	const HANDLE hFile = CreateFile(
+		String{ workingFolder }.append(logName).c_str(),
+		GENERIC_WRITE,
+		FILE_SHARE_READ,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
+
+	if (hFile == INVALID_HANDLE_VALUE) {
+		MessageBoxFormat(TEXT("InfinityLoader.exe"), MB_ICONWARNING,
+			TEXT("CreateFile() failed (%d); unable to open log file \"%s\""),
+			GetLastError(), logName.c_str()
+		);
+		return ERROR_SUCCESS; // Don't prevent the game from launching just because the log couldn't be opened
+	}
+
+	if (!SetStdHandle(STD_OUTPUT_HANDLE, hFile)) {
+		MessageBoxFormat(TEXT("InfinityLoader.exe"), MB_ICONWARNING,
+			TEXT("SetStdHandle() failed (%d); unable to redirect STD_OUTPUT_HANDLE to log file \"%s\""),
+			GetLastError(), logName.c_str()
+		);
+		return ERROR_SUCCESS; // Don't prevent the game from launching just because the log couldn't be opened
+	}
+
+	if (!SetStdHandle(STD_ERROR_HANDLE, hFile)) {
+		MessageBoxFormat(TEXT("InfinityLoader.exe"), MB_ICONWARNING,
+			TEXT("SetStdHandle() failed (%d); unable to redirect STD_ERROR_HANDLE to log file \"%s\""),
+			GetLastError(), logName.c_str()
+		);
+		return ERROR_SUCCESS; // Don't prevent the game from launching just because the log couldn't be opened
+	}
+
+	BindCrtStreamsToOSHandles();
+	return ERROR_SUCCESS;
+}
+
 static DWORD init() {
 
 	std::array<DWORD, 4> version;
 	TryRetErr( getLoadedDLLVersion(L"msvcp140.dll", version[0], version[1], version[2], version[3]) )
 
 	if (!checkVersion({ 14, 42, 34433, 0 }, version)) {
-		MessageBoxA(NULL, "Please update your Microsoft Visual C++ Redistributable", "InfinityLoader", MB_ICONERROR);
+		MessageBoxA(NULL, "Please update your Microsoft Visual C++ Redistributable", "InfinityLoader.exe", MB_ICONERROR);
 		return -2;
 	}
 
 	TryRetErr( CreateMappedMemory(mappedMemoryHandle(), mappedMemory()) )
 	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
+	TryRetErr( checkAutoRedirectToFile() )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility()) )
 	TryElseRetErr( UnbufferCrtStreams(), FPrint("[!][InfinityLoader.exe] init() - UnbufferCrtStreams() failed (%d)\n", error) )
