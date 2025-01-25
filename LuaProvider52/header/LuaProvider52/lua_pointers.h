@@ -178,6 +178,9 @@ extern type_luaL_openlibs p_luaL_openlibs;
 typedef int (*type_luaL_ref)(lua_State* L, int t);
 extern type_luaL_ref p_luaL_ref;
 
+typedef void (*type_luaL_traceback)(lua_State* L, lua_State* L1, const char* msg, int level);
+extern type_luaL_traceback p_luaL_traceback;
+
 ///////////////////////
 // Reimplementations //
 ///////////////////////

@@ -200,6 +200,7 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	setLuaPointer(luaL_newstate)
 	setLuaPointer(luaL_openlibs)
 	setLuaPointer(luaL_ref)
+	setLuaPointer(luaL_traceback) // TODO: Should be switched above
 
 	return ERROR_SUCCESS;
 }

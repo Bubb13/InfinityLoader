@@ -52,6 +52,7 @@ LUA_PROVIDER_API int lua_isstring(lua_State* L, int index);
 LUA_PROVIDER_API int lua_isuserdata(lua_State* L, int index);
 LUA_PROVIDER_API void* lua_newuserdata(lua_State* L, size_t size);
 LUA_PROVIDER_API int lua_next(lua_State* L, int index);
+LUA_PROVIDER_API int lua_pcall(lua_State* L, int nargs, int nresults, int msgh);
 LUA_PROVIDER_API int lua_pcallk(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k);
 LUA_PROVIDER_API void lua_pushboolean(lua_State* L, int b);
 LUA_PROVIDER_API void lua_pushcclosure(lua_State* L, lua_CFunction fn, int n);
@@ -90,6 +91,7 @@ LUA_PROVIDER_API int luaL_newmetatable(lua_State* L, const char* tname);
 LUA_PROVIDER_API lua_State* luaL_newstate();
 LUA_PROVIDER_API void luaL_openlibs(lua_State* L);
 LUA_PROVIDER_API int luaL_ref(lua_State* L, int t);
+LUA_PROVIDER_API void luaL_traceback(lua_State* L, lua_State* L1, const char* msg, int level);
 
 /////////////
 // Utility //

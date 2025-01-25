@@ -76,6 +76,7 @@ type_luaL_newmetatable p_luaL_newmetatable;
 type_luaL_newstate p_luaL_newstate;
 type_luaL_openlibs p_luaL_openlibs;
 type_luaL_ref p_luaL_ref;
+type_luaL_traceback p_luaL_traceback;
 
 /////////////
 // Exports //
@@ -302,6 +303,11 @@ EXPORT void luaL_openlibs(lua_State* L)
 EXPORT int luaL_ref(lua_State* L, int t)
 {
 	return p_luaL_ref(L, t);
+}
+
+EXPORT void luaL_traceback(lua_State* L, lua_State* L1, const char* msg, int level)
+{
+	p_luaL_traceback(L, L1, msg, level);
 }
 
 ///////////////////////
