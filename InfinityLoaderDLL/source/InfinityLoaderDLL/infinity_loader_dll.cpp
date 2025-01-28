@@ -1995,6 +1995,15 @@ void initLuaState(lua_State *const L) {
 	lua_pushinteger(L, sizeof(void*));
 	lua_setglobal(L, prefixed("PtrSize"));
 
+#if _WIN64
+	lua_pushstring(L, "x86-64");
+#elif _WIN32
+	lua_pushstring(L, "x86");
+#else
+	#error "Unhandled Architecture"
+#endif
+	lua_setglobal(L, prefixed("Architecture"));
+
 	//////////////////////////
 	// Export Lua Functions //
 	//////////////////////////
