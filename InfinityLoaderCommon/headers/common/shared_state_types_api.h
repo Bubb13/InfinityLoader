@@ -43,10 +43,9 @@ public:
 	IMPORT const StringA& WorkingFolderA();
 	IMPORT long long InitTime();
 	IMPORT void InitLuaState(lua_State* L);
-	IMPORT void AddLuaStateInitializedCallback(std::function<void()> callback);
+	IMPORT void AddLuaStateInitializedCallback(std::function<void(lua_State*)> callback);
 	IMPORT lua_State* LuaState();
 	IMPORT HMODULE LuaLibrary();
-	IMPORT HMODULE ToLuaLibrary();
 	IMPORT LuaMode LuaMode();
 
 	IMPORT void AddAfterPatternModifiedListener(std::function<void(PatternValueHandle, uintptr_t)> listener);
@@ -59,6 +58,7 @@ public:
 	IMPORT uintptr_t GetSinglePatternValue(PatternValueHandle valueHandle);
 	IMPORT void IteratePatternList(PatternValueHandle valueHandle, std::function<bool(uintptr_t)> func);
 	IMPORT void IteratePatternValues(std::function<bool(PatternValueHandle)> func);
+	IMPORT void ProcessThreadQueue();
 	IMPORT void SetSinglePatternValue(PatternValueHandle valueHandle, uintptr_t value);
 	IMPORT void SetSinglePatternValue(PatternValueHandle valueHandle, void* value);
 

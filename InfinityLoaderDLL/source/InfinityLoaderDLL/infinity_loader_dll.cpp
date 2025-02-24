@@ -28,7 +28,6 @@ struct LoadedBindings {
 	enum class LoadState {
 		Uninitialized,
 		Initialized,
-		BindingsOpened,
 	};
 
 	LoadState loadState = LoadState::Uninitialized;
@@ -72,30 +71,27 @@ const std::tuple<const TCHAR*, const TCHAR*, const unsigned char> aHexLetterToBy
 // General Functions //
 ///////////////////////
 
-void disableCodeProtection() {
+static void setSegmentProtection(const char *const segmentName, const DWORD protectionFlags) {
+
+	TryRetTruthy( sharedState().LoadSegmentInfo(segmentName) )
 
 	void* sectionPtr;
 	DWORD sectionSize;
-	if (sharedState().GetSegmentPointerAndSize(".text", sectionPtr, sectionSize)) {
-		Print("[!][InfinityLoaderDLL.dll] disableCodeProtection() - Failed to fetch .text pointer and size\n");
+	if (sharedState().GetSegmentPointerAndSize(segmentName, sectionPtr, sectionSize)) {
+		FPrint("[!][InfinityLoaderDLL.dll] setSegmentProtection() - Failed to fetch \"%s\" pointer and size\n", segmentName);
 		return;
 	}
 
 	DWORD temp;
-	VirtualProtect(sectionPtr, sectionSize, PAGE_EXECUTE_READWRITE, &temp);
+	VirtualProtect(sectionPtr, sectionSize, protectionFlags, &temp);
 }
 
-void enableCodeProtection() {
+static void disableCodeProtection() {
+	setSegmentProtection(".text", PAGE_EXECUTE_READWRITE);
+}
 
-	void* sectionPtr;
-	DWORD sectionSize;
-	if (sharedState().GetSegmentPointerAndSize(".text", sectionPtr, sectionSize)) {
-		Print("[!][InfinityLoaderDLL.dll] enableCodeProtection() - Failed to fetch .text pointer and size\n");
-		return;
-	}
-
-	DWORD temp;
-	VirtualProtect(sectionPtr, sectionSize, PAGE_EXECUTE_READ, &temp);
+static void enableCodeProtection() {
+	setSegmentProtection(".text", PAGE_EXECUTE_READ);
 }
 
 void exposeToLua(lua_State* L, const char* exposedName, lua_CFunction func) {
@@ -1111,9 +1107,9 @@ int jitAtInternalLua(lua_State* L) {
 	return 0;
 }
 
-bool initializeLuaBindings(const char* bindingsFileName, LoadedBindings& loadedBindings) {
+static bool initializeLuaBindings(const char *const bindingsFileName, LoadedBindings& loadedBindings) {
 
-	StringA bindingsPath = StringA{ workingFolderA() }.append(bindingsFileName).append(".dll");
+	const StringA bindingsPath = StringA{ workingFolderA() }.append(bindingsFileName).append(".dll");
 
 	if (loadedBindings.hHandle = LoadLibraryA(bindingsPath.c_str()); !loadedBindings.hHandle) {
 		FPrint("[!][InfinityLoaderDLL.dll] initializeLuaBindings() - LoadLibraryA(\"%s\") failed (%d)\n", bindingsPath.c_str(), GetLastError());
@@ -1127,23 +1123,25 @@ bool initializeLuaBindings(const char* bindingsFileName, LoadedBindings& loadedB
 	}
 
 	typedef void(__stdcall* type_Init)(SharedState);
-	type_Init initProc = reinterpret_cast<type_Init>(initProcFar);
+	const type_Init initProc = reinterpret_cast<type_Init>(initProcFar);
 	initProc(sharedState());
 
 	loadedBindings.loadState = LoadedBindings::LoadState::Initialized;
 	return false;
 }
 
-int loadLibraryLua(lua_State* L) {
+static int loadLibraryLua(lua_State *const L) {
 	const HMODULE hModule = LoadLibraryA(lua_tostring(L, 1));
 	lua_pushinteger(L, reinterpret_cast<lua_Integer>(hModule));
 	return 1;
 }
 
-int openLuaBindingsLua(lua_State* L) {
+static int openLuaBindingsLua(lua_State *const L) {
 
-	const char* bindingsFileName = lua_tolstring(L, 1, nullptr);
+	const char *const bindingsFileName = lua_tolstring(L, 1, nullptr);
 	LoadedBindings& loadedBindings = loadedBindingsMap[bindingsFileName];
+
+	// Initialize the dll if it hasn't been initialized already
 
 	if (loadedBindings.loadState == LoadedBindings::LoadState::Uninitialized
 		&& initializeLuaBindings(bindingsFileName, loadedBindings))
@@ -1151,20 +1149,34 @@ int openLuaBindingsLua(lua_State* L) {
 		return 0;
 	}
 
-	if (loadedBindings.loadState == LoadedBindings::LoadState::Initialized) {
+	// Check if the dll's bindings have already been opened for the given Lua state
 
-		FARPROC openBindingsProcFar;
-		if (openBindingsProcFar = GetProcAddress(loadedBindings.hHandle, "OpenBindings"); !openBindingsProcFar) {
-			FPrint("[!][InfinityLoaderDLL.dll] %sOpenLuaBindings() - GetProcAddress() failed (%d)\n", luaGlobalsPrefix.c_str(), GetLastError());
-			return 0;
-		}
+	const StringA openedKey = StringA{ "InfinityLoader_" }.append(bindingsFileName).append("_Opened");
 
-		typedef void(__stdcall* type_OpenBindings)();
-		type_OpenBindings openBindingsProc = reinterpret_cast<type_OpenBindings>(openBindingsProcFar);
-		openBindingsProc();
+	lua_pushstring(L, openedKey.c_str()); // 1 [ openedKey ]
+	lua_rawget(L, LUA_REGISTRYINDEX);     // 1 [ registry[openedKey] ]
 
-		loadedBindings.loadState = LoadedBindings::LoadState::BindingsOpened;
+	if (lua_toboolean(L, -1)) {
+		lua_pop(L, 1);                    // 0 [ ]
+		return 0;
 	}
+
+	lua_pushstring(L, openedKey.c_str()); // 2 [ registry[openedKey], openedKey ]
+	lua_pushboolean(L, true);             // 3 [ registry[openedKey], openedKey, true ]
+	lua_rawset(L, LUA_REGISTRYINDEX);     // 1 [ registry[openedKey] ]
+	lua_pop(L, 1);                        // 0 [ ]
+
+	// Call dll's OpenBindings()
+
+	FARPROC openBindingsProcFar;
+	if (openBindingsProcFar = GetProcAddress(loadedBindings.hHandle, "OpenBindings"); !openBindingsProcFar) {
+		FPrint("[!][InfinityLoaderDLL.dll] %sOpenLuaBindings() - GetProcAddress() failed (%d)\n", luaGlobalsPrefix.c_str(), GetLastError());
+		return 0;
+	}
+
+	typedef void(__stdcall* type_OpenBindings)();
+	const type_OpenBindings openBindingsProc = reinterpret_cast<type_OpenBindings>(openBindingsProcFar);
+	openBindingsProc();
 
 	return 0;
 }
@@ -1219,6 +1231,11 @@ int printLua(lua_State* L) {
 
 int printErrLua(lua_State* L) {
 	PrintErr(lua_tostring(L, 1));
+	return 0;
+}
+
+static int processThreadQueueLua(lua_State* L) {
+	sharedState().ProcessThreadQueue();
 	return 0;
 }
 
@@ -1378,6 +1395,26 @@ int setLuaRegistryIndexLua(lua_State* L) {
 	castLuaIntArg(1, int, Int, n)
 	lua_pushvalue(L, 2);
 	lua_rawseti(L, LUA_REGISTRYINDEX, n);
+	return 0;
+}
+
+static int setSegmentProtectionLua(lua_State* L) {
+	const char *const segmentName = lua_tostring(L, 1);
+	castLuaIntArg(2, unsigned __int32, UInt32, protectionFlags)
+	setSegmentProtection(segmentName, protectionFlags);
+	return 0;
+}
+
+static int temporaryPrintReplacementLua(lua_State* L) {
+	const int top = lua_gettop(L);
+	for (int index = 1; index <= top; ++index) {
+		if (!lua_isstring(L, index)) {
+			FPrint("Unable to convert arg %d a %s to string\n", index, lua_typename(L, index));
+		}
+		else {
+			FPrint("%s%s\n", earlyPrintPrefix.c_str(), lua_tolstring(L, index, nullptr));
+		}
+	}
 	return 0;
 }
 
@@ -1598,11 +1635,11 @@ void exportExistingPatterns(lua_State *const L) {
 	lua_pop(L, 1);                                                                    // 0 [ ... ]
 }
 
-void onLuaStateInitialized() {
-	exportExistingPatterns(luaState());
+static void onLuaStateInitialized(lua_State *const L) {
+	exportExistingPatterns(L);
 }
 
-void onAfterPatternModified(const PatternValueHandle handle, const uintptr_t newAddress) {
+static void onAfterPatternModified(const PatternValueHandle handle, const uintptr_t newAddress) {
 
 	if (lua_State *const L = luaState(); L != nullptr) {
 
@@ -1933,46 +1970,11 @@ bool fillPatternPointer(void* segmentPtr, DWORD segmentSize, const String& name,
 	return fillPatternPointer(segmentPtr, segmentSize, name, pointer, [](uintptr_t& address){});
 }
 
-int temporaryPrintReplacement(lua_State* L)
-{
-	const int top = lua_gettop(L);
-	for (int index = 1; index <= top; ++index)
-	{
-		if (!lua_isstring(L, index))
-		{
-			FPrint("Unable to convert arg %d a %s to string\n", index, lua_typename(L, index));
-		}
-		else
-		{
-			FPrint("%s%s\n", earlyPrintPrefix.c_str(), lua_tolstring(L, index, nullptr));
-		}
-	}
-	return 0;
-}
+/////////////////////////
+// START Lua Functions //
+/////////////////////////
 
-static void __stdcall simpleLog(const char *const str) {
-	Print(str);
-}
-
-static void logV(const char* formatText, ...) {
-
-	va_list args;
-	va_start(args, formatText);
-
-	RunWithGrowingBuffer<char>(
-		[&](char *const buffer, const size_t bufferSize) {
-			const int result = _vsnprintf_s(buffer, bufferSize, _TRUNCATE, formatText, args);
-			return result == -1 ? TryFillBufferResult::GROW : TryFillBufferResult::DONE;
-		},
-		[&](char *const buffer, const size_t) {
-			Print(buffer);
-		}
-	);
-
-	va_end(args);
-}
-
-void initLuaState(lua_State *const L) {
+static void initLuaState(lua_State *const L) {
 
 	if (luaMode() != LuaMode::INTERNAL) {
 
@@ -1981,7 +1983,7 @@ void initLuaState(lua_State *const L) {
 		// Since non-internal modes initialize the Lua state immediately, the engine's print() function isn't set when EEex's initial
 		// Lua file is executed, which means print() must be redirected to InfinityLoader's FPrint() to get console output from the
 		// initial file.
-		lua_pushcfunction(L, temporaryPrintReplacement);
+		lua_pushcfunction(L, temporaryPrintReplacementLua);
 		lua_setglobal(L, "print");
 	}
 
@@ -2040,6 +2042,7 @@ void initLuaState(lua_State *const L) {
 	exposeToLua(L, prefixed("OpenLuaBindings"), openLuaBindingsLua);
 	exposeToLua(L, prefixed("Print"), printLua);
 	exposeToLua(L, prefixed("PrintErr"), printErrLua);
+	exposeToLua(L, prefixed("ProcessThreadQueue"), processThreadQueueLua);
 	exposeToLua(L, prefixed("Read16"), read16Lua);
 	exposeToLua(L, prefixed("Read32"), read32Lua);
 #if defined(_WIN64)
@@ -2060,6 +2063,7 @@ void initLuaState(lua_State *const L) {
 	exposeToLua(L, prefixed("RunWithStack"), runWithStackLua);
 	exposeToLua(L, prefixed("SelectFromTables"), selectFromTablesLua);
 	exposeToLua(L, prefixed("SetLuaRegistryIndex"), setLuaRegistryIndexLua);
+	exposeToLua(L, prefixed("SetSegmentProtection"), setSegmentProtectionLua);
 	exposeToLua(L, prefixed("ToDecimalString"), toDecimalStringLua);
 	exposeToLua(L, prefixed("ToDecStr"), toDecimalStringLua);
 	exposeToLua(L, prefixed("Write16"), write16Lua);
@@ -2079,12 +2083,52 @@ void initLuaState(lua_State *const L) {
 	exposeToLua(L, prefixed("WriteStringAuto"), writeStringAutoLua);
 }
 
-void __stdcall initLuaStateExport(lua_State* L) {
-	initLuaState(L);
-	exportExistingPatterns(L);
+/////////////////////////////////////
+// START Hardcoded Pattern Exports //
+/////////////////////////////////////
+
+static void __stdcall doLuaFileExport(lua_State *const L, const char *const str) {
+	callOverrideFile(L, str);
 }
 
-void initLua() {
+static lua_State* __stdcall getLuaStateExport() {
+	return luaState();
+}
+
+static void __stdcall logExport(const char *const str) {
+	Print(str);
+}
+
+static void logVExport(const char* formatText, ...) {
+
+	va_list args;
+	va_start(args, formatText);
+
+	RunWithGrowingBuffer<char>(
+		[&](char *const buffer, const size_t bufferSize) {
+			const int result = _vsnprintf_s(buffer, bufferSize, _TRUNCATE, formatText, args);
+			return result == -1 ? TryFillBufferResult::GROW : TryFillBufferResult::DONE;
+		},
+		[&](char *const buffer, const size_t) {
+			Print(buffer);
+		}
+	);
+
+	va_end(args);
+}
+
+static lua_State* __stdcall newLuaStateExport() {
+	lua_State* const L = luaL_newstate();
+	sharedState().InitLuaState(L);
+	initLuaState(L);
+	return L;
+}
+
+///////////////////////////////////
+// END Hardcoded Pattern Exports //
+///////////////////////////////////
+
+static void initLua() {
 
 	if (debug()) {
 		Print("[?][InfinityLoaderDLL.dll] initLua() - Debug output 4 (Windows: No, Proton: Yes)...\n");
@@ -2169,9 +2213,11 @@ void initLua() {
 	// Export Hardcoded Pattern Values //
 	/////////////////////////////////////
 
-	setSinglePatternValueCleanup(TEXT("Hardcoded_log"), simpleLog)
-	setSinglePatternValueCleanup(TEXT("Hardcoded_logV"), logV)
-	setSinglePatternValueCleanup(TEXT("Hardcoded_initLuaState"), initLuaStateExport)
+	setSinglePatternValueCleanup(TEXT("Hardcoded_doLuaFile"), doLuaFileExport)
+	setSinglePatternValueCleanup(TEXT("Hardcoded_getLuaState"), getLuaStateExport)
+	setSinglePatternValueCleanup(TEXT("Hardcoded_log"), logExport)
+	setSinglePatternValueCleanup(TEXT("Hardcoded_logV"), logVExport)
+	setSinglePatternValueCleanup(TEXT("Hardcoded_newLuaState"), newLuaStateExport)
 
 	///////////////////////
 	// Run Main Lua File //

@@ -13,12 +13,21 @@
   <ItemGroup>
     <ClInclude Include="headers\common\lua_bindings_core_api.h" />
     <ClInclude Include="headers\common\tolua\tolua.h" />
-    <ClInclude Include="headers\LuaBindingsCore\to_lua_pointers.h" />
+    <ClInclude Include="headers\LuaBindingsCore\tolua.h" />
+    <ClInclude Include="headers\LuaBindingsCore\tolua_event.h" />
+    <ClInclude Include="headers\LuaBindingsCore\tolua_infinityloader_overrides.h" />
+    <ClInclude Include="headers\LuaBindingsCore\tolua_pointers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\LuaBindingsCore\common.cpp" />
     <ClCompile Include="source\LuaBindingsCore\lua_bindings_core.cpp" />
-    <ClCompile Include="source\LuaBindingsCore\to_lua_pointers.cpp" />
+    <ClCompile Include="source\LuaBindingsCore\tolua_event.cpp" />
+    <ClCompile Include="source\LuaBindingsCore\tolua_infinityloader_overrides.cpp" />
+    <ClCompile Include="source\LuaBindingsCore\tolua_is.cpp" />
+    <ClCompile Include="source\LuaBindingsCore\tolua_map.cpp" />
+    <ClCompile Include="source\LuaBindingsCore\tolua_pointers.cpp" />
+    <ClCompile Include="source\LuaBindingsCore\tolua_push.cpp" />
+    <ClCompile Include="source\LuaBindingsCore\tolua_to.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />

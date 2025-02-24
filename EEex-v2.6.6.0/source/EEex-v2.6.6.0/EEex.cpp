@@ -563,9 +563,9 @@ void getUDAux(lua_State *const L, void *const ptr) {
 // Expects: n     [ ... ]
 // Returns: n + 1 [ ..., castPtrUD ]
 void getCastUD(lua_State* L, const char* castBaseName, const char* castFuncName, void* toCastPtr) {
-	lua_getglobal(L, castFuncName);                        // 1 [ castFunc ]
-	tolua_pushusertype_nocast(L, toCastPtr, castBaseName); // 2 [ castFunc, toCastPtr ]
-	lua_call(L, 1, 1);                                     // 1 [ castPtrUD ]
+	lua_getglobal(L, castFuncName);                 // 1 [ castFunc ]
+	tolua_pushusertype(L, toCastPtr, castBaseName); // 2 [ castFunc, toCastPtr ]
+	lua_call(L, 1, 1);                              // 1 [ castPtrUD ]
 }
 
 void registerProjVFTableType(const TCHAR* patternName, std::pair<const char*, EEex::ProjectileType> info) {
@@ -609,7 +609,7 @@ void pushGameObjectUD(lua_State* L, CGameObject* pGameObject) {
 		case CGameObjectType::GAME_AI:       userType = "CGameAIGame";      break;
 		default:                             userType = "CGameObject";      break;
 	}
-	tolua_pushusertype_nocast(L, pGameObject, userType);
+	tolua_pushusertype(L, pGameObject, userType);
 }
 
 void pushProjectileUD(lua_State* L, CProjectile* pProjectile) {
@@ -619,10 +619,10 @@ void pushProjectileUD(lua_State* L, CProjectile* pProjectile) {
 	}
 	const uintptr_t vfptr = *reinterpret_cast<uintptr_t*>(pProjectile);
 	if (auto found = projVFTableToType.find(vfptr); found != projVFTableToType.end()) {
-		tolua_pushusertype_nocast(L, pProjectile, found->second.first);
+		tolua_pushusertype(L, pProjectile, found->second.first);
 	}
 	else {
-		tolua_pushusertype_nocast(L, pProjectile, "CProjectile");
+		tolua_pushusertype(L, pProjectile, "CProjectile");
 	}
 }
 
@@ -2388,7 +2388,7 @@ void updateScriptingObject(CGameAIBase* pAIBase, EEex_ScriptingObject scriptingO
 		lua_State *const L = *p_g_lua;
 		luaCallProtected(L, 2, 0, [&](int _) {
 			lua_getglobal(L, "EEex_AIBase_LuaHook_OnScriptingObjectUpdated"); // 1 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated ]
-			tolua_pushusertype_nocast(L, pAIBase, "CGameAIBase");             // 2 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated, pAIBaseUD ]
+			tolua_pushusertype(L, pAIBase, "CGameAIBase");                    // 2 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated, pAIBaseUD ]
 			lua_pushinteger(L, static_cast<__int32>(scriptingObject));        // 3 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated, pAIBaseUD, scriptingObject ]
 		});
 	}
@@ -3149,27 +3149,27 @@ int EEex::Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite) {
 	}
 
 	lua_State *const L = luaState();
-	tolua_pushusertype_nocast(L, pEffect, "CGameEffect");                   // 1 [ ..., pEffectUD ]
-	tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                   // 2 [ ..., pEffectUD, pSpriteUD ]
+	tolua_pushusertype(L, pEffect, "CGameEffect");                   // 1 [ ..., pEffectUD ]
+	tolua_pushusertype(L, pSprite, "CGameSprite");                   // 2 [ ..., pEffectUD, pSpriteUD ]
 	int foundImmunity = 0;
 
 	for (CGameEffect* pScreenEffect : screenEffects) {
 
 		char immunityFunc[9];
 		pScreenEffect->m_res.toNullTerminatedStr(immunityFunc);
-		lua_getglobal(L, immunityFunc);                                     // 3 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc] ]
+		lua_getglobal(L, immunityFunc);                              // 3 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc] ]
 
 		if (lua_isfunction(L, -1)) {
 
 			if (luaCallProtected(L, 3, 1, [&](int base) {
-																			// 3 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ... ]
-				lua_pushvalue(L, base);                                     // 4 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ..., _G[immunityFunc] ]
-				tolua_pushusertype_nocast(L, pScreenEffect, "CGameEffect"); // 5 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ..., _G[immunityFunc], pScreenEffectUD ]
-				lua_pushvalue(L, base - 2);                                 // 6 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ..., _G[immunityFunc], pScreenEffectUD, pEffectUD ]
-				lua_pushvalue(L, base - 1);                                 // 7 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ..., _G[immunityFunc], pScreenEffectUD, pEffectUD, pSpriteUD ]
+																	 // 3 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ... ]
+				lua_pushvalue(L, base);                              // 4 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ..., _G[immunityFunc] ]
+				tolua_pushusertype(L, pScreenEffect, "CGameEffect"); // 5 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ..., _G[immunityFunc], pScreenEffectUD ]
+				lua_pushvalue(L, base - 2);                          // 6 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ..., _G[immunityFunc], pScreenEffectUD, pEffectUD ]
+				lua_pushvalue(L, base - 1);                          // 7 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], ..., _G[immunityFunc], pScreenEffectUD, pEffectUD, pSpriteUD ]
 			}))
 			{
-																			// 4 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], retVal ]
+																	 // 4 [ ..., pEffectUD, pSpriteUD, _G[immunityFunc], retVal ]
 				int nRetType = lua_type(L, -1);
 				if (nRetType == LUA_TNIL) {
 					// Treat nil as false
@@ -3177,7 +3177,7 @@ int EEex::Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite) {
 				else if (nRetType == LUA_TBOOLEAN) {
 					if (lua_toboolean(L, -1)) {
 						foundImmunity = 1;
-						lua_pop(L, 2);                                      // 2 [ ..., pEffectUD, pSpriteUD ]
+						lua_pop(L, 2);                               // 2 [ ..., pEffectUD, pSpriteUD ]
 						break;
 					}
 				}
@@ -3185,16 +3185,16 @@ int EEex::Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite) {
 					FPrint("[!][EEex.dll] op403 (ScreenEffects) - immunityFunc \"%s\" returned invalid type\n", immunityFunc);
 				}
 
-				lua_pop(L, 2);                                              // 2 [ ..., pEffectUD, pSpriteUD ]
+				lua_pop(L, 2);                                       // 2 [ ..., pEffectUD, pSpriteUD ]
 			}
 		}
 		else {
 			FPrint("[!][EEex.dll] op403 (ScreenEffects) - immunityFunc \"%s\" has invalid type\n", immunityFunc);
-			lua_pop(L, 1);                                                  // 2 [ ..., pEffectUD, pSpriteUD ]
+			lua_pop(L, 1);                                           // 2 [ ..., pEffectUD, pSpriteUD ]
 		}
 	}
 
-	lua_pop(L, 2);                                                          // 0 [ ... ]
+	lua_pop(L, 2);                                                   // 0 [ ... ]
 	return foundImmunity;
 
 	STUTTER_LOG_END
@@ -3242,7 +3242,7 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 
 		luaCallProtected(L, 1, 0, [&](int _) {
 			lua_getglobal(L, "EEex_Sprite_LuaHook_OnSpellDisableStateChanged"); // 1 [ ..., EEex_Sprite_LuaHook_SpellDisableStateChanged ]
-			tolua_pushusertype_nocast(L, pSprite, "CGameSprite");               // 2 [ ..., EEex_Sprite_LuaHook_SpellDisableStateChanged, pSpriteUD ]
+			tolua_pushusertype(L, pSprite, "CGameSprite");                      // 2 [ ..., EEex_Sprite_LuaHook_SpellDisableStateChanged, pSpriteUD ]
 		});
 	}
 
@@ -3252,7 +3252,7 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 
 	luaCallProtected(L, 1, 0, [&](int _) {
 		lua_getglobal(L, "EEex_Opcode_LuaHook_AfterListsResolved"); // 1 [ ..., EEex_Opcode_LuaHook_AfterListsResolved ]
-		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");       // 2 [ ..., EEex_Opcode_LuaHook_AfterListsResolved, pSpriteUD ]
+		tolua_pushusertype(L, pSprite, "CGameSprite");              // 2 [ ..., EEex_Opcode_LuaHook_AfterListsResolved, pSpriteUD ]
 	});
 
 	STUTTER_LOG_END
@@ -3354,7 +3354,7 @@ void EEex::Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite) {
 	lua_State *const L = *p_g_lua;
 	luaCallProtected(L, 1, 0, [&](int _) {
 		lua_getglobal(L, "EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled"); // 1 [ ..., EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled ]
-		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                  // 2 [ ..., EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled, pSpriteUD ]
+		tolua_pushusertype(L, pSprite, "CGameSprite");                         // 2 [ ..., EEex_Sprite_LuaHook_OnAfterEffectListUnmarshalled, pSpriteUD ]
 	});
 
 	STUTTER_LOG_END
@@ -3400,8 +3400,8 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 	auto& enableActionListenerEffects = exStatDataMap[pSprite->GetActiveStats()].enableActionListenerEffects;
 	if (!enableActionListenerEffects.empty()) {
 
-		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                        // 1 [ ..., pSpriteUD ]
-		tolua_pushusertype_nocast(L, &pSprite->m_curAction, "CAIAction");            // 2 [ ..., pSpriteUD, pActionUD ]
+		tolua_pushusertype(L, pSprite, "CGameSprite");                               // 1 [ ..., pSpriteUD ]
+		tolua_pushusertype(L, &pSprite->m_curAction, "CAIAction");                   // 2 [ ..., pSpriteUD, pActionUD ]
 		lua_getglobal(L, "EEex_Action_Private_EnabledSpriteStartedActionListeners"); // 3 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners ]
 
 		for (auto& data : enableActionListenerEffects) {
@@ -3417,7 +3417,7 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 						lua_pushvalue(L, base);                                      // 5 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName] ]
 						lua_pushvalue(L, base - 3);                                  // 6 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD ]
 						lua_pushvalue(L, base - 2);                                  // 7 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD, pActionUD ]
-						tolua_pushusertype_nocast(L, pEffect, "CGameEffect");        // 8 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD, pActionUD, pEffect ]
+						tolua_pushusertype(L, pEffect, "CGameEffect");               // 8 [ ..., pSpriteUD, pActionUD, EEex_Action_Private_EnabledSpriteStartedActionListeners, EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], ..., EEex_Action_Private_EnabledSpriteStartedActionListeners[funcName], pSpriteUD, pActionUD, pEffect ]
 					});
 				}
 				else {
@@ -3433,7 +3433,7 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 
 	luaCallProtected(L, 1, 0, [&](int base) {
 		lua_getglobal(L, "EEex_Action_LuaHook_OnAfterSpriteStartedAction");          // 1 [ ..., EEex_Action_Hook_OnAfterSpriteStartedAction ]
-		tolua_pushusertype_nocast(L, pSprite, "CGameSprite");                        // 2 [ ..., EEex_Action_Hook_OnAfterSpriteStartedAction, pSpriteUD ]
+		tolua_pushusertype(L, pSprite, "CGameSprite");                               // 2 [ ..., EEex_Action_Hook_OnAfterSpriteStartedAction, pSpriteUD ]
 	});
 																					 // 0 [ ... ]
 	STUTTER_LOG_END
@@ -3512,18 +3512,18 @@ LuaTypeContainer processMutatorFunctions(
 
 		for (CGameEffect *const pEffect : **projectileMutatorEffects) {
 
-			tolua_pushusertype_nocast(L, pEffect, "CGameEffect"); // 1 [ ..., pEffectUD ]
+			tolua_pushusertype(L, pEffect, "CGameEffect");         // 1 [ ..., pEffectUD ]
 
 			char mutatorTableName[9];
 			pEffect->m_res.toNullTerminatedStr(mutatorTableName);
 
 			LuaTypeContainer retType = func(mutatorTableName, -1);
 			if (retType.valid && retType.type != LUA_TNIL) {
-				lua_pop(L, 2);                                    // 0 [ ... ]
+				lua_pop(L, 2);                                     // 0 [ ... ]
 				return retType;
 			}
 
-			lua_pop(L, 1);                                        // 0 [ ... ]
+			lua_pop(L, 1);                                         // 0 [ ... ]
 		}
 	}
 
@@ -3675,7 +3675,7 @@ void EEex::Projectile_Hook_OnBeforeAddEffect(CProjectile* pProjectile, CGameAIBa
 	pushGlobalIndexedByInt(L, "EEex_Projectile_Private_AddEffectSources", pRetPtr);                             // 1 [ ..., addEffectSource ]
 	pushProjectileUD(L, pProjectile);                                                                           // 2 [ ..., addEffectSource, pProjectileUD ]
 	pushGameObjectUD(L, pDecoder);                                                                              // 3 [ ..., addEffectSource, pProjectileUD, pDecoderUD ]
-	tolua_pushusertype_nocast(L, pEffect, "CGameEffect");                                                       // 4 [ ..., addEffectSource, pProjectileUD, pDecoderUD, pEffectUD ]
+	tolua_pushusertype(L, pEffect, "CGameEffect");                                                              // 4 [ ..., addEffectSource, pProjectileUD, pDecoderUD, pEffectUD ]
 
 	processMutatorFunctions(L, projectileMutatorEffects,
 		[&](const char* mutatorTableName, std::optional<int> originatingEffectIndex) -> LuaTypeContainer

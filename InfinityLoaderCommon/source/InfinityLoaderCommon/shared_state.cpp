@@ -145,7 +145,7 @@ static const String EMPTY_STRING{TEXT("")};
 Pattern::Entry::Entry(const String& str, const uintptr_t val) {
 	name = str;
 	valueType = Pattern::ValueType::SINGLE;
-	value.address = val;
+	value.single.address = val;
 }
 
 Pattern::Entry::Entry(const String& str, const ValueType valType) {
@@ -153,7 +153,7 @@ Pattern::Entry::Entry(const String& str, const ValueType valType) {
 	valueType = valType;
 	switch (valType) {
 		case Pattern::ValueType::LIST: {
-			new (&value.addresses) std::vector<uintptr_t>{};
+			new (&value.list) Pattern::ListValue{};
 			break;
 		}
 	}
@@ -162,7 +162,7 @@ Pattern::Entry::Entry(const String& str, const ValueType valType) {
 Pattern::Entry::~Entry() {
 	switch (valueType) {
 		case Pattern::ValueType::LIST: {
-			value.addresses.~vector();
+			value.list.~ListValue();
 			break;
 		}
 	}
@@ -170,6 +170,7 @@ Pattern::Entry::~Entry() {
 
 OpaqueObjectBoilerplateImp(SharedState, SharedStateData)
 
+// Thread safe
 EXPORT DWORD SharedState::Create(SharedStateMappedMemory mappedMemory, SharedState& sharedStateOut) {
 
 	SharedState toReturn {
@@ -188,7 +189,8 @@ EXPORT DWORD SharedState::Create(SharedStateMappedMemory mappedMemory, SharedSta
 	return ERROR_SUCCESS;
 }
 
-DWORD loadLuaLibrary(const String& iniPath, const String& luaModeStr, HMODULE& luaLibraryOut) {
+// Thread safe
+static DWORD loadLuaLibrary(const String& iniPath, const String& luaModeStr, HMODULE& luaLibraryOut) {
 
 	String luaLibraryName;
 
@@ -212,30 +214,8 @@ DWORD loadLuaLibrary(const String& iniPath, const String& luaModeStr, HMODULE& l
 	return ERROR_SUCCESS;
 }
 
-DWORD loadToLuaLibrary(const String& iniPath, const String& luaModeStr, HMODULE& toLuaLibraryOut) {
-
-	String toLuaLibraryName;
-
-	bool filled;
-	TryRetErr( GetINIStr(iniPath, TEXT("General"), TEXT("ToLuaLibrary"), toLuaLibraryName, filled) )
-
-	if (!filled) {
-		return ERROR_SUCCESS;
-	}
-
-	if (HMODULE hToLuaLibrary = LoadLibrary(toLuaLibraryName.c_str())) {
-		toLuaLibraryOut = hToLuaLibrary;
-	}
-	else {
-		DWORD lastError = GetLastError();
-		FPrintT(TEXT("[!][InfinityLoaderCommon.dll] loadToLuaLibrary() - LoadLibrary() failed (%d) to load [General].LuaLibrary \"%s\"\n"), lastError, toLuaLibraryName.c_str());
-		return lastError;
-	}
-
-	return ERROR_SUCCESS;
-}
-
-DWORD findModuleWithPath(HANDLE process, const String& path, HMODULE& foundModule) {
+// Thread safe
+static DWORD findModuleWithPath(HANDLE process, const String& path, HMODULE& foundModule) {
 
 	HMODULE modules[1024];
 	DWORD needed;
@@ -269,6 +249,7 @@ DWORD findModuleWithPath(HANDLE process, const String& path, HMODULE& foundModul
 	return ERROR_SUCCESS;
 }
 
+// !NOT! thread safe
 EXPORT DWORD SharedState::InitState() {
 
 	SharedStateData& data = *this->data();
@@ -306,9 +287,6 @@ EXPORT DWORD SharedState::InitState() {
 		return -1;
 	}
 
-	// Init toLuaLibrary
-	TryRetErr( loadToLuaLibrary(paths.iniPath, luaModeStr, state.toLuaLibrary) )
-
 	// Init imageBase
 	HMODULE foundModule;
 	TryRetErr( findModuleWithPath(GetCurrentProcess(), paths.exePath, foundModule) )
@@ -322,102 +300,145 @@ EXPORT DWORD SharedState::InitState() {
 	return ERROR_SUCCESS;
 }
 
+// Thread safe
 EXPORT SharedStateMappedMemory& SharedState::MappedMemory() {
 	return data()->mappedMemory;
 }
 
+// Thread safe
 EXPORT const String& SharedState::DbPath() {
 	return data()->paths.dbPath;
 }
 
+// Thread safe
 EXPORT const String& SharedState::ExePath() {
 	return data()->paths.exePath;
 }
 
+// Thread safe
 EXPORT const String& SharedState::ExeName() {
 	return data()->paths.exeName;
 }
 
+// Thread safe
 EXPORT const String& SharedState::IniPath() {
 	return data()->paths.iniPath;
 }
 
+// Thread safe
 EXPORT const String& SharedState::WorkingFolder() {
 	return data()->paths.workingFolder;
 }
 
+// Thread safe
 EXPORT const StringA& SharedState::WorkingFolderA() {
 	return data()->paths.workingFolderA;
 }
 
+// Thread safe
 EXPORT long long SharedState::InitTime() {
 	return data()->state.initTime;
 }
 
+// Thread safe
 EXPORT void SharedState::InitLuaState(lua_State* L) {
 
 	SharedDLLState& state = data()->state;
+	auto& luaStateEntries = state.luaStateEntries;
 
-	if (state.L != nullptr) {
-		Print("[!][InfinityLoaderCommon.dll] SharedState::InitLuaState() - Attempted to call SharedState::InitLuaState() more than once, ignoring\n");
-		return;
+	const DWORD threadId = GetCurrentThreadId();
+	
+	{
+		std::unique_lock<std::shared_mutex> lk { state.luaStateEntriesMutex };
+
+		for (const SharedDLLState::LuaStateEntry& luaStateEntry : luaStateEntries) {
+			if (luaStateEntry.threadId == threadId) {
+				Print("[!][InfinityLoaderCommon.dll] SharedState::InitLuaState() - Attempted to call SharedState::InitLuaState() more than once for thread, ignoring\n");
+				return;
+			}
+		}
+
+		luaStateEntries.emplace_back(threadId, L);
 	}
-	state.L = L;
 
 	auto& callbacks = state.luaStateInitializedCallbacks;
 	for (auto& callback : callbacks) {
-		callback();
+		callback(L);
 	}
-	callbacks.~vector();
 }
 
-EXPORT void SharedState::AddLuaStateInitializedCallback(std::function<void()> callback) {
+// !NOT! thread safe
+EXPORT void SharedState::AddLuaStateInitializedCallback(std::function<void(lua_State*)> callback) {
+
 	SharedDLLState& state = data()->state;
-	if (state.L == nullptr) {
-		state.luaStateInitializedCallbacks.emplace_back(callback);
-	}
-	else {
-		callback();
+	state.luaStateInitializedCallbacks.emplace_back(callback);
+
+	for (const SharedDLLState::LuaStateEntry& luaStateEntry : state.luaStateEntries) {
+		callback(luaStateEntry.L);
 	}
 }
 
+// Thread safe
 EXPORT lua_State* SharedState::LuaState() {
-	return data()->state.L;
+
+	SharedDLLState& state = data()->state;
+	const DWORD threadId = GetCurrentThreadId();
+
+	{
+		std::shared_lock<std::shared_mutex> lk { state.luaStateEntriesMutex };
+
+		for (const SharedDLLState::LuaStateEntry& luaStateEntry : state.luaStateEntries) {
+			if (luaStateEntry.threadId == threadId) {
+				return luaStateEntry.L;
+			}
+		}
+	}
+
+	return nullptr;
 }
 
+// Thread safe
 EXPORT HMODULE SharedState::LuaLibrary() {
 	return data()->state.luaLibrary;
 }
 
-EXPORT HMODULE SharedState::ToLuaLibrary() {
-	return data()->state.toLuaLibrary;
-}
-
+// Thread safe
 EXPORT LuaMode SharedState::LuaMode() {
 	return data()->state.luaMode;
 }
 
+// !NOT! thread safe
 EXPORT void SharedState::AddAfterPatternModifiedListener(std::function<void(PatternValueHandle valueHandle, uintptr_t)> listener) {
 	data()->state.afterPatternSetListeners.emplace_back(listener);
 }
 
+// Thread safe
 EXPORT void SharedState::AddListPatternValue(PatternValueHandle valueHandle, uintptr_t value) {
+
 	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+
 	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::LIST) {
-		pEntry->value.addresses.emplace_back(value);
-		for (auto& listener : data()->state.afterPatternSetListeners) {
-			listener(pEntry, value);
-		}
+
+		auto& listValue = pEntry->value.list;
+		std::unique_lock<std::shared_mutex> lk { listValue.mutex };
+
+		listValue.addresses.emplace_back(value);
+		QueueAfterPatternSetMessage(pEntry, value);
 		return;
 	}
-	FPrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::AddListPatternValue() - Failed, type of pattern \"%s\" is not LIST\n"),
-		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
+
+	FPrintT(
+		TEXT("[!][InfinityLoaderCommon.dll] SharedState::AddListPatternValue() - Failed, type of pattern \"%s\" is not LIST\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>")
+	);
 }
 
+// Thread safe
 EXPORT void SharedState::AddListPatternValue(PatternValueHandle valueHandle, void* value) {
 	AddListPatternValue(valueHandle, reinterpret_cast<uintptr_t>(value));
 }
 
+// Thread safe
 EXPORT bool SharedState::GetOrCreatePatternValue(const String& name, PatternValueType valueType, PatternValueHandle& out) {
 
 	SharedDLLState& state = data()->state;
@@ -442,6 +463,7 @@ EXPORT bool SharedState::GetOrCreatePatternValue(const String& name, PatternValu
 	return false;
 }
 
+// Thread safe
 EXPORT PatternValueType SharedState::GetPatternValue(const String& name, PatternValueHandle& out) {
 
 	SharedDLLState& state = data()->state;
@@ -459,16 +481,23 @@ EXPORT PatternValueType SharedState::GetPatternValue(const String& name, Pattern
 	return PatternValueType::INVALID;
 }
 
+// Thread safe
 EXPORT const String& SharedState::GetPatternValueName(PatternValueHandle valueHandle) {
+
 	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+
 	if (pEntry != nullptr) {
 		return pEntry->name;
 	}
-	FPrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::GetPatternValueName() - Failed, type of pattern \"%s\" is INVALID\n"),
-		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
+
+	FPrintT(
+		TEXT("[!][InfinityLoaderCommon.dll] SharedState::GetPatternValueName() - Failed, type of pattern \"%s\" is INVALID\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>")
+	);
 	return EMPTY_STRING;
 }
 
+// Thread safe
 EXPORT PatternValueType SharedState::GetPatternValueType(PatternValueHandle valueHandle) {
 	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
 	if (pEntry != nullptr) {
@@ -477,58 +506,158 @@ EXPORT PatternValueType SharedState::GetPatternValueType(PatternValueHandle valu
 	return PatternValueType::INVALID;
 }
 
+// Thread safe
 EXPORT uintptr_t SharedState::GetSinglePatternValue(PatternValueHandle valueHandle) {
+
 	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+
 	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::SINGLE) {
-		return pEntry->value.address;
+		return pEntry->value.single.address;
 	}
-	FPrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::GetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE\n"),
-		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
+
+	FPrintT(
+		TEXT("[!][InfinityLoaderCommon.dll] SharedState::GetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>")
+	);
 	return 0x0;
 }
 
+// Thread safe
 EXPORT void SharedState::IteratePatternList(PatternValueHandle valueHandle, std::function<bool(uintptr_t)> func) {
+
 	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+
 	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::LIST) {
-		auto& addresses = pEntry->value.addresses;
-		for (uintptr_t address : addresses) {
+
+		auto& listValue = pEntry->value.list;
+		std::shared_lock<std::shared_mutex> lk { listValue.mutex };
+
+		for (uintptr_t address : listValue.addresses) {
 			if (func(address)) {
 				break;
 			}
 		}
+
 		return;
 	}
-	FPrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::IteratePatternList() - Failed, type of pattern \"%s\" is not LIST\n"),
-		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
+
+	FPrintT(
+		TEXT("[!][InfinityLoaderCommon.dll] SharedState::IteratePatternList() - Failed, type of pattern \"%s\" is not LIST\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>")
+	);
 }
 
+// Thread safe
 EXPORT void SharedState::IteratePatternValues(std::function<bool(PatternValueHandle)> func) {
-	auto& patterns = data()->state.patterns;
-	for (auto& [key, entry] : patterns) {
+
+	SharedDLLState& state = data()->state;
+
+	std::shared_lock<std::shared_mutex> lk { state.patternsModifyMutex };
+
+	for (auto& [key, entry] : state.patterns) {
 		if (func(reinterpret_cast<PatternValueHandle>(&entry))) {
 			break;
 		}
 	}
 }
 
-EXPORT void SharedState::SetSinglePatternValue(PatternValueHandle valueHandle, uintptr_t value) {
-	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
-	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::SINGLE) {
-		pEntry->value.address = value;
-		for (const auto& listener : data()->state.afterPatternSetListeners) {
-			listener(pEntry, value);
+// Thread safe
+EXPORT void SharedState::ProcessThreadQueue() {
+
+	SharedDLLState& state = data()->state;
+
+	const DWORD threadId = GetCurrentThreadId();
+	SharedDLLState::ThreadQueue* threadQueue = nullptr;
+
+	{
+		std::shared_lock<std::shared_mutex> lk { state.luaStateEntriesMutex };
+
+		for (SharedDLLState::LuaStateEntry& luaStateEntry : state.luaStateEntries) {
+			if (luaStateEntry.threadId == threadId) {
+				threadQueue = &luaStateEntry.threadQueue;
+			}
 		}
+	}
+
+	if (threadQueue == nullptr) {
+		Print("[!][InfinityLoaderCommon.dll] SharedState::ProcessThreadQueue() - No queue associated with the calling thread\n");
 		return;
 	}
-	FPrintT(TEXT("[!][InfinityLoaderCommon.dll] SharedState::SetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE\n"),
-		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>"));
+
+	auto& messages = threadQueue->messages;
+
+	while (!messages.empty()) {
+		auto& message = messages.front();
+		switch (message.type) {
+			case MessageType::PATTERN_UPDATED: {
+				auto& patternSet = message.patternSet;
+				for (const auto& listener : state.afterPatternSetListeners) {
+					listener(patternSet.patternValueHandle, patternSet.value);
+				}
+				break;
+			}
+		}
+		messages.pop();
+	}
 }
 
+// Thread safe
+void SharedState::QueueAfterPatternSetMessage(PatternValueHandle valueHandle, uintptr_t value) {
+
+	SharedDLLState& state = data()->state;
+	const DWORD threadId = GetCurrentThreadId();
+
+	{
+		std::shared_lock<std::shared_mutex> lk { state.luaStateEntriesMutex };
+
+		for (SharedDLLState::LuaStateEntry& luaStateEntry : state.luaStateEntries) {
+
+			if (luaStateEntry.threadId == threadId) {
+				// Lua state owned by this thread; run listeners now
+				for (const auto& listener : state.afterPatternSetListeners) {
+					listener(valueHandle, value);
+				}
+			}
+			else {
+				// Lua state owned by another thread; add message to its queue
+				auto& threadQueue = luaStateEntry.threadQueue;
+				{
+					std::unique_lock<std::mutex> lk { threadQueue.messagesMutex };
+
+					auto& message = threadQueue.messages.emplace();
+					message.type = MessageType::PATTERN_UPDATED;
+					message.patternSet.patternValueHandle = valueHandle;
+					message.patternSet.value = value;
+				}
+			}
+		}
+	}
+}
+
+// Thread safe
+EXPORT void SharedState::SetSinglePatternValue(PatternValueHandle valueHandle, uintptr_t value) {
+
+	auto* pEntry = const_cast<Pattern::Entry*>(reinterpret_cast<const Pattern::Entry*>(valueHandle));
+
+	if (pEntry != nullptr && pEntry->valueType == Pattern::ValueType::SINGLE) {
+		pEntry->value.single.address = value;
+		QueueAfterPatternSetMessage(pEntry, value);
+		return;
+	}
+
+	FPrintT(
+		TEXT("[!][InfinityLoaderCommon.dll] SharedState::SetSinglePatternValue() - Failed, type of pattern \"%s\" is not SINGLE\n"),
+		pEntry != nullptr ? pEntry->name.c_str() : TEXT("<unknown>")
+	);
+}
+
+// Thread safe
 EXPORT void SharedState::SetSinglePatternValue(PatternValueHandle valueHandle, void* value) {
 	SetSinglePatternValue(valueHandle, reinterpret_cast<uintptr_t>(value));
 }
 
-bool findSectionInfo(HMODULE module, const char* sectionName, SectionInfo& sectionInfo) {
+// Thread safe
+static bool findSectionInfo(HMODULE module, const char* sectionName, SectionInfo& sectionInfo) {
 
 	char* dllImageBase = (char*)module;
 	IMAGE_NT_HEADERS* pNtHdr = ImageNtHeader(dllImageBase);
@@ -549,16 +678,23 @@ bool findSectionInfo(HMODULE module, const char* sectionName, SectionInfo& secti
 	return false;
 }
 
+// Thread safe
 EXPORT uintptr_t SharedState::ImageBase() {
 	return data()->state.imageBase;
 }
 
+// !NOT! thread safe
 EXPORT DWORD SharedState::LoadSegmentInfo(const StringA& sectionName) {
+
+	auto& sectionInfoMap = data()->state.sectionInfo;
+
+	if (auto itr = sectionInfoMap.find(sectionName); itr != sectionInfoMap.end()) {
+		return ERROR_SUCCESS;
+	}
 
 	HMODULE foundModule;
 	TryRetErr( findModuleWithPath(GetCurrentProcess(), data()->paths.exePath, foundModule) )
 
-	auto& sectionInfoMap = data()->state.sectionInfo;
 	SectionInfo& pSectionInfo = sectionInfoMap[sectionName];
 
 	if (!findSectionInfo(foundModule, sectionName.c_str(), pSectionInfo)) {
@@ -569,6 +705,7 @@ EXPORT DWORD SharedState::LoadSegmentInfo(const StringA& sectionName) {
 	return ERROR_SUCCESS;
 }
 
+// !NOT! thread safe
 EXPORT bool SharedState::GetSegmentPointer(const char* name, void*& out) {
 	auto& sectionInfoMap = data()->state.sectionInfo;
 	if (auto itr = sectionInfoMap.find(name); itr != sectionInfoMap.end()) {
@@ -578,6 +715,7 @@ EXPORT bool SharedState::GetSegmentPointer(const char* name, void*& out) {
 	return true;
 }
 
+// !NOT! thread safe
 EXPORT bool SharedState::GetSegmentSize(const char* name, DWORD& out) {
 	auto& sectionInfoMap = data()->state.sectionInfo;
 	if (auto itr = sectionInfoMap.find(name); itr != sectionInfoMap.end()) {
@@ -587,6 +725,7 @@ EXPORT bool SharedState::GetSegmentSize(const char* name, DWORD& out) {
 	return true;
 }
 
+// !NOT! thread safe
 EXPORT bool SharedState::GetSegmentPointerAndSize(const char* name, void*& ptrOut, DWORD& sizeOut) {
 	auto& sectionInfoMap = data()->state.sectionInfo;
 	if (auto itr = sectionInfoMap.find(name); itr != sectionInfoMap.end()) {

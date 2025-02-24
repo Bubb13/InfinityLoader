@@ -2,6 +2,7 @@
 #pragma once
 
 #include <map>
+#include <queue>
 #include <shared_mutex>
 
 #include "dll_api.h"
@@ -52,9 +53,18 @@ namespace Pattern {
 		LIST = 2,
 	};
 
-	union Value {
+	struct SingleValue {
 		uintptr_t address;
-		std::vector<uintptr_t> addresses;
+	};
+
+	struct ListValue {
+		std::shared_mutex mutex;
+		std::list<uintptr_t> addresses;
+	};
+
+	union Value {
+		SingleValue single;
+		ListValue list;
 		Value() {};
 		~Value() {};
 	};
@@ -70,17 +80,55 @@ namespace Pattern {
 }
 
 class SharedDLLState {
-private:
 	friend class SharedState;
+
+private:
+
 	long long initTime;
-	lua_State* L;
-	std::vector<std::function<void()>> luaStateInitializedCallbacks;
+
+	struct ThreadQueue {
+
+		struct Message {
+
+			enum class Type {
+				PATTERN_UPDATED = 0
+			};
+
+			struct PatternSet {
+				PatternValueHandle patternValueHandle;
+				uintptr_t value;
+			};
+
+			Type type;
+			union {
+				PatternSet patternSet;
+			};
+		};
+
+		std::mutex messagesMutex{};
+		std::queue<Message> messages{};
+	};
+
+	struct LuaStateEntry {
+		DWORD threadId;
+		lua_State* L;
+		ThreadQueue threadQueue{};
+		LuaStateEntry(DWORD threadId, lua_State* L) : threadId(threadId), L(L) {}
+	};
+
+	std::shared_mutex luaStateEntriesMutex;
+	std::list<LuaStateEntry> luaStateEntries;
+
+	std::vector<std::function<void(lua_State*)>> luaStateInitializedCallbacks;
+
 	HMODULE luaLibrary = reinterpret_cast<HMODULE>(INVALID_HANDLE_VALUE);
-	HMODULE toLuaLibrary = reinterpret_cast<HMODULE>(INVALID_HANDLE_VALUE);
 	LuaMode luaMode;
+
 	std::shared_mutex patternsModifyMutex;
 	std::map<String, Pattern::Entry> patterns;
+
 	std::vector<std::function<void(const PatternValueHandle valueHandle, uintptr_t)>> afterPatternSetListeners;
+
 	uintptr_t imageBase;
 	std::map<StringA, SectionInfo> sectionInfo;
 };
@@ -94,6 +142,9 @@ private:
 };
 
 class SharedState : OpaqueObject::Obj<SharedStateData> {
+private:
+	using MessageType = SharedDLLState::ThreadQueue::Message::Type;
+	void QueueAfterPatternSetMessage(PatternValueHandle valueHandle, uintptr_t value);
 public:
 	OpaqueObjectBoilerplateDef(SharedState)
 	// Static Functions
@@ -109,10 +160,9 @@ public:
 	EXPORT const StringA& WorkingFolderA();
 	EXPORT long long InitTime();
 	EXPORT void InitLuaState(lua_State* L);
-	EXPORT void AddLuaStateInitializedCallback(std::function<void()> callback);
+	EXPORT void AddLuaStateInitializedCallback(std::function<void(lua_State*)> callback);
 	EXPORT lua_State* LuaState();
 	EXPORT HMODULE LuaLibrary();
-	EXPORT HMODULE ToLuaLibrary();
 	EXPORT LuaMode LuaMode();
 
 	EXPORT void AddAfterPatternModifiedListener(std::function<void(PatternValueHandle, uintptr_t)> listener);
@@ -125,6 +175,7 @@ public:
 	EXPORT uintptr_t GetSinglePatternValue(PatternValueHandle valueHandle);
 	EXPORT void IteratePatternList(PatternValueHandle valueHandle, std::function<bool(uintptr_t)> func);
 	EXPORT void IteratePatternValues(std::function<bool(PatternValueHandle)> func);
+	EXPORT void ProcessThreadQueue();
 	EXPORT void SetSinglePatternValue(PatternValueHandle valueHandle, uintptr_t value);
 	EXPORT void SetSinglePatternValue(PatternValueHandle valueHandle, void* value);
 

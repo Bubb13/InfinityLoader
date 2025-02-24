@@ -24,6 +24,5 @@ extern SharedState sharedState;
 #define initTime() sharedState().InitTime()
 #define luaState() sharedState().LuaState()
 #define luaLibrary() sharedState().LuaLibrary()
-#define toLuaLibrary() sharedState().ToLuaLibrary()
 #define luaMode() sharedState().LuaMode()
 #define textInfo() sharedState().TextInfo()

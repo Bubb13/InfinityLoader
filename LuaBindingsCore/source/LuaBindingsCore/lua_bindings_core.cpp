@@ -1,13 +1,19 @@
 
+#include <format>
+
 #include "infinity_loader_common_api.h"
-#include "to_lua_pointers.h"
 #include "shared_state_api.h"
+#include "tolua.h"
+#include "tolua_infinityloader_overrides.h"
+#include "tolua_pointers.h"
 
 /////////////
 // Globals //
 /////////////
 
 bool alreadyInitialized = false;
+StringA luaGlobalsPrefix;
+#define prefixed(str) std::format("{}"##str, luaGlobalsPrefix).c_str()  
 
 ///////////////////////
 // General Functions //
@@ -28,7 +34,7 @@ int castUserDataLua(lua_State* g_lua) {
 		lua_pushnil(g_lua);
 		return 1;
 	}
-	tolua_pushusertype_nocast(g_lua, *ptr, lua_tostring(g_lua, 2));
+	tolua_pushusertype(g_lua, *ptr, lua_tostring(g_lua, 2));
 	return 1;
 }
 
@@ -63,7 +69,7 @@ int newUserDataLua(lua_State* L) {
 	const char* userTypeStr = lua_tostring(L, 1);
 	lua_getglobal(L, userTypeStr);
 	lua_getfield(L, -1, "sizeof");
-	tolua_pushusertype_nocast(L, p_malloc(lua_tointeger(L, -1)), userTypeStr);
+	tolua_pushusertype(L, p_malloc(lua_tointeger(L, -1)), userTypeStr);
 	return 1;
 }
 
@@ -73,7 +79,7 @@ int pointerToUserDataLua(lua_State * g_lua) {
 		lua_pushnil(g_lua);
 		return 1;
 	}
-	tolua_pushusertype_nocast(g_lua, ptr, lua_tostring(g_lua, 2));
+	tolua_pushusertype(g_lua, ptr, lua_tostring(g_lua, 2));
 	return 1;
 }
 
@@ -136,67 +142,97 @@ constexpr void* GetMemberPtr(T func) {
 	return reinterpret_cast<void*&>(func);
 }
 
-void exportPattern(const String& name, void* value) {
+static void initLuaState(lua_State *const L) {
+	
+	lua_pushstring(L, "InfinityLoader_LuaBindingsCore_Opened"); // 1 [ "InfinityLoader_LuaBindingsCore_Opened" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);                           // 1 [ registry["InfinityLoader_LuaBindingsCore_Opened"] ]
 
-	PatternValueHandle handle;
-	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, handle)) {
-		FPrintT(TEXT("[!][LuaBindingsCore.dll] exportPattern() - [%s].Type must be SINGLE\n"), name.c_str());
+	if (lua_toboolean(L, -1)) {
+		lua_pop(L, 1);                                          // 0 [ ]
 		return;
 	}
 
-	sharedState().SetSinglePatternValue(handle, value);
+	lua_pushstring(L, "InfinityLoader_LuaBindingsCore_Opened"); // 2 [ registry["InfinityLoader_LuaBindingsCore_Opened"], "InfinityLoader_LuaBindingsCore_Opened" ]
+	lua_pushboolean(L, true);                                   // 3 [ registry["InfinityLoader_LuaBindingsCore_Opened"], "InfinityLoader_LuaBindingsCore_Opened", true ]
+	lua_rawset(L, LUA_REGISTRYINDEX);                           // 1 [ registry["InfinityLoader_LuaBindingsCore_Opened"] ]
+	lua_pop(L, 1);                                              // 0 [ ]
+
+	// Export Lua functions that deal with user data / user types
+	exposeToLua(L, prefixed("CastUserData"), castUserDataLua);
+	exposeToLua(L, prefixed("CastUD"), castUserDataLua);
+
+	exposeToLua(L, prefixed("FreeUserData"), freeUserDataLua);
+	exposeToLua(L, prefixed("FreeUD"), freeUserDataLua);
+
+	exposeToLua(L, prefixed("GetUserType"), getUserTypeLua);
+	exposeToLua(L, prefixed("GetUT"), getUserTypeLua);
+
+	exposeToLua(L, prefixed("LightUserDataToPointer"), lightUserDataToPointerLua);
+	exposeToLua(L, prefixed("LightUDToPtr"), lightUserDataToPointerLua);
+
+	exposeToLua(L, prefixed("MemsetUserData"), memsetUserDataLua);
+	exposeToLua(L, prefixed("MemsetUD"), memsetUserDataLua);
+
+	exposeToLua(L, prefixed("NewUserData"), newUserDataLua);
+	exposeToLua(L, prefixed("NewUD"), newUserDataLua);
+
+	exposeToLua(L, prefixed("PointerToUserData"), pointerToUserDataLua);
+	exposeToLua(L, prefixed("PtrToUD"), pointerToUserDataLua);
+
+	exposeToLua(L, prefixed("SetUserDataGarbageCollectionFunction"), setUserDataGarbageCollectionFunctionLua);
+	exposeToLua(L, prefixed("SetUDGCFunc"), setUserDataGarbageCollectionFunctionLua);
+
+	exposeToLua(L, prefixed("UserDataToLightUserData"), userDataToLightUserDataLua);
+	exposeToLua(L, prefixed("UDToLightUD"), userDataToLightUserDataLua);
+
+	exposeToLua(L, prefixed("UserDataToPointer"), userDataToPointerLua);
+	exposeToLua(L, prefixed("UDToPtr"), userDataToPointerLua);
+
+	// Special
+	lua_pushlightuserdata(L, &NULL_POINTER);
+	lua_setglobal(L, "NULL_PTR");
+	lua_pushlightuserdata(L, &NULL_POINTER);
+	lua_setglobal(L, "NULL_POINTER");
 }
 
-template<typename out_type>
-DWORD getToLuaProc(HMODULE toLuaLibrary, const char* name, out_type& out) {
-	if (out = reinterpret_cast<out_type>(GetProcAddress(toLuaLibrary, name)); out == 0) {
-		DWORD lastError = GetLastError();
-		FPrint("[!][LuaBindingsCore.dll] getToLuaProc() - GetProcAddress() failed (%d) to find ToLua function \"%s\"\n", lastError, name);
-		return lastError;
+template<typename POINTER_OUT>
+static bool setPointerInternal(const TCHAR *const patternName, POINTER_OUT& pointerOut) {
+	PatternValueHandle patternHandle;
+	switch (sharedState().GetPatternValue(patternName, patternHandle)) {
+		case PatternValueType::SINGLE: {
+			pointerOut = reinterpret_cast<POINTER_OUT>(sharedState().GetSinglePatternValue(patternHandle));
+			return true;
+		}
+		case PatternValueType::INVALID: {
+			FPrintT(TEXT("[!][LuaBindingsCore.dll] setPointer() - ToLua pattern [%s] missing; initialization failed\n"), patternName);
+			return false;
+		}
+		default: {
+			FPrintT(TEXT("[!][LuaBindingsCore.dll] setPointer() - ToLua pattern [%s].Type not SINGLE; initialization failed\n"), patternName);
+			return false;
+		}
 	}
-	return 0;
+}
+
+static bool exportPatternInternal(const TCHAR *const patternName, void* patternValue) {
+
+	PatternValueHandle patternHandle;
+	if (sharedState().GetOrCreatePatternValue(patternName, PatternValueType::SINGLE, patternHandle)) {
+		FPrintT(TEXT("[!][LuaBindingsCore.dll] exportPattern() - [%s].Type must be SINGLE\n"), patternName);
+		return false;
+	}
+	
+	sharedState().SetSinglePatternValue(patternHandle, patternValue);
+	return true;
 }
 
 EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 
-#define setNamedPointer(patternName, funcName, ptrName) \
-	switch (sharedState().GetPatternValue(TEXT(patternName), patternHandle)) { \
-		case PatternValueType::SINGLE: { \
-			##ptrName = (type_##funcName)(sharedState().GetSinglePatternValue(patternHandle)); \
-			break; \
-		} \
-		case PatternValueType::INVALID: { \
-			FPrint("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Pattern [%s] not defined; initialization failed\n", patternName); \
-			return; \
-		} \
-		default: { \
-			FPrint("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - [%s].Type must be SINGLE; initialization failed\n", patternName); \
-			return; \
-		} \
-	}
+#define setPointer(funcName) \
+	if (!setPointerInternal(L"Hardcoded_"#funcName, p_##funcName)) return;
 
-#define setPointer(patternName, functionNameStr, funcName) \
-	if (toLuaLibrary == INVALID_HANDLE_VALUE) { \
-		switch (sharedState().GetPatternValue(TEXT(patternName), patternHandle)) { \
-			case PatternValueType::SINGLE: { \
-				##funcName = (type_##funcName)(sharedState().GetSinglePatternValue(patternHandle)); \
-				break; \
-			} \
-			case PatternValueType::INVALID: { \
-				FPrint("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - ToLua pattern [%s] missing; initialization failed\n", patternName); \
-				return; \
-			} \
-			default: { \
-				FPrint("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - ToLua pattern [%s].Type not SINGLE; initialization failed\n", patternName); \
-				return; \
-			} \
-		} \
-	} \
-	else { \
-		if (DWORD lastError = getToLuaProc(toLuaLibrary, functionNameStr, ##funcName)) { \
-			return; \
-		} \
-	}
+#define exportPattern(patternName, func) \
+	if (!exportPatternInternal(patternName, func)) return;
 
 	if (!alreadyInitialized) {
 		sharedState() = argSharedDLL;
@@ -206,83 +242,27 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 
 	if (!alreadyInitialized) {
 
-		alreadyInitialized = true;
-
 		if (int error = InitFPrint()) {
-			FPrint("[!][LuaBindingsCore.dll] InitFPrint() failed (%d)\n", error);
+			FPrint("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - InitFPrint() failed (%d)\n", error);
 			return;
 		}
 
-		HMODULE toLuaLibrary = toLuaLibrary();
-		PatternValueHandle patternHandle;
+		String luaGlobalsPrefixW;
+		if (GetINIStrDef(iniPath(), TEXT("General"), TEXT("LuaGlobalsPrefix"), TEXT("EEex_"), luaGlobalsPrefixW) != ERROR_SUCCESS) {
+			Print("[!][LuaBindingsCore.dll] InitLuaBindingsCommon() - Failed to read [General].LuaGlobalsPrefix\n");
+			return;
+		}
+		luaGlobalsPrefix = StrToStrA(luaGlobalsPrefixW);
 
 		// Read required function pointers from the pattern map
-		setNamedPointer("Hardcoded_free", free, p_free)
-		setNamedPointer("Hardcoded_malloc", malloc, p_malloc)
-		setPointer("Hardcoded_tolua_bnd_cast", "tolua_bnd_cast", tolua_bnd_cast)
-		setPointer("Hardcoded_tolua_bnd_release", "tolua_bnd_release", tolua_bnd_release)
-		setPointer("Hardcoded_tolua_bnd_releaseownership", "tolua_bnd_releaseownership", tolua_bnd_releaseownership)
-		setPointer("Hardcoded_tolua_bnd_takeownership", "tolua_bnd_takeownership", tolua_bnd_takeownership)
-		setPointer("Hardcoded_tolua_bnd_type", "tolua_bnd_type", tolua_bnd_type)
-		setPointer("Hardcoded_tolua_constant", "tolua_constant", tolua_constant)
-		setPointer("Hardcoded_tolua_endmodule", "tolua_endmodule", tolua_endmodule)
-		setPointer("Hardcoded_tolua_error", "tolua_error", tolua_error)
-		setPointer("Hardcoded_tolua_function", "tolua_function", tolua_function)
-		setPointer("Hardcoded_tolua_getmetatable", "tolua_getmetatable", tolua_getmetatable)
-		setPointer("Hardcoded_tolua_isboolean", "tolua_isboolean", tolua_isboolean)
-		setPointer("Hardcoded_tolua_ismodulemetatable", "tolua_ismodulemetatable", tolua_ismodulemetatable)
-		setPointer("Hardcoded_tolua_isnumber", "tolua_isnumber", tolua_isnumber)
-		setPointer("Hardcoded_tolua_isstring", "tolua_isstring", tolua_isstring)
-		setPointer("Hardcoded_tolua_isusertype", "tolua_isusertype", tolua_isusertype)
-		setPointer("Hardcoded_tolua_moduleevents", "tolua_moduleevents", tolua_moduleevents)
-		setPointer("Hardcoded_tolua_newmetatable", "tolua_newmetatable", tolua_newmetatable)
-		setPointer("Hardcoded_tolua_pushboolean", "tolua_pushboolean", tolua_pushboolean)
-		setPointer("Hardcoded_tolua_pushnumber", "tolua_pushnumber", tolua_pushnumber)
-		setPointer("Hardcoded_tolua_pushstring", "tolua_pushstring", tolua_pushstring)
-		setPointer("Hardcoded_tolua_tostring", "tolua_tostring", tolua_tostring)
-		setPointer("Hardcoded_tolua_tousertype", "tolua_tousertype", tolua_tousertype)
-		setPointer("Hardcoded_tolua_typename", "tolua_typename", tolua_typename)
-		setPointer("Hardcoded_tolua_variable", "tolua_variable", tolua_variable)
+		setPointer(free)
+		setPointer(malloc)
 
-		// Export Lua functions that deal with user data / user types
-		exposeToLua(L, "EEex_CastUserData", castUserDataLua);
-		exposeToLua(L, "EEex_CastUD", castUserDataLua);
-
-		exposeToLua(L, "EEex_FreeUserData", freeUserDataLua);
-		exposeToLua(L, "EEex_FreeUD", freeUserDataLua);
-
-		exposeToLua(L, "EEex_GetUserType", getUserTypeLua);
-		exposeToLua(L, "EEex_GetUT", getUserTypeLua);
-
-		exposeToLua(L, "EEex_LightUserDataToPointer", lightUserDataToPointerLua);
-		exposeToLua(L, "EEex_LightUDToPtr", lightUserDataToPointerLua);
-
-		exposeToLua(L, "EEex_MemsetUserData", memsetUserDataLua);
-		exposeToLua(L, "EEex_MemsetUD", memsetUserDataLua);
-
-		exposeToLua(L, "EEex_NewUserData", newUserDataLua);
-		exposeToLua(L, "EEex_NewUD", newUserDataLua);
-
-		exposeToLua(L, "EEex_PointerToUserData", pointerToUserDataLua);
-		exposeToLua(L, "EEex_PtrToUD", pointerToUserDataLua);
-
-		exposeToLua(L, "EEex_SetUserDataGarbageCollectionFunction", setUserDataGarbageCollectionFunctionLua);
-		exposeToLua(L, "EEex_SetUDGCFunc", setUserDataGarbageCollectionFunctionLua);
-
-		exposeToLua(L, "EEex_UserDataToLightUserData", userDataToLightUserDataLua);
-		exposeToLua(L, "EEex_UDToLightUD", userDataToLightUserDataLua);
-
-		exposeToLua(L, "EEex_UserDataToPointer", userDataToPointerLua);
-		exposeToLua(L, "EEex_UDToPtr", userDataToPointerLua);
-
-		// Special
-		lua_pushlightuserdata(L, &NULL_POINTER);
-		lua_setglobal(L, "NULL_PTR");
-		lua_pushlightuserdata(L, &NULL_POINTER);
-		lua_setglobal(L, "NULL_POINTER");
+		// Export tolua functions required for patches
+		exportPattern(TEXT("Hardcoded_tolua_pushusertype"), tolua_pushusertype);
+		exportPattern(TEXT("Hardcoded_tolua_tousertype"), tolua_tousertype);
 
 		// Export tolua overrides (the versions in-engine aren't sufficient)
-		exportPattern(TEXT("Hardcoded_tolua_pushusertype"), tolua_pushusertype_nocast);
 		exportPattern(TEXT("override_class_index_event"), class_index_event);
 		exportPattern(TEXT("override_class_newindex_event"), class_newindex_event);
 		exportPattern(TEXT("override_module_index_event"), module_index_event);
@@ -292,6 +272,13 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 		exportPattern(TEXT("override_tolua_beginmodule"), tolua_beginmodule);
 		exportPattern(TEXT("override_tolua_module"), tolua_module);
 		exportPattern(TEXT("override_tolua_usertype"), tolua_usertype);
+	}
+
+	initLuaState(L);
+
+	if (!alreadyInitialized) {
+
+		alreadyInitialized = true;
 
 		// The Lua environment needs to grab the pattern map and execute any
 		// patches relating to tolua before the Lua bindings are exported
