@@ -204,11 +204,11 @@ static bool setPointerInternal(const TCHAR *const patternName, POINTER_OUT& poin
 			return true;
 		}
 		case PatternValueType::INVALID: {
-			FPrintT(TEXT("[!][LuaBindingsCore.dll] setPointer() - ToLua pattern [%s] missing; initialization failed\n"), patternName);
+			FPrintT(TEXT("[!][LuaBindingsCore.dll] setPointer() - Pattern [%s] missing; initialization failed\n"), patternName);
 			return false;
 		}
 		default: {
-			FPrintT(TEXT("[!][LuaBindingsCore.dll] setPointer() - ToLua pattern [%s].Type not SINGLE; initialization failed\n"), patternName);
+			FPrintT(TEXT("[!][LuaBindingsCore.dll] setPointer() - Pattern [%s].Type not SINGLE; initialization failed\n"), patternName);
 			return false;
 		}
 	}
