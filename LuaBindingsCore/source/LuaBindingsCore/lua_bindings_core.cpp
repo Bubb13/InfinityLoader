@@ -226,6 +226,23 @@ static bool exportPatternInternal(const TCHAR *const patternName, void* patternV
 	return true;
 }
 
+// Track changes to p_free() and p_malloc()
+static void onAfterPatternModified(const PatternValueHandle handle, const uintptr_t newAddress) {
+
+	if (sharedState().GetPatternValueType(handle) != PatternValueType::SINGLE) {
+		return;
+	}
+
+	const String& patternName = sharedState().GetPatternValueName(handle);
+
+	if (patternName == TEXT("Hardcoded_free")) {
+		p_free = reinterpret_cast<type_free>(newAddress);
+	}
+	else if (patternName == TEXT("Hardcoded_malloc")) {
+		p_malloc = reinterpret_cast<type_malloc>(newAddress);
+	}
+}
+
 EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 
 #define setPointer(funcName) \
@@ -257,6 +274,7 @@ EXPORT void InitLuaBindingsCommon(SharedState argSharedDLL) {
 		// Read required function pointers from the pattern map
 		setPointer(free)
 		setPointer(malloc)
+		sharedState().AddAfterPatternModifiedListener(onAfterPatternModified);
 
 		// Export tolua functions required for patches
 		exportPattern(TEXT("Hardcoded_tolua_pushusertype"), tolua_pushusertype);
