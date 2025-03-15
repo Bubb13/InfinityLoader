@@ -8,16 +8,22 @@
 // Globals //
 /////////////
 
-std::unordered_map<const char*, std::unordered_map<const char*, uintptr_t>> baseclassOffsets;
+// Using `StringA` (value comparison), not `const char*` (address comparison)
+std::unordered_map<StringA, std::unordered_map<StringA, uintptr_t>> baseclassOffsets;
 
 ///////////////////////
 // Special Functions //
 ///////////////////////
 
 EXPORT void RegisterClassBaseclassOffsets(const char* name, const std::initializer_list<std::pair<const char*, uintptr_t>>& toRegister) {
-	std::unordered_map<const char*, uintptr_t>& offsets = baseclassOffsets[name];
-	for (auto [baseclassName, baseclassOffset] : toRegister) {
-		//FPrint("%s has baseclass %s at offset 0x%X\n", name, baseclassName, baseclassOffset);
+
+	// Don't register baseclasses more than once for a type
+	if (baseclassOffsets.contains(name)) {
+		return;
+	}
+
+	std::unordered_map<StringA, uintptr_t>& offsets = baseclassOffsets[name];
+	for (const auto& [baseclassName, baseclassOffset] : toRegister) {
 		offsets.emplace(baseclassName, baseclassOffset);
 	}
 }
@@ -49,12 +55,14 @@ EXPORT void RegisterBaseclassOffsets(const std::initializer_list<std::pair<const
 
 static void dumpStackIndex(lua_State* L, const char* label, int index) {
 
+	const int absIndex = lua_absindex(L, index);
+
 	lua_getglobal(L, "debug");                                                          // [ debug ]
 	lua_getfield(L, -1, "traceback");                                                   // [ debug, traceback ]
 
 	lua_getglobal(L, "EEex_Dump");                                                      // [ debug, traceback, EEex_Dump ]
 	lua_pushstring(L, label);                                                           // [ debug, traceback, EEex_Dump, label ]
-	lua_pushvalue(L, index);                                                            // [ debug, traceback, EEex_Dump, label, stack[index] ]
+	lua_pushvalue(L, absIndex);                                                         // [ debug, traceback, EEex_Dump, label, stack[index] ]
 
 	if (lua_pcallk(L, 2, 0, -4, 0, nullptr) != LUA_OK) {
 																						// [ debug, traceback, errorMessage ]
@@ -92,10 +100,6 @@ enum class KeyKeyReturn : int {
 //     KEY/KEYKEY => [ ..., mtVal ]
 template<typename SingleAction>
 static KeyKeyReturn findKeyKeyOnBase(lua_State* L, const char* keykey, SingleAction action) {
-
-	if (lua_type(L, -1) == LUA_TSTRING && lua_tostring(L, -1) == "m_pRes") {
-		Print("Break\n");
-	}
 
 	lua_pushstring(L, "tolua_base");                                               // 3  [ ..., mt, key, "tolua_base" ]
 	lua_rawget(L, LUA_REGISTRYINDEX);                                              // 3  [ ..., mt, key, registry["tolua_base"] ]
@@ -413,7 +417,6 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 	tolua_getmetatable(L, name);         // 2 [ ..., registry["tolua_base"], mt(name) ]
 	getOrCreateTable(L, -2);             // 2 [ ..., registry["tolua_base"], registry["tolua_base"][mt(name)] -> baseT ]
 
-	std::unordered_map<const char*, uintptr_t>& offsets = baseclassOffsets[name];
 	int i{ 0 };
 	for (const char* base : bases) {
 
@@ -448,8 +451,8 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 		lua_rawset(L, -3);               // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseMapT ]
 
 		if (baseclassOffsets.contains(base)) {
-			for (std::pair<const char*, uintptr_t>&& basePair : baseclassOffsets[base]) {
-				toProcess.emplace_back(basePair.first, offset + basePair.second);
+			for (const auto& basePair : baseclassOffsets[base]) {
+				toProcess.emplace_back(basePair.first.c_str(), offset + basePair.second);
 			}
 		}
 	}
