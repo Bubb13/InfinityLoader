@@ -504,8 +504,7 @@ static DWORD init() {
 }
 
 static int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
-	String dmpLocation = WriteDump(workingFolder, pointers);
-	MessageBoxFormat(TEXT("InfinityLoader.exe"), MB_ICONERROR, TEXT("[!] Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
+	DumpCrashInfo(pointers);
 	exit(code);
 }
 

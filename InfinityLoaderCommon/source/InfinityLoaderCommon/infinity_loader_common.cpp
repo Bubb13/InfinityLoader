@@ -671,18 +671,18 @@ EXPORT DWORD SetINIStr(const String& iniPath, const TCHAR *const section, const 
 // Paths //
 ///////////
 
-String getMyFolder() {
-	String myPath = getMyPath();
+static String getMyFolder() {
+	const String myPath = getMyPath();
 	return myPath.substr(0, myPath.length() - (myPath.length() - myPath.find_last_of('\\')) + 1);
 }
 
-String getMyPath() {
+static String getMyPath() {
 	TCHAR fileName[MAX_PATH];
 	GetModuleFileName(NULL, fileName, MAX_PATH);
-	return String(fileName);
+	return String{ fileName };
 }
 
-String getWorkingFolder() {
+static String getWorkingFolder() {
 #ifndef UNICODE
 	return std::filesystem::current_path().string().append(TEXT("\\"));
 #else
@@ -690,11 +690,15 @@ String getWorkingFolder() {
 #endif
 }
 
-StringA getWorkingFolderA() {
+static StringA getWorkingFolderA() {
 	return std::filesystem::current_path().string().append("\\");
 }
 
-DWORD initExePath(const String& workingFolder, const String& iniPath, String& exePathOut, String& exeNameOut) {
+static String getINIPath() {
+	return String{ getWorkingFolder() }.append(TEXT("InfinityLoader.ini"));
+}
+
+static DWORD initExePath(const String& workingFolder, const String& iniPath, String& exePathOut, String& exeNameOut) {
 
 	String exeNames;
 	TryRetErr( GetINIStrDef(iniPath, TEXT("General"), TEXT("ExeNames"), TEXT(""), exeNames) )
@@ -788,53 +792,147 @@ EXPORT StringA StrToStrA(const String& string) {
 // Exception Handling //
 ////////////////////////
 
-EXPORT String WriteDump(const String& baseFolder, EXCEPTION_POINTERS* pointers)
-{
-	//const MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(
-	//      MiniDumpWithFullMemory
-	//    | MiniDumpWithHandleData
-	//    | MiniDumpWithUnloadedModules
-	//    | MiniDumpWithProcessThreadData
-	//    | MiniDumpWithFullMemoryInfo
-	//    | MiniDumpWithThreadInfo
-	//    | MiniDumpWithFullAuxiliaryState
-	//    | MiniDumpIgnoreInaccessibleMemory
-	//    | MiniDumpWithTokenInformation
-	//);
+const TCHAR *const sCrashWithLogFormat = TEXT(R"(Crash detected with error code 0x%X.
 
-	const MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(MiniDumpWithDataSegs | MiniDumpWithIndirectlyReferencedMemory);
+.dmp (big) saved to:
+
+%s
+
+.dmp (small) saved to:
+
+%s
+
+.log saved to:
+
+%s
+
+The game will exit after you press OK.)");
+
+const TCHAR *const sCrashWithoutLogFormat = TEXT(R"(Crash detected with error code 0x%X.
+
+.dmp (big) saved to:
+
+%s
+
+.dmp (small) saved to:
+
+%s
+
+The game will exit after you press OK.)");
+
+EXPORT void DumpCrashInfo(EXCEPTION_POINTERS* pointers)
+{
+	///////////////////////
+	// Find output paths //
+	///////////////////////
+
+	OStringStream dmpNameStream{};
+	dmpNameStream << getWorkingFolder();
+	dmpNameStream << "InfinityLoader_Crash";
+
+	const String dmpFolderPath = dmpNameStream.str();
+
+	if (!std::filesystem::exists(dmpFolderPath)) {
+		std::filesystem::create_directory(dmpFolderPath);
+	}
+
+	String logName{};
+	bool hasLogFile;
+	GetINIStr(getINIPath(), TEXT("General"), TEXT("LogFile"), logName, hasLogFile); // Error intentionally ignored
+
+	String builtDmpNameBig{};
+	String builtDmpName{};
+	String builtLogName{};
+
+	for (size_t attemptI = 0; ; ++attemptI) {
+
+		dmpNameStream.str(TEXT(""));
+		dmpNameStream.clear();
+		dmpNameStream << dmpFolderPath << "\\InfinityLoader_Crash_" << attemptI << "_big" << ".dmp";
+
+		builtDmpNameBig = dmpNameStream.str();
+
+		if (std::filesystem::exists(builtDmpNameBig)) {
+			continue;
+		}
+
+		dmpNameStream.str(TEXT(""));
+		dmpNameStream.clear();
+		dmpNameStream << dmpFolderPath << "\\InfinityLoader_Crash_" << attemptI << "_small" << ".dmp";
+
+		builtDmpName = dmpNameStream.str();
+
+		if (std::filesystem::exists(builtDmpName)) {
+			continue;
+		}
+
+		if (!hasLogFile) {
+			break;
+		}
+
+		dmpNameStream.str(TEXT(""));
+		dmpNameStream.clear();
+		dmpNameStream << dmpFolderPath << "\\InfinityLoader_Crash_" << attemptI << ".log";
+
+		builtLogName = dmpNameStream.str();
+
+		if (!std::filesystem::exists(builtLogName)) {
+			break;
+		}
+	}
+
+	////////////////////////////////////
+	// MINIDUMP_EXCEPTION_INFORMATION //
+	////////////////////////////////////
 
 	MINIDUMP_EXCEPTION_INFORMATION exceptionInfo{};
 	exceptionInfo.ThreadId = GetCurrentThreadId();
 	exceptionInfo.ExceptionPointers = pointers;
 	exceptionInfo.ClientPointers = FALSE;
 
-	OStringStream dmpNameStream{ String{ baseFolder }.append(TEXT("InfinityLoader_Crash"))};
-	String builtDmpName = dmpNameStream.str();
+	////////////////////
+	// Write big dump //
+	////////////////////
 
-	if (!std::filesystem::exists(builtDmpName)) {
-		std::filesystem::create_directory(builtDmpName);
-	}
+	const HANDLE hFileBig = CreateFile(
+		builtDmpNameBig.c_str(),
+		GENERIC_WRITE,
+		NULL,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
 
-	size_t attemptI = 0;
+	const MINIDUMP_TYPE bigDumpType = static_cast<MINIDUMP_TYPE>(
+		  MiniDumpWithFullMemory
+		| MiniDumpWithHandleData
+		| MiniDumpWithUnloadedModules
+		| MiniDumpWithProcessThreadData
+		| MiniDumpWithFullMemoryInfo
+		| MiniDumpWithThreadInfo
+		| MiniDumpWithFullAuxiliaryState
+		| MiniDumpIgnoreInaccessibleMemory
+		| MiniDumpWithTokenInformation
+	);
 
-	while (true) {
+	MiniDumpWriteDump(
+		GetCurrentProcess(),
+		GetCurrentProcessId(),
+		hFileBig,
+		bigDumpType,
+		&exceptionInfo,
+		NULL,
+		NULL
+	);
 
-		dmpNameStream << baseFolder;
-		dmpNameStream << "InfinityLoader_Crash\\InfinityLoader_Crash_";
-		dmpNameStream << attemptI++;
-		dmpNameStream << ".dmp";
-		builtDmpName = dmpNameStream.str();
+	CloseHandle(hFileBig);
 
-		if (!std::filesystem::exists(builtDmpName)) {
-			break;
-		}
+	//////////////////////
+	// Write small dump //
+	//////////////////////
 
-		dmpNameStream.str(TEXT(""));
-		dmpNameStream.clear();
-	}
-
-	HANDLE hFile = CreateFile(
+	const HANDLE hFile = CreateFile(
 		builtDmpName.c_str(),
 		GENERIC_WRITE,
 		NULL,
@@ -842,6 +940,11 @@ EXPORT String WriteDump(const String& baseFolder, EXCEPTION_POINTERS* pointers)
 		CREATE_ALWAYS,
 		FILE_ATTRIBUTE_NORMAL,
 		NULL
+	);
+
+	const MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(
+		  MiniDumpWithDataSegs
+		| MiniDumpWithIndirectlyReferencedMemory
 	);
 
 	MiniDumpWriteDump(
@@ -855,5 +958,29 @@ EXPORT String WriteDump(const String& baseFolder, EXCEPTION_POINTERS* pointers)
 	);
 
 	CloseHandle(hFile);
-	return builtDmpName;
+
+	//////////////
+	// Copy log //
+	//////////////
+
+	if (hasLogFile) {
+		CopyFile(logName.c_str(), builtLogName.c_str(), FALSE);
+	}
+
+	/////////////////////////
+	// Display message box //
+	/////////////////////////
+
+	const DWORD exceptionCode = pointers->ExceptionRecord->ExceptionCode;
+
+	if (hasLogFile)
+	{
+		MessageBoxFormat(TEXT("InfinityLoaderCommon.dll"), MB_ICONERROR, sCrashWithLogFormat,
+			exceptionCode, builtDmpNameBig.c_str(), builtDmpName.c_str(), builtLogName.c_str());
+	}
+	else
+	{
+		MessageBoxFormat(TEXT("InfinityLoaderCommon.dll"), MB_ICONERROR, sCrashWithoutLogFormat,
+			exceptionCode, builtDmpNameBig.c_str(), builtDmpName.c_str());
+	}
 }

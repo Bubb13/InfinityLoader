@@ -2434,17 +2434,15 @@ byte init(HANDLE mappedMemoryHandle) {
 	return 0;
 }
 
-int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
-	String dmpLocation = WriteDump(workingFolder(), pointers);
-	MessageBoxFormat(TEXT("InfinityLoaderDLL.dll"), MB_ICONERROR, TEXT("[!] Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
+static int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
+	DumpCrashInfo(pointers);
 	codeOut = code;
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-int exceptionFilterIgnoreIfSubsequent(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
+static int exceptionFilterIgnoreIfSubsequent(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
 	if (!codeOut) {
-		String dmpLocation = WriteDump(workingFolder(), pointers);
-		MessageBoxFormat(TEXT("InfinityLoaderDLL.dll"), MB_ICONERROR, TEXT("[!] Unhandled exception 0x%X. Crash log saved to:\n\n%s\n\nThis should never happen. Please report to Bubb."), code, dmpLocation.c_str());
+		DumpCrashInfo(pointers);
 		codeOut = code;
 	}
 	return EXCEPTION_EXECUTE_HANDLER;

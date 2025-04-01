@@ -122,4 +122,4 @@ IMPORT StringA StrToStrA(const String& string);
 // Exception Handling //
 ////////////////////////
 
-IMPORT String WriteDump(const String& baseFolder, EXCEPTION_POINTERS* pointers);
+IMPORT void DumpCrashInfo(EXCEPTION_POINTERS* pointers);
