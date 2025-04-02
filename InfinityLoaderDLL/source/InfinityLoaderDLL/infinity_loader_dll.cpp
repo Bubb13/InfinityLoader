@@ -2117,10 +2117,19 @@ static void logVExport(const char* formatText, ...) {
 	va_end(args);
 }
 
-static lua_State* __stdcall newLuaStateExport() {
-	lua_State* const L = luaL_newstate();
+// This needs to be a separate export in order to support the extender creating
+// a lua_State before initializing it, e.g. to write the lua_State's address
+// as part of a patch before its thread has started.
+static void __stdcall initLuaStateExport(lua_State *const L) {
 	sharedState().InitLuaState(L);
 	initLuaState(L);
+}
+
+// This is a shortcut for luaL_newstate() + Hardcoded_initLuaState()
+// Only applicable if calling from the lua_State's thread
+static lua_State* __stdcall newLuaStateExport() {
+	lua_State *const L = luaL_newstate();
+	initLuaStateExport(L);
 	return L;
 }
 
@@ -2215,6 +2224,7 @@ static void initLua() {
 
 	setSinglePatternValueCleanup(TEXT("Hardcoded_doLuaFile"), doLuaFileExport)
 	setSinglePatternValueCleanup(TEXT("Hardcoded_getLuaState"), getLuaStateExport)
+	setSinglePatternValueCleanup(TEXT("Hardcoded_initLuaState"), initLuaStateExport)
 	setSinglePatternValueCleanup(TEXT("Hardcoded_log"), logExport)
 	setSinglePatternValueCleanup(TEXT("Hardcoded_logV"), logVExport)
 	setSinglePatternValueCleanup(TEXT("Hardcoded_newLuaState"), newLuaStateExport)
