@@ -1902,7 +1902,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 
 	# Define function fields
-	functionVariableMatch: Match = re.match("^\\s*(?!typedef\\s+)((?:(?:nopointer)\\s+)*)([, _a-zA-Z0-9*:<>]+?)\\s*\\(\\s*(?:([_a-zA-Z]+?)\\s*){0,1}(\\*+)\\s*([_a-zA-Z0-9~]+)\\s*\\)\\s*\\((?:\\s*([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*this(?:\\s*,\\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*result(?:\\s*,\\s+){0,1}){0,1}\\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\\.\\.\\.(?=\\s*\\))){0,1}){0,1}\\s*\\)\\;$", line)
+	functionVariableMatch: Match = re.match("^\\s*(?!typedef\\s+)((?:(?:nobinding|nopointer)\\s+)*)([, _a-zA-Z0-9*:<>]+?)\\s*\\(\\s*(?:([_a-zA-Z]+?)\\s*){0,1}(\\*+)\\s*([_a-zA-Z0-9~]+)\\s*\\)\\s*\\((?:\\s*([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*this(?:\\s*,\\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*result(?:\\s*,\\s+){0,1}){0,1}\\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\\.\\.\\.(?=\\s*\\))){0,1}){0,1}\\s*\\)\\;$", line)
 	if functionVariableMatch != None:
 
 		functionField = FunctionField()
@@ -1910,7 +1910,10 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 		if keywordMatch := functionVariableMatch.group(1):
 			for keyword in keywordMatch.strip().split(" "):
-				if keyword == "nopointer":
+				if keyword == "nobinding":
+					assert not functionField.lineGroupFlags.isExplicitlyFlagged("noBindings"), f"nobinding already defined"
+					functionField.lineGroupFlags.setFlag("noBindings", FlagSource.EXPLICIT)
+				elif keyword == "nopointer":
 					assert not functionField.nopointer, "nopointer already defined"
 					functionField.nopointer = True
 
