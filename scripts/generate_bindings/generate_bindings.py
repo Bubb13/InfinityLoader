@@ -1755,7 +1755,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 			yield funcParameter
 
 
-	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\)|\\$allow_references)\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=* ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\)|\\$allow_references)\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=*& ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -2573,7 +2573,7 @@ class Group:
 		return "".join(groupNameParts)
 
 
-	def checkForVGroup(self, mainState: MainState) -> Group:
+	def checkForVGroup(self, mainState: MainState, ignoreGhidraVFTables: bool = False) -> Group:
 
 		"""
 		Fills:
@@ -2597,7 +2597,7 @@ class Group:
 		vtblStruct = mainState.tryGetGroup(f"{self.name}_vtbl")
 		ghidraVtblStruct: bool = False
 
-		if vtblStruct is None:
+		if vtblStruct is None and not ignoreGhidraVFTables:
 			vtblStruct = mainState.tryGetGroup(f"{self.name}_VFTable")
 			if vtblStruct is not None:
 				ghidraVtblStruct = True
@@ -2607,7 +2607,7 @@ class Group:
 			# Get super vtbl struct if it exists
 			superVGroup: Group = None
 			for extendRef in self.extends:
-				superVGroupTemp, _ = extendRef.group.checkForVGroup(mainState)
+				superVGroupTemp, _ = extendRef.group.checkForVGroup(mainState, ignoreGhidraVFTables=ignoreGhidraVFTables)
 				if superVGroupTemp:
 					if superVGroup == None:
 						superVGroup = superVGroupTemp
@@ -2663,7 +2663,7 @@ class Group:
 
 			assert extendRef.group, "checkForVGroup() - extendRef has no group assigned"
 			# Recursively handle all vtbl structs in the hierarchy chain
-			superVGroupTemp, finalSuperVGroupTemp = extendRef.group.checkForVGroup(mainState)
+			superVGroupTemp, finalSuperVGroupTemp = extendRef.group.checkForVGroup(mainState, ignoreGhidraVFTables=ignoreGhidraVFTables)
 
 			if superVGroupTemp != None:
 
@@ -4927,6 +4927,7 @@ def loadMaximumMainState(
 	abstractTypesFile: str = None,
 	alreadyDefinedUsertypesFile: str = None,
 	fixupFileName: str = None,
+	ignoreGhidraVFTables: bool = False,
 	ignoreHeaderFile: str = None,
 	inputFileNames: str = None,
 	manualTypesFile: str = None,
@@ -5018,9 +5019,9 @@ struct UnmappedUserType
 		runModule(mainState, fixupFileName, "fixup")
 
 	for group in mainState.groups:
-		group.checkForVGroup(mainState) # Fills vGroup and removes __vftable field if present.
-		group.mapTemplateTypeNames()    # Maps the template names that appear in this Group's inheritance hierarchy to their originating Group.
-		group.mapDependsOn(mainState)   # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
+		group.checkForVGroup(mainState, ignoreGhidraVFTables=ignoreGhidraVFTables) # Fills vGroup and removes __vftable field if present.
+		group.mapTemplateTypeNames()                                               # Maps the template names that appear in this Group's inheritance hierarchy to their originating Group.
+		group.mapDependsOn(mainState)                                              # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
 
 	# Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
 	filterGroups(mainState, wantedFiles.split(","), abstractTypesFile, ignoreHeaderFile, packingFile)
@@ -5058,6 +5059,7 @@ def doGenerateHeader():
 	bindingsPreludeFile: str = None
 	dllName: str = None
 	fixupFileName: str = None
+	ignoreGhidraVFTables: bool = False
 	ignoreHeaderFile: str = None
 	inputFileNames: str = None
 	manualTypesFile: str = None
@@ -5075,6 +5077,7 @@ def doGenerateHeader():
 		elif (v := re.search("-dllName=(.+)",                     k)) != None: dllName                         = v.group(1)
 		elif (v := re.search("-fixupFile=(.+)",                   k)) != None: fixupFileName                   = v.group(1)
 		elif (v := re.search("-forceByteStrings",                 k)) != None: mainState.forceByteStrings      = True
+		elif (v := re.search("-ignoreGhidraVFTables",             k)) != None: ignoreGhidraVFTables            = True
 		elif (v := re.search("-ignoreHeaderFile=(.+)",            k)) != None: ignoreHeaderFile                = v.group(1)
 		elif (v := re.search("-inFiles=(.+)",                     k)) != None: inputFileNames                  = v.group(1)
 		elif (v := re.search("-manualPatternHandling",            k)) != None: mainState.manualPatternHandling = True
@@ -5094,6 +5097,7 @@ def doGenerateHeader():
 		abstractTypesFile = abstractTypesFile,
 		alreadyDefinedUsertypesFile = alreadyDefinedUsertypesFile,
 		fixupFileName = fixupFileName,
+		ignoreGhidraVFTables = ignoreGhidraVFTables,
 		ignoreHeaderFile = ignoreHeaderFile,
 		inputFileNames = inputFileNames,
 		manualTypesFile = manualTypesFile,
