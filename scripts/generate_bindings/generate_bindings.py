@@ -2249,20 +2249,24 @@ class Group:
 					enumLineMatch: Match = re.match("^\\s*([_a-zA-Z0-9]+)\\s*=\\s*(.+?)\\s*,\\s*(?:\\/\\/.*){0,1}$", line)
 					if enumLineMatch:
 						firstExtendName = self.extends[0].getName() if len(self.extends) > 0 else "__int32"
-						if firstExtendName == "__int8":
+						if firstExtendName in ("__int8", "int8_t", "uint8_t"):
 							value = int(enumLineMatch.group(2), 0)
-							if value & 0x80 != 0: value = -1 - (0xFF - value)
+							if firstExtendName not in ("uint8_t") and value & 0x80 != 0: value = -1 - (0xFF - value)
 							self.enumTuples.append((enumLineMatch.group(1), value))
-						elif firstExtendName == "__int32":
+						elif firstExtendName in ("__int16", "int16_t", "uint16_t"):
 							value = int(enumLineMatch.group(2), 0)
-							if value & 0x80000000 != 0: value = -1 - (0xFFFFFFFF - value)
+							if firstExtendName not in ("uint16_t") and value & 0x8000 != 0: value = -1 - (0xFFFF - value)
 							self.enumTuples.append((enumLineMatch.group(1), value))
-						elif firstExtendName == "__int64":
+						elif firstExtendName in ("__int32", "int32_t", "uint32_t"):
 							value = int(enumLineMatch.group(2), 0)
-							if value & 0x8000000000000000 != 0: value = -1 - (0xFFFFFFFFFFFFFFFF - value)
+							if firstExtendName not in ("uint32_t") and value & 0x80000000 != 0: value = -1 - (0xFFFFFFFF - value)
+							self.enumTuples.append((enumLineMatch.group(1), value))
+						elif firstExtendName in ("__int64", "int64_t", "uint64_t"):
+							value = int(enumLineMatch.group(2), 0)
+							if firstExtendName not in ("uint64_t") and value & 0x8000000000000000 != 0: value = -1 - (0xFFFFFFFFFFFFFFFF - value)
 							self.enumTuples.append((enumLineMatch.group(1), value))
 						else:
-							print(f"[!] Unknown enum extend type: \"{firstExtendName}")
+							print(f"[!] Unknown enum extend type: \"{firstExtendName}\"")
 
 
 	def mapTemplateTypeNames(self):
