@@ -22,13 +22,16 @@ CObList
 CProjectile
 CProjectileAmbiant
 CProjectileArea
+CProjectileAreaFileFormat
 CProjectileBAM
+CProjectileBAMFileFormat
 CProjectileCallLightning
 CProjectileCastingGlow
 CProjectileChain
 CProjectileColorSpray
 CProjectileConeOfCold
 CProjectileFall
+CProjectileFileFormat
 CProjectileFireHands
 CProjectileInstant
 CProjectileInvisibleTravelling

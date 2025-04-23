@@ -179,6 +179,9 @@ void registerBaseclasses() {
 		{"CArray<CRect,CRect*>", {
 			{"CObject", offsetofbase<CArray<CRect,CRect*>, CObject>()},
 		}},
+		{"CArray<CRect,CRect*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CArray<CRect,CRect*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CDWordArray", {
 			{"CObject", offsetofbase<CDWordArray, CObject>()},
 		}},
@@ -200,8 +203,14 @@ void registerBaseclasses() {
 		{"CList<long,long>", {
 			{"CObject", offsetofbase<CList<long,long>, CObject>()},
 		}},
+		{"CList<long,long>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CList<long,long>::vtbl, CObject::vtbl>()},
+		}},
 		{"CList<unsigned long,unsigned long*>", {
 			{"CObject", offsetofbase<CList<unsigned long,unsigned long*>, CObject>()},
+		}},
+		{"CList<unsigned long,unsigned long*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CList<unsigned long,unsigned long*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CMapStringToString", {
 			{"CObject", offsetofbase<CMapStringToString, CObject>()},
@@ -938,14 +947,26 @@ void registerBaseclasses() {
 		{"CCallResult<CSteam,CreateItemResult_t>", {
 			{"CCallbackBase", offsetofbase<CCallResult<CSteam,CreateItemResult_t>, CCallbackBase>()},
 		}},
+		{"CCallResult<CSteam,CreateItemResult_t>::vtbl", {
+			{"CCallbackBase::vtbl", offsetofbase<CCallResult<CSteam,CreateItemResult_t>::vtbl, CCallbackBase::vtbl>()},
+		}},
 		{"CCallResult<CSteam,SteamUGCQueryCompleted_t>", {
 			{"CCallbackBase", offsetofbase<CCallResult<CSteam,SteamUGCQueryCompleted_t>, CCallbackBase>()},
+		}},
+		{"CCallResult<CSteam,SteamUGCQueryCompleted_t>::vtbl", {
+			{"CCallbackBase::vtbl", offsetofbase<CCallResult<CSteam,SteamUGCQueryCompleted_t>::vtbl, CCallbackBase::vtbl>()},
 		}},
 		{"CCallResult<CSteam,SubmitItemUpdateResult_t>", {
 			{"CCallbackBase", offsetofbase<CCallResult<CSteam,SubmitItemUpdateResult_t>, CCallbackBase>()},
 		}},
+		{"CCallResult<CSteam,SubmitItemUpdateResult_t>::vtbl", {
+			{"CCallbackBase::vtbl", offsetofbase<CCallResult<CSteam,SubmitItemUpdateResult_t>::vtbl, CCallbackBase::vtbl>()},
+		}},
 		{"CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t>", {
 			{"CCallbackBase", offsetofbase<CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t>, CCallbackBase>()},
+		}},
+		{"CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t>::vtbl", {
+			{"CCallbackBase::vtbl", offsetofbase<CCallResult<CSteam,SteamUGCRequestUGCDetailsResult_t>::vtbl, CCallbackBase::vtbl>()},
 		}},
 		{"EEex_CBaldurEngine", {
 			{"EEex_CWarp", offsetofbase<CBaldurEngine, CWarp>()},
@@ -1149,6 +1170,12 @@ void registerBaseclasses() {
 		}},
 		{"CScreenWorld::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorld::vtbl, CBaldurEngine::vtbl>()},
+		}},
+		{"CProjectileBAMFileFormat", {
+			{"CProjectileFileFormat", offsetofbase<CProjectileBAMFileFormat, CProjectileFileFormat>()},
+		}},
+		{"CProjectileAreaFileFormat", {
+			{"CProjectileBAMFileFormat", offsetofbase<CProjectileAreaFileFormat, CProjectileBAMFileFormat>()},
 		}},
 		{"CItem", {
 			{"CResHelper<CResItem,1005>", offsetofbase<CItem, CResHelper<CResItem,1005>>()},

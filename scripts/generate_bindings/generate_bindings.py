@@ -213,31 +213,111 @@ def attemptManipulate(typeManipulator: Callable[[str], str], typeStr: str) -> tu
 		return typeStr, False
 
 
-def stripUnnecessaryTypeSpaces(typeStr: str):
+def normalizeTypeStringParts(splitParts: list[str]) -> Tuple[str, int]:
+	"""
+	Normalizes type string parts given by `splitKeepBrackets(strIn, [" "], toSplitInclude=["*", "&"])`
+	"""
+	splitPartsLen: int = len(splitParts)
+	assert splitPartsLen > 0, "Invalid type string"
 
-	parts: list[str] = []
-	nextStart = 0
-	checkSpace = False
+	# Count the number of modifiers at the beginning of the type+name pair
+	modifierCount: int = 0
+	for spaceSplitPart in splitParts:
+		if spaceSplitPart in functionParameterTypeModifiers:
+			modifierCount += 1
+		else:
+			break
 
-	def checkSub(i):
-		nonlocal nextStart
-		nonlocal checkSpace
-		if i - nextStart > 0:
-			parts.append(typeStr[nextStart:i])
-			checkSpace = True
+	# Handle when a modifier token should be interpreted as the actual type, e.g. `long long` and `long long varname`
+	if modifierCount >= 1 and modifierCount < splitPartsLen:
+		lastModifier: str = splitParts[modifierCount - 1]
+		nextToken: str = splitParts[modifierCount]
+		if lastModifier == "long":
+			if nextToken not in ("int", "double"):
+				modifierCount -= 1
+		elif lastModifier == "short":
+			if nextToken != "int":
+				modifierCount -= 1
 
-		nextStart = i + 1
+	# Strip non-prefix modifier instances from the type string (currently unsupported)
+	i: int = modifierCount + 1
+	while i < splitPartsLen:
+		curToken: str = splitParts[i]
+		if curToken in functionParameterTypeModifiers:
+			del splitParts[i]
+			splitPartsLen -= 1
+		else:
+			i += 1
 
-	for i, char in enumerate(typeStr):
-		if char == " ":
-			checkSub(i)
-		elif checkSpace:
-			checkSpace = False
-			if char != "*" and char != "&" and char != "<" and char != ">":
-				parts.append(" ")
+	# Find first non-type part
+	firstNonTypeIndex: int = splitPartsLen
+	for i, curToken in islice(enumerate(splitParts), modifierCount + 1, None):
+		if curToken not in ("*", "&"):
+			firstNonTypeIndex = i
+			break
 
-	checkSub(i + 1)
-	return "".join(parts)
+	# Build final type string
+	typeResultParts: list[str] = []
+
+	for i, curToken in islice(enumerate(splitParts), 0, firstNonTypeIndex):
+
+		# Handle nested type strings in template parameters
+		for splitResult in splitGroups(curToken, "<", ">"):
+
+			if splitResult.isGroup:
+				# Type string (between '<' and '>')
+				typeResultParts.append("<")
+
+				commaParts: list[str] = splitKeepBrackets(splitResult.value, [","])
+				for commaPart in commaParts:
+					typeResultParts.append(normalizeTypeString(commaPart))
+					typeResultParts.append(",")
+
+				if len(commaParts) > 0: typeResultParts.pop()
+				typeResultParts.append(">")
+			else:
+				# NOT template type string (NOT between '<' and '>')
+				typeResultParts.append(splitResult.value)
+
+		if i + 1 >= splitPartsLen or splitParts[i + 1] not in ("*", "&"):
+			typeResultParts.append(" ")
+
+	typeResultParts.pop()
+	typeResult: str = "".join(typeResultParts)
+
+	return typeResult, firstNonTypeIndex
+
+
+def normalizeTypeString(strIn: str) -> str:
+	"""
+	Normalizes a type string
+	"""
+	splitParts: list[str] = splitKeepBrackets(strIn, [" "], toSplitInclude=["*", "&"])
+	result: str = normalizeTypeStringParts(splitParts)[0]
+	# print(f"Normalized \"{strIn}\" to \"{result}\"")
+	return result
+
+
+def normalizeTypeAndNameString(strIn: str) -> Tuple[str, str | None]:
+	"""
+	Separates and normalizes a type+name string
+	"""
+	splitParts: list[str] = splitKeepBrackets(strIn, [" "], toSplitInclude=["*", "&"])
+	typeResult, firstNonTypeIndex = normalizeTypeStringParts(splitParts)
+	splitPartsLen: int = len(splitParts)
+
+	numParts: int = splitPartsLen - firstNonTypeIndex
+	if numParts == 0:
+		# Only type
+		# print(f"  result - type: \"{typeResult}\", name: None")
+		return typeResult, None
+	elif numParts == 1:
+		# Type and name
+		nameResult: str = splitParts[splitPartsLen - 1]
+		# print(f"  result - type: \"{typeResult}\", name: \"{nameResult}\"")
+		return typeResult, nameResult
+	else:
+		assert False, f"Invalid function parameter string: \"{strIn}\""
 
 
 def stripTypeBrackets(stringIn):
@@ -257,6 +337,7 @@ def findTemplateBracketStarts(str):
 			bracketLevel += 1
 		elif char == ">":
 			bracketLevel -= 1
+	assert len(hits) <= 1
 	return hits
 
 
@@ -282,7 +363,7 @@ def separateTemplateTypeParts(str, startI=0):
 			if bracketLevel == 0: return name, str[startI:i]
 
 
-def splitKeepBrackets(stringIn, toSplit, noSplit=[], includeToSplit=False):
+def splitKeepBrackets(stringIn, toSplit, toSplitInclude=[], noSplit=[]) -> list[str]:
 
 	def inList(string, i, l):
 		for v in l:
@@ -312,14 +393,19 @@ def splitKeepBrackets(stringIn, toSplit, noSplit=[], includeToSplit=False):
 				i += noSplitLen
 				continue
 
-			splitLen = inList(stringIn, i, toSplit)
+			splitLenInclude = inList(stringIn, i, toSplitInclude)
+			splitLen = splitLenInclude
+
+			if splitLen == -1:
+				splitLen = inList(stringIn, i, toSplit)
+
 			if splitLen != -1:
 
 				slice = stringIn[lastSplitEnd:i]
 				incAmount = splitLen
 				if len(slice) > 0: results.append(slice)
 
-				if includeToSplit:
+				if splitLenInclude != -1:
 					toSplitSlice = stringIn[i:i+incAmount]
 					results.append(toSplitSlice)
 
@@ -332,6 +418,49 @@ def splitKeepBrackets(stringIn, toSplit, noSplit=[], includeToSplit=False):
 		if len(lastSlice) > 0: results.append(lastSlice)
 
 	return results
+
+
+def checkSubstring(strIn: str, i: int, substring: str):
+	substringLen: int = len(substring)
+	lastValidCheckIndex: int = len(strIn) - substringLen
+	return i <= lastValidCheckIndex and strIn[i:i+substringLen] == substring
+
+
+class SplitResult:
+	__slots__ = ("value", "isGroup")
+	def __init__(self, value: str, isGroup: bool):
+		self.value: str = value
+		self.isGroup: bool = isGroup
+
+
+def splitGroups(strIn: str, groupStart: str, groupEnd: str) -> list[SplitResult]:
+
+	result: list[SplitResult] = []
+	level: int = 0
+	nextSubstringStart: int = 0
+	i: int = 0
+
+	def capture(isGroup: bool):
+		if i > nextSubstringStart:
+			toAppend: str = strIn[nextSubstringStart:i]
+			result.append(SplitResult(toAppend, isGroup))
+
+	while i < len(strIn):
+		if checkSubstring(strIn, i, groupStart):
+			level += 1
+			if level == 1: capture(False)
+			i += len(groupStart)
+			if level == 1: nextSubstringStart = i
+		elif checkSubstring(strIn, i, groupEnd):
+			level -= 1
+			if level == 0: capture(True)
+			i += len(groupEnd)
+			if level == 0: nextSubstringStart = i
+		else:
+			i += 1
+
+	capture(False)
+	return result
 
 
 def splitMulti(stringIn, toSplit, noSplit=[]):
@@ -388,7 +517,7 @@ def removeRegexCount(string: str, keyword: str):
 def getPointerLevel(str: str, removeAmount=0):
 	pointerLevel = 0
 	removedStrParts = []
-	splits = splitKeepBrackets(stripUnnecessaryTypeSpaces(str), ["*", "&"], includeToSplit=True)
+	splits = splitKeepBrackets(normalizeTypeString(str), ["*", "&"], includeToSplit=True)
 	for split in splits:
 		if split == "*" or split == "&":
 			pointerLevel += 1
@@ -1218,7 +1347,7 @@ class PointerReference(TypeReference):
 
 
 	def getHeaderPointerLevel(self):
-		return self.getUserTypePointerLevel() + 1
+		return self.getUserTypePointerLevel()
 
 
 	def getUserTypePointerLevel(self):
@@ -1616,9 +1745,13 @@ class FunctionImplementation:
 			parts.append(", ")
 
 		for parameter in self.parameters:
+
 			parts.append(parameter.type.getHeaderName())
-			parts.append(" ")
-			parts.append(parameter.name)
+
+			if parameter.name is not None:
+				parts.append(" ")
+				parts.append(parameter.name)
+
 			parts.append(", ")
 
 		if self.hasVarargs:
@@ -1668,6 +1801,7 @@ class FunctionImplementation:
 				parts.append(", ")
 
 			for parameter in self.parameters:
+				assert parameter.name is not None
 				parts.append(parameter.name)
 				parts.append(", ")
 
@@ -1706,48 +1840,25 @@ class CheckUnnamedStructsState:
 
 variablePatternGlobal = "^((?:(?:nopointer|nobinding|static)\\s+)*)(?!class|enum|struct|typedef|union)(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}([, _a-zA-Z0-9*&:<>\\-$]+?)\\s*([_a-zA-Z0-9~]+)((?:\\[[_a-zA-Z0-9+]+\\])+)*(?:\\s*:\\s*([^\\s>]+?)){0,1}(?:\\s|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*;(?:\\s|(?:\\/\\/.*)|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*$"
 variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\\s+)*)(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}([, _a-zA-Z0-9*&:<>\\-$]+?)\\s*([_a-zA-Z0-9~]+)((?:\\[[_a-zA-Z0-9+]+\\])+)*(?:\\s*:\\s*([^\\s>]+?)){0,1}(?:\\s|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*;(?:\\s|(?:\\/\\/.*)|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*$"
-functionParameterTypeModifiers = [
-	"signed", "unsigned", "short", "long", "const", "volatile",
+functionParameterTypeModifiers = (
+	"struct", "signed", "unsigned", "short", "long", "const", "volatile",
 	"noconst", "primitive" # Bindings specific
-]
+)
 
-def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group):
+
+def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: str, group: Group) :
 
 	isGlobal = group == mainState.globalGroup
 
 
 	def functionParameters(parameterStr: str, allowReferences = False):
 		nonlocal mainState
-		nonlocal state
 		nonlocal line
 		nonlocal group
 
 		for commaSplitPart in splitKeepBrackets(parameterStr, [","]):
 
-			spaceSplit = splitKeepBrackets(commaSplitPart, [" "])
-			spaceSplitLen = len(spaceSplit)
-			typeParts = []
-
-			i: int = 0
-			for i, spaceSplitPart in enumerate(spaceSplit):
-				if spaceSplitPart in functionParameterTypeModifiers:
-					typeParts.append(spaceSplitPart)
-					typeParts.append(" ")
-				else:
-					i -= 1
-					break
-			i += 1
-
-			if i == 0 or i < spaceSplitLen - 1:
-				typeParts.append(spaceSplitPart)
-				typeParts.append(" ")
-				i += 1
-
-			if len(typeParts) > 0:
-				typeParts.pop()
-
-			typeStr = "".join(typeParts)
-			nameStr = spaceSplit[i] if i < spaceSplitLen else ""
+			typeStr, nameStr = normalizeTypeAndNameString(commaSplitPart)
 
 			funcParameter = FunctionParameter()
 			funcParameter.type = defineTypeRef(mainState, group, typeStr, TypeRefSourceType.FUNCTION_PARAMETER, allowReference=allowReferences, debugLine=f"processCommonGroupLines()-2 {line}")
@@ -1902,7 +2013,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 
 
 	# Define function fields
-	functionVariableMatch: Match = re.match("^\\s*(?!typedef\\s+)((?:(?:nobinding|nopointer)\\s+)*)([, _a-zA-Z0-9*:<>]+?)\\s*\\(\\s*(?:([_a-zA-Z]+?)\\s*){0,1}(\\*+)\\s*([_a-zA-Z0-9~]+)\\s*\\)\\s*\\((?:\\s*([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*this(?:\\s*,\\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*result(?:\\s*,\\s+){0,1}){0,1}\\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?){0,1}(?:\\.\\.\\.(?=\\s*\\))){0,1}){0,1}\\s*\\)\\;$", line)
+	functionVariableMatch: Match = re.match("^\\s*(?!typedef\\s+)((?:(?:nobinding|nopointer)\\s+)*)([, _a-zA-Z0-9*:<>]+?)\\s*\\(\\s*(?:([_a-zA-Z]+?)\\s*){0,1}(\\*+)\\s*([_a-zA-Z0-9~]+)\\s*\\)\\s*\\((?:\\s*([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*this(?:\\s*,\\s+){0,1}){0,1}(?:([, _a-zA-Z0-9*:<>]+?)\\s+\\*\\s*result(?:\\s*,\\s+){0,1}){0,1}\\s*((?:[ _a-zA-Z0-9*:<>][, _a-zA-Z0-9*:<>]*?)){0,1}\\s*(\\.\\.\\.(?=\\s*\\))){0,1}\\s*\\)\\;$", line)
 	if functionVariableMatch != None:
 
 		functionField = FunctionField()
@@ -1935,6 +2046,8 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 		if parameterStr != None and parameterStr != "":
 			for funcParameter in functionParameters(parameterStr):
 				functionField.parameters.append(funcParameter)
+
+		functionField.hasVarargs = functionVariableMatch.group(9) != None
 
 		group.addField(functionField)
 
@@ -1996,8 +2109,8 @@ class Group:
 		self.overrideUsertypeSingleName = None # Used to override normal singleName when writing Lua bindings,
 											   # (for instances when the engine already uses the normal name).
 
-		self.dependsOn: dict[str,bool] = {}      # Map of group names which this group needs to be defined in order to be valid.
-		self.lightDependsOn: dict[str,bool] = {} # Map of group names which this group needs to be declared in order to be valid.
+		self.dependsOn: set[Group] = set()      # Map of group names which this group needs to be defined in order to be valid.
+		self.lightDependsOn: set[Group] = set() # Map of group names which this group needs to be declared in order to be valid.
 
 		self.listIndex: int = None      # Position in MainState groups list.
 		self.sortedPosition: int = None # Position in MainState filteredGroups list.
@@ -2417,16 +2530,19 @@ class Group:
 
 		for typeRef in self.getAllTypeReferences(mainState):
 
-			if typeRef.isGenericTemplate() or (typeRef.group and (typeRef.group is self or typeRef.group.isSubgroupOf(self))):
+			refGroup: Group = typeRef.getGroup()
+
+			if refGroup is None or refGroup is self or refGroup.isSubgroupOf(self) or typeRef.isGenericTemplate():
 				continue
 
-			assert (pointerLevel := typeRef.getUserTypePointerLevel()) >= 0, "Invalid typeRef.getUserTypePointerLevel() in Group.mapDependsOn()"
+			assert (pointerLevel := typeRef.getHeaderPointerLevel()) >= 0, "Invalid typeRef.getHeaderPointerLevel() in Group.mapDependsOn()"
 
-			typeName = typeRef.getName()
 			if pointerLevel == 0:
-				self.dependsOn[typeName] = True
+				#print(f"{self.name} depends on {typeRef.getName()}")
+				self.dependsOn.add(refGroup)
 			elif pointerLevel > 0:
-				self.lightDependsOn[typeName] = True
+				#print(f"{self.name} light depends on {typeRef.getName()}")
+				self.lightDependsOn.add(refGroup)
 
 
 	def broadcastName(self: Group, mainState: MainState):
@@ -2494,7 +2610,7 @@ class Group:
 	def rebuildInwardTypeRefs(self, mainState: MainState):
 		# Rebuild reference chains
 		# TODO: Handle templates?
-		parts = splitKeepBrackets(stripUnnecessaryTypeSpaces(self.name), ["::"])
+		parts = splitKeepBrackets(normalizeTypeString(self.name), ["::"])
 		partsLen = len(parts)
 
 		if partsLen > 1:
@@ -2580,7 +2696,7 @@ class Group:
 		return "".join(groupNameParts)
 
 
-	def checkForVGroup(self, mainState: MainState, ignoreGhidraVFTables: bool = False) -> Group:
+	def checkForVGroup(self, mainState: MainState, processGhidraVFTables: bool = False) -> Group:
 
 		"""
 		Fills:
@@ -2604,7 +2720,7 @@ class Group:
 		vtblStruct = mainState.tryGetGroup(f"{self.name}_vtbl")
 		ghidraVtblStruct: bool = False
 
-		if vtblStruct is None and not ignoreGhidraVFTables:
+		if vtblStruct is None and processGhidraVFTables:
 			vtblStruct = mainState.tryGetGroup(f"{self.name}_VFTable")
 			if vtblStruct is not None:
 				ghidraVtblStruct = True
@@ -2614,7 +2730,7 @@ class Group:
 			# Get super vtbl struct if it exists
 			superVGroup: Group = None
 			for extendRef in self.extends:
-				superVGroupTemp, _ = extendRef.group.checkForVGroup(mainState, ignoreGhidraVFTables=ignoreGhidraVFTables)
+				superVGroupTemp, _ = extendRef.group.checkForVGroup(mainState, processGhidraVFTables=processGhidraVFTables)
 				if superVGroupTemp:
 					if superVGroup == None:
 						superVGroup = superVGroupTemp
@@ -2670,7 +2786,7 @@ class Group:
 
 			assert extendRef.group, "checkForVGroup() - extendRef has no group assigned"
 			# Recursively handle all vtbl structs in the hierarchy chain
-			superVGroupTemp, finalSuperVGroupTemp = extendRef.group.checkForVGroup(mainState, ignoreGhidraVFTables=ignoreGhidraVFTables)
+			superVGroupTemp, finalSuperVGroupTemp = extendRef.group.checkForVGroup(mainState, processGhidraVFTables=processGhidraVFTables)
 
 			if superVGroupTemp != None:
 
@@ -3112,6 +3228,7 @@ class FunctionField(Field):
 		self.thisType: TypeReference = None
 		self.resultType: TypeReference = None
 		self.parameters: list[FunctionParameter] = []
+		self.hasVarargs: bool = None
 		self.nopointer: bool = False
 
 
@@ -3127,12 +3244,14 @@ class FunctionField(Field):
 		copy.resultType = self.resultType.shallowCopy() if self.resultType != None else None
 		for parameter in self.parameters:
 			copy.parameters.append(parameter.shallowCopy())
+		copy.hasVarargs = self.hasVarargs
+		copy.nopointer = self.nopointer
 		return copy
 
 
 	def toImplementation(self, group: Group, fromVFTable: bool = False, isFunctionPointer: bool = False) -> FunctionImplementation:
 
-		impl = FunctionImplementation()
+		impl: FunctionImplementation = FunctionImplementation()
 
 		impl.isFunctionPointer = isFunctionPointer
 		impl.returnType = self.returnType
@@ -3140,11 +3259,15 @@ class FunctionField(Field):
 		impl.name = self.functionName
 		self.lineGroupFlags.applyTo(impl.lineGroupFlags)
 
-		enumerateStartI = 0
+		enumerateStartI: int = 0
 
-		if fromVFTable and self.callConvention == "__thiscall":
-			impl.removedThisType = self.parameters[0].type
-			enumerateStartI = 1
+		if fromVFTable:
+			if self.callConvention == "__thiscall":
+				impl.removedThisType = self.parameters[0].type
+				enumerateStartI = 1
+		elif isFunctionPointer:
+			if self.thisType is not None:
+				impl.removedThisType = self.thisType
 
 		for i in range(enumerateStartI, len(self.parameters)):
 			funcParam: FunctionParameter = self.parameters[i]
@@ -3155,6 +3278,7 @@ class FunctionField(Field):
 
 		impl.customReturnCount = None
 		impl.group = group
+		impl.hasVarargs = self.hasVarargs
 
 		return impl
 
@@ -3197,14 +3321,16 @@ class FunctionField(Field):
 
 			parts.append(parameter.type.getHeaderName(typeManipulator=typeManipulator))
 
-			if parameter.name != "":
+			if parameter.name is not None:
 				parts.append(" ")
 				parts.append(parameter.name)
 
 			parts.append(", ")
 			hadParam = True
 
-		if hadParam:
+		if self.hasVarargs:
+			parts.append("...")
+		elif hadParam:
 			parts.pop()
 
 		parts.append(");")
@@ -3347,7 +3473,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 		else:
 			needArrayPart = True
 
-	splits = splitKeepBrackets(stripUnnecessaryTypeSpaces(str), ["*", "&"], includeToSplit=True)
+	splits = splitKeepBrackets(normalizeTypeString(str), [], toSplitInclude=["*", "&"])
 	typeRef = TypeReference()
 	typeRef.sourceGroup = sourceGroup
 	typeRef.sourceType = src
@@ -3459,7 +3585,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 	# Transform pointers into PointerReference
 	else:
-		assert groupName not in ("Array", "ConstArray") or len(typeRef.templateTypes) == 2, "defineTypeRefPart() created invalid Array"
+		assert groupName not in ("Array", "ConstArray") or len(typeRef.templateTypes) == 2, f"defineTypeRefPart() created invalid Array from \"{inStr}\""
 		return PointerReference.create(mainState, typeRef, debugLine=debugLine)
 
 
@@ -3469,7 +3595,7 @@ def defineTypeRef(mainState: MainState, sourceGroup: Group, str: str, src: TypeR
 	if str == None:
 		return
 
-	splits = splitKeepBrackets(stripUnnecessaryTypeSpaces(str), ["::"])
+	splits = splitKeepBrackets(normalizeTypeString(str), ["::"])
 	lastSplitIndex: int = len(splits) - 1
 
 	if lastSplitIndex < 0:
@@ -3534,12 +3660,12 @@ def tryResolveDependencyOrder(groups: UniqueList[Group]):
 
 			maxDependNode: UniqueListNode[Group] = None
 			maxDependIndex: int = 0
-			for dependName in curCheckGroup.dependsOn:
+			for dependGroup in curCheckGroup.dependsOn:
 				i: int = 0
 				for checkDependNode in groups.nodes():
 					checkDependGroup: Group = checkDependNode.value
-					if checkDependGroup.name == dependName and i > maxDependIndex:
-						assert curCheckGroup.name not in checkDependGroup.dependsOn, f"Circular dependency: {curCheckGroup.name} and {dependName}"
+					if checkDependGroup is dependGroup and i > maxDependIndex:
+						assert curCheckGroup not in checkDependGroup.dependsOn, f"Circular dependency: {curCheckGroup.name} and {dependGroup.name}"
 						maxDependNode = checkDependNode
 						maxDependIndex = i
 					i += 1
@@ -3547,7 +3673,7 @@ def tryResolveDependencyOrder(groups: UniqueList[Group]):
 			if curCheckNodeI < maxDependIndex:
 				curCheckNode = curCheckNode.next
 				groups.moveNodeAfter(curCheckNode.previous, maxDependNode)
-				assert curCheckGroup != curCheckNode.value, f"Duplicate group in list: {curCheckGroup.name} and {curCheckNode.value.name}"
+				assert curCheckGroup is not curCheckNode.value, f"Duplicate group in list: {curCheckGroup.name} and {curCheckNode.value.name}"
 				continue
 
 		curCheckNode = curCheckNode.next
@@ -3974,7 +4100,14 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			returnType: TypeReference = functionImplementation.returnType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 
 			# Must be void, enum, primitive, or pointer
-			if not returnType.isNonPointerVoid() and not returnType.isEnum() and not returnType.isPrimitive() and returnType.getUserTypePointerLevel() == 0:
+			if ((
+					not returnType.isNonPointerVoid()
+					and not returnType.isEnum()
+					and not returnType.isPrimitive()
+					and returnType.getUserTypePointerLevel() == 0
+				)
+				or functionImplementation.hasVarargs
+			):
 				return
 
 			for param in functionImplementation.parameters:
@@ -4048,13 +4181,13 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 			out.write("\t")
 
-			parameterIMod: int = None
 			functionNameHeader = f"p_{functionImplementation.funcPtrName}" \
 				if (not isNormal and functionImplementation.noBody and not functionImplementation.externalImplementation) \
 				else functionImplementation.name
 
 			functionNameHeader = f"{functionImplementation.operatorStr}{functionNameHeader}" if functionImplementation.operatorStr != None else functionNameHeader
 
+			parameterIMod: int = None
 			if isNormal and group.groupType != "namespace" and not functionImplementation.isStatic:
 				parameterIMod = 2
 			else:
@@ -4081,18 +4214,20 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				out.write("L")
 				callArgParts.append(", ")
 
-			for i, parameter in enumerate(functionImplementation.parameters):
-				i += parameterIMod
-				paramType = parameter.type.checkReplaceTemplateType(mainState, group, templateMappingTracker)
-				if not checkPrimitiveHandling(paramType, i):
-					# if paramType.getName() == "VoidPointer" and paramType.getUserTypePointerLevel() == 0:
-					# 	callArgParts.append(f"tolua_tousertype(L, {i}, 0)")
-					# 	callArgParts.append(", ")
-					# else:
-						callArgParts.append(paramType.getDereferenceStr(mainState, group, templateMappingTracker, i))
-						callArgParts.append(", ")
+			if functionImplementation.isFunctionPointer and functionImplementation.removedThisType is not None:
+				callArgParts.append("self")
+				callArgParts.append(", ")
 
-			if functionImplementation.customReturnCount or functionImplementation.passLuaState or len(functionImplementation.parameters) > 0:
+			def handleParam(i: int, typeRef: TypeReference):
+				paramType: TypeReference = typeRef.checkReplaceTemplateType(mainState, group, templateMappingTracker)
+				if not checkPrimitiveHandling(paramType, i):
+					callArgParts.append(paramType.getDereferenceStr(mainState, group, templateMappingTracker, i))
+					callArgParts.append(", ")
+
+			for i, parameter in enumerate(functionImplementation.parameters):
+				handleParam(i + parameterIMod, parameter.type)
+
+			if len(callArgParts) > 0:
 				callArgParts.pop()
 
 			callArgParts.append(");\n")
@@ -4532,14 +4667,14 @@ def filterGroups(mainState: MainState, wantedFiles: list[str], abstractTypesFile
 
 		mainState.filteredGroups.addUnique(wantedGroup)
 
-		for dependsOnName in wantedGroup.dependsOn:
-			if dependsOnName in wantedNames: continue
-			pendingProcessed.append(dependsOnName)
-			wantedNames.add(dependsOnName)
-		for dependsOnName in wantedGroup.lightDependsOn:
-			if dependsOnName in wantedNames: continue
-			pendingProcessed.append(dependsOnName)
-			wantedNames.add(dependsOnName)
+		for dependsOnGroup in wantedGroup.dependsOn:
+			if dependsOnGroup.name in wantedNames: continue
+			pendingProcessed.append(dependsOnGroup.name)
+			wantedNames.add(dependsOnGroup.name)
+		for dependsOnGroup in wantedGroup.lightDependsOn:
+			if dependsOnGroup.name in wantedNames: continue
+			pendingProcessed.append(dependsOnGroup.name)
+			wantedNames.add(dependsOnGroup.name)
 		for subGroup in wantedGroup.subGroups:
 			if subGroup.name in wantedNames: continue
 			pendingProcessed.append(subGroup.name)
@@ -4644,9 +4779,7 @@ def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
 
 		if group.isSubgroup() or group.ignoreHeader: continue
 
-		for lightDependency in group.lightDependsOn:
-
-			lightDepend = mainState.tryGetGroup(lightDependency)
+		for lightDepend in group.lightDependsOn:
 
 			if (not lightDepend or lightDepend == mainState.globalGroup
 				or lightDepend.isPrimitive() or lightDepend.name == "void"
@@ -4655,7 +4788,7 @@ def outputForwardDeclarations(mainState: MainState, out: TextIOWrapper):
 			):
 				continue
 
-			forwardDeclarations.add(lightDependency)
+			forwardDeclarations.add(lightDepend.name)
 
 		# Non-static internal member functions need a forward def for the 'this' pointer.
 		if group != mainState.globalGroup and group.groupType != "namespace":
@@ -4934,7 +5067,7 @@ def loadMaximumMainState(
 	abstractTypesFile: str = None,
 	alreadyDefinedUsertypesFile: str = None,
 	fixupFileName: str = None,
-	ignoreGhidraVFTables: bool = False,
+	processGhidraVFTables: bool = False,
 	ignoreHeaderFile: str = None,
 	inputFileNames: str = None,
 	manualTypesFile: str = None,
@@ -5025,10 +5158,10 @@ struct UnmappedUserType
 	if fixupFileName != None:
 		runModule(mainState, fixupFileName, "fixup")
 
-	for group in mainState.groups:
-		group.checkForVGroup(mainState, ignoreGhidraVFTables=ignoreGhidraVFTables) # Fills vGroup and removes __vftable field if present.
-		group.mapTemplateTypeNames()                                               # Maps the template names that appear in this Group's inheritance hierarchy to their originating Group.
-		group.mapDependsOn(mainState)                                              # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
+	for i, group in enumerate(mainState.groups):
+		group.checkForVGroup(mainState, processGhidraVFTables=processGhidraVFTables) # Fills vGroup and removes __vftable field if present.
+		group.mapTemplateTypeNames()                                                 # Maps the template names that appear in this Group's inheritance hierarchy to their originating Group.
+		group.mapDependsOn(mainState)                                                # Attempts to derive type dependencies and light dependencies (those that need forward declarations).
 
 	# Filter groups down to what is requested in wanted_types.txt and their subclasses / referenced types.
 	filterGroups(mainState, wantedFiles.split(","), abstractTypesFile, ignoreHeaderFile, packingFile)
@@ -5066,7 +5199,7 @@ def doGenerateHeader():
 	bindingsPreludeFile: str = None
 	dllName: str = None
 	fixupFileName: str = None
-	ignoreGhidraVFTables: bool = False
+	processGhidraVFTables: bool = False
 	ignoreHeaderFile: str = None
 	inputFileNames: str = None
 	manualTypesFile: str = None
@@ -5084,7 +5217,7 @@ def doGenerateHeader():
 		elif (v := re.search("-dllName=(.+)",                     k)) != None: dllName                         = v.group(1)
 		elif (v := re.search("-fixupFile=(.+)",                   k)) != None: fixupFileName                   = v.group(1)
 		elif (v := re.search("-forceByteStrings",                 k)) != None: mainState.forceByteStrings      = True
-		elif (v := re.search("-ignoreGhidraVFTables",             k)) != None: ignoreGhidraVFTables            = True
+		elif (v := re.search("-processGhidraVFTables",            k)) != None: processGhidraVFTables           = True
 		elif (v := re.search("-ignoreHeaderFile=(.+)",            k)) != None: ignoreHeaderFile                = v.group(1)
 		elif (v := re.search("-inFiles=(.+)",                     k)) != None: inputFileNames                  = v.group(1)
 		elif (v := re.search("-manualPatternHandling",            k)) != None: mainState.manualPatternHandling = True
@@ -5104,7 +5237,7 @@ def doGenerateHeader():
 		abstractTypesFile = abstractTypesFile,
 		alreadyDefinedUsertypesFile = alreadyDefinedUsertypesFile,
 		fixupFileName = fixupFileName,
-		ignoreGhidraVFTables = ignoreGhidraVFTables,
+		processGhidraVFTables = processGhidraVFTables,
 		ignoreHeaderFile = ignoreHeaderFile,
 		inputFileNames = inputFileNames,
 		manualTypesFile = manualTypesFile,

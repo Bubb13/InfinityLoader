@@ -153,6 +153,8 @@ struct CVariableHash;
 struct CVidCellFont;
 struct CVidMode;
 struct CWarp;
+struct CharString;
+struct ConstCharString;
 struct DP_Player;
 struct IDPPeer;
 struct IDPProvider;
@@ -161,6 +163,7 @@ struct Item_ability_st;
 struct Item_effect_st;
 union SDL_Event;
 struct SDL_PixelFormat;
+struct SDL_Point;
 struct SDL_Rect;
 struct SDL_Surface;
 struct SDL_Window;
@@ -172,7 +175,6 @@ struct UI_PanelHeader_st;
 struct WED_LayerHeader_st;
 struct st_tiledef;
 struct uiItem;
-struct uiMenu;
 struct uiVariant;
 
 struct ALCcontext_struct
@@ -220,6 +222,15 @@ struct SDL_Cursor
 	void* driverdata;
 
 	SDL_Cursor() = delete;
+};
+
+struct SDL_WindowUserData
+{
+	char* name;
+	void* data;
+	SDL_WindowUserData* next;
+
+	SDL_WindowUserData() = delete;
 };
 
 struct SProjectileWrapper
@@ -1944,6 +1955,15 @@ struct SDL_JoyAxisEvent
 	SDL_JoyAxisEvent() = delete;
 };
 
+struct SDL_DropEvent
+{
+	unsigned int type;
+	unsigned int timestamp;
+	char* file;
+
+	SDL_DropEvent() = delete;
+};
+
 struct SDL_DollarGestureEvent
 {
 	unsigned int type;
@@ -2088,6 +2108,16 @@ struct PLTHeader_st
 	PLTHeader_st() = delete;
 };
 
+struct Marker
+{
+	const char* src;
+	int start;
+	int count;
+	int line;
+
+	Marker() = delete;
+};
+
 struct MOSAICQUAD
 {
 	int textureIndex;
@@ -2122,6 +2152,287 @@ struct LeaderboardEntry_t
 	unsigned __int64 m_hUGC;
 
 	LeaderboardEntry_t() = delete;
+};
+
+struct ISteamUserStats
+{
+	struct vtbl
+	{
+		bool (__fastcall *RequestCurrentStats)(ISteamUserStats*);
+		bool (__fastcall *GetStat)(ISteamUserStats*, const char*, float*);
+		bool (__fastcall *GetStat_2)(ISteamUserStats*, const char*, int*);
+		bool (__fastcall *SetStat)(ISteamUserStats*, const char*, float);
+		bool (__fastcall *SetStat_2)(ISteamUserStats*, const char*, int);
+		bool (__fastcall *UpdateAvgRateStat)(ISteamUserStats*, const char*, float, long double);
+		bool (__fastcall *GetAchievement)(ISteamUserStats*, const char*, bool*);
+		bool (__fastcall *SetAchievement)(ISteamUserStats*, const char*);
+		bool (__fastcall *ClearAchievement)(ISteamUserStats*, const char*);
+		bool (__fastcall *GetAchievementAndUnlockTime)(ISteamUserStats*, const char*, bool*, unsigned int*);
+		bool (__fastcall *StoreStats)(ISteamUserStats*);
+		int (__fastcall *GetAchievementIcon)(ISteamUserStats*, const char*);
+		const char* (__fastcall *GetAchievementDisplayAttribute)(ISteamUserStats*, const char*, const char*);
+		bool (__fastcall *IndicateAchievementProgress)(ISteamUserStats*, const char*, unsigned int, unsigned int);
+		unsigned int (__fastcall *GetNumAchievements)(ISteamUserStats*);
+		const char* (__fastcall *GetAchievementName)(ISteamUserStats*, unsigned int);
+		unsigned __int64 (__fastcall *RequestUserStats)(ISteamUserStats*, CSteamID);
+		bool (__fastcall *GetUserStat)(ISteamUserStats*, CSteamID, const char*, float*);
+		bool (__fastcall *GetUserStat_2)(ISteamUserStats*, CSteamID, const char*, int*);
+		bool (__fastcall *GetUserAchievement)(ISteamUserStats*, CSteamID, const char*, bool*);
+		bool (__fastcall *GetUserAchievementAndUnlockTime)(ISteamUserStats*, CSteamID, const char*, bool*, unsigned int*);
+		bool (__fastcall *ResetAllStats)(ISteamUserStats*, bool);
+		unsigned __int64 (__fastcall *FindOrCreateLeaderboard)(ISteamUserStats*, const char*, ELeaderboardSortMethod, ELeaderboardDisplayType);
+		unsigned __int64 (__fastcall *FindLeaderboard)(ISteamUserStats*, const char*);
+		const char* (__fastcall *GetLeaderboardName)(ISteamUserStats*, unsigned __int64);
+		int (__fastcall *GetLeaderboardEntryCount)(ISteamUserStats*, unsigned __int64);
+		ELeaderboardSortMethod (__fastcall *GetLeaderboardSortMethod)(ISteamUserStats*, unsigned __int64);
+		ELeaderboardDisplayType (__fastcall *GetLeaderboardDisplayType)(ISteamUserStats*, unsigned __int64);
+		unsigned __int64 (__fastcall *DownloadLeaderboardEntries)(ISteamUserStats*, unsigned __int64, ELeaderboardDataRequest, int, int);
+		unsigned __int64 (__fastcall *DownloadLeaderboardEntriesForUsers)(ISteamUserStats*, unsigned __int64, CSteamID*, int);
+		bool (__fastcall *GetDownloadedLeaderboardEntry)(ISteamUserStats*, unsigned __int64, int, LeaderboardEntry_t*, int*, int);
+		unsigned __int64 (__fastcall *UploadLeaderboardScore)(ISteamUserStats*, unsigned __int64, ELeaderboardUploadScoreMethod, int, const int*, int);
+		unsigned __int64 (__fastcall *AttachLeaderboardUGC)(ISteamUserStats*, unsigned __int64, unsigned __int64);
+		unsigned __int64 (__fastcall *GetNumberOfCurrentPlayers)(ISteamUserStats*);
+		unsigned __int64 (__fastcall *RequestGlobalAchievementPercentages)(ISteamUserStats*);
+		int (__fastcall *GetMostAchievedAchievementInfo)(ISteamUserStats*, char*, unsigned int, float*, bool*);
+		int (__fastcall *GetNextMostAchievedAchievementInfo)(ISteamUserStats*, int, char*, unsigned int, float*, bool*);
+		bool (__fastcall *GetAchievementAchievedPercent)(ISteamUserStats*, const char*, float*);
+		unsigned __int64 (__fastcall *RequestGlobalStats)(ISteamUserStats*, int);
+		bool (__fastcall *GetGlobalStat)(ISteamUserStats*, const char*, long double*);
+		bool (__fastcall *GetGlobalStat_2)(ISteamUserStats*, const char*, __int64*);
+		int (__fastcall *GetGlobalStatHistory)(ISteamUserStats*, const char*, long double*, unsigned int);
+		int (__fastcall *GetGlobalStatHistory_2)(ISteamUserStats*, const char*, __int64*, unsigned int);
+		bool (__fastcall *GetAchievementProgressLimits)(ISteamUserStats*, const char*, float*, float*);
+		bool (__fastcall *GetAchievementProgressLimits_2)(ISteamUserStats*, const char*, int*, int*);
+
+		vtbl() = delete;
+	};
+
+	ISteamUserStats() = delete;
+
+	virtual bool virtual_RequestCurrentStats()
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetStat(const char*, float*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetStat_2(const char*, int*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetStat(const char*, float)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetStat_2(const char*, int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_UpdateAvgRateStat(const char*, float, long double)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetAchievement(const char*, bool*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetAchievement(const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_ClearAchievement(const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetAchievementAndUnlockTime(const char*, bool*, unsigned int*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_StoreStats()
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual int virtual_GetAchievementIcon(const char*)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual const char* virtual_GetAchievementDisplayAttribute(const char*, const char*)
+	{
+		return *(const char**)nullptr;
+	}
+
+	virtual bool virtual_IndicateAchievementProgress(const char*, unsigned int, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetNumAchievements()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual const char* virtual_GetAchievementName(unsigned int)
+	{
+		return *(const char**)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_RequestUserStats(CSteamID)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual bool virtual_GetUserStat(CSteamID, const char*, float*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetUserStat_2(CSteamID, const char*, int*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetUserAchievement(CSteamID, const char*, bool*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetUserAchievementAndUnlockTime(CSteamID, const char*, bool*, unsigned int*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_ResetAllStats(bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_FindOrCreateLeaderboard(const char*, ELeaderboardSortMethod, ELeaderboardDisplayType)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_FindLeaderboard(const char*)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual const char* virtual_GetLeaderboardName(unsigned __int64)
+	{
+		return *(const char**)nullptr;
+	}
+
+	virtual int virtual_GetLeaderboardEntryCount(unsigned __int64)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual ELeaderboardSortMethod virtual_GetLeaderboardSortMethod(unsigned __int64)
+	{
+		return *(ELeaderboardSortMethod*)nullptr;
+	}
+
+	virtual ELeaderboardDisplayType virtual_GetLeaderboardDisplayType(unsigned __int64)
+	{
+		return *(ELeaderboardDisplayType*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_DownloadLeaderboardEntries(unsigned __int64, ELeaderboardDataRequest, int, int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_DownloadLeaderboardEntriesForUsers(unsigned __int64, CSteamID*, int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual bool virtual_GetDownloadedLeaderboardEntry(unsigned __int64, int, LeaderboardEntry_t*, int*, int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_UploadLeaderboardScore(unsigned __int64, ELeaderboardUploadScoreMethod, int, const int*, int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_AttachLeaderboardUGC(unsigned __int64, unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_GetNumberOfCurrentPlayers()
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_RequestGlobalAchievementPercentages()
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual int virtual_GetMostAchievedAchievementInfo(char*, unsigned int, float*, bool*)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int virtual_GetNextMostAchievedAchievementInfo(int, char*, unsigned int, float*, bool*)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual bool virtual_GetAchievementAchievedPercent(const char*, float*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_RequestGlobalStats(int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual bool virtual_GetGlobalStat(const char*, long double*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetGlobalStat_2(const char*, __int64*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual int virtual_GetGlobalStatHistory(const char*, long double*, unsigned int)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int virtual_GetGlobalStatHistory_2(const char*, __int64*, unsigned int)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual bool virtual_GetAchievementProgressLimits(const char*, float*, float*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetAchievementProgressLimits_2(const char*, int*, int*)
+	{
+		return *(bool*)nullptr;
+	}
 };
 
 struct DP_Packet
@@ -2696,6 +3007,14 @@ union _9CC80BF4F2F1300360474CD60BF15E00
 	_9CC80BF4F2F1300360474CD60BF15E00() = delete;
 };
 
+struct keyword
+{
+	const char* name;
+	int tt;
+
+	keyword() = delete;
+};
+
 struct mosHeader_st
 {
 	unsigned int nFileType;
@@ -2825,6 +3144,24 @@ enum class uiVariantType : __int32
 	UIVAR_FLOAT = 3,
 };
 
+struct uiVariant
+{
+	union value_t
+	{
+		int intVal;
+		const char* strVal;
+		float floatVal;
+		int luaFunc;
+
+		value_t() = delete;
+	};
+
+	uiVariantType type;
+	uiVariant::value_t value;
+
+	uiVariant() = delete;
+};
+
 struct view_t
 {
 	void* viewOfFile;
@@ -2896,6 +3233,42 @@ struct SDL_Rect
 	}
 };
 
+struct SDL_Window
+{
+	const void* magic;
+	unsigned int id;
+	char* title;
+	SDL_Surface* icon;
+	int x;
+	int y;
+	int w;
+	int h;
+	int min_w;
+	int min_h;
+	int max_w;
+	int max_h;
+	unsigned int flags;
+	unsigned int last_fullscreen_flags;
+	SDL_Rect windowed;
+	SDL_DisplayMode fullscreen_mode;
+	float brightness;
+	wchar_t* gamma;
+	wchar_t* saved_gamma;
+	SDL_Surface* surface;
+	SDL_bool surface_valid;
+	SDL_bool is_hiding;
+	SDL_bool is_destroying;
+	SDL_WindowShaper* shaper;
+	SDL_HitTestResult (__fastcall *hit_test)(SDL_Window*, const SDL_Point*, void*);
+	void* hit_test_data;
+	SDL_WindowUserData* data;
+	void* driverdata;
+	SDL_Window* prev;
+	SDL_Window* next;
+
+	SDL_Window() = delete;
+};
+
 struct SDL_Surface
 {
 	unsigned int flags;
@@ -2932,6 +3305,49 @@ struct SDL_Point
 	}
 };
 
+struct uiMenu
+{
+	Marker menuSrc;
+	const char* name;
+	int panel;
+	int state;
+	uiItem* items;
+	uiVariant* modal;
+	uiVariant* opacity;
+	uiVariant* greyscale;
+	int onOpen;
+	int onClose;
+	SDL_Point offset;
+	int ha;
+	int va;
+	int width;
+	int height;
+	int enabled;
+	int ignoreEsc;
+
+	uiMenu() = delete;
+};
+
+struct slicedRect
+{
+	SDL_Rect tl;
+	SDL_Rect t;
+	SDL_Rect tr;
+	SDL_Rect r;
+	SDL_Rect br;
+	SDL_Rect b;
+	SDL_Rect bl;
+	SDL_Rect l;
+	SDL_Rect c;
+	SDL_Point d;
+	const char* name;
+	int flags;
+
+	slicedRect()
+	{
+	}
+};
+
 struct _9B9540D9920A90D57A3D80DDD1A70514
 {
 	bool (__fastcall *f)(uiMenu*, const SDL_Rect*, SDL_Event*);
@@ -2961,137 +3377,488 @@ struct Pointer
 	}
 };
 
-struct ConstCharString
+struct ISteamUGC
 {
-	const char* data;
-
-	ConstCharString() = delete;
-
-	char getChar(size_t index)
+	struct vtbl
 	{
-		return data[index];
-	}
+		unsigned __int64 (__fastcall *CreateQueryUserUGCRequest)(ISteamUGC*, unsigned int, EUserUGCList, EUGCMatchingUGCType, EUserUGCListSortOrder, unsigned int, unsigned int, unsigned int);
+		unsigned __int64 (__fastcall *CreateQueryAllUGCRequest)(ISteamUGC*, EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, const char*);
+		unsigned __int64 (__fastcall *CreateQueryAllUGCRequest_2)(ISteamUGC*, EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, unsigned int);
+		unsigned __int64 (__fastcall *CreateQueryUGCDetailsRequest)(ISteamUGC*, unsigned __int64*, unsigned int);
+		unsigned __int64 (__fastcall *SendQueryUGCRequest)(ISteamUGC*, unsigned __int64);
+		bool (__fastcall *GetQueryUGCResult)(ISteamUGC*, unsigned __int64, unsigned int, SteamUGCDetails_t*);
+		bool (__fastcall *GetQueryUGCPreviewURL)(ISteamUGC*, unsigned __int64, unsigned int, char*, unsigned int);
+		bool (__fastcall *GetQueryUGCMetadata)(ISteamUGC*, unsigned __int64, unsigned int, char*, unsigned int);
+		bool (__fastcall *GetQueryUGCChildren)(ISteamUGC*, unsigned __int64, unsigned int, unsigned __int64*, unsigned int);
+		bool (__fastcall *GetQueryUGCStatistic)(ISteamUGC*, unsigned __int64, unsigned int, EItemStatistic, unsigned __int64*);
+		unsigned int (__fastcall *GetQueryUGCNumAdditionalPreviews)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *GetQueryUGCAdditionalPreview)(ISteamUGC*, unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int, EItemPreviewType*);
+		unsigned int (__fastcall *GetQueryUGCNumKeyValueTags)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *GetQueryUGCKeyValueTag)(ISteamUGC*, unsigned __int64, unsigned int, const char*, char*, unsigned int);
+		bool (__fastcall *GetQueryUGCKeyValueTag_2)(ISteamUGC*, unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int);
+		bool (__fastcall *ReleaseQueryUGCRequest)(ISteamUGC*, unsigned __int64);
+		bool (__fastcall *AddRequiredTag)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *AddRequiredTagGroup)(ISteamUGC*, unsigned __int64, const SteamParamStringArray_t*);
+		bool (__fastcall *AddExcludedTag)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetReturnOnlyIDs)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnKeyValueTags)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnLongDescription)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnMetadata)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnChildren)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnAdditionalPreviews)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnTotalOnly)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetReturnPlaytimeStats)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *SetLanguage)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetAllowCachedResponse)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *SetCloudFileNameFilter)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetMatchAnyTag)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *SetSearchText)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetRankedByTrendDays)(ISteamUGC*, unsigned __int64, unsigned int);
+		bool (__fastcall *AddRequiredKeyValueTag)(ISteamUGC*, unsigned __int64, const char*, const char*);
+		unsigned __int64 (__fastcall *RequestUGCDetails)(ISteamUGC*, unsigned __int64, unsigned int);
+		unsigned __int64 (__fastcall *CreateItem)(ISteamUGC*, unsigned int, EWorkshopFileType);
+		unsigned __int64 (__fastcall *StartItemUpdate)(ISteamUGC*, unsigned int, unsigned __int64);
+		bool (__fastcall *SetItemTitle)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemDescription)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemUpdateLanguage)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemMetadata)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemVisibility)(ISteamUGC*, unsigned __int64, ERemoteStoragePublishedFileVisibility);
+		bool (__fastcall *SetItemTags)(ISteamUGC*, unsigned __int64, const SteamParamStringArray_t*);
+		bool (__fastcall *SetItemContent)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetItemPreview)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *SetAllowLegacyUpload)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *RemoveAllItemKeyValueTags)(ISteamUGC*, unsigned __int64);
+		bool (__fastcall *RemoveItemKeyValueTags)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *AddItemKeyValueTag)(ISteamUGC*, unsigned __int64, const char*, const char*);
+		bool (__fastcall *AddItemPreviewFile)(ISteamUGC*, unsigned __int64, const char*, EItemPreviewType);
+		bool (__fastcall *AddItemPreviewVideo)(ISteamUGC*, unsigned __int64, const char*);
+		bool (__fastcall *UpdateItemPreviewFile)(ISteamUGC*, unsigned __int64, unsigned int, const char*);
+		bool (__fastcall *UpdateItemPreviewVideo)(ISteamUGC*, unsigned __int64, unsigned int, const char*);
+		bool (__fastcall *RemoveItemPreview)(ISteamUGC*, unsigned __int64, unsigned int);
+		unsigned __int64 (__fastcall *SubmitItemUpdate)(ISteamUGC*, unsigned __int64, const char*);
+		EItemUpdateStatus (__fastcall *GetItemUpdateProgress)(ISteamUGC*, unsigned __int64, unsigned __int64*, unsigned __int64*);
+		unsigned __int64 (__fastcall *SetUserItemVote)(ISteamUGC*, unsigned __int64, bool);
+		unsigned __int64 (__fastcall *GetUserItemVote)(ISteamUGC*, unsigned __int64);
+		unsigned __int64 (__fastcall *AddItemToFavorites)(ISteamUGC*, unsigned int, unsigned __int64);
+		unsigned __int64 (__fastcall *RemoveItemFromFavorites)(ISteamUGC*, unsigned int, unsigned __int64);
+		unsigned __int64 (__fastcall *SubscribeItem)(ISteamUGC*, unsigned __int64);
+		unsigned __int64 (__fastcall *UnsubscribeItem)(ISteamUGC*, unsigned __int64);
+		unsigned int (__fastcall *GetNumSubscribedItems)(ISteamUGC*);
+		unsigned int (__fastcall *GetSubscribedItems)(ISteamUGC*, unsigned __int64*, unsigned int);
+		unsigned int (__fastcall *GetItemState)(ISteamUGC*, unsigned __int64);
+		bool (__fastcall *GetItemInstallInfo)(ISteamUGC*, unsigned __int64, unsigned __int64*, char*, unsigned int, unsigned int*);
+		bool (__fastcall *GetItemDownloadInfo)(ISteamUGC*, unsigned __int64, unsigned __int64*, unsigned __int64*);
+		bool (__fastcall *DownloadItem)(ISteamUGC*, unsigned __int64, bool);
+		bool (__fastcall *BInitWorkshopForGameServer)(ISteamUGC*, unsigned int, const char*);
+		void (__fastcall *SuspendDownloads)(ISteamUGC*, bool);
+		unsigned __int64 (__fastcall *StartPlaytimeTracking)(ISteamUGC*, unsigned __int64*, unsigned int);
+		unsigned __int64 (__fastcall *StopPlaytimeTracking)(ISteamUGC*, unsigned __int64*, unsigned int);
+		unsigned __int64 (__fastcall *StopPlaytimeTrackingForAllItems)(ISteamUGC*);
+		unsigned __int64 (__fastcall *AddDependency)(ISteamUGC*, unsigned __int64, unsigned __int64);
+		unsigned __int64 (__fastcall *RemoveDependency)(ISteamUGC*, unsigned __int64, unsigned __int64);
+		unsigned __int64 (__fastcall *AddAppDependency)(ISteamUGC*, unsigned __int64, unsigned int);
+		unsigned __int64 (__fastcall *RemoveAppDependency)(ISteamUGC*, unsigned __int64, unsigned int);
+		unsigned __int64 (__fastcall *GetAppDependencies)(ISteamUGC*, unsigned __int64);
+		unsigned __int64 (__fastcall *DeleteItem)(ISteamUGC*, unsigned __int64);
 
-	void set(const char* toSet)
-	{
-		size_t len = strlen(toSet);
-		char* newStr = (char*)p_malloc(len + 1);
-		memcpy((void*)newStr, toSet, len);
-		data = newStr;
-	}
-
-	void setL(const char* toSet, size_t neededLen)
-	{
-		size_t cpyLen = strlen(toSet);
-		if (cpyLen > neededLen) {
-			cpyLen = neededLen;
-		}
-		char* newStr = (char*)p_malloc(neededLen);
-		memcpy((void*)newStr, toSet, cpyLen);
-		if (cpyLen < neededLen) {
-			memset((void*)(newStr + cpyLen), 0, neededLen - cpyLen);
-		}
-		data = newStr;
-	}
-
-	void setReference(ConstCharString* other)
-	{
-		data = other->data;
-	}
-
-	void pointTo(uintptr_t toSet)
-	{
-		data = (const char*)toSet;
-	}
-
-	const char* get()
-	{
-		return data;
-	}
-
-	void free()
-	{
-		p_free((void*)data);
-	}
-};
-
-struct uiVariant
-{
-	union value_t
-	{
-		int intVal;
-		const char* strVal;
-		float floatVal;
-		int luaFunc;
-
-		value_t() = delete;
+		vtbl() = delete;
 	};
 
-	uiVariantType type;
-	uiVariant::value_t value;
+	ISteamUGC() = delete;
 
-	uiVariant() = delete;
-};
+	virtual unsigned __int64 virtual_CreateQueryUserUGCRequest(unsigned int, EUserUGCList, EUGCMatchingUGCType, EUserUGCListSortOrder, unsigned int, unsigned int, unsigned int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
 
-struct slicedRect
-{
-	SDL_Rect tl;
-	SDL_Rect t;
-	SDL_Rect tr;
-	SDL_Rect r;
-	SDL_Rect br;
-	SDL_Rect b;
-	SDL_Rect bl;
-	SDL_Rect l;
-	SDL_Rect c;
-	SDL_Point d;
-	const char* name;
-	int flags;
+	virtual unsigned __int64 virtual_CreateQueryAllUGCRequest(EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, const char*)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
 
-	slicedRect()
+	virtual unsigned __int64 virtual_CreateQueryAllUGCRequest_2(EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, unsigned int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_CreateQueryUGCDetailsRequest(unsigned __int64*, unsigned int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_SendQueryUGCRequest(unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual bool virtual_GetQueryUGCResult(unsigned __int64, unsigned int, SteamUGCDetails_t*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetQueryUGCPreviewURL(unsigned __int64, unsigned int, char*, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetQueryUGCMetadata(unsigned __int64, unsigned int, char*, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetQueryUGCChildren(unsigned __int64, unsigned int, unsigned __int64*, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetQueryUGCStatistic(unsigned __int64, unsigned int, EItemStatistic, unsigned __int64*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetQueryUGCNumAdditionalPreviews(unsigned __int64, unsigned int)
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual bool virtual_GetQueryUGCAdditionalPreview(unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int, EItemPreviewType*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetQueryUGCNumKeyValueTags(unsigned __int64, unsigned int)
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual bool virtual_GetQueryUGCKeyValueTag(unsigned __int64, unsigned int, const char*, char*, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetQueryUGCKeyValueTag_2(unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_ReleaseQueryUGCRequest(unsigned __int64)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_AddRequiredTag(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_AddRequiredTagGroup(unsigned __int64, const SteamParamStringArray_t*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_AddExcludedTag(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetReturnOnlyIDs(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetReturnKeyValueTags(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetReturnLongDescription(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetReturnMetadata(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetReturnChildren(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetReturnAdditionalPreviews(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetReturnTotalOnly(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetReturnPlaytimeStats(unsigned __int64, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetLanguage(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetAllowCachedResponse(unsigned __int64, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetCloudFileNameFilter(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetMatchAnyTag(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetSearchText(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetRankedByTrendDays(unsigned __int64, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_AddRequiredKeyValueTag(unsigned __int64, const char*, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_RequestUGCDetails(unsigned __int64, unsigned int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_CreateItem(unsigned int, EWorkshopFileType)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_StartItemUpdate(unsigned int, unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual bool virtual_SetItemTitle(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetItemDescription(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetItemUpdateLanguage(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetItemMetadata(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetItemVisibility(unsigned __int64, ERemoteStoragePublishedFileVisibility)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetItemTags(unsigned __int64, const SteamParamStringArray_t*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetItemContent(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetItemPreview(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_SetAllowLegacyUpload(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_RemoveAllItemKeyValueTags(unsigned __int64)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_RemoveItemKeyValueTags(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_AddItemKeyValueTag(unsigned __int64, const char*, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_AddItemPreviewFile(unsigned __int64, const char*, EItemPreviewType)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_AddItemPreviewVideo(unsigned __int64, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_UpdateItemPreviewFile(unsigned __int64, unsigned int, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_UpdateItemPreviewVideo(unsigned __int64, unsigned int, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_RemoveItemPreview(unsigned __int64, unsigned int)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_SubmitItemUpdate(unsigned __int64, const char*)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual EItemUpdateStatus virtual_GetItemUpdateProgress(unsigned __int64, unsigned __int64*, unsigned __int64*)
+	{
+		return *(EItemUpdateStatus*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_SetUserItemVote(unsigned __int64, bool)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_GetUserItemVote(unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_AddItemToFavorites(unsigned int, unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_RemoveItemFromFavorites(unsigned int, unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_SubscribeItem(unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_UnsubscribeItem(unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetNumSubscribedItems()
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetSubscribedItems(unsigned __int64*, unsigned int)
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual unsigned int virtual_GetItemState(unsigned __int64)
+	{
+		return *(unsigned int*)nullptr;
+	}
+
+	virtual bool virtual_GetItemInstallInfo(unsigned __int64, unsigned __int64*, char*, unsigned int, unsigned int*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_GetItemDownloadInfo(unsigned __int64, unsigned __int64*, unsigned __int64*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_DownloadItem(unsigned __int64, bool)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual bool virtual_BInitWorkshopForGameServer(unsigned int, const char*)
+	{
+		return *(bool*)nullptr;
+	}
+
+	virtual void virtual_SuspendDownloads(bool)
 	{
 	}
-};
 
-struct keyword
-{
-	const char* name;
-	int tt;
+	virtual unsigned __int64 virtual_StartPlaytimeTracking(unsigned __int64*, unsigned int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
 
-	keyword() = delete;
-};
+	virtual unsigned __int64 virtual_StopPlaytimeTracking(unsigned __int64*, unsigned int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
 
-struct Marker
-{
-	const char* src;
-	int start;
-	int count;
-	int line;
+	virtual unsigned __int64 virtual_StopPlaytimeTrackingForAllItems()
+	{
+		return *(unsigned __int64*)nullptr;
+	}
 
-	Marker() = delete;
-};
+	virtual unsigned __int64 virtual_AddDependency(unsigned __int64, unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
 
-struct uiMenu
-{
-	Marker menuSrc;
-	const char* name;
-	int panel;
-	int state;
-	uiItem* items;
-	uiVariant* modal;
-	uiVariant* opacity;
-	uiVariant* greyscale;
-	int onOpen;
-	int onClose;
-	SDL_Point offset;
-	int ha;
-	int va;
-	int width;
-	int height;
-	int enabled;
-	int ignoreEsc;
+	virtual unsigned __int64 virtual_RemoveDependency(unsigned __int64, unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
 
-	uiMenu() = delete;
+	virtual unsigned __int64 virtual_AddAppDependency(unsigned __int64, unsigned int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_RemoveAppDependency(unsigned __int64, unsigned int)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_GetAppDependencies(unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
+
+	virtual unsigned __int64 virtual_DeleteItem(unsigned __int64)
+	{
+		return *(unsigned __int64*)nullptr;
+	}
 };
 
 struct ISteamRemoteStorage
@@ -3159,92 +3926,92 @@ struct ISteamRemoteStorage
 
 	ISteamRemoteStorage() = delete;
 
-	virtual bool virtual_FileWrite(const char* _0, const void* _1, int _2)
+	virtual bool virtual_FileWrite(const char*, const void*, int)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual int virtual_FileRead(const char* _0, void* _1, int _2)
+	virtual int virtual_FileRead(const char*, void*, int)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_FileWriteAsync(const char* _0, const void* _1, unsigned int _2)
+	virtual unsigned __int64 virtual_FileWriteAsync(const char*, const void*, unsigned int)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_FileReadAsync(const char* _0, unsigned int _1, unsigned int _2)
+	virtual unsigned __int64 virtual_FileReadAsync(const char*, unsigned int, unsigned int)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual bool virtual_FileReadAsyncComplete(unsigned __int64 _0, void* _1, unsigned int _2)
+	virtual bool virtual_FileReadAsyncComplete(unsigned __int64, void*, unsigned int)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_FileForget(const char* _0)
+	virtual bool virtual_FileForget(const char*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_FileDelete(const char* _0)
+	virtual bool virtual_FileDelete(const char*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_FileShare(const char* _0)
+	virtual unsigned __int64 virtual_FileShare(const char*)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual bool virtual_SetSyncPlatforms(const char* _0, ERemoteStoragePlatform _1)
+	virtual bool virtual_SetSyncPlatforms(const char*, ERemoteStoragePlatform)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_FileWriteStreamOpen(const char* _0)
+	virtual unsigned __int64 virtual_FileWriteStreamOpen(const char*)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual bool virtual_FileWriteStreamWriteChunk(unsigned __int64 _0, const void* _1, int _2)
+	virtual bool virtual_FileWriteStreamWriteChunk(unsigned __int64, const void*, int)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_FileWriteStreamClose(unsigned __int64 _0)
+	virtual bool virtual_FileWriteStreamClose(unsigned __int64)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_FileWriteStreamCancel(unsigned __int64 _0)
+	virtual bool virtual_FileWriteStreamCancel(unsigned __int64)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_FileExists(const char* _0)
+	virtual bool virtual_FileExists(const char*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_FilePersisted(const char* _0)
+	virtual bool virtual_FilePersisted(const char*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual int virtual_GetFileSize(const char* _0)
+	virtual int virtual_GetFileSize(const char*)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual __int64 virtual_GetFileTimestamp(const char* _0)
+	virtual __int64 virtual_GetFileTimestamp(const char*)
 	{
 		return *(__int64*)nullptr;
 	}
 
-	virtual ERemoteStoragePlatform virtual_GetSyncPlatforms(const char* _0)
+	virtual ERemoteStoragePlatform virtual_GetSyncPlatforms(const char*)
 	{
 		return *(ERemoteStoragePlatform*)nullptr;
 	}
@@ -3254,12 +4021,12 @@ struct ISteamRemoteStorage
 		return *(int*)nullptr;
 	}
 
-	virtual const char* virtual_GetFileNameAndSize(int _0, int* _1)
+	virtual const char* virtual_GetFileNameAndSize(int, int*)
 	{
 		return *(const char**)nullptr;
 	}
 
-	virtual bool virtual_GetQuota(unsigned __int64* _0, unsigned __int64* _1)
+	virtual bool virtual_GetQuota(unsigned __int64*, unsigned __int64*)
 	{
 		return *(bool*)nullptr;
 	}
@@ -3274,26 +4041,26 @@ struct ISteamRemoteStorage
 		return *(bool*)nullptr;
 	}
 
-	virtual void virtual_SetCloudEnabledForApp(bool _0)
+	virtual void virtual_SetCloudEnabledForApp(bool)
 	{
 	}
 
-	virtual unsigned __int64 virtual_UGCDownload(unsigned __int64 _0, unsigned int _1)
+	virtual unsigned __int64 virtual_UGCDownload(unsigned __int64, unsigned int)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual bool virtual_GetUGCDownloadProgress(unsigned __int64 _0, int* _1, int* _2)
+	virtual bool virtual_GetUGCDownloadProgress(unsigned __int64, int*, int*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_GetUGCDetails(unsigned __int64 _0, unsigned int* _1, char** _2, int* _3, CSteamID* _4)
+	virtual bool virtual_GetUGCDetails(unsigned __int64, unsigned int*, char**, int*, CSteamID*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual int virtual_UGCRead(unsigned __int64 _0, void* _1, int _2, unsigned int _3, EUGCReadAction _4)
+	virtual int virtual_UGCRead(unsigned __int64, void*, int, unsigned int, EUGCReadAction)
 	{
 		return *(int*)nullptr;
 	}
@@ -3303,132 +4070,132 @@ struct ISteamRemoteStorage
 		return *(int*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_GetCachedUGCHandle(int _0)
+	virtual unsigned __int64 virtual_GetCachedUGCHandle(int)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_PublishWorkshopFile(const char* _0, const char* _1, unsigned int _2, const char* _3, const char* _4, ERemoteStoragePublishedFileVisibility _5, SteamParamStringArray_t* _6, EWorkshopFileType _7)
+	virtual unsigned __int64 virtual_PublishWorkshopFile(const char*, const char*, unsigned int, const char*, const char*, ERemoteStoragePublishedFileVisibility, SteamParamStringArray_t*, EWorkshopFileType)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_CreatePublishedFileUpdateRequest(unsigned __int64 _0)
+	virtual unsigned __int64 virtual_CreatePublishedFileUpdateRequest(unsigned __int64)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual bool virtual_UpdatePublishedFileFile(unsigned __int64 _0, const char* _1)
+	virtual bool virtual_UpdatePublishedFileFile(unsigned __int64, const char*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_UpdatePublishedFilePreviewFile(unsigned __int64 _0, const char* _1)
+	virtual bool virtual_UpdatePublishedFilePreviewFile(unsigned __int64, const char*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_UpdatePublishedFileTitle(unsigned __int64 _0, const char* _1)
+	virtual bool virtual_UpdatePublishedFileTitle(unsigned __int64, const char*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_UpdatePublishedFileDescription(unsigned __int64 _0, const char* _1)
+	virtual bool virtual_UpdatePublishedFileDescription(unsigned __int64, const char*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_UpdatePublishedFileVisibility(unsigned __int64 _0, ERemoteStoragePublishedFileVisibility _1)
+	virtual bool virtual_UpdatePublishedFileVisibility(unsigned __int64, ERemoteStoragePublishedFileVisibility)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual bool virtual_UpdatePublishedFileTags(unsigned __int64 _0, SteamParamStringArray_t* _1)
+	virtual bool virtual_UpdatePublishedFileTags(unsigned __int64, SteamParamStringArray_t*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_CommitPublishedFileUpdate(unsigned __int64 _0)
+	virtual unsigned __int64 virtual_CommitPublishedFileUpdate(unsigned __int64)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_GetPublishedFileDetails(unsigned __int64 _0, unsigned int _1)
+	virtual unsigned __int64 virtual_GetPublishedFileDetails(unsigned __int64, unsigned int)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_DeletePublishedFile(unsigned __int64 _0)
+	virtual unsigned __int64 virtual_DeletePublishedFile(unsigned __int64)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_EnumerateUserPublishedFiles(unsigned int _0)
+	virtual unsigned __int64 virtual_EnumerateUserPublishedFiles(unsigned int)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_SubscribePublishedFile(unsigned __int64 _0)
+	virtual unsigned __int64 virtual_SubscribePublishedFile(unsigned __int64)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_EnumerateUserSubscribedFiles(unsigned int _0)
+	virtual unsigned __int64 virtual_EnumerateUserSubscribedFiles(unsigned int)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_UnsubscribePublishedFile(unsigned __int64 _0)
+	virtual unsigned __int64 virtual_UnsubscribePublishedFile(unsigned __int64)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual bool virtual_UpdatePublishedFileSetChangeDescription(unsigned __int64 _0, const char* _1)
+	virtual bool virtual_UpdatePublishedFileSetChangeDescription(unsigned __int64, const char*)
 	{
 		return *(bool*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_GetPublishedItemVoteDetails(unsigned __int64 _0)
+	virtual unsigned __int64 virtual_GetPublishedItemVoteDetails(unsigned __int64)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_UpdateUserPublishedItemVote(unsigned __int64 _0, bool _1)
+	virtual unsigned __int64 virtual_UpdateUserPublishedItemVote(unsigned __int64, bool)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_GetUserPublishedItemVoteDetails(unsigned __int64 _0)
+	virtual unsigned __int64 virtual_GetUserPublishedItemVoteDetails(unsigned __int64)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_EnumerateUserSharedWorkshopFiles(CSteamID _0, unsigned int _1, SteamParamStringArray_t* _2, SteamParamStringArray_t* _3)
+	virtual unsigned __int64 virtual_EnumerateUserSharedWorkshopFiles(CSteamID, unsigned int, SteamParamStringArray_t*, SteamParamStringArray_t*)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_PublishVideo(EWorkshopVideoProvider _0, const char* _1, const char* _2, const char* _3, unsigned int _4, const char* _5, const char* _6, ERemoteStoragePublishedFileVisibility _7, SteamParamStringArray_t* _8)
+	virtual unsigned __int64 virtual_PublishVideo(EWorkshopVideoProvider, const char*, const char*, const char*, unsigned int, const char*, const char*, ERemoteStoragePublishedFileVisibility, SteamParamStringArray_t*)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_SetUserPublishedFileAction(unsigned __int64 _0, EWorkshopFileAction _1)
+	virtual unsigned __int64 virtual_SetUserPublishedFileAction(unsigned __int64, EWorkshopFileAction)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_EnumeratePublishedFilesByUserAction(EWorkshopFileAction _0, unsigned int _1)
+	virtual unsigned __int64 virtual_EnumeratePublishedFilesByUserAction(EWorkshopFileAction, unsigned int)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_EnumeratePublishedWorkshopFiles(EWorkshopEnumerationType _0, unsigned int _1, unsigned int _2, unsigned int _3, SteamParamStringArray_t* _4, SteamParamStringArray_t* _5)
+	virtual unsigned __int64 virtual_EnumeratePublishedWorkshopFiles(EWorkshopEnumerationType, unsigned int, unsigned int, unsigned int, SteamParamStringArray_t*, SteamParamStringArray_t*)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
 
-	virtual unsigned __int64 virtual_UGCDownloadToLocation(unsigned __int64 _0, const char* _1, unsigned int _2)
+	virtual unsigned __int64 virtual_UGCDownloadToLocation(unsigned __int64, const char*, unsigned int)
 	{
 		return *(unsigned __int64*)nullptr;
 	}
@@ -3454,7 +4221,7 @@ struct IDPProvider
 
 	IDPProvider() = delete;
 
-	virtual void virtual_Connect(int _0, const char* _1)
+	virtual void virtual_Connect(int, const char*)
 	{
 	}
 
@@ -3463,11 +4230,11 @@ struct IDPProvider
 		return *(bool*)nullptr;
 	}
 
-	virtual void virtual_Listen(int _0, const char* _1)
+	virtual void virtual_Listen(int, const char*)
 	{
 	}
 
-	virtual bool virtual_Pump(DP_Event* _0)
+	virtual bool virtual_Pump(DP_Event*)
 	{
 		return *(bool*)nullptr;
 	}
@@ -3476,15 +4243,15 @@ struct IDPProvider
 	{
 	}
 
-	virtual void virtual_RequestSessionDetails(int _0)
+	virtual void virtual_RequestSessionDetails(int)
 	{
 	}
 
-	virtual void virtual_AllowJoin(bool _0)
+	virtual void virtual_AllowJoin(bool)
 	{
 	}
 
-	virtual void virtual_SetVersion(const char* _0)
+	virtual void virtual_SetVersion(const char*)
 	{
 	}
 
@@ -3495,6 +4262,106 @@ struct IDPProvider
 
 	virtual void virtual_Destruct()
 	{
+	}
+};
+
+struct IDPPeer
+{
+	struct vtbl
+	{
+		void (__fastcall *Send)(IDPPeer*, DP_Packet*, int);
+		DP_Packet* (__fastcall *GetFrontPacket)(IDPPeer*);
+		int (__fastcall *HasData)(IDPPeer*);
+		void (__fastcall *Disconnect)(IDPPeer*);
+		void (__fastcall *GetAddress)(IDPPeer*, char*, unsigned __int64);
+		void (__fastcall *Destruct)(IDPPeer*);
+
+		vtbl() = delete;
+	};
+
+	int m_packetSentCount;
+	int m_packetReceivedCount;
+
+	IDPPeer() = delete;
+
+	virtual void virtual_Send(DP_Packet*, int)
+	{
+	}
+
+	virtual DP_Packet* virtual_GetFrontPacket()
+	{
+		return *(DP_Packet**)nullptr;
+	}
+
+	virtual int virtual_HasData()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void virtual_Disconnect()
+	{
+	}
+
+	virtual void virtual_GetAddress(char*, unsigned __int64)
+	{
+	}
+
+	virtual void virtual_Destruct()
+	{
+	}
+};
+
+struct ConstCharString
+{
+	const char* data;
+
+	ConstCharString() = delete;
+
+	char getChar(size_t index)
+	{
+		return data[index];
+	}
+
+	void set(const char* toSet)
+	{
+		size_t len = strlen(toSet);
+		char* newStr = (char*)p_malloc(len + 1);
+		memcpy((void*)newStr, toSet, len);
+		data = newStr;
+	}
+
+	void setL(const char* toSet, size_t neededLen)
+	{
+		size_t cpyLen = strlen(toSet);
+		if (cpyLen > neededLen) {
+			cpyLen = neededLen;
+		}
+		char* newStr = (char*)p_malloc(neededLen);
+		memcpy((void*)newStr, toSet, cpyLen);
+		if (cpyLen < neededLen) {
+			memset((void*)(newStr + cpyLen), 0, neededLen - cpyLen);
+		}
+		data = newStr;
+	}
+
+	void setReference(ConstCharString* other)
+	{
+		data = other->data;
+	}
+
+	void pointTo(uintptr_t toSet)
+	{
+		data = (const char*)toSet;
+	}
+
+	const char* get()
+	{
+		return data;
+	}
+
+	void free()
+	{
+		p_free((void*)data);
 	}
 };
 
@@ -3588,871 +4455,6 @@ struct CharString
 		if (data) {
 			p_free(data);
 		}
-	}
-};
-
-struct SDL_WindowUserData
-{
-	char* name;
-	void* data;
-	SDL_WindowUserData* next;
-
-	SDL_WindowUserData() = delete;
-};
-
-struct SDL_Window
-{
-	const void* magic;
-	unsigned int id;
-	char* title;
-	SDL_Surface* icon;
-	int x;
-	int y;
-	int w;
-	int h;
-	int min_w;
-	int min_h;
-	int max_w;
-	int max_h;
-	unsigned int flags;
-	unsigned int last_fullscreen_flags;
-	SDL_Rect windowed;
-	SDL_DisplayMode fullscreen_mode;
-	float brightness;
-	wchar_t* gamma;
-	wchar_t* saved_gamma;
-	SDL_Surface* surface;
-	SDL_bool surface_valid;
-	SDL_bool is_hiding;
-	SDL_bool is_destroying;
-	SDL_WindowShaper* shaper;
-	SDL_HitTestResult (__fastcall *hit_test)(SDL_Window*, const SDL_Point*, void*);
-	void* hit_test_data;
-	SDL_WindowUserData* data;
-	void* driverdata;
-	SDL_Window* prev;
-	SDL_Window* next;
-
-	SDL_Window() = delete;
-};
-
-struct SDL_DropEvent
-{
-	unsigned int type;
-	unsigned int timestamp;
-	char* file;
-
-	SDL_DropEvent() = delete;
-};
-
-struct ISteamUserStats
-{
-	struct vtbl
-	{
-		bool (__fastcall *RequestCurrentStats)(ISteamUserStats*);
-		bool (__fastcall *GetStat)(ISteamUserStats*, const char*, float*);
-		bool (__fastcall *GetStat_2)(ISteamUserStats*, const char*, int*);
-		bool (__fastcall *SetStat)(ISteamUserStats*, const char*, float);
-		bool (__fastcall *SetStat_2)(ISteamUserStats*, const char*, int);
-		bool (__fastcall *UpdateAvgRateStat)(ISteamUserStats*, const char*, float, long double);
-		bool (__fastcall *GetAchievement)(ISteamUserStats*, const char*, bool*);
-		bool (__fastcall *SetAchievement)(ISteamUserStats*, const char*);
-		bool (__fastcall *ClearAchievement)(ISteamUserStats*, const char*);
-		bool (__fastcall *GetAchievementAndUnlockTime)(ISteamUserStats*, const char*, bool*, unsigned int*);
-		bool (__fastcall *StoreStats)(ISteamUserStats*);
-		int (__fastcall *GetAchievementIcon)(ISteamUserStats*, const char*);
-		const char* (__fastcall *GetAchievementDisplayAttribute)(ISteamUserStats*, const char*, const char*);
-		bool (__fastcall *IndicateAchievementProgress)(ISteamUserStats*, const char*, unsigned int, unsigned int);
-		unsigned int (__fastcall *GetNumAchievements)(ISteamUserStats*);
-		const char* (__fastcall *GetAchievementName)(ISteamUserStats*, unsigned int);
-		unsigned __int64 (__fastcall *RequestUserStats)(ISteamUserStats*, CSteamID);
-		bool (__fastcall *GetUserStat)(ISteamUserStats*, CSteamID, const char*, float*);
-		bool (__fastcall *GetUserStat_2)(ISteamUserStats*, CSteamID, const char*, int*);
-		bool (__fastcall *GetUserAchievement)(ISteamUserStats*, CSteamID, const char*, bool*);
-		bool (__fastcall *GetUserAchievementAndUnlockTime)(ISteamUserStats*, CSteamID, const char*, bool*, unsigned int*);
-		bool (__fastcall *ResetAllStats)(ISteamUserStats*, bool);
-		unsigned __int64 (__fastcall *FindOrCreateLeaderboard)(ISteamUserStats*, const char*, ELeaderboardSortMethod, ELeaderboardDisplayType);
-		unsigned __int64 (__fastcall *FindLeaderboard)(ISteamUserStats*, const char*);
-		const char* (__fastcall *GetLeaderboardName)(ISteamUserStats*, unsigned __int64);
-		int (__fastcall *GetLeaderboardEntryCount)(ISteamUserStats*, unsigned __int64);
-		ELeaderboardSortMethod (__fastcall *GetLeaderboardSortMethod)(ISteamUserStats*, unsigned __int64);
-		ELeaderboardDisplayType (__fastcall *GetLeaderboardDisplayType)(ISteamUserStats*, unsigned __int64);
-		unsigned __int64 (__fastcall *DownloadLeaderboardEntries)(ISteamUserStats*, unsigned __int64, ELeaderboardDataRequest, int, int);
-		unsigned __int64 (__fastcall *DownloadLeaderboardEntriesForUsers)(ISteamUserStats*, unsigned __int64, CSteamID*, int);
-		bool (__fastcall *GetDownloadedLeaderboardEntry)(ISteamUserStats*, unsigned __int64, int, LeaderboardEntry_t*, int*, int);
-		unsigned __int64 (__fastcall *UploadLeaderboardScore)(ISteamUserStats*, unsigned __int64, ELeaderboardUploadScoreMethod, int, const int*, int);
-		unsigned __int64 (__fastcall *AttachLeaderboardUGC)(ISteamUserStats*, unsigned __int64, unsigned __int64);
-		unsigned __int64 (__fastcall *GetNumberOfCurrentPlayers)(ISteamUserStats*);
-		unsigned __int64 (__fastcall *RequestGlobalAchievementPercentages)(ISteamUserStats*);
-		int (__fastcall *GetMostAchievedAchievementInfo)(ISteamUserStats*, char*, unsigned int, float*, bool*);
-		int (__fastcall *GetNextMostAchievedAchievementInfo)(ISteamUserStats*, int, char*, unsigned int, float*, bool*);
-		bool (__fastcall *GetAchievementAchievedPercent)(ISteamUserStats*, const char*, float*);
-		unsigned __int64 (__fastcall *RequestGlobalStats)(ISteamUserStats*, int);
-		bool (__fastcall *GetGlobalStat)(ISteamUserStats*, const char*, long double*);
-		bool (__fastcall *GetGlobalStat_2)(ISteamUserStats*, const char*, __int64*);
-		int (__fastcall *GetGlobalStatHistory)(ISteamUserStats*, const char*, long double*, unsigned int);
-		int (__fastcall *GetGlobalStatHistory_2)(ISteamUserStats*, const char*, __int64*, unsigned int);
-		bool (__fastcall *GetAchievementProgressLimits)(ISteamUserStats*, const char*, float*, float*);
-		bool (__fastcall *GetAchievementProgressLimits_2)(ISteamUserStats*, const char*, int*, int*);
-
-		vtbl() = delete;
-	};
-
-	ISteamUserStats() = delete;
-
-	virtual bool virtual_RequestCurrentStats()
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetStat(const char* _0, float* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetStat_2(const char* _0, int* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetStat(const char* _0, float _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetStat_2(const char* _0, int _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_UpdateAvgRateStat(const char* _0, float _1, long double _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetAchievement(const char* _0, bool* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetAchievement(const char* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_ClearAchievement(const char* _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetAchievementAndUnlockTime(const char* _0, bool* _1, unsigned int* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_StoreStats()
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int virtual_GetAchievementIcon(const char* _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual const char* virtual_GetAchievementDisplayAttribute(const char* _0, const char* _1)
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual bool virtual_IndicateAchievementProgress(const char* _0, unsigned int _1, unsigned int _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetNumAchievements()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual const char* virtual_GetAchievementName(unsigned int _0)
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_RequestUserStats(CSteamID _0)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual bool virtual_GetUserStat(CSteamID _0, const char* _1, float* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetUserStat_2(CSteamID _0, const char* _1, int* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetUserAchievement(CSteamID _0, const char* _1, bool* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetUserAchievementAndUnlockTime(CSteamID _0, const char* _1, bool* _2, unsigned int* _3)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_ResetAllStats(bool _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_FindOrCreateLeaderboard(const char* _0, ELeaderboardSortMethod _1, ELeaderboardDisplayType _2)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_FindLeaderboard(const char* _0)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual const char* virtual_GetLeaderboardName(unsigned __int64 _0)
-	{
-		return *(const char**)nullptr;
-	}
-
-	virtual int virtual_GetLeaderboardEntryCount(unsigned __int64 _0)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual ELeaderboardSortMethod virtual_GetLeaderboardSortMethod(unsigned __int64 _0)
-	{
-		return *(ELeaderboardSortMethod*)nullptr;
-	}
-
-	virtual ELeaderboardDisplayType virtual_GetLeaderboardDisplayType(unsigned __int64 _0)
-	{
-		return *(ELeaderboardDisplayType*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_DownloadLeaderboardEntries(unsigned __int64 _0, ELeaderboardDataRequest _1, int _2, int _3)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_DownloadLeaderboardEntriesForUsers(unsigned __int64 _0, CSteamID* _1, int _2)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual bool virtual_GetDownloadedLeaderboardEntry(unsigned __int64 _0, int _1, LeaderboardEntry_t* _2, int* _3, int _4)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_UploadLeaderboardScore(unsigned __int64 _0, ELeaderboardUploadScoreMethod _1, int _2, const int* _3, int _4)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_AttachLeaderboardUGC(unsigned __int64 _0, unsigned __int64 _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_GetNumberOfCurrentPlayers()
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_RequestGlobalAchievementPercentages()
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual int virtual_GetMostAchievedAchievementInfo(char* _0, unsigned int _1, float* _2, bool* _3)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int virtual_GetNextMostAchievedAchievementInfo(int _0, char* _1, unsigned int _2, float* _3, bool* _4)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual bool virtual_GetAchievementAchievedPercent(const char* _0, float* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_RequestGlobalStats(int _0)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual bool virtual_GetGlobalStat(const char* _0, long double* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetGlobalStat_2(const char* _0, __int64* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual int virtual_GetGlobalStatHistory(const char* _0, long double* _1, unsigned int _2)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int virtual_GetGlobalStatHistory_2(const char* _0, __int64* _1, unsigned int _2)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual bool virtual_GetAchievementProgressLimits(const char* _0, float* _1, float* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetAchievementProgressLimits_2(const char* _0, int* _1, int* _2)
-	{
-		return *(bool*)nullptr;
-	}
-};
-
-struct ISteamUGC
-{
-	struct vtbl
-	{
-		unsigned __int64 (__fastcall *CreateQueryUserUGCRequest)(ISteamUGC*, unsigned int, EUserUGCList, EUGCMatchingUGCType, EUserUGCListSortOrder, unsigned int, unsigned int, unsigned int);
-		unsigned __int64 (__fastcall *CreateQueryAllUGCRequest)(ISteamUGC*, EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, const char*);
-		unsigned __int64 (__fastcall *CreateQueryAllUGCRequest_2)(ISteamUGC*, EUGCQuery, EUGCMatchingUGCType, unsigned int, unsigned int, unsigned int);
-		unsigned __int64 (__fastcall *CreateQueryUGCDetailsRequest)(ISteamUGC*, unsigned __int64*, unsigned int);
-		unsigned __int64 (__fastcall *SendQueryUGCRequest)(ISteamUGC*, unsigned __int64);
-		bool (__fastcall *GetQueryUGCResult)(ISteamUGC*, unsigned __int64, unsigned int, SteamUGCDetails_t*);
-		bool (__fastcall *GetQueryUGCPreviewURL)(ISteamUGC*, unsigned __int64, unsigned int, char*, unsigned int);
-		bool (__fastcall *GetQueryUGCMetadata)(ISteamUGC*, unsigned __int64, unsigned int, char*, unsigned int);
-		bool (__fastcall *GetQueryUGCChildren)(ISteamUGC*, unsigned __int64, unsigned int, unsigned __int64*, unsigned int);
-		bool (__fastcall *GetQueryUGCStatistic)(ISteamUGC*, unsigned __int64, unsigned int, EItemStatistic, unsigned __int64*);
-		unsigned int (__fastcall *GetQueryUGCNumAdditionalPreviews)(ISteamUGC*, unsigned __int64, unsigned int);
-		bool (__fastcall *GetQueryUGCAdditionalPreview)(ISteamUGC*, unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int, EItemPreviewType*);
-		unsigned int (__fastcall *GetQueryUGCNumKeyValueTags)(ISteamUGC*, unsigned __int64, unsigned int);
-		bool (__fastcall *GetQueryUGCKeyValueTag)(ISteamUGC*, unsigned __int64, unsigned int, const char*, char*, unsigned int);
-		bool (__fastcall *GetQueryUGCKeyValueTag_2)(ISteamUGC*, unsigned __int64, unsigned int, unsigned int, char*, unsigned int, char*, unsigned int);
-		bool (__fastcall *ReleaseQueryUGCRequest)(ISteamUGC*, unsigned __int64);
-		bool (__fastcall *AddRequiredTag)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *AddRequiredTagGroup)(ISteamUGC*, unsigned __int64, const SteamParamStringArray_t*);
-		bool (__fastcall *AddExcludedTag)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetReturnOnlyIDs)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *SetReturnKeyValueTags)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *SetReturnLongDescription)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *SetReturnMetadata)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *SetReturnChildren)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *SetReturnAdditionalPreviews)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *SetReturnTotalOnly)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *SetReturnPlaytimeStats)(ISteamUGC*, unsigned __int64, unsigned int);
-		bool (__fastcall *SetLanguage)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetAllowCachedResponse)(ISteamUGC*, unsigned __int64, unsigned int);
-		bool (__fastcall *SetCloudFileNameFilter)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetMatchAnyTag)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *SetSearchText)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetRankedByTrendDays)(ISteamUGC*, unsigned __int64, unsigned int);
-		bool (__fastcall *AddRequiredKeyValueTag)(ISteamUGC*, unsigned __int64, const char*, const char*);
-		unsigned __int64 (__fastcall *RequestUGCDetails)(ISteamUGC*, unsigned __int64, unsigned int);
-		unsigned __int64 (__fastcall *CreateItem)(ISteamUGC*, unsigned int, EWorkshopFileType);
-		unsigned __int64 (__fastcall *StartItemUpdate)(ISteamUGC*, unsigned int, unsigned __int64);
-		bool (__fastcall *SetItemTitle)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetItemDescription)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetItemUpdateLanguage)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetItemMetadata)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetItemVisibility)(ISteamUGC*, unsigned __int64, ERemoteStoragePublishedFileVisibility);
-		bool (__fastcall *SetItemTags)(ISteamUGC*, unsigned __int64, const SteamParamStringArray_t*);
-		bool (__fastcall *SetItemContent)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetItemPreview)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *SetAllowLegacyUpload)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *RemoveAllItemKeyValueTags)(ISteamUGC*, unsigned __int64);
-		bool (__fastcall *RemoveItemKeyValueTags)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *AddItemKeyValueTag)(ISteamUGC*, unsigned __int64, const char*, const char*);
-		bool (__fastcall *AddItemPreviewFile)(ISteamUGC*, unsigned __int64, const char*, EItemPreviewType);
-		bool (__fastcall *AddItemPreviewVideo)(ISteamUGC*, unsigned __int64, const char*);
-		bool (__fastcall *UpdateItemPreviewFile)(ISteamUGC*, unsigned __int64, unsigned int, const char*);
-		bool (__fastcall *UpdateItemPreviewVideo)(ISteamUGC*, unsigned __int64, unsigned int, const char*);
-		bool (__fastcall *RemoveItemPreview)(ISteamUGC*, unsigned __int64, unsigned int);
-		unsigned __int64 (__fastcall *SubmitItemUpdate)(ISteamUGC*, unsigned __int64, const char*);
-		EItemUpdateStatus (__fastcall *GetItemUpdateProgress)(ISteamUGC*, unsigned __int64, unsigned __int64*, unsigned __int64*);
-		unsigned __int64 (__fastcall *SetUserItemVote)(ISteamUGC*, unsigned __int64, bool);
-		unsigned __int64 (__fastcall *GetUserItemVote)(ISteamUGC*, unsigned __int64);
-		unsigned __int64 (__fastcall *AddItemToFavorites)(ISteamUGC*, unsigned int, unsigned __int64);
-		unsigned __int64 (__fastcall *RemoveItemFromFavorites)(ISteamUGC*, unsigned int, unsigned __int64);
-		unsigned __int64 (__fastcall *SubscribeItem)(ISteamUGC*, unsigned __int64);
-		unsigned __int64 (__fastcall *UnsubscribeItem)(ISteamUGC*, unsigned __int64);
-		unsigned int (__fastcall *GetNumSubscribedItems)(ISteamUGC*);
-		unsigned int (__fastcall *GetSubscribedItems)(ISteamUGC*, unsigned __int64*, unsigned int);
-		unsigned int (__fastcall *GetItemState)(ISteamUGC*, unsigned __int64);
-		bool (__fastcall *GetItemInstallInfo)(ISteamUGC*, unsigned __int64, unsigned __int64*, char*, unsigned int, unsigned int*);
-		bool (__fastcall *GetItemDownloadInfo)(ISteamUGC*, unsigned __int64, unsigned __int64*, unsigned __int64*);
-		bool (__fastcall *DownloadItem)(ISteamUGC*, unsigned __int64, bool);
-		bool (__fastcall *BInitWorkshopForGameServer)(ISteamUGC*, unsigned int, const char*);
-		void (__fastcall *SuspendDownloads)(ISteamUGC*, bool);
-		unsigned __int64 (__fastcall *StartPlaytimeTracking)(ISteamUGC*, unsigned __int64*, unsigned int);
-		unsigned __int64 (__fastcall *StopPlaytimeTracking)(ISteamUGC*, unsigned __int64*, unsigned int);
-		unsigned __int64 (__fastcall *StopPlaytimeTrackingForAllItems)(ISteamUGC*);
-		unsigned __int64 (__fastcall *AddDependency)(ISteamUGC*, unsigned __int64, unsigned __int64);
-		unsigned __int64 (__fastcall *RemoveDependency)(ISteamUGC*, unsigned __int64, unsigned __int64);
-		unsigned __int64 (__fastcall *AddAppDependency)(ISteamUGC*, unsigned __int64, unsigned int);
-		unsigned __int64 (__fastcall *RemoveAppDependency)(ISteamUGC*, unsigned __int64, unsigned int);
-		unsigned __int64 (__fastcall *GetAppDependencies)(ISteamUGC*, unsigned __int64);
-		unsigned __int64 (__fastcall *DeleteItem)(ISteamUGC*, unsigned __int64);
-
-		vtbl() = delete;
-	};
-
-	ISteamUGC() = delete;
-
-	virtual unsigned __int64 virtual_CreateQueryUserUGCRequest(unsigned int _0, EUserUGCList _1, EUGCMatchingUGCType _2, EUserUGCListSortOrder _3, unsigned int _4, unsigned int _5, unsigned int _6)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_CreateQueryAllUGCRequest(EUGCQuery _0, EUGCMatchingUGCType _1, unsigned int _2, unsigned int _3, const char* _4)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_CreateQueryAllUGCRequest_2(EUGCQuery _0, EUGCMatchingUGCType _1, unsigned int _2, unsigned int _3, unsigned int _4)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_CreateQueryUGCDetailsRequest(unsigned __int64* _0, unsigned int _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_SendQueryUGCRequest(unsigned __int64 _0)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual bool virtual_GetQueryUGCResult(unsigned __int64 _0, unsigned int _1, SteamUGCDetails_t* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetQueryUGCPreviewURL(unsigned __int64 _0, unsigned int _1, char* _2, unsigned int _3)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetQueryUGCMetadata(unsigned __int64 _0, unsigned int _1, char* _2, unsigned int _3)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetQueryUGCChildren(unsigned __int64 _0, unsigned int _1, unsigned __int64* _2, unsigned int _3)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetQueryUGCStatistic(unsigned __int64 _0, unsigned int _1, EItemStatistic _2, unsigned __int64* _3)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetQueryUGCNumAdditionalPreviews(unsigned __int64 _0, unsigned int _1)
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual bool virtual_GetQueryUGCAdditionalPreview(unsigned __int64 _0, unsigned int _1, unsigned int _2, char* _3, unsigned int _4, char* _5, unsigned int _6, EItemPreviewType* _7)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetQueryUGCNumKeyValueTags(unsigned __int64 _0, unsigned int _1)
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual bool virtual_GetQueryUGCKeyValueTag(unsigned __int64 _0, unsigned int _1, const char* _2, char* _3, unsigned int _4)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetQueryUGCKeyValueTag_2(unsigned __int64 _0, unsigned int _1, unsigned int _2, char* _3, unsigned int _4, char* _5, unsigned int _6)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_ReleaseQueryUGCRequest(unsigned __int64 _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_AddRequiredTag(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_AddRequiredTagGroup(unsigned __int64 _0, const SteamParamStringArray_t* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_AddExcludedTag(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetReturnOnlyIDs(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetReturnKeyValueTags(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetReturnLongDescription(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetReturnMetadata(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetReturnChildren(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetReturnAdditionalPreviews(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetReturnTotalOnly(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetReturnPlaytimeStats(unsigned __int64 _0, unsigned int _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetLanguage(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetAllowCachedResponse(unsigned __int64 _0, unsigned int _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetCloudFileNameFilter(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetMatchAnyTag(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetSearchText(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetRankedByTrendDays(unsigned __int64 _0, unsigned int _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_AddRequiredKeyValueTag(unsigned __int64 _0, const char* _1, const char* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_RequestUGCDetails(unsigned __int64 _0, unsigned int _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_CreateItem(unsigned int _0, EWorkshopFileType _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_StartItemUpdate(unsigned int _0, unsigned __int64 _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual bool virtual_SetItemTitle(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetItemDescription(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetItemUpdateLanguage(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetItemMetadata(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetItemVisibility(unsigned __int64 _0, ERemoteStoragePublishedFileVisibility _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetItemTags(unsigned __int64 _0, const SteamParamStringArray_t* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetItemContent(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetItemPreview(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_SetAllowLegacyUpload(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_RemoveAllItemKeyValueTags(unsigned __int64 _0)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_RemoveItemKeyValueTags(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_AddItemKeyValueTag(unsigned __int64 _0, const char* _1, const char* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_AddItemPreviewFile(unsigned __int64 _0, const char* _1, EItemPreviewType _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_AddItemPreviewVideo(unsigned __int64 _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_UpdateItemPreviewFile(unsigned __int64 _0, unsigned int _1, const char* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_UpdateItemPreviewVideo(unsigned __int64 _0, unsigned int _1, const char* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_RemoveItemPreview(unsigned __int64 _0, unsigned int _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_SubmitItemUpdate(unsigned __int64 _0, const char* _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual EItemUpdateStatus virtual_GetItemUpdateProgress(unsigned __int64 _0, unsigned __int64* _1, unsigned __int64* _2)
-	{
-		return *(EItemUpdateStatus*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_SetUserItemVote(unsigned __int64 _0, bool _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_GetUserItemVote(unsigned __int64 _0)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_AddItemToFavorites(unsigned int _0, unsigned __int64 _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_RemoveItemFromFavorites(unsigned int _0, unsigned __int64 _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_SubscribeItem(unsigned __int64 _0)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_UnsubscribeItem(unsigned __int64 _0)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetNumSubscribedItems()
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetSubscribedItems(unsigned __int64* _0, unsigned int _1)
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual unsigned int virtual_GetItemState(unsigned __int64 _0)
-	{
-		return *(unsigned int*)nullptr;
-	}
-
-	virtual bool virtual_GetItemInstallInfo(unsigned __int64 _0, unsigned __int64* _1, char* _2, unsigned int _3, unsigned int* _4)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_GetItemDownloadInfo(unsigned __int64 _0, unsigned __int64* _1, unsigned __int64* _2)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_DownloadItem(unsigned __int64 _0, bool _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual bool virtual_BInitWorkshopForGameServer(unsigned int _0, const char* _1)
-	{
-		return *(bool*)nullptr;
-	}
-
-	virtual void virtual_SuspendDownloads(bool _0)
-	{
-	}
-
-	virtual unsigned __int64 virtual_StartPlaytimeTracking(unsigned __int64* _0, unsigned int _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_StopPlaytimeTracking(unsigned __int64* _0, unsigned int _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_StopPlaytimeTrackingForAllItems()
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_AddDependency(unsigned __int64 _0, unsigned __int64 _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_RemoveDependency(unsigned __int64 _0, unsigned __int64 _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_AddAppDependency(unsigned __int64 _0, unsigned int _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_RemoveAppDependency(unsigned __int64 _0, unsigned int _1)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_GetAppDependencies(unsigned __int64 _0)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-
-	virtual unsigned __int64 virtual_DeleteItem(unsigned __int64 _0)
-	{
-		return *(unsigned __int64*)nullptr;
-	}
-};
-
-struct IDPPeer
-{
-	struct vtbl
-	{
-		void (__fastcall *Send)(IDPPeer*, DP_Packet*, int);
-		DP_Packet* (__fastcall *GetFrontPacket)(IDPPeer*);
-		int (__fastcall *HasData)(IDPPeer*);
-		void (__fastcall *Disconnect)(IDPPeer*);
-		void (__fastcall *GetAddress)(IDPPeer*, char*, unsigned __int64);
-		void (__fastcall *Destruct)(IDPPeer*);
-
-		vtbl() = delete;
-	};
-
-	int m_packetSentCount;
-	int m_packetReceivedCount;
-
-	IDPPeer() = delete;
-
-	virtual void virtual_Send(DP_Packet* _0, int _1)
-	{
-	}
-
-	virtual DP_Packet* virtual_GetFrontPacket()
-	{
-		return *(DP_Packet**)nullptr;
-	}
-
-	virtual int virtual_HasData()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void virtual_Disconnect()
-	{
-	}
-
-	virtual void virtual_GetAddress(char* _0, unsigned __int64 _1)
-	{
-	}
-
-	virtual void virtual_Destruct()
-	{
 	}
 };
 
@@ -4609,7 +4611,7 @@ struct CRes
 		return p_Demand(this);
 	}
 
-	virtual bool virtual_Parse(void* _0)
+	virtual bool virtual_Parse(void*)
 	{
 		return *(bool*)nullptr;
 	}
@@ -5148,7 +5150,7 @@ struct CPersistantEffect
 	{
 	}
 
-	virtual void virtual_AIUpdate(CGameSprite* _0, int _1)
+	virtual void virtual_AIUpdate(CGameSprite*, int)
 	{
 	}
 
@@ -5177,6 +5179,11 @@ struct CObject
 template<class TYPE, class ARG_TYPE>
 struct CArray : CObject
 {
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
 	VariableArray<TYPE>* m_pData;
 	int m_nSize;
 	int m_nMaxSize;
@@ -5214,7 +5221,7 @@ struct CException : CObject
 
 	CException() = delete;
 
-	virtual int virtual_GetErrorMessage(char* _0, unsigned int _1, unsigned int* _2)
+	virtual int virtual_GetErrorMessage(char*, unsigned int, unsigned int*)
 	{
 		return *(int*)nullptr;
 	}
@@ -5244,6 +5251,11 @@ struct CList : CObject
 		TYPE data;
 
 		CNode() = delete;
+	};
+
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
 	};
 
 	CList::CNode* m_pNodeHead;
@@ -5676,11 +5688,11 @@ struct CWarp : CObject
 
 	CWarp() = delete;
 
-	virtual void virtual_InvalidateCursorRect(const CRect* _0)
+	virtual void virtual_InvalidateCursorRect(const CRect*)
 	{
 	}
 
-	virtual void virtual_NormalizePanelRect(unsigned int _0, CRect* _1)
+	virtual void virtual_NormalizePanelRect(unsigned int, CRect*)
 	{
 	}
 
@@ -5712,11 +5724,11 @@ struct CWarp : CObject
 	{
 	}
 
-	virtual void virtual_SelectEngine(CWarp* _0)
+	virtual void virtual_SelectEngine(CWarp*)
 	{
 	}
 
-	virtual bool virtual_OnEvent(SDL_Event* _0)
+	virtual bool virtual_OnEvent(SDL_Event*)
 	{
 		return *(bool*)nullptr;
 	}
@@ -5731,7 +5743,7 @@ struct CWarp : CObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_SetSystemKeyCtrl(unsigned __int8 _0)
+	virtual void virtual_SetSystemKeyCtrl(unsigned __int8)
 	{
 	}
 
@@ -5745,7 +5757,7 @@ struct CWarp : CObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_SetSystemKeyShift(int _0)
+	virtual void virtual_SetSystemKeyShift(int)
 	{
 	}
 
@@ -5759,7 +5771,7 @@ struct CWarp : CObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_SetSystemKeyMenu(int _0)
+	virtual void virtual_SetSystemKeyMenu(int)
 	{
 	}
 
@@ -5768,7 +5780,7 @@ struct CWarp : CObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_SetSystemKeyCapsLock(int _0)
+	virtual void virtual_SetSystemKeyCapsLock(int)
 	{
 	}
 
@@ -5787,7 +5799,7 @@ struct CWarp : CObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_OnMouseMove(CPoint _0)
+	virtual void virtual_OnMouseMove(CPoint)
 	{
 	}
 
@@ -5796,15 +5808,15 @@ struct CWarp : CObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_OnLButtonDblClk(CPoint _0)
+	virtual void virtual_OnLButtonDblClk(CPoint)
 	{
 	}
 
-	virtual void virtual_OnLButtonDown(CPoint _0)
+	virtual void virtual_OnLButtonDown(CPoint)
 	{
 	}
 
-	virtual void virtual_OnLButtonUp(CPoint _0)
+	virtual void virtual_OnLButtonUp(CPoint)
 	{
 	}
 
@@ -5813,15 +5825,15 @@ struct CWarp : CObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_OnMButtonDblClk(CPoint _0)
+	virtual void virtual_OnMButtonDblClk(CPoint)
 	{
 	}
 
-	virtual void virtual_OnMButtonDown(CPoint _0)
+	virtual void virtual_OnMButtonDown(CPoint)
 	{
 	}
 
-	virtual void virtual_OnMButtonUp(CPoint _0)
+	virtual void virtual_OnMButtonUp(CPoint)
 	{
 	}
 
@@ -5830,15 +5842,15 @@ struct CWarp : CObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_OnRButtonDblClk(CPoint _0)
+	virtual void virtual_OnRButtonDblClk(CPoint)
 	{
 	}
 
-	virtual void virtual_OnRButtonDown(CPoint _0)
+	virtual void virtual_OnRButtonDown(CPoint)
 	{
 	}
 
-	virtual void virtual_OnRButtonUp(CPoint _0)
+	virtual void virtual_OnRButtonUp(CPoint)
 	{
 	}
 
@@ -5847,7 +5859,7 @@ struct CWarp : CObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_OnMouseWheel(int _0, int _1, unsigned int _2, unsigned __int16 _3)
+	virtual void virtual_OnMouseWheel(int, int, unsigned int, unsigned __int16)
 	{
 	}
 
@@ -5866,19 +5878,19 @@ struct CWarp : CObject
 		return *(int**)nullptr;
 	}
 
-	virtual void virtual_OnKeyDown(int _0)
+	virtual void virtual_OnKeyDown(int)
 	{
 	}
 
-	virtual void virtual_OnKeyUp(int _0)
+	virtual void virtual_OnKeyUp(int)
 	{
 	}
 
-	virtual void virtual_OnTextInput(const char* _0)
+	virtual void virtual_OnTextInput(const char*)
 	{
 	}
 
-	virtual void virtual_WindowResized(int _0, int _1)
+	virtual void virtual_WindowResized(int, int)
 	{
 	}
 
@@ -5886,7 +5898,7 @@ struct CWarp : CObject
 	{
 	}
 
-	virtual void virtual_EnableEditKeys(__int16 _0)
+	virtual void virtual_EnableEditKeys(__int16)
 	{
 	}
 
@@ -6355,11 +6367,11 @@ struct CMessage
 		return *(unsigned __int8*)nullptr;
 	}
 
-	virtual void virtual_MarshalMessage(unsigned __int8** _0, unsigned int* _1)
+	virtual void virtual_MarshalMessage(unsigned __int8**, unsigned int*)
 	{
 	}
 
-	virtual int virtual_UnmarshalMessage(unsigned __int8* _0, unsigned int _1)
+	virtual int virtual_UnmarshalMessage(unsigned __int8*, unsigned int)
 	{
 		return *(int*)nullptr;
 	}
@@ -6576,21 +6588,21 @@ struct CFile : CObject
 		return *(CString**)nullptr;
 	}
 
-	virtual void virtual_SetFilePath(const char* _0)
+	virtual void virtual_SetFilePath(const char*)
 	{
 	}
 
-	virtual int virtual_Open(const char* _0, unsigned int _1, CFileException* _2)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int virtual_Seek(int _0, unsigned int _1)
+	virtual int virtual_Open(const char*, unsigned int, CFileException*)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_SetLength(unsigned int _0)
+	virtual int virtual_Seek(int, unsigned int)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void virtual_SetLength(unsigned int)
 	{
 	}
 
@@ -6599,12 +6611,12 @@ struct CFile : CObject
 		return *(unsigned int*)nullptr;
 	}
 
-	virtual unsigned int virtual_Read(void* _0, unsigned int _1)
+	virtual unsigned int virtual_Read(void*, unsigned int)
 	{
 		return *(unsigned int*)nullptr;
 	}
 
-	virtual unsigned int virtual_Write(const void* _0, unsigned int _1)
+	virtual unsigned int virtual_Write(const void*, unsigned int)
 	{
 		return *(unsigned int*)nullptr;
 	}
@@ -6621,7 +6633,7 @@ struct CFile : CObject
 	{
 	}
 
-	virtual unsigned int virtual_GetBufferPtr(unsigned int _0, unsigned int _1, void** _2, void** _3)
+	virtual unsigned int virtual_GetBufferPtr(unsigned int, unsigned int, void**, void**)
 	{
 		return *(unsigned int*)nullptr;
 	}
@@ -6669,11 +6681,11 @@ struct CCallbackBase
 
 	CCallbackBase() = delete;
 
-	virtual void virtual_Run(void* _0, bool _1, unsigned __int64 _2)
+	virtual void virtual_Run(void*, bool, unsigned __int64)
 	{
 	}
 
-	virtual void virtual_Run_2(void* _0)
+	virtual void virtual_Run_2(void*)
 	{
 	}
 
@@ -6686,6 +6698,11 @@ struct CCallbackBase
 template<class BASE_CLASS, class RESULT_CLASS>
 struct CCallResult : CCallbackBase
 {
+	struct vtbl : CCallbackBase::vtbl
+	{
+		vtbl() = delete;
+	};
+
 	unsigned __int64 m_hAPICall;
 	BASE_CLASS* m_pObj;
 	void (__thiscall *m_Func)(BASE_CLASS*, RESULT_CLASS*, bool);
@@ -6726,7 +6743,7 @@ struct CBaldurEngine : CWarp
 
 	CBaldurEngine() = delete;
 
-	virtual int virtual_GetSelectedCharacter(int _0)
+	virtual int virtual_GetSelectedCharacter(int)
 	{
 		return *(int*)nullptr;
 	}
@@ -6736,27 +6753,27 @@ struct CBaldurEngine : CWarp
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_SetSelectedCharacter(int _0)
+	virtual void virtual_SetSelectedCharacter(int)
 	{
 	}
 
-	virtual void virtual_SetPickedCharacter(int _0)
+	virtual void virtual_SetPickedCharacter(int)
 	{
 	}
 
-	virtual void virtual_OnPortraitLClick(unsigned int _0)
+	virtual void virtual_OnPortraitLClick(unsigned int)
 	{
 	}
 
-	virtual void virtual_OnPortraitLDblClick(unsigned int _0)
+	virtual void virtual_OnPortraitLDblClick(unsigned int)
 	{
 	}
 
-	virtual void virtual_UpdateContainerStatus(int _0, __int16 _1)
+	virtual void virtual_UpdateContainerStatus(int, __int16)
 	{
 	}
 
-	virtual void virtual_UpdatePersonalItemStatus(int _0)
+	virtual void virtual_UpdatePersonalItemStatus(int)
 	{
 	}
 
@@ -6768,11 +6785,11 @@ struct CBaldurEngine : CWarp
 	{
 	}
 
-	virtual void virtual_UpdateCursorShape(unsigned __int8 _0)
+	virtual void virtual_UpdateCursorShape(unsigned __int8)
 	{
 	}
 
-	virtual void virtual_CheckEnablePortraits(unsigned int _0)
+	virtual void virtual_CheckEnablePortraits(unsigned int)
 	{
 	}
 
@@ -6780,7 +6797,7 @@ struct CBaldurEngine : CWarp
 	{
 	}
 
-	virtual void virtual_EnablePortrait(unsigned int _0, unsigned int _1, int _2)
+	virtual void virtual_EnablePortrait(unsigned int, unsigned int, int)
 	{
 	}
 
@@ -6788,7 +6805,7 @@ struct CBaldurEngine : CWarp
 	{
 	}
 
-	virtual void virtual_UpdateCharacterStatus(int _0)
+	virtual void virtual_UpdateCharacterStatus(int)
 	{
 	}
 
@@ -6796,11 +6813,11 @@ struct CBaldurEngine : CWarp
 	{
 	}
 
-	virtual void virtual_GetChatEditBoxStatus(CString* _0, int* _1)
+	virtual void virtual_GetChatEditBoxStatus(CString*, int*)
 	{
 	}
 
-	virtual void virtual_SetChatEditBoxStatus(const CString* _0, int _1)
+	virtual void virtual_SetChatEditBoxStatus(const CString*, int)
 	{
 	}
 
@@ -9535,17 +9552,17 @@ struct CVidCell : CVidImage, CResHelper<CResCell,1000>
 		return *(int*)nullptr;
 	}
 
-	virtual int virtual_Render(unsigned int* _0, int _1, int _2, int _3, const CRect* _4, unsigned int _5, const CPoint* _6)
+	virtual int virtual_Render(unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual int virtual_Render_2(int _0, int _1, const CRect* _2, CVidPoly* _3, int _4, unsigned int _5, int _6)
+	virtual int virtual_Render_2(int, int, const CRect*, CVidPoly*, int, unsigned int, int)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_StoreBackground(int _0, int _1, const CRect* _2, CRect* _3, unsigned __int8 _4)
+	virtual void virtual_StoreBackground(int, int, const CRect*, CRect*, unsigned __int8)
 	{
 	}
 
@@ -10133,6 +10150,91 @@ struct CScreenWorld : CBaldurEngine
 	}
 };
 
+struct CProjectileFileFormat
+{
+	unsigned __int16 m_wFileType;
+	__int16 m_speed;
+	unsigned int m_dwFlags;
+	CResRef m_fireSoundRef;
+	CResRef m_arrivalSoundRef;
+	CResRef m_visualEffectRef;
+	__int16 m_sparkleColor;
+	__int16 m_lanceWidth;
+	unsigned int m_extFlags;
+	unsigned int m_strRef;
+	unsigned int m_color;
+	unsigned __int16 m_colorSpeed;
+	unsigned __int16 m_shake;
+	unsigned __int16 m_IDSValue1;
+	unsigned __int16 m_IDSType1;
+	unsigned __int16 m_IDSValue2;
+	unsigned __int16 m_IDSType2;
+	CResRef m_failureSpell;
+	CResRef m_successSpell;
+	int m_maxBounces;
+	Array<unsigned int,42> reservedSpace;
+
+	CProjectileFileFormat() = delete;
+};
+
+struct CProjectileBAMFileFormat : CProjectileFileFormat
+{
+	unsigned int m_dwBAMFlags;
+	CResRef m_vidCell;
+	CResRef m_shadowVidCell;
+	unsigned __int8 m_seqVidCell;
+	unsigned __int8 m_seqShadowVidCell;
+	__int16 m_glowIntensity;
+	__int16 m_glowSizeX;
+	__int16 m_glowSizeY;
+	CResRef m_paletteResRef;
+	Array<unsigned __int8,7> m_colors;
+	unsigned __int8 m_smokePeriod;
+	Array<unsigned __int8,7> m_smokeColors;
+	unsigned __int8 m_numDirections;
+	unsigned __int16 m_smokeAnimationCode;
+	CResRef m_cPuffEffect1;
+	CResRef m_cPuffEffect2;
+	CResRef m_cPuffEffect3;
+	unsigned __int16 m_nPuff1Spacing;
+	unsigned __int16 m_nPuff2Spacing;
+	unsigned __int16 m_nPuff3Spacing;
+	unsigned int m_dwPuffFlags;
+	Array<unsigned int,42> reservedSpace;
+
+	CProjectileBAMFileFormat() = delete;
+};
+
+struct CProjectileAreaFileFormat : CProjectileBAMFileFormat
+{
+	unsigned int m_dwAreaFlags;
+	unsigned __int16 m_triggerRange;
+	unsigned __int16 m_explosionRange;
+	CResRef m_explodeSound;
+	unsigned __int16 m_nDelay;
+	unsigned __int16 m_explodeId;
+	unsigned __int16 m_sparkleExplosionProjectile;
+	unsigned __int8 m_nRepetitionCount;
+	unsigned __int8 m_fireBallType;
+	unsigned __int8 m_ringColor;
+	unsigned __int8 padding1;
+	unsigned __int16 m_secondaryProjectile;
+	CResRef m_centerVVC;
+	unsigned __int16 m_coneSize;
+	unsigned __int16 m_startingAngle;
+	CResRef m_fireBallArea;
+	CResRef m_fireBallRing;
+	CResRef m_fireBallSound;
+	unsigned int m_fireBallFlags;
+	unsigned __int16 m_targetDiceCount;
+	unsigned __int16 m_targetDiceSize;
+	unsigned __int16 m_granularity;
+	unsigned __int16 m_granDivider;
+	Array<unsigned int,45> reservedSpace;
+
+	CProjectileAreaFileFormat() = delete;
+};
+
 struct CProgressBar
 {
 	unsigned int m_nSecondsToTimeout;
@@ -10484,7 +10586,7 @@ struct CChitin
 		return *(unsigned int*)nullptr;
 	}
 
-	virtual CRes* virtual_AllocResObject(int _0)
+	virtual CRes* virtual_AllocResObject(int)
 	{
 		return *(CRes**)nullptr;
 	}
@@ -10494,7 +10596,7 @@ struct CChitin
 		return *(const CString**)nullptr;
 	}
 
-	virtual void virtual_GetScreenShotFilePrefix(CString* _0)
+	virtual void virtual_GetScreenShotFilePrefix(CString*)
 	{
 	}
 
@@ -10508,11 +10610,11 @@ struct CChitin
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_SetProgressBar(unsigned __int8 _0, int _1, int _2, int _3, unsigned __int8 _4, int _5, unsigned __int8 _6, int _7, unsigned __int8 _8, unsigned __int8 _9, unsigned int _10)
+	virtual void virtual_SetProgressBar(unsigned __int8, int, int, int, unsigned __int8, int, unsigned __int8, int, unsigned __int8, unsigned __int8, unsigned int)
 	{
 	}
 
-	virtual void virtual_SetProgressBarActivateEngine(int _0)
+	virtual void virtual_SetProgressBarActivateEngine(int)
 	{
 	}
 
@@ -10520,15 +10622,15 @@ struct CChitin
 	{
 	}
 
-	virtual void virtual_SetCDSwitchStatus(unsigned __int8 _0, unsigned __int8 _1, unsigned __int8 _2, const CString* _3, unsigned __int8 _4, unsigned __int8 _5, unsigned __int8 _6)
+	virtual void virtual_SetCDSwitchStatus(unsigned __int8, unsigned __int8, unsigned __int8, const CString*, unsigned __int8, unsigned __int8, unsigned __int8)
 	{
 	}
 
-	virtual void virtual_SetCDSwitchActivateEngine(int _0)
+	virtual void virtual_SetCDSwitchActivateEngine(int)
 	{
 	}
 
-	virtual void virtual_OnMultiplayerSessionOpen(CString* _0, CString* _1, CString* _2)
+	virtual void virtual_OnMultiplayerSessionOpen(CString*, CString*, CString*)
 	{
 	}
 
@@ -10540,37 +10642,37 @@ struct CChitin
 	{
 	}
 
-	virtual void virtual_OnMultiplayerPlayerJoin(int _0, const CString* _1)
+	virtual void virtual_OnMultiplayerPlayerJoin(int, const CString*)
 	{
 	}
 
-	virtual void virtual_OnMultiplayerPlayerVisible(int _0)
+	virtual void virtual_OnMultiplayerPlayerVisible(int)
 	{
 	}
 
-	virtual void virtual_OnMultiplayerPlayerLeave(int _0, const CString* _1)
+	virtual void virtual_OnMultiplayerPlayerLeave(int, const CString*)
 	{
 	}
 
-	virtual int virtual_MessageCallback(unsigned __int8* _0, unsigned int _1)
+	virtual int virtual_MessageCallback(unsigned __int8*, unsigned int)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual unsigned __int8 virtual_GetGamespyResponse(unsigned __int8 _0, unsigned __int8** _1, unsigned int* _2)
+	virtual unsigned __int8 virtual_GetGamespyResponse(unsigned __int8, unsigned __int8**, unsigned int*)
 	{
 		return *(unsigned __int8*)nullptr;
 	}
 
-	virtual void virtual_AsynchronousUpdate(unsigned int _0, unsigned int _1, unsigned int _2, unsigned int _3, unsigned int _4)
+	virtual void virtual_AsynchronousUpdate(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)
 	{
 	}
 
-	virtual void virtual_SelectEngine(CWarp* _0)
+	virtual void virtual_SelectEngine(CWarp*)
 	{
 	}
 
-	virtual void virtual_ShutDown(int _0, const char* _1, const char* _2)
+	virtual void virtual_ShutDown(int, const char*, const char*)
 	{
 	}
 
@@ -10611,7 +10713,7 @@ struct CChitin
 		return *(unsigned __int16*)nullptr;
 	}
 
-	virtual void virtual_SetRenderCount(unsigned __int8 _0)
+	virtual void virtual_SetRenderCount(unsigned __int8)
 	{
 	}
 
@@ -10620,15 +10722,15 @@ struct CChitin
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_GetGameSpyGameName(CString* _0)
+	virtual void virtual_GetGameSpyGameName(CString*)
 	{
 	}
 
-	virtual void virtual_GetGameSpyCode(CString* _0)
+	virtual void virtual_GetGameSpyCode(CString*)
 	{
 	}
 
-	virtual void virtual_GetPanicCDStrings(CString* _0, CString* _1, CString* _2)
+	virtual void virtual_GetPanicCDStrings(CString*, CString*, CString*)
 	{
 	}
 
@@ -10636,7 +10738,7 @@ struct CChitin
 	{
 	}
 
-	virtual int virtual_Is3DSound(int _0)
+	virtual int virtual_Is3DSound(int)
 	{
 		return *(int*)nullptr;
 	}
@@ -10650,7 +10752,7 @@ struct CChitin
 	{
 	}
 
-	virtual unsigned __int8 virtual_GetSoundEnvironment(CString _0, unsigned int* _1, float* _2, float* _3, float* _4, float* _5)
+	virtual unsigned __int8 virtual_GetSoundEnvironment(CString, unsigned int*, float*, float*, float*, float*)
 	{
 		return *(unsigned __int8*)nullptr;
 	}
@@ -11250,7 +11352,7 @@ struct CGameEffect : CGameEffectBase
 {
 	struct vtbl
 	{
-		void (__fastcall *Destruct)(CGameEffect*, unsigned int);
+		void (__fastcall *Destruct)(CGameEffect*, unsigned int );
 		CGameEffect* (__fastcall *Copy)(CGameEffect*);
 		int (__fastcall *ApplyEffect)(CGameEffect*, CGameSprite*);
 		int (__fastcall *ResolveEffect)(CGameEffect*, CGameSprite*);
@@ -11295,29 +11397,29 @@ struct CGameEffect : CGameEffectBase
 		return *(CGameEffect**)nullptr;
 	}
 
-	virtual int virtual_ApplyEffect(CGameSprite* _0)
+	virtual int virtual_ApplyEffect(CGameSprite*)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual int virtual_ResolveEffect(CGameSprite* _0)
+	virtual int virtual_ResolveEffect(CGameSprite*)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_OnAdd(CGameSprite* _0)
+	virtual void virtual_OnAdd(CGameSprite*)
 	{
 	}
 
-	virtual void virtual_OnAddSpecific(CGameSprite* _0)
+	virtual void virtual_OnAddSpecific(CGameSprite*)
 	{
 	}
 
-	virtual void virtual_OnLoad(CGameSprite* _0)
+	virtual void virtual_OnLoad(CGameSprite*)
 	{
 	}
 
-	virtual int virtual_CheckSave(CGameSprite* _0, unsigned __int8* _1, unsigned __int8* _2, unsigned __int8* _3, unsigned __int8* _4, unsigned __int8* _5, unsigned __int8* _6)
+	virtual int virtual_CheckSave(CGameSprite*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*, unsigned __int8*)
 	{
 		return *(int*)nullptr;
 	}
@@ -11327,11 +11429,11 @@ struct CGameEffect : CGameEffectBase
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_DisplayString(CGameSprite* _0)
+	virtual void virtual_DisplayString(CGameSprite*)
 	{
 	}
 
-	virtual void virtual_OnRemove(CGameSprite* _0)
+	virtual void virtual_OnRemove(CGameSprite*)
 	{
 	}
 };
@@ -11446,40 +11548,40 @@ struct CGameAnimationType
 	{
 	}
 
-	virtual void virtual_CalculateFxRect(CRect* _0, CPoint* _1, int _2)
+	virtual void virtual_CalculateFxRect(CRect*, CPoint*, int)
 	{
 	}
 
-	virtual void virtual_CalculateGCBoundsRect(CRect* _0, const CPoint* _1, const CPoint* _2, int _3, int _4, int _5)
+	virtual void virtual_CalculateGCBoundsRect(CRect*, const CPoint*, const CPoint*, int, int, int)
 	{
 	}
 
-	virtual void virtual_ChangeDirection(__int16 _0)
+	virtual void virtual_ChangeDirection(__int16)
 	{
 	}
 
-	virtual void virtual_EquipArmor(char _0, unsigned __int8* _1)
+	virtual void virtual_EquipArmor(char, unsigned __int8*)
 	{
 	}
 
-	virtual void virtual_EquipHelmet(const CString* _0, unsigned __int8* _1)
+	virtual void virtual_EquipHelmet(const CString*, unsigned __int8*)
 	{
 	}
 
-	virtual void virtual_EquipShield(const CString* _0, unsigned __int8* _1)
+	virtual void virtual_EquipShield(const CString*, unsigned __int8*)
 	{
 	}
 
-	virtual void virtual_EquipWeapon(const CString* _0, unsigned __int8* _1, unsigned int _2, const unsigned __int16* _3)
+	virtual void virtual_EquipWeapon(const CString*, unsigned __int8*, unsigned int, const unsigned __int16*)
 	{
 	}
 
-	virtual CVidPalette* virtual_GetAnimationPalette(unsigned __int8 _0)
+	virtual CVidPalette* virtual_GetAnimationPalette(unsigned __int8)
 	{
 		return *(CVidPalette**)nullptr;
 	}
 
-	virtual void virtual_GetAnimationResRef(CString* _0, unsigned __int8 _1)
+	virtual void virtual_GetAnimationResRef(CString*, unsigned __int8)
 	{
 	}
 
@@ -11513,7 +11615,7 @@ struct CGameAnimationType
 		return *(unsigned __int8*)nullptr;
 	}
 
-	virtual void virtual_SetListType(unsigned __int8 _0)
+	virtual void virtual_SetListType(unsigned __int8)
 	{
 	}
 
@@ -11522,7 +11624,7 @@ struct CGameAnimationType
 		return *(unsigned __int8*)nullptr;
 	}
 
-	virtual void virtual_SetMoveScale(unsigned __int8 _0)
+	virtual void virtual_SetMoveScale(unsigned __int8)
 	{
 	}
 
@@ -11535,7 +11637,7 @@ struct CGameAnimationType
 		return *(unsigned __int8*)nullptr;
 	}
 
-	virtual NECK_POINTS virtual_GetNeckOffsets(__int16 _0)
+	virtual NECK_POINTS virtual_GetNeckOffsets(__int16)
 	{
 		return *(NECK_POINTS*)nullptr;
 	}
@@ -11555,22 +11657,22 @@ struct CGameAnimationType
 		return *(unsigned __int8*)nullptr;
 	}
 
-	virtual const char* virtual_GetSndArmor(char* _0)
+	virtual const char* virtual_GetSndArmor(char*)
 	{
 		return *(const char**)nullptr;
 	}
 
-	virtual const char* virtual_GetSndDeath(char* _0)
+	virtual const char* virtual_GetSndDeath(char*)
 	{
 		return *(const char**)nullptr;
 	}
 
-	virtual const char* virtual_GetSndReady(char* _0)
+	virtual const char* virtual_GetSndReady(char*)
 	{
 		return *(const char**)nullptr;
 	}
 
-	virtual const char* virtual_GetSndWalk(char* _0, __int16 _1)
+	virtual const char* virtual_GetSndWalk(char*, __int16)
 	{
 		return *(const char**)nullptr;
 	}
@@ -11618,11 +11720,11 @@ struct CGameAnimationType
 	{
 	}
 
-	virtual void virtual_Render(CInfinity* _0, CVidMode* _1, const CRect* _2, const CPoint* _3, const CPoint* _4, unsigned int _5, unsigned int _6, const CRect* _7, int _8, int _9, int _10, unsigned __int8 _11, CGameSprite* _12)
+	virtual void virtual_Render(CInfinity*, CVidMode*, const CRect*, const CPoint*, const CPoint*, unsigned int, unsigned int, const CRect*, int, int, int, unsigned __int8, CGameSprite*)
 	{
 	}
 
-	virtual void virtual_ClearColorEffects(unsigned __int8 _0)
+	virtual void virtual_ClearColorEffects(unsigned __int8)
 	{
 	}
 
@@ -11630,23 +11732,23 @@ struct CGameAnimationType
 	{
 	}
 
-	virtual void virtual_SetColorEffect(unsigned __int8 _0, unsigned __int8 _1, unsigned int _2, unsigned __int8 _3)
+	virtual void virtual_SetColorEffect(unsigned __int8, unsigned __int8, unsigned int, unsigned __int8)
 	{
 	}
 
-	virtual void virtual_SetColorEffectAll(unsigned __int8 _0, unsigned int _1, unsigned __int8 _2)
+	virtual void virtual_SetColorEffectAll(unsigned __int8, unsigned int, unsigned __int8)
 	{
 	}
 
-	virtual void virtual_SetColorRange(unsigned __int8 _0, unsigned __int8 _1)
+	virtual void virtual_SetColorRange(unsigned __int8, unsigned __int8)
 	{
 	}
 
-	virtual void virtual_SetColorRangeAll(unsigned __int8 _0)
+	virtual void virtual_SetColorRangeAll(unsigned __int8)
 	{
 	}
 
-	virtual __int16 virtual_SetSequence(__int16 _0)
+	virtual __int16 virtual_SetSequence(__int16)
 	{
 		return *(__int16*)nullptr;
 	}
@@ -11656,7 +11758,7 @@ struct CGameAnimationType
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_CalculateFxRectMax(CRect* _0, CPoint* _1, int _2)
+	virtual void virtual_CalculateFxRectMax(CRect*, CPoint*, int)
 	{
 	}
 
@@ -11664,11 +11766,11 @@ struct CGameAnimationType
 	{
 	}
 
-	virtual void virtual_SetNeckOffsets(__int16 _0, __int16 _1, __int16 _2, __int16 _3, __int16 _4, __int16 _5, __int16 _6, __int16 _7, __int16 _8, __int16 _9, __int16 _10, __int16 _11, __int16 _12, __int16 _13, __int16 _14, __int16 _15)
+	virtual void virtual_SetNeckOffsets(__int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16, __int16)
 	{
 	}
 
-	virtual unsigned __int8 virtual_GetAttackFrameType(unsigned __int8 _0, unsigned __int8 _1, unsigned __int8 _2)
+	virtual unsigned __int8 virtual_GetAttackFrameType(unsigned __int8, unsigned __int8, unsigned __int8)
 	{
 		return *(unsigned __int8*)nullptr;
 	}
@@ -11683,11 +11785,11 @@ struct CGameAnimationType
 		return *(__int16*)nullptr;
 	}
 
-	virtual void virtual_SetBrightest(unsigned __int8 _0)
+	virtual void virtual_SetBrightest(unsigned __int8)
 	{
 	}
 
-	virtual void virtual_SetBrightestDesired(unsigned __int8 _0)
+	virtual void virtual_SetBrightestDesired(unsigned __int8)
 	{
 	}
 
@@ -11696,29 +11798,29 @@ struct CGameAnimationType
 		return *(__int16*)nullptr;
 	}
 
-	virtual void virtual_GetCastingOffset(CPoint* _0)
+	virtual void virtual_GetCastingOffset(CPoint*)
 	{
 	}
 
-	virtual unsigned __int8 virtual_GetCurrentSequenceAndFrame(__int16* _0, __int16* _1)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 virtual_GetCurrentResRef(CString* _0, CString* _1, CString* _2, CString* _3)
+	virtual unsigned __int8 virtual_GetCurrentSequenceAndFrame(__int16*, __int16*)
 	{
 		return *(unsigned __int8*)nullptr;
 	}
 
-	virtual void virtual_OverrideAnimation(CResRef _0, int _1)
+	virtual unsigned __int8 virtual_GetCurrentResRef(CString*, CString*, CString*, CString*)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void virtual_OverrideAnimation(CResRef, int)
 	{
 	}
 
-	virtual void virtual_Marshal(unsigned __int8** _0, unsigned int* _1)
+	virtual void virtual_Marshal(unsigned __int8**, unsigned int*)
 	{
 	}
 
-	virtual bool virtual_Unmarshal(CResRef _0)
+	virtual bool virtual_Unmarshal(CResRef)
 	{
 		return *(bool*)nullptr;
 	}
@@ -12304,7 +12406,7 @@ struct CBaldurChitin : CChitin
 
 	CBaldurChitin() = delete;
 
-	virtual void virtual_ShutDown_2(int _0, char* _1, const char* _2)
+	virtual void virtual_ShutDown_2(int, char*, const char*)
 	{
 	}
 
@@ -13042,7 +13144,7 @@ struct CGameObject
 		return *(CGameObjectType*)nullptr;
 	}
 
-	virtual void virtual_AddToArea(CGameArea* _0, const CPoint* _1, int _2, unsigned __int8 _3)
+	virtual void virtual_AddToArea(CGameArea*, const CPoint*, int, unsigned __int8)
 	{
 	}
 
@@ -13060,7 +13162,7 @@ struct CGameObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_GetNextWaypoint(CPoint* _0)
+	virtual void virtual_GetNextWaypoint(CPoint*)
 	{
 	}
 
@@ -13074,30 +13176,30 @@ struct CGameObject
 		return *(VertListType*)nullptr;
 	}
 
-	virtual void virtual_SetVertListType(unsigned __int8 _0)
+	virtual void virtual_SetVertListType(unsigned __int8)
 	{
 	}
 
-	virtual unsigned __int8 virtual_CanSaveGame(unsigned int* _0, int _1, int _2)
-	{
-		return *(unsigned __int8*)nullptr;
-	}
-
-	virtual unsigned __int8 virtual_CompressTime(unsigned int _0)
+	virtual unsigned __int8 virtual_CanSaveGame(unsigned int*, int, int)
 	{
 		return *(unsigned __int8*)nullptr;
 	}
 
-	virtual void virtual_DebugDump(const CString* _0, unsigned __int8 _1)
+	virtual unsigned __int8 virtual_CompressTime(unsigned int)
+	{
+		return *(unsigned __int8*)nullptr;
+	}
+
+	virtual void virtual_DebugDump(const CString*, unsigned __int8)
 	{
 	}
 
-	virtual int virtual_IsOver(const CPoint* _0)
+	virtual int virtual_IsOver(const CPoint*)
 	{
 		return *(int*)nullptr;
 	}
 
-	virtual int virtual_DoesIntersect(CRect _0)
+	virtual int virtual_DoesIntersect(CRect)
 	{
 		return *(int*)nullptr;
 	}
@@ -13107,11 +13209,11 @@ struct CGameObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_OnActionButton(const CPoint* _0)
+	virtual void virtual_OnActionButton(const CPoint*)
 	{
 	}
 
-	virtual void virtual_OnFormationButton(const CPoint* _0)
+	virtual void virtual_OnFormationButton(const CPoint*)
 	{
 	}
 
@@ -13119,32 +13221,32 @@ struct CGameObject
 	{
 	}
 
-	virtual void virtual_Render(CGameArea* _0, CVidMode* _1)
+	virtual void virtual_Render(CGameArea*, CVidMode*)
 	{
 	}
 
-	virtual unsigned __int8 virtual_DoAIUpdate(unsigned __int8 _0, int _1)
+	virtual unsigned __int8 virtual_DoAIUpdate(unsigned __int8, int)
 	{
 		return *(unsigned __int8*)nullptr;
 	}
 
-	virtual void virtual_SetAIType(const CAIObjectType* _0, int _1)
+	virtual void virtual_SetAIType(const CAIObjectType*, int)
 	{
 	}
 
-	virtual void virtual_SetCursor(int _0)
+	virtual void virtual_SetCursor(int)
 	{
 	}
 
-	virtual void virtual_SetTarget(CPoint _0, int _1)
+	virtual void virtual_SetTarget(CPoint, int)
 	{
 	}
 
-	virtual void virtual_SetVertListPos(__POSITION* _0)
+	virtual void virtual_SetVertListPos(__POSITION*)
 	{
 	}
 
-	virtual int virtual_EvaluateStatusTrigger(const CAITrigger* _0)
+	virtual int virtual_EvaluateStatusTrigger(const CAITrigger*)
 	{
 		return *(int*)nullptr;
 	}
@@ -13287,7 +13389,7 @@ struct CProjectile : CGameObject
 		p_ClearEffects(this);
 	}
 
-	virtual void virtual_Fire(CGameArea* _0, int _1, int _2, CPoint _3, int _4, __int16 _5)
+	virtual void virtual_Fire(CGameArea*, int, int, CPoint, int, __int16)
 	{
 	}
 
@@ -13312,7 +13414,7 @@ struct CProjectile : CGameObject
 		return *(unsigned int*)nullptr;
 	}
 
-	virtual void virtual_SetDefaultRenderFlags(unsigned int _0)
+	virtual void virtual_SetDefaultRenderFlags(unsigned int)
 	{
 	}
 
@@ -13321,7 +13423,7 @@ struct CProjectile : CGameObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_Marshal(SProjectileWrapper* _0)
+	virtual void virtual_Marshal(SProjectileWrapper*)
 	{
 	}
 
@@ -13330,11 +13432,11 @@ struct CProjectile : CGameObject
 		return *(CAIObjectType**)nullptr;
 	}
 
-	virtual void virtual_SetTargetType(const CAIObjectType* _0)
+	virtual void virtual_SetTargetType(const CAIObjectType*)
 	{
 	}
 
-	virtual void virtual_GetPreview(CGameArea* _0)
+	virtual void virtual_GetPreview(CGameArea*)
 	{
 	}
 };
@@ -13478,7 +13580,7 @@ struct CProjectileBAM : CProjectile
 
 	CProjectileBAM() = delete;
 
-	virtual void virtual_Move(CPoint _0)
+	virtual void virtual_Move(CPoint)
 	{
 	}
 };
@@ -13562,7 +13664,7 @@ struct CProjectileSegment : CProjectileBAM
 
 	CProjectileSegment() = delete;
 
-	virtual void virtual_Fire_2(CGameArea* _0, const CPoint* _1, int _2)
+	virtual void virtual_Fire_2(CGameArea*, const CPoint*, int)
 	{
 	}
 };
@@ -13607,7 +13709,7 @@ struct CProjectileNewScorcher : CProjectileBAM
 	{
 	}
 
-	virtual void virtual_ApplyEffectsToTarget(int* _0, bool _1)
+	virtual void virtual_ApplyEffectsToTarget(int*, bool)
 	{
 	}
 };
@@ -13623,7 +13725,7 @@ struct CProjectileMushroom : CProjectileBAM
 
 	CProjectileMushroom() = delete;
 
-	virtual void virtual_Fire_2(CGameArea* _0, CPoint _1)
+	virtual void virtual_Fire_2(CGameArea*, CPoint)
 	{
 	}
 };
@@ -14047,23 +14149,23 @@ struct CGameAIBase : CGameObject
 		return p_GetTargetShareType_Overload_ObjectType(this, type);
 	}
 
-	virtual void virtual_ClearActions(int _0)
+	virtual void virtual_ClearActions(int)
 	{
 	}
 
-	virtual void virtual_UpdateTarget(CGameObject* _0)
+	virtual void virtual_UpdateTarget(CGameObject*)
 	{
 	}
 
-	virtual void virtual_AddAction(const CAIAction* _0)
+	virtual void virtual_AddAction(const CAIAction*)
 	{
 	}
 
-	virtual void virtual_AddEffect(CGameEffect* _0, unsigned __int8 _1, int _2, int _3)
+	virtual void virtual_AddEffect(CGameEffect*, unsigned __int8, int, int)
 	{
 	}
 
-	virtual void virtual_ClearAI(unsigned __int8 _0)
+	virtual void virtual_ClearAI(unsigned __int8)
 	{
 	}
 
@@ -14076,7 +14178,7 @@ struct CGameAIBase : CGameObject
 		return *(__int16*)nullptr;
 	}
 
-	virtual void virtual_InsertAction(const CAIAction* _0)
+	virtual void virtual_InsertAction(const CAIAction*)
 	{
 	}
 
@@ -14084,11 +14186,11 @@ struct CGameAIBase : CGameObject
 	{
 	}
 
-	virtual void virtual_SetCurrAction(const CAIAction* _0)
+	virtual void virtual_SetCurrAction(const CAIAction*)
 	{
 	}
 
-	virtual void virtual_SetScript(__int16 _0, CAIScript* _1)
+	virtual void virtual_SetScript(__int16, CAIScript*)
 	{
 	}
 
@@ -14112,7 +14214,7 @@ struct CGameAIBase : CGameObject
 		return *(const unsigned __int8**)nullptr;
 	}
 
-	virtual int virtual_QuickDecode(CAITrigger* _0, CGameSprite** _1)
+	virtual int virtual_QuickDecode(CAITrigger*, CGameSprite**)
 	{
 		return *(int*)nullptr;
 	}
@@ -14126,7 +14228,7 @@ struct CGameAIBase : CGameObject
 	{
 	}
 
-	virtual void virtual_AutoPause(unsigned int _0)
+	virtual void virtual_AutoPause(unsigned int)
 	{
 	}
 
@@ -14135,7 +14237,7 @@ struct CGameAIBase : CGameObject
 		return *(int*)nullptr;
 	}
 
-	virtual void virtual_OnActionRemoval(CAIAction* _0)
+	virtual void virtual_OnActionRemoval(CAIAction*)
 	{
 	}
 
@@ -14186,7 +14288,7 @@ struct CGameTrigger : CGameAIBase
 		p_SetDrawPoly(this, time);
 	}
 
-	virtual int virtual_IsOverActivate(const CPoint* _0)
+	virtual int virtual_IsOverActivate(const CPoint*)
 	{
 		return *(int*)nullptr;
 	}
@@ -14729,11 +14831,11 @@ struct CGameSprite : CGameAIBase
 		p_UpdateTarget(this, target);
 	}
 
-	virtual void virtual_SetTarget_2(const CPoint* _0, int _1)
+	virtual void virtual_SetTarget_2(const CPoint*, int)
 	{
 	}
 
-	virtual void virtual_SetAIType_2(const CAIObjectType* _0, int _1, int _2)
+	virtual void virtual_SetAIType_2(const CAIObjectType*, int, int)
 	{
 	}
 
@@ -14745,7 +14847,7 @@ struct CGameSprite : CGameAIBase
 	{
 	}
 
-	virtual void virtual_ProcessPendingTriggers(int _0)
+	virtual void virtual_ProcessPendingTriggers(int)
 	{
 	}
 };
