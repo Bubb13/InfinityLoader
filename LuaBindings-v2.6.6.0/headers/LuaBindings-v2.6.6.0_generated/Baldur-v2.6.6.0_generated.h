@@ -10794,9 +10794,17 @@ struct CItem : CResHelper<CResItem,1005>
 	typedef void (__thiscall *type_Construct_Overload_Manual)(CItem* pThis, CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
 	static type_Construct_Overload_Manual p_Construct_Overload_Manual;
 
+	typedef Item_ability_st* (__thiscall *type_GetAbility)(CItem* pThis, int abilityNum);
+	static type_GetAbility p_GetAbility;
+
 	void Construct(CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags)
 	{
 		p_Construct_Overload_Manual(this, id, useCount1, useCount2, useCount3, wear, flags);
+	}
+
+	Item_ability_st* GetAbility(int abilityNum)
+	{
+		return p_GetAbility(this, abilityNum);
 	}
 
 	virtual void virtual_Destruct()
@@ -11434,6 +11442,22 @@ struct CGameEffect : CGameEffectBase
 	}
 
 	virtual void virtual_OnRemove(CGameSprite*)
+	{
+	}
+};
+
+struct CGameEffectDamage : CGameEffect
+{
+	struct vtbl : CGameEffect::vtbl
+	{
+		void (__fastcall *DisplayDamageAmount)(CGameEffectDamage*, CGameSprite*, int);
+
+		vtbl() = delete;
+	};
+
+	CGameEffectDamage() = delete;
+
+	virtual void virtual_DisplayDamageAmount(CGameSprite*, int)
 	{
 	}
 };
@@ -14682,6 +14706,9 @@ struct CGameSprite : CGameAIBase
 	typedef void (__thiscall *type_CheckQuickLists)(CGameSprite* pThis, CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
 	static type_CheckQuickLists p_CheckQuickLists;
 
+	typedef CGameEffectDamage* (__thiscall *type_Damage)(CGameSprite* pThis, CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
+	static type_Damage p_Damage;
+
 	typedef void (__thiscall *type_FeedBack)(CGameSprite* pThis, uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
 	static type_FeedBack p_FeedBack;
 
@@ -14739,6 +14766,11 @@ struct CGameSprite : CGameAIBase
 	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero)
 	{
 		p_CheckQuickLists(this, ab, changeAmount, remove, removeSpellIfZero);
+	}
+
+	CGameEffectDamage* Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing)
+	{
+		return p_Damage(this, curWeaponIn, pLauncher, curAttackNum, criticalDamage, type, facing, myFacing, target, lastSwing);
 	}
 
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn)

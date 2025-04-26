@@ -1183,6 +1183,12 @@ void registerBaseclasses() {
 		{"CGameEffect", {
 			{"CGameEffectBase", offsetofbase<CGameEffect, CGameEffectBase>()},
 		}},
+		{"CGameEffectDamage", {
+			{"CGameEffect", offsetofbase<CGameEffectDamage, CGameEffect>()},
+		}},
+		{"CGameEffectDamage::vtbl", {
+			{"CGameEffect::vtbl", offsetofbase<CGameEffectDamage::vtbl, CGameEffect::vtbl>()},
+		}},
 		{"CGameEffectUsability", {
 			{"CGameEffect", offsetofbase<CGameEffectUsability, CGameEffect>()},
 		}},

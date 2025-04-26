@@ -43,7 +43,8 @@ namespace EEex
 struct CGameSprite : CGameAIBase
 {
 	$binding_name(getUUID) $external_implementation uint64_t GetUUID();
-}
+	$nobinding $external_implementation CGameEffectDamage* Override_Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
+};
 
 struct CAICondition
 {

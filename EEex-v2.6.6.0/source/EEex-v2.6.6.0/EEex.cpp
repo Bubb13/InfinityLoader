@@ -458,7 +458,7 @@ void logStutter<void>(const char* name, std::function<void()> func) {
 
 // Expects:       0 [ ... ]
 // Returns: nReturn [ ..., return1, ..., returnN ]
-bool luaCallProtected(lua_State* L, int nArg, int nReturn, std::function<void(int)> setup) {
+static bool luaCallProtected(lua_State* L, int nArg, int nReturn, std::function<void(int)> setup) {
 
 	const int top = lua_gettop(L);
 
@@ -483,7 +483,7 @@ bool luaCallProtected(lua_State* L, int nArg, int nReturn, std::function<void(in
 
 // Expects: 0 [ ... ]
 // Returns: 1 [ ..., result ]
-void pushGlobalIndexedByInt(lua_State *const L, const char *const globalName, const lua_Integer key) {
+static void pushGlobalIndexedByInt(lua_State *const L, const char *const globalName, const lua_Integer key) {
 	lua_getglobal(L, globalName); // 1 [ ..., global ]
 	lua_pushinteger(L, key);      // 2 [ ..., global, key ]
 	lua_rawget(L, -2);            // 2 [ ..., global, global[key] -> result ]
@@ -493,10 +493,34 @@ void pushGlobalIndexedByInt(lua_State *const L, const char *const globalName, co
 // Contract: Value index must be absolute
 // Expects:  1 [ ..., t ]
 // Returns:  1 [ ..., t ]
-void setImmediateTableValue(lua_State *const L, const char *const fieldName, int absValueIndex) {
+static void setImmediateTableValue(lua_State *const L, const char *const fieldName, const int absValueIndex) {
 	lua_pushstring(L, fieldName);    // 2 [ ..., t, fieldName ]
 	lua_pushvalue(L, absValueIndex); // 3 [ ..., t, fieldName, value ]
 	lua_rawset(L, -3);               // 1 [ ..., t ]
+}
+
+// Expects:  1 [ ..., t ]
+// Returns:  1 [ ..., t ]
+static void setImmediateTableInt(lua_State *const L, const char *const fieldName, const int value) {
+	lua_pushstring(L, fieldName); // 2 [ ..., t, fieldName ]
+	lua_pushinteger(L, value);    // 3 [ ..., t, fieldName, value ]
+	lua_rawset(L, -3);            // 1 [ ..., t ]
+}
+
+// Expects:  1 [ ..., t ]
+// Returns:  1 [ ..., t ]
+static void setImmediateTableBool(lua_State *const L, const char *const fieldName, const bool value) {
+	lua_pushstring(L, fieldName); // 2 [ ..., t, fieldName ]
+	lua_pushboolean(L, value);    // 3 [ ..., t, fieldName, value ]
+	lua_rawset(L, -3);            // 1 [ ..., t ]
+}
+
+// Expects:  1 [ ..., t ]
+// Returns:  1 [ ..., t ]
+static void setImmediateTableUsertype(lua_State *const L, const char *const fieldName, void *const value, const char *const usertype) {
+	lua_pushstring(L, fieldName);           // 2 [ ..., t, fieldName ]
+	tolua_pushusertype(L, value, usertype); // 3 [ ..., t, fieldName, value ]
+	lua_rawset(L, -3);                      // 1 [ ..., t ]
 }
 
 union LuaTypeValue {
@@ -3385,6 +3409,33 @@ void EEex::Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite) {
 	}
 
 	STUTTER_LOG_END
+}
+
+CGameEffectDamage* CGameSprite::Override_Damage(
+	CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage,
+	CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing)
+{
+	Item_ability_st *const pAbility = curWeaponIn->GetAbility(curAttackNum);
+	CGameEffectDamage *const pEffect = this->Damage(curWeaponIn, pLauncher, curAttackNum, criticalDamage, type, facing, myFacing, target, lastSwing);
+
+	CItem *const pLeftHandItem = this->m_equipment.m_items[9];
+	const bool isLeftHand = lastSwing && pLeftHandItem != nullptr && pLeftHandItem->pRes->pHeader->itemType != 12;
+
+	lua_State *const L = luaState();
+	luaCallProtected(L, 1, 0, [&](int) {
+		lua_getglobal(L, "EEex_Sprite_LuaHook_AlterBaseWeaponDamage");
+		lua_newtable(L);
+		setImmediateTableUsertype(L, "ability",         pAbility,       "Item_ability_st" );
+		setImmediateTableUsertype(L, "attacker",        this,           "CGameSprite"     );
+		setImmediateTableUsertype(L, "effect",          pEffect,        "CGameEffect"     );
+		setImmediateTableBool(L,     "isCritical",      criticalDamage                    );
+		setImmediateTableBool(L,     "isLeftHand",      isLeftHand                        );
+		setImmediateTableUsertype(L, "launcher",        pLauncher,      "CItem"           );
+		setImmediateTableUsertype(L, "target",          target,         "CGameSprite"     );
+		setImmediateTableUsertype(L, "weapon",          curWeaponIn,    "CItem"           );
+	});
+
+	return pEffect;
 }
 
 ////////////

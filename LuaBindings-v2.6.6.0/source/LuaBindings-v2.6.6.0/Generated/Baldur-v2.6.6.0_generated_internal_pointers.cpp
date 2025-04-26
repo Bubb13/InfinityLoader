@@ -112,6 +112,7 @@ CScreenWorld::type_TogglePauseGame CScreenWorld::p_TogglePauseGame;
 CChitin::type_OnResizeWindow CChitin::p_OnResizeWindow;
 uint* CChitin::p_TIMER_UPDATES_PER_SECOND;
 CItem::type_Construct_Overload_Manual CItem::p_Construct_Overload_Manual;
+CItem::type_GetAbility CItem::p_GetAbility;
 CInfButtonArray::type_SetState CInfButtonArray::p_SetState;
 CInfButtonArray::type_SetQuickSlot CInfButtonArray::p_SetQuickSlot;
 CInfGame::type_OnPortraitLDblClick CInfGame::p_OnPortraitLDblClick;
@@ -165,6 +166,7 @@ CGameAIBase::type_GetTargetShareType_Overload_AIType_ObjectType CGameAIBase::p_G
 CGameAIBase::type_GetTargetShareType_Overload_ObjectType CGameAIBase::p_GetTargetShareType_Overload_ObjectType;
 CGameTrigger::type_SetDrawPoly CGameTrigger::p_SetDrawPoly;
 CGameSprite::type_CheckQuickLists CGameSprite::p_CheckQuickLists;
+CGameSprite::type_Damage CGameSprite::p_Damage;
 CGameSprite::type_FeedBack CGameSprite::p_FeedBack;
 CGameSprite::type_GetActiveStats CGameSprite::p_GetActiveStats;
 CGameSprite::type_GetCasterLevel CGameSprite::p_GetCasterLevel;
@@ -317,6 +319,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CChitin::OnResizeWindow"), CChitin::p_OnResizeWindow);
 	attemptFillPointer(TEXT("CChitin::TIMER_UPDATES_PER_SECOND"), CChitin::p_TIMER_UPDATES_PER_SECOND);
 	attemptFillPointer(TEXT("CItem::Construct(CResRef,ushort,ushort,ushort,ushort,uint)"), CItem::p_Construct_Overload_Manual);
+	attemptFillPointer(TEXT("CItem::GetAbility"), CItem::p_GetAbility);
 	attemptFillPointer(TEXT("CInfButtonArray::SetState"), CInfButtonArray::p_SetState);
 	attemptFillPointer(TEXT("CInfButtonArray::SetQuickSlot"), CInfButtonArray::p_SetQuickSlot);
 	attemptFillPointer(TEXT("CInfGame::OnPortraitLDblClick"), CInfGame::p_OnPortraitLDblClick);
@@ -370,6 +373,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CGameAIBase::GetTargetShareType(byte)"), CGameAIBase::p_GetTargetShareType_Overload_ObjectType);
 	attemptFillPointer(TEXT("CGameTrigger::SetDrawPoly"), CGameTrigger::p_SetDrawPoly);
 	attemptFillPointer(TEXT("CGameSprite::CheckQuickLists"), CGameSprite::p_CheckQuickLists);
+	attemptFillPointer(TEXT("CGameSprite::Damage"), CGameSprite::p_Damage);
 	attemptFillPointer(TEXT("CGameSprite::FeedBack"), CGameSprite::p_FeedBack);
 	attemptFillPointer(TEXT("CGameSprite::GetActiveStats"), CGameSprite::p_GetActiveStats);
 	attemptFillPointer(TEXT("CGameSprite::GetCasterLevel"), CGameSprite::p_GetCasterLevel);

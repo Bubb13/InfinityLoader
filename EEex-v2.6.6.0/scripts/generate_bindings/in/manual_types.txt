@@ -868,6 +868,7 @@ struct CGameAIBase : CGameObject
 struct CGameSprite : CGameAIBase
 {
 	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
+	CGameEffectDamage* Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
 	CDerivedStats* GetActiveStats();
 	short GetCasterLevel(CSpell* pSpell, int includeWildMage);
@@ -926,6 +927,8 @@ struct CSpell : CResHelper<CResSpell,1006>
 struct CItem : CResHelper<CResItem,1005>
 {
 	$binding_name(Construct_Overload_Manual) $pattern_name(Construct(CResRef,ushort,ushort,ushort,ushort,uint)) $constructor_fake Construct(CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
+
+	Item_ability_st* GetAbility(int abilityNum);
 };
 
 struct CString
