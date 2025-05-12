@@ -1720,15 +1720,17 @@ bool attachedToConsole = false;
 
 DWORD attachToConsole(bool force = false) {
 
-	if (protonCompatibility()) {
-		return ERROR_SUCCESS;
-	}
-
 	if (!force && attachedToConsole) {
 		return ERROR_SUCCESS;
 	}
 
 	if (!AttachConsole(parentProcessId())) {
+
+		if (protonCompatibility()) {
+			// Ignore the error if we are running under Wine
+			return ERROR_SUCCESS;
+		}
+
 		const DWORD lastError = GetLastError();
 		MessageBoxFormat(TEXT("InfinityLoaderDLL.dll"), MB_ICONERROR, TEXT("[!] attachToConsole() - AttachConsole() failed (%d)"), lastError);
 		return lastError;

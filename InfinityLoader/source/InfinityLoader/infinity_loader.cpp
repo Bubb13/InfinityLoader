@@ -484,20 +484,28 @@ static DWORD checkAutoRedirectToFile() {
 }
 
 static DWORD init() {
+	
+	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
 
-	std::array<DWORD, 4> version;
-	TryRetErr( getLoadedDLLVersion(L"msvcp140.dll", version[0], version[1], version[2], version[3]) )
+	bool tempProtonCompatibility;
+	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, tempProtonCompatibility) )
 
-	if (!checkVersion({ 14, 42, 34433, 0 }, version)) {
-		MessageBoxA(NULL, "Please update your Microsoft Visual C++ Redistributable", "InfinityLoader.exe", MB_ICONERROR);
-		return -2;
+	if (!tempProtonCompatibility) {
+
+		// This check is unnecessary (and usually fails) under Wine
+		std::array<DWORD, 4> version;
+		TryRetErr( getLoadedDLLVersion(L"msvcp140.dll", version[0], version[1], version[2], version[3]) )
+
+		if (!checkVersion({ 14, 42, 34433, 0 }, version)) {
+			MessageBoxA(NULL, "Please update your Microsoft Visual C++ Redistributable", "InfinityLoader.exe", MB_ICONERROR);
+			return -2;
+		}
 	}
 
 	TryRetErr( CreateMappedMemory(mappedMemoryHandle(), mappedMemory()) )
-	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
 	TryRetErr( checkAutoRedirectToFile() )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
-	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, protonCompatibility()) )
+	protonCompatibility() = tempProtonCompatibility;
 	TryElseRetErr( UnbufferCrtStreams(), FPrint("[!][InfinityLoader.exe] init() - UnbufferCrtStreams() failed (%d)\n", error) )
 	TryElseRetErr( InitFPrint(), FPrint("[!][InfinityLoader.exe] init() - InitFPrint() failed (%d)\n", error) )
 	return ERROR_SUCCESS;

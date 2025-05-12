@@ -153,20 +153,43 @@ static void FFilePrintT_Console(FILE* file, const TCHAR* formatText, ...) {
 // END FFilePrint //
 //----------------//
 
+static void initFPrintNoConsole() {
+
+	p_FilePrint = FilePrint_NoConsole;
+	p_FilePrintT = FilePrintT_NoConsole;
+
+	FFilePrint = FFilePrint_NoConsole;
+	FFilePrintT = FFilePrintT_NoConsole;
+
+	if (debug()) {
+		Print("[?][InfinityLoaderCommon.dll] InitFPrint() - NoConsole\n");
+	}
+}
+
 EXPORT int InitFPrint() {
 
 	if (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_CHAR) {
+
+		// STD_ERROR_HANDLE was redirected, try to open the console directly
+
+		if (errno_t error = fopen_s(&consoleOut, "CONOUT$", "w")) {
+
+			if (protonCompatibility()) {
+				// Fallback when some Wine variants refuse to give us the console handle
+				initFPrintNoConsole();
+				return 0;
+			}
+			else{
+				FPrint("[!][InfinityLoaderCommon.dll] InitFPrint() - fopen_s() failed (%d)\n", error);
+				return error;
+			}
+		}
 
 		p_FilePrint = FilePrint_Console;
 		p_FilePrintT = FilePrintT_Console;
 
 		FFilePrint = FFilePrint_Console;
 		FFilePrintT = FFilePrintT_Console;
-
-		if (errno_t error = fopen_s(&consoleOut, "CONOUT$", "w")) {
-			FPrint("[!][InfinityLoaderCommon.dll] InitFPrint() - fopen_s() failed (%d)\n", error);
-			return error;
-		}
 
 		if (int error = setvbuf(consoleOut, NULL, _IONBF, 0)) {
 			FPrint("[!][InfinityLoaderCommon.dll] InitFPrint() - setvbuf() failed (%d)\n", error);
@@ -178,16 +201,7 @@ EXPORT int InitFPrint() {
 		}
 	}
 	else {
-
-		p_FilePrint = FilePrint_NoConsole;
-		p_FilePrintT = FilePrintT_NoConsole;
-
-		FFilePrint = FFilePrint_NoConsole;
-		FFilePrintT = FFilePrintT_NoConsole;
-
-		if (debug()) {
-			Print("[?][InfinityLoaderCommon.dll] InitFPrint() - NoConsole\n");
-		}
+		initFPrintNoConsole();
 	}
 
 	return 0;
@@ -590,6 +604,8 @@ EXPORT bool INISectionExists(const String& iniPath, const TCHAR* section) {
 
 EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR* section, const TCHAR* key, String& outStr, bool& filled) {
 
+	const bool handleValid = mappedMemoryHandle() != INVALID_HANDLE_VALUE;
+
 	filled = false;
 
 	// Try to use a stack buffer at first
@@ -603,7 +619,14 @@ EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR* section, const TCHAR*
 	DWORD numRead = GetPrivateProfileString(section, key, nullptr,
 		curBuffer, curBufferSize, iniPath.c_str());
 
-	if (DWORD lastError = GetLastError(); lastError == ERROR_SUCCESS || lastError == ERROR_FILE_NOT_FOUND) {
+	DWORD lastError = GetLastError();
+
+	if (handleValid && protonCompatibility() && lastError == ERROR_SUCCESS && numRead == initialBufferSize - 1) {
+		// Wine fails to flag ERROR_MORE_DATA so we might have actually truncated
+		lastError = ERROR_MORE_DATA;
+	}
+
+	if (lastError == ERROR_SUCCESS || lastError == ERROR_FILE_NOT_FOUND) {
 		if (numRead > 0) {
 			outStr = curBuffer;
 			filled = true;
@@ -620,6 +643,13 @@ EXPORT DWORD GetINIStr(const String& iniPath, const TCHAR* section, const TCHAR*
 			// Try again with the larger buffer
 			numRead = GetPrivateProfileString(section, key, nullptr,
 				curBuffer, curBufferSize, iniPath.c_str());
+
+			lastError = GetLastError();
+
+			if (handleValid && protonCompatibility() && lastError == ERROR_SUCCESS && numRead == initialBufferSize - 1) {
+				// Wine fails to flag ERROR_MORE_DATA so we might have actually truncated
+				lastError = ERROR_MORE_DATA;
+			}
 
 			if (lastError = GetLastError(); lastError == ERROR_SUCCESS || lastError == ERROR_FILE_NOT_FOUND) {
 				if (numRead > 0) {

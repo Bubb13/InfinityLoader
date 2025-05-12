@@ -11,11 +11,6 @@ struct UpVal;
 struct lua_State;
 struct lua_TValue;
 
-struct _SETJMP_FLOAT128
-{
-	unsigned __int64 Part[2];
-};
-
 struct Mbuffer
 {
 	char* buffer;
