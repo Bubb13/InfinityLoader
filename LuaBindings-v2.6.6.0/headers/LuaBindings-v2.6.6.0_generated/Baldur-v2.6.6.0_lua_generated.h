@@ -1,6 +1,12 @@
 
 #pragma once
 
+#ifndef _WIN64
+	#error "This project is a x64-only build"
+#endif
+
+#include <setjmp.h>
+
 union Closure;
 union GCObject;
 struct LocVar;
