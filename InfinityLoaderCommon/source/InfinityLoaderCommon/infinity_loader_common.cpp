@@ -19,11 +19,13 @@
 
 FILE* consoleOut;
 
+static void FilePrint_NoConsole(FILE* file, const char* str); // Forward declaration
 typedef void(*type_FilePrint)(FILE* file, const char* str);
-type_FilePrint p_FilePrint = reinterpret_cast<type_FilePrint>(fputs);
+type_FilePrint p_FilePrint = reinterpret_cast<type_FilePrint>(FilePrint_NoConsole); // Not fputs because the argument order is reversed
 
+static void FilePrintT_NoConsole(FILE* file, const TCHAR* str); // Forward declaration
 typedef void(*type_FilePrintT)(FILE* file, const TCHAR* str);
-type_FilePrintT p_FilePrintT = reinterpret_cast<type_FilePrintT>(fputsT);
+type_FilePrintT p_FilePrintT = reinterpret_cast<type_FilePrintT>(FilePrintT_NoConsole); // Not fputsT because the argument order is reversed
 
 #undef fprintf
 #undef fprintfT
@@ -77,12 +79,12 @@ static void FilePrint_Console(FILE* file, const char* str) {
 }
 
 static void FilePrintT_NoConsole(FILE* file, const TCHAR* str) {
-	fputws(str, file);
+	fputsT(str, file);
 }
 
 static void FilePrintT_Console(FILE* file, const TCHAR* str) {
-	fputws(str, consoleOut);
-	fputws(str, file);
+	fputsT(str, consoleOut);
+	fputsT(str, file);
 }
 
 EXPORT void FilePrint(FILE* file, const char* str) {

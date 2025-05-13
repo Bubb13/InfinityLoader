@@ -483,12 +483,22 @@ static DWORD checkAutoRedirectToFile() {
 	return ERROR_SUCCESS;
 }
 
-static DWORD init() {
-	
-	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
+static bool isRunningUnderWine() {
 
-	bool tempProtonCompatibility;
-	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("ProtonCompatibility"), false, tempProtonCompatibility) )
+	const HMODULE hNT = GetModuleHandleA("ntdll.dll");
+
+	if (hNT == NULL) {
+		return false;
+	}
+
+	typedef const char* (*wine_get_version_t)();
+	const wine_get_version_t wine_get_version = reinterpret_cast<wine_get_version_t>(GetProcAddress(hNT, "wine_get_version"));
+	return wine_get_version != nullptr;
+}
+
+static DWORD init() {
+
+	const bool tempProtonCompatibility = isRunningUnderWine();
 
 	if (!tempProtonCompatibility) {
 
@@ -503,9 +513,10 @@ static DWORD init() {
 	}
 
 	TryRetErr( CreateMappedMemory(mappedMemoryHandle(), mappedMemory()) )
-	TryRetErr( checkAutoRedirectToFile() )
-	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
 	protonCompatibility() = tempProtonCompatibility;
+	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
+	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
+	TryRetErr( checkAutoRedirectToFile() )
 	TryElseRetErr( UnbufferCrtStreams(), FPrint("[!][InfinityLoader.exe] init() - UnbufferCrtStreams() failed (%d)\n", error) )
 	TryElseRetErr( InitFPrint(), FPrint("[!][InfinityLoader.exe] init() - InitFPrint() failed (%d)\n", error) )
 	return ERROR_SUCCESS;
