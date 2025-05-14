@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <DEBUGGER_WORKING_DIRECTORY>
-    </DEBUGGER_WORKING_DIRECTORY>
-    <USING_LUAJIT>
-    </USING_LUAJIT>
+    <DEBUGGER_WORKING_DIRECTORY></DEBUGGER_WORKING_DIRECTORY>
+    <DEPLOY></DEPLOY>
+    <DEPLOY_DIRECTORY></DEPLOY_DIRECTORY>
+    <USING_LUAJIT></USING_LUAJIT>
   </PropertyGroup>
   <PropertyGroup>
     <_PropertySheetDisplayName>User Macros</_PropertySheetDisplayName>
@@ -15,8 +15,17 @@
     <BuildMacro Include="DEBUGGER_WORKING_DIRECTORY">
       <Value>$(DEBUGGER_WORKING_DIRECTORY)</Value>
     </BuildMacro>
+    <BuildMacro Include="DEPLOY">
+      <Value>$(DEPLOY)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="DEPLOY_DIRECTORY">
+      <Value>$(DEPLOY_DIRECTORY)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
     <BuildMacro Include="USING_LUAJIT">
       <Value>$(USING_LUAJIT)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
   </ItemGroup>
 </Project>

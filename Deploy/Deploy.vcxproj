@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="Build">
+    <MSBuild Projects="$(SolutionDir)\InfinityLoaderCommon\InfinityLoaderCommon.vcxproj;$(SolutionDir)\InfinityLoader\InfinityLoader.vcxproj;$(SolutionDir)\LuaProvider52\LuaProvider52.vcxproj;$(SolutionDir)\LuaJITProvider\LuaJITProvider.vcxproj;$(SolutionDir)\InfinityLoaderDLL\InfinityLoaderDLL.vcxproj;$(SolutionDir)\LuaBindingsCore\LuaBindingsCore.vcxproj;$(SolutionDir)\LuaBindings-v2.6.6.0\LuaBindings-v2.6.6.0.vcxproj;$(SolutionDir)\EEex-v2.6.6.0\EEex-v2.6.6.0.vcxproj" Targets="Build" Properties="DEPLOY=1;Configuration=$(Configuration);Platform=$(Platform)" ContinueOnError="false" />
+  </Target>
+  <Target Name="Rebuild">
+    <MSBuild Projects="$(SolutionDir)\InfinityLoaderCommon\InfinityLoaderCommon.vcxproj;$(SolutionDir)\InfinityLoader\InfinityLoader.vcxproj;$(SolutionDir)\LuaProvider52\LuaProvider52.vcxproj;$(SolutionDir)\LuaJITProvider\LuaJITProvider.vcxproj;$(SolutionDir)\InfinityLoaderDLL\InfinityLoaderDLL.vcxproj;$(SolutionDir)\LuaBindingsCore\LuaBindingsCore.vcxproj;$(SolutionDir)\LuaBindings-v2.6.6.0\LuaBindings-v2.6.6.0.vcxproj;$(SolutionDir)\EEex-v2.6.6.0\EEex-v2.6.6.0.vcxproj" Targets="Rebuild" Properties="DEPLOY=1;Configuration=$(Configuration);Platform=$(Platform)" ContinueOnError="false" />
+  </Target>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{AAB62332-54AD-43C9-A12A-F759A9C2A84A}</ProjectGuid>
+  </PropertyGroup>
+</Project>
