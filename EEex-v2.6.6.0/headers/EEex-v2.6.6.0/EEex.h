@@ -114,7 +114,6 @@ namespace EEex {
 
 	void Sprite_Hook_OnConstruct(CGameSprite* pSprite);
 	void Sprite_Hook_OnDestruct(CGameSprite* pSprite);
-	EEex_OnBeforeEffectUnmarshalledRet Sprite_Hook_OnBeforeEffectUnmarshalled(CGameSprite* pSprite, CGameEffectBase* pEffectBase);
 	void Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite);
 	void Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite);
 

@@ -3,7 +3,7 @@
 #include "EEex.h"
 #include "EEexLua_generated.h"
 
-void exportPattern(const String& name, void* value) {
+static void exportPattern(const String& name, void* value) {
 
 	PatternValueHandle handle;
 	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, handle)) {
@@ -16,11 +16,11 @@ void exportPattern(const String& name, void* value) {
 
 // Ugly hack to get a member-function pointer
 template<typename T>
-constexpr void* GetMemberPtr(T func) {
+static constexpr void* getMemberPtr(T func) {
 	return reinterpret_cast<void*&>(func);
 }
 
-void exportPatterns() {
+static void exportPatterns() {
 
 	///////////////////////////////////////////////
 	//          Hook Integrity Watchdog          //
@@ -33,12 +33,13 @@ void exportPatterns() {
 	//          Overrides          //
 	/////////////////////////////////
 
-	exportPattern(TEXT("CAICondition::Override_Hold"), GetMemberPtr(&CAICondition::Override_Hold));
-	exportPattern(TEXT("CAICondition::Override_TriggerHolds"), GetMemberPtr(&CAICondition::Override_TriggerHolds));
-	exportPattern(TEXT("CGameAIBase::Override_ApplyTriggers"), GetMemberPtr(&CGameAIBase::Override_ApplyTriggers));
-	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), GetMemberPtr(&CGameAIBase::Override_SetTrigger));
-	exportPattern(TEXT("CGameSprite::Override_Damage"), GetMemberPtr(&CGameSprite::Override_Damage));
-	exportPattern(TEXT("CMessageSetLastObject::Override_Run"), GetMemberPtr(&CMessageSetLastObject::Override_Run));
+	exportPattern(TEXT("CAICondition::Override_Hold"), getMemberPtr(&CAICondition::Override_Hold));
+	exportPattern(TEXT("CAICondition::Override_TriggerHolds"), getMemberPtr(&CAICondition::Override_TriggerHolds));
+	exportPattern(TEXT("CGameAIBase::Override_ApplyTriggers"), getMemberPtr(&CGameAIBase::Override_ApplyTriggers));
+	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), getMemberPtr(&CGameAIBase::Override_SetTrigger));
+	exportPattern(TEXT("CGameEffectList::Override_Unmarshal"), getMemberPtr(&CGameEffectList::Override_Unmarshal));
+	exportPattern(TEXT("CGameSprite::Override_Damage"), getMemberPtr(&CGameSprite::Override_Damage));
+	exportPattern(TEXT("CMessageSetLastObject::Override_Run"), getMemberPtr(&CMessageSetLastObject::Override_Run));
 	exportPattern(TEXT("EEex::Override_bootstrapLua"), EEex::Override_bootstrapLua);
 	exportPattern(TEXT("EEex::Override_CGameEffect_CheckSave"), EEex::Override_CGameEffect_CheckSave);
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
@@ -107,7 +108,6 @@ void exportPatterns() {
 
 	exportPattern(TEXT("EEex::Sprite_Hook_OnConstruct"), EEex::Sprite_Hook_OnConstruct);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnDestruct"), EEex::Sprite_Hook_OnDestruct);
-	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeEffectUnmarshalled"), EEex::Sprite_Hook_OnBeforeEffectUnmarshalled);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnAfterEffectListUnmarshalled"), EEex::Sprite_Hook_OnAfterEffectListUnmarshalled);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeEffectListMarshalled"), EEex::Sprite_Hook_OnBeforeEffectListMarshalled);
 

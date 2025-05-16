@@ -123,6 +123,7 @@ CInfGame::type_SetIconIndex CInfGame::p_SetIconIndex;
 CInfGame::type_UnselectAll CInfGame::p_UnselectAll;
 CInfGame::type_GetCharacterPortraitNum CInfGame::p_GetCharacterPortraitNum;
 CGameEffect::type_DecodeEffect CGameEffect::p_DecodeEffect;
+CGameEffect::type_DecodeEffectFromBase CGameEffect::p_DecodeEffectFromBase;
 CDerivedStats::type_Construct CDerivedStats::p_Construct;
 CDerivedStats::type_Destruct CDerivedStats::p_Destruct;
 CDerivedStats::type_GetAtOffset CDerivedStats::p_GetAtOffset;
@@ -330,6 +331,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CInfGame::UnselectAll"), CInfGame::p_UnselectAll);
 	attemptFillPointer(TEXT("CInfGame::GetCharacterPortraitNum"), CInfGame::p_GetCharacterPortraitNum);
 	attemptFillPointer(TEXT("CGameEffect::DecodeEffect"), CGameEffect::p_DecodeEffect);
+	attemptFillPointer(TEXT("CGameEffect::DecodeEffectFromBase"), CGameEffect::p_DecodeEffectFromBase);
 	attemptFillPointer(TEXT("CDerivedStats::Construct"), CDerivedStats::p_Construct);
 	attemptFillPointer(TEXT("CDerivedStats::Destruct"), CDerivedStats::p_Destruct);
 	attemptFillPointer(TEXT("CDerivedStats::GetAtOffset"), CDerivedStats::p_GetAtOffset);

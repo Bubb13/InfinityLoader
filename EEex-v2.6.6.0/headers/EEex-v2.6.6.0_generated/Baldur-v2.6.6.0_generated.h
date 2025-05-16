@@ -106,6 +106,7 @@ struct CGameContainer;
 struct CGameDialogReply;
 struct CGameDoor;
 struct CGameEffect;
+struct CGameEffectList;
 struct CGameEffectUsability;
 struct CGameFile;
 struct CGameObject;
@@ -5672,21 +5673,6 @@ struct CGameButtonList : CTypedPtrList<CPtrList,CButtonData*>
 	CGameButtonList() = delete;
 };
 
-struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CGameEffect*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	__POSITION* m_posNext;
-	__POSITION* m_posCurrent;
-	int m_newEffect;
-	int m_retry;
-
-	CGameEffectList() = delete;
-};
-
 struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 {
 	struct vtbl : CTypedPtrList<CPtrList,CAIObjectType*>::vtbl
@@ -6645,6 +6631,23 @@ struct CMemINIValue
 	virtual void virtual_Destruct()
 	{
 	}
+};
+
+struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CGameEffect*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__POSITION* m_posNext;
+	__POSITION* m_posCurrent;
+	int m_newEffect;
+	int m_retry;
+
+	CGameEffectList() = delete;
+
+	void Override_Unmarshal(byte* pData, uint nSize, CGameSprite* pSprite, byte version);
 };
 
 struct CFile : CObject
@@ -11414,9 +11417,17 @@ struct CGameEffect : CGameEffectBase
 	typedef CGameEffect* (*type_DecodeEffect)(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
 	static type_DecodeEffect p_DecodeEffect;
 
+	typedef CGameEffect* (*type_DecodeEffectFromBase)(CGameEffectBase* pBase);
+	static type_DecodeEffectFromBase p_DecodeEffectFromBase;
+
 	static CGameEffect* DecodeEffect(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget)
 	{
 		return p_DecodeEffect(effect, source, sourceID, target, sourceTarget);
+	}
+
+	static CGameEffect* DecodeEffectFromBase(CGameEffectBase* pBase)
+	{
+		return p_DecodeEffectFromBase(pBase);
 	}
 
 	virtual void virtual_Destruct(unsigned int _0)

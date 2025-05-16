@@ -58,6 +58,11 @@ struct CGameAIBase : CGameObject
 	$nobinding $external_implementation void Override_SetTrigger(const CAITrigger* trigger);
 };
 
+struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	$nobinding $external_implementation void Override_Unmarshal(byte* pData, uint nSize, CGameSprite* pSprite, byte version);
+};
+
 struct CMessageSetLastObject : CMessage
 {
 	$nobinding $external_implementation void Override_Run();
@@ -93,13 +98,6 @@ enum EEex::ProjectileType : __int32
 	CProjectileSkyStrikeBAM          = 0x20000, // 0x14059B6C8
 	CProjectileSpellHit              = 0x40000, // 0x14059B330
 	CProjectileTravelDoor            = 0x80000, // 0x14059B0D0
-};
-
-enum EEex_OnBeforeEffectUnmarshalledRet : __int32
-{
-	NORMAL = 0,
-	CONTINUE = 1,
-	BREAK = 2,
 };
 
 enum EEex_HookIntegrityWatchdogRegister : __int32

@@ -353,9 +353,6 @@ void registerBaseclasses() {
 		{"CGameButtonList", {
 			{"CTypedPtrList<CPtrList,CButtonData*>", offsetofbase<CGameButtonList, CTypedPtrList<CPtrList,CButtonData*>>()},
 		}},
-		{"CGameEffectList", {
-			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CGameEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
-		}},
 		{"CImmunitiesAIType", {
 			{"CTypedPtrList<CPtrList,CAIObjectType*>", offsetofbase<CImmunitiesAIType, CTypedPtrList<CPtrList,CAIObjectType*>>()},
 		}},
@@ -460,6 +457,9 @@ void registerBaseclasses() {
 		}},
 		{"CMessageAddEffect", {
 			{"CMessage", offsetofbase<CMessageAddEffect, CMessage>()},
+		}},
+		{"CGameEffectList", {
+			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CGameEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
 		}},
 		{"CFile", {
 			{"CObject", offsetofbase<CFile, CObject>()},

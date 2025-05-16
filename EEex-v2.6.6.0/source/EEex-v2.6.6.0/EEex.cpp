@@ -3329,28 +3329,6 @@ void updateUUIDLocal(CGameSprite* pSprite, ExSpriteData& exData) {
 	}
 }
 
-EEex_OnBeforeEffectUnmarshalledRet EEex::Sprite_Hook_OnBeforeEffectUnmarshalled(CGameSprite* pSprite, CGameEffectBase* pEffectBase) {
-
-	STUTTER_LOG_START(EEex_OnBeforeEffectUnmarshalledRet, "EEex::Sprite_Hook_OnBeforeEffectUnmarshalled")
-
-	if (EEex::bNoUUID) {
-		return EEex_OnBeforeEffectUnmarshalledRet::NORMAL;
-	}
-
-	ExSpriteData& exData = exSpriteDataMap[pSprite];
-
-	if (pEffectBase->m_effectId == 187) {
-
-		if (strncmp(pEffectBase->m_scriptName.data, "EEEX_UUID", 32) == 0) {
-			exData.uuid = (static_cast<uint64_t>(pEffectBase->m_dWFlags) << 32) | pEffectBase->m_effectAmount;
-		}
-	}
-
-	return EEex_OnBeforeEffectUnmarshalledRet::NORMAL;
-
-	STUTTER_LOG_END
-}
-
 void EEex::Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnAfterEffectListUnmarshalled")
@@ -3436,6 +3414,79 @@ CGameEffectDamage* CGameSprite::Override_Damage(
 	});
 
 	return pEffect;
+}
+
+void CGameEffectList::Override_Unmarshal(byte* pData, uint nSize, CGameSprite* pSprite, byte version) {
+
+	if (version == 0) {
+
+		const uint nNumEffects = nSize / sizeof(Item_effect_st);
+		const CPoint dummyPoint { -1, -1 };
+
+		for (uint i = 0; i < nNumEffects; ++i) {
+
+			CGameEffect *const pEffect = CGameEffect::DecodeEffect(
+				reinterpret_cast<Item_effect_st*>(pData + i * sizeof(Item_effect_st)),
+				&dummyPoint,
+				-1,
+				&dummyPoint,
+				-1
+			);
+
+			this->AddTail(pEffect);
+
+			if (pSprite != nullptr) {
+				pEffect->virtual_OnLoad(pSprite);
+			}
+		}
+	}
+	else {
+
+		const uint nNumEffects = nSize / sizeof(CGameEffectBase);
+		lua_State *const L = *p_g_lua;
+
+		for (uint i = 0; i < nNumEffects; ++i) {
+
+			CGameEffectBase *const pEffectBase = reinterpret_cast<CGameEffectBase*>(pData + i * sizeof(CGameEffectBase));
+
+			if (memcmp(&pEffectBase->m_version, "X-BIV1.0", 8) == 0) { // Is this effect the start of EEex's binary data?
+
+				// Call out to Lua to parse it
+				if (luaCallProtected(L, 2, 1, [&](int) {
+					lua_getglobal(L, "EEex_Sprite_LuaHook_ReadExtraEffectListUnmarshal"); // 1 [ ..., EEex_Sprite_LuaHook_ReadExtraEffectListUnmarshal ]
+					tolua_pushusertype(L, pSprite, "CGameSprite");                        // 2 [ ..., EEex_Sprite_LuaHook_ReadExtraEffectListUnmarshal, pSpriteUD ]
+					lua_pushinteger(L, reinterpret_cast<uintptr_t>(pEffectBase));         // 3 [ ..., EEex_Sprite_LuaHook_ReadExtraEffectListUnmarshal, pSpriteUD, pEffectBase ]
+				})) {
+					// The Lua call returns how many effects were binary data
+					// Skipping one less because of the for loop increment
+					i += static_cast<uint>(lua_tointeger(L, -1) - 1);
+					lua_pop(L, 1);
+				}
+				else {
+					Print("[!][EEex.dll] EEex_Sprite_LuaHook_ReadExtraEffectListUnmarshal() failed, the game will most likely crash!\n");
+				}
+			}
+			else { // Not EEex binary data; normal effect
+
+				// Read the sprite's UUID (stored as a LOCALS instance)
+				if (!EEex::bNoUUID) {
+
+					ExSpriteData& exData = exSpriteDataMap[pSprite];
+
+					if (pEffectBase->m_effectId == 187) {
+
+						if (strncmp(pEffectBase->m_scriptName.data, "EEEX_UUID", 32) == 0) {
+							exData.uuid = (static_cast<uint64_t>(pEffectBase->m_dWFlags) << 32) | pEffectBase->m_effectAmount;
+						}
+					}
+				}
+
+				// Normal effect decode
+				CGameEffect *const pEffect = CGameEffect::DecodeEffectFromBase(pEffectBase);
+				this->AddTail(pEffect);
+			}
+		}
+	}
 }
 
 ////////////

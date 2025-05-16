@@ -11391,9 +11391,17 @@ struct CGameEffect : CGameEffectBase
 	typedef CGameEffect* (*type_DecodeEffect)(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget);
 	static type_DecodeEffect p_DecodeEffect;
 
+	typedef CGameEffect* (*type_DecodeEffectFromBase)(CGameEffectBase* pBase);
+	static type_DecodeEffectFromBase p_DecodeEffectFromBase;
+
 	static CGameEffect* DecodeEffect(Item_effect_st* effect, const CPoint* source, int sourceID, const CPoint* target, int sourceTarget)
 	{
 		return p_DecodeEffect(effect, source, sourceID, target, sourceTarget);
+	}
+
+	static CGameEffect* DecodeEffectFromBase(CGameEffectBase* pBase)
+	{
+		return p_DecodeEffectFromBase(pBase);
 	}
 
 	virtual void virtual_Destruct(unsigned int _0)

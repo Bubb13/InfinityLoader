@@ -154,7 +154,6 @@ static int tolua_function_CGameSprite_getUUID(lua_State* L)
 static void tolua_reg_types(lua_State* L)
 {
 	tolua_usertype(L, "EEex_ScriptingObject");
-	tolua_usertype(L, "EEex_OnBeforeEffectUnmarshalledRet");
 	tolua_usertype(L, "EEex_MatchObjectFlags");
 	tolua_usertype(L, "EEex_HookIntegrityWatchdogRegister");
 	tolua_usertype(L, "CSteamID");
@@ -299,7 +298,6 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CImmunitiesProjectile");
 	tolua_usertype(L, "CImmunitiesSchoolAndSecondary");
 	tolua_usertype(L, "CGameButtonList");
-	tolua_usertype(L, "CGameEffectList");
 	tolua_usertype(L, "CImmunitiesAIType");
 	tolua_usertype(L, "CPersistantEffectListRegenerated");
 	tolua_usertype(L, "EEex_CWarp");
@@ -337,6 +335,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CMessageDisplayText");
 	tolua_usertype(L, "CMessageAddEffect");
 	tolua_usertype(L, "CMemINIValue");
+	tolua_usertype(L, "CGameEffectList");
 	tolua_usertype(L, "CFile");
 	tolua_usertype(L, "CContingencyList");
 	tolua_usertype(L, "CCallbackBase");
@@ -452,12 +451,6 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_constant(L, "HEARD", 7);
 		tolua_constant(L, "SUMMONED_BY", 8);
 		tolua_constant(L, "KILLED", 9);
-	tolua_endmodule(L);
-	tolua_cclass(L, "EEex_OnBeforeEffectUnmarshalledRet", "EEex_OnBeforeEffectUnmarshalledRet", {"__int32"}, NULL);
-	tolua_beginmodule(L, "EEex_OnBeforeEffectUnmarshalledRet");
-		tolua_constant(L, "NORMAL", 0);
-		tolua_constant(L, "CONTINUE", 1);
-		tolua_constant(L, "BREAK", 2);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex_MatchObjectFlags", "EEex_MatchObjectFlags", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex_MatchObjectFlags");
@@ -956,9 +949,6 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CGameButtonList", "CGameButtonList", {"CTypedPtrList<CPtrList,CButtonData*>"}, NULL);
 	tolua_beginmodule(L, "CGameButtonList");
 	tolua_endmodule(L);
-	tolua_cclass(L, "CGameEffectList", "CGameEffectList", {"CTypedPtrList<CPtrList,CGameEffect*>"}, NULL);
-	tolua_beginmodule(L, "CGameEffectList");
-	tolua_endmodule(L);
 	tolua_cclass(L, "CImmunitiesAIType", "CImmunitiesAIType", {"CTypedPtrList<CPtrList,CAIObjectType*>"}, NULL);
 	tolua_beginmodule(L, "CImmunitiesAIType");
 	tolua_endmodule(L);
@@ -1069,6 +1059,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CMemINIValue", "CMemINIValue", {}, NULL);
 	tolua_beginmodule(L, "CMemINIValue");
+	tolua_endmodule(L);
+	tolua_cclass(L, "CGameEffectList", "CGameEffectList", {"CTypedPtrList<CPtrList,CGameEffect*>"}, NULL);
+	tolua_beginmodule(L, "CGameEffectList");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CFile", "CFile", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CFile");
