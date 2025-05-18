@@ -272,7 +272,7 @@ EXPORT const char* lua_typename(lua_State* L, int tp)
 
 EXPORT __attribute((naked)) int luaL_error(lua_State* L, const char* fmt, ...)
 {
-	__asm__("jmp [" EXTERN_C_SYMBOL(p_luaL_error) "]");
+	__asm__("jmp %0" : : "m" (p_luaL_error));
 }
 
 EXPORT int luaL_loadfilex(lua_State* L, const char* fileName, const char* mode)
