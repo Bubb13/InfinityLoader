@@ -363,6 +363,16 @@ def separateTemplateTypeParts(str, startI=0):
 			if bracketLevel == 0: return name, str[startI:i]
 
 
+def buildInstantiationStr(groupName: str, templateTypesTup):
+	groupNameParts: list[str] = [groupName, "<"]
+	for templateType in templateTypesTup:
+		groupNameParts.append(templateType.getHeaderName())
+		groupNameParts.append(",")
+	del groupNameParts[-1]
+	groupNameParts.append(">")
+	return "".join(groupNameParts)
+
+
 def splitKeepBrackets(stringIn, toSplit, toSplitInclude=[], noSplit=[]) -> list[str]:
 
 	def inList(string, i, l):
@@ -1634,6 +1644,7 @@ class FunctionImplementation:
 		self.bindingName: str = None
 		self.patternName: str = None
 		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
+		self.instantiations: list[tuple[TypeReference]] = []
 
 	def shallowCopy(self, copy=None):
 		copy = copy if copy != None else FunctionImplementation()
@@ -1791,6 +1802,38 @@ class FunctionImplementation:
 			parts.append(f"{indent}\t{{\n")
 			parts.append(f"{indent}\t\t")
 
+			if len(self.instantiations) > 0:
+
+				parts.append(f"static_assert(\n{indent}\t\t\t")
+
+				for templateTypeTup in self.instantiations:
+
+					parts.append("(")
+
+					for i, templateType in enumerate(templateTypeTup):
+
+						templateTypeName: str = self.group.templateTypeNames[i]
+
+						if templateType.group is None:
+							parts.append(templateTypeName)
+							parts.append(" == ")
+							parts.append(templateType.getHeaderName())
+						else:
+							parts.append("std::is_same<")
+							parts.append(templateTypeName)
+							parts.append(",")
+							parts.append(templateType.getHeaderName())
+							parts.append(">::value")
+
+						parts.append(" && ")
+
+					del parts[-1]
+					parts.append(")")
+					parts.append(f"\n{indent}\t\t\t|| ")
+
+				del parts[-1]
+				parts.append(f",\n{indent}\t\t\t\"Unbound template use\"\n{indent}\t\t);\n{indent}\t\t")
+
 			if not self.returnType.isNonPointerVoid():
 				parts.append("return ")
 
@@ -1866,7 +1909,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 			yield funcParameter
 
 
-	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\)|\\$allow_references)\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=*& ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\)|\\$allow_references|\\$instantiations\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=*& ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1900,6 +1943,12 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 					state.currentFunctionImplementation.patternName = patternNameMatch.group(1)
 				elif keyword == "$allow_references":
 					allowReferences = True
+				elif instantiationsMatch := re.match("^\\$instantiations\\((\\S+)\\)$", keyword):
+					for templateStr in instantiationsMatch.group(1).split(";"):
+						templateTypes: list[TypeReference] = []
+						for templateTypeStr in splitKeepBrackets(templateStr, [","]):
+							templateTypes.append(defineTypeRef(mainState, group, templateTypeStr, TypeRefSourceType.TEMPLATE))
+						state.currentFunctionImplementation.instantiations.append(tuple(templateTypes))
 				else:
 					assert False, "Bad bindings directive"
 
@@ -2883,53 +2932,65 @@ class Group:
 
 				if functionImp.noBody and not functionImp.externalImplementation:
 
-					patternName: str = None
-					if not functionImp.patternName:
-						if not functionImp.bindingName:
-							patternName = functionImp.name
-							if functionImp.operatorStr:
-								patternName = f"{functionImp.operatorStr}{patternName}"
+					def writeFuncImpInternalPointer(first: bool, templateTypesTup: tuple[TypeReference] = None):
+
+						patternName: str = None
+						if not functionImp.patternName:
+							if not functionImp.bindingName:
+								patternName = functionImp.name
+								if functionImp.operatorStr:
+									patternName = f"{functionImp.operatorStr}{patternName}"
+							else:
+								patternName = functionImp.bindingName
 						else:
-							patternName = functionImp.bindingName
-					else:
-						patternName = functionImp.patternName
+							patternName = functionImp.patternName
 
-					patternName = f"{group.name}::{patternName}" if isNormal else patternName
-					pointerVariableName: str = f"{group.name}::p_{functionImp.funcPtrName}" if isNormal else f"p_{functionImp.funcPtrName}"
+						groupName: str = group.name if templateTypesTup is None else buildInstantiationStr(group.name, templateTypesTup)
 
-					pointerVariableTypeName: str = f"type_{functionImp.funcPtrName}"
-					pointerVariableFullTypeName: str = f"{group.name}::{pointerVariableTypeName}" if isNormal else pointerVariableTypeName
+						patternName = f"{groupName}::{patternName}" if isNormal else patternName
+						pointerVariableName: str = f"{groupName}::p_{functionImp.funcPtrName}" if isNormal else f"p_{functionImp.funcPtrName}"
 
-					internalPointersOut.write(f"{pointerVariableFullTypeName} {pointerVariableName};\n")
-					internalPointersListOut.append((patternName, f"{pointerVariableName}"))
+						pointerVariableTypeName: str = f"type_{functionImp.funcPtrName}"
+						pointerVariableFullTypeName: str = f"{groupName}::{pointerVariableTypeName}" if isNormal else pointerVariableTypeName
 
-					if not functionImp.noDeclaration:
+						internalPointersOut.write(f"{pointerVariableFullTypeName} {pointerVariableName};\n")
+						internalPointersListOut.append((patternName, f"{pointerVariableName}"))
 
-						conventionStr: str = f"{functionImp.callingConvention} " if functionImp.callingConvention != None else ""
-						if conventionStr == "" and isNormal and not functionImp.isStatic:
-							conventionStr = "__thiscall "
+						if first and not functionImp.noDeclaration:
 
-						parts.append(f"{indent}typedef {functionImp.returnType.getHeaderName()} ({conventionStr}*{pointerVariableTypeName})(")
+							conventionStr: str = f"{functionImp.callingConvention} " if functionImp.callingConvention != None else ""
+							if conventionStr == "" and isNormal and not functionImp.isStatic:
+								conventionStr = "__thiscall "
 
-						if isNormal and not functionImp.isStatic:
-							constStr: str = "const " if functionImp.isConst else ""
-							parts.append(f"{constStr}{group.name}* pThis")
-							parts.append(", ")
+							parts.append(f"{indent}typedef {functionImp.returnType.getHeaderName()} ({conventionStr}*{pointerVariableTypeName})(")
 
-						for param in functionImp.parameters:
-							parts.append(f"{param.type.getHeaderName()} {param.name}")
-							parts.append(", ")
+							if isNormal and not functionImp.isStatic:
+								constStr: str = "const " if functionImp.isConst else ""
+								parts.append(f"{constStr}{group.name}* pThis")
+								parts.append(", ")
 
-						if functionImp.hasVarargs:
-							parts.append("...")
-						elif (isNormal and not functionImp.isStatic) or len(functionImp.parameters) > 0:
-							del parts[-1]
+							for param in functionImp.parameters:
+								parts.append(f"{param.type.getHeaderName()} {param.name}")
+								parts.append(", ")
 
-						parts.append(");\n")
-						modifierStr: str = "static" if isNormal else "extern"
-						parts.append(f"{indent}{modifierStr} {pointerVariableTypeName} p_{functionImp.funcPtrName};")
-						parts.append("\n\n")
-						wroteSomething = True
+							if functionImp.hasVarargs:
+								parts.append("...")
+							elif (isNormal and not functionImp.isStatic) or len(functionImp.parameters) > 0:
+								del parts[-1]
+
+							parts.append(");\n")
+							modifierStr: str = "static" if isNormal else "extern"
+							parts.append(f"{indent}{modifierStr} {pointerVariableTypeName} p_{functionImp.funcPtrName};")
+							parts.append("\n\n")
+							wroteSomething = True
+
+					if functionImp.group.template is None:
+						writeFuncImpInternalPointer(True)
+					elif len(functionImp.instantiations) > 0:
+						writeFuncImpInternalPointer(True, functionImp.instantiations[0])
+						for templateTypesTup in islice(functionImp.instantiations, 1, None):
+							writeFuncImpInternalPointer(False, templateTypesTup)
+
 
 			if isNormal:
 				if group.groupType == "namespace":
@@ -4096,6 +4157,30 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		def handleFunctionImplementation(functionImplementation: FunctionImplementation):
 
 			# TODO: I can't return / pass non-pointer, non-primitives to functions yet
+
+			# Only write the binding for templated types if the struct templates match one of the function's instantiations
+			if len(functionImplementation.instantiations) > 0:
+
+				def matchInstantiations():
+
+					for templateInstantiationTup in functionImplementation.instantiations:
+
+						match: bool = True
+
+						for i in range(len(functionImplementation.instantiations)):
+							templateInstantiationType: TypeReference = templateInstantiationTup[i]
+							currentTemplateType: TypeReference = currentTemplate.tup[i]
+							if not templateInstantiationType.sameTypeAs(currentTemplateType):
+								match = False
+								break
+
+						if match:
+							return True
+
+					return False
+
+				if not matchInstantiations():
+					return
 
 			returnType: TypeReference = functionImplementation.returnType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
 

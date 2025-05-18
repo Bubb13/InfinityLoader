@@ -6,6 +6,7 @@ set script_path="../../../scripts/generate_bindings/generate_bindings_main.py"
 
 python %script_path%^
  -mode=GenerateHeader^
+ -allowDebug^
  -alreadyDefinedUsertypesFile=./in/already_defined_usertypes.txt^
  -bindingsOutFile=./out/EEexLua_generated.cpp^
  -bindingsPreludeFile=./in/bindings_prelude.txt^
