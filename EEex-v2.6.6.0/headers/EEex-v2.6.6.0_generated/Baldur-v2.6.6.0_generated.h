@@ -5264,14 +5264,14 @@ struct CObject
 {
 	struct vtbl
 	{
-		void (__fastcall *Destruct)(CObject*);
+		void (__fastcall *Destruct)(CObject*, unsigned int );
 
 		vtbl() = delete;
 	};
 
 	CObject() = delete;
 
-	virtual void virtual_Destruct()
+	virtual void virtual_Destruct(unsigned int _0)
 	{
 	}
 };
@@ -13132,7 +13132,7 @@ struct CGameObject
 {
 	struct vtbl
 	{
-		void (__fastcall *Destruct)(CGameObject*);
+		void (__fastcall *Destruct)(CGameObject*, unsigned int );
 		CGameObjectType (__fastcall *GetObjectType)(CGameObject*);
 		void (__fastcall *AddToArea)(CGameObject*, CGameArea*, const CPoint*, int, unsigned __int8);
 		void (__fastcall *AIUpdate)(CGameObject*);
@@ -13189,7 +13189,7 @@ struct CGameObject
 		return p_InControl(this);
 	}
 
-	virtual void virtual_Destruct()
+	virtual void virtual_Destruct(unsigned int _0)
 	{
 	}
 
