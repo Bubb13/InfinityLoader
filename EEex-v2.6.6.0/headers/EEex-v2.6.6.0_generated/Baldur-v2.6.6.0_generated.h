@@ -1245,13 +1245,6 @@ enum class EEex_ScriptingObject : __int32
 	KILLED = 9,
 };
 
-enum class EEex_OnBeforeEffectUnmarshalledRet : __int32
-{
-	NORMAL = 0,
-	CONTINUE = 1,
-	BREAK = 2,
-};
-
 enum class EEex_MatchObjectFlags : __int32
 {
 	IGNORE_LOS = 1,
@@ -4409,6 +4402,7 @@ namespace EEex
 	bool IsPlayerScript(CAIScript* pScript);
 	void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
 	void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
+	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	void DrawSlicedRectNum(lua_State* L);
 	void RegisterSlicedRect(lua_State* L);
 	void DrawSlicedRect(lua_State* L);
@@ -13433,11 +13427,30 @@ struct CProjectile : CGameObject
 
 	CProjectile() = delete;
 
+	typedef CProjectile* (*type_DecodeProjectile)(ushort wProjectileType, CGameAIBase* pSprite);
+	static type_DecodeProjectile p_DecodeProjectile;
+
+	typedef void (*type_GetStart)(int id, CPoint* start, byte bCastOffset);
+	static type_GetStart p_GetStart;
+
 	typedef void (__thiscall *type_AddEffect)(CProjectile* pThis, CGameEffect* effect);
 	static type_AddEffect p_AddEffect;
 
 	typedef void (__thiscall *type_ClearEffects)(CProjectile* pThis);
 	static type_ClearEffects p_ClearEffects;
+
+	typedef int (__thiscall *type_DetermineHeight)(CProjectile* pThis, CGameObject* pCaster);
+	static type_DetermineHeight p_DetermineHeight;
+
+	static CProjectile* DecodeProjectile(ushort wProjectileType, CGameAIBase* pSprite)
+	{
+		return p_DecodeProjectile(wProjectileType, pSprite);
+	}
+
+	static void GetStart(int id, CPoint* start, byte bCastOffset)
+	{
+		p_GetStart(id, start, bCastOffset);
+	}
 
 	void AddEffect(CGameEffect* effect)
 	{
@@ -13447,6 +13460,11 @@ struct CProjectile : CGameObject
 	void ClearEffects()
 	{
 		p_ClearEffects(this);
+	}
+
+	int DetermineHeight(CGameObject* pCaster)
+	{
+		return p_DetermineHeight(this, pCaster);
 	}
 
 	virtual void virtual_Fire(CGameArea*, int, int, CPoint, int, __int16)

@@ -26,6 +26,9 @@ namespace EEex
 	$external_implementation bool IsPlayerScript(CAIScript* pScript);
 	$external_implementation void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
 	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
+
+	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
+
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	bool Projectile_LuaHook_GlobalMutators_Enabled;
 	$external_implementation $pass_lua_state void DrawSlicedRectNum();

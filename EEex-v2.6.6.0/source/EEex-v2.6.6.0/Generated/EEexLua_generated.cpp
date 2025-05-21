@@ -103,6 +103,12 @@ static int tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters(lua_State* L
 	return 0;
 }
 
+static int tolua_function_EEex_GetProjectileStartingPos(lua_State* L)
+{
+	EEex::GetProjectileStartingPos(L, (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile"), (CGameArea*)tolua_tousertype_dynamic(L, 2, 0, "CGameArea"), (CGameAIBase*)tolua_tousertype_dynamic(L, 3, 0, "CGameAIBase"), (CGameObject*)tolua_tousertype_dynamic(L, 4, 0, "CGameObject"), tolua_function_tointeger<int>(L, 5, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 6, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 7, "GetProjectileStartingPos"));
+	return 3;
+}
+
 static int tolua_function_EEex_DrawSlicedRectNum(lua_State* L)
 {
 	EEex::DrawSlicedRectNum(L);
@@ -559,6 +565,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreStackRange", &tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
+		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
 		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
 		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);

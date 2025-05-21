@@ -13405,11 +13405,30 @@ struct CProjectile : CGameObject
 
 	CProjectile() = delete;
 
+	typedef CProjectile* (*type_DecodeProjectile)(ushort wProjectileType, CGameAIBase* pSprite);
+	static type_DecodeProjectile p_DecodeProjectile;
+
+	typedef void (*type_GetStart)(int id, CPoint* start, byte bCastOffset);
+	static type_GetStart p_GetStart;
+
 	typedef void (__thiscall *type_AddEffect)(CProjectile* pThis, CGameEffect* effect);
 	static type_AddEffect p_AddEffect;
 
 	typedef void (__thiscall *type_ClearEffects)(CProjectile* pThis);
 	static type_ClearEffects p_ClearEffects;
+
+	typedef int (__thiscall *type_DetermineHeight)(CProjectile* pThis, CGameObject* pCaster);
+	static type_DetermineHeight p_DetermineHeight;
+
+	static CProjectile* DecodeProjectile(ushort wProjectileType, CGameAIBase* pSprite)
+	{
+		return p_DecodeProjectile(wProjectileType, pSprite);
+	}
+
+	static void GetStart(int id, CPoint* start, byte bCastOffset)
+	{
+		p_GetStart(id, start, bCastOffset);
+	}
 
 	void AddEffect(CGameEffect* effect)
 	{
@@ -13419,6 +13438,11 @@ struct CProjectile : CGameObject
 	void ClearEffects()
 	{
 		p_ClearEffects(this);
+	}
+
+	int DetermineHeight(CGameObject* pCaster)
+	{
+		return p_DetermineHeight(this, pCaster);
 	}
 
 	virtual void virtual_Fire(CGameArea*, int, int, CPoint, int, __int16)

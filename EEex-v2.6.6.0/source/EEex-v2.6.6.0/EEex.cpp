@@ -3545,6 +3545,371 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 // Projectile //
 ////////////////
 
+__forceinline static constexpr __int32 operator&(const EEex::ProjectileType a, const EEex::ProjectileType b) {
+	return static_cast<__int32>(a) & static_cast<__int32>(b);
+}
+
+__forceinline static constexpr EEex::ProjectileType operator|(const EEex::ProjectileType a, const EEex::ProjectileType b) {
+	return static_cast<EEex::ProjectileType>(static_cast<__int32>(a) | static_cast<__int32>(b));
+}
+
+static EEex::ProjectileType getProjectileType(CProjectile* pProjectile) {
+
+	if (pProjectile != nullptr) {
+		const uintptr_t vfptr = *reinterpret_cast<uintptr_t*>(pProjectile);
+		if (auto found = projVFTableToType.find(vfptr); found != projVFTableToType.end()) {
+			return found->second.second;
+		}
+	}
+
+	return EEex::ProjectileType::Unknown;
+}
+
+static void CProjectileTravelDoor_GetStartingPos(
+	lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight)
+{
+	CPoint startPos;
+
+	if (pTargetObject == nullptr) {
+		startPos.x = nTargetPosX;
+		startPos.y = nTargetPosY;
+	}
+	else {
+		switch(pTargetObject->virtual_GetObjectType()) {
+			case CGameObjectType::NONE:
+			case CGameObjectType::AIBASE:
+			case CGameObjectType::SOUND:
+			case CGameObjectType::SPAWNING:
+			case CGameObjectType::STATIC:
+			case CGameObjectType::SPRITE:
+			case CGameObjectType::OBJECT_MARKER:
+			case static_cast<CGameObjectType>(0x50):
+			case CGameObjectType::TEMPORAL:
+			case CGameObjectType::AREA_AI:
+			case CGameObjectType::FIREBALL:
+			case CGameObjectType::GAME_AI: {
+				startPos.x = pTargetObject->m_pos.x;
+				startPos.y = pTargetObject->m_pos.y - 1;
+				break;
+			}
+			case CGameObjectType::CONTAINER: {
+				CGameContainer *const pContainer = reinterpret_cast<CGameContainer*>(pTargetObject);
+				startPos.x = pContainer->m_posTrapOrigin.x;
+				startPos.y = pContainer->m_posTrapOrigin.y - 1;
+				break;
+			}
+			case CGameObjectType::DOOR: {
+				CGameDoor *const pDoor = reinterpret_cast<CGameDoor*>(pTargetObject);
+				startPos.x = pDoor->m_posXTrapOrigin;
+				startPos.y = pDoor->m_posYTrapOrigin - 1;
+				break;
+			}
+			case CGameObjectType::TRIGGER: {
+				CGameTrigger *const pTrigger = reinterpret_cast<CGameTrigger*>(pTargetObject);
+				startPos.x = pTrigger->m_posTrapOrigin.x;
+				startPos.y = pTrigger->m_posTrapOrigin.y - 1;
+				break;
+			}
+			default: {
+				// Vanilla bug
+				--startPos.y;
+				break;
+			}
+		}
+	}
+
+	lua_pushinteger(L, startPos.x);
+	lua_pushinteger(L, startPos.y);
+	lua_pushinteger(L, 0);
+}
+
+static void CProjectileBAM_GetStartingPos(
+	lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight)
+{
+	CPoint startingPos;
+	int nPosZ;
+
+	CPoint targetPos;
+
+	if (pTargetObject == nullptr)
+	{
+		targetPos.x = nTargetPosX;
+		targetPos.y = nTargetPosY;
+	}
+	else
+	{
+		targetPos = pTargetObject->m_pos;
+	}
+
+	if ((pProjectile->m_extFlags & 0x3000) == 0) // NOT Falling path (12) or Comet (13)
+	{
+		if (pSourceObject == nullptr)
+		{
+			return; // Fail
+		}
+
+		if ((pProjectile->m_extFlags & 8) == 0) // NOT Hit immediately (3)
+		{
+			CProjectile::GetStart(pSourceObject->m_id, &startingPos, 1);
+
+			if (pSourceObject->virtual_GetObjectType() == CGameObjectType::SPRITE)
+			{
+				const int nSearchDeltaX = targetPos.x / 16 - startingPos.x / 16;
+				const int nSearchDeltaY = targetPos.y / 12 - startingPos.y / 12;
+
+				if (nSearchDeltaX * nSearchDeltaX + nSearchDeltaY * nSearchDeltaY < 3)
+				{
+					startingPos.x = pSourceObject->m_pos.x;
+					startingPos.y = pSourceObject->m_pos.y;
+				}
+			}
+		}
+		else // Hit immediately (3)
+		{
+			if (pTargetObject == nullptr)
+			{
+				startingPos = targetPos;
+			}
+			else
+			{
+				pProjectile->GetStart(pTargetObject->m_id, &startingPos, 1);
+			}
+		}
+
+		nPosZ = pProjectile->DetermineHeight(pSourceObject);
+	}
+	else // Falling path (12) or Comet (13)
+	{
+		startingPos = targetPos;
+		nPosZ = pArea->m_cInfinity.rViewPort.bottom - pArea->m_cInfinity.rViewPort.top;
+
+		if ((pProjectile->m_extFlags & 0x2000) != 0) // Comet (13)
+		{
+			if ((pProjectile->m_extFlags & 0x1000) == 0) // NOT Falling path (12)
+			{
+				startingPos.x = targetPos.x + (nPosZ / pProjectile->m_speed) * pProjectile->m_lanceWidth;
+			}
+			else // Falling path (12)
+			{
+				startingPos.x = targetPos.x - (nPosZ / pProjectile->m_speed) * pProjectile->m_lanceWidth;
+			}
+		}
+	}
+
+	lua_pushinteger(L, startingPos.x);
+	lua_pushinteger(L, startingPos.y);
+	lua_pushinteger(L, nPosZ);
+}
+
+static void CProjectileSpellHit_GetStartingPos(
+	lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight)
+{
+	CPoint startPos;
+
+	if (pTargetObject == nullptr) {
+		// Use target pos
+		startPos.x = nTargetPosX;
+		startPos.y = nTargetPosY;
+	}
+	else {
+		switch (pTargetObject->virtual_GetObjectType()) {
+			case CGameObjectType::NONE:
+			case CGameObjectType::AIBASE:
+			case CGameObjectType::SOUND:
+			case CGameObjectType::SPAWNING:
+			case CGameObjectType::STATIC:
+			case CGameObjectType::SPRITE:
+			case CGameObjectType::OBJECT_MARKER:
+			case static_cast<CGameObjectType>(0x50):
+			case CGameObjectType::TEMPORAL:
+			case CGameObjectType::AREA_AI:
+			case CGameObjectType::FIREBALL:
+			case CGameObjectType::GAME_AI: {
+				startPos = pTargetObject->m_pos;
+				break;
+			}
+			case CGameObjectType::CONTAINER: {
+				CGameContainer *const pContainer = reinterpret_cast<CGameContainer*>(pTargetObject);
+				startPos = pContainer->m_posTrapOrigin;
+				break;
+			}
+			case CGameObjectType::DOOR: {
+				CGameDoor *const pDoor = reinterpret_cast<CGameDoor*>(pTargetObject);
+				startPos.x = pDoor->m_posXTrapOrigin;
+				startPos.y = pDoor->m_posYTrapOrigin;
+				break;
+			}
+			case CGameObjectType::TRIGGER: {
+				CGameTrigger *const pTrigger = reinterpret_cast<CGameTrigger*>(pTargetObject);
+				startPos = pTrigger->m_posTrapOrigin;
+				break;
+			}
+			default: {
+				// Vanilla bug
+				break;
+			}
+		}
+	}
+
+	lua_pushinteger(L, startPos.x);
+	lua_pushinteger(L, startPos.y + 1);
+	lua_pushinteger(L, nHeight);
+}
+
+void EEex::GetProjectileStartingPos(
+	lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight)
+{
+	if (pProjectile == nullptr || pArea == nullptr) {
+		return; // Fail
+	}
+
+	switch (getProjectileType(pProjectile)) {
+
+		///////////////////////
+		// CProjectile based //
+		///////////////////////
+
+		case (EEex::ProjectileType::CProjectile): {
+			break;
+		}
+		case (EEex::ProjectileType::CProjectileInstant): {
+			break;
+		}
+		case (EEex::ProjectileType::CProjectileSkyStrike): {
+
+			if (pTargetObject == nullptr) {
+				lua_pushinteger(L, nTargetPosX);
+				lua_pushinteger(L, nTargetPosY);
+				lua_pushinteger(L, 0);
+			}
+			else {
+				lua_pushinteger(L, pTargetObject->m_pos.x);
+				lua_pushinteger(L, pTargetObject->m_pos.y + 13);
+				lua_pushinteger(L, 0);
+			}
+
+			break;
+		}
+		case (EEex::ProjectileType::CProjectileTravelDoor): {
+			CProjectileTravelDoor_GetStartingPos(L, pProjectile, pArea, pSourceObject, pTargetObject, nTargetPosX, nTargetPosY, nHeight);
+			break;
+		}
+
+		//////////////////////////
+		// CProjectileBAM based //
+		//////////////////////////
+
+		case (EEex::ProjectileType::CProjectileArea):
+		case (EEex::ProjectileType::CProjectileBAM):
+		case (EEex::ProjectileType::CProjectileColorSpray):
+		case (EEex::ProjectileType::CProjectileFireHands):
+		case (EEex::ProjectileType::CProjectileMushroom):       // op141 uses alternate Fire() method
+		case (EEex::ProjectileType::CProjectileNewScorcher):
+		case (EEex::ProjectileType::CProjectileScorcher):
+		case (EEex::ProjectileType::CProjectileSegment):        // CProjectileConeOfCold::DoLayers() uses alternate Fire() method
+		case (EEex::ProjectileType::CProjectileSkyStrikeBAM): {
+			CProjectileBAM_GetStartingPos(L, pProjectile, pArea, pSourceObject, pTargetObject, nTargetPosX, nTargetPosY, nHeight);
+			break;
+		}
+		case (EEex::ProjectileType::CProjectileChain): {
+			lua_pushinteger(L, nTargetPosX);
+			lua_pushinteger(L, nTargetPosY);
+			lua_pushinteger(L, nHeight);
+			break;
+		}
+		case (EEex::ProjectileType::CProjectileConeOfCold): {
+
+			if (pSourceObject == nullptr) {
+				break; // Fail
+			}
+
+			CPoint startPos;
+			CProjectile::GetStart(pSourceObject->m_id, &startPos, 1);
+
+			if (const int nDeltaX = nTargetPosX - startPos.x; nDeltaX < -10) {
+				startPos.x -= 10;
+			}
+			else if (nDeltaX > 10) {
+				startPos.x += 10;
+			}
+
+			if (const int nDeltaY = nTargetPosY - startPos.y; nDeltaY < -10) {
+				startPos.y -= 10;
+			}
+			else if (nDeltaY > 10) {
+				startPos.y += 10;
+			}
+
+			lua_pushinteger(L, nTargetPosX);
+			lua_pushinteger(L, nTargetPosY);
+			lua_pushinteger(L, nHeight);
+			break;
+		}
+		case (EEex::ProjectileType::CProjectileFall): {
+
+			CProjectileFall *const pProjectileFall = reinterpret_cast<CProjectileFall*>(pProjectile);
+			CPoint targetPos;
+
+			if (pTargetObject == nullptr) {
+				targetPos.x = nTargetPosX;
+				targetPos.y = nTargetPosY;
+			}
+			else {
+				targetPos.x = pTargetObject->m_pos.x;
+				targetPos.y = pTargetObject->m_pos.y;
+			}
+
+			CPoint startPos;
+			const int nPosZ = pArea->m_cInfinity.rViewPort.bottom - pArea->m_cInfinity.rViewPort.top;
+
+			if (pProjectileFall->m_sideMove) {
+				startPos.x = targetPos.x - (nPosZ / pProjectileFall->m_speed) * pProjectileFall->m_nSideSpeed;
+				startPos.y = targetPos.y;
+			}
+			else {
+				startPos = targetPos;
+			}
+
+			lua_pushinteger(L, startPos.x);
+			lua_pushinteger(L, startPos.y);
+			lua_pushinteger(L, nPosZ);
+			break;
+		}
+		case (EEex::ProjectileType::CProjectileMulti): {
+
+			if (pProjectile->m_canBeSeen) { // Actually means no decoder was provided
+				CProjectileBAM_GetStartingPos(L, pProjectile, pArea, pSourceObject, pTargetObject, nTargetPosX, nTargetPosY, nHeight);
+				break;
+			}
+
+			if (pSourceObject == nullptr || pTargetObject == nullptr) {
+				break; // Fail
+			}
+
+			// Not actually added to area
+			lua_pushinteger(L, pSourceObject->m_pos.x);
+			lua_pushinteger(L, pSourceObject->m_pos.y);
+			lua_pushinteger(L, 0);
+			break;
+		}
+
+		///////////////////////////////
+		// CProjectileSpellHit based //
+		///////////////////////////////
+
+		case (EEex::ProjectileType::CProjectileAmbiant): {
+			lua_pushinteger(L, nTargetPosX);
+			lua_pushinteger(L, nTargetPosY);
+			lua_pushinteger(L, nHeight);
+			break;
+		}
+		case (EEex::ProjectileType::CProjectileSpellHit): {
+			CProjectileSpellHit_GetStartingPos(L, pProjectile, pArea, pSourceObject, pTargetObject, nTargetPosX, nTargetPosY, nHeight);
+			break;
+		}
+	}
+}
+
 LuaTypeContainer callMutatorFunction(
 	lua_State* L,
 	const char* mutatorTableName,

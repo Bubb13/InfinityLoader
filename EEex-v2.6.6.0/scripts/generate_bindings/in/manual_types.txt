@@ -892,8 +892,11 @@ struct CGameSprite : CGameAIBase
 
 struct CProjectile : CGameObject
 {
+	static CProjectile* DecodeProjectile(ushort wProjectileType, CGameAIBase* pSprite);
+	static void GetStart(int id, CPoint* start, byte bCastOffset);
 	void AddEffect(CGameEffect* effect);
 	void ClearEffects();
+	int DetermineHeight(CGameObject* pCaster);
 };
 
 struct CRes
