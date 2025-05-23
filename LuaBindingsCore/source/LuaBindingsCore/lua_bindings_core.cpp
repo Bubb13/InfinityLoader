@@ -13,7 +13,7 @@
 
 bool alreadyInitialized = false;
 StringA luaGlobalsPrefix;
-#define prefixed(str) std::format("{}"##str, luaGlobalsPrefix).c_str()  
+#define prefixed(str) std::format("{}"##str, luaGlobalsPrefix).c_str()
 
 ///////////////////////
 // General Functions //
@@ -83,6 +83,24 @@ int pointerToUserDataLua(lua_State * g_lua) {
 	return 1;
 }
 
+// Note: Do NOT capture the userdata to be collected; this will hold a reference that
+// prevents the garbage collector from cleaning up the object. Use the first argument
+// of the callback to accept a new reference to the userdata. i.e.:
+//
+//     local projectile = CProjectile.DecodeProjectile(missileType, scriptRunner)
+//
+//     EEex_SetUDGCFunc(projectile, function(p)
+//         p:virtual_Destruct(true)
+//     end)
+//
+// !NOT!
+//
+//     local projectile = CProjectile.DecodeProjectile(missileType, scriptRunner)
+//
+//     EEex_SetUDGCFunc(projectile, function()
+//         projectile:virtual_Destruct(true)
+//     end)
+//
 // Expects [ ..., ud, func ]
 int setUserDataGarbageCollectionFunctionLua(lua_State* L) {
 	void* ptr = *reinterpret_cast<void**>(lua_touserdata(L, -2));
@@ -143,7 +161,7 @@ constexpr void* GetMemberPtr(T func) {
 }
 
 static void initLuaState(lua_State *const L) {
-	
+
 	lua_pushstring(L, "InfinityLoader_LuaBindingsCore_Opened"); // 1 [ "InfinityLoader_LuaBindingsCore_Opened" ]
 	lua_rawget(L, LUA_REGISTRYINDEX);                           // 1 [ registry["InfinityLoader_LuaBindingsCore_Opened"] ]
 
@@ -221,7 +239,7 @@ static bool exportPatternInternal(const TCHAR *const patternName, void* patternV
 		FPrintT(TEXT("[!][LuaBindingsCore.dll] exportPattern() - [%s].Type must be SINGLE\n"), patternName);
 		return false;
 	}
-	
+
 	sharedState().SetSinglePatternValue(patternHandle, patternValue);
 	return true;
 }
