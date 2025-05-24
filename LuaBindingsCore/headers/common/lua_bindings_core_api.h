@@ -88,9 +88,16 @@ IntegerType tolua_function_tointeger(lua_State *const L, const int narg, const c
 	}
 	else if (type == LUA_TNUMBER) {
 
-		const lua_Integer val = lua_tointeger(L, narg);
+		lua_Integer val = lua_tointeger(L, narg);
 		constexpr auto min = (std::numeric_limits<IntegerType>::lowest)();
 		constexpr auto max = (std::numeric_limits<IntegerType>::max)();
+
+		// Allow negative numbers to be passed as unsigned
+		if constexpr (std::is_unsigned<IntegerType>()) {
+			if (val < 0) {
+				val = static_cast<std::make_unsigned<IntegerType>::type>(val);
+			}
+		}
 
 		if (val < min || val > max) {
 			std::string error = std::format("invalid integer '{:d}' for integer argument #{:d} in function '{:s}'; '[{:d}-{:d}]' expected.", val, narg, functionName, min, max);
@@ -115,9 +122,16 @@ IntegerType tolua_setter_tointeger(lua_State *const L, const char *const variabl
 	}
 	else if (type == LUA_TNUMBER) {
 
-		const lua_Integer val = lua_tointeger(L, narg);
+		lua_Integer val = lua_tointeger(L, narg);
 		constexpr auto min = (std::numeric_limits<IntegerType>::lowest)();
 		constexpr auto max = (std::numeric_limits<IntegerType>::max)();
+
+		// Allow negative numbers to be passed as unsigned
+		if constexpr (std::is_unsigned<IntegerType>()) {
+			if (val < 0) {
+				val = static_cast<std::make_unsigned<IntegerType>::type>(val);
+			}
+		}
 
 		if (val < min || val > max) {
 			std::string error = std::format("invalid integer '{:d}' in integer variable setter '{:s}'; '[{:d}-{:d}]' expected.", val, variableName, min, max);
