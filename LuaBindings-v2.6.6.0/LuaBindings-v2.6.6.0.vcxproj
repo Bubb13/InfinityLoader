@@ -132,6 +132,7 @@
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated.cpp" />
     <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />
     <ClCompile Include="source\LuaBindings-v2.6.6.0\lua_bindings-v2.6.6.0.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\manual_reimplementations_export.cpp" />
     <ClCompile Include="source\LuaBindings-v2.6.6.0\util.cpp" />
   </ItemGroup>
   <ItemGroup>

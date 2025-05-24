@@ -494,26 +494,26 @@ void registerBaseclasses() {
 		{"EEex_CScreenConnection", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenConnection, CBaldurEngine>()},
 		}},
-		{"CGameStatsRes", {
-			{"CObject", offsetofbase<CGameStatsRes, CObject>()},
-		}},
-		{"EEex_CScreenWizSpell", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenWizSpell, CBaldurEngine>()},
-		}},
-		{"EEex_CScreenPriestSpell", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenPriestSpell, CBaldurEngine>()},
-		}},
-		{"EEex_CScreenCharacter", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenCharacter, CBaldurEngine>()},
-		}},
 		{"CAIIdList", {
 			{"CResHelper<CResText,1008>", offsetofbase<CAIIdList, CResHelper<CResText,1008>>()},
 		}},
-		{"EEex_CScreenInventory", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenInventory, CBaldurEngine>()},
+		{"CSound", {
+			{"CObject", offsetofbase<CSound, CObject>()},
+			{"CResHelper<CResWave,4>", offsetofbase<CSound, CResHelper<CResWave,4>>()},
 		}},
-		{"EEex_CScreenJournal", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenJournal, CBaldurEngine>()},
+		{"CSoundImp", {
+			{"CObject", offsetofbase<CSoundImp, CObject>()},
+			{"CResHelper<CResWave,4>", offsetofbase<CSoundImp, CResHelper<CResWave,4>>()},
+		}},
+		{"CScreenAI", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenAI, CBaldurEngine>()},
+		}},
+		{"CVidCell", {
+			{"CVidImage", offsetofbase<CVidCell, CVidImage>()},
+			{"CResHelper<CResCell,1000>", offsetofbase<CVidCell, CResHelper<CResCell,1000>>()},
+		}},
+		{"CVidCellFont", {
+			{"CVidCell", offsetofbase<CVidCellFont, CVidCell>()},
 		}},
 		{"EEex_CScreenCreateChar", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenCreateChar, CBaldurEngine>()},
@@ -542,35 +542,35 @@ void registerBaseclasses() {
 		{"EEex_CScreenStart", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenStart, CBaldurEngine>()},
 		}},
-		{"CVidCell", {
-			{"CVidImage", offsetofbase<CVidCell, CVidImage>()},
-			{"CResHelper<CResCell,1000>", offsetofbase<CVidCell, CResHelper<CResCell,1000>>()},
+		{"EEex_CInfToolTip", {
+			{"CVidCell", offsetofbase<CInfToolTip, CVidCell>()},
+		}},
+		{"CGameStatsRes", {
+			{"CObject", offsetofbase<CGameStatsRes, CObject>()},
 		}},
 		{"EEex_CScreenWorldMap", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenWorldMap, CBaldurEngine>()},
 		}},
-		{"CVidCellFont", {
-			{"CVidCell", offsetofbase<CVidCellFont, CVidCell>()},
+		{"EEex_CScreenWorld", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenWorld, CBaldurEngine>()},
 		}},
-		{"CScreenAI", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenAI, CBaldurEngine>()},
+		{"EEex_CScreenWizSpell", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenWizSpell, CBaldurEngine>()},
 		}},
-		{"CSoundImp", {
-			{"CObject", offsetofbase<CSoundImp, CObject>()},
-			{"CResHelper<CResWave,4>", offsetofbase<CSoundImp, CResHelper<CResWave,4>>()},
+		{"EEex_CScreenPriestSpell", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenPriestSpell, CBaldurEngine>()},
 		}},
-		{"CSound", {
-			{"CObject", offsetofbase<CSound, CObject>()},
-			{"CResHelper<CResWave,4>", offsetofbase<CSound, CResHelper<CResWave,4>>()},
+		{"EEex_CScreenJournal", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenJournal, CBaldurEngine>()},
+		}},
+		{"EEex_CScreenInventory", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenInventory, CBaldurEngine>()},
+		}},
+		{"EEex_CScreenCharacter", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenCharacter, CBaldurEngine>()},
 		}},
 		{"EEex_CScreenChapter", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenChapter, CBaldurEngine>()},
-		}},
-		{"EEex_CInfToolTip", {
-			{"CVidCell", offsetofbase<CInfToolTip, CVidCell>()},
-		}},
-		{"EEex_CScreenWorld", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenWorld, CBaldurEngine>()},
 		}},
 		{"CItem", {
 			{"CResHelper<CResItem,1005>", offsetofbase<CItem, CResHelper<CResItem,1005>>()},

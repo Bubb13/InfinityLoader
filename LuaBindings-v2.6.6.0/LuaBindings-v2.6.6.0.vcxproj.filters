@@ -83,6 +83,9 @@
     <ClCompile Include="source\LuaBindings-v2.6.6.0\lua_bindings-v2.6.6.0.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0</Filter>
     </ClCompile>
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\manual_reimplementations_export.cpp">
+      <Filter>Source Files\LuaBindings-v2.6.6.0</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="references\header\include\tolua_reference\tolua_event.h">

@@ -350,6 +350,12 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>::vtbl, CObject::vtbl>()},
 		}},
+		{"CTypedPtrList<CPtrList,CVEFEvent*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CVEFEvent*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CVEFEvent*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CVEFEvent*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CAIObjectType*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIObjectType*>, CObject>()},
 		}},
@@ -1004,29 +1010,9 @@ void registerBaseclasses() {
 		{"CScreenConnection::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenConnection::vtbl, CBaldurEngine::vtbl>()},
 		}},
-		{"CGameStatsRes", {
-			{"CObject", offsetofbase<CGameStatsRes, CObject>()},
-		}},
-		{"CGameStatsRes::vtbl", {
-			{"CObject::vtbl", offsetofbase<CGameStatsRes::vtbl, CObject::vtbl>()},
-		}},
-		{"EEex_CScreenWizSpell", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenWizSpell, CBaldurEngine>()},
-		}},
-		{"CScreenWizSpell::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWizSpell::vtbl, CBaldurEngine::vtbl>()},
-		}},
-		{"EEex_CScreenPriestSpell", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenPriestSpell, CBaldurEngine>()},
-		}},
-		{"CScreenPriestSpell::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenPriestSpell::vtbl, CBaldurEngine::vtbl>()},
-		}},
-		{"EEex_CScreenCharacter", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenCharacter, CBaldurEngine>()},
-		}},
-		{"CScreenCharacter::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenCharacter::vtbl, CBaldurEngine::vtbl>()},
+		{"CVidMosaic", {
+			{"CVidImage", offsetofbase<CVidMosaic, CVidImage>()},
+			{"CResHelper<CResMosaic,1004>", offsetofbase<CVidMosaic, CResHelper<CResMosaic,1004>>()},
 		}},
 		{"C2DArray", {
 			{"CResHelper<CResText,1012>", offsetofbase<C2DArray, CResHelper<CResText,1012>>()},
@@ -1034,27 +1020,42 @@ void registerBaseclasses() {
 		{"CAIIdList", {
 			{"CResHelper<CResText,1008>", offsetofbase<CAIIdList, CResHelper<CResText,1008>>()},
 		}},
-		{"CGameFile", {
-			{"CResHelper<CResGame,1013>", offsetofbase<CGameFile, CResHelper<CResGame,1013>>()},
+		{"CSound", {
+			{"CObject", offsetofbase<CSound, CObject>()},
+			{"CResHelper<CResWave,4>", offsetofbase<CSound, CResHelper<CResWave,4>>()},
 		}},
-		{"CVidMosaic", {
-			{"CVidImage", offsetofbase<CVidMosaic, CVidImage>()},
-			{"CResHelper<CResMosaic,1004>", offsetofbase<CVidMosaic, CResHelper<CResMosaic,1004>>()},
+		{"CSound::vtbl", {
+			{"CObject::vtbl", offsetofbase<CSound::vtbl, CObject::vtbl>()},
+		}},
+		{"CSoundImp", {
+			{"CObject", offsetofbase<CSoundImp, CObject>()},
+			{"CResHelper<CResWave,4>", offsetofbase<CSoundImp, CResHelper<CResWave,4>>()},
+		}},
+		{"CSoundImp::vtbl", {
+			{"CObject::vtbl", offsetofbase<CSoundImp::vtbl, CObject::vtbl>()},
+		}},
+		{"CVidBitmap", {
+			{"CVidImage", offsetofbase<CVidBitmap, CVidImage>()},
+			{"CResHelper<CResBitmap,1>", offsetofbase<CVidBitmap, CResHelper<CResBitmap,1>>()},
+		}},
+		{"CScreenAI", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenAI, CBaldurEngine>()},
+		}},
+		{"CScreenAI::vtbl", {
+			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenAI::vtbl, CBaldurEngine::vtbl>()},
+		}},
+		{"CVidCell", {
+			{"CVidImage", offsetofbase<CVidCell, CVidImage>()},
+			{"CResHelper<CResCell,1000>", offsetofbase<CVidCell, CResHelper<CResCell,1000>>()},
+		}},
+		{"CVidCellFont", {
+			{"CVidCell", offsetofbase<CVidCellFont, CVidCell>()},
+		}},
+		{"CVidCellFont::vtbl", {
+			{"CVidCell::vtbl", offsetofbase<CVidCellFont::vtbl, CVidCell::vtbl>()},
 		}},
 		{"CVidFont", {
 			{"CResHelper<CResFont,1034>", offsetofbase<CVidFont, CResHelper<CResFont,1034>>()},
-		}},
-		{"EEex_CScreenInventory", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenInventory, CBaldurEngine>()},
-		}},
-		{"CScreenInventory::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenInventory::vtbl, CBaldurEngine::vtbl>()},
-		}},
-		{"EEex_CScreenJournal", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenJournal, CBaldurEngine>()},
-		}},
-		{"CScreenJournal::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenJournal::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenCreateChar", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenCreateChar, CBaldurEngine>()},
@@ -1110,9 +1111,23 @@ void registerBaseclasses() {
 		{"CScreenStart::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenStart::vtbl, CBaldurEngine::vtbl>()},
 		}},
-		{"CVidCell", {
-			{"CVidImage", offsetofbase<CVidCell, CVidImage>()},
-			{"CResHelper<CResCell,1000>", offsetofbase<CVidCell, CResHelper<CResCell,1000>>()},
+		{"EEex_CInfToolTip", {
+			{"CVidCell", offsetofbase<CInfToolTip, CVidCell>()},
+		}},
+		{"CInfToolTip::vtbl", {
+			{"CVidCell::vtbl", offsetofbase<CInfToolTip::vtbl, CVidCell::vtbl>()},
+		}},
+		{"CGameFile", {
+			{"CResHelper<CResGame,1013>", offsetofbase<CGameFile, CResHelper<CResGame,1013>>()},
+		}},
+		{"CGameStatsRes", {
+			{"CObject", offsetofbase<CGameStatsRes, CObject>()},
+		}},
+		{"CGameStatsRes::vtbl", {
+			{"CObject::vtbl", offsetofbase<CGameStatsRes::vtbl, CObject::vtbl>()},
+		}},
+		{"CSpell", {
+			{"CResHelper<CResSpell,1006>", offsetofbase<CSpell, CResHelper<CResSpell,1006>>()},
 		}},
 		{"EEex_CScreenWorldMap", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenWorldMap, CBaldurEngine>()},
@@ -1120,56 +1135,47 @@ void registerBaseclasses() {
 		{"CScreenWorldMap::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorldMap::vtbl, CBaldurEngine::vtbl>()},
 		}},
-		{"CVidCellFont", {
-			{"CVidCell", offsetofbase<CVidCellFont, CVidCell>()},
+		{"EEex_CScreenWorld", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenWorld, CBaldurEngine>()},
 		}},
-		{"CVidCellFont::vtbl", {
-			{"CVidCell::vtbl", offsetofbase<CVidCellFont::vtbl, CVidCell::vtbl>()},
+		{"CScreenWorld::vtbl", {
+			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorld::vtbl, CBaldurEngine::vtbl>()},
 		}},
-		{"CVidBitmap", {
-			{"CVidImage", offsetofbase<CVidBitmap, CVidImage>()},
-			{"CResHelper<CResBitmap,1>", offsetofbase<CVidBitmap, CResHelper<CResBitmap,1>>()},
+		{"EEex_CScreenWizSpell", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenWizSpell, CBaldurEngine>()},
 		}},
-		{"CScreenAI", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenAI, CBaldurEngine>()},
+		{"CScreenWizSpell::vtbl", {
+			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWizSpell::vtbl, CBaldurEngine::vtbl>()},
 		}},
-		{"CScreenAI::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenAI::vtbl, CBaldurEngine::vtbl>()},
+		{"EEex_CScreenPriestSpell", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenPriestSpell, CBaldurEngine>()},
 		}},
-		{"CSpell", {
-			{"CResHelper<CResSpell,1006>", offsetofbase<CSpell, CResHelper<CResSpell,1006>>()},
+		{"CScreenPriestSpell::vtbl", {
+			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenPriestSpell::vtbl, CBaldurEngine::vtbl>()},
 		}},
-		{"CSoundImp", {
-			{"CObject", offsetofbase<CSoundImp, CObject>()},
-			{"CResHelper<CResWave,4>", offsetofbase<CSoundImp, CResHelper<CResWave,4>>()},
+		{"EEex_CScreenJournal", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenJournal, CBaldurEngine>()},
 		}},
-		{"CSoundImp::vtbl", {
-			{"CObject::vtbl", offsetofbase<CSoundImp::vtbl, CObject::vtbl>()},
+		{"CScreenJournal::vtbl", {
+			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenJournal::vtbl, CBaldurEngine::vtbl>()},
 		}},
-		{"CSound", {
-			{"CObject", offsetofbase<CSound, CObject>()},
-			{"CResHelper<CResWave,4>", offsetofbase<CSound, CResHelper<CResWave,4>>()},
+		{"EEex_CScreenInventory", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenInventory, CBaldurEngine>()},
 		}},
-		{"CSound::vtbl", {
-			{"CObject::vtbl", offsetofbase<CSound::vtbl, CObject::vtbl>()},
+		{"CScreenInventory::vtbl", {
+			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenInventory::vtbl, CBaldurEngine::vtbl>()},
+		}},
+		{"EEex_CScreenCharacter", {
+			{"EEex_CBaldurEngine", offsetofbase<CScreenCharacter, CBaldurEngine>()},
+		}},
+		{"CScreenCharacter::vtbl", {
+			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenCharacter::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenChapter", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenChapter, CBaldurEngine>()},
 		}},
 		{"CScreenChapter::vtbl", {
 			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenChapter::vtbl, CBaldurEngine::vtbl>()},
-		}},
-		{"EEex_CInfToolTip", {
-			{"CVidCell", offsetofbase<CInfToolTip, CVidCell>()},
-		}},
-		{"CInfToolTip::vtbl", {
-			{"CVidCell::vtbl", offsetofbase<CInfToolTip::vtbl, CVidCell::vtbl>()},
-		}},
-		{"EEex_CScreenWorld", {
-			{"EEex_CBaldurEngine", offsetofbase<CScreenWorld, CBaldurEngine>()},
-		}},
-		{"CScreenWorld::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorld::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"CProjectileBAMFileFormat", {
 			{"CProjectileFileFormat", offsetofbase<CProjectileBAMFileFormat, CProjectileFileFormat>()},
@@ -1227,6 +1233,13 @@ void registerBaseclasses() {
 		}},
 		{"CGameFireball3d::vtbl", {
 			{"CGameObject::vtbl", offsetofbase<CGameFireball3d::vtbl, CGameObject::vtbl>()},
+		}},
+		{"CVisualEffect", {
+			{"CGameObject", offsetofbase<CVisualEffect, CGameObject>()},
+			{"CVisualEffectBase", offsetofbase<CVisualEffect, CVisualEffectBase>()},
+		}},
+		{"CVisualEffect::vtbl", {
+			{"CGameObject::vtbl", offsetofbase<CVisualEffect::vtbl, CGameObject::vtbl>()},
 		}},
 		{"CProjectile", {
 			{"CGameObject", offsetofbase<CProjectile, CGameObject>()},

@@ -1,0 +1,5 @@
+
+struct CGameSprite : CGameAIBase
+{
+	$external_implementation void MakeLocal();
+};

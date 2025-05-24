@@ -76,6 +76,7 @@ CResWave
 CResWebm
 CResWED
 CResWorldMap
+CVisualEffect
 EEex
 EEex::ProjectileType
 SDL_WindowFlags

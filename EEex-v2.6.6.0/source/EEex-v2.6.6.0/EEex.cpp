@@ -3378,7 +3378,7 @@ void EEex::Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite) {
 		CGameEffect* pEffect = pNode->data;
 
 		if (pEffect->m_effectId == 187 && strncmp(pEffect->m_scriptName.data, "EEEX_UUID", 32) == 0) {
-			pEffectList->RemoveAt(reinterpret_cast<__POSITION*>(pNode));
+			pEffectList->RemoveAt(pNode);
 			pEffect->virtual_OnRemove(pSprite);
 			pEffect->virtual_Destruct(1);
 		}

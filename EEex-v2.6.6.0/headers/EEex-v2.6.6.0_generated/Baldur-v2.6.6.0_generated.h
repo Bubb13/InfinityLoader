@@ -132,10 +132,13 @@ struct CPlex;
 struct CPoint;
 struct CProjectile;
 struct CRes;
+template<class RES_CLASS, int RES_ID>
+struct CResHelper;
 struct CResPVR;
 struct CResRef;
 struct CResTileSet;
 struct CRuleTables;
+struct CSaveGameSlot;
 struct CSavedGamePartyCreature;
 struct CScreenStore;
 struct CScreenWorld;
@@ -144,6 +147,7 @@ struct CSelectiveBonus;
 struct CSelectiveWeaponType;
 struct CSequenceSound;
 struct CSound;
+struct CSoundImp;
 struct CSoundMixerImp;
 struct CSpawn;
 struct CSpell;
@@ -153,7 +157,7 @@ struct CUIControlTextDisplay;
 struct CVVCHashEntry;
 struct CVariable;
 struct CVariableHash;
-struct CVidCellFont;
+struct CVidCell;
 struct CVidMode;
 struct CWarp;
 struct CharString;
@@ -5450,10 +5454,10 @@ struct CTypedPtrList : CObject
 		#pragma warning(default:4312)
 	}
 
-	CTypedPtrList::CNode* Find(T searchValue, __POSITION* startAfter)
+	CTypedPtrList::CNode* Find(T searchValue, CTypedPtrList::CNode* startAfter)
 	{
 		#pragma warning(disable:4312)
-		return (CTypedPtrList::CNode*)((CObList*)this)->Find((void*)searchValue, startAfter);
+		return (CTypedPtrList::CNode*)((CObList*)this)->Find((void*)searchValue, (CObList::CNode*)startAfter);
 		#pragma warning(default:4312)
 	}
 
@@ -5464,9 +5468,9 @@ struct CTypedPtrList : CObject
 		#pragma warning(default:4302 4311)
 	}
 
-	void RemoveAt(__POSITION* position)
+	void RemoveAt(CTypedPtrList::CNode* position)
 	{
-		((CObList*)this)->RemoveAt(position);
+		((CObList*)this)->RemoveAt((CObList::CNode*)position);
 	}
 
 	void Destruct()
@@ -6373,16 +6377,16 @@ struct CObList : CObject
 	typedef CObject* (__thiscall *type_RemoveHead)(CObList* pThis);
 	static type_RemoveHead p_RemoveHead;
 
-	typedef void (__thiscall *type_RemoveAt)(CObList* pThis, __POSITION* position);
+	typedef void (__thiscall *type_RemoveAt)(CObList* pThis, CObList::CNode* position);
 	static type_RemoveAt p_RemoveAt;
 
 	typedef void (__thiscall *type_Destruct)(CObList* pThis);
 	static type_Destruct p_Destruct;
 
-	typedef __POSITION* (__thiscall *type_AddTail)(CObList* pThis, void* newElement);
+	typedef CObList::CNode* (__thiscall *type_AddTail)(CObList* pThis, void* newElement);
 	static type_AddTail p_AddTail;
 
-	typedef __POSITION* (__thiscall *type_Find)(CObList* pThis, void* searchValue, __POSITION* startAfter);
+	typedef CObList::CNode* (__thiscall *type_Find)(CObList* pThis, void* searchValue, CObList::CNode* startAfter);
 	static type_Find p_Find;
 
 	void Construct(int size)
@@ -6395,7 +6399,7 @@ struct CObList : CObject
 		return p_RemoveHead(this);
 	}
 
-	void RemoveAt(__POSITION* position)
+	void RemoveAt(CObList::CNode* position)
 	{
 		p_RemoveAt(this, position);
 	}
@@ -6405,12 +6409,12 @@ struct CObList : CObject
 		p_Destruct(this);
 	}
 
-	__POSITION* AddTail(void* newElement)
+	CObList::CNode* AddTail(void* newElement)
 	{
 		return p_AddTail(this, newElement);
 	}
 
-	__POSITION* Find(void* searchValue, __POSITION* startAfter)
+	CObList::CNode* Find(void* searchValue, CObList::CNode* startAfter)
 	{
 		return p_Find(this, searchValue, startAfter);
 	}
@@ -6530,6 +6534,11 @@ struct CMessageDisplayTextRef : CMessage
 	unsigned __int8 m_bPlaySound;
 
 	CMessageDisplayTextRef() = delete;
+
+	void Construct()
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+	}
 
 	void Construct(uint name, uint text, uint nameColor, uint textColor, int marker, int caller, int target)
 	{
@@ -7343,6 +7352,11 @@ struct LCharString
 		localCopy[i] = '\0';
 		lua_pushstring(L, localCopy);
 	}
+
+	operator char*()
+	{
+		return data;
+	}
 };
 
 struct CResBinary : CRes
@@ -7634,6 +7648,7 @@ struct CVisibilityMap
 
 struct CVidPalette
 {
+	static Array<uint,256>* p_RANGE_COLORS;
 	unsigned __int64 m_nAUCounter;
 	unsigned __int64 m_nAUCounterBase;
 	tagRGBQUAD* m_pPalette;
@@ -7865,8 +7880,6 @@ struct CResRef
 {
 	Array<unsigned __int8,8> m_resRef;
 
-	CResRef() = delete;
-
 	void get(lua_State* L)
 	{
 		char* localCopy = (char*)alloca(sizeof(m_resRef) + 1);
@@ -7903,6 +7916,11 @@ struct CResRef
 	CResRef(const char* chars)
 	{
 		set(chars);
+	}
+
+	CResRef()
+	{
+		memset(m_resRef, 0, 8);
 	}
 
 	void copy(CResRef* newVal)
@@ -7989,6 +8007,956 @@ struct CButtonData
 	{
 		p_Construct(this);
 	}
+};
+
+template<class RES_CLASS, int RES_ID>
+struct CResHelper
+{
+	RES_CLASS* pRes;
+	CResRef cResRef;
+
+	CResHelper() = delete;
+
+	typedef void (__thiscall *type_SetResRef)(CResHelper* pThis, const CResRef* cNewResRef, int bSetAutoRequest, int bWarningIfMissing);
+	static type_SetResRef p_SetResRef;
+
+	void Construct()
+	{
+		pRes = nullptr;
+		new (&cResRef) CResRef{};
+	}
+
+	void Destruct()
+	{
+		pRes = nullptr;
+	}
+
+	void SetResRef(const CResRef* cNewResRef, int bSetAutoRequest, int bWarningIfMissing)
+	{
+		static_assert(
+			(std::is_same<RES_CLASS,CResCRE>::value && RES_ID == 1009),
+			"Unbound template use"
+		);
+		p_SetResRef(this, cNewResRef, bSetAutoRequest, bWarningIfMissing);
+	}
+};
+
+struct CVidMosaic : CVidImage, CResHelper<CResMosaic,1004>
+{
+	CVidMosaic() = delete;
+};
+
+struct C2DArray : CResHelper<CResText,1012>
+{
+	VariableArray<CString>* m_pNamesX;
+	VariableArray<CString>* m_pNamesY;
+	VariableArray<CString>* m_pArray;
+	CString m_default;
+	__int16 m_nSizeX;
+	__int16 m_nSizeY;
+
+	C2DArray() = delete;
+
+	typedef void (__thiscall *type_Construct)(C2DArray* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Load)(C2DArray* pThis, const CResRef* res);
+	static type_Load p_Load;
+
+	typedef const CString* (__thiscall *type_GetAtLabels)(C2DArray* pThis, const CString* nX, const CString* nY);
+	static type_GetAtLabels p_GetAtLabels;
+
+	typedef void (__thiscall *type_Destruct)(C2DArray* pThis);
+	static type_Destruct p_Destruct;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
+
+	void Load(const CResRef* res)
+	{
+		p_Load(this, res);
+	}
+
+	const CString* GetAtLabels(const CString* nX, const CString* nY)
+	{
+		return p_GetAtLabels(this, nX, nY);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
+};
+
+struct CAIIdList : CResHelper<CResText,1008>
+{
+	struct vtbl
+	{
+		void (__fastcall *Destruct)(CAIIdList*);
+
+		vtbl() = delete;
+	};
+
+	CString m_fileName;
+	CTypedPtrList<CPtrList,CAIId*> m_idList;
+	int m_faster;
+	VariableArray<CAIId*>* m_pIdArray;
+	int m_nArray;
+
+	CAIIdList() = delete;
+
+	typedef void (__thiscall *type_Construct_Overload_Default)(CAIIdList* pThis);
+	static type_Construct_Overload_Default p_Construct_Overload_Default;
+
+	typedef void (__thiscall *type_Destruct)(CAIIdList* pThis);
+	static type_Destruct p_Destruct;
+
+	typedef void (__thiscall *type_LoadList_Overload_Resref)(CAIIdList* pThis, CResRef id, int faster);
+	static type_LoadList_Overload_Resref p_LoadList_Overload_Resref;
+
+	typedef CAIId* (__thiscall *type_Find_Overload_ID)(CAIIdList* pThis, int id);
+	static type_Find_Overload_ID p_Find_Overload_ID;
+
+	void Construct()
+	{
+		p_Construct_Overload_Default(this);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
+
+	void LoadList(CResRef id, int faster)
+	{
+		p_LoadList_Overload_Resref(this, id, faster);
+	}
+
+	CAIId* Find(int id)
+	{
+		return p_Find_Overload_ID(this, id);
+	}
+
+	virtual void virtual_Destruct()
+	{
+	}
+};
+
+struct CAIScriptFile
+{
+	__int16 m_parseMode;
+	int m_lineNumber;
+	CAIScript* m_curScript;
+	CAIResponseSet* m_curResponseSet;
+	CAICondition* m_curCondition;
+	CAIResponse* m_curResponse;
+	CString m_errors;
+	CFile m_file;
+	CString source;
+	CString m_decompiledText;
+	CAIIdList m_actions;
+	CAIIdList m_triggers;
+	CAIIdList m_objects;
+
+	CAIScriptFile() = delete;
+
+	typedef void (__thiscall *type_Construct)(CAIScriptFile* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Destruct)(CAIScriptFile* pThis);
+	static type_Destruct p_Destruct;
+
+	typedef void (__thiscall *type_ParseConditionalString)(CAIScriptFile* pThis, CString* data);
+	static type_ParseConditionalString p_ParseConditionalString;
+
+	typedef CAIObjectType* (__thiscall *type_ParseObjectType)(CAIScriptFile* pThis, CAIObjectType* result, CString* input);
+	static type_ParseObjectType p_ParseObjectType;
+
+	typedef void (__thiscall *type_ParseResponseString)(CAIScriptFile* pThis, CString* data);
+	static type_ParseResponseString p_ParseResponseString;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
+
+	void ParseConditionalString(CString* data)
+	{
+		p_ParseConditionalString(this, data);
+	}
+
+	CAIObjectType* ParseObjectType(CAIObjectType* result, CString* input)
+	{
+		return p_ParseObjectType(this, result, input);
+	}
+
+	void ParseResponseString(CString* data)
+	{
+		p_ParseResponseString(this, data);
+	}
+};
+
+struct CSound : CObject, CResHelper<CResWave,4>
+{
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CSoundImp* pimpl;
+
+	CSound() = delete;
+
+	typedef void (__thiscall *type_Construct)(CSound* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Destruct)(CSound* pThis);
+	static type_Destruct p_Destruct;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
+};
+
+struct CWeather
+{
+	unsigned __int8 m_bOverCast;
+	unsigned __int16 m_nLightningFreq;
+	unsigned __int16 m_nCurrentWeather;
+	unsigned __int16 m_nWeatherLevel;
+	unsigned int m_nWeatherEndTime;
+	unsigned int m_nWeatherStageEndTime;
+	unsigned int m_nWeatherDuration;
+	unsigned int m_nLastTimeChecked;
+	unsigned __int16 m_nWindLevel;
+	unsigned int m_rgbCurrentOverCastColor;
+	unsigned int m_nDurationCounter;
+	CSnowStorm m_snowStorm;
+	CRainStorm m_rainStorm;
+	CFog m_fog;
+	CSound m_sndRain;
+	CSound m_sndWind;
+	unsigned __int8 m_bWindOn;
+	unsigned __int8 m_bUpgrading;
+	unsigned int m_nNextTimeToStartChecking;
+	unsigned int m_nWindVolumeLevel;
+	unsigned int m_nRainVolumeLevel;
+	unsigned __int8 m_bReInitialize;
+
+	CWeather() = delete;
+};
+
+struct STR_RES
+{
+	CString szText;
+	CSound cSound;
+
+	STR_RES() = delete;
+
+	void Construct()
+	{
+		szText.Construct();
+		cSound.Construct();
+	}
+
+	void Destruct()
+	{
+		cSound.Destruct();
+		szText.Destruct();
+	}
+};
+
+struct CSoundImp : CObject, CResHelper<CResWave,4>
+{
+	struct vtbl : CObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CSound* m_pParent;
+	int m_bPositionedSound;
+	int m_dwBufferSize;
+	int m_dwFrequency;
+	int m_nBufferFormat;
+	int m_nRange;
+	int m_nRangeVolume;
+	int m_nXCoordinate;
+	int m_nYCoordinate;
+	int m_nZCoordinate;
+	int m_nPan;
+	int m_nVolume;
+	bool m_bSoundInitialized;
+	int m_nChannel;
+	int m_nPriority;
+	int m_nLooping;
+	int m_nPitchVariance;
+	int m_nVolumeVariance;
+	bool m_b3DPositionning;
+	unsigned int m_nSource;
+	unsigned int m_nBuffer;
+	bool m_bFireForget;
+	unsigned __int64 m_nArea;
+	int m_dwOverrideFlags;
+	bool m_bSoundIsntDucked;
+
+	CSoundImp() = delete;
+};
+
+struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
+{
+	__int16 m_nBitCount;
+	CString m_szResFileName;
+
+	CVidBitmap() = delete;
+};
+
+struct CScreenAI : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CVidBitmap m_bmpScreen;
+	C2DArray m_tSplashScreens;
+	__int16 m_nSplashScreen;
+	int m_nSplashTimer;
+	int m_bInteractiveDemoQuit;
+	unsigned __int8 m_nBmpDraw;
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	Array<int,5> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+
+	CScreenAI() = delete;
+};
+
+struct CSearchBitmap
+{
+	CVidBitmap m_resSearch;
+	unsigned __int8* m_pDynamicCost;
+	unsigned __int8* m_snapshotDynamicCost;
+	const unsigned __int8* m_snapshotTerrainTable;
+	CSize m_GridSquareDimensions;
+	CGameArea* m_pArea;
+	unsigned __int8 m_sourceSide;
+	unsigned __int8 m_snapshotPersonalSpace;
+
+	CSearchBitmap() = delete;
+
+	typedef byte (__thiscall *type_GetCost)(CSearchBitmap* pThis, CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump);
+	static type_GetCost p_GetCost;
+
+	typedef CPoint* (__thiscall *type_GetNearestOpenSquare)(CSearchBitmap* pThis, CPoint* pResult, CPoint cPoint, byte* terrainTable, byte snapshotPersonalSpace, short facing);
+	static type_GetNearestOpenSquare p_GetNearestOpenSquare;
+
+	byte GetCost(CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump)
+	{
+		return p_GetCost(this, point, terrainTable, snapshotPersonalSpace, nTableIndex, bCheckBump);
+	}
+
+	CPoint* GetNearestOpenSquare(CPoint* pResult, CPoint cPoint, byte* terrainTable, byte snapshotPersonalSpace, short facing)
+	{
+		return p_GetNearestOpenSquare(this, pResult, cPoint, terrainTable, snapshotPersonalSpace, facing);
+	}
+
+	void Lua_GetNearestOpenSquare(lua_State* L, int x, int y, byte* terrainTable, byte snapshotPersonalSpace, short facing)
+	{
+		CPoint result;
+		GetNearestOpenSquare(&result, CPoint{x, y}, terrainTable, snapshotPersonalSpace, facing);
+		lua_pushinteger(L, result.x);
+		lua_pushinteger(L, result.y);
+	}
+};
+
+struct CVidMode
+{
+	static ushort* p_SCREENWIDTH;
+	static ushort* p_SCREENHEIGHT;
+	int m_nPrintFile;
+	int m_nPointerNumber;
+	unsigned int m_dwCursorRenderFlags;
+	unsigned int m_dwRedMask;
+	unsigned int m_dwGreenMask;
+	unsigned int m_dwBlueMask;
+	unsigned __int8 m_bFadeTo;
+	unsigned __int8 m_nFade;
+	SDL_Window* m_pWindow;
+	void* m_glContext;
+	CVidBitmap m_circle;
+	int nWidth;
+	int nHeight;
+	bool bRedrawEntireScreen;
+	bool bHardwareMouseCursor;
+	CVidCell* pPointerVidCell;
+	CVidCell* pTooltipVidCell;
+	unsigned __int8 m_bPrintScreen;
+	unsigned int nTickCount;
+	float m_fInputScale;
+	unsigned int rgbGlobalTint;
+	unsigned __int8 m_nGammaCorrection;
+	unsigned __int8 m_nBrightnessCorrection;
+	int m_nScreenScrollY;
+	int m_nScreenScrollX;
+	int nRShift;
+	int nGShift;
+	int nBShift;
+	tagRGBQUAD rgbTint;
+	int bPointerEnabled;
+	CRect rPointerStorage;
+	CRect m_rLockedRect;
+	CVidCell* m_lastCursor;
+	int m_lastCursorFrame;
+	int m_lastCursorSequence;
+	int m_lastCursorNumber;
+	unsigned int m_lastCursorFlags;
+	unsigned int m_lastCursorResId;
+	SDL_Cursor* m_hwCursor;
+	SDL_Surface* m_hwCursorSurface;
+	int nVRamSurfaces;
+	CVidBitmap m_rgbMasterBitmap;
+
+	CVidMode() = delete;
+};
+
+struct CVidCell : CVidImage, CResHelper<CResCell,1000>
+{
+	struct vtbl
+	{
+		int (__fastcall *FrameAdvance)(CVidCell*);
+		int (__fastcall *Render)(CVidCell*, unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*);
+		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
+		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
+		int (__fastcall *GetFrame)(CVidCell*);
+
+		vtbl() = delete;
+	};
+
+	__int16 m_nCurrentFrame;
+	unsigned __int16 m_nCurrentSequence;
+	int m_nAnimType;
+	int m_bPaletteChanged;
+	frameTableEntry_st* m_pFrame;
+	unsigned __int8 m_bShadowOn;
+
+	CVidCell() = delete;
+
+	virtual int virtual_FrameAdvance()
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int virtual_Render(unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual int virtual_Render_2(int, int, const CRect*, CVidPoly*, int, unsigned int, int)
+	{
+		return *(int*)nullptr;
+	}
+
+	virtual void virtual_StoreBackground(int, int, const CRect*, CRect*, unsigned __int8)
+	{
+	}
+
+	virtual int virtual_GetFrame()
+	{
+		return *(int*)nullptr;
+	}
+};
+
+struct CVidCellFont : CVidCell
+{
+	struct vtbl : CVidCell::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CVidCellFont() = delete;
+};
+
+struct CPortraitIcon
+{
+	int icon;
+	int frame;
+	CVidCell bam;
+
+	CPortraitIcon() = delete;
+};
+
+struct CInfButtonSettings
+{
+	int m_bEnabled;
+	int m_bShowIcon;
+	int m_bOverrideRender;
+	int m_nButtonFrame;
+	int m_nButtonSelectedFrame;
+	CVidCell m_vcIcon;
+	CVidCell m_vcLauncherIcon;
+	int m_bSelectable;
+	int m_bSelected;
+	int m_bHighlighted;
+	int m_itemCount;
+	int m_itemCharge;
+	int m_bGreyOut;
+
+	CInfButtonSettings() = delete;
+};
+
+struct CVidFont : CResHelper<CResFont,1034>
+{
+	CVidCellFont* vidCellFont;
+	unsigned int foreground;
+	unsigned int tintcolor;
+	int pointSize;
+	int zoom;
+
+	CVidFont() = delete;
+};
+
+struct CScreenCreateChar : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	C2DArray m_kitList;
+	CImportGame m_importGame;
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bCtrlKeyDown;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	CScreenCreateCharStep m_nFirstStep;
+	CScreenCreateCharStep m_nCurrentStep;
+	CScreenCreateCharStep m_nNextStep;
+	int m_nGameSprite;
+	int m_nExtraProficiencySlots;
+	int m_nExtraAbilityPoints;
+	int m_nExtraSpells;
+	int m_nExtraSkillPoints;
+	int m_nBasePickPockets;
+	int m_nBaseOpenLocks;
+	int m_nBaseDetectTraps;
+	int m_nBaseMoveSilently;
+	int m_nBaseHideInShadows;
+	int m_nBaseDetectIllusion;
+	int m_nBaseSetTraps;
+	unsigned __int8 m_nMinSTR;
+	unsigned __int8 m_nMinDEX;
+	unsigned __int8 m_nMinCON;
+	unsigned __int8 m_nMinINT;
+	unsigned __int8 m_nMinWIS;
+	unsigned __int8 m_nMinCHR;
+	unsigned __int8 m_nMaxSTR;
+	unsigned __int8 m_nMaxDEX;
+	unsigned __int8 m_nMaxCON;
+	unsigned __int8 m_nMaxINT;
+	unsigned __int8 m_nMaxWIS;
+	unsigned __int8 m_nMaxCHR;
+	unsigned __int8 m_nPreviousMin;
+	unsigned __int8 m_nPreviousMax;
+	int m_nMaxProficiencySlots;
+	__POSITION* m_nCurrentPortrait;
+	CStringList* m_pAppearancePortraits;
+	CPtrList m_lPopupStack;
+	int m_nEngineState;
+	int m_nCharacterSlot;
+	int m_nTopHatedRace;
+	unsigned __int8 m_nPickRange;
+	unsigned __int8 m_nMemorySTR;
+	unsigned __int8 m_nMemorySTRExtra;
+	unsigned __int8 m_nMemoryDEX;
+	unsigned __int8 m_nMemoryCON;
+	unsigned __int8 m_nMemoryINT;
+	unsigned __int8 m_nMemoryWIS;
+	unsigned __int8 m_nMemoryCHR;
+	int m_nMemoryExtra;
+	int m_nPortraitSmallIndex;
+	int m_nPortraitMediumIndex;
+	CStringList* m_pPortraits;
+	int m_nCustomSoundSetIndex;
+	int m_nCustomSoundIndex;
+	int m_nCharacterIndex;
+	int m_nPrerollTopIndex;
+	CStringList* m_pCharacters;
+	int m_bImported;
+	CStringList* m_pSounds;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	CVidFont m_preLoadFontTool;
+	unsigned __int8 m_nCurrentSpellLevel;
+	int m_nExtraMageSpells;
+	CCreatureFileHeader* m_pOldBaseStats;
+	CDerivedStats* m_pOldDerivedStats;
+	int m_nOldConHPBonus;
+	unsigned __int8 m_nCurrentSpellLevelChoice;
+	unsigned __int8 m_nCurrentSpellLevelChoiceMax;
+	unsigned __int16 m_nImportedCharHPs;
+	unsigned __int16 m_nImportedCharConBonus;
+	unsigned __int8 m_nImportedDualClass;
+	unsigned int m_nImportedDualKit;
+	int m_nImportedDualReactivated;
+	unsigned __int8 m_byImportedCharVersion;
+	__int16 m_nSelectedSpecialistSpells;
+	__int16 m_nMemorizedSpecialistSpells;
+	int m_nTotalKits;
+	unsigned __int16 m_nHatedRaces;
+	importStateType m_importState;
+	unsigned int m_strDefaultHelpString;
+	unsigned __int8 m_bUpdatedHelp;
+	unsigned int m_strCurrentHelpString;
+	int m_bGaveExtraXP;
+	int m_nExtraXP;
+	CString m_sImportCharName;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	Array<int,9> m_OldMageSpells;
+	Array<int,7> m_OldPriestSpells;
+	CTypedPtrArray<CPtrArray,__int8> m_aBaseProficiencySlots;
+	CCreatureFileHeader* m_pTempBaseStats;
+	CDerivedStats* m_pTempDerivedStats;
+	Array<int,7> m_storedSkillPoints;
+	int m_bAddInactiveAbilities;
+	CStringList* m_szCharInfoStorage;
+	int m_nSpellcasterLevel;
+	int m_nNumLevelUpAbilities;
+	unsigned __int8 m_nCurrentAbilityLevelChoice;
+	int m_bFinishedAbilitySelection;
+	CGameAbilityList* m_lstLevelUpAbilitiesList;
+	Array<unsigned __int8,24> m_lstSelectedAbility;
+	unsigned __int8 m_nSelectedAbilityInd;
+	int m_nDualClass;
+	int m_nSpecialization;
+
+	CScreenCreateChar() = delete;
+};
+
+struct CScreenCreateParty : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	int m_bCtrlKeyDown;
+	Array<int,5> m_pVirtualKeysFlags;
+	int m_nEngineState;
+	int m_firstCall;
+	CVidFont m_preloadFontStnSml;
+	int m_nCharacterSlot;
+
+	CScreenCreateParty() = delete;
+};
+
+struct CScreenDLC : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bExitProgram;
+	CPtrList m_lPopupStack;
+	unsigned int m_dwErrorTextId;
+	unsigned int m_dwErrorState;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	CTypedPtrList<CPtrList,CGameOptions*> m_lOptionsStack;
+	int m_bSpriteMirror;
+	unsigned __int8 m_bCtrlKeyDown;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	int m_nNumDLC;
+	int m_nCurrentDLC;
+	int m_nDlcState;
+
+	CScreenDLC() = delete;
+};
+
+struct CScreenLoad : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	Array<int,5> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+	int m_nTopGameSlot;
+	int m_nNumGameSlots;
+	int m_nEngineState;
+	CTypedPtrArray<CPtrArray,CSaveGameSlot*> m_aGameSlots;
+	int m_nCurrentGameSlot;
+	unsigned int m_strErrorText;
+	Array<unsigned int,3> m_strErrorButtonText;
+	int m_nNumErrorButtons;
+	CPtrList m_lPopupStack;
+	int m_nMaxSlotNumber;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	int m_bHideSoA;
+	int m_bHideToB;
+
+	CScreenLoad() = delete;
+};
+
+struct CScreenMap : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	CPtrList m_lPopupStack;
+	__int16 m_nLastPicked;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	unsigned __int8 m_bSelectWorldOnUp;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontTool;
+	CVidFont m_preLoadFontStnSml;
+	unsigned int m_noteStrref;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	unsigned __int8 m_bCtrlKeyDown;
+	int m_nClairvoyanceCaster;
+	int m_nClairvoyanceDuration;
+	unsigned __int8 m_bClairvoyanceCastInBlack;
+	int m_nScrollState;
+	unsigned int m_nTimeLButtonHeld;
+	CRect m_HoldArea;
+	bool m_bDisplayExploredMap;
+	CVidMosaic m_vmMap;
+	unsigned int m_mapTint;
+	CGameArea* m_pArea;
+	CRect m_rViewPort;
+	Array<MAP_CHAR_POSITIONS,6> m_charPositions;
+	unsigned __int16 m_nCharInArea;
+	int m_nCharactersChanged;
+	unsigned int m_nUserNoteId;
+	CRect m_rMap;
+
+	CScreenMap() = delete;
+};
+
+struct CScreenMultiPlayer : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bCtrlKeyDown;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	CPtrList m_lPopupStack;
+	int m_nModifiedCharacterSlot;
+	int m_nEngineState;
+	int m_nChatMessageCount;
+	int m_nPermissionsChatMessageCount;
+	int m_nKickPlayerSlot;
+	int m_nCharacterSlot;
+	unsigned __int8 m_bMultiplayerStartup;
+	int m_bLastLockAllowInput;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	CVidFont m_preLoadFontTool;
+	unsigned __int8 m_bSentGameDemand;
+	Array<CString,6> m_playerNames;
+	Array<CString,6> m_characterNames;
+	Array<CString,6> m_characterPortrait;
+
+	CScreenMultiPlayer() = delete;
+};
+
+struct CScreenOptions : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bExitProgram;
+	CPtrList m_lPopupStack;
+	unsigned int m_dwErrorTextId;
+	unsigned int m_dwErrorState;
+	int m_nNumErrorButtons;
+	Array<unsigned int,3> m_strErrorButtonText;
+	CTypedPtrList<CPtrList,CGameOptions*> m_lOptionsStack;
+	int m_bSpriteMirror;
+	unsigned __int8 m_bCtrlKeyDown;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	unsigned __int8 m_bFullScreenOptions;
+	unsigned __int8 m_bReQuietSound;
+	int m_nTopKeymap;
+	int m_nSelectedKeymap;
+	int m_nNumKeymapEntries;
+	int m_nKeymapEditIndex;
+	char* m_cKeymapEditSection;
+	char* m_cKeymapEditConflictSection;
+	char* m_cKeymapEditConflictKey;
+	int m_nKeymapEditConflictIndex;
+	char m_cKeymapEditConflictValue;
+	int m_bPauseState;
+	int m_nEngineState;
+
+	CScreenOptions() = delete;
+};
+
+struct CScreenSave : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_bQuitGameSave;
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	int m_nTopGameSlot;
+	int m_nNumGameSlots;
+	int m_nEngineState;
+	CTypedPtrArray<CPtrArray,CSaveGameSlot*> m_aGameSlots;
+	CPtrList m_lPopupStack;
+	unsigned int m_strErrorText;
+	Array<unsigned int,3> m_strErrorButtonText;
+	int m_nNumErrorButtons;
+	int m_nCurrentGameSlot;
+	int m_nMaxSlotNumber;
+	unsigned __int8 m_bCtrlKeyDown;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	int m_bPauseState;
+
+	CScreenSave() = delete;
+};
+
+struct CScreenStart : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_bStartMusic;
+	int m_bExitProgram;
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	int m_bCtrlKeyDown;
+	Array<int,5> m_pVirtualKeysFlags;
+	unsigned __int8 m_bMovieOn;
+	int m_nEngineState;
+	int m_firstCall;
+	CPtrList m_lPopupStack;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	Array<unsigned int,4> m_strErrorButtonText;
+	int m_bPlayEndCredits;
+	int m_bSplashScreens;
+	int m_bNeedCDCheck;
+	int m_nCurrentDLC;
+	int m_nNumDLC;
+	int m_nLastImageUpdate;
+	int m_nDlcState;
+	CVidFont m_preloadFontStnSml;
+
+	CScreenStart() = delete;
+};
+
+struct CCacheStatus
+{
+	int m_nDrawnBars;
+	int m_nScreensDrawn;
+	int m_bDemandedResources;
+	int m_bTravelScreen;
+	int m_nProgressBarCaption;
+	int m_nParchmentCaption;
+	unsigned int m_dwLastUpdateTickCount;
+	int m_nTimeToNewHint;
+	int m_nCurrentHint;
+	int m_nCurrentHintRef;
+	int m_bWaiting;
+	CVidFont m_vidFont;
+	CVidFont m_initialsFont;
+	CVidFont m_parchmentFont;
+	CVidMosaic m_titleBar;
+	CVidCell m_skullAnimating;
+	CVidCell m_progressBar;
+	int m_nAnimationFrame;
+	int m_nAnimationDirection;
+	int m_bActivateEngine;
+
+	CCacheStatus() = delete;
+};
+
+struct CInfToolTip : CVidCell
+{
+	struct vtbl : CVidCell::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_sText;
+	CRect m_rSource;
+	int m_bUseSourceRect;
+	CVidFont m_textFont;
+	CSound m_openSnd;
+
+	CInfToolTip() = delete;
+};
+
+struct CInfCursor
+{
+	int bVisible;
+	CVidCell vcCursors;
+	CVidCell vcArrow;
+	CVidCell vcCustom;
+	CInfToolTip vcToolTip;
+	unsigned int nAnimationCounter;
+	int nAnimationSpeed;
+	int nCurrentCursor;
+	int nDirection;
+	int nState;
+	unsigned __int8 bAnimatingCustom;
+
+	CInfCursor() = delete;
+};
+
+struct CGameFile : CResHelper<CResGame,1013>
+{
+	CGameFile() = delete;
 };
 
 struct CGameDialogReply
@@ -8559,12 +9527,248 @@ struct CStore
 	CStore() = delete;
 };
 
+struct CSpell : CResHelper<CResSpell,1006>
+{
+	CSpell() = delete;
+
+	typedef void (__thiscall *type_Construct)(CSpell* pThis, CResRef res);
+	static type_Construct p_Construct;
+
+	void Construct(CResRef res)
+	{
+		p_Construct(this, res);
+	}
+};
+
 struct CSequenceSound
 {
 	CResRef m_sound;
 	int m_offset;
 
 	CSequenceSound() = delete;
+};
+
+struct CScreenWorldMap : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+	unsigned __int8 m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	CPtrList m_lPopupStack;
+	CSize m_mapSize;
+	int m_nEngineState;
+	CPoint m_ptMapView;
+	CVidMosaic m_vmMap;
+	CVidCell m_vcAreas;
+	CVidCell m_vcMarker;
+	CVidFont m_vfLabel;
+	Array<tagRGBQUAD,256> m_aPalette;
+	unsigned int m_wAreaForeground;
+	unsigned int m_nHighlightArea;
+	unsigned int m_nSelectedArea;
+	int m_bSelectedReachable;
+	int m_bOverSelectedArea;
+	CPoint m_ptMapStartMousePos;
+	CPoint m_ptMapStartView;
+	int m_bMapDragging;
+	CGameArea* m_pCurrentArea;
+	int m_nLeaderSprite;
+	CList<unsigned long,unsigned long*>* m_pPath;
+	int m_nLeavingEdge;
+	unsigned int m_nCurrentLink;
+	CResRef m_cResCurrentArea;
+	CArray<CRect,CRect*> m_aAreaRect;
+	CArray<CRect,CRect*> m_aAreaMarker;
+	CUIControlTextDisplay* m_pChatDisplay;
+	int m_nChatMessageCount;
+	unsigned __int8 m_bInControl;
+	unsigned __int8 m_bClickedArea;
+	int m_nCurrentSong;
+	unsigned int m_nToolTip;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontTool;
+	unsigned __int8 m_nScrollState;
+	CResRef m_rForceRandomEncounter;
+	CString m_sForcedEncounterEntry;
+	int m_bFontDropShadow;
+
+	CScreenWorldMap() = delete;
+};
+
+struct CScreenWorld : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_nStupidMovieWait;
+	int m_bProtagonistInStartArea;
+	int m_nProtagonistMoveMax;
+	int m_bWaitToRender;
+	SDL_Event flickEvent;
+	int m_bIgnoreDisplayTextTop;
+	int nCounter;
+	int m_boredCount;
+	int m_bored;
+	int m_playerShutdown;
+	int m_bShiftKeyDown;
+	int m_bMenuKeyDown;
+	int m_bCtrlKeyDown;
+	int m_bCapsLockKeyOn;
+	unsigned __int8 m_bPaused;
+	unsigned __int8 m_bHardPaused;
+	unsigned __int8 m_bHostOnlyPaused;
+	unsigned __int8 m_bVisualPaused;
+	unsigned __int8 m_bFirstRender;
+	int m_bPausedBeforePickParty;
+	int m_bCheatKeys;
+	int m_bMButtonDown;
+	int m_bMButtonDragged;
+	int m_bSetStartViewCenter;
+	CPoint m_ptStartViewCenter;
+	__int16 m_sequence;
+	unsigned __int8 m_facing;
+	unsigned __int8 m_bloodLevel;
+	unsigned __int16 m_castingGlow;
+	unsigned __int8 m_hitEffect;
+	__int16 m_renderText;
+	int m_newText;
+	CVidFont m_vidFont;
+	CVidFont m_vidFont2;
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	CGameDialogSprite m_internalLoadedDialog;
+	CGameDialogSprite* m_pCurrentDialog;
+	CPoint m_dialogStartPos;
+	CResRef m_dialogStartArea;
+	int m_dialogPausing;
+	CRect m_newViewSize;
+	int m_bForceViewSize;
+	unsigned __int8 m_waitingOnResize;
+	unsigned __int8 m_storeText;
+	CString m_consoleText;
+	int m_nTopContainerRow;
+	int m_nTopGroupRow;
+	unsigned __int8 m_bForceDitherToggledOn;
+	CWeather m_WeatherController;
+	int m_scrollLockId;
+	__int16 m_nResponseMarker;
+	int m_bBlockStepDialog;
+	int m_interactionIndex;
+	int m_interactionTarget;
+	CString m_interactionString;
+	int m_interactionCounter;
+	int m_interactionForce;
+	int m_interactionTime;
+	int m_lastInteractionIndex;
+	unsigned __int8 m_bSetNightOnActivate;
+	unsigned __int8 m_bSetDayOnActivate;
+	int m_ambianceForce;
+	unsigned int m_deltaTime;
+	int m_nChatMessageCount;
+	CResRef m_movie;
+	unsigned __int8 m_bInControlOfDialog;
+	unsigned __int8 m_bInControlOfStore;
+	int m_bGameOverPanel;
+	CResRef m_movieDelay;
+	int m_autoPauseId;
+	unsigned int m_autoPauseRef;
+	unsigned int m_autoPauseColor;
+	unsigned int m_autoPauseName;
+	int m_nStoreChatMessageCount;
+	int m_nPickPartyRemoveCharacterId;
+	Array<int,10> m_aPickPartyCharacter;
+	int m_nPickPartyNumCharacters;
+	unsigned int m_strErrorText;
+	Array<unsigned int,3> m_strErrorButtonText;
+	unsigned int m_nDialogPanelOnStartDialog;
+	unsigned __int8 m_bDialogPressedAButton;
+	unsigned __int8 m_bEndMajorEventListenToJoin;
+	unsigned __int8 m_bEndMajorEventPauseStatus;
+	unsigned __int8 m_bChapterTransitionPending;
+	int m_nChapterTransition;
+	CResRef m_szChapterTransitionResRef;
+	unsigned __int8 m_bTextScreenTransitionPending;
+	CResRef m_szTextScreenTransitionResRef;
+	unsigned __int8 m_bMoviePending;
+	CResRef m_szMovieResRef;
+	unsigned __int8 m_bPendingMapWorld;
+	int m_idPendingMapWorldController;
+	__int16 m_nPendingMapWorldDirection;
+	unsigned __int8 m_bRestPending;
+	unsigned __int8 m_bRestRenting;
+	unsigned __int8 m_bRestMovie;
+	int m_nRestHP;
+	int m_nRestGP;
+	int m_nBattleCryTimeOut;
+	CTypedPtrList<CPtrList,CDeathSound*> m_deathSoundList;
+	int m_nPartySizeCheckStartDelay;
+	unsigned __int8 m_bPlayEndCredits;
+	unsigned __int8 m_bPendingReformParty;
+	unsigned __int8 m_bLeaveAreaLuaPanicPending;
+	unsigned int m_ulLeaveAreaLuaPanicTimer;
+	CPoint m_ptLeaveAreaLuaPanicLocation;
+	__int16 m_nLeaveAreaLuaPanicDirection;
+	CString m_sLeaveAreaLuaPanicAreaName;
+	CString m_sLeaveAreaLuaPanicParchment;
+	unsigned int m_dwPausedTickCount;
+	unsigned int m_dwLastDialogTickCount;
+	int m_lastAmbiance;
+	int m_comingOutOfDialog;
+	unsigned __int8 m_nAutoHideInterface;
+	unsigned __int8 m_nAutoUnhideInterface;
+	CRect m_rCurrViewPort;
+	int m_bLeftPanel;
+	int m_bRightPanel;
+	unsigned __int8 m_bCheckRestrict;
+	CTypedPtrList<CPtrList,long> m_otherTalkers;
+	int m_nInteractionBlockCnt;
+	int m_bInteractionBlock;
+	int m_nStateOverride;
+	int m_nStateOverrideCnt;
+	int m_nBlackOutCountDown;
+	int m_nCutSceneDeadZoneCountDown;
+	int m_nContainerOutline;
+	int m_tutorialWaitTimer;
+	int m_bPausedBeforeStore;
+	int m_nPauseMessageUpdate;
+	unsigned int m_deathStrRef;
+	int m_bHighlightEnabled;
+	float m_fPanStorage;
+	int m_bViewingContainer;
+	int m_bInDialog;
+	int m_bDead;
+	int m_bInCommand;
+	int m_bPickingParty;
+	int m_bAutoZooming;
+	float m_fPreviousZoom;
+	float m_fTargetZoom;
+	CRect m_rPreviousViewPort;
+	CPoint m_ptPreviousView;
+	CPoint m_ptTarget;
+	int m_nZoomCurStep;
+	CRect m_rOriginalViewPort;
+	CPoint m_ptOriginalView;
+	float m_fOriginalZoom;
+	int* m_storedGroup;
+	int m_nStoredGroupMembers;
+
+	CScreenWorld() = delete;
+
+	typedef int (__thiscall *type_TogglePauseGame)(CScreenWorld* pThis, byte visualPause, byte bSendMessage, int idPlayerPause, byte bLogPause, byte bRequireHostUnpause);
+	static type_TogglePauseGame p_TogglePauseGame;
+
+	int TogglePauseGame(byte visualPause, byte bSendMessage, int idPlayerPause, byte bLogPause, byte bRequireHostUnpause)
+	{
+		return p_TogglePauseGame(this, visualPause, bSendMessage, idPlayerPause, bLogPause, bRequireHostUnpause);
+	}
 };
 
 struct CScreenWizSpell : CBaldurEngine
@@ -8636,6 +9840,65 @@ struct CScreenPriestSpell : CBaldurEngine
 	CScreenPriestSpell() = delete;
 };
 
+struct CScreenJournal : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	int m_bShiftKeyDown;
+	int m_bCapsLockKeyOn;
+	unsigned __int8 m_bCtrlKeyDown;
+	CResRef m_oldMosaic;
+	CResRef m_oldFont;
+	unsigned int m_rgbOldText;
+	unsigned int m_rgbOldBackground;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontTool;
+	int m_bPauseState;
+
+	CScreenJournal() = delete;
+};
+
+struct CScreenInventory : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CItem* m_pTempItem;
+	Array<CKeyInfo,98> m_pVirtualKeys;
+	Array<int,98> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+	CPoint m_cLastMousePosition;
+	int m_nTopGroundItem;
+	Array<int,6> m_nGroundPile;
+	Array<int,6> m_bGroundPileQueried;
+	int m_nErrorState;
+	unsigned int m_strErrorText;
+	int m_nNumErrorButtons;
+	int m_nLastSwapPortrait;
+	unsigned int m_dwLastSwapButton;
+	int m_bMultiPlayerViewable;
+	CResRef m_cCheckLearnSpellRes;
+	int m_nCheckLearnSpellCountDown;
+	int m_bDroppedItemInHand;
+	unsigned __int8 m_bPauseWarningDisplayed;
+	CVidFont m_preLoadFontRealms;
+	CVidFont m_preLoadFontStnSml;
+	CVidFont m_preLoadFontTool;
+	unsigned int m_stSpellsDisabled;
+	int m_bLearnSpellFailed;
+	unsigned int m_strLearnSpellFailedReason;
+	int m_bPauseState;
+
+	CScreenInventory() = delete;
+};
+
 struct CScreenCharacter : CBaldurEngine
 {
 	struct vtbl : CBaldurEngine::vtbl
@@ -8685,6 +9948,39 @@ struct CScreenCharacter : CBaldurEngine
 	int m_bIsCharGenMenu;
 
 	CScreenCharacter() = delete;
+};
+
+struct CScreenChapter : CBaldurEngine
+{
+	struct vtbl : CBaldurEngine::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<CKeyInfo,5> m_pVirtualKeys;
+	Array<int,5> m_pVirtualKeysFlags;
+	unsigned __int8 m_bCtrlKeyDown;
+	int m_nChapter;
+	int m_nDream;
+	CResRef m_cResText;
+	CList<unsigned long,unsigned long*>* m_pTextList;
+	CTypedPtrList<CPtrList,CResRef*> m_bmpList;
+	int m_nBmpFlip;
+	int m_nCurrBmp;
+	int m_nParagraph;
+	int m_nLine;
+	CSound m_cVoiceSound;
+	int m_bStartSound;
+	int m_nEngineState;
+	CResRef m_cResPower;
+	int m_nSongCountDown;
+	CVidFont m_preLoadFontRealms;
+	int m_bMPRemoveTextScreen;
+	int m_nCustomSong;
+	int m_waitingForNetwork;
+	CWarp* m_destinationEngine;
+
+	CScreenChapter() = delete;
 };
 
 struct CSavedGameStoredLocation
@@ -8757,113 +10053,6 @@ struct CSaveGameSlot
 	CString m_sChapter;
 
 	CSaveGameSlot() = delete;
-};
-
-template<class RES_CLASS, int RES_ID>
-struct CResHelper
-{
-	RES_CLASS* pRes;
-	CResRef cResRef;
-
-	CResHelper() = delete;
-};
-
-struct C2DArray : CResHelper<CResText,1012>
-{
-	VariableArray<CString>* m_pNamesX;
-	VariableArray<CString>* m_pNamesY;
-	VariableArray<CString>* m_pArray;
-	CString m_default;
-	__int16 m_nSizeX;
-	__int16 m_nSizeY;
-
-	C2DArray() = delete;
-
-	typedef void (__thiscall *type_Construct)(C2DArray* pThis);
-	static type_Construct p_Construct;
-
-	typedef void (__thiscall *type_Load)(C2DArray* pThis, const CResRef* res);
-	static type_Load p_Load;
-
-	typedef const CString* (__thiscall *type_GetAtLabels)(C2DArray* pThis, const CString* nX, const CString* nY);
-	static type_GetAtLabels p_GetAtLabels;
-
-	typedef void (__thiscall *type_Destruct)(C2DArray* pThis);
-	static type_Destruct p_Destruct;
-
-	void Construct()
-	{
-		p_Construct(this);
-	}
-
-	void Load(const CResRef* res)
-	{
-		p_Load(this, res);
-	}
-
-	const CString* GetAtLabels(const CString* nX, const CString* nY)
-	{
-		return p_GetAtLabels(this, nX, nY);
-	}
-
-	void Destruct()
-	{
-		p_Destruct(this);
-	}
-};
-
-struct CAIIdList : CResHelper<CResText,1008>
-{
-	struct vtbl
-	{
-		void (__fastcall *Destruct)(CAIIdList*);
-
-		vtbl() = delete;
-	};
-
-	CString m_fileName;
-	CTypedPtrList<CPtrList,CAIId*> m_idList;
-	int m_faster;
-	VariableArray<CAIId*>* m_pIdArray;
-	int m_nArray;
-
-	CAIIdList() = delete;
-
-	typedef void (__thiscall *type_Construct_Overload_Default)(CAIIdList* pThis);
-	static type_Construct_Overload_Default p_Construct_Overload_Default;
-
-	typedef void (__thiscall *type_Destruct)(CAIIdList* pThis);
-	static type_Destruct p_Destruct;
-
-	typedef void (__thiscall *type_LoadList_Overload_Resref)(CAIIdList* pThis, CResRef id, int faster);
-	static type_LoadList_Overload_Resref p_LoadList_Overload_Resref;
-
-	typedef CAIId* (__thiscall *type_Find_Overload_ID)(CAIIdList* pThis, int id);
-	static type_Find_Overload_ID p_Find_Overload_ID;
-
-	void Construct()
-	{
-		p_Construct_Overload_Default(this);
-	}
-
-	void Destruct()
-	{
-		p_Destruct(this);
-	}
-
-	void LoadList(CResRef id, int faster)
-	{
-		p_LoadList_Overload_Resref(this, id, faster);
-	}
-
-	CAIId* Find(int id)
-	{
-		return p_Find_Overload_ID(this, id);
-	}
-
-	virtual void virtual_Destruct()
-	{
-	}
 };
 
 struct CRuleTables
@@ -9120,1138 +10309,6 @@ struct CRuleTables
 	byte MapCharacterSpecializationToSchool(ushort nSpecialistMage)
 	{
 		return p_MapCharacterSpecializationToSchool(this, nSpecialistMage);
-	}
-};
-
-struct CAIScriptFile
-{
-	__int16 m_parseMode;
-	int m_lineNumber;
-	CAIScript* m_curScript;
-	CAIResponseSet* m_curResponseSet;
-	CAICondition* m_curCondition;
-	CAIResponse* m_curResponse;
-	CString m_errors;
-	CFile m_file;
-	CString source;
-	CString m_decompiledText;
-	CAIIdList m_actions;
-	CAIIdList m_triggers;
-	CAIIdList m_objects;
-
-	CAIScriptFile() = delete;
-
-	typedef void (__thiscall *type_Construct)(CAIScriptFile* pThis);
-	static type_Construct p_Construct;
-
-	typedef void (__thiscall *type_Destruct)(CAIScriptFile* pThis);
-	static type_Destruct p_Destruct;
-
-	typedef void (__thiscall *type_ParseConditionalString)(CAIScriptFile* pThis, CString* data);
-	static type_ParseConditionalString p_ParseConditionalString;
-
-	typedef CAIObjectType* (__thiscall *type_ParseObjectType)(CAIScriptFile* pThis, CAIObjectType* result, CString* input);
-	static type_ParseObjectType p_ParseObjectType;
-
-	typedef void (__thiscall *type_ParseResponseString)(CAIScriptFile* pThis, CString* data);
-	static type_ParseResponseString p_ParseResponseString;
-
-	void Construct()
-	{
-		p_Construct(this);
-	}
-
-	void Destruct()
-	{
-		p_Destruct(this);
-	}
-
-	void ParseConditionalString(CString* data)
-	{
-		p_ParseConditionalString(this, data);
-	}
-
-	CAIObjectType* ParseObjectType(CAIObjectType* result, CString* input)
-	{
-		return p_ParseObjectType(this, result, input);
-	}
-
-	void ParseResponseString(CString* data)
-	{
-		p_ParseResponseString(this, data);
-	}
-};
-
-struct CGameFile : CResHelper<CResGame,1013>
-{
-	CGameFile() = delete;
-};
-
-struct CVidMosaic : CVidImage, CResHelper<CResMosaic,1004>
-{
-	CVidMosaic() = delete;
-};
-
-struct CVidFont : CResHelper<CResFont,1034>
-{
-	CVidCellFont* vidCellFont;
-	unsigned int foreground;
-	unsigned int tintcolor;
-	int pointSize;
-	int zoom;
-
-	CVidFont() = delete;
-};
-
-struct CScreenInventory : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CItem* m_pTempItem;
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-	CPoint m_cLastMousePosition;
-	int m_nTopGroundItem;
-	Array<int,6> m_nGroundPile;
-	Array<int,6> m_bGroundPileQueried;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	int m_nLastSwapPortrait;
-	unsigned int m_dwLastSwapButton;
-	int m_bMultiPlayerViewable;
-	CResRef m_cCheckLearnSpellRes;
-	int m_nCheckLearnSpellCountDown;
-	int m_bDroppedItemInHand;
-	unsigned __int8 m_bPauseWarningDisplayed;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	CVidFont m_preLoadFontTool;
-	unsigned int m_stSpellsDisabled;
-	int m_bLearnSpellFailed;
-	unsigned int m_strLearnSpellFailedReason;
-	int m_bPauseState;
-
-	CScreenInventory() = delete;
-};
-
-struct CScreenJournal : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	unsigned __int8 m_bCtrlKeyDown;
-	CResRef m_oldMosaic;
-	CResRef m_oldFont;
-	unsigned int m_rgbOldText;
-	unsigned int m_rgbOldBackground;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontTool;
-	int m_bPauseState;
-
-	CScreenJournal() = delete;
-};
-
-struct CScreenCreateChar : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	C2DArray m_kitList;
-	CImportGame m_importGame;
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bCtrlKeyDown;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	CScreenCreateCharStep m_nFirstStep;
-	CScreenCreateCharStep m_nCurrentStep;
-	CScreenCreateCharStep m_nNextStep;
-	int m_nGameSprite;
-	int m_nExtraProficiencySlots;
-	int m_nExtraAbilityPoints;
-	int m_nExtraSpells;
-	int m_nExtraSkillPoints;
-	int m_nBasePickPockets;
-	int m_nBaseOpenLocks;
-	int m_nBaseDetectTraps;
-	int m_nBaseMoveSilently;
-	int m_nBaseHideInShadows;
-	int m_nBaseDetectIllusion;
-	int m_nBaseSetTraps;
-	unsigned __int8 m_nMinSTR;
-	unsigned __int8 m_nMinDEX;
-	unsigned __int8 m_nMinCON;
-	unsigned __int8 m_nMinINT;
-	unsigned __int8 m_nMinWIS;
-	unsigned __int8 m_nMinCHR;
-	unsigned __int8 m_nMaxSTR;
-	unsigned __int8 m_nMaxDEX;
-	unsigned __int8 m_nMaxCON;
-	unsigned __int8 m_nMaxINT;
-	unsigned __int8 m_nMaxWIS;
-	unsigned __int8 m_nMaxCHR;
-	unsigned __int8 m_nPreviousMin;
-	unsigned __int8 m_nPreviousMax;
-	int m_nMaxProficiencySlots;
-	__POSITION* m_nCurrentPortrait;
-	CStringList* m_pAppearancePortraits;
-	CPtrList m_lPopupStack;
-	int m_nEngineState;
-	int m_nCharacterSlot;
-	int m_nTopHatedRace;
-	unsigned __int8 m_nPickRange;
-	unsigned __int8 m_nMemorySTR;
-	unsigned __int8 m_nMemorySTRExtra;
-	unsigned __int8 m_nMemoryDEX;
-	unsigned __int8 m_nMemoryCON;
-	unsigned __int8 m_nMemoryINT;
-	unsigned __int8 m_nMemoryWIS;
-	unsigned __int8 m_nMemoryCHR;
-	int m_nMemoryExtra;
-	int m_nPortraitSmallIndex;
-	int m_nPortraitMediumIndex;
-	CStringList* m_pPortraits;
-	int m_nCustomSoundSetIndex;
-	int m_nCustomSoundIndex;
-	int m_nCharacterIndex;
-	int m_nPrerollTopIndex;
-	CStringList* m_pCharacters;
-	int m_bImported;
-	CStringList* m_pSounds;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	CVidFont m_preLoadFontTool;
-	unsigned __int8 m_nCurrentSpellLevel;
-	int m_nExtraMageSpells;
-	CCreatureFileHeader* m_pOldBaseStats;
-	CDerivedStats* m_pOldDerivedStats;
-	int m_nOldConHPBonus;
-	unsigned __int8 m_nCurrentSpellLevelChoice;
-	unsigned __int8 m_nCurrentSpellLevelChoiceMax;
-	unsigned __int16 m_nImportedCharHPs;
-	unsigned __int16 m_nImportedCharConBonus;
-	unsigned __int8 m_nImportedDualClass;
-	unsigned int m_nImportedDualKit;
-	int m_nImportedDualReactivated;
-	unsigned __int8 m_byImportedCharVersion;
-	__int16 m_nSelectedSpecialistSpells;
-	__int16 m_nMemorizedSpecialistSpells;
-	int m_nTotalKits;
-	unsigned __int16 m_nHatedRaces;
-	importStateType m_importState;
-	unsigned int m_strDefaultHelpString;
-	unsigned __int8 m_bUpdatedHelp;
-	unsigned int m_strCurrentHelpString;
-	int m_bGaveExtraXP;
-	int m_nExtraXP;
-	CString m_sImportCharName;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	Array<int,9> m_OldMageSpells;
-	Array<int,7> m_OldPriestSpells;
-	CTypedPtrArray<CPtrArray,__int8> m_aBaseProficiencySlots;
-	CCreatureFileHeader* m_pTempBaseStats;
-	CDerivedStats* m_pTempDerivedStats;
-	Array<int,7> m_storedSkillPoints;
-	int m_bAddInactiveAbilities;
-	CStringList* m_szCharInfoStorage;
-	int m_nSpellcasterLevel;
-	int m_nNumLevelUpAbilities;
-	unsigned __int8 m_nCurrentAbilityLevelChoice;
-	int m_bFinishedAbilitySelection;
-	CGameAbilityList* m_lstLevelUpAbilitiesList;
-	Array<unsigned __int8,24> m_lstSelectedAbility;
-	unsigned __int8 m_nSelectedAbilityInd;
-	int m_nDualClass;
-	int m_nSpecialization;
-
-	CScreenCreateChar() = delete;
-};
-
-struct CScreenCreateParty : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	int m_bCtrlKeyDown;
-	Array<int,5> m_pVirtualKeysFlags;
-	int m_nEngineState;
-	int m_firstCall;
-	CVidFont m_preloadFontStnSml;
-	int m_nCharacterSlot;
-
-	CScreenCreateParty() = delete;
-};
-
-struct CScreenDLC : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bExitProgram;
-	CPtrList m_lPopupStack;
-	unsigned int m_dwErrorTextId;
-	unsigned int m_dwErrorState;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	CTypedPtrList<CPtrList,CGameOptions*> m_lOptionsStack;
-	int m_bSpriteMirror;
-	unsigned __int8 m_bCtrlKeyDown;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	int m_nNumDLC;
-	int m_nCurrentDLC;
-	int m_nDlcState;
-
-	CScreenDLC() = delete;
-};
-
-struct CScreenLoad : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	Array<int,5> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-	int m_nTopGameSlot;
-	int m_nNumGameSlots;
-	int m_nEngineState;
-	CTypedPtrArray<CPtrArray,CSaveGameSlot*> m_aGameSlots;
-	int m_nCurrentGameSlot;
-	unsigned int m_strErrorText;
-	Array<unsigned int,3> m_strErrorButtonText;
-	int m_nNumErrorButtons;
-	CPtrList m_lPopupStack;
-	int m_nMaxSlotNumber;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	int m_bHideSoA;
-	int m_bHideToB;
-
-	CScreenLoad() = delete;
-};
-
-struct CScreenMap : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	CPtrList m_lPopupStack;
-	__int16 m_nLastPicked;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	unsigned __int8 m_bSelectWorldOnUp;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontTool;
-	CVidFont m_preLoadFontStnSml;
-	unsigned int m_noteStrref;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	unsigned __int8 m_bCtrlKeyDown;
-	int m_nClairvoyanceCaster;
-	int m_nClairvoyanceDuration;
-	unsigned __int8 m_bClairvoyanceCastInBlack;
-	int m_nScrollState;
-	unsigned int m_nTimeLButtonHeld;
-	CRect m_HoldArea;
-	bool m_bDisplayExploredMap;
-	CVidMosaic m_vmMap;
-	unsigned int m_mapTint;
-	CGameArea* m_pArea;
-	CRect m_rViewPort;
-	Array<MAP_CHAR_POSITIONS,6> m_charPositions;
-	unsigned __int16 m_nCharInArea;
-	int m_nCharactersChanged;
-	unsigned int m_nUserNoteId;
-	CRect m_rMap;
-
-	CScreenMap() = delete;
-};
-
-struct CScreenMultiPlayer : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bCtrlKeyDown;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	CPtrList m_lPopupStack;
-	int m_nModifiedCharacterSlot;
-	int m_nEngineState;
-	int m_nChatMessageCount;
-	int m_nPermissionsChatMessageCount;
-	int m_nKickPlayerSlot;
-	int m_nCharacterSlot;
-	unsigned __int8 m_bMultiplayerStartup;
-	int m_bLastLockAllowInput;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	CVidFont m_preLoadFontTool;
-	unsigned __int8 m_bSentGameDemand;
-	Array<CString,6> m_playerNames;
-	Array<CString,6> m_characterNames;
-	Array<CString,6> m_characterPortrait;
-
-	CScreenMultiPlayer() = delete;
-};
-
-struct CScreenOptions : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bExitProgram;
-	CPtrList m_lPopupStack;
-	unsigned int m_dwErrorTextId;
-	unsigned int m_dwErrorState;
-	int m_nNumErrorButtons;
-	Array<unsigned int,3> m_strErrorButtonText;
-	CTypedPtrList<CPtrList,CGameOptions*> m_lOptionsStack;
-	int m_bSpriteMirror;
-	unsigned __int8 m_bCtrlKeyDown;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	unsigned __int8 m_bFullScreenOptions;
-	unsigned __int8 m_bReQuietSound;
-	int m_nTopKeymap;
-	int m_nSelectedKeymap;
-	int m_nNumKeymapEntries;
-	int m_nKeymapEditIndex;
-	char* m_cKeymapEditSection;
-	char* m_cKeymapEditConflictSection;
-	char* m_cKeymapEditConflictKey;
-	int m_nKeymapEditConflictIndex;
-	char m_cKeymapEditConflictValue;
-	int m_bPauseState;
-	int m_nEngineState;
-
-	CScreenOptions() = delete;
-};
-
-struct CScreenSave : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	int m_bQuitGameSave;
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	int m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	int m_nTopGameSlot;
-	int m_nNumGameSlots;
-	int m_nEngineState;
-	CTypedPtrArray<CPtrArray,CSaveGameSlot*> m_aGameSlots;
-	CPtrList m_lPopupStack;
-	unsigned int m_strErrorText;
-	Array<unsigned int,3> m_strErrorButtonText;
-	int m_nNumErrorButtons;
-	int m_nCurrentGameSlot;
-	int m_nMaxSlotNumber;
-	unsigned __int8 m_bCtrlKeyDown;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontStnSml;
-	int m_bPauseState;
-
-	CScreenSave() = delete;
-};
-
-struct CScreenStart : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	int m_bStartMusic;
-	int m_bExitProgram;
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	int m_bCtrlKeyDown;
-	Array<int,5> m_pVirtualKeysFlags;
-	unsigned __int8 m_bMovieOn;
-	int m_nEngineState;
-	int m_firstCall;
-	CPtrList m_lPopupStack;
-	int m_nErrorState;
-	unsigned int m_strErrorText;
-	int m_nNumErrorButtons;
-	Array<unsigned int,4> m_strErrorButtonText;
-	int m_bPlayEndCredits;
-	int m_bSplashScreens;
-	int m_bNeedCDCheck;
-	int m_nCurrentDLC;
-	int m_nNumDLC;
-	int m_nLastImageUpdate;
-	int m_nDlcState;
-	CVidFont m_preloadFontStnSml;
-
-	CScreenStart() = delete;
-};
-
-struct CVidCell : CVidImage, CResHelper<CResCell,1000>
-{
-	struct vtbl
-	{
-		int (__fastcall *FrameAdvance)(CVidCell*);
-		int (__fastcall *Render)(CVidCell*, unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*);
-		int (__fastcall *Render_2)(CVidCell*, int, int, const CRect*, CVidPoly*, int, unsigned int, int);
-		void (__fastcall *StoreBackground)(CVidCell*, int, int, const CRect*, CRect*, unsigned __int8);
-		int (__fastcall *GetFrame)(CVidCell*);
-
-		vtbl() = delete;
-	};
-
-	__int16 m_nCurrentFrame;
-	unsigned __int16 m_nCurrentSequence;
-	int m_nAnimType;
-	int m_bPaletteChanged;
-	frameTableEntry_st* m_pFrame;
-	unsigned __int8 m_bShadowOn;
-
-	CVidCell() = delete;
-
-	virtual int virtual_FrameAdvance()
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int virtual_Render(unsigned int*, int, int, int, const CRect*, unsigned int, const CPoint*)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual int virtual_Render_2(int, int, const CRect*, CVidPoly*, int, unsigned int, int)
-	{
-		return *(int*)nullptr;
-	}
-
-	virtual void virtual_StoreBackground(int, int, const CRect*, CRect*, unsigned __int8)
-	{
-	}
-
-	virtual int virtual_GetFrame()
-	{
-		return *(int*)nullptr;
-	}
-};
-
-struct CScreenWorldMap : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-	unsigned __int8 m_bShiftKeyDown;
-	int m_bCapsLockKeyOn;
-	CPtrList m_lPopupStack;
-	CSize m_mapSize;
-	int m_nEngineState;
-	CPoint m_ptMapView;
-	CVidMosaic m_vmMap;
-	CVidCell m_vcAreas;
-	CVidCell m_vcMarker;
-	CVidFont m_vfLabel;
-	Array<tagRGBQUAD,256> m_aPalette;
-	unsigned int m_wAreaForeground;
-	unsigned int m_nHighlightArea;
-	unsigned int m_nSelectedArea;
-	int m_bSelectedReachable;
-	int m_bOverSelectedArea;
-	CPoint m_ptMapStartMousePos;
-	CPoint m_ptMapStartView;
-	int m_bMapDragging;
-	CGameArea* m_pCurrentArea;
-	int m_nLeaderSprite;
-	CList<unsigned long,unsigned long*>* m_pPath;
-	int m_nLeavingEdge;
-	unsigned int m_nCurrentLink;
-	CResRef m_cResCurrentArea;
-	CArray<CRect,CRect*> m_aAreaRect;
-	CArray<CRect,CRect*> m_aAreaMarker;
-	CUIControlTextDisplay* m_pChatDisplay;
-	int m_nChatMessageCount;
-	unsigned __int8 m_bInControl;
-	unsigned __int8 m_bClickedArea;
-	int m_nCurrentSong;
-	unsigned int m_nToolTip;
-	CVidFont m_preLoadFontRealms;
-	CVidFont m_preLoadFontTool;
-	unsigned __int8 m_nScrollState;
-	CResRef m_rForceRandomEncounter;
-	CString m_sForcedEncounterEntry;
-	int m_bFontDropShadow;
-
-	CScreenWorldMap() = delete;
-};
-
-struct CCacheStatus
-{
-	int m_nDrawnBars;
-	int m_nScreensDrawn;
-	int m_bDemandedResources;
-	int m_bTravelScreen;
-	int m_nProgressBarCaption;
-	int m_nParchmentCaption;
-	unsigned int m_dwLastUpdateTickCount;
-	int m_nTimeToNewHint;
-	int m_nCurrentHint;
-	int m_nCurrentHintRef;
-	int m_bWaiting;
-	CVidFont m_vidFont;
-	CVidFont m_initialsFont;
-	CVidFont m_parchmentFont;
-	CVidMosaic m_titleBar;
-	CVidCell m_skullAnimating;
-	CVidCell m_progressBar;
-	int m_nAnimationFrame;
-	int m_nAnimationDirection;
-	int m_bActivateEngine;
-
-	CCacheStatus() = delete;
-};
-
-struct CInfButtonSettings
-{
-	int m_bEnabled;
-	int m_bShowIcon;
-	int m_bOverrideRender;
-	int m_nButtonFrame;
-	int m_nButtonSelectedFrame;
-	CVidCell m_vcIcon;
-	CVidCell m_vcLauncherIcon;
-	int m_bSelectable;
-	int m_bSelected;
-	int m_bHighlighted;
-	int m_itemCount;
-	int m_itemCharge;
-	int m_bGreyOut;
-
-	CInfButtonSettings() = delete;
-};
-
-struct CPortraitIcon
-{
-	int icon;
-	int frame;
-	CVidCell bam;
-
-	CPortraitIcon() = delete;
-};
-
-struct CVidCellFont : CVidCell
-{
-	struct vtbl : CVidCell::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CVidCellFont() = delete;
-};
-
-struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
-{
-	__int16 m_nBitCount;
-	CString m_szResFileName;
-
-	CVidBitmap() = delete;
-};
-
-struct CScreenAI : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CVidBitmap m_bmpScreen;
-	C2DArray m_tSplashScreens;
-	__int16 m_nSplashScreen;
-	int m_nSplashTimer;
-	int m_bInteractiveDemoQuit;
-	unsigned __int8 m_nBmpDraw;
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	Array<int,5> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-
-	CScreenAI() = delete;
-};
-
-struct CSearchBitmap
-{
-	CVidBitmap m_resSearch;
-	unsigned __int8* m_pDynamicCost;
-	unsigned __int8* m_snapshotDynamicCost;
-	const unsigned __int8* m_snapshotTerrainTable;
-	CSize m_GridSquareDimensions;
-	CGameArea* m_pArea;
-	unsigned __int8 m_sourceSide;
-	unsigned __int8 m_snapshotPersonalSpace;
-
-	CSearchBitmap() = delete;
-
-	typedef byte (__thiscall *type_GetCost)(CSearchBitmap* pThis, CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump);
-	static type_GetCost p_GetCost;
-
-	byte GetCost(CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump)
-	{
-		return p_GetCost(this, point, terrainTable, snapshotPersonalSpace, nTableIndex, bCheckBump);
-	}
-};
-
-struct CVidMode
-{
-	static ushort* p_SCREENWIDTH;
-	static ushort* p_SCREENHEIGHT;
-	int m_nPrintFile;
-	int m_nPointerNumber;
-	unsigned int m_dwCursorRenderFlags;
-	unsigned int m_dwRedMask;
-	unsigned int m_dwGreenMask;
-	unsigned int m_dwBlueMask;
-	unsigned __int8 m_bFadeTo;
-	unsigned __int8 m_nFade;
-	SDL_Window* m_pWindow;
-	void* m_glContext;
-	CVidBitmap m_circle;
-	int nWidth;
-	int nHeight;
-	bool bRedrawEntireScreen;
-	bool bHardwareMouseCursor;
-	CVidCell* pPointerVidCell;
-	CVidCell* pTooltipVidCell;
-	unsigned __int8 m_bPrintScreen;
-	unsigned int nTickCount;
-	float m_fInputScale;
-	unsigned int rgbGlobalTint;
-	unsigned __int8 m_nGammaCorrection;
-	unsigned __int8 m_nBrightnessCorrection;
-	int m_nScreenScrollY;
-	int m_nScreenScrollX;
-	int nRShift;
-	int nGShift;
-	int nBShift;
-	tagRGBQUAD rgbTint;
-	int bPointerEnabled;
-	CRect rPointerStorage;
-	CRect m_rLockedRect;
-	CVidCell* m_lastCursor;
-	int m_lastCursorFrame;
-	int m_lastCursorSequence;
-	int m_lastCursorNumber;
-	unsigned int m_lastCursorFlags;
-	unsigned int m_lastCursorResId;
-	SDL_Cursor* m_hwCursor;
-	SDL_Surface* m_hwCursorSurface;
-	int nVRamSurfaces;
-	CVidBitmap m_rgbMasterBitmap;
-
-	CVidMode() = delete;
-};
-
-struct CSpell : CResHelper<CResSpell,1006>
-{
-	CSpell() = delete;
-
-	typedef void (__thiscall *type_Construct)(CSpell* pThis, CResRef res);
-	static type_Construct p_Construct;
-
-	void Construct(CResRef res)
-	{
-		p_Construct(this, res);
-	}
-};
-
-struct CSoundImp : CObject, CResHelper<CResWave,4>
-{
-	struct vtbl : CObject::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CSound* m_pParent;
-	int m_bPositionedSound;
-	int m_dwBufferSize;
-	int m_dwFrequency;
-	int m_nBufferFormat;
-	int m_nRange;
-	int m_nRangeVolume;
-	int m_nXCoordinate;
-	int m_nYCoordinate;
-	int m_nZCoordinate;
-	int m_nPan;
-	int m_nVolume;
-	bool m_bSoundInitialized;
-	int m_nChannel;
-	int m_nPriority;
-	int m_nLooping;
-	int m_nPitchVariance;
-	int m_nVolumeVariance;
-	bool m_b3DPositionning;
-	unsigned int m_nSource;
-	unsigned int m_nBuffer;
-	bool m_bFireForget;
-	unsigned __int64 m_nArea;
-	int m_dwOverrideFlags;
-	bool m_bSoundIsntDucked;
-
-	CSoundImp() = delete;
-};
-
-struct CSound : CObject, CResHelper<CResWave,4>
-{
-	struct vtbl : CObject::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CSoundImp* pimpl;
-
-	CSound() = delete;
-
-	typedef void (__thiscall *type_Construct)(CSound* pThis);
-	static type_Construct p_Construct;
-
-	typedef void (__thiscall *type_Destruct)(CSound* pThis);
-	static type_Destruct p_Destruct;
-
-	void Construct()
-	{
-		p_Construct(this);
-	}
-
-	void Destruct()
-	{
-		p_Destruct(this);
-	}
-};
-
-struct CScreenChapter : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	Array<CKeyInfo,5> m_pVirtualKeys;
-	Array<int,5> m_pVirtualKeysFlags;
-	unsigned __int8 m_bCtrlKeyDown;
-	int m_nChapter;
-	int m_nDream;
-	CResRef m_cResText;
-	CList<unsigned long,unsigned long*>* m_pTextList;
-	CTypedPtrList<CPtrList,CResRef*> m_bmpList;
-	int m_nBmpFlip;
-	int m_nCurrBmp;
-	int m_nParagraph;
-	int m_nLine;
-	CSound m_cVoiceSound;
-	int m_bStartSound;
-	int m_nEngineState;
-	CResRef m_cResPower;
-	int m_nSongCountDown;
-	CVidFont m_preLoadFontRealms;
-	int m_bMPRemoveTextScreen;
-	int m_nCustomSong;
-	int m_waitingForNetwork;
-	CWarp* m_destinationEngine;
-
-	CScreenChapter() = delete;
-};
-
-struct CInfToolTip : CVidCell
-{
-	struct vtbl : CVidCell::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CString m_sText;
-	CRect m_rSource;
-	int m_bUseSourceRect;
-	CVidFont m_textFont;
-	CSound m_openSnd;
-
-	CInfToolTip() = delete;
-};
-
-struct CInfCursor
-{
-	int bVisible;
-	CVidCell vcCursors;
-	CVidCell vcArrow;
-	CVidCell vcCustom;
-	CInfToolTip vcToolTip;
-	unsigned int nAnimationCounter;
-	int nAnimationSpeed;
-	int nCurrentCursor;
-	int nDirection;
-	int nState;
-	unsigned __int8 bAnimatingCustom;
-
-	CInfCursor() = delete;
-};
-
-struct STR_RES
-{
-	CString szText;
-	CSound cSound;
-
-	STR_RES() = delete;
-
-	void Construct()
-	{
-		szText.Construct();
-		cSound.Construct();
-	}
-
-	void Destruct()
-	{
-		cSound.Destruct();
-		szText.Destruct();
-	}
-};
-
-struct CWeather
-{
-	unsigned __int8 m_bOverCast;
-	unsigned __int16 m_nLightningFreq;
-	unsigned __int16 m_nCurrentWeather;
-	unsigned __int16 m_nWeatherLevel;
-	unsigned int m_nWeatherEndTime;
-	unsigned int m_nWeatherStageEndTime;
-	unsigned int m_nWeatherDuration;
-	unsigned int m_nLastTimeChecked;
-	unsigned __int16 m_nWindLevel;
-	unsigned int m_rgbCurrentOverCastColor;
-	unsigned int m_nDurationCounter;
-	CSnowStorm m_snowStorm;
-	CRainStorm m_rainStorm;
-	CFog m_fog;
-	CSound m_sndRain;
-	CSound m_sndWind;
-	unsigned __int8 m_bWindOn;
-	unsigned __int8 m_bUpgrading;
-	unsigned int m_nNextTimeToStartChecking;
-	unsigned int m_nWindVolumeLevel;
-	unsigned int m_nRainVolumeLevel;
-	unsigned __int8 m_bReInitialize;
-
-	CWeather() = delete;
-};
-
-struct CScreenWorld : CBaldurEngine
-{
-	struct vtbl : CBaldurEngine::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	int m_nStupidMovieWait;
-	int m_bProtagonistInStartArea;
-	int m_nProtagonistMoveMax;
-	int m_bWaitToRender;
-	SDL_Event flickEvent;
-	int m_bIgnoreDisplayTextTop;
-	int nCounter;
-	int m_boredCount;
-	int m_bored;
-	int m_playerShutdown;
-	int m_bShiftKeyDown;
-	int m_bMenuKeyDown;
-	int m_bCtrlKeyDown;
-	int m_bCapsLockKeyOn;
-	unsigned __int8 m_bPaused;
-	unsigned __int8 m_bHardPaused;
-	unsigned __int8 m_bHostOnlyPaused;
-	unsigned __int8 m_bVisualPaused;
-	unsigned __int8 m_bFirstRender;
-	int m_bPausedBeforePickParty;
-	int m_bCheatKeys;
-	int m_bMButtonDown;
-	int m_bMButtonDragged;
-	int m_bSetStartViewCenter;
-	CPoint m_ptStartViewCenter;
-	__int16 m_sequence;
-	unsigned __int8 m_facing;
-	unsigned __int8 m_bloodLevel;
-	unsigned __int16 m_castingGlow;
-	unsigned __int8 m_hitEffect;
-	__int16 m_renderText;
-	int m_newText;
-	CVidFont m_vidFont;
-	CVidFont m_vidFont2;
-	Array<CKeyInfo,98> m_pVirtualKeys;
-	Array<int,98> m_pVirtualKeysFlags;
-	CGameDialogSprite m_internalLoadedDialog;
-	CGameDialogSprite* m_pCurrentDialog;
-	CPoint m_dialogStartPos;
-	CResRef m_dialogStartArea;
-	int m_dialogPausing;
-	CRect m_newViewSize;
-	int m_bForceViewSize;
-	unsigned __int8 m_waitingOnResize;
-	unsigned __int8 m_storeText;
-	CString m_consoleText;
-	int m_nTopContainerRow;
-	int m_nTopGroupRow;
-	unsigned __int8 m_bForceDitherToggledOn;
-	CWeather m_WeatherController;
-	int m_scrollLockId;
-	__int16 m_nResponseMarker;
-	int m_bBlockStepDialog;
-	int m_interactionIndex;
-	int m_interactionTarget;
-	CString m_interactionString;
-	int m_interactionCounter;
-	int m_interactionForce;
-	int m_interactionTime;
-	int m_lastInteractionIndex;
-	unsigned __int8 m_bSetNightOnActivate;
-	unsigned __int8 m_bSetDayOnActivate;
-	int m_ambianceForce;
-	unsigned int m_deltaTime;
-	int m_nChatMessageCount;
-	CResRef m_movie;
-	unsigned __int8 m_bInControlOfDialog;
-	unsigned __int8 m_bInControlOfStore;
-	int m_bGameOverPanel;
-	CResRef m_movieDelay;
-	int m_autoPauseId;
-	unsigned int m_autoPauseRef;
-	unsigned int m_autoPauseColor;
-	unsigned int m_autoPauseName;
-	int m_nStoreChatMessageCount;
-	int m_nPickPartyRemoveCharacterId;
-	Array<int,10> m_aPickPartyCharacter;
-	int m_nPickPartyNumCharacters;
-	unsigned int m_strErrorText;
-	Array<unsigned int,3> m_strErrorButtonText;
-	unsigned int m_nDialogPanelOnStartDialog;
-	unsigned __int8 m_bDialogPressedAButton;
-	unsigned __int8 m_bEndMajorEventListenToJoin;
-	unsigned __int8 m_bEndMajorEventPauseStatus;
-	unsigned __int8 m_bChapterTransitionPending;
-	int m_nChapterTransition;
-	CResRef m_szChapterTransitionResRef;
-	unsigned __int8 m_bTextScreenTransitionPending;
-	CResRef m_szTextScreenTransitionResRef;
-	unsigned __int8 m_bMoviePending;
-	CResRef m_szMovieResRef;
-	unsigned __int8 m_bPendingMapWorld;
-	int m_idPendingMapWorldController;
-	__int16 m_nPendingMapWorldDirection;
-	unsigned __int8 m_bRestPending;
-	unsigned __int8 m_bRestRenting;
-	unsigned __int8 m_bRestMovie;
-	int m_nRestHP;
-	int m_nRestGP;
-	int m_nBattleCryTimeOut;
-	CTypedPtrList<CPtrList,CDeathSound*> m_deathSoundList;
-	int m_nPartySizeCheckStartDelay;
-	unsigned __int8 m_bPlayEndCredits;
-	unsigned __int8 m_bPendingReformParty;
-	unsigned __int8 m_bLeaveAreaLuaPanicPending;
-	unsigned int m_ulLeaveAreaLuaPanicTimer;
-	CPoint m_ptLeaveAreaLuaPanicLocation;
-	__int16 m_nLeaveAreaLuaPanicDirection;
-	CString m_sLeaveAreaLuaPanicAreaName;
-	CString m_sLeaveAreaLuaPanicParchment;
-	unsigned int m_dwPausedTickCount;
-	unsigned int m_dwLastDialogTickCount;
-	int m_lastAmbiance;
-	int m_comingOutOfDialog;
-	unsigned __int8 m_nAutoHideInterface;
-	unsigned __int8 m_nAutoUnhideInterface;
-	CRect m_rCurrViewPort;
-	int m_bLeftPanel;
-	int m_bRightPanel;
-	unsigned __int8 m_bCheckRestrict;
-	CTypedPtrList<CPtrList,long> m_otherTalkers;
-	int m_nInteractionBlockCnt;
-	int m_bInteractionBlock;
-	int m_nStateOverride;
-	int m_nStateOverrideCnt;
-	int m_nBlackOutCountDown;
-	int m_nCutSceneDeadZoneCountDown;
-	int m_nContainerOutline;
-	int m_tutorialWaitTimer;
-	int m_bPausedBeforeStore;
-	int m_nPauseMessageUpdate;
-	unsigned int m_deathStrRef;
-	int m_bHighlightEnabled;
-	float m_fPanStorage;
-	int m_bViewingContainer;
-	int m_bInDialog;
-	int m_bDead;
-	int m_bInCommand;
-	int m_bPickingParty;
-	int m_bAutoZooming;
-	float m_fPreviousZoom;
-	float m_fTargetZoom;
-	CRect m_rPreviousViewPort;
-	CPoint m_ptPreviousView;
-	CPoint m_ptTarget;
-	int m_nZoomCurStep;
-	CRect m_rOriginalViewPort;
-	CPoint m_ptOriginalView;
-	float m_fOriginalZoom;
-	int* m_storedGroup;
-	int m_nStoredGroupMembers;
-
-	CScreenWorld() = delete;
-
-	typedef int (__thiscall *type_TogglePauseGame)(CScreenWorld* pThis, byte visualPause, byte bSendMessage, int idPlayerPause, byte bLogPause, byte bRequireHostUnpause);
-	static type_TogglePauseGame p_TogglePauseGame;
-
-	int TogglePauseGame(byte visualPause, byte bSendMessage, int idPlayerPause, byte bLogPause, byte bRequireHostUnpause)
-	{
-		return p_TogglePauseGame(this, visualPause, bSendMessage, idPlayerPause, bLogPause, bRequireHostUnpause);
 	}
 };
 
@@ -11274,6 +11331,12 @@ struct CInfGame
 
 	CInfGame() = delete;
 
+	typedef short (__thiscall *type_GetCharacterPortraitNum)(CInfGame* pThis, int characterId);
+	static type_GetCharacterPortraitNum p_GetCharacterPortraitNum;
+
+	typedef void (__thiscall *type_GetFamiliar)(CInfGame* pThis, byte nLevel, byte nAlignment, CString* pResRefOut);
+	static type_GetFamiliar p_GetFamiliar;
+
 	typedef void (__thiscall *type_OnPortraitLDblClick)(CInfGame* pThis, int index);
 	static type_OnPortraitLDblClick p_OnPortraitLDblClick;
 
@@ -11283,17 +11346,24 @@ struct CInfGame
 	typedef void (__thiscall *type_SelectToolbar)(CInfGame* pThis);
 	static type_SelectToolbar p_SelectToolbar;
 
-	typedef void (__thiscall *type_SetState)(CInfGame* pThis, __int16 state, bool allowDead);
-	static type_SetState p_SetState;
-
 	typedef void (__thiscall *type_SetIconIndex)(CInfGame* pThis, unsigned __int8 iconIndex);
 	static type_SetIconIndex p_SetIconIndex;
+
+	typedef void (__thiscall *type_SetState)(CInfGame* pThis, __int16 state, bool allowDead);
+	static type_SetState p_SetState;
 
 	typedef void (__thiscall *type_UnselectAll)(CInfGame* pThis);
 	static type_UnselectAll p_UnselectAll;
 
-	typedef short (__thiscall *type_GetCharacterPortraitNum)(CInfGame* pThis, int characterId);
-	static type_GetCharacterPortraitNum p_GetCharacterPortraitNum;
+	short GetCharacterPortraitNum(int characterId)
+	{
+		return p_GetCharacterPortraitNum(this, characterId);
+	}
+
+	void GetFamiliar(byte nLevel, byte nAlignment, CString* pResRefOut)
+	{
+		p_GetFamiliar(this, nLevel, nAlignment, pResRefOut);
+	}
 
 	void OnPortraitLDblClick(int index)
 	{
@@ -11310,24 +11380,19 @@ struct CInfGame
 		p_SelectToolbar(this);
 	}
 
-	void SetState(__int16 state, bool allowDead)
-	{
-		p_SetState(this, state, allowDead);
-	}
-
 	void SetIconIndex(unsigned __int8 iconIndex)
 	{
 		p_SetIconIndex(this, iconIndex);
 	}
 
+	void SetState(__int16 state, bool allowDead)
+	{
+		p_SetState(this, state, allowDead);
+	}
+
 	void UnselectAll()
 	{
 		p_UnselectAll(this);
-	}
-
-	short GetCharacterPortraitNum(int characterId)
-	{
-		return p_GetCharacterPortraitNum(this, characterId);
 	}
 };
 
@@ -14760,6 +14825,15 @@ struct CGameSprite : CGameAIBase
 
 	CGameSprite() = delete;
 
+	typedef void (__thiscall *type_Construct_Overload_FromData)(CGameSprite* pThis, byte* pCreature, int creatureSize, ushort type, uint expirationTime, ushort huntingRange, ushort followRange, uint timeOfDayVisible, CPoint startPos, ushort facing, int copyScript);
+	static type_Construct_Overload_FromData p_Construct_Overload_FromData;
+
+	typedef CGameSprite* (__thiscall *type_Copy)(CGameSprite* pThis, int bMarkItemsAsNonDroppable, int copyNonDroppable, int copyEffects, int copyScripts);
+	static type_Copy p_Copy;
+
+	typedef void (__thiscall *type_MakeGlobal)(CGameSprite* pThis, bool bReplace);
+	static type_MakeGlobal p_MakeGlobal;
+
 	typedef void (__thiscall *type_CheckQuickLists)(CGameSprite* pThis, CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
 	static type_CheckQuickLists p_CheckQuickLists;
 
@@ -14819,6 +14893,24 @@ struct CGameSprite : CGameAIBase
 
 	typedef void (__thiscall *type_UpdateTarget)(CGameSprite* pThis, CGameObject* target);
 	static type_UpdateTarget p_UpdateTarget;
+
+	typedef void (__thiscall *type_MakeLocal)(CGameSprite* pThis);
+	static type_MakeLocal p_MakeLocal;
+
+	void Construct(byte* pCreature, int creatureSize, ushort type, uint expirationTime, ushort huntingRange, ushort followRange, uint timeOfDayVisible, CPoint startPos, ushort facing, int copyScript)
+	{
+		p_Construct_Overload_FromData(this, pCreature, creatureSize, type, expirationTime, huntingRange, followRange, timeOfDayVisible, startPos, facing, copyScript);
+	}
+
+	CGameSprite* Copy(int bMarkItemsAsNonDroppable, int copyNonDroppable, int copyEffects, int copyScripts)
+	{
+		return p_Copy(this, bMarkItemsAsNonDroppable, copyNonDroppable, copyEffects, copyScripts);
+	}
+
+	void MakeGlobal(bool bReplace)
+	{
+		p_MakeGlobal(this, bReplace);
+	}
 
 	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero)
 	{
@@ -14918,6 +15010,11 @@ struct CGameSprite : CGameAIBase
 	void UpdateTarget(CGameObject* target)
 	{
 		p_UpdateTarget(this, target);
+	}
+
+	void MakeLocal()
+	{
+		p_MakeLocal(this);
 	}
 
 	uint64_t GetUUID();

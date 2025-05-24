@@ -194,6 +194,11 @@ struct LCharString
 		localCopy[i] = '\0';
 		lua_pushstring(L, localCopy);
 	}
+
+	$nobinding operator char*()
+	{
+		return data;
+	}
 };
 
 template<class POINTED_TO_TYPE>
@@ -359,6 +364,19 @@ struct CResHelper
 {
 	RES_CLASS* pRes;
 	CResRef cResRef;
+
+	$constructor_fake Construct()
+	{
+		pRes = nullptr;
+		new (&cResRef) CResRef{};
+	}
+
+	void Destruct()
+	{
+		pRes = nullptr;
+	}
+
+	$instantiations(CResCRE,1009) void SetResRef(const CResRef* cNewResRef, int bSetAutoRequest, int bWarningIfMissing);
 };
 
 template<class BASE_CLASS, class T>
@@ -399,10 +417,10 @@ struct CTypedPtrList : CObject
 		#pragma warning(default:4312)
 	}
 
-	CTypedPtrList::CNode* Find(T searchValue, __POSITION* startAfter)
+	CTypedPtrList::CNode* Find(T searchValue, CTypedPtrList::CNode* startAfter)
 	{
 		#pragma warning(disable:4312)
-		return (CTypedPtrList::CNode*)((CObList*)this)->Find((void*)searchValue, startAfter);
+		return (CTypedPtrList::CNode*)((CObList*)this)->Find((void*)searchValue, (CObList::CNode*)startAfter);
 		#pragma warning(default:4312)
 	}
 
@@ -413,9 +431,9 @@ struct CTypedPtrList : CObject
 		#pragma warning(default:4302 4311)
 	}
 
-	void RemoveAt(__POSITION* position)
+	void RemoveAt(CTypedPtrList::CNode* position)
 	{
-		((CObList*)this)->RemoveAt(position);
+		((CObList*)this)->RemoveAt((CObList::CNode*)position);
 	}
 
 	void Destruct()
@@ -762,6 +780,11 @@ struct CResRef
 		set(chars);
 	}
 
+	$nobinding $constructor Construct()
+	{
+		memset(m_resRef, 0, 8);
+	}
+
 	void copy(CResRef* newVal)
 	{
 		*reinterpret_cast<__int64*>(&m_resRef) = *reinterpret_cast<__int64*>(newVal);
@@ -845,10 +868,10 @@ struct CObList : CObject
 {
 	$constructor_fake Construct(int size);
 	CObject* RemoveHead();
-	void RemoveAt(__POSITION* position);
+	void RemoveAt(CObList::CNode* position);
 	void Destruct();
-	__POSITION* AddTail(void* newElement);
-	__POSITION* Find(void* searchValue, __POSITION* startAfter);
+	CObList::CNode* AddTail(void* newElement);
+	CObList::CNode* Find(void* searchValue, CObList::CNode* startAfter);
 };
 
 struct CGameObjectArray
@@ -868,6 +891,11 @@ struct CGameAIBase : CGameObject
 
 struct CGameSprite : CGameAIBase
 {
+	$binding_name(Construct_Overload_FromData) $pattern_name(Construct(byte*,int,ushort,uint,ushort,ushort,uint,CPoint,ushort,int)) $constructor_fake Construct(byte* pCreature, int creatureSize, ushort type, uint expirationTime, ushort huntingRange, ushort followRange, uint timeOfDayVisible, CPoint startPos, ushort facing, int copyScript);
+
+	CGameSprite* Copy(int bMarkItemsAsNonDroppable, int copyNonDroppable, int copyEffects, int copyScripts);
+	void MakeGlobal(bool bReplace);
+
 	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
 	CGameEffectDamage* Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
@@ -914,13 +942,14 @@ struct CInfButtonArray
 
 struct CInfGame
 {
+	short GetCharacterPortraitNum(int characterId);
+	void GetFamiliar(byte nLevel, byte nAlignment, CString* pResRefOut);
 	void OnPortraitLDblClick(int index);
 	bool SelectCharacter(int characterId, bool bPlaySelectSound);
 	void SelectToolbar();
-	void SetState(__int16 state, bool allowDead);
 	void SetIconIndex(unsigned __int8 iconIndex);
+	void SetState(__int16 state, bool allowDead);
 	void UnselectAll();
-	short GetCharacterPortraitNum(int characterId);
 };
 
 struct CSpell : CResHelper<CResSpell,1006>
@@ -953,6 +982,14 @@ struct CString
 struct CSearchBitmap
 {
 	byte GetCost(CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump);
+	CPoint* GetNearestOpenSquare(CPoint* pResult, CPoint cPoint, byte* terrainTable, byte snapshotPersonalSpace, short facing);
+	$binding_name(GetNearestOpenSquare) $custom_return_2 Lua_GetNearestOpenSquare(int x, int y, byte* terrainTable, byte snapshotPersonalSpace, short facing)
+	{
+		CPoint result;
+		GetNearestOpenSquare(&result, CPoint{x, y}, terrainTable, snapshotPersonalSpace, facing);
+		lua_pushinteger(L, result.x);
+		lua_pushinteger(L, result.y);
+	}
 };
 
 struct CGameObject
@@ -1030,6 +1067,21 @@ struct CVidMode
 {
 	static ushort SCREENWIDTH;
 	static ushort SCREENHEIGHT;
+};
+
+struct CVidPalette
+{
+	static uint RANGE_COLORS[256];
+};
+
+struct CVisualEffect : CGameObject, CVisualEffectBase
+{
+	static int Load(CString* name, CGameArea* pArea, CPoint* start, int targetId, const CPoint* targetPos, int height, int linkToObject, int speed);
+};
+
+struct CMessageStartVEF : CMessage
+{
+	$constructor_fake Construct(const CResRef* ref, const CString* area, const CPoint* start, const CPoint targetPt, short height, int caller, int target);
 };
 
 struct CChitin
@@ -1113,7 +1165,12 @@ struct CMessageDisplayTextRef : CMessage
 {
 	nobinding nopointer static void* VFTable;
 
-	$constructor_fake Construct(uint name, uint text, uint nameColor, uint textColor, int marker, int caller, int target)
+	$binding_name(Construct_Overload_Default) $constructor_fake Construct()
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+	}
+
+	$binding_name(Construct_Overload_Manual) $constructor_fake Construct(uint name, uint text, uint nameColor, uint textColor, int marker, int caller, int target)
 	{
 		*reinterpret_cast<void**>(this) = VFTable;
 		m_targetId = target;
