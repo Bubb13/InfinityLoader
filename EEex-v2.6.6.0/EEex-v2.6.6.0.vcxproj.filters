@@ -60,6 +60,9 @@
     <ClCompile Include="source\EEex-v2.6.6.0\engine_reimplementations.cpp">
       <Filter>Source Files\EEex-v2.6.6.0</Filter>
     </ClCompile>
+    <ClCompile Include="source\EEex-v2.6.6.0\visibility_map.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\EEex-v2.6.6.0\util.hpp">

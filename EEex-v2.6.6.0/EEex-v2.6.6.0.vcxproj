@@ -19,6 +19,7 @@
     <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\main.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\util.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\visibility_map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\common\eeex_api.h" />

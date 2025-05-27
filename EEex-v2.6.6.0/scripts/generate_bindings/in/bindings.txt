@@ -71,6 +71,13 @@ struct CMessageSetLastObject : CMessage
 	$nobinding $external_implementation void Override_Run();
 };
 
+struct CVisibilityMap
+{
+	$nobinding $external_implementation byte Override_AddCharacter(CPoint* pos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable);
+	$nobinding $external_implementation void Override_RemoveCharacter(CPoint* ptOldPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bRemoveCharId);
+	$nobinding $external_implementation void Override_UpDate(CPoint* ptOldPos, CPoint* ptNewPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bForceUpdate);
+};
+
 enum EEex::ProjectileType : __int32
 {
 	Unknown                          = 0x1,

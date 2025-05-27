@@ -982,7 +982,10 @@ struct CString
 struct CSearchBitmap
 {
 	byte GetCost(CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump);
+	byte GetLOSCost(CPoint* point, byte* terrainTable, short* nTableIndex, byte bVisibilityOutDoor);
 	CPoint* GetNearestOpenSquare(CPoint* pResult, CPoint cPoint, byte* terrainTable, byte snapshotPersonalSpace, short facing);
+	short GetStructureHeight(short nTableIndex);
+
 	$binding_name(GetNearestOpenSquare) $custom_return_2 Lua_GetNearestOpenSquare(int x, int y, byte* terrainTable, byte snapshotPersonalSpace, short facing)
 	{
 		CPoint result;
@@ -1077,6 +1080,11 @@ struct CVidPalette
 struct CVisualEffect : CGameObject, CVisualEffectBase
 {
 	static int Load(CString* name, CGameArea* pArea, CPoint* start, int targetId, const CPoint* targetPos, int height, int linkToObject, int speed);
+};
+
+struct CVisibilityMap
+{
+	static byte m_SSToVSTable[8];
 };
 
 struct CMessageStartVEF : CMessage
@@ -1221,6 +1229,11 @@ struct CSound : CObject, CResHelper<CResWave,4>
 {
 	$constructor_fake Construct();
 	void Destruct();
+};
+
+struct CSoundMixer
+{
+	void GetListenPosition(CPoint* pos, int* posZ);
 };
 
 struct CScreenWorld : CBaldurEngine

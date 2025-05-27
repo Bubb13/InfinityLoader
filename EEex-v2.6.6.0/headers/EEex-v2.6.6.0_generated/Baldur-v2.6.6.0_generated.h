@@ -148,6 +148,7 @@ struct CSelectiveWeaponType;
 struct CSequenceSound;
 struct CSound;
 struct CSoundImp;
+struct CSoundMixer;
 struct CSoundMixerImp;
 struct CSpawn;
 struct CSpell;
@@ -159,6 +160,7 @@ struct CVariable;
 struct CVariableHash;
 struct CVidCell;
 struct CVidMode;
+struct CVisibilityMap;
 struct CWarp;
 struct CharString;
 struct ConstCharString;
@@ -1319,13 +1321,6 @@ enum class DP_EventType : __int32
 	DP_EVENT_TYPE_CONNECT = 1,
 	DP_EVENT_TYPE_DISCONNECT = 2,
 	DP_EVENT_TYPE_RECEIVE = 3,
-};
-
-struct CSoundMixer
-{
-	CSoundMixerImp* pimpl;
-
-	CSoundMixer() = delete;
 };
 
 enum class CScreenCreateCharStep : __int32
@@ -4666,6 +4661,21 @@ struct CSpawnPointVar : CSpawnVar
 	CSpawnPointVar() = delete;
 };
 
+struct CSoundMixer
+{
+	CSoundMixerImp* pimpl;
+
+	CSoundMixer() = delete;
+
+	typedef void (__thiscall *type_GetListenPosition)(CSoundMixer* pThis, CPoint* pos, int* posZ);
+	static type_GetListenPosition p_GetListenPosition;
+
+	void GetListenPosition(CPoint* pos, int* posZ)
+	{
+		p_GetListenPosition(this, pos, posZ);
+	}
+};
+
 struct CRes
 {
 	struct vtbl
@@ -7633,6 +7643,7 @@ struct CVisibilityMapTreeNode
 
 struct CVisibilityMap
 {
+	static Array<byte,8>* p_m_SSToVSTable;
 	unsigned __int16* m_pMap;
 	int m_nMapSize;
 	__int16 m_nWidth;
@@ -7644,6 +7655,10 @@ struct CVisibilityMap
 	CVisibilityMapEllipse* m_pVisMapEllipses;
 
 	CVisibilityMap() = delete;
+
+	byte Override_AddCharacter(CPoint* pos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable);
+	void Override_RemoveCharacter(CPoint* ptOldPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bRemoveCharId);
+	void Override_UpDate(CPoint* ptOldPos, CPoint* ptNewPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bForceUpdate);
 };
 
 struct CVidPalette
@@ -8359,17 +8374,33 @@ struct CSearchBitmap
 	typedef byte (__thiscall *type_GetCost)(CSearchBitmap* pThis, CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump);
 	static type_GetCost p_GetCost;
 
+	typedef byte (__thiscall *type_GetLOSCost)(CSearchBitmap* pThis, CPoint* point, byte* terrainTable, short* nTableIndex, byte bVisibilityOutDoor);
+	static type_GetLOSCost p_GetLOSCost;
+
 	typedef CPoint* (__thiscall *type_GetNearestOpenSquare)(CSearchBitmap* pThis, CPoint* pResult, CPoint cPoint, byte* terrainTable, byte snapshotPersonalSpace, short facing);
 	static type_GetNearestOpenSquare p_GetNearestOpenSquare;
+
+	typedef short (__thiscall *type_GetStructureHeight)(CSearchBitmap* pThis, short nTableIndex);
+	static type_GetStructureHeight p_GetStructureHeight;
 
 	byte GetCost(CPoint* point, byte* terrainTable, byte snapshotPersonalSpace, ushort* nTableIndex, int bCheckBump)
 	{
 		return p_GetCost(this, point, terrainTable, snapshotPersonalSpace, nTableIndex, bCheckBump);
 	}
 
+	byte GetLOSCost(CPoint* point, byte* terrainTable, short* nTableIndex, byte bVisibilityOutDoor)
+	{
+		return p_GetLOSCost(this, point, terrainTable, nTableIndex, bVisibilityOutDoor);
+	}
+
 	CPoint* GetNearestOpenSquare(CPoint* pResult, CPoint cPoint, byte* terrainTable, byte snapshotPersonalSpace, short facing)
 	{
 		return p_GetNearestOpenSquare(this, pResult, cPoint, terrainTable, snapshotPersonalSpace, facing);
+	}
+
+	short GetStructureHeight(short nTableIndex)
+	{
+		return p_GetStructureHeight(this, nTableIndex);
 	}
 
 	void Lua_GetNearestOpenSquare(lua_State* L, int x, int y, byte* terrainTable, byte snapshotPersonalSpace, short facing)
