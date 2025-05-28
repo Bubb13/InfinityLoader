@@ -7657,6 +7657,7 @@ struct CVisibilityMap
 	CVisibilityMap() = delete;
 
 	byte Override_AddCharacter(CPoint* pos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable);
+	int Override_IsCharacterIdOnMap(int charId);
 	void Override_RemoveCharacter(CPoint* ptOldPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bRemoveCharId);
 	void Override_UpDate(CPoint* ptOldPos, CPoint* ptNewPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bForceUpdate);
 };
@@ -15050,6 +15051,7 @@ struct CGameSprite : CGameAIBase
 
 	uint64_t GetUUID();
 	CGameEffectDamage* Override_Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
+	short Override_SetVisualRange(short newVisualRange);
 
 	virtual void virtual_SetTarget_2(const CPoint*, int)
 	{

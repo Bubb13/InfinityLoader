@@ -39,8 +39,10 @@ static void exportPatterns() {
 	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), getMemberPtr(&CGameAIBase::Override_SetTrigger));
 	exportPattern(TEXT("CGameEffectList::Override_Unmarshal"), getMemberPtr(&CGameEffectList::Override_Unmarshal));
 	exportPattern(TEXT("CGameSprite::Override_Damage"), getMemberPtr(&CGameSprite::Override_Damage));
+	exportPattern(TEXT("CGameSprite::Override_SetVisualRange"), getMemberPtr(&CGameSprite::Override_SetVisualRange));
 	exportPattern(TEXT("CMessageSetLastObject::Override_Run"), getMemberPtr(&CMessageSetLastObject::Override_Run));
 	exportPattern(TEXT("CVisibilityMap::Override_AddCharacter"), getMemberPtr(&CVisibilityMap::Override_AddCharacter));
+	exportPattern(TEXT("CVisibilityMap::Override_IsCharacterIdOnMap"), getMemberPtr(&CVisibilityMap::Override_IsCharacterIdOnMap));
 	exportPattern(TEXT("CVisibilityMap::Override_RemoveCharacter"), getMemberPtr(&CVisibilityMap::Override_RemoveCharacter));
 	exportPattern(TEXT("CVisibilityMap::Override_UpDate"), getMemberPtr(&CVisibilityMap::Override_UpDate));
 	exportPattern(TEXT("EEex::Override_bootstrapLua"), EEex::Override_bootstrapLua);
@@ -149,6 +151,13 @@ static void exportPatterns() {
 
 	exportPattern(TEXT("EEex::Trigger_Hook_OnScriptLevelHit"), EEex::Trigger_Hook_OnScriptLevelHit);
 	exportPattern(TEXT("EEex::Trigger_Hook_OnConditionResponseHit"), EEex::Trigger_Hook_OnConditionResponseHit);
+
+	////////////////////
+	// Visibility Map //
+	////////////////////
+
+	exportPattern(TEXT("EEex::VisibilityMap_Hook_OnConstruct"), EEex::VisibilityMap_Hook_OnConstruct);
+	exportPattern(TEXT("EEex::VisibilityMap_Hook_OnDestruct"), EEex::VisibilityMap_Hook_OnDestruct);
 
 	///////////////////////////////
 	//          Globals          //

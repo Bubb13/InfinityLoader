@@ -1,116 +1,256 @@
 
+#include <unordered_map>
+#include <vector>
+
 #include "Baldur-v2.6.6.0_generated.h"
+#include "EEex.h"
+
+////////////////
+// Structures //
+////////////////
+
+//--------------------------//
+// VisibilityMapCharacterEx //
+//--------------------------//
+
+class VisibilityMapCharacterEx
+{
+private:
+	byte m_nVisRange = 0;
+	int m_nSideLen = 0;
+	int m_nArraySize = 0;
+	byte* m_pCanSee = nullptr;
+
+public:
+	VisibilityMapCharacterEx();
+
+	// Error if copy or move is attempted.
+	VisibilityMapCharacterEx(const VisibilityMapCharacterEx& other) = delete;
+	VisibilityMapCharacterEx(VisibilityMapCharacterEx&& other) = delete;
+	VisibilityMapCharacterEx& operator=(const VisibilityMapCharacterEx& other) = delete;
+	VisibilityMapCharacterEx& operator=(VisibilityMapCharacterEx&& other) = delete;
+
+	~VisibilityMapCharacterEx();
+	template<bool set> void apply(CVisibilityMap* pVisMap, CPoint ptVisCenter);
+	void checkInitRange(byte nVisRange);
+	void setAtOffset(CPoint ptVisOffset);
+};
+
+VisibilityMapCharacterEx::VisibilityMapCharacterEx()
+{
+}
+
+VisibilityMapCharacterEx::~VisibilityMapCharacterEx()
+{
+	delete[] m_pCanSee;
+}
+
+template<bool set>
+void VisibilityMapCharacterEx::apply(CVisibilityMap* pVisMap, CPoint ptVisCenter)
+{
+	const int nLocalLeft = ptVisCenter.x - m_nVisRange;
+	const int nLocalTop = ptVisCenter.y - m_nVisRange;
+
+	const int nLeft = (std::max)(0, nLocalLeft);
+	const int nTop = (std::max)(0, nLocalTop);
+	const int nRight = (std::min)(ptVisCenter.x + m_nVisRange, static_cast<int>(pVisMap->m_nWidth - 1));
+	const int nBottom = (std::min)(ptVisCenter.y + m_nVisRange, static_cast<int>(pVisMap->m_nHeight - 1));
+
+	ushort *const pMap = pVisMap->m_pMap;
+
+	for (int nY = nTop; nY <= nBottom; ++nY)
+	{
+		const int nSourceOffsetY = (nY - nLocalTop) * m_nSideLen;
+		ushort* pDest = &pMap[nY * pVisMap->m_nWidth + nLeft];
+
+		for (int nX = nLeft; nX <= nRight; ++nX, ++pDest)
+		{
+			if constexpr (set)
+			{
+				if (m_pCanSee[nSourceOffsetY + nX - nLocalLeft])
+				{
+					*pDest = 0x8000 | ((*pDest & 0x7FFF) + 1);
+				}
+			}
+			else
+			{
+				if (m_pCanSee[nSourceOffsetY + nX - nLocalLeft])
+				{
+					*pDest = 0x8000 | ((*pDest & 0x7FFF) - 1);
+				}
+			}
+		}
+	}
+}
+
+void VisibilityMapCharacterEx::checkInitRange(byte nVisRange)
+{
+	if (nVisRange <= m_nVisRange)
+	{
+		memset(m_pCanSee, 0, m_nArraySize);
+		return;
+	}
+
+	m_nVisRange = nVisRange;
+	m_nSideLen = 1 + m_nVisRange * 2;
+	m_nArraySize = m_nSideLen * m_nSideLen;
+	delete[] m_pCanSee;
+	m_pCanSee = new byte[m_nArraySize];
+	memset(m_pCanSee, 0, m_nArraySize);
+}
+
+void VisibilityMapCharacterEx::setAtOffset(CPoint ptVisOffset)
+{
+	const int nIndexX = ptVisOffset.x + m_nVisRange;
+	const int nIndexY = ptVisOffset.y + m_nVisRange;
+
+	if (nIndexX >= m_nSideLen || nIndexY >= m_nSideLen)
+	{
+		FPrint("[!][EEex.dll] VisibilityMapCharacterEx::setAtOffset() - Out of bounds write at (%d,%d)!\n", ptVisOffset.x, ptVisOffset.y);
+		return;
+	}
+
+	m_pCanSee[nIndexY * m_nSideLen + nIndexX] = 1;
+}
+
+//-----------------//
+// VisibilityMapEx //
+//-----------------//
+
+class VisibilityMapEx
+{
+private:
+	CVisibilityMap* m_owner;
+	std::unordered_map<int, VisibilityMapCharacterEx> m_charactersExMap{};
+
+public:
+	VisibilityMapEx(CVisibilityMap* pOwner);
+
+	// Only moveable. Error if copy is attempted.
+	VisibilityMapEx(VisibilityMapEx&& other) = default;
+	VisibilityMapEx& operator=(VisibilityMapEx&& other) = default;
+
+	VisibilityMapCharacterEx* getCharacterEx(int nCharId);
+	VisibilityMapCharacterEx& getOrCreateCharacterEx(int nCharId);
+	CVisibilityMap* getOwner() const;
+	void removeCharacter(int nCharId);
+};
+
+VisibilityMapEx::VisibilityMapEx(CVisibilityMap* pOwner) : m_owner(pOwner)
+{
+}
+
+VisibilityMapCharacterEx* VisibilityMapEx::getCharacterEx(int nCharId)
+{
+	if (auto itr = m_charactersExMap.find(nCharId); itr != m_charactersExMap.end())
+	{
+		return &itr->second;
+	}
+	return nullptr;
+}
+
+VisibilityMapCharacterEx& VisibilityMapEx::getOrCreateCharacterEx(int nCharId)
+{
+	return m_charactersExMap[nCharId];
+}
+
+CVisibilityMap* VisibilityMapEx::getOwner() const
+{
+	return m_owner;
+}
+
+void VisibilityMapEx::removeCharacter(int nCharId)
+{
+	m_charactersExMap.erase(nCharId);
+}
+
+/////////////
+// Globals //
+/////////////
+
+std::vector<VisibilityMapEx> visibilityMapExList{};
+
+//////////////////
+// Global Utils //
+//////////////////
+
+static std::vector<VisibilityMapEx>::iterator getVisibilityMapExItr(CVisibilityMap* pThis)
+{
+	return std::find_if(visibilityMapExList.begin(), visibilityMapExList.end(), [=](const auto& i) { return i.getOwner() == pThis; });
+}
+
+static VisibilityMapEx& getVisibilityMapEx(CVisibilityMap* pThis)
+{
+	return *getVisibilityMapExItr(pThis);
+}
+
+///////////
+// Hooks //
+///////////
+
+void EEex::VisibilityMap_Hook_OnConstruct(CVisibilityMap* pThis)
+{
+	visibilityMapExList.emplace_back(pThis);
+}
+
+void EEex::VisibilityMap_Hook_OnDestruct(CVisibilityMap* pThis)
+{
+	visibilityMapExList.erase(getVisibilityMapExItr(pThis));
+}
 
 //////////////////////////
 // Forward Declarations //
 //////////////////////////
 
-static void CVisibilityMap_TraverseTree(CVisibilityMap* pThis, CPoint ptStart, CPoint ptInvert, byte range, ushort nMask, byte* pVisibleTerrainTable);
+static void CVisibilityMap_TraverseTree(CVisibilityMap* pThis, CPoint ptStartMap, CPoint ptInvertSearch, byte nVisRange, byte* pVisibleTerrainTable,
+	VisibilityMapCharacterEx& characterEx);
+
+static void CVisibilityMap_SetTileVisible(CPoint ptCenterVis, CPoint ptSetVis, VisibilityMapCharacterEx& characterEx);
 
 //////////////
 // Internal //
 //////////////
 
-static void CVisibilityMap_ClimbWall(CVisibilityMap* pThis, CPoint* ptStart, CPoint* ptEnd, ushort nMask, byte* pVisibleTerrainTable, short nHighest)
+static void CVisibilityMap_ClimbWall(
+	CPoint ptCenterVis, CPoint ptSetVis, CPoint ptEnd, short nHighest, VisibilityMapCharacterEx& characterEx)
 {
 	if (nHighest < 1 || nHighest > 3)
 	{
 		return;
 	}
 
-	const int nClampedEndY = (std::max)(0, ptEnd->y);
-	const int nMapSize = pThis->m_nWidth * pThis->m_nHeight;
+	const int nClampedEndY = (std::max)(0, ptEnd.y);
 
 	for (short nCurHighest = nHighest; nCurHighest >= 1; --nCurHighest)
 	{
-		const int ptStartAdjY = ptStart->y - nCurHighest + 1;
+		const int ptStartAdjY = ptSetVis.y - nCurHighest + 1;
 
 		if (ptStartAdjY < nClampedEndY)
 		{
 			continue;
 		}
 
-		const int nMapIndex = ptStartAdjY * pThis->m_nWidth + ptStart->x;
-
-		if (nMapIndex >= 0 && nMapIndex < nMapSize)
-		{
-			pThis->m_pMap[nMapIndex] |= 0x8000 | nMask;
-		}
+		CVisibilityMap_SetTileVisible(ptCenterVis, CPoint{ ptSetVis.x, ptStartAdjY }, characterEx);
 	}
 }
 
-static void CVisibilityMap_PrivateAddCharacter(
-	CVisibilityMap* pThis, CPoint* ptPos, ushort nMask, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable)
+static void CVisibilityMap_SetTileVisible(CPoint ptCenterVis, CPoint ptSetVis, VisibilityMapCharacterEx& characterEx)
 {
-	///////////////////////////
-	// Update exact position //
-	///////////////////////////
-
-	int xPos = ptPos->x;
-	if (xPos < 0) { xPos += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
-	xPos /= 32;
-
-	int yPos = ptPos->y;
-	if (yPos < 0) { yPos += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
-	yPos /= 32;
-
-	const int nMapIndex = yPos * pThis->m_nWidth + xPos;
-
-	if (nMapIndex >= 0 && nMapIndex < pThis->m_nHeight * pThis->m_nWidth)
-	{
-		pThis->m_pMap[nMapIndex] |= 0x8000 | nMask;
-	}
-
-	//////////////////////////////
-	// Update full visual range //
-	//////////////////////////////
-
-	const int xPosSearch = ptPos->x / 16;
-	const int yPosSearch = ptPos->y / 12;
-	const int nClampedVisualRange = (std::max)(0, (std::min)(static_cast<int>(visualRange), 23));
-
-	CVisibilityMap_TraverseTree(pThis, CPoint{xPosSearch, yPosSearch}, CPoint{ 1,  1}, nClampedVisualRange, nMask, pVisibleTerrainTable);
-	CVisibilityMap_TraverseTree(pThis, CPoint{xPosSearch, yPosSearch}, CPoint{-1,  1}, nClampedVisualRange, nMask, pVisibleTerrainTable);
-	CVisibilityMap_TraverseTree(pThis, CPoint{xPosSearch, yPosSearch}, CPoint{-1, -1}, nClampedVisualRange, nMask, pVisibleTerrainTable);
-	CVisibilityMap_TraverseTree(pThis, CPoint{xPosSearch, yPosSearch}, CPoint{ 1, -1}, nClampedVisualRange, nMask, pVisibleTerrainTable);
-
-	////////////////////////////
-	// Update listen position //
-	////////////////////////////
-
-	CPoint listenPosition;
-	int unused;
-	(*p_g_pBaldurChitin)->cSoundMixer->GetListenPosition(&listenPosition, &unused);
-
-	if (listenPosition.x == -1 && listenPosition.y == -1)
-	{
-		CGameArea* pArea = pThis->m_pSearchMap->m_pArea;
-		CInfGame* pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
-
-		if (pArea == pGame->m_gameAreas[pGame->m_visibleArea])
-		{
-			pArea->m_cInfinity.m_updateListenPosition = 1;
-		}
-	}
-}
-
-static void CVisibilityMap_SetTileVisible(CVisibilityMap* pThis, int nIndex, ushort nMask)
-{
-	if (nIndex >= 0 && nIndex < pThis->m_nWidth * pThis->m_nHeight)
-	{
-		pThis->m_pMap[nIndex] |= 0x8000 | nMask;
-	}
+	const CPoint ptVisOffset { ptSetVis.x - ptCenterVis.x, ptSetVis.y - ptCenterVis.y };
+	characterEx.setAtOffset(ptVisOffset);
 }
 
 static void CVisibilityMap_TraverseTree(
-	CVisibilityMap* pThis, CPoint ptStart, CPoint ptInvert, byte range, ushort nMask, byte* pVisibleTerrainTable)
+	CVisibilityMap* pThis, CPoint ptStartMap, CPoint ptInvertSearch, byte nVisRange, byte* pVisibleTerrainTable,
+	VisibilityMapCharacterEx& characterEx)
 {
-	CVisibilityMapTreeNode *const pRootNode = pThis->m_pVisMapTrees[range];
+	const CPoint ptStartSearch { ptStartMap.x / 16, ptStartMap.y / 12 };
+	const CPoint ptStartVis { ptStartMap.x / 32, ptStartMap.y / 32 };
+	CVisibilityMapTreeNode *const pRootNode = pThis->m_pVisMapTrees[nVisRange];
 
 	short nLastImpassibleNodeIndex = 0;
-	int lastVisibleX = -1;
-	int lastVisibleY = -1;
 	short nLastHighest = 0;
+	CPoint ptLastVisible { -1, -1 };
 
 	short nPreviousNodeIndex = 0;
 	short nNextNodeIndex = pRootNode->m_aChildren[0];
@@ -120,13 +260,16 @@ static void CVisibilityMap_TraverseTree(
 	{
 		CVisibilityMapTreeNode* pCurNode = pRootNode + nCurNodeIndex;
 
-		CPoint curRelativePos;
-		curRelativePos.x = ptStart.x + pCurNode->m_relativePos.x * ptInvert.x;
-		curRelativePos.y = ptStart.y + pCurNode->m_relativePos.y * ptInvert.y;
+		// Search units are of the ratio (3/48,4/48) compared to map units
+		CPoint curSearchPos;
+		curSearchPos.x = ptStartSearch.x + pCurNode->m_relativePos.x * ptInvertSearch.x;
+		curSearchPos.y = ptStartSearch.y + pCurNode->m_relativePos.y * ptInvertSearch.y;
 
+		// Visual units are of the ratio (1/32,1/32) compared to map units, (4/8,3/8) compared to search units
+		// This conversion is imprecise, but leaving it as-is for parity with vanilla.
 		CPoint ptStartLocal;
-		ptStartLocal.x = curRelativePos.x / 2;
-		ptStartLocal.y = (curRelativePos.y >> 3) * 3 + (*CVisibilityMap::p_m_SSToVSTable)[curRelativePos.y & 7];
+		ptStartLocal.x = curSearchPos.x / 2;
+		ptStartLocal.y = (curSearchPos.y >> 3) * 3 + (*CVisibilityMap::p_m_SSToVSTable)[curSearchPos.y & 7];
 
 		if (nPreviousNodeIndex == pCurNode->m_parent)
 		{
@@ -157,7 +300,7 @@ static void CVisibilityMap_TraverseTree(
 				// Check LOS //
 				///////////////
 
-				if (short nTableIndex; pThis->m_pSearchMap->GetLOSCost(&curRelativePos, pVisibleTerrainTable, &nTableIndex, pThis->m_bOutDoor) == 0xFF)
+				if (short nTableIndex; pThis->m_pSearchMap->GetLOSCost(&curSearchPos, pVisibleTerrainTable, &nTableIndex, pThis->m_bOutDoor) == 0xFF)
 				{
 					////////////////
 					// Impassible //
@@ -184,13 +327,12 @@ static void CVisibilityMap_TraverseTree(
 
 					nLastHighest = nHighest;
 
-					if (lastVisibleX != ptStartLocal.x || lastVisibleY != ptStartLocal.y)
+					if (ptLastVisible.x != ptStartLocal.x || ptLastVisible.y != ptStartLocal.y)
 					{
-						const int nUnknown = range - pCurNode->m_nRange;
+						const int nUnknown = nVisRange - pCurNode->m_nRange;
 						CPoint ptEnd { nUnknown, nUnknown >> 16 };
-						CVisibilityMap_ClimbWall(pThis, &ptStartLocal, &ptEnd, nMask, pVisibleTerrainTable, nHighest);
-						lastVisibleX = ptStartLocal.x;
-						lastVisibleY = ptStartLocal.y;
+						CVisibilityMap_ClimbWall(ptStartVis, ptStartLocal, ptEnd, nHighest, characterEx);
+						ptLastVisible = ptStartLocal;
 					}
 
 					// m_aChildren[0]
@@ -213,11 +355,10 @@ static void CVisibilityMap_TraverseTree(
 						continue;
 					}
 
-					if (lastVisibleX != ptStartLocal.x || lastVisibleY != ptStartLocal.y)
+					if (ptLastVisible.x != ptStartLocal.x || ptLastVisible.y != ptStartLocal.y)
 					{
-						CVisibilityMap_SetTileVisible(pThis, ptStartLocal.y * pThis->m_nWidth + ptStartLocal.x, nMask);
-						lastVisibleX = ptStartLocal.x;
-						lastVisibleY = ptStartLocal.y;
+						CVisibilityMap_SetTileVisible(ptStartVis, ptStartLocal, characterEx);
+						ptLastVisible = ptStartLocal;
 					}
 
 					// m_aChildren[0]
@@ -282,67 +423,46 @@ static void CVisibilityMap_TraverseTree(
 	}
 }
 
-///////////////
-// Overrides //
-///////////////
-
-byte CVisibilityMap::Override_AddCharacter(CPoint* pos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable)
+static void unseePreviousPoints(CVisibilityMap* pThis, CPoint ptOld, VisibilityMapCharacterEx& characterEx)
 {
-	//////////////////////////////
-	// Find open character slot //
-	//////////////////////////////
-
-	int nCharIndex = 0;
-
-	for (; nCharIndex < 15; ++nCharIndex)
-	{
-		const int nExistingId = this->m_aCharacterIds[nCharIndex];
-
-		if (nExistingId == -1)
-		{
-			this->m_aCharacterIds[nCharIndex] = charId;
-			break;
-		}
-
-		if (nExistingId == charId) // Vanilla Bug: Might already exist after an open slot
-		{
-			break;
-		}
-	}
-
-	const ushort nMask = 1 << (nCharIndex & 0x1F);
-
 	///////////////////////////
-	// Update exact position //
+	// Unsee previous points //
 	///////////////////////////
 
-	int xPos = pos->x;
-	if (xPos < 0) { xPos += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
-	xPos /= 32;
+	int nOldVisPosX = ptOld.x;
+	if (nOldVisPosX < 0) { nOldVisPosX += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
+	nOldVisPosX /= 32;
 
-	int yPos = pos->y;
-	if (yPos < 0) { yPos += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
-	yPos /= 32;
+	int nOldVisPosY = ptOld.y;
+	if (nOldVisPosY < 0) { nOldVisPosY += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
+	nOldVisPosY /= 32;
 
-	const int nMapIndex = yPos * this->m_nWidth + xPos;
+	characterEx.apply<false>(pThis, CPoint{ nOldVisPosX, nOldVisPosY });
+}
 
-	if (nMapIndex >= 0 && nMapIndex < this->m_nHeight * this->m_nWidth)
-	{
-		this->m_pMap[nMapIndex] |= 0x8000 | nMask;
-	}
+static void calculateNewSeenPoints(
+	CVisibilityMap* pThis, CPoint ptNew, byte* pVisibleTerrainTable, byte nVisRange, VisibilityMapCharacterEx& characterEx)
+{
+	///////////////////////////////
+	// Calculate new seen points //
+	///////////////////////////////
 
-	//////////////////////////////
-	// Update full visual range //
-	//////////////////////////////
+	int nNewVisPosX = ptNew.x;
+	if (nNewVisPosX < 0) { nNewVisPosX += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
+	nNewVisPosX /= 32;
 
-	const int xPosSearch = pos->x / 16;
-	const int yPosSearch = pos->y / 12;
-	const int nClampedVisualRange = (std::max)(0, (std::min)(static_cast<int>(visualRange), 23));
+	int nNewVisPosY = ptNew.y;
+	if (nNewVisPosY < 0) { nNewVisPosY += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
+	nNewVisPosY /= 32;
 
-	CVisibilityMap_TraverseTree(this, CPoint{xPosSearch, yPosSearch}, CPoint{ 1,  1}, nClampedVisualRange, nMask, pVisibleTerrainTable);
-	CVisibilityMap_TraverseTree(this, CPoint{xPosSearch, yPosSearch}, CPoint{-1,  1}, nClampedVisualRange, nMask, pVisibleTerrainTable);
-	CVisibilityMap_TraverseTree(this, CPoint{xPosSearch, yPosSearch}, CPoint{-1, -1}, nClampedVisualRange, nMask, pVisibleTerrainTable);
-	CVisibilityMap_TraverseTree(this, CPoint{xPosSearch, yPosSearch}, CPoint{ 1, -1}, nClampedVisualRange, nMask, pVisibleTerrainTable);
+	const int nClampedVisualRange = (std::max)(0, (std::min)(static_cast<int>(nVisRange), 23));
+
+	characterEx.checkInitRange(nClampedVisualRange);
+	CVisibilityMap_TraverseTree(pThis, ptNew, CPoint{ 1,  1}, nClampedVisualRange, pVisibleTerrainTable, characterEx);
+	CVisibilityMap_TraverseTree(pThis, ptNew, CPoint{-1,  1}, nClampedVisualRange, pVisibleTerrainTable, characterEx);
+	CVisibilityMap_TraverseTree(pThis, ptNew, CPoint{-1, -1}, nClampedVisualRange, pVisibleTerrainTable, characterEx);
+	CVisibilityMap_TraverseTree(pThis, ptNew, CPoint{ 1, -1}, nClampedVisualRange, pVisibleTerrainTable, characterEx);
+	characterEx.apply<true>(pThis, CPoint{ nNewVisPosX, nNewVisPosY });
 
 	////////////////////////////
 	// Update listen position //
@@ -354,82 +474,119 @@ byte CVisibilityMap::Override_AddCharacter(CPoint* pos, int charId, byte* pVisib
 
 	if (listenPosition.x == -1 && listenPosition.y == -1)
 	{
-		CGameArea* pArea = this->m_pSearchMap->m_pArea;
-		CInfGame* pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
+		CGameArea *const pArea = pThis->m_pSearchMap->m_pArea;
+		CInfGame *const pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
 
 		if (pArea == pGame->m_gameAreas[pGame->m_visibleArea])
 		{
 			pArea->m_cInfinity.m_updateListenPosition = 1;
 		}
 	}
+}
+
+///////////////
+// Overrides //
+///////////////
+
+short CGameSprite::Override_SetVisualRange(short nVisRange)
+{
+	const byte nOldVisRange = this->m_nVisualRange;
+	CGameArea *const pArea = this->m_pArea;
+
+	if (pArea == nullptr)
+	{
+		return nOldVisRange;
+	}
+
+	CVisibilityMap *const pVisibility = &pArea->m_visibility;
+	VisibilityMapEx& visibilityMapEx = getVisibilityMapEx(pVisibility);
+	VisibilityMapCharacterEx *const pCharacterEx = visibilityMapEx.getCharacterEx(this->m_id);
+
+	if (pCharacterEx == nullptr)
+	{
+		this->m_nVisualRange = static_cast<byte>(nVisRange);
+		return nOldVisRange;
+	}
+
+	///////////////////////////
+	// Unsee previous points //
+	///////////////////////////
+
+	unseePreviousPoints(pVisibility, this->m_pos, *pCharacterEx);
+
+	/////////////////////////
+	// Update visual range //
+	/////////////////////////
+
+	this->m_nVisualRange = static_cast<byte>(nVisRange);
+
+	///////////////////////////////
+	// Calculate new seen points //
+	///////////////////////////////
+
+	calculateNewSeenPoints(pVisibility, this->m_pos, this->m_visibleTerrainTable, this->m_nVisualRange, *pCharacterEx);
+
+	return nOldVisRange;
+}
+
+byte CVisibilityMap::Override_AddCharacter(CPoint* pPos, int nCharId, byte* pVisibleTerrainTable, byte nVisRange, int* pRemovalTable)
+{
+	//////////////////////////////
+	// Find open character slot //
+	//////////////////////////////
+
+	VisibilityMapEx& visibilityMapEx = getVisibilityMapEx(this);
+	VisibilityMapCharacterEx& characterEx = visibilityMapEx.getOrCreateCharacterEx(nCharId);
+
+	///////////////////////////////
+	// Calculate new seen points //
+	///////////////////////////////
+
+	calculateNewSeenPoints(this, *pPos, pVisibleTerrainTable, nVisRange, characterEx);
 
 	return 1;
 }
 
-void CVisibilityMap::Override_RemoveCharacter(CPoint* ptOldPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bRemoveCharId)
+int CVisibilityMap::Override_IsCharacterIdOnMap(int nCharId)
+{
+	VisibilityMapEx& visibilityMapEx = getVisibilityMapEx(this);
+	VisibilityMapCharacterEx *const characterEx = visibilityMapEx.getCharacterEx(nCharId);
+	return characterEx != nullptr;
+}
+
+void CVisibilityMap::Override_RemoveCharacter(CPoint* pOldPos, int nCharId, byte* pVisibleTerrainTable, byte nVisRange, int* pRemovalTable, byte bRemoveCharId)
 {
 	//////////////////////////
 	// Find character index //
 	//////////////////////////
 
-	int nCharIndex = 0;
+	VisibilityMapEx& visibilityMapEx = getVisibilityMapEx(this);
+	VisibilityMapCharacterEx *const pCharacterEx = visibilityMapEx.getCharacterEx(nCharId);
 
-	while (this->m_aCharacterIds[nCharIndex] != charId)
+	if (pCharacterEx == nullptr)
 	{
-		if (++nCharIndex >= 15)
-		{
-			return;
-		}
+		return;
 	}
+
+	///////////////////////////
+	// Unsee previous points //
+	///////////////////////////
+
+	unseePreviousPoints(this, *pOldPos, *pCharacterEx);
+
+	//////////////////////
+	// Remove character //
+	//////////////////////
 
 	if (bRemoveCharId)
 	{
-		this->m_aCharacterIds[nCharIndex] = -1;
-	}
-
-	const ushort nMask = 1 << (nCharIndex & 0x1F);
-
-	if (nMask == 0xFF) // Vanilla Bug: Never happens
-	{
-		return;
-	}
-
-	////////////////////////////////
-	// Unset all indices in range //
-	////////////////////////////////
-
-	int xPos = ptOldPos->x;
-	if (xPos < 0) { xPos += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
-	xPos /= 32;
-
-	int yPos = ptOldPos->y;
-	if (yPos < 0) { yPos += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
-	yPos /= 32;
-
-	const int nClampedVisualRange = (std::max)(0, (std::min)(static_cast<int>(visualRange), 23));
-
-	const int xLeft = (std::max)(0, xPos - nClampedVisualRange - 1);
-	const int yTop = (std::max)(0, yPos - nClampedVisualRange - 1);
-	const int xRight = (std::min)(xPos + nClampedVisualRange + 1, static_cast<int>(this->m_nWidth));
-	const int yBottom = (std::min)(yPos + nClampedVisualRange + 1, static_cast<int>(this->m_nHeight));
-
-	for (int curY = yTop; curY < yBottom; ++curY)
-	{
-		int curIndex = curY * this->m_nWidth + xLeft;
-
-		for (int curX = xLeft; curX < xRight; ++curX, ++curIndex)
-		{
-			if (curIndex >= 0 && curIndex < this->m_nMapSize)
-			{
-				this->m_pMap[curIndex] &= ~nMask;
-			}
-		}
+		visibilityMapEx.removeCharacter(nCharId);
 	}
 }
 
-void CVisibilityMap::Override_UpDate(CPoint* ptOldPos, CPoint* ptNewPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bForceUpdate)
+void CVisibilityMap::Override_UpDate(CPoint* pOldPos, CPoint* pNewPos, int nCharId, byte* pVisibleTerrainTable, byte nVisRange, int* pRemovalTable, byte bForceUpdate)
 {
-	if (ptOldPos->x == ptNewPos->x && ptOldPos->y == ptNewPos->y && bForceUpdate == 0)
+	if (pOldPos->x == pNewPos->x && pOldPos->y == pNewPos->y && bForceUpdate == 0)
 	{
 		return;
 	}
@@ -438,58 +595,23 @@ void CVisibilityMap::Override_UpDate(CPoint* ptOldPos, CPoint* ptNewPos, int cha
 	// Find character index //
 	//////////////////////////
 
-	int nCharIndex = 0;
+	VisibilityMapEx& visibilityMapEx = getVisibilityMapEx(this);
+	VisibilityMapCharacterEx *const pCharacterEx = visibilityMapEx.getCharacterEx(nCharId);
 
-	while (this->m_aCharacterIds[nCharIndex] != charId)
-	{
-		if (++nCharIndex >= 15)
-		{
-			return;
-		}
-	}
-
-	const ushort nMask = 1 << (nCharIndex & 0x1F);
-
-	if (nMask == 0xFF) // Vanilla Bug: Never happens
+	if (pCharacterEx == nullptr)
 	{
 		return;
 	}
 
-	////////////////////////////////
-	// Unset all indices in range //
-	////////////////////////////////
+	///////////////////////////
+	// Unsee previous points //
+	///////////////////////////
 
-	int xPos = ptOldPos->x;
-	if (xPos < 0) { xPos += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
-	xPos /= 32;
+	unseePreviousPoints(this, *pOldPos, *pCharacterEx);
 
-	int yPos = ptOldPos->y;
-	if (yPos < 0) { yPos += 31; } // Vanilla Bug: Bad attempt to round towards floor for negative values
-	yPos /= 32;
+	///////////////////////////////
+	// Calculate new seen points //
+	///////////////////////////////
 
-	const int nClampedVisualRange = (std::max)(0, (std::min)(static_cast<int>(visualRange), 23));
-
-	const int xLeft = (std::max)(0, xPos - nClampedVisualRange - 1);
-	const int yTop = (std::max)(0, yPos - nClampedVisualRange - 1);
-	const int xRight = (std::min)(xPos + nClampedVisualRange + 1, static_cast<int>(this->m_nWidth));
-	const int yBottom = (std::min)(yPos + nClampedVisualRange + 1, static_cast<int>(this->m_nHeight));
-
-	for (int curY = yTop; curY < yBottom; ++curY)
-	{
-		int curIndex = curY * this->m_nWidth + xLeft;
-
-		for (int curX = xLeft; curX < xRight; ++curX, ++curIndex)
-		{
-			if (curIndex >= 0 && curIndex < this->m_nMapSize)
-			{
-				this->m_pMap[curIndex] &= ~nMask;
-			}
-		}
-	}
-
-	/////////////////////
-	// Set new indices //
-	/////////////////////
-
-	CVisibilityMap_PrivateAddCharacter(this, ptNewPos, nMask, pVisibleTerrainTable, nClampedVisualRange, pRemovalTable);
+	calculateNewSeenPoints(this, *pNewPos, pVisibleTerrainTable, nVisRange, *pCharacterEx);
 }

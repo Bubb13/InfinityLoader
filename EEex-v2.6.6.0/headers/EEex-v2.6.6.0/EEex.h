@@ -153,6 +153,13 @@ namespace EEex {
 	void Trigger_Hook_OnScriptLevelHit(CGameAIBase* pCaller, unsigned char nScriptLevel);
 	void Trigger_Hook_OnConditionResponseHit(int16_t nResponseSetNum);
 
+	////////////////////
+	// Visibility Map //
+	////////////////////
+
+	void VisibilityMap_Hook_OnConstruct(CVisibilityMap* pThis);
+	void VisibilityMap_Hook_OnDestruct(CVisibilityMap* pThis);
+
 	//---------------------------//
 	//          Exports          //
 	//---------------------------//

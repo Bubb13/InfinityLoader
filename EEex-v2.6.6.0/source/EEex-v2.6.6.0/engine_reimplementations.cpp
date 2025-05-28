@@ -198,7 +198,7 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 		// If offset put the target in an invalid location, just use the main target point
 		if (pSpriteArea != nullptr
 			&& (curTargetPointOffsetGrid.x != spritePosGrid.x || curTargetPointOffsetGrid.y != spritePosGrid.y)
-			&& !pSpriteArea->AdjustTarget(&spritePosGrid, &curTargetPointOffsetGrid, spritePersonalSpace, 1))
+			&& !pSpriteArea->AdjustTarget(spritePosGrid, &curTargetPointOffsetGrid, spritePersonalSpace, 1))
 		{
 			curTargetPointOffset.x = curTargetPoint.x;
 			curTargetPointOffset.y = curTargetPoint.y;
@@ -228,7 +228,7 @@ void CAIGroup::Override_GroupSetTarget(CPoint target, int additive, ushort forma
 						tempAdjust.x += curTargetPointOffset.x / 16;
 						tempAdjust.y += curTargetPointOffset.y / 12;
 
-						if (pSpriteArea->AdjustTarget(&spritePosGrid, &tempAdjust, spritePersonalSpace, 1)) {
+						if (pSpriteArea->AdjustTarget(spritePosGrid, &tempAdjust, spritePersonalSpace, 1)) {
 							done = true;
 						}
 
@@ -1003,7 +1003,7 @@ void Reference_CGameAIBase_ApplyTriggers(CGameAIBase* pThis) {
 
 				pThis->virtual_AutoPause(2);
 				pThis->m_lAttackStyle = pTrigger->m_specificID;
-				
+
 				if
 				(
 					pThis->m_lAttacker != &pTrigger->m_triggerCause
