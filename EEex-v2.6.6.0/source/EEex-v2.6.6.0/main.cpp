@@ -37,6 +37,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("CAICondition::Override_TriggerHolds"), getMemberPtr(&CAICondition::Override_TriggerHolds));
 	exportPattern(TEXT("CGameAIBase::Override_ApplyTriggers"), getMemberPtr(&CGameAIBase::Override_ApplyTriggers));
 	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), getMemberPtr(&CGameAIBase::Override_SetTrigger));
+	exportPattern(TEXT("CGameArea::Override_AddClairvoyanceObject(CGameSprite*,CPoint,int)"), getMemberPtr(&CGameArea::Override_AddClairvoyanceObject));
 	exportPattern(TEXT("CGameEffectList::Override_Unmarshal"), getMemberPtr(&CGameEffectList::Override_Unmarshal));
 	exportPattern(TEXT("CGameSprite::Override_CheckIfVisible"), getMemberPtr(&CGameSprite::Override_CheckIfVisible));
 	exportPattern(TEXT("CGameSprite::Override_Damage"), getMemberPtr(&CGameSprite::Override_Damage));

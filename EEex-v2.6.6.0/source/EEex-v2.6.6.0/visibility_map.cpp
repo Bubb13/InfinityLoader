@@ -141,6 +141,7 @@ public:
 	VisibilityMapEx(VisibilityMapEx&& other) = default;
 	VisibilityMapEx& operator=(VisibilityMapEx&& other) = default;
 
+	int addFakeCharacter(CPoint* pPos, byte* pVisibleTerrainTable, byte nVisRange, int* pRemovalTable);
 	ConstItrProxy<decltype(m_charactersExMap)> characters();
 	VisibilityMapCharacterEx* getCharacterEx(int nCharId);
 	VisibilityMapCharacterEx& getOrCreateCharacterEx(int nCharId);
@@ -150,6 +151,14 @@ public:
 
 VisibilityMapEx::VisibilityMapEx(CVisibilityMap* pOwner) : m_owner(pOwner)
 {
+}
+
+int VisibilityMapEx::addFakeCharacter(CPoint* pPos, byte* pVisibleTerrainTable, byte nVisRange, int* pRemovalTable)
+{
+	int nFakeId = -1;
+	for (; m_charactersExMap.contains(nFakeId); --nFakeId);
+	m_owner->Override_AddCharacter(pPos, nFakeId, pVisibleTerrainTable, nVisRange, pRemovalTable);
+	return nFakeId;
 }
 
 ConstItrProxy<decltype(VisibilityMapEx::m_charactersExMap)> VisibilityMapEx::characters()
@@ -505,6 +514,56 @@ static void calculateNewSeenPoints(
 // Overrides //
 ///////////////
 
+void CGameArea::Override_AddClairvoyanceObject(CGameSprite* pSprite, CPoint position, int duration)
+{
+	//////////////////
+	// Send message //
+	//////////////////
+
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+
+	if (pChitin->cNetwork.m_bConnectionEstablished == 1 && pChitin->cNetwork.m_idLocalPlayer == pSprite->m_remotePlayerID)
+	{
+		CMessageAddClairvoyance *const pMessage = newEngineObj<CMessageAddClairvoyance>(
+			position.x, position.y, duration, pSprite->m_id, pSprite->m_id);
+
+		pChitin->m_cMessageHandler.AddMessage(pMessage, 0);
+	}
+
+	///////////////////////////////////////////////////////////
+	// Add clairvoyance object to the vismap using a fake id //
+	///////////////////////////////////////////////////////////
+
+	VisibilityMapEx& visibilityMapEx = getVisibilityMapEx(&this->m_visibility);
+	byte *const pVisibleTerrainTable = pSprite->virtual_GetVisibleTerrainTable();
+	constexpr short VISUAL_RANGE = 448;
+
+	const int nVisMapId = visibilityMapEx.addFakeCharacter(
+		&position,
+		pVisibleTerrainTable,
+		static_cast<byte>(VISUAL_RANGE), // Vanilla bug: VISUAL_RANGE is mistakenly passed as map coordinates, not visual coordinates.
+										 // This is attempting to pass the default visual range of 14, but (after truncation) passes
+										 // 192 instead, which ends up clamped to the maximum of 23.
+		nullptr
+	);
+
+	//////////////////////////////////////
+	// Register the clairvoyance object //
+	//////////////////////////////////////
+
+	CGameAreaClairvoyanceEntry *const pClairvoyanceEntry = newEngineObj<CGameAreaClairvoyanceEntry>(
+		position.x, position.y,                                    // position
+		nVisMapId,                                                 // id (visibility map)
+		pChitin->m_pObjectGame->m_worldTime.m_gameTime + duration, // timeKill
+		pVisibleTerrainTable,                                      // visibleTerrainTable
+		pSprite->m_id,                                             // charId (caster)
+		VISUAL_RANGE                                               // visRange
+	);
+
+	this->m_lClairvoyanceObjects.AddTail(pClairvoyanceEntry);
+	this->ShowMonstersInArea(pClairvoyanceEntry);
+}
+
 void CGameSprite::Override_CheckIfVisible()
 {
 	////////////////////////////////////////
@@ -736,10 +795,15 @@ void CVisibilityMap::Override_RemoveCharacter(CPoint* pOldPos, int nCharId, byte
 	// Remove character //
 	//////////////////////
 
-	if (bRemoveCharId)
-	{
-		visibilityMapEx.removeCharacter(nCharId);
-	}
+	// This flag is only used by Farsight objects in the old vismap code, (they hackily used to share a single vismap id).
+	// Ignoring the following workaround since I assign them unique ids in CGameArea::Override_AddClairvoyanceObject().
+
+	//if (bRemoveCharId)
+	//{
+	//	visibilityMapEx.removeCharacter(nCharId);
+	//}
+
+	visibilityMapEx.removeCharacter(nCharId);
 }
 
 void CVisibilityMap::Override_UpDate(CPoint* pOldPos, CPoint* pNewPos, int nCharId, byte* pVisibleTerrainTable, byte nVisRange, int* pRemovalTable, byte bForceUpdate)

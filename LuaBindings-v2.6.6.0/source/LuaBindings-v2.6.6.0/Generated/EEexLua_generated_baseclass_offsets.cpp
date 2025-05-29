@@ -938,6 +938,12 @@ void registerBaseclasses() {
 		{"CMessageAddEffect::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageAddEffect::vtbl, CMessage::vtbl>()},
 		}},
+		{"CMessageAddClairvoyance", {
+			{"CMessage", offsetofbase<CMessageAddClairvoyance, CMessage>()},
+		}},
+		{"CMessageAddClairvoyance::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageAddClairvoyance::vtbl, CMessage::vtbl>()},
+		}},
 		{"CFile", {
 			{"CObject", offsetofbase<CFile, CObject>()},
 		}},

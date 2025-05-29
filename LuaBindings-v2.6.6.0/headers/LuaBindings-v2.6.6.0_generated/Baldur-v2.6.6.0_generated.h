@@ -5067,19 +5067,6 @@ struct CFog
 	CFog() = delete;
 };
 
-struct CGameAreaClairvoyanceEntry
-{
-	CPoint m_position;
-	int m_id;
-	int m_timeKill;
-	unsigned __int8* m_pVisibleTerrainTable;
-	int m_charId;
-	__int16 m_visRange;
-	int* m_pVisMapExploredArea;
-
-	CGameAreaClairvoyanceEntry() = delete;
-};
-
 struct MAP_CHAR_POSITIONS
 {
 	CPoint ptPos;
@@ -6538,6 +6525,30 @@ struct CMessageAddEffect : CMessage
 	}
 };
 
+struct CMessageAddClairvoyance : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	CPoint m_ptPosition;
+	int m_nDuration;
+
+	CMessageAddClairvoyance() = delete;
+
+	void Construct(int posX, int posY, int duration, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_targetId = target;
+		m_sourceId = caller;
+		m_ptPosition.x = posX;
+		m_ptPosition.y = posY;
+		m_nDuration = duration;
+	}
+};
+
 struct CMemINIValue
 {
 	struct vtbl
@@ -6554,6 +6565,30 @@ struct CMemINIValue
 
 	virtual void virtual_Destruct()
 	{
+	}
+};
+
+struct CGameAreaClairvoyanceEntry
+{
+	CPoint m_position;
+	int m_id;
+	int m_timeKill;
+	unsigned __int8* m_pVisibleTerrainTable;
+	int m_charId;
+	__int16 m_visRange;
+	int* m_pVisMapExploredArea;
+
+	CGameAreaClairvoyanceEntry() = delete;
+
+	void Construct(int posX, int posY, int id, int timeKill, byte* visibleTerrainTable, int charId, short visRange)
+	{
+		m_position.x = posX;
+		m_position.y = posY;
+		m_id = id;
+		m_timeKill = timeKill;
+		m_pVisibleTerrainTable = visibleTerrainTable;
+		m_charId = charId;
+		m_visRange = visRange;
 	}
 };
 
@@ -12808,6 +12843,9 @@ struct CGameArea
 	typedef void (__thiscall *type_OnActionButtonClickGround)(CGameArea* pThis, CPoint* pt);
 	static type_OnActionButtonClickGround p_OnActionButtonClickGround;
 
+	typedef void (__thiscall *type_ShowMonstersInArea)(CGameArea* pThis, CGameAreaClairvoyanceEntry* pEntry);
+	static type_ShowMonstersInArea p_ShowMonstersInArea;
+
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
 	int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
@@ -12850,6 +12888,11 @@ struct CGameArea
 	void OnActionButtonClickGround(CPoint* pt)
 	{
 		p_OnActionButtonClickGround(this, pt);
+	}
+
+	void ShowMonstersInArea(CGameAreaClairvoyanceEntry* pEntry)
+	{
+		p_ShowMonstersInArea(this, pEntry);
 	}
 };
 

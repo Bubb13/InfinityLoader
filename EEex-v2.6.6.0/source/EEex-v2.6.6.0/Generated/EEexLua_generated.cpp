@@ -341,6 +341,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CMessageDisplayTextRef");
 	tolua_usertype(L, "CMessageDisplayText");
 	tolua_usertype(L, "CMessageAddEffect");
+	tolua_usertype(L, "CMessageAddClairvoyance");
 	tolua_usertype(L, "CMemINIValue");
 	tolua_usertype(L, "CGameEffectList");
 	tolua_usertype(L, "CFile");
@@ -1069,6 +1070,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CMessageAddEffect", "CMessageAddEffect", {"CMessage"}, NULL);
 	tolua_beginmodule(L, "CMessageAddEffect");
+	tolua_endmodule(L);
+	tolua_cclass(L, "CMessageAddClairvoyance", "CMessageAddClairvoyance", {"CMessage"}, NULL);
+	tolua_beginmodule(L, "CMessageAddClairvoyance");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CMemINIValue", "CMemINIValue", {}, NULL);
 	tolua_beginmodule(L, "CMemINIValue");

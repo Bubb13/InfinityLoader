@@ -12,6 +12,7 @@ CGameStatic
 CGameTemporal
 CGameTiledObject
 CGameTrigger
+CMessageAddClairvoyance
 CMessageAddEffect
 CMessageDisplayText
 CMessageDisplayTextRef

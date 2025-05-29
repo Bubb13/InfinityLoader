@@ -63,6 +63,11 @@ struct CGameAIBase : CGameObject
 	$nobinding $external_implementation void Override_SetTrigger(const CAITrigger* trigger);
 };
 
+struct CGameArea
+{
+	$nobinding $external_implementation void Override_AddClairvoyanceObject(CGameSprite* pSprite, CPoint position, int duration);
+};
+
 struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 {
 	$nobinding $external_implementation void Override_Unmarshal(byte* pData, uint nSize, CGameSprite* pSprite, byte version);

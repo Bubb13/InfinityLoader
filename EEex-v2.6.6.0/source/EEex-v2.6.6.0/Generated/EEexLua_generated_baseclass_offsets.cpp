@@ -461,6 +461,9 @@ void registerBaseclasses() {
 		{"CMessageAddEffect", {
 			{"CMessage", offsetofbase<CMessageAddEffect, CMessage>()},
 		}},
+		{"CMessageAddClairvoyance", {
+			{"CMessage", offsetofbase<CMessageAddClairvoyance, CMessage>()},
+		}},
 		{"CGameEffectList", {
 			{"CTypedPtrList<CPtrList,CGameEffect*>", offsetofbase<CGameEffectList, CTypedPtrList<CPtrList,CGameEffect*>>()},
 		}},

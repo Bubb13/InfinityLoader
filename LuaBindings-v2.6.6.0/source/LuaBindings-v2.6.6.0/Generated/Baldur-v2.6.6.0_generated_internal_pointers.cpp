@@ -29,6 +29,7 @@ void* CMessageSetDirection::VFTable;
 void* CMessageDisplayTextRef::VFTable;
 void* CMessageDisplayText::VFTable;
 void* CMessageAddEffect::VFTable;
+void* CMessageAddClairvoyance::VFTable;
 CContingencyList::type_ProcessTrigger CContingencyList::p_ProcessTrigger;
 CContingencyList::type_Process CContingencyList::p_Process;
 CAIGroup::type_FollowLeader CAIGroup::p_FollowLeader;
@@ -147,6 +148,7 @@ CGameArea::type_GetAllInRange_Overload_Point CGameArea::p_GetAllInRange_Overload
 CGameArea::type_GetAllInRange_Overload_VertListPos CGameArea::p_GetAllInRange_Overload_VertListPos;
 CGameArea::type_ApplyEffect CGameArea::p_ApplyEffect;
 CGameArea::type_OnActionButtonClickGround CGameArea::p_OnActionButtonClickGround;
+CGameArea::type_ShowMonstersInArea CGameArea::p_ShowMonstersInArea;
 CAIObjectType::type_Construct_Overload_Manual CAIObjectType::p_Construct_Overload_Manual;
 CAIObjectType::type_Decode CAIObjectType::p_Decode;
 CAIObjectType::type_GetShare CAIObjectType::p_GetShare;
@@ -253,6 +255,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CMessageDisplayTextRef::VFTable"), CMessageDisplayTextRef::VFTable);
 	attemptFillPointer(TEXT("CMessageDisplayText::VFTable"), CMessageDisplayText::VFTable);
 	attemptFillPointer(TEXT("CMessageAddEffect::VFTable"), CMessageAddEffect::VFTable);
+	attemptFillPointer(TEXT("CMessageAddClairvoyance::VFTable"), CMessageAddClairvoyance::VFTable);
 	attemptFillPointer(TEXT("CContingencyList::ProcessTrigger"), CContingencyList::p_ProcessTrigger);
 	attemptFillPointer(TEXT("CContingencyList::Process"), CContingencyList::p_Process);
 	attemptFillPointer(TEXT("CAIGroup::FollowLeader"), CAIGroup::p_FollowLeader);
@@ -371,6 +374,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CGameArea::GetAllInRange(__POSITION*,CPoint*,CAIObjectType*,short,byte*,CTypedPtrList<CPtrList,long>*,int,int)"), CGameArea::p_GetAllInRange_Overload_VertListPos);
 	attemptFillPointer(TEXT("CGameArea::ApplyEffect"), CGameArea::p_ApplyEffect);
 	attemptFillPointer(TEXT("CGameArea::OnActionButtonClickGround"), CGameArea::p_OnActionButtonClickGround);
+	attemptFillPointer(TEXT("CGameArea::ShowMonstersInArea"), CGameArea::p_ShowMonstersInArea);
 	attemptFillPointer(TEXT("CAIObjectType::Construct(byte,byte,byte,byte,byte,byte,byte,int)"), CAIObjectType::p_Construct_Overload_Manual);
 	attemptFillPointer(TEXT("CAIObjectType::Decode"), CAIObjectType::p_Decode);
 	attemptFillPointer(TEXT("CAIObjectType::GetShare"), CAIObjectType::p_GetShare);
