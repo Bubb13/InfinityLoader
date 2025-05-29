@@ -170,6 +170,9 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CVEFEvent*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CVEFEvent*>, CObject>()},
+		}},
 		{"CTypedPtrList<CPtrList,CAIObjectType*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIObjectType*>, CObject>()},
 		}},
@@ -599,6 +602,10 @@ void registerBaseclasses() {
 		{"CGameFireball3d", {
 			{"CGameObject", offsetofbase<CGameFireball3d, CGameObject>()},
 		}},
+		{"CVisualEffect", {
+			{"CGameObject", offsetofbase<CVisualEffect, CGameObject>()},
+			{"CVisualEffectBase", offsetofbase<CVisualEffect, CVisualEffectBase>()},
+		}},
 		{"CProjectile", {
 			{"CGameObject", offsetofbase<CProjectile, CGameObject>()},
 		}},
@@ -694,6 +701,9 @@ void registerBaseclasses() {
 		}},
 		{"CGameSound", {
 			{"CGameObject", offsetofbase<CGameSound, CGameObject>()},
+		}},
+		{"CMessageSetTrigger", {
+			{"CMessage", offsetofbase<CMessageSetTrigger, CMessage>()},
 		}},
 		{"CGameAIBase", {
 			{"CGameObject", offsetofbase<CGameAIBase, CGameObject>()},

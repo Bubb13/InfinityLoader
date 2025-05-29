@@ -12939,7 +12939,7 @@ struct CAIObjectType
 
 	CAIObjectType() = delete;
 
-	typedef void (__thiscall *type_Construct_Overload_Manual)(CAIObjectType* pThis, byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
+	typedef void (__thiscall *type_Construct_Overload_Manual)(CAIObjectType* pThis, byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance);
 	static type_Construct_Overload_Manual p_Construct_Overload_Manual;
 
 	typedef void (__thiscall *type_Decode)(CAIObjectType* pThis, CGameAIBase* caller);
@@ -12960,9 +12960,9 @@ struct CAIObjectType
 	typedef bool (__thiscall *type_operator_equ_equ)(CAIObjectType* pThis, const CAIObjectType* y);
 	static type_operator_equ_equ p_operator_equ_equ;
 
-	void Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name)
+	void Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance)
 	{
-		p_Construct_Overload_Manual(this, EnemyAlly, General, Race, Class, Specifics, Gender, Alignment, Instance, SpecialCase, name);
+		p_Construct_Overload_Manual(this, EnemyAlly, General, Race, Class, Specifics, Gender, Alignment, Instance);
 	}
 
 	void Decode(CGameAIBase* caller)
@@ -14210,6 +14210,39 @@ struct CAITrigger
 	void Construct(const CAITrigger* trigger)
 	{
 		p_Construct_Overload_Copy(this, trigger);
+	}
+
+	void Construct(short triggerID, int specific)
+	{
+		m_triggerID = triggerID;
+		m_specificID = specific;
+		m_triggerCause.Construct(0, 0, 0, 0, 0, 0, 0, -1);
+		m_flags = 0;
+		m_specific2 = 0;
+		m_specific3 = 0;
+		m_string1.Construct();
+		m_string2.Construct();
+	}
+};
+
+struct CMessageSetTrigger : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	CAITrigger m_trigger;
+
+	CMessageSetTrigger() = delete;
+
+	void Construct(const CAITrigger* trigger, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_targetId = target;
+		m_sourceId = caller;
+		m_trigger.Construct(trigger);
 	}
 };
 

@@ -117,6 +117,17 @@ void VisibilityMapCharacterEx::setAtOffset(CPoint ptVisOffset)
 // VisibilityMapEx //
 //-----------------//
 
+template<typename T>
+class ConstItrProxy
+{
+private:
+	T& ref;
+public:
+	ConstItrProxy(T& r) : ref(r) {}
+	auto begin() { return ref.cbegin(); }
+	auto end() { return ref.cend(); }
+};
+
 class VisibilityMapEx
 {
 private:
@@ -130,6 +141,7 @@ public:
 	VisibilityMapEx(VisibilityMapEx&& other) = default;
 	VisibilityMapEx& operator=(VisibilityMapEx&& other) = default;
 
+	ConstItrProxy<decltype(m_charactersExMap)> characters();
 	VisibilityMapCharacterEx* getCharacterEx(int nCharId);
 	VisibilityMapCharacterEx& getOrCreateCharacterEx(int nCharId);
 	CVisibilityMap* getOwner() const;
@@ -138,6 +150,11 @@ public:
 
 VisibilityMapEx::VisibilityMapEx(CVisibilityMap* pOwner) : m_owner(pOwner)
 {
+}
+
+ConstItrProxy<decltype(VisibilityMapEx::m_charactersExMap)> VisibilityMapEx::characters()
+{
+	return ConstItrProxy { m_charactersExMap };
 }
 
 VisibilityMapCharacterEx* VisibilityMapEx::getCharacterEx(int nCharId)
@@ -487,6 +504,147 @@ static void calculateNewSeenPoints(
 ///////////////
 // Overrides //
 ///////////////
+
+void CGameSprite::Override_CheckIfVisible()
+{
+	////////////////////////////////////////
+	// Check if I'm always seen via op114 //
+	////////////////////////////////////////
+
+	if (this->GetActiveStats()->m_bIdentifyMode != 0)
+	{
+		this->m_canBeSeen = 8;
+		return;
+	}
+
+	/////////////////////////////
+	// Check if I'm in an area //
+	/////////////////////////////
+
+	CGameArea *const pArea = this->m_pArea;
+
+	if (pArea == nullptr)
+	{
+		this->m_canBeSeen = 8;
+		return;
+	}
+
+	////////////////////////////////
+	// Check if I'm always "seen" //
+	////////////////////////////////
+
+	CVisibilityMap *const pVisibility = &pArea->m_visibility;
+
+	if
+	(
+		(
+			pVisibility->Override_IsCharacterIdOnMap(this->m_id)      // If I'm a FoW clearing creature...
+			||
+			this->m_animation.m_animation->virtual_GetListType() == 2 // or I'm a flying creature...
+		)
+		&&
+		(this->GetActiveStats()->m_generalState & 0x800) == 0         // + I'm not STATE_DEAD...
+	)
+	{
+		this->m_canBeSeen = 8;                                        // ...then I'm always seen
+		return;
+	}
+
+	//////////////////////////////////////////
+	// Loop over all FoW clearing creatures //
+	//////////////////////////////////////////
+
+	VisibilityMapEx& visibilityMapEx = getVisibilityMapEx(pVisibility);
+
+	for (const auto& [nCharId, characterEx] : visibilityMapEx.characters())
+	{
+		CGameSprite* pFoWClearingCreature = nullptr; // Vanilla bug: Assumes sprite
+
+		if (CGameObjectArray::GetShare(nCharId, reinterpret_cast<CGameObject**>(&pFoWClearingCreature)) != 0)
+		{
+			continue;
+		}
+
+		////////////////////////////////////////
+		// Check that we are in the same area //
+		////////////////////////////////////////
+
+		if (pFoWClearingCreature->m_pArea != pArea)
+		{
+			continue;
+		}
+
+		//////////////////////////////////////////////////////////
+		// Check that the FoW clearing object is not STATE_DEAD //
+		//////////////////////////////////////////////////////////
+
+		if ((pFoWClearingCreature->GetActiveStats()->m_generalState & 0x800) != 0)
+		{
+			continue;
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////
+		// Check LOS from me to FoW clearing object, using their visual range (but my terrain table?) //
+		////////////////////////////////////////////////////////////////////////////////////////////////
+
+		const int bLOSResult = pArea->CheckLOS(
+			&this->m_pos,
+			&pFoWClearingCreature->m_pos,
+			this->m_visibleTerrainTable,
+			1,
+			pFoWClearingCreature->virtual_GetVisualRange()
+		);
+
+		if (!bLOSResult)
+		{
+			continue;
+		}
+
+		//////////////////////////////////
+		// Check if I'm a visible enemy //
+		//////////////////////////////////
+
+		if
+		(
+			this->m_bVisibleMonster == 0                          // I haven't passed this guard yet
+			&&
+			this->m_typeAI.m_EnemyAlly >= 200                     // + My EA is >= EVILCUTOFF
+			&&
+			(this->GetActiveStats()->m_generalState & 0x800) == 0 // + I'm not STATE_DEAD
+			&&
+			(this->GetActiveStats()->m_generalState & 0x10) == 0  // + I'm not STATE_INVISIBLE
+		)
+		{
+			this->m_bVisibleMonster = 1;
+
+			if (pArea->m_nVisibleMonster++ == 0)
+			{
+				pFoWClearingCreature->virtual_AutoPause(0x80);
+			}
+		}
+
+		////////////////////////////////////
+		// Check if I just became visible //
+		////////////////////////////////////
+
+		if (this->m_canBeSeen == 0)
+		{
+			this->m_bSeenPartyBefore = 1; // Unused
+
+			// Vanilla bug: BecameVisible() set on FoW object, (not the current sprite)?
+			CMessageSetTrigger *const pMessage = newEngineObj<CMessageSetTrigger>(
+				EngineVal<CAITrigger> { 0x0033, 0 }, // BecameVisible()
+				this->m_id,
+				pFoWClearingCreature->m_id
+			);
+
+			(*p_g_pBaldurChitin)->m_cMessageHandler.AddMessage(pMessage, 0);
+		}
+
+		this->m_canBeSeen = 8;
+		break;
+	}
+}
 
 short CGameSprite::Override_SetVisualRange(short nVisRange)
 {

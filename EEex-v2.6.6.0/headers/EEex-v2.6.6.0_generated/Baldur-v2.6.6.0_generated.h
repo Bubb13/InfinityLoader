@@ -7631,6 +7631,24 @@ extern ConstArray<short,122>* p_yy_reduce_ofst;
 extern ConstArray<short,174>* p_yy_shift_ofst;
 extern ConstArray<_D98D369160A0DDA2B95F5D0F301081BB,157>* p_yyRuleInfo;
 
+struct CVisualEffectBase
+{
+	unsigned int m_nTimedEventOffset;
+	unsigned int m_nTimedEventCount;
+	unsigned int m_nTriggeredEventOffset;
+	unsigned int m_nTriggeredEventCount;
+	unsigned int m_nTargetType;
+	int m_nSpeed;
+	int m_nDuration;
+	CPoint m_ptStartDeltaV;
+	int m_nDeltaVDec;
+	int m_nHeight;
+	unsigned int m_flags;
+	Array<unsigned int,100> m_extra;
+
+	CVisualEffectBase() = delete;
+};
+
 struct CVisibilityMapTreeNode
 {
 	CPoint m_relativePos;
@@ -9459,6 +9477,19 @@ struct CVVCHashEntry
 	CVVCHashEntry() = delete;
 };
 
+struct CVEFEvent
+{
+	int m_nTimeFrame;
+	unsigned int m_dwFlags;
+	int m_nRepeatRate;
+	unsigned int m_nResType;
+	CResRef m_res;
+	unsigned int m_specialFlags;
+	Array<unsigned int,49> m_pad;
+
+	CVEFEvent() = delete;
+};
+
 struct CTiledObject
 {
 	int m_nWedIndex;
@@ -10342,6 +10373,91 @@ struct CRuleTables
 	{
 		return p_MapCharacterSpecializationToSchool(this, nSpecialistMage);
 	}
+};
+
+struct CProjectileFileFormat
+{
+	unsigned __int16 m_wFileType;
+	__int16 m_speed;
+	unsigned int m_dwFlags;
+	CResRef m_fireSoundRef;
+	CResRef m_arrivalSoundRef;
+	CResRef m_visualEffectRef;
+	__int16 m_sparkleColor;
+	__int16 m_lanceWidth;
+	unsigned int m_extFlags;
+	unsigned int m_strRef;
+	unsigned int m_color;
+	unsigned __int16 m_colorSpeed;
+	unsigned __int16 m_shake;
+	unsigned __int16 m_IDSValue1;
+	unsigned __int16 m_IDSType1;
+	unsigned __int16 m_IDSValue2;
+	unsigned __int16 m_IDSType2;
+	CResRef m_failureSpell;
+	CResRef m_successSpell;
+	int m_maxBounces;
+	Array<unsigned int,42> reservedSpace;
+
+	CProjectileFileFormat() = delete;
+};
+
+struct CProjectileBAMFileFormat : CProjectileFileFormat
+{
+	unsigned int m_dwBAMFlags;
+	CResRef m_vidCell;
+	CResRef m_shadowVidCell;
+	unsigned __int8 m_seqVidCell;
+	unsigned __int8 m_seqShadowVidCell;
+	__int16 m_glowIntensity;
+	__int16 m_glowSizeX;
+	__int16 m_glowSizeY;
+	CResRef m_paletteResRef;
+	Array<unsigned __int8,7> m_colors;
+	unsigned __int8 m_smokePeriod;
+	Array<unsigned __int8,7> m_smokeColors;
+	unsigned __int8 m_numDirections;
+	unsigned __int16 m_smokeAnimationCode;
+	CResRef m_cPuffEffect1;
+	CResRef m_cPuffEffect2;
+	CResRef m_cPuffEffect3;
+	unsigned __int16 m_nPuff1Spacing;
+	unsigned __int16 m_nPuff2Spacing;
+	unsigned __int16 m_nPuff3Spacing;
+	unsigned int m_dwPuffFlags;
+	Array<unsigned int,42> reservedSpace;
+
+	CProjectileBAMFileFormat() = delete;
+};
+
+struct CProjectileAreaFileFormat : CProjectileBAMFileFormat
+{
+	unsigned int m_dwAreaFlags;
+	unsigned __int16 m_triggerRange;
+	unsigned __int16 m_explosionRange;
+	CResRef m_explodeSound;
+	unsigned __int16 m_nDelay;
+	unsigned __int16 m_explodeId;
+	unsigned __int16 m_sparkleExplosionProjectile;
+	unsigned __int8 m_nRepetitionCount;
+	unsigned __int8 m_fireBallType;
+	unsigned __int8 m_ringColor;
+	unsigned __int8 padding1;
+	unsigned __int16 m_secondaryProjectile;
+	CResRef m_centerVVC;
+	unsigned __int16 m_coneSize;
+	unsigned __int16 m_startingAngle;
+	CResRef m_fireBallArea;
+	CResRef m_fireBallRing;
+	CResRef m_fireBallSound;
+	unsigned int m_fireBallFlags;
+	unsigned __int16 m_targetDiceCount;
+	unsigned __int16 m_targetDiceSize;
+	unsigned __int16 m_granularity;
+	unsigned __int16 m_granDivider;
+	Array<unsigned int,45> reservedSpace;
+
+	CProjectileAreaFileFormat() = delete;
 };
 
 struct CProgressBar
@@ -12934,7 +13050,7 @@ struct CAIObjectType
 
 	CAIObjectType() = delete;
 
-	typedef void (__thiscall *type_Construct_Overload_Manual)(CAIObjectType* pThis, byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
+	typedef void (__thiscall *type_Construct_Overload_Manual)(CAIObjectType* pThis, byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance);
 	static type_Construct_Overload_Manual p_Construct_Overload_Manual;
 
 	typedef void (__thiscall *type_Decode)(CAIObjectType* pThis, CGameAIBase* caller);
@@ -12955,9 +13071,9 @@ struct CAIObjectType
 	typedef bool (__thiscall *type_operator_equ_equ)(CAIObjectType* pThis, const CAIObjectType* y);
 	static type_operator_equ_equ p_operator_equ_equ;
 
-	void Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name)
+	void Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance)
 	{
-		p_Construct_Overload_Manual(this, EnemyAlly, General, Race, Class, Specifics, Gender, Alignment, Instance, SpecialCase, name);
+		p_Construct_Overload_Manual(this, EnemyAlly, General, Race, Class, Specifics, Gender, Alignment, Instance);
 	}
 
 	void Decode(CGameAIBase* caller)
@@ -13450,6 +13566,41 @@ struct CGameFireball3d : CGameObject
 	int m_bCanSave;
 
 	CGameFireball3d() = delete;
+};
+
+struct CVisualEffect : CGameObject, CVisualEffectBase
+{
+	struct vtbl : CGameObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CTypedPtrList<CPtrList,long*> m_activeAnimations;
+	CTypedPtrList<CPtrList,CVEFEvent*> m_timedEvents;
+	CTypedPtrList<CPtrList,CVEFEvent*> m_triggeredEvents;
+	CPoint m_ptTargetPos;
+	int m_nTargetId;
+	CPoint m_posExact;
+	CPoint m_posOld;
+	int m_nExistanceCounter;
+	int m_nDirection;
+	int m_nNewDirection;
+	CPoint m_posDelta;
+	Array<unsigned __int8,16> m_terrainTable;
+	CStringList* pList;
+	__POSITION* m_listPos;
+	int m_startedList;
+	unsigned int m_renderMask;
+
+	CVisualEffect() = delete;
+
+	typedef int (*type_Load)(CString* name, CGameArea* pArea, CPoint* start, int targetId, const CPoint* targetPos, int height, int linkToObject, int speed);
+	static type_Load p_Load;
+
+	static int Load(CString* name, CGameArea* pArea, CPoint* start, int targetId, const CPoint* targetPos, int height, int linkToObject, int speed)
+	{
+		return p_Load(name, pArea, start, targetId, targetPos, height, linkToObject, speed);
+	}
 };
 
 struct CProjectile : CGameObject
@@ -14172,6 +14323,39 @@ struct CAITrigger
 	void Construct(const CAITrigger* trigger)
 	{
 		p_Construct_Overload_Copy(this, trigger);
+	}
+
+	void Construct(short triggerID, int specific)
+	{
+		m_triggerID = triggerID;
+		m_specificID = specific;
+		m_triggerCause.Construct(0, 0, 0, 0, 0, 0, 0, -1);
+		m_flags = 0;
+		m_specific2 = 0;
+		m_specific3 = 0;
+		m_string1.Construct();
+		m_string2.Construct();
+	}
+};
+
+struct CMessageSetTrigger : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	CAITrigger m_trigger;
+
+	CMessageSetTrigger() = delete;
+
+	void Construct(const CAITrigger* trigger, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_targetId = target;
+		m_sourceId = caller;
+		m_trigger.Construct(trigger);
 	}
 };
 
@@ -15050,6 +15234,7 @@ struct CGameSprite : CGameAIBase
 	}
 
 	uint64_t GetUUID();
+	void Override_CheckIfVisible();
 	CGameEffectDamage* Override_Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
 	short Override_SetVisualRange(short newVisualRange);
 

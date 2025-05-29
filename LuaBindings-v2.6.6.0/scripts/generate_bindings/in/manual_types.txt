@@ -838,7 +838,7 @@ struct CAIIdList : CResHelper<CResText,1008>
 struct CAIObjectType
 {
 	static CAIObjectType NOONE;
-	$binding_name(Construct_Overload_Manual) $pattern_name(Construct(byte,byte,byte,byte,byte,byte,byte,int)) $constructor_fake Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance, byte* SpecialCase, CString* name);
+	$binding_name(Construct_Overload_Manual) $pattern_name(Construct(byte,byte,byte,byte,byte,byte,byte,int)) $constructor_fake Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance);
 	void Decode(CGameAIBase* caller);
 	CGameObject* GetShare(CGameAIBase* caller, int checkBackList);
 	CGameObject* GetShareType(CGameAIBase* caller, CGameObjectType type, int checkBackList);
@@ -1215,6 +1215,19 @@ struct CMessageDisplayText : CMessage
 	}
 };
 
+struct CMessageSetTrigger : CMessage
+{
+	nobinding nopointer static void* VFTable;
+
+	$constructor_fake Construct(const CAITrigger* trigger, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_targetId = target;
+		m_sourceId = caller;
+		m_trigger.Construct(trigger);
+	}
+};
+
 struct CMessageHandler
 {
 	short AddMessage(CMessage* message, int bForcePassThrough);
@@ -1307,6 +1320,18 @@ struct CAITrigger
 {
 	byte OfType(const CAITrigger* trigger);
 	$binding_name(Construct_Overload_Copy) $pattern_name(Construct(CAITrigger*)) $constructor_fake Construct(const CAITrigger* trigger);
+
+	$constructor_fake Construct(short triggerID, int specific)
+	{
+		m_triggerID = triggerID;
+		m_specificID = specific;
+		m_triggerCause.Construct(0, 0, 0, 0, 0, 0, 0, -1);
+		m_flags = 0;
+		m_specific2 = 0;
+		m_specific3 = 0;
+		m_string1.Construct();
+		m_string2.Construct();
+	}
 };
 
 struct CGameTrigger : CGameAIBase

@@ -243,6 +243,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CTypedPtrList<CPtrList,__POSITION*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CTiledObject*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,CVEFEvent*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CAIObjectType*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CAIConditionResponse*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CMessage*>");
@@ -395,6 +396,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CMessageSetLastObject");
 	tolua_usertype(L, "CGameObject");
 	tolua_usertype(L, "CGameFireball3d");
+	tolua_usertype(L, "CVisualEffect");
 	tolua_usertype(L, "CProjectile");
 	tolua_usertype(L, "CProjectileTravelDoor");
 	tolua_usertype(L, "CProjectileSpellHit");
@@ -427,6 +429,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CGameStatic");
 	tolua_usertype(L, "CGameSpawning");
 	tolua_usertype(L, "CGameSound");
+	tolua_usertype(L, "CMessageSetTrigger");
 	tolua_usertype(L, "CGameAIBase");
 	tolua_usertype(L, "CGameTrigger");
 	tolua_usertype(L, "CGameTiledObject");
@@ -772,6 +775,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>", "CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CGameAreaClairvoyanceEntry*>");
+	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,CVEFEvent*>", "CTypedPtrList<CPtrList,CVEFEvent*>", {"CObject"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CVEFEvent*>");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CAIObjectType*>", "CTypedPtrList<CPtrList,CAIObjectType*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CAIObjectType*>");
@@ -1229,6 +1235,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CGameFireball3d", "CGameFireball3d", {"CGameObject"}, NULL);
 	tolua_beginmodule(L, "CGameFireball3d");
 	tolua_endmodule(L);
+	tolua_cclass(L, "CVisualEffect", "CVisualEffect", {"CGameObject","CVisualEffectBase"}, NULL);
+	tolua_beginmodule(L, "CVisualEffect");
+	tolua_endmodule(L);
 	tolua_cclass(L, "CProjectile", "CProjectile", {"CGameObject"}, NULL);
 	tolua_beginmodule(L, "CProjectile");
 	tolua_endmodule(L);
@@ -1324,6 +1333,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CGameSound", "CGameSound", {"CGameObject"}, NULL);
 	tolua_beginmodule(L, "CGameSound");
+	tolua_endmodule(L);
+	tolua_cclass(L, "CMessageSetTrigger", "CMessageSetTrigger", {"CMessage"}, NULL);
+	tolua_beginmodule(L, "CMessageSetTrigger");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CGameAIBase", "CGameAIBase", {"CGameObject"}, NULL);
 	tolua_beginmodule(L, "CGameAIBase");

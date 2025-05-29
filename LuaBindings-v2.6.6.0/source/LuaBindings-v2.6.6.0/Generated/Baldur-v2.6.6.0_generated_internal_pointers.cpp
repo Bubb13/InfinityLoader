@@ -171,6 +171,7 @@ CProjectile::type_ClearEffects CProjectile::p_ClearEffects;
 CProjectile::type_DetermineHeight CProjectile::p_DetermineHeight;
 CAITrigger::type_OfType CAITrigger::p_OfType;
 CAITrigger::type_Construct_Overload_Copy CAITrigger::p_Construct_Overload_Copy;
+void* CMessageSetTrigger::VFTable;
 CGameAIBase::type_ApplyEffectToParty CGameAIBase::p_ApplyEffectToParty;
 CGameAIBase::type_ForceSpell CGameAIBase::p_ForceSpell;
 CGameAIBase::type_ForceSpellPoint CGameAIBase::p_ForceSpellPoint;
@@ -394,6 +395,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CProjectile::DetermineHeight"), CProjectile::p_DetermineHeight);
 	attemptFillPointer(TEXT("CAITrigger::OfType"), CAITrigger::p_OfType);
 	attemptFillPointer(TEXT("CAITrigger::Construct(CAITrigger*)"), CAITrigger::p_Construct_Overload_Copy);
+	attemptFillPointer(TEXT("CMessageSetTrigger::VFTable"), CMessageSetTrigger::VFTable);
 	attemptFillPointer(TEXT("CGameAIBase::ApplyEffectToParty"), CGameAIBase::p_ApplyEffectToParty);
 	attemptFillPointer(TEXT("CGameAIBase::ForceSpell"), CGameAIBase::p_ForceSpell);
 	attemptFillPointer(TEXT("CGameAIBase::ForceSpellPoint"), CGameAIBase::p_ForceSpellPoint);

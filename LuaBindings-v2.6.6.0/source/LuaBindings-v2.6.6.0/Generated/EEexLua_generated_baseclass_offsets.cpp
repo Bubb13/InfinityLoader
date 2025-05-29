@@ -1433,6 +1433,12 @@ void registerBaseclasses() {
 		{"CGameSound::vtbl", {
 			{"CGameObject::vtbl", offsetofbase<CGameSound::vtbl, CGameObject::vtbl>()},
 		}},
+		{"CMessageSetTrigger", {
+			{"CMessage", offsetofbase<CMessageSetTrigger, CMessage>()},
+		}},
+		{"CMessageSetTrigger::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetTrigger::vtbl, CMessage::vtbl>()},
+		}},
 		{"CGameAIBase", {
 			{"CGameObject", offsetofbase<CGameAIBase, CGameObject>()},
 		}},

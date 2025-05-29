@@ -17,6 +17,7 @@ CMessageDisplayText
 CMessageDisplayTextRef
 CMessageSetDirection
 CMessageSetLastObject
+CMessageSetTrigger
 CMessageUpdateReaction
 CObList
 CProjectile
@@ -77,8 +78,6 @@ CResWebm
 CResWED
 CResWorldMap
 CVisualEffect
-EEex
-EEex::ProjectileType
 SDL_WindowFlags
 VariableArray<$D98D369160A0DDA2B95F5D0F301081BB>
 VariableArray<byte>
