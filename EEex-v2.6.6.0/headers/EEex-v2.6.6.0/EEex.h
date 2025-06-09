@@ -143,6 +143,7 @@ namespace EEex {
 	// Fix //
 	/////////
 
+	bool Fix_Hook_ShouldProcessEffectListSkipRolls();
 	bool Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell);
 	bool Fix_Hook_SpellImmunityShouldSkipItemIndexing(CGameObject* pGameObject);
 

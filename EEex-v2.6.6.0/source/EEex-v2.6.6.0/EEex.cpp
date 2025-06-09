@@ -4223,6 +4223,10 @@ void EEex::Script_Hook_OnDestruct(CAIScript* pScript) {
 // Fix //
 /////////
 
+bool EEex::Fix_Hook_ShouldProcessEffectListSkipRolls() {
+	return !(*p_g_pBaldurChitin)->m_pObjectGame->m_worldTime.m_active;
+}
+
 bool EEex::Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell) {
 
 	STUTTER_LOG_START(bool, "EEex::Fix_Hook_ShouldTransformSpellImmunityStrref")
