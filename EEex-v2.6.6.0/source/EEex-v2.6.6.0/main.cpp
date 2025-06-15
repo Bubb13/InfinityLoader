@@ -39,6 +39,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), getMemberPtr(&CGameAIBase::Override_SetTrigger));
 	exportPattern(TEXT("CGameArea::Override_AddClairvoyanceObject(CGameSprite*,CPoint,int)"), getMemberPtr(&CGameArea::Override_AddClairvoyanceObject));
 	exportPattern(TEXT("CGameEffectList::Override_Unmarshal"), getMemberPtr(&CGameEffectList::Override_Unmarshal));
+	exportPattern(TEXT("CGameEffectUsability::Override_CheckUsability"), getMemberPtr(&CGameEffectUsability::Override_CheckUsability));
 	exportPattern(TEXT("CGameSprite::Override_CheckIfVisible"), getMemberPtr(&CGameSprite::Override_CheckIfVisible));
 	exportPattern(TEXT("CGameSprite::Override_Damage"), getMemberPtr(&CGameSprite::Override_Damage));
 	exportPattern(TEXT("CGameSprite::Override_SetVisualRange"), getMemberPtr(&CGameSprite::Override_SetVisualRange));
@@ -88,6 +89,8 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Opcode_Hook_Op280_BeforeApplyEffect"), EEex::Opcode_Hook_Op280_BeforeApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_Op280_GetForcedWildSurgeNumber"), EEex::Opcode_Hook_Op280_GetForcedWildSurgeNumber);
 	exportPattern(TEXT("EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals"), EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals);
+	// op319
+	exportPattern(TEXT("EEex::Opcode_Hook_Op319_IsInverted"), EEex::Opcode_Hook_Op319_IsInverted);
 	// New op400
 	exportPattern(TEXT("EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect"), EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove"), EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove);

@@ -73,6 +73,11 @@ struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
 	$nobinding $external_implementation void Override_Unmarshal(byte* pData, uint nSize, CGameSprite* pSprite, byte version);
 };
 
+struct CGameEffectUsability : CGameEffect
+{
+	$nobinding $external_implementation int Override_CheckUsability(CGameSprite* pSprite);
+};
+
 struct CMessageSetLastObject : CMessage
 {
 	$nobinding $external_implementation void Override_Run();

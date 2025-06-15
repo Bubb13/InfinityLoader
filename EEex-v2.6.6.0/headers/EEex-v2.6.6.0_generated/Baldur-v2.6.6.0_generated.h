@@ -10404,9 +10404,17 @@ struct CRuleTables
 	typedef byte (__thiscall *type_MapCharacterSpecializationToSchool)(CRuleTables* pThis, ushort nSpecialistMage);
 	static type_MapCharacterSpecializationToSchool p_MapCharacterSpecializationToSchool;
 
+	typedef int (__thiscall *type_IsProtectedFromSpell)(CRuleTables* pThis, int nRow, CGameSprite* stats, CGameSprite* mine, int value);
+	static type_IsProtectedFromSpell p_IsProtectedFromSpell;
+
 	byte MapCharacterSpecializationToSchool(ushort nSpecialistMage)
 	{
 		return p_MapCharacterSpecializationToSchool(this, nSpecialistMage);
+	}
+
+	int IsProtectedFromSpell(int nRow, CGameSprite* stats, CGameSprite* mine, int value)
+	{
+		return p_IsProtectedFromSpell(this, nRow, stats, mine, value);
 	}
 };
 
@@ -11746,6 +11754,8 @@ struct CGameEffectUsability : CGameEffect
 	};
 
 	CGameEffectUsability() = delete;
+
+	int Override_CheckUsability(CGameSprite* pSprite);
 };
 
 struct CGameAnimationType

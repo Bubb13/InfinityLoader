@@ -117,6 +117,7 @@ ushort* CVidMode::p_SCREENHEIGHT;
 CSpell::type_Construct CSpell::p_Construct;
 CScreenWorld::type_TogglePauseGame CScreenWorld::p_TogglePauseGame;
 CRuleTables::type_MapCharacterSpecializationToSchool CRuleTables::p_MapCharacterSpecializationToSchool;
+CRuleTables::type_IsProtectedFromSpell CRuleTables::p_IsProtectedFromSpell;
 CChitin::type_OnResizeWindow CChitin::p_OnResizeWindow;
 uint* CChitin::p_TIMER_UPDATES_PER_SECOND;
 CItem::type_Construct_Overload_Manual CItem::p_Construct_Overload_Manual;
@@ -343,6 +344,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CSpell::Construct"), CSpell::p_Construct);
 	attemptFillPointer(TEXT("CScreenWorld::TogglePauseGame"), CScreenWorld::p_TogglePauseGame);
 	attemptFillPointer(TEXT("CRuleTables::MapCharacterSpecializationToSchool"), CRuleTables::p_MapCharacterSpecializationToSchool);
+	attemptFillPointer(TEXT("CRuleTables::IsProtectedFromSpell"), CRuleTables::p_IsProtectedFromSpell);
 	attemptFillPointer(TEXT("CChitin::OnResizeWindow"), CChitin::p_OnResizeWindow);
 	attemptFillPointer(TEXT("CChitin::TIMER_UPDATES_PER_SECOND"), CChitin::p_TIMER_UPDATES_PER_SECOND);
 	attemptFillPointer(TEXT("CItem::Construct(CResRef,ushort,ushort,ushort,ushort,uint)"), CItem::p_Construct_Overload_Manual);

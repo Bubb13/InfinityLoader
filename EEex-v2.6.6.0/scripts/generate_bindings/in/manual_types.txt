@@ -1266,6 +1266,7 @@ struct CMessageHandler
 struct CRuleTables
 {
 	byte MapCharacterSpecializationToSchool(ushort nSpecialistMage);
+	int IsProtectedFromSpell(int nRow, CGameSprite* stats, CGameSprite* mine, int value);
 };
 
 struct CSound : CObject, CResHelper<CResWave,4>

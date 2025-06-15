@@ -87,6 +87,8 @@ namespace EEex {
 	void Opcode_Hook_Op280_BeforeApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	int Opcode_Hook_Op280_GetForcedWildSurgeNumber(CGameSprite* pSprite);
 	bool Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals(CGameSprite* pSprite);
+	// op319
+	bool Opcode_Hook_Op319_IsInverted(CGameEffect* pEffect);
 	// New op400
 	int Opcode_Hook_SetTemporaryAIScript_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_SetTemporaryAIScript_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);

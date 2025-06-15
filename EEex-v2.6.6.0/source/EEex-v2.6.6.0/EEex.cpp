@@ -3,6 +3,8 @@
 #include <optional>
 #include <sstream>
 
+#include <mbstring.h>
+
 #include "Baldur-v2.6.6.0_generated.h"
 #include "EEex.h"
 #include "util.hpp"
@@ -2914,7 +2916,10 @@ int EEex::Stats_Hook_OnGettingUnknown(CDerivedStats* pStats, int nStatId) {
 // Opcode //
 ////////////
 
-// op101 - Allow saving throw BIT23 to bypass opcode #101
+//--------------------------------------------------------//
+// op101 - Allow saving throw BIT23 to bypass opcode #101 //
+//--------------------------------------------------------//
+
 bool EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect) {
 
 	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity")
@@ -2924,7 +2929,10 @@ bool EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect) {
 	STUTTER_LOG_END
 }
 
-// op248
+//-------//
+// op248 //
+//-------//
+
 void EEex::Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect) {
 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnOp248AddTail")
@@ -2936,7 +2944,10 @@ void EEex::Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect)
 	STUTTER_LOG_END
 }
 
-// op249
+//-------//
+// op249 //
+//-------//
+
 void EEex::Opcode_Hook_OnOp249AddTail(CGameEffect* pOp249, CGameEffect* pEffect) {
 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnOp249AddTail")
@@ -2948,7 +2959,10 @@ void EEex::Opcode_Hook_OnOp249AddTail(CGameEffect* pOp249, CGameEffect* pEffect)
 	STUTTER_LOG_END
 }
 
-// op280
+//-------//
+// op280 //
+//-------//
+
 void EEex::Opcode_Hook_Op280_BeforeApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Op280_BeforeApplyEffect")
@@ -2984,7 +2998,81 @@ bool EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals(CGameSprite* pSprite
 	STUTTER_LOG_END
 }
 
-// New op400
+//-------//
+// op319 //
+//-------//
+
+bool EEex::Opcode_Hook_Op319_IsInverted(CGameEffect* pEffect) {
+	return pEffect->m_spellLevel != 1 && pEffect->m_spellLevel != 3;
+}
+
+int CGameEffectUsability::Override_CheckUsability(CGameSprite* pSprite) {
+
+	const CAIObjectType* pAIType = pSprite->virtual_GetAIType();
+	bool match = false;
+
+	if (this->m_spellLevel == 2 || this->m_spellLevel == 3) {
+		// New SPLPROT modes
+		CRuleTables *const pRuleTables = &(*p_g_pBaldurChitin)->m_pObjectGame->m_ruleTables;
+		match = pRuleTables->IsProtectedFromSpell(this->m_dWFlags, pSprite, pSprite, this->m_effectAmount);
+	}
+	else {
+		switch (this->m_dWFlags) {
+			case 2: {
+				match = pAIType->m_EnemyAlly == this->m_effectAmount;
+				break;
+			}
+			case 3: {
+				match = pAIType->m_General == this->m_effectAmount;
+				break;
+			}
+			case 4: {
+				match = pAIType->m_Race == this->m_effectAmount;
+				break;
+			}
+			case 5: {
+				match = pAIType->m_Class == this->m_effectAmount;
+				break;
+			}
+			case 6: {
+				match = pAIType->m_Specifics == this->m_effectAmount;
+				break;
+			}
+			case 7: {
+				match = pAIType->m_Gender == this->m_effectAmount;
+				break;
+			}
+			case 8: {
+				match = pAIType->m_Alignment == this->m_effectAmount;
+				break;
+			}
+			case 9: {
+				const uint32_t nKit = static_cast<uint32_t>(pSprite->m_baseStats.m_mageSpecUpperWord) << 16 | pSprite->m_baseStats.m_mageSpecialization;
+				match = nKit == this->m_effectAmount;
+				break;
+			}
+			case 10: {
+				match = pSprite->m_baseStats.m_name == this->m_effectAmount;
+				break;
+			}
+			case 11: {
+				char scriptNameStr[33]; strncpy_s(scriptNameStr, pSprite->m_scriptName, 32);
+				char resStr[9]; this->m_res.toNullTerminatedStr(resStr);
+				#pragma warning(disable:6054) // scriptNameStr is always null terminated by strncpy_s
+				match = _mbsicmp(reinterpret_cast<unsigned char*>(scriptNameStr), reinterpret_cast<unsigned char*>(resStr)) == 0;
+				#pragma warning(default:6054)
+				break;
+			}
+		}
+	}
+
+	return match ^ EEex::Opcode_Hook_Op319_IsInverted(this);
+}
+
+//-----------//
+// New op400 //
+//-----------//
+
 int EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(int, "EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect")
@@ -3039,7 +3127,10 @@ void EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove(CGameEffect* pEffect, CGame
 	STUTTER_LOG_END
 }
 
-// New op401
+//-----------//
+// New op401 //
+//-----------//
+
 int EEex::Opcode_Hook_SetExtendedStat_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(int, "EEex::Opcode_Hook_SetExtendedStat_ApplyEffect")
@@ -3081,7 +3172,10 @@ int EEex::Opcode_Hook_SetExtendedStat_ApplyEffect(CGameEffect* pEffect, CGameSpr
 	STUTTER_LOG_END
 }
 
-// New op403
+//-----------//
+// New op403 //
+//-----------//
+
 int EEex::Opcode_Hook_ScreenEffects_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(int, "EEex::Opcode_Hook_ScreenEffects_ApplyEffect")
@@ -3104,7 +3198,10 @@ void EEex::Opcode_Hook_ScreenEffects_OnRemove(CGameEffect* pEffect, CGameSprite*
 	STUTTER_LOG_END
 }
 
-// New op408
+//-----------//
+// New op408 //
+//-----------//
+
 int EEex::Opcode_Hook_ProjectileMutator_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(int, "EEex::Opcode_Hook_ProjectileMutator_ApplyEffect")
@@ -3127,7 +3224,10 @@ void EEex::Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSpr
 	STUTTER_LOG_END
 }
 
-// New op409
+//-----------------//
+// START New op409 //
+//-----------------//
+
 int EEex::Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(int, "EEex::Opcode_Hook_EnableActionListener_ApplyEffect")
@@ -3152,6 +3252,10 @@ void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGame
 
 	STUTTER_LOG_END
 }
+
+//---------------//
+// END New op409 //
+//---------------//
 
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
 
