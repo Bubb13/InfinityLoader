@@ -4,11 +4,12 @@
 CVariableHash::type_FindKey CVariableHash::p_FindKey;
 CVariableHash::type_AddKey CVariableHash::p_AddKey;
 CGameObjectArray::type_GetShare CGameObjectArray::p_GetShare;
+bool EEex::bInTrackedResponse;
+bool EEex::bNoUUID;
+bool EEex::bStripUUID;
+byte EEex::CGameSprite_Hit_Roll;
 bool EEex::Opcode_LuaHook_AfterListsResolved_Enabled;
 bool EEex::Projectile_LuaHook_GlobalMutators_Enabled;
-bool EEex::bInTrackedResponse;
-bool EEex::bStripUUID;
-bool EEex::bNoUUID;
 bool EEex::StutterDetector_Enabled;
 CString::type_Construct_Overload_String CString::p_Construct_Overload_String;
 CString::type_Construct_Overload_CString CString::p_Construct_Overload_CString;

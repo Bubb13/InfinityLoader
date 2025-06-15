@@ -170,8 +170,9 @@ static void exportPatterns() {
 	///////////////////////////////
 
 	exportPattern(TEXT("EEex::bInTrackedResponse"), &EEex::bInTrackedResponse);
-	exportPattern(TEXT("EEex::bStripUUID"), &EEex::bStripUUID);
 	exportPattern(TEXT("EEex::bNoUUID"), &EEex::bNoUUID);
+	exportPattern(TEXT("EEex::bStripUUID"), &EEex::bStripUUID);
+	exportPattern(TEXT("EEex::CGameSprite_Hit_Roll"), &EEex::CGameSprite_Hit_Roll);
 }
 
 void __stdcall InitBindings(SharedState argSharedState) {

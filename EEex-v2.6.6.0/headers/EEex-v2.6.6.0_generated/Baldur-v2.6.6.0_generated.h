@@ -4387,27 +4387,28 @@ namespace EEex
 		CProjectileTravelDoor = 524288,
 	};
 
+	extern bool bInTrackedResponse;
+	extern bool bNoUUID;
+	extern bool bStripUUID;
+	extern byte CGameSprite_Hit_Roll;
 	extern bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	extern bool Projectile_LuaHook_GlobalMutators_Enabled;
-	extern bool bInTrackedResponse;
-	extern bool bStripUUID;
-	extern bool bNoUUID;
 	extern bool StutterDetector_Enabled;
 
-	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 	void DeepCopy(lua_State* L);
-	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
-	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
-	bool IsPlayerScript(CAIScript* pScript);
-	void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
-	void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
-	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
-	void DrawSlicedRectNum(lua_State* L);
-	void RegisterSlicedRect(lua_State* L);
 	void DrawSlicedRect(lua_State* L);
-	bool IsDefaultAttackCursor();
+	void DrawSlicedRectNum(lua_State* L);
+	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	CGameSprite* GetSpriteFromUUID(uint64_t uuid);
+	void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
+	void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
+	bool IsDefaultAttackCursor();
 	bool IsMarshallingCopy();
+	bool IsPlayerScript(CAIScript* pScript);
+	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+	void RegisterSlicedRect(lua_State* L);
+	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 };
 
 struct ConstCharString

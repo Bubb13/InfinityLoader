@@ -57,24 +57,22 @@ static int tolua_get_EEex_reference_StutterDetector_Enabled(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_EEex_MatchObject(lua_State* L)
-{
-	long returnVal = EEex::MatchObject(L, (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject"), tolua_function_tostring(L, 2, "MatchObject"), tolua_function_tointeger<int>(L, 3, "MatchObject"), tolua_function_tointeger<int>(L, 4, "MatchObject"), (EEex_MatchObjectFlags)tolua_function_tointeger<__int32>(L, 5, "MatchObject"));
-	lua_pushinteger(L, (lua_Integer)returnVal);
-	return 1;
-}
-
 static int tolua_function_EEex_DeepCopy(lua_State* L)
 {
 	EEex::DeepCopy(L);
 	return 1;
 }
 
-static int tolua_function_EEex_ShouldEffectBypassOp120(lua_State* L)
+static int tolua_function_EEex_DrawSlicedRect(lua_State* L)
 {
-	bool returnVal = EEex::ShouldEffectBypassOp120((CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect"));
-	tolua_pushboolean(L, (bool)returnVal);
-	return 1;
+	EEex::DrawSlicedRect(L);
+	return 0;
+}
+
+static int tolua_function_EEex_DrawSlicedRectNum(lua_State* L)
+{
+	EEex::DrawSlicedRectNum(L);
+	return 0;
 }
 
 static int tolua_function_EEex_GetExtendedStatValue(lua_State* L)
@@ -84,17 +82,17 @@ static int tolua_function_EEex_GetExtendedStatValue(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_EEex_IsPlayerScript(lua_State* L)
+static int tolua_function_EEex_GetProjectileStartingPos(lua_State* L)
 {
-	bool returnVal = EEex::IsPlayerScript((CAIScript*)tolua_tousertype_dynamic(L, 1, 0, "CAIScript"));
-	tolua_pushboolean(L, (bool)returnVal);
-	return 1;
+	EEex::GetProjectileStartingPos(L, (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile"), (CGameArea*)tolua_tousertype_dynamic(L, 2, 0, "CGameArea"), (CGameAIBase*)tolua_tousertype_dynamic(L, 3, 0, "CGameAIBase"), (CGameObject*)tolua_tousertype_dynamic(L, 4, 0, "CGameObject"), tolua_function_tointeger<int>(L, 5, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 6, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 7, "GetProjectileStartingPos"));
+	return 3;
 }
 
-static int tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange(lua_State* L)
+static int tolua_function_EEex_GetSpriteFromUUID(lua_State* L)
 {
-	EEex::HookIntegrityWatchdogIgnoreStackRange(tolua_function_tointeger<uintptr_t>(L, 1, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<size_t>(L, 2, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<int>(L, 3, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<int>(L, 4, "HookIntegrityWatchdogIgnoreStackRange"));
-	return 0;
+	CGameSprite* returnVal = EEex::GetSpriteFromUUID(tolua_function_tointeger<uint64_t>(L, 1, "GetSpriteFromUUID"));
+	tolua_pushusertype(L, (void*)returnVal, "CGameSprite");
+	return 1;
 }
 
 static int tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters(lua_State* L)
@@ -103,27 +101,9 @@ static int tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters(lua_State* L
 	return 0;
 }
 
-static int tolua_function_EEex_GetProjectileStartingPos(lua_State* L)
+static int tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange(lua_State* L)
 {
-	EEex::GetProjectileStartingPos(L, (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile"), (CGameArea*)tolua_tousertype_dynamic(L, 2, 0, "CGameArea"), (CGameAIBase*)tolua_tousertype_dynamic(L, 3, 0, "CGameAIBase"), (CGameObject*)tolua_tousertype_dynamic(L, 4, 0, "CGameObject"), tolua_function_tointeger<int>(L, 5, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 6, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 7, "GetProjectileStartingPos"));
-	return 3;
-}
-
-static int tolua_function_EEex_DrawSlicedRectNum(lua_State* L)
-{
-	EEex::DrawSlicedRectNum(L);
-	return 0;
-}
-
-static int tolua_function_EEex_RegisterSlicedRect(lua_State* L)
-{
-	EEex::RegisterSlicedRect(L);
-	return 0;
-}
-
-static int tolua_function_EEex_DrawSlicedRect(lua_State* L)
-{
-	EEex::DrawSlicedRect(L);
+	EEex::HookIntegrityWatchdogIgnoreStackRange(tolua_function_tointeger<uintptr_t>(L, 1, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<size_t>(L, 2, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<int>(L, 3, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<int>(L, 4, "HookIntegrityWatchdogIgnoreStackRange"));
 	return 0;
 }
 
@@ -134,16 +114,36 @@ static int tolua_function_EEex_IsDefaultAttackCursor(lua_State* L)
 	return 1;
 }
 
-static int tolua_function_EEex_GetSpriteFromUUID(lua_State* L)
-{
-	CGameSprite* returnVal = EEex::GetSpriteFromUUID(tolua_function_tointeger<uint64_t>(L, 1, "GetSpriteFromUUID"));
-	tolua_pushusertype(L, (void*)returnVal, "CGameSprite");
-	return 1;
-}
-
 static int tolua_function_EEex_IsMarshallingCopy(lua_State* L)
 {
 	bool returnVal = EEex::IsMarshallingCopy();
+	tolua_pushboolean(L, (bool)returnVal);
+	return 1;
+}
+
+static int tolua_function_EEex_IsPlayerScript(lua_State* L)
+{
+	bool returnVal = EEex::IsPlayerScript((CAIScript*)tolua_tousertype_dynamic(L, 1, 0, "CAIScript"));
+	tolua_pushboolean(L, (bool)returnVal);
+	return 1;
+}
+
+static int tolua_function_EEex_MatchObject(lua_State* L)
+{
+	long returnVal = EEex::MatchObject(L, (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject"), tolua_function_tostring(L, 2, "MatchObject"), tolua_function_tointeger<int>(L, 3, "MatchObject"), tolua_function_tointeger<int>(L, 4, "MatchObject"), (EEex_MatchObjectFlags)tolua_function_tointeger<__int32>(L, 5, "MatchObject"));
+	lua_pushinteger(L, (lua_Integer)returnVal);
+	return 1;
+}
+
+static int tolua_function_EEex_RegisterSlicedRect(lua_State* L)
+{
+	EEex::RegisterSlicedRect(L);
+	return 0;
+}
+
+static int tolua_function_EEex_ShouldEffectBypassOp120(lua_State* L)
+{
+	bool returnVal = EEex::ShouldEffectBypassOp120((CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect"));
 	tolua_pushboolean(L, (bool)returnVal);
 	return 1;
 }
@@ -562,20 +562,20 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_reference_Projectile_LuaHook_GlobalMutators_Enabled, NULL);
 		tolua_variable(L, "StutterDetector_Enabled", tolua_get_EEex_StutterDetector_Enabled, tolua_set_EEex_StutterDetector_Enabled);
 		tolua_variable(L, "reference_StutterDetector_Enabled", tolua_get_EEex_reference_StutterDetector_Enabled, NULL);
-		tolua_function(L, "MatchObject", &tolua_function_EEex_MatchObject);
 		tolua_function(L, "DeepCopy", &tolua_function_EEex_DeepCopy);
-		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
-		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
-		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
-		tolua_function(L, "HookIntegrityWatchdogIgnoreStackRange", &tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange);
-		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
-		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
-		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
-		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
-		tolua_function(L, "IsDefaultAttackCursor", &tolua_function_EEex_IsDefaultAttackCursor);
+		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
+		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
+		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
 		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
+		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
+		tolua_function(L, "HookIntegrityWatchdogIgnoreStackRange", &tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange);
+		tolua_function(L, "IsDefaultAttackCursor", &tolua_function_EEex_IsDefaultAttackCursor);
 		tolua_function(L, "IsMarshallingCopy", &tolua_function_EEex_IsMarshallingCopy);
+		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
+		tolua_function(L, "MatchObject", &tolua_function_EEex_MatchObject);
+		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
+		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");

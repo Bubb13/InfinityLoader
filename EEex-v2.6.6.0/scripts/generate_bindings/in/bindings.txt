@@ -19,28 +19,40 @@ enum EEex_MatchObjectFlags : __int32
 
 namespace EEex
 {
-	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
-	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
-	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
-	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
-	$external_implementation bool IsPlayerScript(CAIScript* pScript);
-	$external_implementation void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
-	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
+	///////////////
+	// Non-Bound //
+	///////////////
 
-	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
+	// Globals
+	nobinding bool bInTrackedResponse;
+	nobinding bool bNoUUID;
+	nobinding bool bStripUUID;
+	nobinding byte CGameSprite_Hit_Roll;
 
+	///////////
+	// Bound //
+	///////////
+
+	// Globals
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	bool Projectile_LuaHook_GlobalMutators_Enabled;
-	$external_implementation $pass_lua_state void DrawSlicedRectNum();
-	$external_implementation $pass_lua_state void RegisterSlicedRect();
-	$external_implementation $pass_lua_state void DrawSlicedRect();
-	$external_implementation bool IsDefaultAttackCursor();
-	nobinding bool bInTrackedResponse;
-	nobinding bool bStripUUID;
-	nobinding bool bNoUUID;
-	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
-	$external_implementation bool IsMarshallingCopy();
 	bool StutterDetector_Enabled;
+
+	// Functions
+	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
+	$external_implementation $pass_lua_state void DrawSlicedRect();
+	$external_implementation $pass_lua_state void DrawSlicedRectNum();
+	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
+	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
+	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
+	$external_implementation void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
+	$external_implementation bool IsDefaultAttackCursor();
+	$external_implementation bool IsMarshallingCopy();
+	$external_implementation bool IsPlayerScript(CAIScript* pScript);
+	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+	$external_implementation $pass_lua_state void RegisterSlicedRect();
+	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 };
 
 struct CGameSprite : CGameAIBase

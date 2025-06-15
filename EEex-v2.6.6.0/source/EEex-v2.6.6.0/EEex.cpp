@@ -3507,14 +3507,15 @@ CGameEffectDamage* CGameSprite::Override_Damage(
 	luaCallProtected(L, 1, 0, [&](int) {
 		lua_getglobal(L, "EEex_Sprite_LuaHook_AlterBaseWeaponDamage");
 		lua_newtable(L);
-		setImmediateTableUsertype(L, "ability",         pAbility,       "Item_ability_st" );
-		setImmediateTableUsertype(L, "attacker",        this,           "CGameSprite"     );
-		setImmediateTableUsertype(L, "effect",          pEffect,        "CGameEffect"     );
-		setImmediateTableBool(L,     "isCritical",      criticalDamage                    );
-		setImmediateTableBool(L,     "isLeftHand",      isLeftHand                        );
-		setImmediateTableUsertype(L, "launcher",        pLauncher,      "CItem"           );
-		setImmediateTableUsertype(L, "target",          target,         "CGameSprite"     );
-		setImmediateTableUsertype(L, "weapon",          curWeaponIn,    "CItem"           );
+		setImmediateTableUsertype(L, "ability",    pAbility,                   "Item_ability_st" );
+		setImmediateTableUsertype(L, "attacker",   this,                       "CGameSprite"     );
+		setImmediateTableUsertype(L, "effect",     pEffect,                    "CGameEffect"     );
+		setImmediateTableBool(L,     "isCritical", criticalDamage                                );
+		setImmediateTableBool(L,     "isLeftHand", isLeftHand                                    );
+		setImmediateTableUsertype(L, "launcher",   pLauncher,                  "CItem"           );
+		setImmediateTableInt(L,      "attackRoll", EEex::CGameSprite_Hit_Roll                    );
+		setImmediateTableUsertype(L, "target",     target,                     "CGameSprite"     );
+		setImmediateTableUsertype(L, "weapon",     curWeaponIn,                "CItem"           );
 	});
 
 	return pEffect;
