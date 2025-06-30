@@ -4398,11 +4398,13 @@ namespace EEex
 	void DeepCopy(lua_State* L);
 	void DrawSlicedRect(lua_State* L);
 	void DrawSlicedRectNum(lua_State* L);
+	void DestroyAllTemplates(lua_State* L, const char* menuName);
 	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
 	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	CGameSprite* GetSpriteFromUUID(uint64_t uuid);
 	void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
 	void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
+	uiItem* InjectTemplateInstance(lua_State* L, const char* menuName, const char* templateName, int instanceId, int x, int y);
 	bool IsDefaultAttackCursor();
 	bool IsMarshallingCopy();
 	bool IsPlayerScript(CAIScript* pScript);
@@ -7601,8 +7603,14 @@ extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
 typedef _iobuf* (__cdecl *type_OpenIniFile)(const char* path, const char* mode);
 extern type_OpenIniFile p_OpenIniFile;
 
+typedef void (__cdecl *type_dimmDump)(CRes* pRes);
+extern type_dimmDump p_dimmDump;
+
 typedef CRes* (__cdecl *type_dimmGetResObject)(const CResRef* cResRef, int nType, bool createIfNotExists);
 extern type_dimmGetResObject p_dimmGetResObject;
+
+typedef void (__cdecl *type_dimmServiceFromMemory)(CRes* pRes, void* pData, int nSize, bool useTempOverride, bool makeCopy);
+extern type_dimmServiceFromMemory p_dimmServiceFromMemory;
 
 typedef void (*type_DrawPushState)();
 extern type_DrawPushState p_DrawPushState;

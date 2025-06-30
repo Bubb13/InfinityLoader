@@ -7494,8 +7494,14 @@ extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
 typedef _iobuf* (__cdecl *type_OpenIniFile)(const char* path, const char* mode);
 extern type_OpenIniFile p_OpenIniFile;
 
+typedef void (__cdecl *type_dimmDump)(CRes* pRes);
+extern type_dimmDump p_dimmDump;
+
 typedef CRes* (__cdecl *type_dimmGetResObject)(const CResRef* cResRef, int nType, bool createIfNotExists);
 extern type_dimmGetResObject p_dimmGetResObject;
+
+typedef void (__cdecl *type_dimmServiceFromMemory)(CRes* pRes, void* pData, int nSize, bool useTempOverride, bool makeCopy);
+extern type_dimmServiceFromMemory p_dimmServiceFromMemory;
 
 typedef void (*type_DrawPushState)();
 extern type_DrawPushState p_DrawPushState;

@@ -75,6 +75,12 @@ static int tolua_function_EEex_DrawSlicedRectNum(lua_State* L)
 	return 0;
 }
 
+static int tolua_function_EEex_DestroyAllTemplates(lua_State* L)
+{
+	EEex::DestroyAllTemplates(L, tolua_function_tostring(L, 1, "DestroyAllTemplates"));
+	return 0;
+}
+
 static int tolua_function_EEex_GetExtendedStatValue(lua_State* L)
 {
 	int returnVal = EEex::GetExtendedStatValue((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"), tolua_function_tointeger<int>(L, 2, "GetExtendedStatValue"));
@@ -105,6 +111,13 @@ static int tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange(lua_State* 
 {
 	EEex::HookIntegrityWatchdogIgnoreStackRange(tolua_function_tointeger<uintptr_t>(L, 1, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<size_t>(L, 2, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<int>(L, 3, "HookIntegrityWatchdogIgnoreStackRange"), tolua_function_tointeger<int>(L, 4, "HookIntegrityWatchdogIgnoreStackRange"));
 	return 0;
+}
+
+static int tolua_function_EEex_InjectTemplateInstance(lua_State* L)
+{
+	uiItem* returnVal = EEex::InjectTemplateInstance(L, tolua_function_tostring(L, 1, "InjectTemplateInstance"), tolua_function_tostring(L, 2, "InjectTemplateInstance"), tolua_function_tointeger<int>(L, 3, "InjectTemplateInstance"), tolua_function_tointeger<int>(L, 4, "InjectTemplateInstance"), tolua_function_tointeger<int>(L, 5, "InjectTemplateInstance"));
+	tolua_pushusertype(L, (void*)returnVal, "uiItem");
+	return 1;
 }
 
 static int tolua_function_EEex_IsDefaultAttackCursor(lua_State* L)
@@ -565,11 +578,13 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "DeepCopy", &tolua_function_EEex_DeepCopy);
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
 		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
+		tolua_function(L, "DestroyAllTemplates", &tolua_function_EEex_DestroyAllTemplates);
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
 		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
 		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreStackRange", &tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange);
+		tolua_function(L, "InjectTemplateInstance", &tolua_function_EEex_InjectTemplateInstance);
 		tolua_function(L, "IsDefaultAttackCursor", &tolua_function_EEex_IsDefaultAttackCursor);
 		tolua_function(L, "IsMarshallingCopy", &tolua_function_EEex_IsMarshallingCopy);
 		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);

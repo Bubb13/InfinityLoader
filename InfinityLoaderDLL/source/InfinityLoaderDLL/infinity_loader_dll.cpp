@@ -1339,6 +1339,27 @@ int runWithStackLua(lua_State* L) {
 	return 0;
 }
 
+static int runWithString(lua_State* L) {
+
+	lua_getglobal(L, "debug");                                           // [ debug ]
+	lua_getfield(L, -1, "traceback");                                    // [ debug, traceback ]
+	lua_pushvalue(L, 2);                                                 // [ debug, traceback, func ]
+
+	lua_pushinteger(L, reinterpret_cast<uintptr_t>(lua_tostring(L, 1)));
+
+	if (lua_pcallk(L, 1, 0, -3, 0, nullptr) != LUA_OK) {
+		                                                                 // [ debug, traceback, errorMessage ]
+		FPrint("[!][InfinityLoaderDLL.dll] %sRunWithString() - %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
+		lua_pop(L, 3);                                                   // [ ]
+	}
+	else {
+		                                                                 // [ debug, traceback ]
+		lua_pop(L, 2);                                                   // [ ]
+	}
+
+	return 0;
+}
+
 int selectFromTablesLua(lua_State* L) {
 
 	const int nStackTop = lua_gettop(L);
@@ -2063,6 +2084,7 @@ static void initLuaState(lua_State *const L) {
 	exposeToLua(L, prefixed("ReadString"), readString);
 	exposeToLua(L, prefixed("RShift"), rshiftLua);
 	exposeToLua(L, prefixed("RunWithStack"), runWithStackLua);
+	exposeToLua(L, prefixed("RunWithString"), runWithString);
 	exposeToLua(L, prefixed("SelectFromTables"), selectFromTablesLua);
 	exposeToLua(L, prefixed("SetLuaRegistryIndex"), setLuaRegistryIndexLua);
 	exposeToLua(L, prefixed("SetSegmentProtection"), setSegmentProtectionLua);

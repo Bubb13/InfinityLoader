@@ -554,6 +554,17 @@ LuaTypeContainer getLuaTypeContainer(lua_State* L, int index) {
 	return LuaTypeContainer{ type };
 }
 
+template<typename IntegerType>
+static std::optional<IntegerType> getOptionalInt(lua_State* L, int index, const char* funcName) {
+	switch (lua_type(L, index)) {
+		case LUA_TNONE:
+		case LUA_TNIL:
+			return std::optional<IntegerType>{};
+		default:
+			return std::optional<IntegerType> { tolua_function_tointeger<IntegerType>(L, index, funcName) };
+	}
+}
+
 //---------------------------------//
 //          Userdata Util          //
 //---------------------------------//
@@ -1736,6 +1747,83 @@ bool EEex::IsDefaultAttackCursor() {
 			pSprite->m_typeAI.m_EnemyAlly == 28 // EA_GOODBUTRED
 		)
 	);
+}
+
+void EEex::DestroyAllTemplates(lua_State* L, const char* menuName) {
+
+	uiMenu *const pMenu = p_findMenu(menuName, 0, 0);
+
+	if (pMenu == nullptr) {
+		return;
+	}
+
+	uiItem** pPrevItemNext = &pMenu->items;
+
+	for (uiItem* pCurItem = pMenu->items; pCurItem != nullptr; pCurItem = pCurItem->next) {
+
+		if (pCurItem->templateName == nullptr) {
+			pPrevItemNext = &pCurItem->next;
+			continue;
+		}
+
+		*pPrevItemNext = pCurItem->next;
+		p_free(pCurItem);
+	}
+}
+
+static uiItem* uiCreateFromTemplate(
+	lua_State* L, const char* menuName, const char* templateName, int instanceId, int x, int y, std::optional<int> w, std::optional<int> h)
+{
+	uiMenu *const pMenu = p_findMenu(menuName, 0, 0);
+
+	if (pMenu == nullptr) {
+		return nullptr;
+	}
+
+	lua_getglobal(L, "nameToItem");  // 1 [ ..., nameToItem ]
+	lua_pushstring(L, templateName); // 2 [ ..., nameToItem, sTemplate ]
+	lua_gettable(L, -2);             // 2 [ ..., nameToItem, nameToItem[sTemplate] ]
+	uiItem *const pTemplateItem = reinterpret_cast<uiItem*>(lua_touserdata(L, -1));
+	lua_pop(L, 2);
+
+	if (pTemplateItem == nullptr) {
+		return nullptr;
+	}
+
+	uiItem *const pNewItem = reinterpret_cast<uiItem*>(p_malloc(sizeof(uiItem)));
+	*pNewItem = *pTemplateItem->uiTemplate.item;
+	pNewItem->menu = pMenu;
+	pNewItem->instanceId = instanceId;
+	pNewItem->templateName = pTemplateItem->name;
+	pNewItem->area.x = x;
+	pNewItem->area.y = y;
+
+	if (w.has_value()) {
+		pNewItem->area.w = *w;
+	}
+
+	if (h.has_value()) {
+		pNewItem->area.h = *h;
+	}
+
+	uiItem* pLastNode = pMenu->items;
+
+	if (pLastNode == nullptr) {
+		pMenu->items = pNewItem;
+	}
+	else {
+		while (pLastNode->next != nullptr) pLastNode = pLastNode->next;
+		pLastNode->next = pNewItem;
+	}
+
+	return pNewItem;
+}
+
+// 7 [ menuName, templateName, instanceId, x, y, w, h ]
+uiItem* EEex::InjectTemplateInstance(lua_State* L, const char* menuName, const char* templateName, int instanceId, int x, int y) {
+	const std::optional<int> w = getOptionalInt<int>(L, 6, "InjectTemplateInstance");
+	const std::optional<int> h = getOptionalInt<int>(L, 7, "InjectTemplateInstance");
+	return uiCreateFromTemplate(L, menuName, templateName, instanceId, x, y, w, h);
 }
 
 /////////////////////////////////

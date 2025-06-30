@@ -85,6 +85,7 @@ EEex_ScriptingObject
 SDL_WindowFlags
 VariableArray<$D98D369160A0DDA2B95F5D0F301081BB>
 VariableArray<byte>
+VariableArray<char>
 VariableArray<int>
 VariableArray<short>
 VariableArray<ushort>

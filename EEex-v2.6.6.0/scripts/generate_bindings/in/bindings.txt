@@ -42,11 +42,13 @@ namespace EEex
 	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
 	$external_implementation $pass_lua_state void DrawSlicedRect();
 	$external_implementation $pass_lua_state void DrawSlicedRectNum();
+	$external_implementation $pass_lua_state void DestroyAllTemplates(primitive const char* menuName);
 	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
 	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
 	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
 	$external_implementation void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
+	$external_implementation $pass_lua_state uiItem* InjectTemplateInstance(primitive const char* menuName, primitive const char* templateName, int instanceId, int x, int y);
 	$external_implementation bool IsDefaultAttackCursor();
 	$external_implementation bool IsMarshallingCopy();
 	$external_implementation bool IsPlayerScript(CAIScript* pScript);
