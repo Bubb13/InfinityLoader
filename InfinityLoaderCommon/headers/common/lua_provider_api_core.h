@@ -85,6 +85,7 @@ LUA_PROVIDER_API void* lua_touserdata(lua_State* L, int idx);
 LUA_PROVIDER_API int lua_type(lua_State* L, int index);
 LUA_PROVIDER_API const char* lua_typename(lua_State* L, int tp);
 LUA_PROVIDER_API int luaL_error(lua_State* L, const char* fmt, ...);
+LUA_PROVIDER_API int luaL_loadbufferx(lua_State* L, const char* buff, size_t sz, const char* name, const char* mode);
 LUA_PROVIDER_API int luaL_loadfilex(lua_State* L, const char* fileName, const char* mode);
 LUA_PROVIDER_API int luaL_loadstring(lua_State* L, const char* s);
 LUA_PROVIDER_API int luaL_newmetatable(lua_State* L, const char* tname);

@@ -70,6 +70,7 @@ type_lua_touserdata p_lua_touserdata;
 type_lua_type p_lua_type;
 type_lua_typename p_lua_typename;
 type_luaL_error p_luaL_error;
+type_luaL_loadbufferx p_luaL_loadbufferx;
 type_luaL_loadfilex p_luaL_loadfilex;
 type_luaL_loadstring p_luaL_loadstring;
 type_luaL_newmetatable p_luaL_newmetatable;
@@ -273,6 +274,11 @@ EXPORT const char* lua_typename(lua_State* L, int tp)
 EXPORT __attribute((naked)) int luaL_error(lua_State* L, const char* fmt, ...)
 {
 	__asm__("jmp %0" : : "m" (p_luaL_error));
+}
+
+EXPORT int luaL_loadbufferx(lua_State* L, const char* buff, size_t sz, const char* name, const char* mode)
+{
+	return p_luaL_loadbufferx(L, buff, sz, name, mode);
 }
 
 EXPORT int luaL_loadfilex(lua_State* L, const char* fileName, const char* mode)

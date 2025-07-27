@@ -44,6 +44,7 @@ namespace EEex
 	$external_implementation $pass_lua_state void DrawSlicedRectNum();
 	$external_implementation $pass_lua_state void DestroyAllTemplates(primitive const char* menuName);
 	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	$external_implementation $custom_return_1 GetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* def);
 	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
 	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
@@ -54,6 +55,7 @@ namespace EEex
 	$external_implementation bool IsPlayerScript(CAIScript* pScript);
 	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 	$external_implementation $pass_lua_state void RegisterSlicedRect();
+	$external_implementation void SetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* value);
 	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 };
 

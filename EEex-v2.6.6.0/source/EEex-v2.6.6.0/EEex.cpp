@@ -1826,9 +1826,102 @@ uiItem* EEex::InjectTemplateInstance(lua_State* L, const char* menuName, const c
 	return uiCreateFromTemplate(L, menuName, templateName, instanceId, x, y, w, h);
 }
 
+void EEex::GetINIString(
+	lua_State* const L,
+	const char* const iniPath,
+	const char* const section,
+	const char* const key,
+	const char* const def
+)
+{
+	String result{};
+
+	const DWORD lastError = GetINIStrDef(
+		sharedState().WorkingFolder() + NulTermStrToStr(iniPath),
+		NulTermStrToStr(section).c_str(),
+		NulTermStrToStr(key).c_str(),
+		NulTermStrToStr(def).c_str(),
+		result
+	);
+
+	if (lastError != ERROR_SUCCESS)
+	{
+		FPrint("[EEex.dll] EEex::GetINIString() - GetINIStrDef() failed (%d)", lastError);
+		lua_pushstring(L, def);
+		return;
+	}
+
+	lua_pushstring(L, StrToStrA(result).c_str());
+}
+
+void EEex::SetINIString(
+	const char* const iniPath,
+	const char* const section,
+	const char* const key,
+	const char* const value
+)
+{
+	const DWORD lastError = SetINIStr(
+		sharedState().WorkingFolder() + NulTermStrToStr(iniPath),
+		NulTermStrToStr(section).c_str(),
+		NulTermStrToStr(key).c_str(),
+		NulTermStrToStr(value).c_str()
+	);
+
+	if (lastError != ERROR_SUCCESS)
+	{
+		FPrint("[EEex.dll] EnhancedWidescreen::SetINIString() - SetINIStr() failed (%d)", lastError);
+	}
+}
+
 /////////////////////////////////
 //          Overrides          //
 /////////////////////////////////
+
+void __cdecl EEex::Override_uiDoFile(char* fileName) {
+
+	lua_State* const L = *p_g_lua;
+
+	EngineVal<CString> fullFileName{};
+	fullFileName->Format("%s.lua", fileName);
+
+	const CResRef resref { fileName };
+	CRes *const pRes = p_dimmGetResObject(&resref, 0x409, false);
+
+	if (pRes != nullptr) {
+
+		const char *const pResBuffer = reinterpret_cast<char*>(pRes->Demand());
+
+		if (luaL_loadbufferx(L, pResBuffer, pRes->nSize, fullFileName->m_pchData, nullptr) == LUA_OK) {
+
+			if (lua_pcallk(L, 0, -1, 0, 0, nullptr) != LUA_OK) {
+
+				const char *const pErrorMessage = lua_tolstring(L, -1, nullptr);
+
+				if (pErrorMessage != nullptr) {
+					p_SDL_ShowSimpleMessageBox(0x10, CChitin::p_m_sGameName->m_pchData, pErrorMessage, (*p_g_pBaldurChitin)->cVideo.pCurrentMode->m_pWindow);
+					p_SDL_Log("Error [%s] in %s", pResBuffer, fullFileName->m_pchData);
+				}
+			}
+		}
+		else {
+			const char *const pErrorMessage = lua_tolstring(L, -1, nullptr);
+			p_SDL_ShowSimpleMessageBox(0x10, CChitin::p_m_sGameName->m_pchData, pErrorMessage, (*p_g_pBaldurChitin)->cVideo.pCurrentMode->m_pWindow);
+			p_SDL_Log("Err: %s", pErrorMessage);
+		}
+
+		pRes->virtual_Dump();
+	}
+
+	EngineVal<CString> langFile{};
+	langFile->Format("L_%s", static_cast<char*>(*p_lang));
+
+	if (_stricmp(fileName, langFile->m_pchData) == 0) {
+		luaCallProtected(L, 0, 0, [&](int _) {
+			lua_getglobal(L, "EEex_Menu_LuaHook_AfterTranslationLoaded"); // 1 [ ..., EEex_Menu_LuaHook_AfterTranslationLoaded ]
+		});
+	}
+}
 
 void EEex::Override_bootstrapLua() {
 

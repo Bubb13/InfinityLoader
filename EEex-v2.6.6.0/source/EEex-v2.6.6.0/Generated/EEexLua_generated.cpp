@@ -88,6 +88,12 @@ static int tolua_function_EEex_GetExtendedStatValue(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_GetINIString(lua_State* L)
+{
+	EEex::GetINIString(L, tolua_function_tostring(L, 1, "GetINIString"), tolua_function_tostring(L, 2, "GetINIString"), tolua_function_tostring(L, 3, "GetINIString"), tolua_function_tostring(L, 4, "GetINIString"));
+	return 1;
+}
+
 static int tolua_function_EEex_GetProjectileStartingPos(lua_State* L)
 {
 	EEex::GetProjectileStartingPos(L, (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile"), (CGameArea*)tolua_tousertype_dynamic(L, 2, 0, "CGameArea"), (CGameAIBase*)tolua_tousertype_dynamic(L, 3, 0, "CGameAIBase"), (CGameObject*)tolua_tousertype_dynamic(L, 4, 0, "CGameObject"), tolua_function_tointeger<int>(L, 5, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 6, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 7, "GetProjectileStartingPos"));
@@ -151,6 +157,12 @@ static int tolua_function_EEex_MatchObject(lua_State* L)
 static int tolua_function_EEex_RegisterSlicedRect(lua_State* L)
 {
 	EEex::RegisterSlicedRect(L);
+	return 0;
+}
+
+static int tolua_function_EEex_SetINIString(lua_State* L)
+{
+	EEex::SetINIString(tolua_function_tostring(L, 1, "SetINIString"), tolua_function_tostring(L, 2, "SetINIString"), tolua_function_tostring(L, 3, "SetINIString"), tolua_function_tostring(L, 4, "SetINIString"));
 	return 0;
 }
 
@@ -580,6 +592,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
 		tolua_function(L, "DestroyAllTemplates", &tolua_function_EEex_DestroyAllTemplates);
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
+		tolua_function(L, "GetINIString", &tolua_function_EEex_GetINIString);
 		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
 		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
@@ -590,6 +603,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
 		tolua_function(L, "MatchObject", &tolua_function_EEex_MatchObject);
 		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
+		tolua_function(L, "SetINIString", &tolua_function_EEex_SetINIString);
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);

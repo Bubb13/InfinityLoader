@@ -52,6 +52,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Override_CGameEffect_CheckSave"), EEex::Override_CGameEffect_CheckSave);
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);
+	exportPattern(TEXT("EEex::Override_uiDoFile"), EEex::Override_uiDoFile);
 
 	/////////////////////////////
 	//          Hooks          //

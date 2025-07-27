@@ -977,6 +977,8 @@ struct CString
 
 	$binding_name(AssignmentOperator_Overload_String) $pattern_name(operator=(char*)) void operator=(primitive const char* lpsz) const;
 	$binding_name(AssignmentOperator_Overload_CString) $pattern_name(operator=(CString*)) void operator=(const CString* other) const;
+
+	$nobinding void __cdecl Format(const char* pszFormat, ...);
 };
 
 struct CSearchBitmap
@@ -1109,6 +1111,7 @@ struct CMessageStartVEF : CMessage
 
 struct CChitin
 {
+	static CString m_sGameName;
 	static uint TIMER_UPDATES_PER_SECOND;
 
 	void OnResizeWindow(int w, int h);
@@ -1435,8 +1438,11 @@ $nobinding void drawSliceSide(const SDL_Rect* dr, const SDL_Rect* r, const SDL_R
 $nobinding int uiVariantAsInt(uiVariant* var);
 $nobinding void uiDrawSlicedRect(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
 $nobinding int uiExecLuaInt(int id);
+primitive char* __cdecl SDL_GetKeyName(int key);
 SDL_Window* SDL_GetWindowFromID(uint id);
 uint SDL_GetWindowFlags(SDL_Window* window);
+$nobinding void __cdecl SDL_Log(const char* fmt, ...);
+$nobinding int __cdecl SDL_ShowSimpleMessageBox(uint flags, const char* title, const char* message, SDL_Window* window);
 
 //////////////////////////////
 // Global Variable Bindings //
@@ -1447,6 +1453,7 @@ $9B9540D9920A90D57A3D80DDD1A70514 capture;
 keyword g_keywords[124];
 lua_State* g_lua;
 CBaldurChitin* g_pBaldurChitin;
+nobinding char lang[16];
 int menuLength;
 uiMenu menus[256];
 CResText* menuSrc;

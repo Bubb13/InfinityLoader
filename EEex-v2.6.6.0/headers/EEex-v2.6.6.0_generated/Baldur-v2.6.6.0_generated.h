@@ -4400,6 +4400,7 @@ namespace EEex
 	void DrawSlicedRectNum(lua_State* L);
 	void DestroyAllTemplates(lua_State* L, const char* menuName);
 	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	void GetINIString(lua_State* L, const char* iniPath, const char* section, const char* key, const char* def);
 	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	CGameSprite* GetSpriteFromUUID(uint64_t uuid);
 	void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
@@ -4410,6 +4411,7 @@ namespace EEex
 	bool IsPlayerScript(CAIScript* pScript);
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 	void RegisterSlicedRect(lua_State* L);
+	void SetINIString(const char* iniPath, const char* section, const char* key, const char* value);
 	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 };
 
@@ -4592,6 +4594,9 @@ struct CString
 	typedef void (__thiscall *type_AssignmentOperator_Overload_CString)(const CString* pThis, const CString* other);
 	static type_AssignmentOperator_Overload_CString p_AssignmentOperator_Overload_CString;
 
+	typedef void (__cdecl *type_Format)(CString* pThis, const char* pszFormat, ...);
+	static type_Format p_Format;
+
 	void Construct(const char* lpsz)
 	{
 		p_Construct_Overload_String(this, lpsz);
@@ -4617,6 +4622,12 @@ struct CString
 	void operator=(const CString* other) const
 	{
 		p_AssignmentOperator_Overload_CString(this, other);
+	}
+
+	template<typename... VarArgs>
+	void Format(const char* pszFormat, VarArgs... varArgs)
+	{
+		p_Format(this, pszFormat, varArgs...);
 	}
 };
 
@@ -7648,17 +7659,27 @@ extern type_uiDrawSlicedRect p_uiDrawSlicedRect;
 typedef int (*type_uiExecLuaInt)(int id);
 extern type_uiExecLuaInt p_uiExecLuaInt;
 
+typedef char* (__cdecl *type_SDL_GetKeyName)(int key);
+extern type_SDL_GetKeyName p_SDL_GetKeyName;
+
 typedef SDL_Window* (*type_SDL_GetWindowFromID)(uint id);
 extern type_SDL_GetWindowFromID p_SDL_GetWindowFromID;
 
 typedef uint (*type_SDL_GetWindowFlags)(SDL_Window* window);
 extern type_SDL_GetWindowFlags p_SDL_GetWindowFlags;
 
+typedef void (__cdecl *type_SDL_Log)(const char* fmt, ...);
+extern type_SDL_Log p_SDL_Log;
+
+typedef int (__cdecl *type_SDL_ShowSimpleMessageBox)(uint flags, const char* title, const char* message, SDL_Window* window);
+extern type_SDL_ShowSimpleMessageBox p_SDL_ShowSimpleMessageBox;
+
 extern char** p_afxPchNil;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 extern Array<keyword,124>* p_g_keywords;
 extern lua_State** p_g_lua;
 extern CBaldurChitin** p_g_pBaldurChitin;
+extern Array<char,16>* p_lang;
 extern int* p_menuLength;
 extern Array<uiMenu,256>* p_menus;
 extern CResText** p_menuSrc;
@@ -10694,6 +10715,7 @@ struct CChitin
 		vtbl() = delete;
 	};
 
+	static CString* p_m_sGameName;
 	static uint* p_TIMER_UPDATES_PER_SECOND;
 	int m_mouseLButton;
 	int m_mouseRButton;

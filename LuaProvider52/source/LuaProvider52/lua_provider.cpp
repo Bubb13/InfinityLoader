@@ -131,6 +131,7 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	setLuaPointer(lua_type)
 	setLuaPointer(lua_typename)
 	setLuaPointer(luaL_error)
+	setLuaPointer(luaL_loadbufferx)
 	setLuaPointer(luaL_loadfilex)
 	setLuaPointer(luaL_loadstring)
 	setLuaPointer(luaL_newmetatable)

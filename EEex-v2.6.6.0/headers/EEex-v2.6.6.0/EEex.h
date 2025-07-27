@@ -46,10 +46,11 @@ namespace EEex {
 	//          Overrides          //
 	//-----------------------------//
 
-	void Override_bootstrapLua();
+	int __cdecl Override_Infinity_WriteINILine(lua_State* L);
 	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
 	void __cdecl Override_chWriteInifile();
-	int __cdecl Override_Infinity_WriteINILine(lua_State* L);
+	void __cdecl Override_uiDoFile(char* fileName);
+	void Override_bootstrapLua();
 
 	//-------------------------//
 	//          Hooks          //

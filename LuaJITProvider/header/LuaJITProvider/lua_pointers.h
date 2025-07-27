@@ -166,6 +166,9 @@ extern type_lua_typename p_lua_typename;
 typedef int (*type_luaL_error)(lua_State* L, const char* fmt, ...);
 extern "C" type_luaL_error p_luaL_error;
 
+typedef int (*type_luaL_loadbufferx)(lua_State* L, const char* buff, size_t sz, const char* name, const char* mode);
+extern type_luaL_loadbufferx p_luaL_loadbufferx;
+
 typedef int (*type_luaL_loadfilex)(lua_State* L, const char* fileName, const char* mode);
 extern type_luaL_loadfilex p_luaL_loadfilex;
 
