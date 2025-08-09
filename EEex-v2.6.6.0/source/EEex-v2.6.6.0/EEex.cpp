@@ -167,6 +167,19 @@ std::unordered_map<uint64_t, ExUUIDData> exUUIDDataMap{};
 
 uint64_t nextUUID = 0;
 
+/////////
+// Fix //
+/////////
+
+bool exNeedRenderRepass = false;
+
+struct ExUIItemData {
+	bool bScrollbarVisible = false;
+};
+
+std::unordered_map<StringA, bool> exForceScrollbarRenderForItemName{};
+std::unordered_map<void*, ExUIItemData> exUIItemData{};
+
 /////////////
 // Exports //
 /////////////
@@ -1767,8 +1780,29 @@ void EEex::DestroyAllTemplates(lua_State* L, const char* menuName) {
 		}
 
 		*pPrevItemNext = pCurItem->next;
+		EEex::Menu_Hook_OnBeforeUITemplateFreed(pCurItem);
 		p_free(pCurItem);
 	}
+}
+
+void EEex::ForceScrollbarRenderForItemName(lua_State *const L) {
+
+	const char *const pItemName = tolua_function_tostring(L, 1, "ForceScrollbarRenderForItemName");
+	const int type = lua_type(L, 2);
+
+	if (type == LUA_TBOOLEAN) {
+		exForceScrollbarRenderForItemName[pItemName] = tolua_function_toboolean(L, 2, "ForceScrollbarRenderForItemName");
+	}
+	else if (type == LUA_TNIL) {
+		exForceScrollbarRenderForItemName.erase(pItemName);
+	}
+	else {
+		luaL_error(L, "invalid type '%s' for argument #2 in function 'ForceScrollbarRenderForItemName'; 'boolean' or 'nil' expected.", tolua_typename(L, 2));
+	}
+}
+
+const char* EEex::FormatPointerAsEngine(uintptr_t ptr) {
+	return p_va("%p", ptr);
 }
 
 static uiItem* uiCreateFromTemplate(
@@ -1877,6 +1911,66 @@ void EEex::SetINIString(
 /////////////////////////////////
 //          Overrides          //
 /////////////////////////////////
+
+void CChitin::Override_SynchronousUpdate() {
+
+	CWarp *const pActiveEngine = this->pActiveEngine;
+
+	if (!this->bEngineActive || pActiveEngine == nullptr) {
+		return;
+	}
+
+	CProgressBar *const pProgressBar = &this->cProgressBar;
+
+	if (pProgressBar->m_bProgressBarActivated == 1) {
+
+		if (pProgressBar->m_nActionProgress != 0 || pProgressBar->m_nActionTarget != 0) {
+
+			this->virtual_SetProgressBar(
+				1,
+				pProgressBar->m_nProgressBarCaption,
+				pProgressBar->m_nActionProgress,
+				pProgressBar->m_nActionTarget,
+				pProgressBar->m_bTravelActive,
+				pProgressBar->m_nParchmentCaption,
+				pProgressBar->m_bWaiting,
+				pProgressBar->m_nWaitingReason,
+				this->cNetwork.m_bConnectionEstablished == 1 && !pProgressBar->m_bDisableMinibars && pProgressBar->m_nActionProgress == pProgressBar->m_nActionTarget,
+				pProgressBar->m_bTimeoutVisible,
+				pProgressBar->m_nSecondsToTimeout
+			);
+		}
+	}
+	else {
+
+		++this->m_nRenderElasped;
+		const uint nTicks = p_SDL_GetTicks();
+
+		if (nTicks - this->m_nRenderTickCount > 1000) {
+			this->m_nRenderPerSec = this->m_nRenderElasped;
+			this->m_nRenderElasped = 0;
+			this->m_nRenderTickCount = nTicks;
+		}
+
+		// Patch: Fix scrollbar visibility change causing an incomplete content wrapping state to be presented for 1 frame
+		do {
+			if (!this->m_bManualFrameControl) {
+				p_DrawClear();
+			}
+
+			pActiveEngine->virtual_ResetControls();
+			pActiveEngine->virtual_TimerSynchronousUpdate();
+
+			exNeedRenderRepass = false;
+			pActiveEngine->virtual_RenderUI();
+		}
+		while (exNeedRenderRepass);
+
+		if (!this->m_bManualFrameControl) {
+			this->cVideo.pCurrentMode->Flip(1);
+		}
+	}
+}
 
 void __cdecl EEex::Override_uiDoFile(char* fileName) {
 
@@ -3827,6 +3921,25 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 	STUTTER_LOG_END
 }
 
+//////////
+// Menu //
+//////////
+
+void EEex::Menu_Hook_OnBeforeMenuStackSave() {
+
+	lua_State *const L = luaState();
+
+	luaCallProtected(L, 0, 0, [&](int _) {
+		lua_getglobal(L, "EEex_Menu_LuaHook_BeforeMenuStackSave"); // 1 [ ..., EEex_Menu_LuaHook_BeforeMenuStackSave ]
+	});
+
+	exUIItemData.clear();
+}
+
+void EEex::Menu_Hook_OnBeforeUITemplateFreed(uiItem* pItem) {
+	exUIItemData.erase(pItem);
+}
+
 ////////////////
 // Projectile //
 ////////////////
@@ -4508,6 +4621,24 @@ void EEex::Script_Hook_OnDestruct(CAIScript* pScript) {
 /////////
 // Fix //
 /////////
+
+bool EEex::Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible) {
+
+	ExUIItemData& exData = exUIItemData[pItem];
+
+	if (exData.bScrollbarVisible != bVisible) {
+		exData.bScrollbarVisible = bVisible;
+		exNeedRenderRepass = true;
+	}
+
+	if (pItem->name != nullptr) {
+		if (auto itr = exForceScrollbarRenderForItemName.find(pItem->name); itr != exForceScrollbarRenderForItemName.end()) {
+			return itr->second;
+		}
+	}
+
+	return bVisible;
+}
 
 bool EEex::Fix_Hook_ShouldProcessEffectListSkipRolls() {
 	return !(*p_g_pBaldurChitin)->m_pObjectGame->m_worldTime.m_active;

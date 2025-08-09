@@ -81,6 +81,19 @@ static int tolua_function_EEex_DestroyAllTemplates(lua_State* L)
 	return 0;
 }
 
+static int tolua_function_EEex_ForceScrollbarRenderForItemName(lua_State* L)
+{
+	EEex::ForceScrollbarRenderForItemName(L);
+	return 0;
+}
+
+static int tolua_function_EEex_FormatPointerAsEngine(lua_State* L)
+{
+	const char* returnVal = EEex::FormatPointerAsEngine(tolua_function_tointeger<uintptr_t>(L, 1, "FormatPointerAsEngine"));
+	tolua_pushstring(L, (const char*)returnVal);
+	return 1;
+}
+
 static int tolua_function_EEex_GetExtendedStatValue(lua_State* L)
 {
 	int returnVal = EEex::GetExtendedStatValue((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"), tolua_function_tointeger<int>(L, 2, "GetExtendedStatValue"));
@@ -591,6 +604,8 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
 		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
 		tolua_function(L, "DestroyAllTemplates", &tolua_function_EEex_DestroyAllTemplates);
+		tolua_function(L, "ForceScrollbarRenderForItemName", &tolua_function_EEex_ForceScrollbarRenderForItemName);
+		tolua_function(L, "FormatPointerAsEngine", &tolua_function_EEex_FormatPointerAsEngine);
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
 		tolua_function(L, "GetINIString", &tolua_function_EEex_GetINIString);
 		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);

@@ -1087,6 +1087,8 @@ struct CVidMode
 {
 	static ushort SCREENWIDTH;
 	static ushort SCREENHEIGHT;
+
+	void Flip(int bRenderCursor);
 };
 
 struct CVidPalette
@@ -1419,6 +1421,7 @@ void restoreMenuStack();
 int CompareCResByTypeThenName(const CRes* a, const CRes* b);
 int SDL_GetKeyFromName(primitive const char* name);
 int rand();
+uint strtoul(primitive const char* str, char** endptr, int base);
 $nobinding int l_log_print(lua_State* L);
 $nobinding int panic(lua_State* L);
 $nobinding int Chitin_GetSectionCallback(lua_State* L);
@@ -1428,6 +1431,7 @@ CRes* __cdecl dimmGetResObject(const CResRef* cResRef, int nType, bool createIfN
 void __cdecl dimmServiceFromMemory(CRes* pRes, void* pData, int nSize, bool useTempOverride, bool makeCopy);
 $nobinding void DrawPushState();
 $nobinding void DrawBindTexture(int texture);
+$nobinding void DrawClear();
 $nobinding void DrawEnable(DrawFeature f);
 $nobinding void DrawBlendFunc(DrawBlend src, DrawBlend dst);
 $nobinding uint DrawColor(uint color);
@@ -1439,10 +1443,12 @@ $nobinding int uiVariantAsInt(uiVariant* var);
 $nobinding void uiDrawSlicedRect(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
 $nobinding int uiExecLuaInt(int id);
 primitive char* __cdecl SDL_GetKeyName(int key);
+$nobinding uint SDL_GetTicks();
 SDL_Window* SDL_GetWindowFromID(uint id);
 uint SDL_GetWindowFlags(SDL_Window* window);
 $nobinding void __cdecl SDL_Log(const char* fmt, ...);
 $nobinding int __cdecl SDL_ShowSimpleMessageBox(uint flags, const char* title, const char* message, SDL_Window* window);
+$nobinding char* __cdecl va(const char* format, ...);
 
 //////////////////////////////
 // Global Variable Bindings //

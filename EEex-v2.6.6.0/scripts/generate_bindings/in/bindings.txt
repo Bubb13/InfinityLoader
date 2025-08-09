@@ -43,6 +43,8 @@ namespace EEex
 	$external_implementation $pass_lua_state void DrawSlicedRect();
 	$external_implementation $pass_lua_state void DrawSlicedRectNum();
 	$external_implementation $pass_lua_state void DestroyAllTemplates(primitive const char* menuName);
+	$external_implementation $pass_lua_state void ForceScrollbarRenderForItemName();
+	$external_implementation primitive const char* FormatPointerAsEngine(uintptr_t ptr);
 	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
 	$external_implementation $custom_return_1 GetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* def);
 	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
@@ -71,6 +73,11 @@ struct CAICondition
 {
 	$nobinding $external_implementation int Override_Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
 	$nobinding $external_implementation int Override_TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+};
+
+struct CChitin
+{
+	$nobinding $external_implementation void Override_SynchronousUpdate();
 };
 
 struct CGameAIBase : CGameObject

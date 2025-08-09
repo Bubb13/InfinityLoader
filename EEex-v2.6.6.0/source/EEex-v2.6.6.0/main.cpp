@@ -35,6 +35,7 @@ static void exportPatterns() {
 
 	exportPattern(TEXT("CAICondition::Override_Hold"), getMemberPtr(&CAICondition::Override_Hold));
 	exportPattern(TEXT("CAICondition::Override_TriggerHolds"), getMemberPtr(&CAICondition::Override_TriggerHolds));
+	exportPattern(TEXT("CChitin::Override_SynchronousUpdate"), getMemberPtr(&CChitin::Override_SynchronousUpdate));
 	exportPattern(TEXT("CGameAIBase::Override_ApplyTriggers"), getMemberPtr(&CGameAIBase::Override_ApplyTriggers));
 	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), getMemberPtr(&CGameAIBase::Override_SetTrigger));
 	exportPattern(TEXT("CGameArea::Override_AddClairvoyanceObject(CGameSprite*,CPoint,int)"), getMemberPtr(&CGameArea::Override_AddClairvoyanceObject));
@@ -128,6 +129,13 @@ static void exportPatterns() {
 
 	exportPattern(TEXT("EEex::Action_Hook_OnAfterSpriteStartedAction"), EEex::Action_Hook_OnAfterSpriteStartedAction);
 
+	//////////
+	// Menu //
+	//////////
+
+	exportPattern(TEXT("EEex::Menu_Hook_OnBeforeMenuStackSave"), EEex::Menu_Hook_OnBeforeMenuStackSave);
+	exportPattern(TEXT("EEex::Menu_Hook_OnBeforeUITemplateFreed"), EEex::Menu_Hook_OnBeforeUITemplateFreed);
+
 	////////////////
 	// Projectile //
 	////////////////
@@ -148,6 +156,7 @@ static void exportPatterns() {
 	// Fix //
 	/////////
 
+	exportPattern(TEXT("EEex::Fix_Hook_OnUIItemCheckRenderScrollbar"), EEex::Fix_Hook_OnUIItemCheckRenderScrollbar);
 	exportPattern(TEXT("EEex::Fix_Hook_ShouldProcessEffectListSkipRolls"), EEex::Fix_Hook_ShouldProcessEffectListSkipRolls);
 	exportPattern(TEXT("EEex::Fix_Hook_ShouldTransformSpellImmunityStrref"), EEex::Fix_Hook_ShouldTransformSpellImmunityStrref);
 	exportPattern(TEXT("EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing"), EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing);

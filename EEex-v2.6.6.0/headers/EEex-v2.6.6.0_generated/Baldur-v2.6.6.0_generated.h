@@ -4399,6 +4399,8 @@ namespace EEex
 	void DrawSlicedRect(lua_State* L);
 	void DrawSlicedRectNum(lua_State* L);
 	void DestroyAllTemplates(lua_State* L, const char* menuName);
+	void ForceScrollbarRenderForItemName(lua_State* L);
+	const char* FormatPointerAsEngine(uintptr_t ptr);
 	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
 	void GetINIString(lua_State* L, const char* iniPath, const char* section, const char* key, const char* def);
 	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
@@ -7602,6 +7604,9 @@ extern type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
 typedef int (*type_rand)();
 extern type_rand p_rand;
 
+typedef uint (*type_strtoul)(const char* str, char** endptr, int base);
+extern type_strtoul p_strtoul;
+
 typedef int (*type_l_log_print)(lua_State* L);
 extern type_l_log_print p_l_log_print;
 
@@ -7628,6 +7633,9 @@ extern type_DrawPushState p_DrawPushState;
 
 typedef void (*type_DrawBindTexture)(int texture);
 extern type_DrawBindTexture p_DrawBindTexture;
+
+typedef void (*type_DrawClear)();
+extern type_DrawClear p_DrawClear;
 
 typedef void (*type_DrawEnable)(DrawFeature f);
 extern type_DrawEnable p_DrawEnable;
@@ -7662,6 +7670,9 @@ extern type_uiExecLuaInt p_uiExecLuaInt;
 typedef char* (__cdecl *type_SDL_GetKeyName)(int key);
 extern type_SDL_GetKeyName p_SDL_GetKeyName;
 
+typedef uint (*type_SDL_GetTicks)();
+extern type_SDL_GetTicks p_SDL_GetTicks;
+
 typedef SDL_Window* (*type_SDL_GetWindowFromID)(uint id);
 extern type_SDL_GetWindowFromID p_SDL_GetWindowFromID;
 
@@ -7673,6 +7684,9 @@ extern type_SDL_Log p_SDL_Log;
 
 typedef int (__cdecl *type_SDL_ShowSimpleMessageBox)(uint flags, const char* title, const char* message, SDL_Window* window);
 extern type_SDL_ShowSimpleMessageBox p_SDL_ShowSimpleMessageBox;
+
+typedef char* (__cdecl *type_va)(const char* format, ...);
+extern type_va p_va;
 
 extern char** p_afxPchNil;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
@@ -8544,6 +8558,14 @@ struct CVidMode
 	CVidBitmap m_rgbMasterBitmap;
 
 	CVidMode() = delete;
+
+	typedef void (__thiscall *type_Flip)(CVidMode* pThis, int bRenderCursor);
+	static type_Flip p_Flip;
+
+	void Flip(int bRenderCursor)
+	{
+		p_Flip(this, bRenderCursor);
+	}
 };
 
 struct CVidCell : CVidImage, CResHelper<CResCell,1000>
@@ -10831,6 +10853,8 @@ struct CChitin
 	{
 		p_OnResizeWindow(this, w, h);
 	}
+
+	void Override_SynchronousUpdate();
 
 	virtual void virtual_SynchronousUpdate()
 	{

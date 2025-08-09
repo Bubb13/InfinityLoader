@@ -126,6 +126,13 @@ namespace EEex {
 
 	void Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite);
 
+	//////////
+	// Menu //
+	//////////
+
+	void Menu_Hook_OnBeforeMenuStackSave();
+	void Menu_Hook_OnBeforeUITemplateFreed(uiItem* pItem);
+
 	////////////////
 	// Projectile //
 	////////////////
@@ -146,6 +153,7 @@ namespace EEex {
 	// Fix //
 	/////////
 
+	bool Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible);
 	bool Fix_Hook_ShouldProcessEffectListSkipRolls();
 	bool Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell);
 	bool Fix_Hook_SpellImmunityShouldSkipItemIndexing(CGameObject* pGameObject);

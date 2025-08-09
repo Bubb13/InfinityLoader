@@ -1639,6 +1639,7 @@ class FunctionImplementation:
 		self.group: Group = None
 		self.virtual: bool = False
 		self.externalImplementation: bool = False
+		self.delayedPointer: bool = False
 		self.passLuaState: bool = False
 		self.eofBody: bool = False
 		self.bindingName: str = None
@@ -1672,6 +1673,7 @@ class FunctionImplementation:
 		copy.group = self.group
 		copy.virtual = self.virtual
 		copy.externalImplementation = self.externalImplementation
+		copy.delayedPointer = self.delayedPointer
 		copy.passLuaState = self.passLuaState
 		copy.eofBody = self.eofBody
 		copy.bindingName = self.bindingName
@@ -1909,7 +1911,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 			yield funcParameter
 
 
-	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\)|\\$allow_references|\\$instantiations\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=*& ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$delayed_pointer|\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\)|\\$allow_references|\\$instantiations\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=*& ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1943,6 +1945,9 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 					state.currentFunctionImplementation.patternName = patternNameMatch.group(1)
 				elif keyword == "$allow_references":
 					allowReferences = True
+				elif keyword == "$delayed_pointer":
+					assert not state.currentFunctionImplementation.delayedPointer, "delayed_pointer already defined"
+					state.currentFunctionImplementation.delayedPointer = True
 				elif instantiationsMatch := re.match("^\\$instantiations\\((\\S+)\\)$", keyword):
 					for templateStr in instantiationsMatch.group(1).split(";"):
 						templateTypes: list[TypeReference] = []
@@ -2919,7 +2924,10 @@ class Group:
 		return vtblStruct, finalSuperVGroup if finalSuperVGroup != None else vtblStruct
 
 
-	def writeHeader(self, mainState, internalPointersOut, internalPointersListOut: list[tuple[str,str]], headerType: HeaderType, indent="") -> str:
+	def writeHeader(
+			self, mainState, internalPointersOut, internalPointersListOut: list[tuple[str,str]],
+			delayedPointersListOut: list[tuple[str,str]], headerType: HeaderType, indent=""
+		) -> str:
 
 		parts = [indent]
 
@@ -2954,7 +2962,11 @@ class Group:
 						pointerVariableFullTypeName: str = f"{groupName}::{pointerVariableTypeName}" if isNormal else pointerVariableTypeName
 
 						internalPointersOut.write(f"{pointerVariableFullTypeName} {pointerVariableName};\n")
-						internalPointersListOut.append((patternName, f"{pointerVariableName}"))
+
+						if functionImp.delayedPointer:
+							delayedPointersListOut.append((patternName, f"{pointerVariableName}"))
+						else:
+							internalPointersListOut.append((patternName, f"{pointerVariableName}"))
 
 						if first and not functionImp.noDeclaration:
 
@@ -3075,7 +3087,7 @@ class Group:
 
 			for subgroup in self.subGroups:
 				if not subgroup.isUsed(mainState): continue
-				parts.append(subgroup.writeHeader(mainState, internalPointersOut, internalPointersListOut, headerType, nextIndent))
+				parts.append(subgroup.writeHeader(mainState, internalPointersOut, internalPointersListOut, delayedPointersListOut, headerType, nextIndent))
 				parts.append("\n")
 
 			for enumTuple in self.enumTuples:
@@ -4895,7 +4907,8 @@ def outputHeader(mainState: MainState, outputFileName: str, dllName: str, out: T
 
 	def doOutput(internalPointersOut: TextIOWrapper):
 
-		internalPointersList = []
+		internalPointersList: list[tuple[str,str]] = []
+		delayedPointersList: list[tuple[str,str]] = []
 
 		if internalPointersOut:
 			internalPointersOut.write(f"\n#include \"{pathToFileName(outputFileName)}\"\n\n")
@@ -4906,7 +4919,7 @@ def outputHeader(mainState: MainState, outputFileName: str, dllName: str, out: T
 		for group in mainState.filteredGroups:
 			if group.isSubgroup() or group.ignoreHeader or group.groupType == "undefined": continue
 			out.write(newline)
-			groupStr = group.writeHeader(mainState, internalPointersOut, internalPointersList, HeaderType.NORMAL)
+			groupStr = group.writeHeader(mainState, internalPointersOut, internalPointersList, delayedPointersList, HeaderType.NORMAL)
 			if groupStr != "":
 				out.write(groupStr)
 				newline = "\n"
@@ -4928,14 +4941,39 @@ def outputHeader(mainState: MainState, outputFileName: str, dllName: str, out: T
 
 		if internalPointersOut:
 
-			if mainState.manualPatternHandling:
-				out.write("\ntypedef std::function<uintptr_t(const char*)> type_attemptFillPointerCallback;\n")
-				out.write("void InitBindingsInternal(type_attemptFillPointerCallback);\n")
-
 			printFunc: str = mainState.printFuncWideString if not mainState.forceByteStrings else mainState.printFuncByteString
 			strStart: str = "TEXT(\"" if not mainState.forceByteStrings else "\""
 			strNewline: str = "\\n" if not mainState.printFuncOmitNewline else ""
 			strEnd: str = "\")" if not mainState.forceByteStrings else "\""
+
+			if len(delayedPointersList) > 0:
+
+				internalPointersOut.write("\nstd::unordered_map<String, uintptr_t*> delayedPointers {\n")
+
+				for internalPointerNameTup in delayedPointersList:
+					internalPointersOut.write(f"\t{{{strStart}{internalPointerNameTup[0]}{strEnd}, reinterpret_cast<uintptr_t*>(&{internalPointerNameTup[1]})}},\n")
+
+				internalPointersOut.write("""};
+
+static void onAfterPatternModified(const PatternValueHandle handle, const uintptr_t newAddress) {
+
+	if (sharedState().GetPatternValueType(handle) != PatternValueType::SINGLE) {
+		return;
+	}
+
+	auto itr = delayedPointers.find(sharedState().GetPatternValueName(handle));
+
+	if (itr == delayedPointers.end()) {
+		return;
+	}
+
+	*itr->second = sharedState().GetSinglePatternValue(handle);
+}
+""")
+
+			if mainState.manualPatternHandling:
+				out.write("\ntypedef std::function<uintptr_t(const char*)> type_attemptFillPointerCallback;\n")
+				out.write("void InitBindingsInternal(type_attemptFillPointerCallback);\n")
 
 			if not mainState.manualPatternHandling:
 
@@ -4977,6 +5015,9 @@ static void attemptFillPointer(const char *const patternName, OutType& pointerOu
 void InitBindingsInternal(type_attemptFillPointerCallback callback) {{
 """
 				)
+
+			if len(delayedPointersList) > 0:
+				internalPointersOut.write("\tsharedState().AddAfterPatternModifiedListener(onAfterPatternModified);\n")
 
 			callbackArgument: str = "" if not mainState.manualPatternHandling else ", callback"
 			for internalPointerNameTup in internalPointersList:
