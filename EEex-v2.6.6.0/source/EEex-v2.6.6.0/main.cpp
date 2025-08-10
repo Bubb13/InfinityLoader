@@ -52,6 +52,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Override_bootstrapLua"), EEex::Override_bootstrapLua);
 	exportPattern(TEXT("EEex::Override_CGameEffect_CheckSave"), EEex::Override_CGameEffect_CheckSave);
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
+	//exportPattern(TEXT("EEex::Override_fontWrap"), EEex::Override_fontWrap);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);
 	exportPattern(TEXT("EEex::Override_uiDoFile"), EEex::Override_uiDoFile);
 
@@ -133,6 +134,7 @@ static void exportPatterns() {
 	// Menu //
 	//////////
 
+	exportPattern(TEXT("EEex::Menu_Hook_CheckApplyTextScrollbarPad"), EEex::Menu_Hook_CheckApplyTextScrollbarPad);
 	exportPattern(TEXT("EEex::Menu_Hook_OnBeforeMenuStackSave"), EEex::Menu_Hook_OnBeforeMenuStackSave);
 	exportPattern(TEXT("EEex::Menu_Hook_OnBeforeUITemplateFreed"), EEex::Menu_Hook_OnBeforeUITemplateFreed);
 

@@ -1,4 +1,5 @@
 $9B9540D9920A90D57A3D80DDD1A70514
+adjustmentData_t
 CBaldurChitin
 CGameAIArea
 CGameAIGame
@@ -79,6 +80,8 @@ CResWebm
 CResWED
 CResWorldMap
 CVisualEffect
+font_t
+letter_t
 SDL_WindowFlags
 VariableArray<$D98D369160A0DDA2B95F5D0F301081BB>
 VariableArray<byte>

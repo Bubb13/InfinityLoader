@@ -46,11 +46,12 @@ namespace EEex {
 	//          Overrides          //
 	//-----------------------------//
 
-	int __cdecl Override_Infinity_WriteINILine(lua_State* L);
+	void Override_bootstrapLua();
 	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
 	void __cdecl Override_chWriteInifile();
+	//int __cdecl Override_fontWrap(char* text, SDL_Rect* r, SDL_Rect* rClip, int* horizontalAlignment, int* verticalAlignment, font_t* font, int* pointSize, letter_t* letters, int* nlines, int* nletters, int* pointIndex, bool* scale, adjustmentData_t* adjustData, int indent, bool bUseFontSizeFloor);
+	int __cdecl Override_Infinity_WriteINILine(lua_State* L);
 	void __cdecl Override_uiDoFile(char* fileName);
-	void Override_bootstrapLua();
 
 	//-------------------------//
 	//          Hooks          //
@@ -130,6 +131,7 @@ namespace EEex {
 	// Menu //
 	//////////
 
+	void Menu_Hook_CheckApplyTextScrollbarPad(uiItem* pItem, SDL_Rect* pItemArea);
 	void Menu_Hook_OnBeforeMenuStackSave();
 	void Menu_Hook_OnBeforeUITemplateFreed(uiItem* pItem);
 

@@ -175,6 +175,7 @@ bool exNeedRenderRepass = false;
 
 struct ExUIItemData {
 	bool bScrollbarVisible = false;
+	int nExtraScrollbarPad = 0;
 };
 
 std::unordered_map<StringA, bool> exForceScrollbarRenderForItemName{};
@@ -1908,6 +1909,10 @@ void EEex::SetINIString(
 	}
 }
 
+void EEex::SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad) {
+	exUIItemData[pItem].nExtraScrollbarPad = nExtraPad;
+}
+
 /////////////////////////////////
 //          Overrides          //
 /////////////////////////////////
@@ -2094,6 +2099,114 @@ end
 		lua_pcallk(L, 0, -1, 0, 0, nullptr);
 	}
 }
+
+//int __cdecl EEex::Override_fontWrap(
+//	char* text,
+//	SDL_Rect* r,
+//	SDL_Rect* rClip,
+//	int* horizontalAlignment,
+//	int* verticalAlignment,
+//	font_t* font,
+//	int* pointSize,
+//	letter_t* letters,
+//	int* nlines,
+//	int* nletters,
+//	int* pointIndex,
+//	bool* scale,
+//	adjustmentData_t* adjustData,
+//	int indent,
+//	bool bUseFontSizeFloor)
+//{
+//	const int maxLines = (*verticalAlignment >> 16) & 0xFFF;
+//	*verticalAlignment &= 0xFFFF;
+//
+//	if (r->h == 0xFFFFFF)
+//	{
+//		*verticalAlignment = 0;
+//	}
+//
+//	SDL_Rect rTransformed;
+//	SDL_Rect rClipTransformed;
+//
+//	p_DrawTransformToScreen(r, &rTransformed);
+//	p_DrawTransformToScreen(rClip, &rClipTransformed);
+//
+//	int nAlignAdjX = 0;
+//
+//	if ((*horizontalAlignment & 4) != 0) {
+//		nAlignAdjX = rClipTransformed.w - rClipTransformed.x;
+//	}
+//
+//	if ((*horizontalAlignment & 8) != 0) {
+//		nAlignAdjX = rTransformed.w;
+//	}
+//
+//	int nAlignAdjY = 0;
+//
+//	if ((*verticalAlignment & 4) != 0) {
+//		nAlignAdjY = rClipTransformed.h - rClipTransformed.y;
+//	}
+//
+//	if ((*verticalAlignment & 8) != 0) {
+//		nAlignAdjY = rTransformed.h;
+//	}
+//
+//	*horizontalAlignment = *horizontalAlignment & 0xFFFFFFF3; // Unset 0x4 | 0x8
+//	*verticalAlignment = *verticalAlignment & 0xFFFFFFF3; // Unset 0x4 | 0x8
+//
+//	int nFinalPoint = static_cast<int>(p_DrawTransformToScreenH(static_cast<float>(*pointSize)));
+//
+//	if (bUseFontSizeFloor)
+//	{
+//		nFinalPoint = (std::max)(10, nFinalPoint);
+//	}
+//
+//	nFinalPoint = (std::min)(nFinalPoint, 79);
+//	nFinalPoint = static_cast<int>(floor(nFinalPoint));
+//
+//	line_metric *const pNewLineMetrics = font->newLineMetrics;
+//	int lastLineHeight;
+//
+//	for (; nFinalPoint > 1 && (nAlignAdjX != 0 || nAlignAdjY != 0); --nFinalPoint)
+//	{
+//		line_metric *const pNewLineMetric = &pNewLineMetrics[nFinalPoint];
+//		const float fLineHeight = pNewLineMetric->ascent - pNewLineMetric->descent + pNewLineMetric->line_spacing - 0.001f;
+//
+//		if (nAlignAdjY < 1 || fLineHeight <= nAlignAdjY)
+//		{
+//			*nlines = p_wordwrap(letters, 0x40000, nletters, text, rTransformed.w, font, nFinalPoint, *pointIndex, maxLines, &lastLineHeight, adjustData, indent);
+//
+//			if
+//			(
+//				(nAlignAdjY < 1 || *nlines * fLineHeight <= nAlignAdjY)
+//				&&
+//				(nAlignAdjX < 1 || letters->w <= nAlignAdjX)
+//			)
+//			{
+//				break;
+//			}
+//		}
+//	}
+//
+//	if (*nletters == 0)
+//	{
+//		*nlines = p_wordwrap(letters, 0x40000, nletters, text, rTransformed.w, font, nFinalPoint, *pointIndex, maxLines, &lastLineHeight, adjustData, indent);
+//	}
+//
+//	r->x = rTransformed.x;
+//	r->y = rTransformed.y;
+//	r->w = rTransformed.w;
+//	r->h = rTransformed.h;
+//	rClip->x = rClipTransformed.x;
+//	rClip->y = rClipTransformed.y;
+//	rClip->w = rClipTransformed.w;
+//	rClip->h = rClipTransformed.h;
+//	*pointSize = nFinalPoint;
+//
+//	line_metric *const pNewLineMetric = &pNewLineMetrics[nFinalPoint];
+//	const int nLineHeight = static_cast<int>(ceil(pNewLineMetric->ascent - pNewLineMetric->descent + pNewLineMetric->line_spacing));
+//	return nLineHeight * *nlines;
+//}
 
 int checkNoSavingThrowsAndEvasion(CGameEffect *const pEffect, CGameSprite *const pTarget) {
 
@@ -3924,6 +4037,28 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 //////////
 // Menu //
 //////////
+
+void EEex::Menu_Hook_CheckApplyTextScrollbarPad(uiItem* pItem, SDL_Rect* pItemArea) {
+
+	if (pItem->scrollbar.bam == nullptr) {
+		return;
+	}
+
+	bool bScrollbarVisible = pItem->area.h < pItem->scrollbar.contentHeight;
+
+	if (pItem->name != nullptr) {
+		if (auto itr = exForceScrollbarRenderForItemName.find(pItem->name); itr != exForceScrollbarRenderForItemName.end()) {
+			bScrollbarVisible = itr->second;
+		}
+	}
+
+	if (!bScrollbarVisible) {
+		return;
+	}
+
+	ExUIItemData& exData = exUIItemData[pItem];
+	pItemArea->w -= 16 + exData.nExtraScrollbarPad;
+}
 
 void EEex::Menu_Hook_OnBeforeMenuStackSave() {
 

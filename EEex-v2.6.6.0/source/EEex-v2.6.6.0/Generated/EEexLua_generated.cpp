@@ -179,6 +179,12 @@ static int tolua_function_EEex_SetINIString(lua_State* L)
 	return 0;
 }
 
+static int tolua_function_EEex_SetUIItemExtraScrollbarPad(lua_State* L)
+{
+	EEex::SetUIItemExtraScrollbarPad((uiItem*)tolua_tousertype_dynamic(L, 1, 0, "uiItem"), tolua_function_tointeger<int>(L, 2, "SetUIItemExtraScrollbarPad"));
+	return 0;
+}
+
 static int tolua_function_EEex_ShouldEffectBypassOp120(lua_State* L)
 {
 	bool returnVal = EEex::ShouldEffectBypassOp120((CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect"));
@@ -619,6 +625,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "MatchObject", &tolua_function_EEex_MatchObject);
 		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
 		tolua_function(L, "SetINIString", &tolua_function_EEex_SetINIString);
+		tolua_function(L, "SetUIItemExtraScrollbarPad", &tolua_function_EEex_SetUIItemExtraScrollbarPad);
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);

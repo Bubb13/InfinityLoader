@@ -58,6 +58,7 @@ namespace EEex
 	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 	$external_implementation $pass_lua_state void RegisterSlicedRect();
 	$external_implementation void SetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* value);
+	$external_implementation void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
 	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 };
 

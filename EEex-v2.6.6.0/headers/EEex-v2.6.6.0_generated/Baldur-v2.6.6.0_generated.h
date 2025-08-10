@@ -1561,6 +1561,22 @@ enum class importStateType : __int32
 	PartyFromGame = 4,
 };
 
+struct glyphHashEntry_t
+{
+	int key;
+	int glyphIndex;
+
+	glyphHashEntry_t() = delete;
+};
+
+struct glyphAdvance_t
+{
+	int numGlyphAdvanceItems;
+	int* glyphAdvances;
+
+	glyphAdvance_t() = delete;
+};
+
 struct frameTableEntry_st
 {
 	struct _anonymous_tag_
@@ -1627,6 +1643,14 @@ struct bamHeader_st
 	unsigned int nFrameListOffset;
 
 	bamHeader_st() = delete;
+};
+
+struct adjustmentData_t
+{
+	int maxAscent;
+	int maxDescent;
+
+	adjustmentData_t() = delete;
 };
 
 struct _EdgeDescription
@@ -3065,6 +3089,26 @@ struct keyword
 	keyword() = delete;
 };
 
+struct letter_t
+{
+	int gi;
+	int w;
+	const char* T;
+
+	letter_t() = delete;
+};
+
+struct line_metric
+{
+	float size;
+	float line_spacing;
+	float ascent;
+	float descent;
+	float scale;
+
+	line_metric() = delete;
+};
+
 struct mosHeader_st
 {
 	unsigned int nFileType;
@@ -3087,6 +3131,15 @@ struct sequenceTableEntry_st
 	unsigned __int16 nStartingFrame;
 
 	sequenceTableEntry_st() = delete;
+};
+
+struct sheet
+{
+	int texture;
+	int w;
+	int h;
+
+	sheet() = delete;
 };
 
 template<class T, size_t size>
@@ -3129,6 +3182,60 @@ struct st_tiledef
 	CInfTileSet* pTileSet;
 
 	st_tiledef() = delete;
+};
+
+struct stbrp_node
+{
+	unsigned __int16 x;
+	unsigned __int16 y;
+	stbrp_node* next;
+
+	stbrp_node() = delete;
+};
+
+struct stbrp_rect
+{
+	int id;
+	unsigned __int16 w;
+	unsigned __int16 h;
+	unsigned __int16 x;
+	unsigned __int16 y;
+	int was_packed;
+
+	stbrp_rect() = delete;
+};
+
+struct glyphmap_t
+{
+	stbrp_rect packedRect;
+	int glyphIndex;
+	int xOffset;
+	int yOffset;
+	float leftSideBearing;
+	int advanceWidth;
+	int sheetIndex;
+	bool renderable;
+	bool fullyProcessed;
+
+	glyphmap_t() = delete;
+};
+
+struct stbtt_fontinfo
+{
+	void* userdata;
+	unsigned __int8* data;
+	int fontstart;
+	int numGlyphs;
+	int loca;
+	int head;
+	int glyf;
+	int hhea;
+	int hmtx;
+	int kern;
+	int index_map;
+	int indexToLocFormat;
+
+	stbtt_fontinfo() = delete;
 };
 
 struct CRect : tagRECT
@@ -4414,6 +4521,7 @@ namespace EEex
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
 	void RegisterSlicedRect(lua_State* L);
 	void SetINIString(const char* iniPath, const char* section, const char* key, const char* value);
+	void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
 	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 };
 
@@ -7339,6 +7447,54 @@ struct uiItem
 	uiItem() = delete;
 };
 
+struct stbrp_context
+{
+	int width;
+	int height;
+	int align;
+	int init_mode;
+	int heuristic;
+	int num_nodes;
+	stbrp_node* active_head;
+	stbrp_node* free_head;
+	Array<stbrp_node,2> extra;
+
+	stbrp_context() = delete;
+};
+
+struct glyphHashTable_t
+{
+	int numElements;
+	Array<glyphHashEntry_t,32749> table;
+
+	glyphHashTable_t() = delete;
+};
+
+struct font_t
+{
+	Array<char,64> name;
+	int space;
+	stbtt_fontinfo fontInfo;
+	sheet* fontSheets;
+	stbrp_context* packingContext;
+	stbrp_node* packingNodes;
+	int numFontSizes;
+	int currentSheetIndex;
+	int numGlyphMaps;
+	int maxNumGlyphMaps;
+	glyphmap_t* newGlyphMapping;
+	int* pointSizeToGlyphIndexMapping;
+	line_metric* newLineMetrics;
+	char* fileBuffer;
+	int metricTopMax;
+	int metricBottomMax;
+	int metricRight;
+	glyphHashTable_t glyphHashTable;
+	glyphAdvance_t* glyphAdvance;
+
+	font_t() = delete;
+};
+
 struct SDL_PixelFormat
 {
 	unsigned int format;
@@ -7658,6 +7814,12 @@ extern type_drawSlice p_drawSlice;
 typedef void (*type_drawSliceSide)(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool wide);
 extern type_drawSliceSide p_drawSliceSide;
 
+typedef void (__cdecl *type_DrawTransformToScreen)(SDL_Rect* w, SDL_Rect* s);
+extern type_DrawTransformToScreen p_DrawTransformToScreen;
+
+typedef float (__cdecl *type_DrawTransformToScreenH)(float h);
+extern type_DrawTransformToScreenH p_DrawTransformToScreenH;
+
 typedef int (*type_uiVariantAsInt)(uiVariant* var);
 extern type_uiVariantAsInt p_uiVariantAsInt;
 
@@ -7687,6 +7849,9 @@ extern type_SDL_ShowSimpleMessageBox p_SDL_ShowSimpleMessageBox;
 
 typedef char* (__cdecl *type_va)(const char* format, ...);
 extern type_va p_va;
+
+typedef int (__cdecl *type_wordwrap)(letter_t* letters, int maxletters, int* numletters, char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);
+extern type_wordwrap p_wordwrap;
 
 extern char** p_afxPchNil;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
