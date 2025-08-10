@@ -155,6 +155,7 @@ namespace EEex {
 	// Fix //
 	/////////
 
+	void Fix_Hook_OnBeforeUIKillCapture();
 	bool Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible);
 	bool Fix_Hook_ShouldProcessEffectListSkipRolls();
 	bool Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell);

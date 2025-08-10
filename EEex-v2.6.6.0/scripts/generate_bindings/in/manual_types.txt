@@ -1450,6 +1450,8 @@ SDL_Window* SDL_GetWindowFromID(uint id);
 uint SDL_GetWindowFlags(SDL_Window* window);
 $nobinding void __cdecl SDL_Log(const char* fmt, ...);
 $nobinding int __cdecl SDL_ShowSimpleMessageBox(uint flags, const char* title, const char* message, SDL_Window* window);
+void stopEditCapture();
+void uiKillCapture();
 $nobinding char* __cdecl va(const char* format, ...);
 $nobinding int __cdecl wordwrap(letter_t* letters, int maxletters, int* numletters, char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);
 

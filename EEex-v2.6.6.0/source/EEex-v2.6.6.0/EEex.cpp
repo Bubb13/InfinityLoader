@@ -4072,6 +4072,11 @@ void EEex::Menu_Hook_OnBeforeMenuStackSave() {
 }
 
 void EEex::Menu_Hook_OnBeforeUITemplateFreed(uiItem* pItem) {
+
+	if (p_capture->item == pItem) {
+		p_uiKillCapture();
+	}
+
 	exUIItemData.erase(pItem);
 }
 
@@ -4756,6 +4761,15 @@ void EEex::Script_Hook_OnDestruct(CAIScript* pScript) {
 /////////
 // Fix //
 /////////
+
+void EEex::Fix_Hook_OnBeforeUIKillCapture() {
+
+	if (p_capture->item == nullptr || p_capture->item->type != uiItemType::ITEM_EDIT) {
+		return;
+	}
+
+	p_stopEditCapture();
+}
 
 bool EEex::Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible) {
 

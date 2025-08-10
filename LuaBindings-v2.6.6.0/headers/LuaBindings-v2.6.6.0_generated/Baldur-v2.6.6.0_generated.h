@@ -7733,6 +7733,12 @@ extern type_SDL_Log p_SDL_Log;
 typedef int (__cdecl *type_SDL_ShowSimpleMessageBox)(uint flags, const char* title, const char* message, SDL_Window* window);
 extern type_SDL_ShowSimpleMessageBox p_SDL_ShowSimpleMessageBox;
 
+typedef void (*type_stopEditCapture)();
+extern type_stopEditCapture p_stopEditCapture;
+
+typedef void (*type_uiKillCapture)();
+extern type_uiKillCapture p_uiKillCapture;
+
 typedef char* (__cdecl *type_va)(const char* format, ...);
 extern type_va p_va;
 

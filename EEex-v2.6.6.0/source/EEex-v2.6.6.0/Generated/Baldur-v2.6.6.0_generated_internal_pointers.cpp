@@ -83,6 +83,8 @@ type_SDL_GetWindowFromID p_SDL_GetWindowFromID;
 type_SDL_GetWindowFlags p_SDL_GetWindowFlags;
 type_SDL_Log p_SDL_Log;
 type_SDL_ShowSimpleMessageBox p_SDL_ShowSimpleMessageBox;
+type_stopEditCapture p_stopEditCapture;
+type_uiKillCapture p_uiKillCapture;
 type_va p_va;
 type_wordwrap p_wordwrap;
 char** p_afxPchNil;
@@ -327,6 +329,8 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("SDL_GetWindowFlags"), p_SDL_GetWindowFlags);
 	attemptFillPointer(TEXT("SDL_Log"), p_SDL_Log);
 	attemptFillPointer(TEXT("SDL_ShowSimpleMessageBox"), p_SDL_ShowSimpleMessageBox);
+	attemptFillPointer(TEXT("stopEditCapture"), p_stopEditCapture);
+	attemptFillPointer(TEXT("uiKillCapture"), p_uiKillCapture);
 	attemptFillPointer(TEXT("va"), p_va);
 	attemptFillPointer(TEXT("wordwrap"), p_wordwrap);
 	attemptFillPointer(TEXT("afxPchNil"), p_afxPchNil);
