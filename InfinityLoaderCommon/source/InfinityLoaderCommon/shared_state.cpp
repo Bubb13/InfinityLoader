@@ -347,7 +347,7 @@ EXPORT void SharedState::InitLuaState(lua_State* L) {
 	auto& luaStateEntries = state.luaStateEntries;
 
 	const DWORD threadId = GetCurrentThreadId();
-	
+
 	{
 		std::unique_lock<std::shared_mutex> lk { state.luaStateEntriesMutex };
 

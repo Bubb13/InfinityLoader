@@ -46,7 +46,7 @@ std::unordered_map<StringA, LoadedBindings> loadedBindingsMap{};
 StringA earlyPrintPrefix;
 StringA extenderName;
 StringA luaGlobalsPrefix;
-#define prefixed(str) std::format("{}"##str, luaGlobalsPrefix).c_str()  
+#define prefixed(str) std::format("{}"##str, luaGlobalsPrefix).c_str()
 
 const std::tuple<const TCHAR*, const TCHAR*, const unsigned char> aHexLetterToByte[] = {
 	std::tuple{TEXT("0"), TEXT("0"), 0},
@@ -1348,12 +1348,12 @@ static int runWithString(lua_State* L) {
 	lua_pushinteger(L, reinterpret_cast<uintptr_t>(lua_tostring(L, 1)));
 
 	if (lua_pcallk(L, 1, 0, -3, 0, nullptr) != LUA_OK) {
-		                                                                 // [ debug, traceback, errorMessage ]
+																		 // [ debug, traceback, errorMessage ]
 		FPrint("[!][InfinityLoaderDLL.dll] %sRunWithString() - %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
 		lua_pop(L, 3);                                                   // [ ]
 	}
 	else {
-		                                                                 // [ debug, traceback ]
+																		 // [ debug, traceback ]
 		lua_pop(L, 2);                                                   // [ ]
 	}
 
@@ -2469,6 +2469,7 @@ byte init(HANDLE mappedMemoryHandle) {
 }
 
 static int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
+	if (IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH;
 	DumpCrashInfo(pointers);
 	codeOut = code;
 	return EXCEPTION_EXECUTE_HANDLER;
@@ -2476,6 +2477,7 @@ static int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers, uns
 
 static int exceptionFilterIgnoreIfSubsequent(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
 	if (!codeOut) {
+		if (IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH;
 		DumpCrashInfo(pointers);
 		codeOut = code;
 	}

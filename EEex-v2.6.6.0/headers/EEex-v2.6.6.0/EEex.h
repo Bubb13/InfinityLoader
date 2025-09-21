@@ -155,6 +155,7 @@ namespace EEex {
 	// Fix //
 	/////////
 
+	void Fix_Hook_HandleMiddleMouseDrag(SDL_Event* pEvent);
 	void Fix_Hook_OnBeforeUIKillCapture();
 	bool Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible);
 	bool Fix_Hook_ShouldProcessEffectListSkipRolls();
@@ -167,6 +168,14 @@ namespace EEex {
 
 	void Trigger_Hook_OnScriptLevelHit(CGameAIBase* pCaller, unsigned char nScriptLevel);
 	void Trigger_Hook_OnConditionResponseHit(int16_t nResponseSetNum);
+
+	///////////////
+	// Uncap FPS //
+	///////////////
+
+	void UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted(CGameArea* pArea);
+	void UncapFPS_Hook_OnBeforeWorldScreenDeactivated();
+	void UncapFPS_Hook_HandleAreaAutoZoom();
 
 	////////////////////
 	// Visibility Map //

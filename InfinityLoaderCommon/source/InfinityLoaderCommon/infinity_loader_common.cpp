@@ -342,7 +342,7 @@ EXPORT int UnbufferCrtStreams() {
 // fopen_s         | [Note 2]
 // freopen         | [Note 1, Note 2]
 // freopen_s       | [Note 1, Note 2]
-// tmpfile         | [Note 1] 
+// tmpfile         | [Note 1]
 // tmpfile_s       | [Note 1]
 
 ///////////////////////////

@@ -7,6 +7,8 @@
 
 #include "Baldur-v2.6.6.0_generated.h"
 #include "EEex.h"
+#include "time_util.hpp"
+#include "uncap_fps.hpp"
 #include "util.hpp"
 
 //---------------------------//
@@ -4963,6 +4965,9 @@ DWORD getLuaProc(const char* name, out_type& out) {
 }
 
 void EEex::InitEEex() {
+
+	initTimeUtil();
+	initUncapFPS();
 
 	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = false;
 	EEex::Projectile_LuaHook_GlobalMutators_Enabled = false;

@@ -230,6 +230,12 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CAIId*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAIId*>::vtbl, CObject::vtbl>()},
 		}},
+		{"CTypedPtrList<CPtrList,CAreaUserNote*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAreaUserNote*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CAreaUserNote*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAreaUserNote*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,CAIAction*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIAction*>, CObject>()},
 		}},
@@ -319,6 +325,12 @@ void registerBaseclasses() {
 		}},
 		{"CTypedPtrList<CPtrList,CSavedGameStoredLocation*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSavedGameStoredLocation*>::vtbl, CObject::vtbl>()},
+		}},
+		{"CTypedPtrList<CPtrList,CAOEEntry*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CAOEEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,long>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,long>, CObject>()},
@@ -415,18 +427,6 @@ void registerBaseclasses() {
 		}},
 		{"CTypedPtrList<CPtrList,CMoveListEntry*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CMoveListEntry*>::vtbl, CObject::vtbl>()},
-		}},
-		{"CTypedPtrList<CPtrList,CAreaUserNote*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAreaUserNote*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CAreaUserNote*>::vtbl", {
-			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAreaUserNote*>::vtbl, CObject::vtbl>()},
-		}},
-		{"CTypedPtrList<CPtrList,CAOEEntry*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CAOEEntry*>::vtbl", {
-			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,void*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,void*>, CObject>()},

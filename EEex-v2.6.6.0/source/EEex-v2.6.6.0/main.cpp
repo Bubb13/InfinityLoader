@@ -36,6 +36,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("CAICondition::Override_Hold"), getMemberPtr(&CAICondition::Override_Hold));
 	exportPattern(TEXT("CAICondition::Override_TriggerHolds"), getMemberPtr(&CAICondition::Override_TriggerHolds));
 	exportPattern(TEXT("CChitin::Override_SynchronousUpdate"), getMemberPtr(&CChitin::Override_SynchronousUpdate));
+	exportPattern(TEXT("CChitin::Override_Update"), getMemberPtr(&CChitin::Override_Update));
 	exportPattern(TEXT("CGameAIBase::Override_ApplyTriggers"), getMemberPtr(&CGameAIBase::Override_ApplyTriggers));
 	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), getMemberPtr(&CGameAIBase::Override_SetTrigger));
 	exportPattern(TEXT("CGameArea::Override_AddClairvoyanceObject(CGameSprite*,CPoint,int)"), getMemberPtr(&CGameArea::Override_AddClairvoyanceObject));
@@ -44,7 +45,15 @@ static void exportPatterns() {
 	exportPattern(TEXT("CGameSprite::Override_CheckIfVisible"), getMemberPtr(&CGameSprite::Override_CheckIfVisible));
 	exportPattern(TEXT("CGameSprite::Override_Damage"), getMemberPtr(&CGameSprite::Override_Damage));
 	exportPattern(TEXT("CGameSprite::Override_SetVisualRange"), getMemberPtr(&CGameSprite::Override_SetVisualRange));
+	exportPattern(TEXT("CInfinity::Override_AdjustViewPosition"), getMemberPtr(&CInfinity::Override_AdjustViewPosition));
+	exportPattern(TEXT("CInfinity::Override_FitViewPosition"), getMemberPtr(&CInfinity::Override_FitViewPosition));
+	exportPattern(TEXT("CInfinity::Override_SetScrollDest"), getMemberPtr(&CInfinity::Override_SetScrollDest));
+	exportPattern(TEXT("CInfinity::Override_Scroll"), getMemberPtr(&CInfinity::Override_Scroll));
 	exportPattern(TEXT("CMessageSetLastObject::Override_Run"), getMemberPtr(&CMessageSetLastObject::Override_Run));
+	exportPattern(TEXT("CScreenMap::Override_CenterViewPort"), getMemberPtr(&CScreenMap::Override_CenterViewPort));
+	exportPattern(TEXT("CScreenWorld::Override_ResetZoom"), getMemberPtr(&CScreenWorld::Override_ResetZoom));
+	exportPattern(TEXT("CScreenWorld::Override_StartScroll"), getMemberPtr(&CScreenWorld::Override_StartScroll));
+	exportPattern(TEXT("CScreenWorld::Override_ZoomToMap"), getMemberPtr(&CScreenWorld::Override_ZoomToMap));
 	exportPattern(TEXT("CVisibilityMap::Override_AddCharacter"), getMemberPtr(&CVisibilityMap::Override_AddCharacter));
 	exportPattern(TEXT("CVisibilityMap::Override_IsCharacterIdOnMap"), getMemberPtr(&CVisibilityMap::Override_IsCharacterIdOnMap));
 	exportPattern(TEXT("CVisibilityMap::Override_RemoveCharacter"), getMemberPtr(&CVisibilityMap::Override_RemoveCharacter));
@@ -158,6 +167,7 @@ static void exportPatterns() {
 	// Fix //
 	/////////
 
+	exportPattern(TEXT("EEex::Fix_Hook_HandleMiddleMouseDrag"), EEex::Fix_Hook_HandleMiddleMouseDrag);
 	exportPattern(TEXT("EEex::Fix_Hook_OnBeforeUIKillCapture"), EEex::Fix_Hook_OnBeforeUIKillCapture);
 	exportPattern(TEXT("EEex::Fix_Hook_OnUIItemCheckRenderScrollbar"), EEex::Fix_Hook_OnUIItemCheckRenderScrollbar);
 	exportPattern(TEXT("EEex::Fix_Hook_ShouldProcessEffectListSkipRolls"), EEex::Fix_Hook_ShouldProcessEffectListSkipRolls);
@@ -170,6 +180,14 @@ static void exportPatterns() {
 
 	exportPattern(TEXT("EEex::Trigger_Hook_OnScriptLevelHit"), EEex::Trigger_Hook_OnScriptLevelHit);
 	exportPattern(TEXT("EEex::Trigger_Hook_OnConditionResponseHit"), EEex::Trigger_Hook_OnConditionResponseHit);
+
+	///////////////
+	// Uncap FPS //
+	///////////////
+
+	exportPattern(TEXT("EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted"), EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted);
+	exportPattern(TEXT("EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated"), EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated);
+	exportPattern(TEXT("EEex::UncapFPS_Hook_HandleAreaAutoZoom"), EEex::UncapFPS_Hook_HandleAreaAutoZoom);
 
 	////////////////////
 	// Visibility Map //

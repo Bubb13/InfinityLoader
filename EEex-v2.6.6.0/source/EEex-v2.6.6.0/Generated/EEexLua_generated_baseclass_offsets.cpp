@@ -110,6 +110,9 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CAIId*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIId*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CAreaUserNote*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAreaUserNote*>, CObject>()},
+		}},
 		{"CTypedPtrList<CPtrList,CAIAction*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAIAction*>, CObject>()},
 		}},
@@ -154,6 +157,9 @@ void registerBaseclasses() {
 		}},
 		{"CTypedPtrList<CPtrList,CSavedGameStoredLocation*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSavedGameStoredLocation*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CAOEEntry*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>, CObject>()},
 		}},
 		{"CTypedPtrList<CPtrList,long>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,long>, CObject>()},
@@ -202,12 +208,6 @@ void registerBaseclasses() {
 		}},
 		{"CTypedPtrList<CPtrList,CMoveListEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CMoveListEntry*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CAreaUserNote*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAreaUserNote*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CAOEEntry*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>, CObject>()},
 		}},
 		{"CTypedPtrList<CPtrList,void*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,void*>, CObject>()},

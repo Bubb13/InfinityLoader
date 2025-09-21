@@ -57,6 +57,42 @@ static int tolua_get_EEex_reference_StutterDetector_Enabled(lua_State* L)
 	return 1;
 }
 
+static int tolua_get_EEex_UncapFPS_Enabled(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::UncapFPS_Enabled);
+	return 1;
+}
+
+static int tolua_set_EEex_UncapFPS_Enabled(lua_State* L)
+{
+	EEex::UncapFPS_Enabled = tolua_setter_toboolean(L, "UncapFPS_Enabled");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_UncapFPS_Enabled(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::UncapFPS_Enabled, "Primitive<bool>");
+	return 1;
+}
+
+static int tolua_get_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::UncapFPS_RemoveMiddleMouseScrollMultiplier);
+	return 1;
+}
+
+static int tolua_set_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier(lua_State* L)
+{
+	EEex::UncapFPS_RemoveMiddleMouseScrollMultiplier = tolua_setter_toboolean(L, "UncapFPS_RemoveMiddleMouseScrollMultiplier");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_UncapFPS_RemoveMiddleMouseScrollMultiplier(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::UncapFPS_RemoveMiddleMouseScrollMultiplier, "Primitive<bool>");
+	return 1;
+}
+
 static int tolua_function_EEex_DeepCopy(lua_State* L)
 {
 	EEex::DeepCopy(L);
@@ -267,6 +303,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CMapStringToString");
 	tolua_usertype(L, "CVoice");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CAIId*>");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,CAreaUserNote*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CAIAction*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CAITrigger*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CGameTimer*>");
@@ -282,6 +319,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CSearchRequest*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,SAreaFileWrapper*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CSavedGameStoredLocation*>");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,CAOEEntry*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,long>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,__POSITION*>");
@@ -298,8 +336,6 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CMusicPosition*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CGameJournalEntry*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CMoveListEntry*>");
-	tolua_usertype(L, "CTypedPtrList<CPtrList,CAreaUserNote*>");
-	tolua_usertype(L, "CTypedPtrList<CPtrList,CAOEEntry*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,void*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CGameEffectUsability*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CStoreFileItem*>");
@@ -606,6 +642,10 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_reference_Projectile_LuaHook_GlobalMutators_Enabled, NULL);
 		tolua_variable(L, "StutterDetector_Enabled", tolua_get_EEex_StutterDetector_Enabled, tolua_set_EEex_StutterDetector_Enabled);
 		tolua_variable(L, "reference_StutterDetector_Enabled", tolua_get_EEex_reference_StutterDetector_Enabled, NULL);
+		tolua_variable(L, "UncapFPS_Enabled", tolua_get_EEex_UncapFPS_Enabled, tolua_set_EEex_UncapFPS_Enabled);
+		tolua_variable(L, "reference_UncapFPS_Enabled", tolua_get_EEex_reference_UncapFPS_Enabled, NULL);
+		tolua_variable(L, "UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier, tolua_set_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier);
+		tolua_variable(L, "reference_UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_reference_UncapFPS_RemoveMiddleMouseScrollMultiplier, NULL);
 		tolua_function(L, "DeepCopy", &tolua_function_EEex_DeepCopy);
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
 		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
@@ -768,6 +808,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CAIId*>", "CTypedPtrList<CPtrList,CAIId*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CAIId*>");
 	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,CAreaUserNote*>", "CTypedPtrList<CPtrList,CAreaUserNote*>", {"CObject"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CAreaUserNote*>");
+	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CAIAction*>", "CTypedPtrList<CPtrList,CAIAction*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CAIAction*>");
 	tolua_endmodule(L);
@@ -812,6 +855,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CSavedGameStoredLocation*>", "CTypedPtrList<CPtrList,CSavedGameStoredLocation*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CSavedGameStoredLocation*>");
+	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,CAOEEntry*>", "CTypedPtrList<CPtrList,CAOEEntry*>", {"CObject"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CAOEEntry*>");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,long>", "CTypedPtrList<CPtrList,long>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,long>");
@@ -860,12 +906,6 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CMoveListEntry*>", "CTypedPtrList<CPtrList,CMoveListEntry*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CMoveListEntry*>");
-	tolua_endmodule(L);
-	tolua_cclass(L, "CTypedPtrList<CPtrList,CAreaUserNote*>", "CTypedPtrList<CPtrList,CAreaUserNote*>", {"CObject"}, NULL);
-	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CAreaUserNote*>");
-	tolua_endmodule(L);
-	tolua_cclass(L, "CTypedPtrList<CPtrList,CAOEEntry*>", "CTypedPtrList<CPtrList,CAOEEntry*>", {"CObject"}, NULL);
-	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CAOEEntry*>");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,void*>", "CTypedPtrList<CPtrList,void*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,void*>");

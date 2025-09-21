@@ -102,6 +102,7 @@ struct CDerivedStats;
 struct CGameAIBase;
 struct CGameAnimationType;
 struct CGameArea;
+struct CGameAreaNotes;
 struct CGameContainer;
 struct CGameDialogReply;
 struct CGameDoor;
@@ -116,8 +117,10 @@ struct CImmunitiesAIType;
 struct CImmunitiesItemEquip;
 struct CImmunitySpell;
 struct CInfButtonArray;
+struct CInfCursor;
 struct CInfGame;
 struct CInfTileSet;
+struct CInfinity;
 struct CItem;
 struct CMemINISection;
 struct CMemINIValue;
@@ -125,6 +128,7 @@ struct CMessage;
 struct CMessageHandler;
 struct CMessageSetLastObject;
 struct CMoveListEntry;
+struct CNetwork;
 struct CObList;
 struct CObjectMarker;
 struct CPathNode;
@@ -140,6 +144,7 @@ struct CResTileSet;
 struct CRuleTables;
 struct CSaveGameSlot;
 struct CSavedGamePartyCreature;
+struct CScreenMap;
 struct CScreenStore;
 struct CScreenWorld;
 struct CSearchBitmap;
@@ -598,6 +603,23 @@ enum class SDL_SYSWM_TYPE : __int32
 	SDL_SYSWM_MIR = 7,
 	SDL_SYSWM_WINRT = 8,
 	SDL_SYSWM_ANDROID = 9,
+};
+
+enum class SDL_Keymod : __int32
+{
+	KMOD_NONE = 0,
+	KMOD_LSHIFT = 1,
+	KMOD_RSHIFT = 2,
+	KMOD_LCTRL = 64,
+	KMOD_RCTRL = 128,
+	KMOD_LALT = 256,
+	KMOD_RALT = 512,
+	KMOD_LGUI = 1024,
+	KMOD_RGUI = 2048,
+	KMOD_NUM = 4096,
+	KMOD_CAPS = 8192,
+	KMOD_MODE = 16384,
+	KMOD_RESERVED = 32768,
 };
 
 enum class SDL_Keycode : __int32
@@ -4501,6 +4523,8 @@ namespace EEex
 	extern bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	extern bool Projectile_LuaHook_GlobalMutators_Enabled;
 	extern bool StutterDetector_Enabled;
+	extern bool UncapFPS_Enabled;
+	extern bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
 
 	void DeepCopy(lua_State* L);
 	void DrawSlicedRect(lua_State* L);
@@ -7736,44 +7760,11 @@ union SDL_Event
 	SDL_Event() = delete;
 };
 
-typedef uiMenu* (*type_findMenu)(const char* name, int panel, int state);
-extern type_findMenu p_findMenu;
-
-typedef void (*type_saveMenuStack)();
-extern type_saveMenuStack p_saveMenuStack;
-
-typedef void (*type_uiLoadMenu)(CResText* menuRes);
-extern type_uiLoadMenu p_uiLoadMenu;
-
 typedef void** (*type_bsearch)(void* key, void* base, size_t num, size_t width, void* func);
 extern type_bsearch p_bsearch;
 
-typedef void (*type_restoreMenuStack)();
-extern type_restoreMenuStack p_restoreMenuStack;
-
 typedef int (*type_CompareCResByTypeThenName)(const CRes* a, const CRes* b);
 extern type_CompareCResByTypeThenName p_CompareCResByTypeThenName;
-
-typedef int (*type_SDL_GetKeyFromName)(const char* name);
-extern type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
-
-typedef int (*type_rand)();
-extern type_rand p_rand;
-
-typedef uint (*type_strtoul)(const char* str, char** endptr, int base);
-extern type_strtoul p_strtoul;
-
-typedef int (*type_l_log_print)(lua_State* L);
-extern type_l_log_print p_l_log_print;
-
-typedef int (*type_panic)(lua_State* L);
-extern type_panic p_panic;
-
-typedef int (*type_Chitin_GetSectionCallback)(lua_State* L);
-extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
-
-typedef _iobuf* (__cdecl *type_OpenIniFile)(const char* path, const char* mode);
-extern type_OpenIniFile p_OpenIniFile;
 
 typedef void (__cdecl *type_dimmDump)(CRes* pRes);
 extern type_dimmDump p_dimmDump;
@@ -7784,29 +7775,74 @@ extern type_dimmGetResObject p_dimmGetResObject;
 typedef void (__cdecl *type_dimmServiceFromMemory)(CRes* pRes, void* pData, int nSize, bool useTempOverride, bool makeCopy);
 extern type_dimmServiceFromMemory p_dimmServiceFromMemory;
 
-typedef void (*type_DrawPushState)();
-extern type_DrawPushState p_DrawPushState;
+typedef uiMenu* (*type_findMenu)(const char* name, int panel, int state);
+extern type_findMenu p_findMenu;
 
-typedef void (*type_DrawBindTexture)(int texture);
-extern type_DrawBindTexture p_DrawBindTexture;
+typedef int (*type_rand)();
+extern type_rand p_rand;
 
-typedef void (*type_DrawClear)();
-extern type_DrawClear p_DrawClear;
+typedef void (*type_restoreMenuStack)();
+extern type_restoreMenuStack p_restoreMenuStack;
 
-typedef void (*type_DrawEnable)(DrawFeature f);
-extern type_DrawEnable p_DrawEnable;
+typedef void (*type_saveMenuStack)();
+extern type_saveMenuStack p_saveMenuStack;
 
-typedef void (*type_DrawBlendFunc)(DrawBlend src, DrawBlend dst);
-extern type_DrawBlendFunc p_DrawBlendFunc;
+typedef int (*type_SDL_GetKeyFromName)(const char* name);
+extern type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
 
-typedef uint (*type_DrawColor)(uint color);
-extern type_DrawColor p_DrawColor;
+typedef char* (__cdecl *type_SDL_GetKeyName)(int key);
+extern type_SDL_GetKeyName p_SDL_GetKeyName;
+
+typedef uint (*type_SDL_GetWindowFlags)(SDL_Window* window);
+extern type_SDL_GetWindowFlags p_SDL_GetWindowFlags;
+
+typedef SDL_Window* (*type_SDL_GetWindowFromID)(uint id);
+extern type_SDL_GetWindowFromID p_SDL_GetWindowFromID;
+
+typedef void (*type_stopEditCapture)();
+extern type_stopEditCapture p_stopEditCapture;
+
+typedef uint (*type_strtoul)(const char* str, char** endptr, int base);
+extern type_strtoul p_strtoul;
+
+typedef bool (__cdecl *type_uiIsHidden)();
+extern type_uiIsHidden p_uiIsHidden;
+
+typedef bool (__cdecl *type_uiIsMenuOnStack)(CString* sMenu);
+extern type_uiIsMenuOnStack p_uiIsMenuOnStack;
+
+typedef void (*type_uiKillCapture)();
+extern type_uiKillCapture p_uiKillCapture;
+
+typedef void (*type_uiLoadMenu)(CResText* menuRes);
+extern type_uiLoadMenu p_uiLoadMenu;
+
+typedef int (*type_Chitin_GetSectionCallback)(lua_State* L);
+extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
 
 typedef uint (*type_DrawAlpha)(uint alpha);
 extern type_DrawAlpha p_DrawAlpha;
 
+typedef void (*type_DrawBindTexture)(int texture);
+extern type_DrawBindTexture p_DrawBindTexture;
+
+typedef void (*type_DrawBlendFunc)(DrawBlend src, DrawBlend dst);
+extern type_DrawBlendFunc p_DrawBlendFunc;
+
+typedef void (*type_DrawClear)();
+extern type_DrawClear p_DrawClear;
+
+typedef uint (*type_DrawColor)(uint color);
+extern type_DrawColor p_DrawColor;
+
+typedef void (*type_DrawEnable)(DrawFeature f);
+extern type_DrawEnable p_DrawEnable;
+
 typedef void (*type_DrawPopState)();
 extern type_DrawPopState p_DrawPopState;
+
+typedef void (*type_DrawPushState)();
+extern type_DrawPushState p_DrawPushState;
 
 typedef void (*type_drawSlice)(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool unused);
 extern type_drawSlice p_drawSlice;
@@ -7820,26 +7856,29 @@ extern type_DrawTransformToScreen p_DrawTransformToScreen;
 typedef float (__cdecl *type_DrawTransformToScreenH)(float h);
 extern type_DrawTransformToScreenH p_DrawTransformToScreenH;
 
-typedef int (*type_uiVariantAsInt)(uiVariant* var);
-extern type_uiVariantAsInt p_uiVariantAsInt;
+typedef void (*type_fadeSounds)();
+extern type_fadeSounds p_fadeSounds;
 
-typedef void (*type_uiDrawSlicedRect)(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
-extern type_uiDrawSlicedRect p_uiDrawSlicedRect;
+typedef size_t (*type_fwrite)(const void* buffer, size_t size, size_t count, FILE* stream);
+extern type_fwrite p_fwrite;
 
-typedef int (*type_uiExecLuaInt)(int id);
-extern type_uiExecLuaInt p_uiExecLuaInt;
+typedef int (*type_l_log_print)(lua_State* L);
+extern type_l_log_print p_l_log_print;
 
-typedef char* (__cdecl *type_SDL_GetKeyName)(int key);
-extern type_SDL_GetKeyName p_SDL_GetKeyName;
+typedef _iobuf* (__cdecl *type_OpenIniFile)(const char* path, const char* mode);
+extern type_OpenIniFile p_OpenIniFile;
+
+typedef int (*type_panic)(lua_State* L);
+extern type_panic p_panic;
+
+typedef void (*type_SDL_Delay)(uint ms);
+extern type_SDL_Delay p_SDL_Delay;
+
+typedef SDL_Keymod (*type_SDL_GetModState)();
+extern type_SDL_GetModState p_SDL_GetModState;
 
 typedef uint (*type_SDL_GetTicks)();
 extern type_SDL_GetTicks p_SDL_GetTicks;
-
-typedef SDL_Window* (*type_SDL_GetWindowFromID)(uint id);
-extern type_SDL_GetWindowFromID p_SDL_GetWindowFromID;
-
-typedef uint (*type_SDL_GetWindowFlags)(SDL_Window* window);
-extern type_SDL_GetWindowFlags p_SDL_GetWindowFlags;
 
 typedef void (__cdecl *type_SDL_Log)(const char* fmt, ...);
 extern type_SDL_Log p_SDL_Log;
@@ -7847,11 +7886,17 @@ extern type_SDL_Log p_SDL_Log;
 typedef int (__cdecl *type_SDL_ShowSimpleMessageBox)(uint flags, const char* title, const char* message, SDL_Window* window);
 extern type_SDL_ShowSimpleMessageBox p_SDL_ShowSimpleMessageBox;
 
-typedef void (*type_stopEditCapture)();
-extern type_stopEditCapture p_stopEditCapture;
+typedef void (*type_SearchThreadMain)();
+extern type_SearchThreadMain p_SearchThreadMain;
 
-typedef void (*type_uiKillCapture)();
-extern type_uiKillCapture p_uiKillCapture;
+typedef void (*type_uiDrawSlicedRect)(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
+extern type_uiDrawSlicedRect p_uiDrawSlicedRect;
+
+typedef int (*type_uiExecLuaInt)(int id);
+extern type_uiExecLuaInt p_uiExecLuaInt;
+
+typedef int (*type_uiVariantAsInt)(uiVariant* var);
+extern type_uiVariantAsInt p_uiVariantAsInt;
 
 typedef char* (__cdecl *type_va)(const char* format, ...);
 extern type_va p_va;
@@ -7864,22 +7909,22 @@ extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 extern Array<keyword,124>* p_g_keywords;
 extern lua_State** p_g_lua;
 extern CBaldurChitin** p_g_pBaldurChitin;
-extern Array<char,16>* p_lang;
 extern int* p_menuLength;
 extern Array<uiMenu,256>* p_menus;
 extern CResText** p_menuSrc;
 extern Array<uiMenu*,256>* p_menuStack;
 extern int* p_nextStackMenuIdx;
 extern int* p_numMenus;
-extern int* p_optionsHaveChanged;
 extern CTypedPtrArray<CPtrArray,CRes*>* p_resources;
-extern Array<slicedRect,6>* p_slicedRects;
 extern ConstArray<ushort,1765>* p_yy_action;
 extern ConstArray<ushort,329>* p_yy_default;
 extern ConstArray<byte,1765>* p_yy_lookahead;
 extern ConstArray<short,122>* p_yy_reduce_ofst;
 extern ConstArray<short,174>* p_yy_shift_ofst;
 extern ConstArray<_D98D369160A0DDA2B95F5D0F301081BB,157>* p_yyRuleInfo;
+extern Array<char,16>* p_lang;
+extern int* p_optionsHaveChanged;
+extern Array<slicedRect,6>* p_slicedRects;
 
 struct CVisualEffectBase
 {
@@ -9070,6 +9115,8 @@ struct CScreenMap : CBaldurEngine
 	CRect m_rMap;
 
 	CScreenMap() = delete;
+
+	void Override_CenterViewPort(CPoint* ptPoint);
 };
 
 struct CScreenMultiPlayer : CBaldurEngine
@@ -9260,6 +9307,14 @@ struct CInfCursor
 	unsigned __int8 bAnimatingCustom;
 
 	CInfCursor() = delete;
+
+	typedef void (__thiscall *type_SetCursor)(CInfCursor* pThis, int nNewCursor, byte bForce, int nPointerNumber);
+	static type_SetCursor p_SetCursor;
+
+	void SetCursor(int nNewCursor, byte bForce, int nPointerNumber)
+	{
+		p_SetCursor(this, nNewCursor, bForce, nPointerNumber);
+	}
 };
 
 struct CGameFile : CResHelper<CResGame,1013>
@@ -10090,6 +10145,10 @@ struct CScreenWorld : CBaldurEngine
 	{
 		return p_TogglePauseGame(this, visualPause, bSendMessage, idPlayerPause, bLogPause, bRequireHostUnpause);
 	}
+
+	void Override_ResetZoom();
+	void Override_StartScroll(CPoint dest, short speed);
+	void Override_ZoomToMap(bool bOverwriteOriginal);
 };
 
 struct CScreenWizSpell : CBaldurEngine
@@ -10847,6 +10906,14 @@ struct CNetwork
 	Array<unsigned int,6> m_lastMessageReceivedTime;
 
 	CNetwork() = delete;
+
+	typedef int (__thiscall *type_ThreadLoop)(CNetwork* pThis);
+	static type_ThreadLoop p_ThreadLoop;
+
+	int ThreadLoop()
+	{
+		return p_ThreadLoop(this);
+	}
 };
 
 struct CChitin
@@ -11026,6 +11093,7 @@ struct CChitin
 	}
 
 	void Override_SynchronousUpdate();
+	void Override_Update();
 
 	virtual void virtual_SynchronousUpdate()
 	{
@@ -11308,6 +11376,7 @@ struct CItem : CResHelper<CResItem,1005>
 
 struct CInfinity
 {
+	static float* p_MAXZOOM_OUT;
 	Array<CInfTileSet*,5> pTileSets;
 	CResWED* pResWED;
 	CVRamPool* pVRPool;
@@ -11400,6 +11469,59 @@ struct CInfinity
 	int m_bZooming;
 
 	CInfinity() = delete;
+
+	typedef void (__thiscall *type_FitViewPosition)(CInfinity* pThis, int* x, int* y, const CRect* r);
+	static type_FitViewPosition p_FitViewPosition;
+
+	typedef CPoint* (__thiscall *type_ScreenToViewport)(CInfinity* pThis, CPoint* pResult, CPoint* pScreen);
+	static type_ScreenToViewport p_ScreenToViewport;
+
+	typedef CPoint* (__thiscall *type_ScreenToWorld)(CInfinity* pThis, CPoint* pResult, CPoint* pScreen);
+	static type_ScreenToWorld p_ScreenToWorld;
+
+	typedef void (__thiscall *type_SetScrollDest)(CInfinity* pThis, CPoint* ptDest);
+	static type_SetScrollDest p_SetScrollDest;
+
+	typedef int (__thiscall *type_SetViewPosition)(CInfinity* pThis, int x, int y, byte bSetExactScale);
+	static type_SetViewPosition p_SetViewPosition;
+
+	typedef void (__thiscall *type_SetZoom)(CInfinity* pThis, float fZoom);
+	static type_SetZoom p_SetZoom;
+
+	void FitViewPosition(int* x, int* y, const CRect* r)
+	{
+		p_FitViewPosition(this, x, y, r);
+	}
+
+	CPoint* ScreenToViewport(CPoint* pResult, CPoint* pScreen)
+	{
+		return p_ScreenToViewport(this, pResult, pScreen);
+	}
+
+	CPoint* ScreenToWorld(CPoint* pResult, CPoint* pScreen)
+	{
+		return p_ScreenToWorld(this, pResult, pScreen);
+	}
+
+	void SetScrollDest(CPoint* ptDest)
+	{
+		p_SetScrollDest(this, ptDest);
+	}
+
+	int SetViewPosition(int x, int y, byte bSetExactScale)
+	{
+		return p_SetViewPosition(this, x, y, bSetExactScale);
+	}
+
+	void SetZoom(float fZoom)
+	{
+		p_SetZoom(this, fZoom);
+	}
+
+	void Override_AdjustViewPosition(byte nScrollState);
+	void Override_FitViewPosition(int* pX, int* pY, CRect* pViewPort);
+	void Override_SetScrollDest(CPoint* ptDest);
+	void Override_Scroll(CPoint ptDest, short speed);
 };
 
 struct CInfTileSet
@@ -11754,6 +11876,9 @@ struct CInfGame
 	typedef void (__thiscall *type_GetFamiliar)(CInfGame* pThis, byte nLevel, byte nAlignment, CString* pResRefOut);
 	static type_GetFamiliar p_GetFamiliar;
 
+	typedef uint (__thiscall *type_GetScrollSpeed)(CInfGame* pThis);
+	static type_GetScrollSpeed p_GetScrollSpeed;
+
 	typedef void (__thiscall *type_OnPortraitLDblClick)(CInfGame* pThis, int index);
 	static type_OnPortraitLDblClick p_OnPortraitLDblClick;
 
@@ -11780,6 +11905,11 @@ struct CInfGame
 	void GetFamiliar(byte nLevel, byte nAlignment, CString* pResRefOut)
 	{
 		p_GetFamiliar(this, nLevel, nAlignment, pResRefOut);
+	}
+
+	uint GetScrollSpeed()
+	{
+		return p_GetScrollSpeed(this);
 	}
 
 	void OnPortraitLDblClick(int index)
@@ -12978,6 +13108,14 @@ struct CGameAreaNotes
 	unsigned __int8 m_nCurrentIcon;
 
 	CGameAreaNotes() = delete;
+
+	typedef void (__thiscall *type_UpdateButtonPositions)(CGameAreaNotes* pThis);
+	static type_UpdateButtonPositions p_UpdateButtonPositions;
+
+	void UpdateButtonPositions()
+	{
+		p_UpdateButtonPositions(this);
+	}
 };
 
 struct CAreaSoundsAndMusic

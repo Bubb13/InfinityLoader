@@ -1,75 +1,4 @@
 
-//////////
-// EEex //
-//////////
-
-enum EEex_MatchObjectFlags : __int32
-{
-	IGNORE_LOS           = 0x00000001,
-	MATCH_NON_SPRITES    = 0x00000002,
-	IGNORE_INVISIBLE     = 0x00000004,
-	MATCH_INVISIBLE      = 0x00000008,
-	MATCH_SLEEPING       = 0x00000010,
-	MATCH_DEAD           = 0x00000020,
-	MATCH_BACKLIST       = 0x00000040,
-	PRIORITIZE_BACKLIST  = 0x00000080,
-	MATCH_ONLY_BACKLIST  = 0x00000100,
-	FARTHEST             = 0x00000200,
-};
-
-namespace EEex
-{
-	///////////////
-	// Non-Bound //
-	///////////////
-
-	// Globals
-	nobinding bool bInTrackedResponse;
-	nobinding bool bNoUUID;
-	nobinding bool bStripUUID;
-	nobinding byte CGameSprite_Hit_Roll;
-
-	///////////
-	// Bound //
-	///////////
-
-	// Globals
-	bool Opcode_LuaHook_AfterListsResolved_Enabled;
-	bool Projectile_LuaHook_GlobalMutators_Enabled;
-	bool StutterDetector_Enabled;
-
-	// Functions
-	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
-	$external_implementation $pass_lua_state void DrawSlicedRect();
-	$external_implementation $pass_lua_state void DrawSlicedRectNum();
-	$external_implementation $pass_lua_state void DestroyAllTemplates(primitive const char* menuName);
-	$external_implementation $pass_lua_state void ForceScrollbarRenderForItemName();
-	$external_implementation primitive const char* FormatPointerAsEngine(uintptr_t ptr);
-	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
-	$external_implementation $custom_return_1 GetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* def);
-	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
-	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
-	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
-	$external_implementation void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
-	$external_implementation $pass_lua_state uiItem* InjectTemplateInstance(primitive const char* menuName, primitive const char* templateName, int instanceId, int x, int y);
-	$external_implementation bool IsDefaultAttackCursor();
-	$external_implementation bool IsMarshallingCopy();
-	$external_implementation bool IsPlayerScript(CAIScript* pScript);
-	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
-	$external_implementation $pass_lua_state void RegisterSlicedRect();
-	$external_implementation void SetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* value);
-	$external_implementation void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
-	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
-};
-
-struct CGameSprite : CGameAIBase
-{
-	$binding_name(getUUID) $external_implementation uint64_t GetUUID();
-	$nobinding $external_implementation void Override_CheckIfVisible();
-	$nobinding $external_implementation CGameEffectDamage* Override_Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
-	$nobinding $external_implementation short Override_SetVisualRange(short newVisualRange);
-};
-
 struct CAICondition
 {
 	$nobinding $external_implementation int Override_Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
@@ -79,6 +8,7 @@ struct CAICondition
 struct CChitin
 {
 	$nobinding $external_implementation void Override_SynchronousUpdate();
+	$nobinding $external_implementation void Override_Update();
 };
 
 struct CGameAIBase : CGameObject
@@ -102,9 +32,39 @@ struct CGameEffectUsability : CGameEffect
 	$nobinding $external_implementation int Override_CheckUsability(CGameSprite* pSprite);
 };
 
+struct CGameSprite : CGameAIBase
+{
+	$binding_name(getUUID) $external_implementation uint64_t GetUUID();
+
+	$nobinding $external_implementation void Override_CheckIfVisible();
+	$nobinding $external_implementation CGameEffectDamage* Override_Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
+	$nobinding $external_implementation short Override_SetVisualRange(short newVisualRange);
+};
+
+struct CInfinity
+{
+	$nobinding $external_implementation void Override_AdjustViewPosition(byte nScrollState);
+	$nobinding $external_implementation void Override_FitViewPosition(int* pX, int* pY, CRect* pViewPort);
+	$nobinding $external_implementation void Override_SetScrollDest(CPoint* ptDest);
+	$nobinding $external_implementation void Override_Scroll(CPoint ptDest, short speed);
+};
+
 struct CMessageSetLastObject : CMessage
 {
 	$nobinding $external_implementation void Override_Run();
+};
+
+struct CScreenMap : CBaldurEngine
+{
+	$nobinding $external_implementation void Override_CenterViewPort(CPoint* ptPoint);
+	//$nobinding $external_implementation void Override_OnLButtonUp(CPoint cPoint);
+};
+
+struct CScreenWorld : CBaldurEngine
+{
+	$nobinding $external_implementation void Override_ResetZoom();
+	$nobinding $external_implementation void Override_StartScroll(CPoint dest, short speed);
+	$nobinding $external_implementation void Override_ZoomToMap(bool bOverwriteOriginal);
 };
 
 struct CVisibilityMap
@@ -113,6 +73,57 @@ struct CVisibilityMap
 	$nobinding $external_implementation int Override_IsCharacterIdOnMap(int charId);
 	$nobinding $external_implementation void Override_RemoveCharacter(CPoint* ptOldPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bRemoveCharId);
 	$nobinding $external_implementation void Override_UpDate(CPoint* ptOldPos, CPoint* ptNewPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bForceUpdate);
+};
+
+//////////
+// EEex //
+//////////
+
+namespace EEex
+{
+	///////////////
+	// Non-Bound //
+	///////////////
+
+	// Globals
+	nobinding bool bInTrackedResponse;
+	nobinding bool bNoUUID;
+	nobinding bool bStripUUID;
+	nobinding byte CGameSprite_Hit_Roll;
+
+	///////////
+	// Bound //
+	///////////
+
+	// Globals
+	bool Opcode_LuaHook_AfterListsResolved_Enabled;
+	bool Projectile_LuaHook_GlobalMutators_Enabled;
+	bool StutterDetector_Enabled;
+	bool UncapFPS_Enabled;
+	bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
+
+	// Functions
+	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
+	$external_implementation $pass_lua_state void DrawSlicedRect();
+	$external_implementation $pass_lua_state void DrawSlicedRectNum();
+	$external_implementation $pass_lua_state void DestroyAllTemplates(primitive const char* menuName);
+	$external_implementation $pass_lua_state void ForceScrollbarRenderForItemName();
+	$external_implementation primitive const char* FormatPointerAsEngine(uintptr_t ptr);
+	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	$external_implementation $custom_return_1 GetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* def);
+	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
+	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
+	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
+	$external_implementation void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
+	$external_implementation $pass_lua_state uiItem* InjectTemplateInstance(primitive const char* menuName, primitive const char* templateName, int instanceId, int x, int y);
+	$external_implementation bool IsDefaultAttackCursor();
+	$external_implementation bool IsMarshallingCopy();
+	$external_implementation bool IsPlayerScript(CAIScript* pScript);
+	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+	$external_implementation $pass_lua_state void RegisterSlicedRect();
+	$external_implementation void SetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* value);
+	$external_implementation void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
+	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 };
 
 enum EEex::ProjectileType : __int32
@@ -157,8 +168,8 @@ enum EEex_HookIntegrityWatchdogRegister : __int32
 	RSP = 0x20,
 	RSI = 0x40,
 	RDI = 0x80,
-	R8 = 0x100,
-	R9 = 0x200,
+	R8  = 0x100,
+	R9  = 0x200,
 	R10 = 0x400,
 	R11 = 0x800,
 	R12 = 0x10000,
@@ -167,16 +178,30 @@ enum EEex_HookIntegrityWatchdogRegister : __int32
 	R15 = 0x80000,
 };
 
+enum EEex_MatchObjectFlags : __int32
+{
+	IGNORE_LOS           = 0x00000001,
+	MATCH_NON_SPRITES    = 0x00000002,
+	IGNORE_INVISIBLE     = 0x00000004,
+	MATCH_INVISIBLE      = 0x00000008,
+	MATCH_SLEEPING       = 0x00000010,
+	MATCH_DEAD           = 0x00000020,
+	MATCH_BACKLIST       = 0x00000040,
+	PRIORITIZE_BACKLIST  = 0x00000080,
+	MATCH_ONLY_BACKLIST  = 0x00000100,
+	FARTHEST             = 0x00000200,
+};
+
 enum EEex_ScriptingObject : __int32
 {
-	ATTACKER = 0,
-	ORDERED_BY = 1,
-	HITTER = 2,
-	HELP = 3,
-	TRIGGER = 4,
-	SEEN = 5,
-	TALKED_TO = 6,
-	HEARD = 7,
+	ATTACKER    = 0,
+	ORDERED_BY  = 1,
+	HITTER      = 2,
+	HELP        = 3,
+	TRIGGER     = 4,
+	SEEN        = 5,
+	TALKED_TO   = 6,
+	HEARD       = 7,
 	SUMMONED_BY = 8,
-	KILLED = 9,
+	KILLED      = 9,
 };
