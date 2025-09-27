@@ -118,8 +118,9 @@ std::unordered_map<void*, ExInfinityData> exInfinityDataMap{};
 long long nLastScrollTime = 0;
 bool bAutoScrollFirstTick = false;
 long long nLastSyncUpdateTime = 0;
-//long long nLastTPSPrintTime = 0;
-uint nNextFullSyncUpdateTick = 0;
+long long nLastTPSPrintTime = 0;
+long long nNextLightSyncUpdateTick = -1;
+long long nNextFullSyncUpdateTick = 0;
 long long nRemainingScrollTime = 0;
 
 bool bWasWorldActionbarOpen = false;
@@ -650,24 +651,23 @@ void EEex::UncapFPS_Hook_HandleAreaAutoZoom()
 // Overrides //
 ///////////////
 
-void CChitin::Override_Update()
+static void trackSyncUpdateDelta(long long nStartTime)
 {
-	//////////////////////////////
-	// Patch: Keep track of tps //
-	//////////////////////////////
+	const int nSyncUpdateDelta = static_cast<int>(nStartTime - nLastSyncUpdateTime);
+	nLastSyncUpdateTime = nStartTime;
+	averageSyncUpdateDelta.push(nStartTime, nSyncUpdateDelta);
+	averageSyncUpdateDelta.recalculate(nStartTime);
 
-	const long long nCurrentTime = getTime();
-	const int nSyncUpdateDelta = static_cast<int>(nCurrentTime - nLastSyncUpdateTime);
-	nLastSyncUpdateTime = nCurrentTime;
-
-	averageSyncUpdateDelta.push(nCurrentTime, nSyncUpdateDelta);
-	averageSyncUpdateDelta.recalculate(nCurrentTime);
-
-	//if (currentTime - nLastTPSPrintTime >= 1000000)
+	//if (nStartTime - nLastTPSPrintTime >= 1000000)
 	//{
 	//	FPrint("tps: %d\n", 1000000 / averageSyncUpdateDelta.get());
-	//	nLastTPSPrintTime = currentTime;
+	//	nLastTPSPrintTime = nStartTime;
 	//}
+}
+
+void CChitin::Override_Update()
+{
+	const long long nStartTime = getTime();
 
 	//////////////////////////////////////////////////////////////////////
 	// Dump Lua values that were not properly cleaned up from the stack //
@@ -708,8 +708,10 @@ void CChitin::Override_Update()
 
 	// Patch: Run "full ticks" at 30tps like normal, and (if uncapped) run in-between "light" ticks that only render the game
 	// |
-	if (!EEex::UncapFPS_Enabled || p_SDL_GetTicks() >= nNextFullSyncUpdateTick)
+	if (!EEex::UncapFPS_Enabled || nStartTime >= nNextFullSyncUpdateTick)
 	{
+		trackSyncUpdateDelta(nStartTime);
+
 		/////////////////
 		// Search tick //
 		/////////////////
@@ -786,12 +788,12 @@ void CChitin::Override_Update()
 		// Delay loop //
 		////////////////
 
-		const int nTargetMilliseconds = 1000 / *CChitin::p_TIMER_UPDATES_PER_SECOND;
-
 		// Patch: Don't sleep to target 30fps when uncapped
 		// |
 		if (!EEex::UncapFPS_Enabled)
 		{
+			const int nTargetMilliseconds = 1000 / *CChitin::p_TIMER_UPDATES_PER_SECOND;
+
 			if (this->m_nFullFrameTimer < nTargetMilliseconds && !this->m_bManualFrameControl)
 			{
 				p_SDL_Delay(nTargetMilliseconds - this->m_nFullFrameTimer);
@@ -799,7 +801,18 @@ void CChitin::Override_Update()
 		}
 		else
 		{
-			nNextFullSyncUpdateTick = p_SDL_GetTicks() + (nTargetMilliseconds - this->m_nFullFrameTimer);
+			const long long nEndTime = getTime();
+			const long long nTimeTaken = nEndTime - nStartTime;
+
+			const long long nTargetFullMicroseconds = 1000000 / *CChitin::p_TIMER_UPDATES_PER_SECOND - nTimeTaken;
+			nNextFullSyncUpdateTick = nEndTime + nTargetFullMicroseconds;
+
+			// Check reschedule light ticks if they are disabled
+			if (nNextLightSyncUpdateTick == -1)
+			{
+				const int nEffectiveCap = EEex::UncapFPS_FPSLimit - *CChitin::p_TIMER_UPDATES_PER_SECOND;
+				nNextLightSyncUpdateTick = nEffectiveCap > 0 ? nEndTime + 1000000 / nEffectiveCap - nTimeTaken : -1;
+			}
 		}
 
 		/////////////////////
@@ -825,8 +838,10 @@ void CChitin::Override_Update()
 			p_fwrite(buffer, size, 1, this->m_fFrameTimeLog);
 		}
 	}
-	else
+	else if (nNextLightSyncUpdateTick != -1 && nStartTime >= nNextLightSyncUpdateTick)
 	{
+		trackSyncUpdateDelta(nStartTime);
+
 		this->m_displayStale = 1;
 
 		if (this->m_displayStale == 1)
@@ -837,13 +852,28 @@ void CChitin::Override_Update()
 			this->m_bInSyncUpdate = 0;
 			this->m_AIStale = 1;
 		}
+
+		const long long nEndTime = getTime();
+		const long long nTimeTaken = nEndTime - nStartTime;
+
+		const int nEffectiveCap = EEex::UncapFPS_FPSLimit - *CChitin::p_TIMER_UPDATES_PER_SECOND;
+		nNextLightSyncUpdateTick = nEffectiveCap > 0 ? nEndTime + 1000000 / nEffectiveCap - nTimeTaken : -1;
 	}
 
 	// Patch: If uncapped, sleep for a small amount so the main update loop doesn't hog the CPU
 	// |
-	if (EEex::UncapFPS_Enabled)
+	if (EEex::UncapFPS_Enabled && EEex::UncapFPS_BusyWaitThreshold != 0)
 	{
-		p_SDL_Delay(1);
+		const long long nNextTick = nNextLightSyncUpdateTick != -1 && nNextLightSyncUpdateTick < nNextFullSyncUpdateTick
+			? nNextLightSyncUpdateTick
+			: nNextFullSyncUpdateTick;
+
+		const long long nDelayMilliseconds = (nNextTick - getTime()) / 1000;
+
+		if (nDelayMilliseconds >= EEex::UncapFPS_BusyWaitThreshold)
+		{
+			p_SDL_Delay(static_cast<uint>(nDelayMilliseconds - EEex::UncapFPS_BusyWaitThreshold));
+		}
 	}
 }
 

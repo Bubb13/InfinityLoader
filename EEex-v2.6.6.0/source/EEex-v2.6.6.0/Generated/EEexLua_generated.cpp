@@ -57,6 +57,24 @@ static int tolua_get_EEex_reference_StutterDetector_Enabled(lua_State* L)
 	return 1;
 }
 
+static int tolua_get_EEex_UncapFPS_BusyWaitThreshold(lua_State* L)
+{
+	lua_pushinteger(L, (lua_Integer)EEex::UncapFPS_BusyWaitThreshold);
+	return 1;
+}
+
+static int tolua_set_EEex_UncapFPS_BusyWaitThreshold(lua_State* L)
+{
+	EEex::UncapFPS_BusyWaitThreshold = tolua_setter_tointeger<int>(L, "UncapFPS_BusyWaitThreshold");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_UncapFPS_BusyWaitThreshold(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::UncapFPS_BusyWaitThreshold, "Primitive<int>");
+	return 1;
+}
+
 static int tolua_get_EEex_UncapFPS_Enabled(lua_State* L)
 {
 	tolua_pushboolean(L, (bool)EEex::UncapFPS_Enabled);
@@ -72,6 +90,24 @@ static int tolua_set_EEex_UncapFPS_Enabled(lua_State* L)
 static int tolua_get_EEex_reference_UncapFPS_Enabled(lua_State* L)
 {
 	tolua_pushusertype(L, (void*)&EEex::UncapFPS_Enabled, "Primitive<bool>");
+	return 1;
+}
+
+static int tolua_get_EEex_UncapFPS_FPSLimit(lua_State* L)
+{
+	lua_pushinteger(L, (lua_Integer)EEex::UncapFPS_FPSLimit);
+	return 1;
+}
+
+static int tolua_set_EEex_UncapFPS_FPSLimit(lua_State* L)
+{
+	EEex::UncapFPS_FPSLimit = tolua_setter_tointeger<int>(L, "UncapFPS_FPSLimit");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_UncapFPS_FPSLimit(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::UncapFPS_FPSLimit, "Primitive<int>");
 	return 1;
 }
 
@@ -642,8 +678,12 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_reference_Projectile_LuaHook_GlobalMutators_Enabled, NULL);
 		tolua_variable(L, "StutterDetector_Enabled", tolua_get_EEex_StutterDetector_Enabled, tolua_set_EEex_StutterDetector_Enabled);
 		tolua_variable(L, "reference_StutterDetector_Enabled", tolua_get_EEex_reference_StutterDetector_Enabled, NULL);
+		tolua_variable(L, "UncapFPS_BusyWaitThreshold", tolua_get_EEex_UncapFPS_BusyWaitThreshold, tolua_set_EEex_UncapFPS_BusyWaitThreshold);
+		tolua_variable(L, "reference_UncapFPS_BusyWaitThreshold", tolua_get_EEex_reference_UncapFPS_BusyWaitThreshold, NULL);
 		tolua_variable(L, "UncapFPS_Enabled", tolua_get_EEex_UncapFPS_Enabled, tolua_set_EEex_UncapFPS_Enabled);
 		tolua_variable(L, "reference_UncapFPS_Enabled", tolua_get_EEex_reference_UncapFPS_Enabled, NULL);
+		tolua_variable(L, "UncapFPS_FPSLimit", tolua_get_EEex_UncapFPS_FPSLimit, tolua_set_EEex_UncapFPS_FPSLimit);
+		tolua_variable(L, "reference_UncapFPS_FPSLimit", tolua_get_EEex_reference_UncapFPS_FPSLimit, NULL);
 		tolua_variable(L, "UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier, tolua_set_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier);
 		tolua_variable(L, "reference_UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_reference_UncapFPS_RemoveMiddleMouseScrollMultiplier, NULL);
 		tolua_function(L, "DeepCopy", &tolua_function_EEex_DeepCopy);

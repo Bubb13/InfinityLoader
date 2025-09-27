@@ -4523,7 +4523,9 @@ namespace EEex
 	extern bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	extern bool Projectile_LuaHook_GlobalMutators_Enabled;
 	extern bool StutterDetector_Enabled;
+	extern int UncapFPS_BusyWaitThreshold;
 	extern bool UncapFPS_Enabled;
+	extern int UncapFPS_FPSLimit;
 	extern bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
 
 	void DeepCopy(lua_State* L);

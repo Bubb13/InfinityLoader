@@ -99,7 +99,9 @@ namespace EEex
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	bool Projectile_LuaHook_GlobalMutators_Enabled;
 	bool StutterDetector_Enabled;
+	int UncapFPS_BusyWaitThreshold;
 	bool UncapFPS_Enabled;
+	int UncapFPS_FPSLimit;
 	bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
 
 	// Functions
