@@ -1601,6 +1601,11 @@ int EEex::GetExtendedStatValue(CGameSprite* pSprite, int exStatId) {
 	return 0;
 }
 
+int EEex::GetHighestRefreshRate()
+{
+	return getHighestRefreshRate();
+}
+
 bool EEex::IsPlayerScript(CAIScript* pScript) {
 	return exScriptDataMap[pScript].bPlayerScript;
 }

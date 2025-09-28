@@ -4535,6 +4535,7 @@ namespace EEex
 	void ForceScrollbarRenderForItemName(lua_State* L);
 	const char* FormatPointerAsEngine(uintptr_t ptr);
 	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	int GetHighestRefreshRate();
 	void GetINIString(lua_State* L, const char* iniPath, const char* section, const char* key, const char* def);
 	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	CGameSprite* GetSpriteFromUUID(uint64_t uuid);

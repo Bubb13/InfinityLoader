@@ -112,6 +112,7 @@ namespace EEex
 	$external_implementation $pass_lua_state void ForceScrollbarRenderForItemName();
 	$external_implementation primitive const char* FormatPointerAsEngine(uintptr_t ptr);
 	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	$external_implementation int GetHighestRefreshRate();
 	$external_implementation $custom_return_1 GetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* def);
 	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);

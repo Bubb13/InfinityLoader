@@ -173,6 +173,13 @@ static int tolua_function_EEex_GetExtendedStatValue(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_GetHighestRefreshRate(lua_State* L)
+{
+	int returnVal = EEex::GetHighestRefreshRate();
+	lua_pushinteger(L, (lua_Integer)returnVal);
+	return 1;
+}
+
 static int tolua_function_EEex_GetINIString(lua_State* L)
 {
 	EEex::GetINIString(L, tolua_function_tostring(L, 1, "GetINIString"), tolua_function_tostring(L, 2, "GetINIString"), tolua_function_tostring(L, 3, "GetINIString"), tolua_function_tostring(L, 4, "GetINIString"));
@@ -693,6 +700,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "ForceScrollbarRenderForItemName", &tolua_function_EEex_ForceScrollbarRenderForItemName);
 		tolua_function(L, "FormatPointerAsEngine", &tolua_function_EEex_FormatPointerAsEngine);
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
+		tolua_function(L, "GetHighestRefreshRate", &tolua_function_EEex_GetHighestRefreshRate);
 		tolua_function(L, "GetINIString", &tolua_function_EEex_GetINIString);
 		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
 		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
