@@ -72,6 +72,9 @@
     <ClCompile Include="source\EEex-v2.6.6.0\coordinate_util.cpp">
       <Filter>Source Files\EEex-v2.6.6.0</Filter>
     </ClCompile>
+    <ClCompile Include="source\EEex-v2.6.6.0\menu_util.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\EEex-v2.6.6.0\util.hpp">
@@ -99,6 +102,9 @@
       <Filter>Header Files\EEex-v2.6.6.0</Filter>
     </ClInclude>
     <ClInclude Include="headers\EEex-v2.6.6.0\uncap_fps.hpp">
+      <Filter>Header Files\EEex-v2.6.6.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.6.6.0\menu_util.hpp">
       <Filter>Header Files\EEex-v2.6.6.0</Filter>
     </ClInclude>
   </ItemGroup>

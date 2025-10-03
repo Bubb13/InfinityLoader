@@ -11,9 +11,6 @@ void registerBaseclasses() {
 		{"CResWorldMap", {
 			{"CRes", offsetofbase<CResWorldMap, CRes>()},
 		}},
-		{"CResWebm", {
-			{"CRes", offsetofbase<CResWebm, CRes>()},
-		}},
 		{"CResWave", {
 			{"CRes", offsetofbase<CResWave, CRes>()},
 		}},
@@ -82,6 +79,9 @@ void registerBaseclasses() {
 		}},
 		{"CResArea", {
 			{"CRes", offsetofbase<CResArea, CRes>()},
+		}},
+		{"CResWebm", {
+			{"CRes", offsetofbase<CResWebm, CRes>()},
 		}},
 		{"CArray<CRect,CRect*>", {
 			{"CObject", offsetofbase<CArray<CRect,CRect*>, CObject>()},

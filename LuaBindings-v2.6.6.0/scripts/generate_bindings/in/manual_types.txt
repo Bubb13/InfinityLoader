@@ -858,10 +858,21 @@ struct CAIObjectType
 	}
 };
 
+struct CRect : tagRECT
+{
+	$nobinding $constructor Construct(int left, int top, int right, int bottom)
+	{
+		this->left = left;
+		this->top = top;
+		this->right = right;
+		this->bottom = bottom;
+	}
+};
+
 struct CGameAreaNotes
 {
 	void UpdateButtonPositions();
-}
+};
 
 struct CGameEffect : CGameEffectBase
 {
@@ -1467,9 +1478,11 @@ $nobinding void DrawBindTexture(int texture);
 $nobinding void DrawBlendFunc(DrawBlend src, DrawBlend dst);
 $nobinding void DrawClear();
 $nobinding uint DrawColor(uint color);
+$nobinding void DrawDisable(DrawFeature f);
 $nobinding void DrawEnable(DrawFeature f);
 $nobinding void DrawPopState();
 $nobinding void DrawPushState();
+$pattern_name(DrawQuad(CRect*,CRect*)) void DrawQuad(const CRect* rDest, const CRect* rClip);
 $nobinding void drawSlice(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool unused);
 $nobinding void drawSliceSide(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool wide);
 $nobinding void __cdecl DrawTransformToScreen(SDL_Rect* w, SDL_Rect* s);
@@ -1488,6 +1501,8 @@ $nobinding int __cdecl SDL_ShowSimpleMessageBox(uint flags, const char* title, c
 $nobinding void SearchThreadMain();
 $nobinding void uiDrawSlicedRect(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
 $nobinding int uiExecLuaInt(int id);
+$nobinding bool uiPop(const char* name);
+$nobinding bool uiPush(const char* name);
 $nobinding int uiVariantAsInt(uiVariant* var);
 $nobinding char* __cdecl va(const char* format, ...);
 $nobinding int __cdecl wordwrap(letter_t* letters, int maxletters, int* numletters, char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);
@@ -1509,6 +1524,7 @@ uiMenu* menuStack[256];
 int nextStackMenuIdx;
 int numMenus;
 CTypedPtrArray<CPtrArray,CRes*> resources;
+$A92C2F5FC159A4FE55DD6CCAABD58E72 transition;
 const ushort yy_action[1765];
 const ushort yy_default[329];
 const byte yy_lookahead[1765];

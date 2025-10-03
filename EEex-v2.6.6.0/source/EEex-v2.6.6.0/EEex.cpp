@@ -8,6 +8,7 @@
 
 #include "Baldur-v2.6.6.0_generated.h"
 #include "EEex.h"
+#include "menu_util.hpp"
 #include "time_util.hpp"
 #include "uncap_fps.hpp"
 #include "util.hpp"
@@ -4140,14 +4141,6 @@ void EEex::Menu_Hook_FreeUITemplate(uiItem* pItem) {
 	else {
 		p_free(pItem);
 	}
-}
-
-static int getMenuStackTop() {
-	return *p_nextStackMenuIdx > 0 ? *p_nextStackMenuIdx - 1 : 0;
-}
-
-static uiMenu* getStackMenu(int num) {
-	return num > -1 && num < *p_nextStackMenuIdx ? (*p_menuStack)[num] : nullptr;
 }
 
 bool __cdecl EEex::Override_uiEventMenuStack(SDL_Event* pEvent, SDL_Rect* pWindow) {

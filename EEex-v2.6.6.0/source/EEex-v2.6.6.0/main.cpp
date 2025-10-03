@@ -62,6 +62,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Override_CGameEffect_CheckSave"), EEex::Override_CGameEffect_CheckSave);
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
 	//exportPattern(TEXT("EEex::Override_fontWrap"), EEex::Override_fontWrap);
+	exportPattern(TEXT("EEex::Override_Infinity_TransitionMenu"), EEex::Override_Infinity_TransitionMenu);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);
 	exportPattern(TEXT("EEex::Override_uiDoFile"), EEex::Override_uiDoFile);
 	exportPattern(TEXT("EEex::Override_uiEventMenuStack"), EEex::Override_uiEventMenuStack);
@@ -189,6 +190,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted"), EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated"), EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_HandleAreaAutoZoom"), EEex::UncapFPS_Hook_HandleAreaAutoZoom);
+	exportPattern(TEXT("EEex::UncapFPS_Hook_HandleTransitionMenuFade"), EEex::UncapFPS_Hook_HandleTransitionMenuFade);
 
 	////////////////////
 	// Visibility Map //

@@ -50,6 +50,7 @@ namespace EEex {
 	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
 	void __cdecl Override_chWriteInifile();
 	//int __cdecl Override_fontWrap(char* text, SDL_Rect* r, SDL_Rect* rClip, int* horizontalAlignment, int* verticalAlignment, font_t* font, int* pointSize, letter_t* letters, int* nlines, int* nletters, int* pointIndex, bool* scale, adjustmentData_t* adjustData, int indent, bool bUseFontSizeFloor);
+	int __cdecl Override_Infinity_TransitionMenu(lua_State* L);
 	int __cdecl Override_Infinity_WriteINILine(lua_State* L);
 	void __cdecl Override_uiDoFile(char* fileName);
 	bool __cdecl Override_uiEventMenuStack(SDL_Event* pEvent, SDL_Rect* pWindow);
@@ -177,6 +178,7 @@ namespace EEex {
 	void UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted(CGameArea* pArea);
 	void UncapFPS_Hook_OnBeforeWorldScreenDeactivated();
 	void UncapFPS_Hook_HandleAreaAutoZoom();
+	void UncapFPS_Hook_HandleTransitionMenuFade();
 
 	////////////////////
 	// Visibility Map //

@@ -3,6 +3,7 @@
 
 #include "EEex.h"
 #include "coordinate_util.hpp"
+#include "menu_util.hpp"
 #include "time_util.hpp"
 
 //-----------------------------//
@@ -122,6 +123,8 @@ long long nLastTPSPrintTime = 0;
 long long nNextLightSyncUpdateTick = -1;
 long long nNextFullSyncUpdateTick = 0;
 long long nRemainingScrollTime = 0;
+long long nTransitionStartTime = 0;
+long long nTransitionEndTime = 0;
 
 bool bWasWorldActionbarOpen = false;
 bool bWasWorldQuicklootOpen = false;
@@ -645,6 +648,120 @@ void EEex::UncapFPS_Hook_HandleAreaAutoZoom()
 	// Patch: Handle uncapped fps
 	// |
 	pArea->m_cGameAreaNotes.UpdateButtonPositions();
+}
+
+void EEex::UncapFPS_Hook_HandleTransitionMenuFade()
+{
+	p_DrawDisable(DrawFeature::DRAW_TEXTURE_2D);
+	p_DrawEnable(DrawFeature::DRAW_BLEND);
+	p_DrawBlendFunc(DrawBlend::DRAW_SRC_ALPHA, DrawBlend::DRAW_ONE_MINUS_SRC_ALPHA);
+	p_DrawColor(p_transition->opacity << 24);
+
+	const CRect rScreen { 0, 0, *CVidMode::p_SCREENWIDTH, *CVidMode::p_SCREENHEIGHT };
+	p_DrawQuad(&rScreen, &rScreen);
+
+	p_DrawDisable(DrawFeature::DRAW_BLEND);
+
+	// Patch: Handle uncapped fps
+	// |
+	// | if (p_transition->state == 1)
+	// | {
+	// | 	p_transition->opacity += 75;
+	// | }
+	// | else if (p_transition->state == 2)
+	// | {
+	// | 	p_transition->opacity -= 75;
+	// | }
+	// |
+	// | if (p_transition->opacity <= 0)
+	// | {
+	// | 	p_transition->state = 0;
+	// | 	p_transition->opacity = 0;
+	// | 	p_transition->prevMenu = nullptr;
+	// | 	p_transition->newMenu = nullptr;
+	// | }
+	// | else if (p_transition->opacity >= 255)
+	// | {
+	// | 	p_transition->state = 2;
+	// | 	p_transition->opacity = 255;
+	// |
+	// | 	p_uiPop(p_transition->prevMenu->name);
+	// | 	p_uiPush(p_transition->newMenu->name);
+	// | }
+	// |
+	const long long nCurrentTime = getTime();
+	// |
+	if (nCurrentTime >= nTransitionEndTime)
+	{
+		if (p_transition->state == 1)
+		{
+			nTransitionStartTime = nCurrentTime;
+			nTransitionEndTime = nTransitionStartTime + 133333;
+
+			p_transition->state = 2;
+			p_transition->opacity = 255;
+
+			p_uiPop(p_transition->prevMenu->name);
+			p_uiPush(p_transition->newMenu->name);
+		}
+		else if (p_transition->state == 2)
+		{
+			p_transition->state = 0;
+			p_transition->opacity = 0;
+			p_transition->prevMenu = nullptr;
+			p_transition->newMenu = nullptr;
+		}
+	}
+	else
+	{
+		const long long nCurrentProgress = nCurrentTime - nTransitionStartTime;
+		const long long nTotalDistance = nTransitionEndTime - nTransitionStartTime;
+		const float fPercent = static_cast<float>(nCurrentProgress) / nTotalDistance;
+
+		if (p_transition->state == 1)
+		{
+			p_transition->opacity = static_cast<int>(255 * fPercent);
+		}
+		else if (p_transition->state == 2)
+		{
+			p_transition->opacity = 255 - static_cast<int>(255 * fPercent);
+		}
+	}
+}
+
+int __cdecl EEex::Override_Infinity_TransitionMenu(lua_State* L)
+{
+	const char *const sTargetMenuName = lua_tolstring(L, 1, nullptr);
+	const int nTargetPanel = static_cast<int>(lua_tointeger(L, 2));
+	const int nTargetState = static_cast<int>(lua_tointeger(L, 3));
+
+	uiMenu *const pTargetMenu = p_findMenu(sTargetMenuName, nTargetPanel, nTargetState);
+	uiMenu *const pCurrentMenu = getStackMenu(getMenuStackTop());
+
+	if (pTargetMenu != nullptr)
+	{
+		if (pCurrentMenu != nullptr)
+		{
+			// Patch: Handle uncapped fps
+			// |
+			nTransitionStartTime = getTime();
+			nTransitionEndTime = nTransitionStartTime + 133333;
+
+			p_transition->state = 1;
+			p_transition->prevMenu = pCurrentMenu;
+			p_transition->newMenu = pTargetMenu;
+		}
+		else
+		{
+			p_uiPush(pTargetMenu->name);
+		}
+	}
+	else if (pCurrentMenu != nullptr)
+	{
+		p_uiPop(pCurrentMenu->name);
+	}
+
+	return 0;
 }
 
 ///////////////

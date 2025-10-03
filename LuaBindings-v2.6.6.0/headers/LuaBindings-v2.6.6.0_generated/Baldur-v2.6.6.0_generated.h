@@ -132,6 +132,7 @@ struct CPathNode;
 struct CPlex;
 struct CPoint;
 struct CProjectile;
+struct CRect;
 struct CRes;
 template<class RES_CLASS, int RES_ID>
 struct CResHelper;
@@ -184,6 +185,7 @@ struct UI_PanelHeader_st;
 struct WED_LayerHeader_st;
 struct st_tiledef;
 struct uiItem;
+struct uiMenu;
 struct uiVariant;
 
 struct ALCcontext_struct
@@ -3042,6 +3044,16 @@ struct BAMHEADERV2
 	BAMHEADERV2() = delete;
 };
 
+struct _A92C2F5FC159A4FE55DD6CCAABD58E72
+{
+	int state;
+	int opacity;
+	uiMenu* prevMenu;
+	uiMenu* newMenu;
+
+	_A92C2F5FC159A4FE55DD6CCAABD58E72() = delete;
+};
+
 union _9CC80BF4F2F1300360474CD60BF15E00
 {
 	_6B279AA1C7A281E7C97E085DB9F2DFBB __s0;
@@ -3205,31 +3217,6 @@ struct stbtt_fontinfo
 	int indexToLocFormat;
 
 	stbtt_fontinfo() = delete;
-};
-
-struct CRect : tagRECT
-{
-	CRect() = delete;
-};
-
-struct CRainStorm
-{
-	CRainDrop* m_pRainDrops;
-	unsigned __int16 m_nCurrentDensity;
-	CRect m_rOldWorldViewPort;
-	__int16 m_nWindGustCounter;
-	int m_nRainDrops;
-
-	CRainStorm() = delete;
-};
-
-struct CSnowStorm
-{
-	CSnowFlake* m_pSnowFlakes;
-	unsigned __int16 m_nCurrentDensity;
-	CRect m_rOldWorldViewPort;
-
-	CSnowStorm() = delete;
 };
 
 struct CSize : tagSIZE
@@ -4786,32 +4773,6 @@ struct CResWorldMap : CRes
 	CResWorldMap() = delete;
 };
 
-struct CResWebm : CRes
-{
-	struct vtbl : CRes::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	void* m_pCodec;
-	unsigned int m_nFirstFrameTime;
-	unsigned int m_nFrameWaitTime;
-	bool m_bComplete;
-	bool m_bLooping;
-	CRect m_rRender;
-	int m_texture;
-	bool m_bGreyscale;
-	bool m_bTiled;
-	int m_nTransparent;
-	bool m_bUseTone;
-	float m_nDeltaX;
-	float m_nDeltaY;
-	float m_nOffsetX;
-	float m_nOffsetY;
-
-	CResWebm() = delete;
-};
-
 struct CResWave : CRes
 {
 	struct vtbl : CRes::vtbl
@@ -5124,6 +5085,65 @@ struct CResArea : CRes
 	};
 
 	CResArea() = delete;
+};
+
+struct CRect : tagRECT
+{
+	CRect() = delete;
+
+	CRect(int left, int top, int right, int bottom)
+	{
+		this->left = left;
+		this->top = top;
+		this->right = right;
+		this->bottom = bottom;
+	}
+};
+
+struct CRainStorm
+{
+	CRainDrop* m_pRainDrops;
+	unsigned __int16 m_nCurrentDensity;
+	CRect m_rOldWorldViewPort;
+	__int16 m_nWindGustCounter;
+	int m_nRainDrops;
+
+	CRainStorm() = delete;
+};
+
+struct CSnowStorm
+{
+	CSnowFlake* m_pSnowFlakes;
+	unsigned __int16 m_nCurrentDensity;
+	CRect m_rOldWorldViewPort;
+
+	CSnowStorm() = delete;
+};
+
+struct CResWebm : CRes
+{
+	struct vtbl : CRes::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	void* m_pCodec;
+	unsigned int m_nFirstFrameTime;
+	unsigned int m_nFrameWaitTime;
+	bool m_bComplete;
+	bool m_bLooping;
+	CRect m_rRender;
+	int m_texture;
+	bool m_bGreyscale;
+	bool m_bTiled;
+	int m_nTransparent;
+	bool m_bUseTone;
+	float m_nDeltaX;
+	float m_nDeltaY;
+	float m_nOffsetX;
+	float m_nOffsetY;
+
+	CResWebm() = delete;
 };
 
 struct CPoint
@@ -7718,6 +7738,9 @@ extern type_DrawClear p_DrawClear;
 typedef uint (*type_DrawColor)(uint color);
 extern type_DrawColor p_DrawColor;
 
+typedef void (*type_DrawDisable)(DrawFeature f);
+extern type_DrawDisable p_DrawDisable;
+
 typedef void (*type_DrawEnable)(DrawFeature f);
 extern type_DrawEnable p_DrawEnable;
 
@@ -7726,6 +7749,9 @@ extern type_DrawPopState p_DrawPopState;
 
 typedef void (*type_DrawPushState)();
 extern type_DrawPushState p_DrawPushState;
+
+typedef void (*type_DrawQuad)(const CRect* rDest, const CRect* rClip);
+extern type_DrawQuad p_DrawQuad;
 
 typedef void (*type_drawSlice)(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool unused);
 extern type_drawSlice p_drawSlice;
@@ -7781,6 +7807,12 @@ extern type_uiDrawSlicedRect p_uiDrawSlicedRect;
 typedef int (*type_uiExecLuaInt)(int id);
 extern type_uiExecLuaInt p_uiExecLuaInt;
 
+typedef bool (*type_uiPop)(const char* name);
+extern type_uiPop p_uiPop;
+
+typedef bool (*type_uiPush)(const char* name);
+extern type_uiPush p_uiPush;
+
 typedef int (*type_uiVariantAsInt)(uiVariant* var);
 extern type_uiVariantAsInt p_uiVariantAsInt;
 
@@ -7803,6 +7835,7 @@ extern Array<uiMenu*,256>* p_menuStack;
 extern int* p_nextStackMenuIdx;
 extern int* p_numMenus;
 extern CTypedPtrArray<CPtrArray,CRes*>* p_resources;
+extern _A92C2F5FC159A4FE55DD6CCAABD58E72* p_transition;
 extern ConstArray<ushort,1765>* p_yy_action;
 extern ConstArray<ushort,329>* p_yy_default;
 extern ConstArray<byte,1765>* p_yy_lookahead;

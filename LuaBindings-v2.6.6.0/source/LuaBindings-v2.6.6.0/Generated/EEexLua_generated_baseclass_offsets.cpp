@@ -17,9 +17,6 @@ void registerBaseclasses() {
 		{"CRainDrop", {
 			{"CParticle", offsetofbase<CRainDrop, CParticle>()},
 		}},
-		{"CRect", {
-			{"tagRECT", offsetofbase<CRect, tagRECT>()},
-		}},
 		{"CSize", {
 			{"tagSIZE", offsetofbase<CSize, tagSIZE>()},
 		}},
@@ -31,12 +28,6 @@ void registerBaseclasses() {
 		}},
 		{"CResWorldMap::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResWorldMap::vtbl, CRes::vtbl>()},
-		}},
-		{"CResWebm", {
-			{"CRes", offsetofbase<CResWebm, CRes>()},
-		}},
-		{"CResWebm::vtbl", {
-			{"CRes::vtbl", offsetofbase<CResWebm::vtbl, CRes::vtbl>()},
 		}},
 		{"CResWave", {
 			{"CRes", offsetofbase<CResWave, CRes>()},
@@ -175,6 +166,12 @@ void registerBaseclasses() {
 		}},
 		{"CResArea::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResArea::vtbl, CRes::vtbl>()},
+		}},
+		{"CResWebm", {
+			{"CRes", offsetofbase<CResWebm, CRes>()},
+		}},
+		{"CResWebm::vtbl", {
+			{"CRes::vtbl", offsetofbase<CResWebm::vtbl, CRes::vtbl>()},
 		}},
 		{"CArray<CRect,CRect*>", {
 			{"CObject", offsetofbase<CArray<CRect,CRect*>, CObject>()},

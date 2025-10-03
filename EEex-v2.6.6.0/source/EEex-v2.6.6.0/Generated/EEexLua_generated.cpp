@@ -316,7 +316,6 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "EEex::ProjectileType");
 	tolua_usertype(L, "CRes");
 	tolua_usertype(L, "CResWorldMap");
-	tolua_usertype(L, "CResWebm");
 	tolua_usertype(L, "CResWave");
 	tolua_usertype(L, "CResWED");
 	tolua_usertype(L, "CResUI");
@@ -340,6 +339,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CResBitmap");
 	tolua_usertype(L, "CResBIO");
 	tolua_usertype(L, "CResArea");
+	tolua_usertype(L, "CResWebm");
 	tolua_usertype(L, "CAOEEntry");
 	tolua_usertype(L, "CSpawnPoint");
 	tolua_usertype(L, "CPersistantEffect");
@@ -753,9 +753,6 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CResWorldMap", "CResWorldMap", {"CRes"}, NULL);
 	tolua_beginmodule(L, "CResWorldMap");
 	tolua_endmodule(L);
-	tolua_cclass(L, "CResWebm", "CResWebm", {"CRes"}, NULL);
-	tolua_beginmodule(L, "CResWebm");
-	tolua_endmodule(L);
 	tolua_cclass(L, "CResWave", "CResWave", {"CRes"}, NULL);
 	tolua_beginmodule(L, "CResWave");
 	tolua_endmodule(L);
@@ -824,6 +821,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CResArea", "CResArea", {"CRes"}, NULL);
 	tolua_beginmodule(L, "CResArea");
+	tolua_endmodule(L);
+	tolua_cclass(L, "CResWebm", "CResWebm", {"CRes"}, NULL);
+	tolua_beginmodule(L, "CResWebm");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CAOEEntry", "CAOEEntry", {}, NULL);
 	tolua_beginmodule(L, "CAOEEntry");

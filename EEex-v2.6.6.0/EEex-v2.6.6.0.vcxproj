@@ -19,6 +19,7 @@
     <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\main.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\menu_util.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\time_util.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\uncap_fps.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\util.cpp" />
@@ -29,6 +30,7 @@
     <ClInclude Include="headers\EEex-v2.6.6.0\coordinate_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\EEex.h" />
     <ClInclude Include="headers\EEex-v2.6.6.0\EEexLua_generated.h" />
+    <ClInclude Include="headers\EEex-v2.6.6.0\menu_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\time_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\uncap_fps.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\util.hpp" />
