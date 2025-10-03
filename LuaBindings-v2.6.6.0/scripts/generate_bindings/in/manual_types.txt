@@ -1474,6 +1474,7 @@ $nobinding void drawSlice(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect*
 $nobinding void drawSliceSide(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool wide);
 $nobinding void __cdecl DrawTransformToScreen(SDL_Rect* w, SDL_Rect* s);
 $nobinding float __cdecl DrawTransformToScreenH(float h);
+$nobinding bool __cdecl eventMenu(uiMenu* pMenu, SDL_Event* pEvent, SDL_Rect* pWindow);
 $nobinding void fadeSounds();
 $nobinding size_t fwrite(const void* buffer, size_t size, size_t count, FILE* stream);
 $nobinding int l_log_print(lua_State* L);
@@ -1499,6 +1500,7 @@ char* afxPchNil;
 $9B9540D9920A90D57A3D80DDD1A70514 capture;
 keyword g_keywords[124];
 lua_State* g_lua;
+uiMenu* g_overlayMenu;
 CBaldurChitin* g_pBaldurChitin;
 int menuLength;
 uiMenu menus[256];

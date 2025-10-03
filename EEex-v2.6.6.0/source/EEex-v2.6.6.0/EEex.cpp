@@ -2,6 +2,7 @@
 #include <chrono>
 #include <optional>
 #include <sstream>
+#include <unordered_set>
 
 #include <mbstring.h>
 
@@ -183,6 +184,9 @@ struct ExUIItemData {
 std::unordered_map<StringA, bool> exForceScrollbarRenderForItemName{};
 std::unordered_map<void*, ExUIItemData> exUIItemData{};
 
+bool exInUseCaptureItemDeleted = false;
+uiItem* exInUseCaptureItem = nullptr;
+
 /////////////
 // Exports //
 /////////////
@@ -191,6 +195,12 @@ std::vector<std::function<void(CGameAIBase*, unsigned char)>> scriptLevelHitCall
 std::vector<std::function<void(int16_t)>> conditionResponseHitCallbacks{};
 std::vector<std::function<void(int32_t)>> triggerHitCallbacks{};
 std::vector<std::function<void(bool)>> triggerEvaluatedCallbacks{};
+
+//////////
+// Menu //
+//////////
+
+std::unordered_set<std::string> exTemplateNames{};
 
 //--------------------------------//
 //          Globals Util          //
@@ -1788,8 +1798,7 @@ void EEex::DestroyAllTemplates(lua_State* L, const char* menuName) {
 		}
 
 		*pPrevItemNext = pCurItem->next;
-		EEex::Menu_Hook_OnBeforeUITemplateFreed(pCurItem);
-		p_free(pCurItem);
+		EEex::Menu_Hook_FreeUITemplate(pCurItem);
 	}
 }
 
@@ -1813,6 +1822,51 @@ const char* EEex::FormatPointerAsEngine(uintptr_t ptr) {
 	return p_va("%p", ptr);
 }
 
+static void addItemToMenu(uiMenu* pMenu, uiItem* pItem) {
+
+	uiItem* pLastNode = pMenu->items;
+
+	if (pLastNode == nullptr) {
+		pMenu->items = pItem;
+	}
+	else {
+		while (pLastNode->next != nullptr) pLastNode = pLastNode->next;
+		pLastNode->next = pItem;
+	}
+
+	pItem->menu = pMenu;
+}
+
+static uiItem* createTemplateFromCopy(lua_State* L, const char* menuName, const char* templateName, uiItem* pItem) {
+
+	uiMenu *const pMenu = p_findMenu(menuName, 0, 0);
+
+	if (pMenu == nullptr) {
+		return nullptr;
+	}
+
+	uiItem *const pTemplate = reinterpret_cast<uiItem*>(p_malloc(sizeof(uiItem)));
+	*pTemplate = *pItem;
+	pTemplate->next = nullptr;
+
+	uiItem *const pTemplateHolder = reinterpret_cast<uiItem*>(p_malloc(sizeof(uiItem)));
+
+	const std::string& storedTemplateName = *exTemplateNames.emplace(templateName).first;
+	pTemplateHolder->type = uiItemType::ITEM_TEMPLATE;
+	pTemplateHolder->name = storedTemplateName.c_str();
+	pTemplateHolder->uiTemplate.item = pTemplate;
+
+	addItemToMenu(pMenu, pTemplateHolder);
+
+	lua_getglobal(L, "nameToItem");            // 1 [ ..., nameToItem ]
+	lua_pushstring(L, templateName);           // 2 [ ..., nameToItem, templateName ]
+	lua_pushlightuserdata(L, pTemplateHolder); // 3 [ ..., nameToItem, templateName, pTemplateHolder ]
+	lua_settable(L, -3);                       // 1 [ ..., nameToItem ]
+	lua_pop(L, 1);                             // 0 [ ... ]
+
+	return pTemplate;
+}
+
 static uiItem* uiCreateFromTemplate(
 	lua_State* L, const char* menuName, const char* templateName, int instanceId, int x, int y, std::optional<int> w, std::optional<int> h)
 {
@@ -1834,7 +1888,6 @@ static uiItem* uiCreateFromTemplate(
 
 	uiItem *const pNewItem = reinterpret_cast<uiItem*>(p_malloc(sizeof(uiItem)));
 	*pNewItem = *pTemplateItem->uiTemplate.item;
-	pNewItem->menu = pMenu;
 	pNewItem->instanceId = instanceId;
 	pNewItem->templateName = pTemplateItem->name;
 	pNewItem->area.x = x;
@@ -1848,17 +1901,12 @@ static uiItem* uiCreateFromTemplate(
 		pNewItem->area.h = *h;
 	}
 
-	uiItem* pLastNode = pMenu->items;
-
-	if (pLastNode == nullptr) {
-		pMenu->items = pNewItem;
-	}
-	else {
-		while (pLastNode->next != nullptr) pLastNode = pLastNode->next;
-		pLastNode->next = pNewItem;
-	}
-
+	addItemToMenu(pMenu, pNewItem);
 	return pNewItem;
+}
+
+uiItem* EEex::CreateTemplateFromCopy(lua_State* L, const char* menuName, const char* templateName, uiItem* pItem) {
+	return createTemplateFromCopy(L, menuName, templateName, pItem);
 }
 
 // 7 [ menuName, templateName, instanceId, x, y, w, h ]
@@ -4078,13 +4126,73 @@ void EEex::Menu_Hook_OnBeforeMenuStackSave() {
 	exUIItemData.clear();
 }
 
-void EEex::Menu_Hook_OnBeforeUITemplateFreed(uiItem* pItem) {
+void EEex::Menu_Hook_FreeUITemplate(uiItem* pItem) {
 
 	if (p_capture->item == pItem) {
 		p_uiKillCapture();
 	}
 
 	exUIItemData.erase(pItem);
+	
+	if (pItem == exInUseCaptureItem) {
+		exInUseCaptureItemDeleted = true;
+	}
+	else {
+		p_free(pItem);
+	}
+}
+
+static int getMenuStackTop() {
+	return *p_nextStackMenuIdx > 0 ? *p_nextStackMenuIdx - 1 : 0;
+}
+
+static uiMenu* getStackMenu(int num) {
+	return num > -1 && num < *p_nextStackMenuIdx ? (*p_menuStack)[num] : nullptr;
+}
+
+bool __cdecl EEex::Override_uiEventMenuStack(SDL_Event* pEvent, SDL_Rect* pWindow) {
+
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+
+	if (p_uiIsHidden() && pChitin->pActiveEngine == pChitin->m_pEngineWorld) {
+		return false;
+	}
+
+	bool toReturn = false;
+
+	// Fix: capture item might be deleted by the event stack processing, but the engine's treatment of the capture item's lifetime is messy,
+	//      leading to situations where the engine might attempt to access the capture item even after its possible deletion. This patch
+	//      keeps the capture item alive until after the event stack processing.
+	//
+	exInUseCaptureItemDeleted = false;
+	exInUseCaptureItem = p_capture->item;
+
+	if (*p_g_overlayMenu != nullptr && p_eventMenu(*p_g_overlayMenu, pEvent, pWindow)) {
+		toReturn = true;
+	}
+	else {
+		for (int nIndex = getMenuStackTop(); ; --nIndex) {
+
+			uiMenu *const pMenu = getStackMenu(nIndex);
+
+			if (pMenu == nullptr) {
+				toReturn = false;
+				break;
+			}
+
+			if (p_eventMenu(pMenu, pEvent, pWindow)) {
+				toReturn = true;
+				break;
+			}
+		}
+	}
+
+	if (exInUseCaptureItemDeleted) {
+		p_free(exInUseCaptureItem);
+	}
+	exInUseCaptureItem = nullptr;
+
+	return toReturn;
 }
 
 ////////////////

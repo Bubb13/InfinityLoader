@@ -129,6 +129,13 @@ static int tolua_get_EEex_reference_UncapFPS_RemoveMiddleMouseScrollMultiplier(l
 	return 1;
 }
 
+static int tolua_function_EEex_CreateTemplateFromCopy(lua_State* L)
+{
+	uiItem* returnVal = EEex::CreateTemplateFromCopy(L, tolua_function_tostring(L, 1, "CreateTemplateFromCopy"), tolua_function_tostring(L, 2, "CreateTemplateFromCopy"), (uiItem*)tolua_tousertype_dynamic(L, 3, 0, "uiItem"));
+	tolua_pushusertype(L, (void*)returnVal, "uiItem");
+	return 1;
+}
+
 static int tolua_function_EEex_DeepCopy(lua_State* L)
 {
 	EEex::DeepCopy(L);
@@ -693,6 +700,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_UncapFPS_FPSLimit", tolua_get_EEex_reference_UncapFPS_FPSLimit, NULL);
 		tolua_variable(L, "UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier, tolua_set_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier);
 		tolua_variable(L, "reference_UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_reference_UncapFPS_RemoveMiddleMouseScrollMultiplier, NULL);
+		tolua_function(L, "CreateTemplateFromCopy", &tolua_function_EEex_CreateTemplateFromCopy);
 		tolua_function(L, "DeepCopy", &tolua_function_EEex_DeepCopy);
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
 		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);

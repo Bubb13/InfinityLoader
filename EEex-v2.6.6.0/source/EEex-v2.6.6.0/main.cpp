@@ -64,6 +64,7 @@ static void exportPatterns() {
 	//exportPattern(TEXT("EEex::Override_fontWrap"), EEex::Override_fontWrap);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);
 	exportPattern(TEXT("EEex::Override_uiDoFile"), EEex::Override_uiDoFile);
+	exportPattern(TEXT("EEex::Override_uiEventMenuStack"), EEex::Override_uiEventMenuStack);
 
 	/////////////////////////////
 	//          Hooks          //
@@ -144,8 +145,8 @@ static void exportPatterns() {
 	//////////
 
 	exportPattern(TEXT("EEex::Menu_Hook_CheckApplyTextScrollbarPad"), EEex::Menu_Hook_CheckApplyTextScrollbarPad);
+	exportPattern(TEXT("EEex::Menu_Hook_FreeUITemplate"), EEex::Menu_Hook_FreeUITemplate);
 	exportPattern(TEXT("EEex::Menu_Hook_OnBeforeMenuStackSave"), EEex::Menu_Hook_OnBeforeMenuStackSave);
-	exportPattern(TEXT("EEex::Menu_Hook_OnBeforeUITemplateFreed"), EEex::Menu_Hook_OnBeforeUITemplateFreed);
 
 	////////////////
 	// Projectile //

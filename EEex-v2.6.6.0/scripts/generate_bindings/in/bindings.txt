@@ -105,6 +105,7 @@ namespace EEex
 	bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
 
 	// Functions
+	$external_implementation $pass_lua_state uiItem* CreateTemplateFromCopy(primitive const char* menuName, primitive const char* templateName, uiItem* pItem);
 	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
 	$external_implementation $pass_lua_state void DrawSlicedRect();
 	$external_implementation $pass_lua_state void DrawSlicedRectNum();

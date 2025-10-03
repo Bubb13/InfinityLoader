@@ -7739,6 +7739,9 @@ extern type_DrawTransformToScreen p_DrawTransformToScreen;
 typedef float (__cdecl *type_DrawTransformToScreenH)(float h);
 extern type_DrawTransformToScreenH p_DrawTransformToScreenH;
 
+typedef bool (__cdecl *type_eventMenu)(uiMenu* pMenu, SDL_Event* pEvent, SDL_Rect* pWindow);
+extern type_eventMenu p_eventMenu;
+
 typedef void (*type_fadeSounds)();
 extern type_fadeSounds p_fadeSounds;
 
@@ -7791,6 +7794,7 @@ extern char** p_afxPchNil;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 extern Array<keyword,124>* p_g_keywords;
 extern lua_State** p_g_lua;
+extern uiMenu** p_g_overlayMenu;
 extern CBaldurChitin** p_g_pBaldurChitin;
 extern int* p_menuLength;
 extern Array<uiMenu,256>* p_menus;

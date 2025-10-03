@@ -52,6 +52,7 @@ namespace EEex {
 	//int __cdecl Override_fontWrap(char* text, SDL_Rect* r, SDL_Rect* rClip, int* horizontalAlignment, int* verticalAlignment, font_t* font, int* pointSize, letter_t* letters, int* nlines, int* nletters, int* pointIndex, bool* scale, adjustmentData_t* adjustData, int indent, bool bUseFontSizeFloor);
 	int __cdecl Override_Infinity_WriteINILine(lua_State* L);
 	void __cdecl Override_uiDoFile(char* fileName);
+	bool __cdecl Override_uiEventMenuStack(SDL_Event* pEvent, SDL_Rect* pWindow);
 
 	//-------------------------//
 	//          Hooks          //
@@ -132,8 +133,8 @@ namespace EEex {
 	//////////
 
 	void Menu_Hook_CheckApplyTextScrollbarPad(uiItem* pItem, SDL_Rect* pItemArea);
+	void Menu_Hook_FreeUITemplate(uiItem* pItem);
 	void Menu_Hook_OnBeforeMenuStackSave();
-	void Menu_Hook_OnBeforeUITemplateFreed(uiItem* pItem);
 
 	////////////////
 	// Projectile //
