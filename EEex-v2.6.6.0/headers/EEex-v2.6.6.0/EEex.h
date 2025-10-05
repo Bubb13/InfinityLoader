@@ -175,7 +175,9 @@ namespace EEex {
 	// Uncap FPS //
 	///////////////
 
+	void UncapFPS_Hook_OnAfterAreaActivated(CGameArea* pArea);
 	void UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted(CGameArea* pArea);
+	void UncapFPS_Hook_OnBeforeAreaDeactivated(CGameArea* pArea);
 	void UncapFPS_Hook_OnBeforeWorldScreenDeactivated();
 	void UncapFPS_Hook_HandleAreaAutoZoom();
 	void UncapFPS_Hook_HandleTransitionMenuFade();
