@@ -4433,9 +4433,8 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		for enumTuple in group.enumTuples:
 			handleEnumTuple(enumTuple)
 
-		# Empty structs (those that simply derive from a superclass) should
-		# be outputted if they were defined when bindings were enabled.
-		if len(group.fields) == 0 and len(group.functionImplementations) == 0 and not group.lineGroupFlags.isFlagged("noBindings"):
+		# Always output structs if they are used and were defined when bindings were enabled.
+		if not group.lineGroupFlags.isFlagged("noBindings"):
 			groupOpenData.hasReasonForOutput = True
 
 		#handleHardcodedBindings()

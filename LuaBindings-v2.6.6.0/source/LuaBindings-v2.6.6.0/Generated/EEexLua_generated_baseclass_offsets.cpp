@@ -167,6 +167,9 @@ void registerBaseclasses() {
 		{"CResArea::vtbl", {
 			{"CRes::vtbl", offsetofbase<CResArea::vtbl, CRes::vtbl>()},
 		}},
+		{"CRect", {
+			{"tagRECT", offsetofbase<CRect, tagRECT>()},
+		}},
 		{"CResWebm", {
 			{"CRes", offsetofbase<CResWebm, CRes>()},
 		}},

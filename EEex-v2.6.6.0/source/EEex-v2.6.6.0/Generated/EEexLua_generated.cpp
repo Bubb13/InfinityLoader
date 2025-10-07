@@ -494,6 +494,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CDungeonMaster");
 	tolua_usertype(L, "uiItem");
 	tolua_usertype(L, "CResBinary");
+	tolua_usertype(L, "EngineGlobals");
 	tolua_usertype(L, "CSteam");
 	tolua_usertype(L, "EEex_CScreenMovies");
 	tolua_usertype(L, "EEex_CScreenConnection");
@@ -1275,6 +1276,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CResBinary", "CResBinary", {"CRes"}, NULL);
 	tolua_beginmodule(L, "CResBinary");
+	tolua_endmodule(L);
+	tolua_cclass(L, "EngineGlobals", "EngineGlobals", {}, NULL);
+	tolua_beginmodule(L, "EngineGlobals");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CSteam", "CSteam", {}, NULL);
 	tolua_beginmodule(L, "CSteam");
