@@ -507,6 +507,15 @@ static void fitViewPosition(CInfinity* pInfinity, int* pX, int* pY, CRect* pView
 	}
 }
 
+///////////////////
+// Lua Functions //
+///////////////////
+
+long long EEex::GetMicroseconds()
+{
+	return getTime() - getInitTime();
+}
+
 ///////////
 // Hooks //
 ///////////

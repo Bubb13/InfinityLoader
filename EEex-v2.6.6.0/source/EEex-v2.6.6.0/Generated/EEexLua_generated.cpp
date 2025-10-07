@@ -193,6 +193,13 @@ static int tolua_function_EEex_GetINIString(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_GetMicroseconds(lua_State* L)
+{
+	long long returnVal = EEex::GetMicroseconds();
+	lua_pushinteger(L, (lua_Integer)returnVal);
+	return 1;
+}
+
 static int tolua_function_EEex_GetProjectileStartingPos(lua_State* L)
 {
 	EEex::GetProjectileStartingPos(L, (CProjectile*)tolua_tousertype_dynamic(L, 1, 0, "CProjectile"), (CGameArea*)tolua_tousertype_dynamic(L, 2, 0, "CGameArea"), (CGameAIBase*)tolua_tousertype_dynamic(L, 3, 0, "CGameAIBase"), (CGameObject*)tolua_tousertype_dynamic(L, 4, 0, "CGameObject"), tolua_function_tointeger<int>(L, 5, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 6, "GetProjectileStartingPos"), tolua_function_tointeger<int>(L, 7, "GetProjectileStartingPos"));
@@ -712,6 +719,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
 		tolua_function(L, "GetHighestRefreshRate", &tolua_function_EEex_GetHighestRefreshRate);
 		tolua_function(L, "GetINIString", &tolua_function_EEex_GetINIString);
+		tolua_function(L, "GetMicroseconds", &tolua_function_EEex_GetMicroseconds);
 		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
 		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);

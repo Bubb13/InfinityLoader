@@ -116,6 +116,7 @@ namespace EEex
 	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
 	$external_implementation int GetHighestRefreshRate();
 	$external_implementation $custom_return_1 GetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* def);
+	$external_implementation long long GetMicroseconds();
 	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
 	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
