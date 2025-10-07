@@ -62,6 +62,7 @@ struct CScreenMap : CBaldurEngine
 
 struct CScreenWorld : CBaldurEngine
 {
+	$nobinding $external_implementation void Override_EndDialog(byte bForceExecution, byte fullEnd);
 	$nobinding $external_implementation void Override_ResetZoom();
 	$nobinding $external_implementation void Override_StartScroll(CPoint dest, short speed);
 	$nobinding $external_implementation void Override_ZoomToMap(bool bOverwriteOriginal);

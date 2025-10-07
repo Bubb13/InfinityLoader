@@ -418,12 +418,12 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CVoice*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CTimer*>");
 	tolua_usertype(L, "CTypedPtrArray<CPtrArray,CRes*>");
+	tolua_usertype(L, "CTypedPtrArray<CPtrArray,CGameDialogEntry*>");
 	tolua_usertype(L, "CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>");
 	tolua_usertype(L, "CTypedPtrArray<CPtrArray,CSavedGamePartyCreature*>");
 	tolua_usertype(L, "CTypedPtrArray<CPtrArray,unsigned char*>");
 	tolua_usertype(L, "CTypedPtrArray<CPtrArray,CAbilityData*>");
 	tolua_usertype(L, "CTypedPtrArray<CPtrArray,CSaveGameSlot*>");
-	tolua_usertype(L, "CTypedPtrArray<CPtrArray,CGameDialogEntry*>");
 	tolua_usertype(L, "CTypedPtrArray<CPtrArray,CSpawnPoint*>");
 	tolua_usertype(L, "CTypedPtrArray<CPtrArray,CGameDialogReply*>");
 	tolua_usertype(L, "CTypedPtrArray<CPtrArray,long>");
@@ -467,7 +467,9 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CObList");
 	tolua_usertype(L, "CMessage");
 	tolua_usertype(L, "CMessageUpdateReaction");
+	tolua_usertype(L, "CMessageUpdateMachineState");
 	tolua_usertype(L, "CMessageSetDirection");
+	tolua_usertype(L, "CMessageExitDialogMode");
 	tolua_usertype(L, "CMessageDisplayTextRef");
 	tolua_usertype(L, "CMessageDisplayText");
 	tolua_usertype(L, "CMessageAddEffect");
@@ -1059,6 +1061,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CTypedPtrArray<CPtrArray,CRes*>", "CTypedPtrArray<CPtrArray,CRes*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrArray<CPtrArray,CRes*>");
 	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrArray<CPtrArray,CGameDialogEntry*>", "CTypedPtrArray<CPtrArray,CGameDialogEntry*>", {"CObject"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrArray<CPtrArray,CGameDialogEntry*>");
+	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>", "CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>");
 	tolua_endmodule(L);
@@ -1073,9 +1078,6 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrArray<CPtrArray,CSaveGameSlot*>", "CTypedPtrArray<CPtrArray,CSaveGameSlot*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrArray<CPtrArray,CSaveGameSlot*>");
-	tolua_endmodule(L);
-	tolua_cclass(L, "CTypedPtrArray<CPtrArray,CGameDialogEntry*>", "CTypedPtrArray<CPtrArray,CGameDialogEntry*>", {"CObject"}, NULL);
-	tolua_beginmodule(L, "CTypedPtrArray<CPtrArray,CGameDialogEntry*>");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrArray<CPtrArray,CSpawnPoint*>", "CTypedPtrArray<CPtrArray,CSpawnPoint*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrArray<CPtrArray,CSpawnPoint*>");
@@ -1206,8 +1208,14 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CMessageUpdateReaction", "CMessageUpdateReaction", {"CMessage"}, NULL);
 	tolua_beginmodule(L, "CMessageUpdateReaction");
 	tolua_endmodule(L);
+	tolua_cclass(L, "CMessageUpdateMachineState", "CMessageUpdateMachineState", {"CMessage"}, NULL);
+	tolua_beginmodule(L, "CMessageUpdateMachineState");
+	tolua_endmodule(L);
 	tolua_cclass(L, "CMessageSetDirection", "CMessageSetDirection", {"CMessage"}, NULL);
 	tolua_beginmodule(L, "CMessageSetDirection");
+	tolua_endmodule(L);
+	tolua_cclass(L, "CMessageExitDialogMode", "CMessageExitDialogMode", {"CMessage"}, NULL);
+	tolua_beginmodule(L, "CMessageExitDialogMode");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CMessageDisplayTextRef", "CMessageDisplayTextRef", {"CMessage"}, NULL);
 	tolua_beginmodule(L, "CMessageDisplayTextRef");

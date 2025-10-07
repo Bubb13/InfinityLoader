@@ -31,6 +31,14 @@ struct ExInfinityData
 	long long nAutoZoomTimeRemaining = 0;
 };
 
+struct ExMenuStateOverrides
+{
+	bool bWorldActionbarOpen = false;
+	bool bWorldDialogOpen    = false;
+	bool bWorldMessagesOpen  = false;
+	bool bWorldQuicklootOpen = false;
+};
+
 enum class ExpScrollEndReason
 {
 	GRANULARITY,
@@ -115,6 +123,7 @@ void RollingAverage<T>::recalculate(long long currentTime)
 //---------------------------//
 
 RollingAverage<int> averageSyncUpdateDelta { 1000000 };
+ExMenuStateOverrides beforeWorldScreenDeactivatedMenuStates{};
 std::unordered_map<void*, ExInfinityData> exInfinityDataMap{};
 long long nLastScrollTime = 0;
 bool bAutoScrollFirstTick = false;
@@ -125,11 +134,6 @@ long long nNextFullSyncUpdateTick = 0;
 long long nRemainingScrollTime = 0;
 long long nTransitionStartTime = 0;
 long long nTransitionEndTime = 0;
-
-bool bWasWorldActionbarOpen = false;
-bool bWasWorldQuicklootOpen = false;
-bool bWasWorldDialogOpen    = false;
-bool bWasWorldMessagesOpen  = false;
 
 //-----------------------------//
 //          Functions          //
@@ -225,7 +229,7 @@ static int expScrollScaleSpeedToTime(int src, int dst, int minStep, int threshol
 }
 
 static void fitViewPosition(CInfinity* pInfinity, int* pX, int* pY, CRect* pViewPort,
-	bool usePreviousMenuState, bool bTheoretical)
+	ExMenuStateOverrides* pMenuStateOverrides, bool bTheoretical)
 {
 	lua_State *const L = *p_g_lua;
 	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
@@ -352,35 +356,68 @@ static void fitViewPosition(CInfinity* pInfinity, int* pX, int* pY, CRect* pView
 
 	int nAllowedOOBBottom = 0;
 
-	if (!p_uiIsHidden() && (usePreviousMenuState ? bWasWorldActionbarOpen : p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_ACTIONBAR" })))
+	if (!p_uiIsHidden())
 	{
-		nAllowedOOBBottom = static_cast<int>(60 * fEffectiveZoom);
+		// Vanilla Bugfix: Don't predicate the other y-menu checks behind the actionbar
+		// |
+		if (pMenuStateOverrides != nullptr ? pMenuStateOverrides->bWorldActionbarOpen : p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_ACTIONBAR" }))
+		{
+			nAllowedOOBBottom = static_cast<int>(60 * fEffectiveZoom);
+		}
 
-		if (usePreviousMenuState ? bWasWorldQuicklootOpen : p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_QUICKLOOT" }))
+		if (pMenuStateOverrides != nullptr ? pMenuStateOverrides->bWorldQuicklootOpen : p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_QUICKLOOT" }))
 		{
 			nAllowedOOBBottom *= 2;
 		}
 
-		const char* sBottomItemName = nullptr;
-
-		if (usePreviousMenuState ? bWasWorldDialogOpen : p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_DIALOG" }))
-		{
-			sBottomItemName = "worldDialogBackground";
-		}
-		else if (usePreviousMenuState ? bWasWorldMessagesOpen : p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_MESSAGES" }))
-		{
-			sBottomItemName = "messagesRect";
-		}
-
-		if (sBottomItemName != nullptr)
+		// Vanilla Bugfix: Always allow the viewport to scroll down to where the dialog target is visible
+		// |
+		// | const char* sBottomItemName = nullptr;
+		// |
+		// | if (pMenuStateOverrides != nullptr ? pMenuStateOverrides->bWorldDialogOpen : p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_DIALOG" }))
+		// | {
+		// | 	sBottomItemName = "worldDialogBackground";
+		// | }
+		// | else if (pMenuStateOverrides != nullptr ? pMenuStateOverrides->bWorldMessagesOpen : p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_MESSAGES" }))
+		// | {
+		// | 	sBottomItemName = "messagesRect";
+		// | }
+		// |
+		// | if (sBottomItemName != nullptr)
+		// | {
+		// | 	lua_getglobal(L, "Infinity_GetArea");
+		// | 	lua_pushstring(L, sBottomItemName);
+		// | 	lua_callk(L, 1, 4, 0, nullptr);
+		// | 	const lua_Number nBottomMenuHeight = lua_tonumberx(L, -1, nullptr);
+		// | 	lua_settop(L, -5);
+		// |
+		// | 	nAllowedOOBBottom = static_cast<int>(nAllowedOOBBottom + nBottomMenuHeight * fEffectiveZoom);
+		// | }
+		// |
+		if (pMenuStateOverrides != nullptr ? pMenuStateOverrides->bWorldMessagesOpen : p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_MESSAGES" }))
 		{
 			lua_getglobal(L, "Infinity_GetArea");
-			lua_pushstring(L, sBottomItemName);
+			lua_pushstring(L, "messagesRect");
 			lua_callk(L, 1, 4, 0, nullptr);
-			const lua_Number nBottomMenuHeight = lua_tonumberx(L, -1, nullptr);
+			const int nEffectiveMessagesHeight = static_cast<int>(lua_tointeger(L, -1) * fEffectiveZoom);
 			lua_settop(L, -5);
 
-			nAllowedOOBBottom = static_cast<int>(nAllowedOOBBottom + nBottomMenuHeight * fEffectiveZoom);
+			nAllowedOOBBottom += nEffectiveMessagesHeight;
+		}
+		// |
+		lua_getglobal(L, "nameToItem");                                                     // 1 [ ..., nameToItem ]
+		lua_pushstring(L, "worldDialogBackground");                                         // 2 [ ..., nameToItem, "worldDialogBackground" ]
+		lua_gettable(L, -2);                                                                // 2 [ ..., nameToItem, worldDialogBackgroundLUD ]
+		uiItem *const pWorldDialogBackground = static_cast<uiItem*>(lua_touserdata(L, -1));
+		lua_pop(L, 2);                                                                      // 0 [ ... ]
+		// |
+		if (pWorldDialogBackground != nullptr)
+		{
+			const int nWorldDialogBackgroundY = getMenuY(pWorldDialogBackground->menu) + pWorldDialogBackground->area.y;
+			const int nEffectiveDialogHeight = nViewPortHeight - static_cast<int>(nWorldDialogBackgroundY * fEffectiveZoom);
+			const int nAllowedOOBBottomForDialog = (std::max)(0, nEffectiveDialogHeight);
+
+			nAllowedOOBBottom = (std::max)(nAllowedOOBBottom, nAllowedOOBBottomForDialog);
 		}
 	}
 
@@ -533,7 +570,7 @@ void EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted(CGameArea* pArea)
 
 	int nFitX = nTestX;
 	int nFitY = nTestY;
-	fitViewPosition(pInfinity, &nFitX, &nFitY, &pInfinity->rViewPort, false, true);
+	fitViewPosition(pInfinity, &nFitX, &nFitY, &pInfinity->rViewPort, nullptr, true);
 
 	if (nFitX != nTestX || nFitY != nTestY)
 	{
@@ -550,10 +587,10 @@ void EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted(CGameArea* pArea)
 
 void EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated()
 {
-	bWasWorldActionbarOpen = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_ACTIONBAR" });
-	bWasWorldQuicklootOpen = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_QUICKLOOT" });
-	bWasWorldDialogOpen    = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_DIALOG"    });
-	bWasWorldMessagesOpen  = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_MESSAGES"  });
+	beforeWorldScreenDeactivatedMenuStates.bWorldActionbarOpen = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_ACTIONBAR" });
+	beforeWorldScreenDeactivatedMenuStates.bWorldDialogOpen    = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_DIALOG"    });
+	beforeWorldScreenDeactivatedMenuStates.bWorldMessagesOpen  = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_MESSAGES"  });
+	beforeWorldScreenDeactivatedMenuStates.bWorldQuicklootOpen = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_QUICKLOOT" });
 }
 
 void EEex::UncapFPS_Hook_HandleTransitionMenuFade()
@@ -1274,13 +1311,23 @@ void CInfinity::Override_FitViewPosition(int* pX, int* pY, CRect* pViewPort)
 {
 	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
 
-	// Don't fit the view if the game is transitioning between engines or the local map is zooming.
+	// Vanilla Bugfix: Don't fit the view if the game is transitioning between engines or the local map is zooming.
+	// |
 	if (!pChitin->bEngineActive || pChitin->m_pEngineWorld->m_bAutoZooming)
 	{
 		return;
 	}
 
-	fitViewPosition(this, pX, pY, pViewPort, false, false);
+	CScreenWorld *const pScreenWorld = pChitin->m_pEngineWorld;
+
+	// Vanilla Bugfix: Don't fit view when autoscrolling for dialog
+	// |
+	if (pScreenWorld->m_bInDialog)
+	{
+		return;
+	}
+
+	fitViewPosition(this, pX, pY, pViewPort, nullptr, false);
 }
 
 // Used by:
@@ -1565,26 +1612,209 @@ void CInfinity::Override_SetScrollDest(CPoint* ptDest)
 	CInfGame *const pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
 	CInfinity *const pInfinity = &pGame->m_gameAreas[pGame->m_visibleArea]->m_cInfinity;
 
-	if (!pGame->m_options.m_bShowBlackSpace)
-	{
-		if (this->m_ptScrollDest.x < 0)
-		{
-			this->m_ptScrollDest.x = 0;
-		}
-		else if (this->m_ptScrollDest.x > pInfinity->nAreaX)
-		{
-			this->m_ptScrollDest.x = pInfinity->nAreaX;
-		}
+	// Vanilla Bugfix: Use proper OOB handling instead of the following approximation
+	// |
+	// | if (!pGame->m_options.m_bShowBlackSpace)
+	// | {
+	// | 	if (this->m_ptScrollDest.x < 0)
+	// | 	{
+	// | 		this->m_ptScrollDest.x = 0;
+	// | 	}
+	// | 	else if (this->m_ptScrollDest.x > pInfinity->nAreaX)
+	// | 	{
+	// | 		this->m_ptScrollDest.x = pInfinity->nAreaX;
+	// | 	}
+	// |
+	// | 	if (this->m_ptScrollDest.y < 0)
+	// | 	{
+	// | 		this->m_ptScrollDest.y = 0;
+	// | 	}
+	// | 	else if (this->m_ptScrollDest.y > pInfinity->nAreaY)
+	// | 	{
+	// | 		this->m_ptScrollDest.y = pInfinity->nAreaY;
+	// | 	}
+	// | }
 
-		if (this->m_ptScrollDest.y < 0)
+	int nFitX = this->m_ptScrollDest.x;
+	int nFitY = this->m_ptScrollDest.y;
+	fitViewPosition(this, &nFitX, &nFitY, &pInfinity->rViewPort, nullptr, true);
+	this->m_ptScrollDest.x = nFitX;
+	this->m_ptScrollDest.y = nFitY;
+}
+
+void CScreenWorld::Override_EndDialog(byte bForceExecution, byte fullEnd)
+{
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+	CInfGame *const pGame = pChitin->m_pObjectGame;
+	CMessageHandler *const pMessageHandler = &pChitin->m_cMessageHandler;
+
+	this->m_nPartySizeCheckStartDelay = 6;
+	this->m_bIgnoreDisplayTextTop = 0;
+	this->m_comingOutOfDialog = 50;
+
+	if (!this->m_bInControlOfDialog)
+	{
+		if (!bForceExecution)
 		{
-			this->m_ptScrollDest.y = 0;
-		}
-		else if (this->m_ptScrollDest.y > pInfinity->nAreaY)
-		{
-			this->m_ptScrollDest.y = pInfinity->nAreaY;
+			return;
 		}
 	}
+	else
+	{
+		CMessageExitDialogMode *const pExitDialogModeMessage = newEngineObj<CMessageExitDialogMode>(this->m_bDialogPressedAButton, -1, -1);
+		pMessageHandler->AddMessage(pExitDialogModeMessage, this->m_dialogPausing);
+
+		this->m_pCurrentDialog->ResetDialogStates();
+	}
+
+	//////////////////
+	// Reset cursor //
+	//////////////////
+
+	pGame->m_tempCursor = 4;
+
+	///////////////////////////////////////////////
+	// Handle pause state + interface autohiding //
+	///////////////////////////////////////////////
+
+	if (!this->m_dialogPausing)
+	{
+		pGame->m_worldTime.StartTime();
+		this->m_bPaused = false;
+	}
+	else if (this->m_nAutoHideInterface != 0)
+	{
+		--this->m_nAutoHideInterface;
+
+		if (pChitin->m_bDropPanels && !p_uiIsHidden())
+		{
+			p_uiSetHidden(true);
+		}
+	}
+
+	////////////////////
+	// Set input mode //
+	////////////////////
+
+	pGame->m_gameSave.SetInputMode(0xFFFFFFFF);
+
+	/////////////////////////////////////
+	// Send CMessageUpdateMachineState //
+	/////////////////////////////////////
+
+	CMessageUpdateMachineState *const pMessageUpdateMachineState = newEngineObj<CMessageUpdateMachineState>(
+		0xFFFFFFFF, pChitin->cNetwork.m_idLocalPlayer, pChitin->cNetwork.m_idLocalPlayer);
+
+	pMessageHandler->AddMessage(pMessageUpdateMachineState, 0);
+
+	////////////////
+	// Set cursor //
+	////////////////
+
+	pChitin->m_pObjectCursor->SetCursor(0, 0, -1);
+
+	///////////////////////////////
+	// Host multiplayer handling //
+	///////////////////////////////
+
+	if (pChitin->cNetwork.m_bConnectionEstablished == 1 && pChitin->cNetwork.m_bIsHost == 1)
+	{
+		this->m_dwLastDialogTickCount = p_SDL_GetTicks();
+
+		CMultiplayerSettings *const pMultiplayerSettings = &pGame->m_multiPlayerSettings;
+		pMultiplayerSettings->m_nHostPermittedDialogDelay = 0;
+		pMultiplayerSettings->m_bHostPermittedDialog = false;
+		pMultiplayerSettings->m_idHostPermittedDialog = 0;
+	}
+
+	/////////////////////////////////////////
+	// Switch back to dialog starting area //
+	/////////////////////////////////////////
+
+	EngineVal<CString> sDialogStartArea{};
+	this->m_dialogStartArea.CopyToString(&*sDialogStartArea);
+
+	EngineVal<CString, false> sDialogStartAreaTemp { &*sDialogStartArea };
+	CGameArea *const pDialogStartArea = pGame->GetArea(sDialogStartAreaTemp);
+
+	if (pDialogStartArea != nullptr)
+	{
+		CGameArea* pVisibleArea = pGame->m_gameAreas[pGame->m_visibleArea];
+
+		if (pDialogStartArea != pVisibleArea)
+		{
+			pVisibleArea->m_bPicked = false;
+			pVisibleArea->m_iPicked = -1;
+			pVisibleArea->m_nToolTip = 0;
+
+			pVisibleArea->OnDeactivation();
+			pGame->SetVisibleArea(pDialogStartArea->m_id);
+			pVisibleArea = pGame->m_gameAreas[pGame->m_visibleArea];
+			pVisibleArea->OnActivation();
+		}
+
+		CInfinity *const pInfinity = &pVisibleArea->m_cInfinity;
+
+		// Vanilla Bug: This doesn't do anything?
+		// |
+		int nViewX;
+		int nViewY;
+		pInfinity->GetViewPosition(&nViewX, &nViewY);
+
+		this->m_dialogStartPos.x += pInfinity->rViewPort.left;
+		this->m_dialogStartPos.y += pInfinity->rViewPort.top;
+	}
+
+	////////////////
+	// End dialog //
+	////////////////
+
+	this->m_pCurrentDialog->EndDialog();
+
+	// Vanilla Bugfix: Delay resetting `CScreenWorld::m_bInDialog` so changes in menu visibility doesn't cause viewport fit
+	// |
+	// | this->m_bInDialog = false;
+
+	///////////////////////
+	// Reset Lua globals //
+	///////////////////////
+
+	lua_State *const L = *p_g_lua;
+
+	lua_createtable(L, 0, 0);
+	lua_setglobal(L, "worldPlayerDialogChoices");
+
+	lua_pushstring(L, "");
+	lua_setglobal(L, "worldNPCDialogText");
+
+	////////////////////
+	// Reset UI state //
+	////////////////////
+
+	if
+	(
+		p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_DIALOG" })
+		&&
+		(
+			pChitin->pActiveEngine != pChitin->m_pEngineCreateChar
+			||
+			pChitin->m_pEngineCreateChar->virtual_GetEngineState() != 6
+		)
+	)
+	{
+		p_uiPop("WORLD_DIALOG");
+		p_uiPush("WORLD_ACTIONBAR");
+
+		if (p_uiIsMenuOnStack(EngineVal<CString, false>{ "JOURNAL" }))
+		{
+			p_uiPop("JOURNAL");
+			p_uiPush("JOURNAL");
+		}
+	}
+
+	// Vanilla Bugfix: Delay resetting `CScreenWorld::m_bInDialog` so changes in menu visibility doesn't cause viewport fit
+	// |
+	this->m_bInDialog = false;
 }
 
 void CScreenWorld::Override_StartScroll(CPoint dest, short speed)
@@ -1904,7 +2134,7 @@ void CScreenMap::Override_CenterViewPort(CPoint* ptPoint)
 	// |
 	// Patch: Directly call EEex's reimplementation (instead of the shim) to force fit even though the map engine is active
 	// |
-	fitViewPosition(pInfinity, &nX, &nY, &pWorld->m_rOriginalViewPort, true, true);
+	fitViewPosition(pInfinity, &nX, &nY, &pWorld->m_rOriginalViewPort, &beforeWorldScreenDeactivatedMenuStates, true);
 
 	pWorld->m_ptOriginalView.x = nX + nOriginalViewPortCenterX;
 	pWorld->m_ptOriginalView.y = nY + nOriginalViewPortCenterY;
@@ -2012,9 +2242,9 @@ void CScreenWorld::Override_ZoomToMap(bool bOverwriteOriginal)
 	}
 }
 
-////////////////////
-// Initialization //
-////////////////////
+//----------------------------------//
+//          Initialization          //
+//----------------------------------//
 
 void initUncapFPS()
 {

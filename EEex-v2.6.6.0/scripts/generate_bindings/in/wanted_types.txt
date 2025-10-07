@@ -17,9 +17,11 @@ CMessageAddClairvoyance
 CMessageAddEffect
 CMessageDisplayText
 CMessageDisplayTextRef
+CMessageExitDialogMode
 CMessageSetDirection
 CMessageSetLastObject
 CMessageSetTrigger
+CMessageUpdateMachineState
 CMessageUpdateReaction
 CObList
 CProjectile

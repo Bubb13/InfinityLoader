@@ -802,6 +802,8 @@ struct CResRef
 		}
 		nullTerminatedStr[i] = '\0';
 	}
+
+	$nobinding void CopyToString(CString* str);
 };
 
 struct $D98D369160A0DDA2B95F5D0F301081BB
@@ -872,6 +874,12 @@ struct CRect : tagRECT
 struct CGameAreaNotes
 {
 	void UpdateButtonPositions();
+};
+
+struct CGameDialogSprite
+{
+	$nobinding void EndDialog();
+	$nobinding void ResetDialogStates();
 };
 
 struct CGameEffect : CGameEffectBase
@@ -972,6 +980,9 @@ struct CInfGame
 	void SetIconIndex(unsigned __int8 iconIndex);
 	void SetState(__int16 state, bool allowDead);
 	void UnselectAll();
+
+	$nobinding CGameArea* GetArea(CString* areaName);
+	$nobinding void SetVisibleArea(byte nAreaId);
 };
 
 struct CInfinity
@@ -984,6 +995,8 @@ struct CInfinity
 	void SetScrollDest(CPoint* ptDest);
 	int SetViewPosition(int x, int y, byte bSetExactScale);
 	void SetZoom(float fZoom);
+
+	$nobinding void GetViewPosition(int* pXOut, int* pYOut);
 };
 
 struct CSpell : CResHelper<CResSpell,1006>
@@ -1031,6 +1044,11 @@ struct CSearchBitmap
 	}
 };
 
+struct CTimerWorld
+{
+	$nobinding void StartTime();
+};
+
 struct CGameObject
 {
 	static byte DEFAULT_VISIBLE_TERRAIN_TABLE[16];
@@ -1052,6 +1070,9 @@ struct CGameArea
 	void ApplyEffect(CGameEffect* effect, int ignoreParty, int useSpecifics, byte specifics, CGameObject* pIgnore);
 	void OnActionButtonClickGround(CPoint* pt);
 	void ShowMonstersInArea(CGameAreaClairvoyanceEntry* pEntry);
+
+	$nobinding void OnActivation();
+	$nobinding void OnDeactivation();
 };
 
 struct CGameAreaClairvoyanceEntry
@@ -1297,6 +1318,32 @@ struct CMessageSetTrigger : CMessage
 	}
 };
 
+struct CMessageExitDialogMode : CMessage
+{
+	nobinding nopointer static void* VFTable;
+
+	$constructor_fake Construct(byte bButtonPushed, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_bButtonPushed = bButtonPushed;
+	}
+};
+
+struct CMessageUpdateMachineState : CMessage
+{
+	nobinding nopointer static void* VFTable;
+
+	$constructor_fake Construct(uint dwFlags, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_dwFlags = dwFlags;
+	}
+};
+
 struct CMessageHandler
 {
 	short AddMessage(CMessage* message, int bForcePassThrough);
@@ -1409,6 +1456,11 @@ struct CAITrigger
 	}
 };
 
+struct CGameSave
+{
+	$nobinding void SetInputMode(uint mode);
+};
+
 struct CGameTrigger : CGameAIBase
 {
 	void SetDrawPoly(short time);
@@ -1503,6 +1555,7 @@ $nobinding void uiDrawSlicedRect(int rectNum, const SDL_Rect* bounds, int alpha,
 $nobinding int uiExecLuaInt(int id);
 $nobinding bool uiPop(const char* name);
 $nobinding bool uiPush(const char* name);
+$nobinding void uiSetHidden(bool bHidden);
 $nobinding int uiVariantAsInt(uiVariant* var);
 $nobinding char* __cdecl va(const char* format, ...);
 $nobinding int __cdecl wordwrap(letter_t* letters, int maxletters, int* numletters, char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);

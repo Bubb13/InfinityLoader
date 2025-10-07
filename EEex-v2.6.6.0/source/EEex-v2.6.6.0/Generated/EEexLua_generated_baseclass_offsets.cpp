@@ -305,6 +305,9 @@ void registerBaseclasses() {
 		{"CTypedPtrArray<CPtrArray,CRes*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CRes*>, CObject>()},
 		}},
+		{"CTypedPtrArray<CPtrArray,CGameDialogEntry*>", {
+			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogEntry*>, CObject>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>, CObject>()},
 		}},
@@ -319,9 +322,6 @@ void registerBaseclasses() {
 		}},
 		{"CTypedPtrArray<CPtrArray,CSaveGameSlot*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CSaveGameSlot*>, CObject>()},
-		}},
-		{"CTypedPtrArray<CPtrArray,CGameDialogEntry*>", {
-			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogEntry*>, CObject>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,CSpawnPoint*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CSpawnPoint*>, CObject>()},
@@ -449,8 +449,14 @@ void registerBaseclasses() {
 		{"CMessageUpdateReaction", {
 			{"CMessage", offsetofbase<CMessageUpdateReaction, CMessage>()},
 		}},
+		{"CMessageUpdateMachineState", {
+			{"CMessage", offsetofbase<CMessageUpdateMachineState, CMessage>()},
+		}},
 		{"CMessageSetDirection", {
 			{"CMessage", offsetofbase<CMessageSetDirection, CMessage>()},
+		}},
+		{"CMessageExitDialogMode", {
+			{"CMessage", offsetofbase<CMessageExitDialogMode, CMessage>()},
 		}},
 		{"CMessageDisplayTextRef", {
 			{"CMessage", offsetofbase<CMessageDisplayTextRef, CMessage>()},

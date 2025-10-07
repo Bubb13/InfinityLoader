@@ -617,6 +617,12 @@ void registerBaseclasses() {
 		{"CTypedPtrArray<CPtrArray,CRes*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CRes*>::vtbl, CObject::vtbl>()},
 		}},
+		{"CTypedPtrArray<CPtrArray,CGameDialogEntry*>", {
+			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogEntry*>, CObject>()},
+		}},
+		{"CTypedPtrArray<CPtrArray,CGameDialogEntry*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogEntry*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CTypedPtrList<CPtrList,CGameJournalEntry*>*>, CObject>()},
 		}},
@@ -646,12 +652,6 @@ void registerBaseclasses() {
 		}},
 		{"CTypedPtrArray<CPtrArray,CSaveGameSlot*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CSaveGameSlot*>::vtbl, CObject::vtbl>()},
-		}},
-		{"CTypedPtrArray<CPtrArray,CGameDialogEntry*>", {
-			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogEntry*>, CObject>()},
-		}},
-		{"CTypedPtrArray<CPtrArray,CGameDialogEntry*>::vtbl", {
-			{"CObject::vtbl", offsetofbase<CTypedPtrArray<CPtrArray,CGameDialogEntry*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrArray<CPtrArray,CSpawnPoint*>", {
 			{"CObject", offsetofbase<CTypedPtrArray<CPtrArray,CSpawnPoint*>, CObject>()},
@@ -911,11 +911,23 @@ void registerBaseclasses() {
 		{"CMessageUpdateReaction::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageUpdateReaction::vtbl, CMessage::vtbl>()},
 		}},
+		{"CMessageUpdateMachineState", {
+			{"CMessage", offsetofbase<CMessageUpdateMachineState, CMessage>()},
+		}},
+		{"CMessageUpdateMachineState::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageUpdateMachineState::vtbl, CMessage::vtbl>()},
+		}},
 		{"CMessageSetDirection", {
 			{"CMessage", offsetofbase<CMessageSetDirection, CMessage>()},
 		}},
 		{"CMessageSetDirection::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageSetDirection::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageExitDialogMode", {
+			{"CMessage", offsetofbase<CMessageExitDialogMode, CMessage>()},
+		}},
+		{"CMessageExitDialogMode::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageExitDialogMode::vtbl, CMessage::vtbl>()},
 		}},
 		{"CMessageDisplayTextRef", {
 			{"CMessage", offsetofbase<CMessageDisplayTextRef, CMessage>()},

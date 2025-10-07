@@ -104,11 +104,13 @@ struct CGameArea;
 struct CGameAreaNotes;
 struct CGameContainer;
 struct CGameDialogReply;
+struct CGameDialogSprite;
 struct CGameDoor;
 struct CGameEffect;
 struct CGameEffectUsability;
 struct CGameFile;
 struct CGameObject;
+struct CGameSave;
 struct CGameSprite;
 struct CGameTrigger;
 struct CImmunitiesAIType;
@@ -155,6 +157,7 @@ struct CSoundMixerImp;
 struct CSpawn;
 struct CSpell;
 struct CString;
+struct CTimerWorld;
 struct CTlkTable;
 struct CUIControlTextDisplay;
 struct CVVCHashEntry;
@@ -2597,15 +2600,6 @@ struct CTlkFileOverride
 	CTlkFileOverride() = delete;
 };
 
-struct CTimerWorld
-{
-	unsigned int m_gameTime;
-	unsigned __int8 m_active;
-	unsigned __int8 m_nLastPercentage;
-
-	CTimerWorld() = delete;
-};
-
 struct CSpellLevelDecrementing
 {
 	int m_bImmune;
@@ -4580,6 +4574,23 @@ struct CVidPoly
 	void (__fastcall *m_pDrawHLineFunction)(CVidPoly*, void*, int, int, unsigned int, const CRect*, const CPoint*);
 
 	CVidPoly() = delete;
+};
+
+struct CTimerWorld
+{
+	unsigned int m_gameTime;
+	unsigned __int8 m_active;
+	unsigned __int8 m_nLastPercentage;
+
+	CTimerWorld() = delete;
+
+	typedef void (__thiscall *type_StartTime)(CTimerWorld* pThis);
+	static type_StartTime p_StartTime;
+
+	void StartTime()
+	{
+		p_StartTime(this);
+	}
 };
 
 struct CString
@@ -6559,6 +6570,27 @@ struct CMessageUpdateReaction : CMessage
 	}
 };
 
+struct CMessageUpdateMachineState : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	unsigned int m_dwFlags;
+
+	CMessageUpdateMachineState() = delete;
+
+	void Construct(uint dwFlags, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_dwFlags = dwFlags;
+	}
+};
+
 struct CMessageSetDirection : CMessage
 {
 	struct vtbl : CMessage::vtbl
@@ -6577,6 +6609,27 @@ struct CMessageSetDirection : CMessage
 		m_sourceId = caller;
 		m_targetId = target;
 		m_face = face;
+	}
+};
+
+struct CMessageExitDialogMode : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	static void* VFTable;
+	unsigned __int8 m_bButtonPushed;
+
+	CMessageExitDialogMode() = delete;
+
+	void Construct(byte bButtonPushed, int caller, int target)
+	{
+		*reinterpret_cast<void**>(this) = VFTable;
+		m_sourceId = caller;
+		m_targetId = target;
+		m_bButtonPushed = bButtonPushed;
 	}
 };
 
@@ -7813,6 +7866,9 @@ extern type_uiPop p_uiPop;
 typedef bool (*type_uiPush)(const char* name);
 extern type_uiPush p_uiPush;
 
+typedef void (*type_uiSetHidden)(bool bHidden);
+extern type_uiSetHidden p_uiSetHidden;
+
 typedef int (*type_uiVariantAsInt)(uiVariant* var);
 extern type_uiVariantAsInt p_uiVariantAsInt;
 
@@ -8124,6 +8180,9 @@ struct CResRef
 {
 	Array<unsigned __int8,8> m_resRef;
 
+	typedef void (__thiscall *type_CopyToString)(CResRef* pThis, CString* str);
+	static type_CopyToString p_CopyToString;
+
 	void get(lua_State* L)
 	{
 		char* localCopy = (char*)alloca(sizeof(m_resRef) + 1);
@@ -8183,6 +8242,11 @@ struct CResRef
 			nullTerminatedStr[i] = readVal;
 		}
 		nullTerminatedStr[i] = '\0';
+	}
+
+	void CopyToString(CString* str)
+	{
+		p_CopyToString(this, str);
 	}
 };
 
@@ -8250,6 +8314,45 @@ struct CButtonData
 	void Construct()
 	{
 		p_Construct(this);
+	}
+};
+
+struct CGameDialogSprite
+{
+	CResRef m_file;
+	CTypedPtrArray<CPtrArray,CGameDialogEntry*> m_dialogEntries;
+	CTypedPtrArray<CPtrArray,CGameDialogEntry*> m_dialogEntriesOrdered;
+	int m_characterIndex;
+	int m_talkerIndex;
+	unsigned int m_currentEntryIndex;
+	int m_waitingForResponse;
+	int m_responseMarker;
+	unsigned int m_playerColor;
+	CString m_playerName;
+	int m_dialogFreezeCounter;
+	int m_dialogFreezeMultiplayer;
+	unsigned int m_dWFlags;
+	int m_bPlayedStartSound;
+	int m_bItemDialog;
+	int m_bSuppressName;
+	int m_UpdateTime;
+
+	CGameDialogSprite() = delete;
+
+	typedef void (__thiscall *type_EndDialog)(CGameDialogSprite* pThis);
+	static type_EndDialog p_EndDialog;
+
+	typedef void (__thiscall *type_ResetDialogStates)(CGameDialogSprite* pThis);
+	static type_ResetDialogStates p_ResetDialogStates;
+
+	void EndDialog()
+	{
+		p_EndDialog(this);
+	}
+
+	void ResetDialogStates()
+	{
+		p_ResetDialogStates(this);
 	}
 };
 
@@ -9343,29 +9446,6 @@ struct CCriticalEntry
 	int m_bonus;
 
 	CCriticalEntry() = delete;
-};
-
-struct CGameDialogSprite
-{
-	CResRef m_file;
-	CTypedPtrArray<CPtrArray,CGameDialogEntry*> m_dialogEntries;
-	CTypedPtrArray<CPtrArray,CGameDialogEntry*> m_dialogEntriesOrdered;
-	int m_characterIndex;
-	int m_talkerIndex;
-	unsigned int m_currentEntryIndex;
-	int m_waitingForResponse;
-	int m_responseMarker;
-	unsigned int m_playerColor;
-	CString m_playerName;
-	int m_dialogFreezeCounter;
-	int m_dialogFreezeMultiplayer;
-	unsigned int m_dWFlags;
-	int m_bPlayedStartSound;
-	int m_bItemDialog;
-	int m_bSuppressName;
-	int m_UpdateTime;
-
-	CGameDialogSprite() = delete;
 };
 
 struct CImmunitiesItemEquip
@@ -11394,6 +11474,9 @@ struct CInfinity
 	typedef void (__thiscall *type_SetZoom)(CInfinity* pThis, float fZoom);
 	static type_SetZoom p_SetZoom;
 
+	typedef void (__thiscall *type_GetViewPosition)(CInfinity* pThis, int* pXOut, int* pYOut);
+	static type_GetViewPosition p_GetViewPosition;
+
 	void FitViewPosition(int* x, int* y, const CRect* r)
 	{
 		p_FitViewPosition(this, x, y, r);
@@ -11422,6 +11505,11 @@ struct CInfinity
 	void SetZoom(float fZoom)
 	{
 		p_SetZoom(this, fZoom);
+	}
+
+	void GetViewPosition(int* pXOut, int* pYOut)
+	{
+		p_GetViewPosition(this, pXOut, pYOut);
 	}
 };
 
@@ -11581,6 +11669,14 @@ struct CGameSave
 	int m_nCutSceneStatusOverride;
 
 	CGameSave() = delete;
+
+	typedef void (__thiscall *type_SetInputMode)(CGameSave* pThis, uint mode);
+	static type_SetInputMode p_SetInputMode;
+
+	void SetInputMode(uint mode)
+	{
+		p_SetInputMode(this, mode);
+	}
 };
 
 struct CGameRemoteObjectArray
@@ -11798,6 +11894,12 @@ struct CInfGame
 	typedef void (__thiscall *type_UnselectAll)(CInfGame* pThis);
 	static type_UnselectAll p_UnselectAll;
 
+	typedef CGameArea* (__thiscall *type_GetArea)(CInfGame* pThis, CString* areaName);
+	static type_GetArea p_GetArea;
+
+	typedef void (__thiscall *type_SetVisibleArea)(CInfGame* pThis, byte nAreaId);
+	static type_SetVisibleArea p_SetVisibleArea;
+
 	short GetCharacterPortraitNum(int characterId)
 	{
 		return p_GetCharacterPortraitNum(this, characterId);
@@ -11841,6 +11943,16 @@ struct CInfGame
 	void UnselectAll()
 	{
 		p_UnselectAll(this);
+	}
+
+	CGameArea* GetArea(CString* areaName)
+	{
+		return p_GetArea(this, areaName);
+	}
+
+	void SetVisibleArea(byte nAreaId)
+	{
+		p_SetVisibleArea(this, nAreaId);
 	}
 };
 
@@ -13230,6 +13342,12 @@ struct CGameArea
 	typedef void (__thiscall *type_ShowMonstersInArea)(CGameArea* pThis, CGameAreaClairvoyanceEntry* pEntry);
 	static type_ShowMonstersInArea p_ShowMonstersInArea;
 
+	typedef void (__thiscall *type_OnActivation)(CGameArea* pThis);
+	static type_OnActivation p_OnActivation;
+
+	typedef void (__thiscall *type_OnDeactivation)(CGameArea* pThis);
+	static type_OnDeactivation p_OnDeactivation;
+
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
 	int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
@@ -13277,6 +13395,16 @@ struct CGameArea
 	void ShowMonstersInArea(CGameAreaClairvoyanceEntry* pEntry)
 	{
 		p_ShowMonstersInArea(this, pEntry);
+	}
+
+	void OnActivation()
+	{
+		p_OnActivation(this);
+	}
+
+	void OnDeactivation()
+	{
+		p_OnDeactivation(this);
 	}
 };
 

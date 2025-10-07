@@ -8,4 +8,6 @@
 //-----------------------------//
 
 int getMenuStackTop();
+int getMenuX(uiMenu* pMenu);
+int getMenuY(uiMenu* pMenu);
 uiMenu* getStackMenu(int num);
