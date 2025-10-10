@@ -2193,6 +2193,10 @@ void EEex::UncapFPS_Hook_OnAfterAreaActivated(CGameArea* pArea)
 
 void EEex::UncapFPS_Hook_OnBeforeAreaDeactivated(CGameArea* pArea)
 {
+	// Vanilla Bugfix: Hovering over an object while opening the local map shouldn't prevent area changes
+	// |
+	pArea->m_iPicked = -1;
+
 	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
 
 	if (pChitin->pActiveEngine != pChitin->m_pEngineMap)
