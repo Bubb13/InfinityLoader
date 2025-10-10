@@ -3,6 +3,7 @@
 
 #include "EEex.h"
 #include "coordinate_util.hpp"
+#include "lua_util.hpp"
 #include "menu_util.hpp"
 #include "time_util.hpp"
 
@@ -25,18 +26,21 @@ constexpr int EXP_SCROLL_MIN_STEP = 2500;
 //          Structs          //
 //---------------------------//
 
-struct ExInfinityData
-{
-	long long nLastAutoZoomTime = 0;
-	long long nAutoZoomTimeRemaining = 0;
-};
-
 struct ExMenuStateOverrides
 {
 	bool bWorldActionbarOpen = false;
 	bool bWorldDialogOpen    = false;
 	bool bWorldMessagesOpen  = false;
 	bool bWorldQuicklootOpen = false;
+	float fZoom;
+};
+
+struct ExAdjustViewPositionOverrides
+{
+	ExMenuStateOverrides* pMenuStateOverrides;
+	CPoint* pPos;
+	CPoint* pPosExact;
+	CRect* pViewPort;
 };
 
 enum class ExpScrollEndReason
@@ -124,16 +128,18 @@ void RollingAverage<T>::recalculate(long long currentTime)
 
 RollingAverage<int> averageSyncUpdateDelta { 1000000 };
 ExMenuStateOverrides beforeWorldScreenDeactivatedMenuStates{};
-std::unordered_map<void*, ExInfinityData> exInfinityDataMap{};
 long long nLastScrollTime = 0;
 bool bAutoScrollFirstTick = false;
+long long nLastAutoZoomTime = 0;
 long long nLastSyncUpdateTime = 0;
 long long nLastTPSPrintTime = 0;
 long long nNextLightSyncUpdateTick = -1;
 long long nNextFullSyncUpdateTick = 0;
+long long nRemainingAutoZoomTime = 0;
 long long nRemainingScrollTime = 0;
 long long nTransitionStartTime = 0;
 long long nTransitionEndTime = 0;
+CPoint ptMapPosExact;
 
 //-----------------------------//
 //          Functions          //
@@ -157,77 +163,6 @@ static SDL_Keymod operator&(const SDL_Keymod& a, const SDL_Keymod b)
 // Scrolling Utility //
 ///////////////////////
 
-static int clampStep(int distance, int speed, int minStep)
-{
-	if (std::abs(distance) <= std::abs(minStep)) return distance;
-	const int nStep = distance / speed;
-	return nStep >= 0 ? (std::max)(minStep, nStep) : (std::min)(nStep, -minStep);
-}
-
-static ExpScrollResult expScrollNumSteps(int src, int dst, int minStep, int threshold, int speed)
-{
-	if (dst > src)
-	{
-		minStep = -minStep;
-	}
-
-	int nStepAmount = (src - dst) / speed;
-
-	if (nStepAmount == 0)
-	{
-		return { false, ExpScrollEndReason::GRANULARITY, 1 }; // Hit granularity limit; no progress can be made at higher speeds
-	}
-
-	bool hadNonMinStep = false;
-	int nStepCount = 2;
-
-	for (int cur = src;; ++nStepCount)
-	{
-		if (std::abs(nStepAmount) < std::abs(minStep))
-		{
-			nStepAmount = minStep;
-		}
-		else
-		{
-			hadNonMinStep = true;
-		}
-
-		cur -= nStepAmount;
-
-		if (std::abs(cur - dst) <= threshold)
-		{
-			return { hadNonMinStep, ExpScrollEndReason::THRESHOLD, nStepCount };
-		}
-
-		nStepAmount = (cur - dst) / speed;
-
-		if (nStepAmount == 0)
-		{
-			return { hadNonMinStep, ExpScrollEndReason::NORMAL, nStepCount };
-		}
-	}
-}
-
-static int expScrollScaleSpeedToTime(int src, int dst, int minStep, int threshold, int microsecondDelta, long long targetMicroseconds)
-{
-	if (std::abs(src - dst) <= threshold)
-	{
-		return 1;
-	}
-
-	for (int speed = 1;; ++speed)
-	{
-		const ExpScrollResult result = expScrollNumSteps(src, dst, minStep, threshold, speed);
-		const ExpScrollEndReason endReason = result.endReason;
-		const int nSteps = result.nStepCount;
-
-		if (!result.bHadNonMinStep || endReason == ExpScrollEndReason::GRANULARITY || nSteps * microsecondDelta >= targetMicroseconds)
-		{
-			return speed;
-		}
-	}
-}
-
 static void fitViewPosition(CInfinity* pInfinity, int* pX, int* pY, CRect* pViewPort,
 	ExMenuStateOverrides* pMenuStateOverrides, bool bTheoretical)
 {
@@ -242,9 +177,7 @@ static void fitViewPosition(CInfinity* pInfinity, int* pX, int* pY, CRect* pView
 
 	bool bSetNoScrollCursor = false;
 
-	const float fEffectiveZoom = pChitin->pActiveEngine != pChitin->m_pEngineMap
-		? pInfinity->m_fZoom
-		: pWorld->m_fOriginalZoom;
+	const float fEffectiveZoom = pMenuStateOverrides == nullptr ? pInfinity->m_fZoom : pMenuStateOverrides->fZoom;
 
 	//////////////////////////////////////
 	// Calculate allowed horizontal OOB //
@@ -507,6 +440,307 @@ static void fitViewPosition(CInfinity* pInfinity, int* pX, int* pY, CRect* pView
 	}
 }
 
+static void adjustViewPosition(CInfinity* pInfinity, byte nScrollState, ExAdjustViewPositionOverrides* pExOverrides)
+{
+	const uint nCurrentTick = p_SDL_GetTicks();
+	// |
+	// Patch: Scroll based on microsecond measurements (versus the millisecond-based vanilla implementation)
+	// |
+	// | const uint nDeltaT = nCurrentTick >= pInfinity->m_nLastTickCount
+	// | 	? (std::min)(nCurrentTick - pInfinity->m_nLastTickCount, 500U)
+	// | 	: 500U;
+	// |
+	pInfinity->m_nLastTickCount = nCurrentTick;
+	// |
+	const long long nCurrentTime = getTime();
+	const int nScrollUpdateDelta = static_cast<int>(nCurrentTime - nLastScrollTime);
+	const int nDeltaT = (std::max)(1, (std::min)(nScrollUpdateDelta, 500000));
+	nLastScrollTime = nCurrentTime;
+
+	// Not scrolling
+	if (nScrollState == 0)
+	{
+		return;
+	}
+
+	// Hit edge of scrollable area
+	if (nScrollState == 9)
+	{
+		return;
+	}
+
+	// Patch: Allow theoretical movement
+	// |
+	if (pExOverrides == nullptr)
+	{
+		// Stop auto scrolling
+		pInfinity->m_ptScrollDest.x = -1;
+		pInfinity->m_ptScrollDest.y = -1;
+	}
+
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+	CInfGame *const pGame = pChitin->m_pObjectGame;
+
+	const float fEffectiveZoom = pExOverrides == nullptr ? pInfinity->m_fZoom : pExOverrides->pMenuStateOverrides->fZoom;
+
+	const int nSpeedBase = static_cast<int>(
+		static_cast<float>(*CVidMode::p_SCREENHEIGHT)         // Internal resolution height
+		/ pChitin->cVideo.pCurrentMode->nHeight               // Window height
+		/ (*CInfinity::p_MAXZOOM_OUT + 1.0f - fEffectiveZoom) // Zoom factor
+		* pGame->GetScrollSpeed());                           // Scroll speed
+
+	// Patch: Scroll based on microsecond measurements (versus the millisecond-based vanilla implementation)
+	// |
+	// | const int nSpeedFast   = nSpeedBase * 200;
+	// | const int nSpeedMedium = nSpeedBase * 150;
+	// | const int nSpeedSlow   = nSpeedBase * 100;
+	// |
+	const float nSpeedSlow   = nSpeedBase * 0.1f;
+	const float nSpeedMedium = nSpeedSlow * 1.5f;
+	const float nSpeedFast   = nSpeedSlow * 2.0f;
+
+	// Vanilla Bugfix: Don't reset exact-coordinate movement
+	// |
+	// | const int nExactX = pInfinity->nNewX * 10000;
+	// | const int nExactY = pInfinity->nNewY * 10000;
+	// |
+	// | pInfinity->m_ptCurrentPosExact.x = nExactX;
+	// | pInfinity->m_ptCurrentPosExact.y = nExactY;
+	// |
+	CPoint *const pPosExact = pExOverrides == nullptr ? &pInfinity->m_ptCurrentPosExact : pExOverrides->pPosExact;
+	int nExactX = pPosExact->x;
+	int nExactY = pPosExact->y;
+
+	// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+	// |
+	// | int nDestX;
+	// | int nDestY;
+
+	switch (nScrollState)
+	{
+		case 1: // Up
+		{
+			const int nExactDestY = nExactY - static_cast<int>(nDeltaT * nSpeedMedium);
+
+			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+			// |
+			// | nDestX = nExactX / 10000;
+			// | nDestY = nExactDestY / 10000;
+
+			nExactY = nExactDestY;
+			break;
+		}
+		case 2: // Right + Up
+		{
+			const int nExactDestX = nExactX + static_cast<int>(nDeltaT * nSpeedMedium);
+			const int nExactDestY = nExactY - static_cast<int>(nDeltaT * nSpeedSlow);
+
+			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+			// |
+			// | nDestX = nExactDestX / 10000;
+			// | nDestY = nExactDestY / 10000;
+
+			nExactX = nExactDestX;
+			nExactY = nExactDestY;
+			break;
+		}
+		case 3: // Right
+		{
+			const int nExactDestX = nExactX + static_cast<int>(nDeltaT * nSpeedFast);
+
+			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+			// |
+			// | nDestX = nExactDestX / 10000;
+			// | nDestY = nExactY / 10000;
+
+			nExactX = nExactDestX;
+			break;
+		}
+		case 4: // Right + Down
+		{
+			const int nExactDestX = nExactX + static_cast<int>(nDeltaT * nSpeedMedium);
+			const int nExactDestY = nExactY + static_cast<int>(nDeltaT * nSpeedSlow);
+
+			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+			// |
+			// | nDestX = nExactDestX / 10000;
+			// | nDestY = nExactDestY / 10000;
+
+			nExactX = nExactDestX;
+			nExactY = nExactDestY;
+			break;
+		}
+		case 5: // Down
+		{
+			const int nExactDestY = nExactY + static_cast<int>(nDeltaT * nSpeedMedium);
+
+			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+			// |
+			// | nDestX = nExactX / 10000;
+			// | nDestY = nExactDestY / 10000;
+
+			nExactY = nExactDestY;
+			break;
+		}
+		case 6: // Left + Down
+		{
+			const int nExactDestX = nExactX - static_cast<int>(nDeltaT * nSpeedMedium);
+			const int nExactDestY = nExactY + static_cast<int>(nDeltaT * nSpeedSlow);
+
+			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+			// |
+			// | nDestX = nExactDestX / 10000;
+			// | nDestY = nExactDestY / 10000;
+
+			nExactX = nExactDestX;
+			nExactY = nExactDestY;
+			break;
+		}
+		case 7: // Left
+		{
+			const int nExactDestX = nExactX - static_cast<int>(nDeltaT * nSpeedFast);
+
+			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+			// |
+			// | nDestX = nExactDestX / 10000;
+			// | nDestY = nExactY / 10000;
+
+			nExactX = nExactDestX;
+			break;
+		}
+		case 8: // Left + Up
+		{
+			const int nExactDestX = nExactX - static_cast<int>(nDeltaT * nSpeedMedium);
+			const int nExactDestY = nExactY - static_cast<int>(nDeltaT * nSpeedSlow);
+
+			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+			// |
+			// | nDestX = nExactDestX / 10000;
+			// | nDestY = nExactDestY / 10000;
+
+			nExactX = nExactDestX;
+			nExactY = nExactDestY;
+			break;
+		}
+		default:
+		{
+			return;
+		}
+	}
+
+	// Patch: Allow theoretical movement
+	// |
+	if (pExOverrides == nullptr)
+	{
+		// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
+		// |
+		// | pInfinity->FitViewPosition(&nDestX, &nDestY, &pInfinity->rViewPort);
+		// | pInfinity->nNewX = nDestX;
+		// | pInfinity->nNewY = nDestY;
+		// |
+		pPosExact->x = nExactX;
+		pPosExact->y = nExactY;
+		setViewPositionFromExact(pInfinity);
+	}
+	else
+	{
+		const int nX = nExactX / 10000;
+		const int nY = nExactY / 10000;
+
+		int nFitX = nX;
+		int nFitY = nY;
+		fitViewPosition(pInfinity, &nFitX, &nFitY, pExOverrides->pViewPort, pExOverrides->pMenuStateOverrides, true);
+
+		if (nFitX != nX)
+		{
+			nExactX = nFitX * 10000;
+		}
+
+		if (nFitY != nY)
+		{
+			nExactY = nFitY * 10000;
+		}
+
+		CPoint *const pPos = pExOverrides->pPos;
+		pPos->x = nFitX;
+		pPos->y = nFitY;
+
+		pPosExact->x = nExactX;
+		pPosExact->y = nExactY;
+	}
+}
+
+static int clampStep(int distance, int speed, int minStep)
+{
+	if (std::abs(distance) <= std::abs(minStep)) return distance;
+	const int nStep = distance / speed;
+	return nStep >= 0 ? (std::max)(minStep, nStep) : (std::min)(nStep, -minStep);
+}
+
+static ExpScrollResult expScrollNumSteps(int src, int dst, int minStep, int threshold, int speed)
+{
+	if (dst > src)
+	{
+		minStep = -minStep;
+	}
+
+	int nStepAmount = (src - dst) / speed;
+
+	if (nStepAmount == 0)
+	{
+		return { false, ExpScrollEndReason::GRANULARITY, 1 }; // Hit granularity limit; no progress can be made at higher speeds
+	}
+
+	bool hadNonMinStep = false;
+	int nStepCount = 2;
+
+	for (int cur = src;; ++nStepCount)
+	{
+		if (std::abs(nStepAmount) < std::abs(minStep))
+		{
+			nStepAmount = minStep;
+		}
+		else
+		{
+			hadNonMinStep = true;
+		}
+
+		cur -= nStepAmount;
+
+		if (std::abs(cur - dst) <= threshold)
+		{
+			return { hadNonMinStep, ExpScrollEndReason::THRESHOLD, nStepCount };
+		}
+
+		nStepAmount = (cur - dst) / speed;
+
+		if (nStepAmount == 0)
+		{
+			return { hadNonMinStep, ExpScrollEndReason::NORMAL, nStepCount };
+		}
+	}
+}
+
+static int expScrollScaleSpeedToTime(int src, int dst, int minStep, int threshold, int microsecondDelta, long long targetMicroseconds)
+{
+	if (std::abs(src - dst) <= threshold)
+	{
+		return 1;
+	}
+
+	for (int speed = 1;; ++speed)
+	{
+		const ExpScrollResult result = expScrollNumSteps(src, dst, minStep, threshold, speed);
+		const ExpScrollEndReason endReason = result.endReason;
+		const int nSteps = result.nStepCount;
+
+		if (!result.bHadNonMinStep || endReason == ExpScrollEndReason::GRANULARITY || nSteps * microsecondDelta >= targetMicroseconds)
+		{
+			return speed;
+		}
+	}
+}
+
 ///////////////////
 // Lua Functions //
 ///////////////////
@@ -514,6 +748,11 @@ static void fitViewPosition(CInfinity* pInfinity, int* pX, int* pY, CRect* pView
 long long EEex::GetMicroseconds()
 {
 	return getTime() - getInitTime();
+}
+
+void EEex::UpdateLastScrollTime()
+{
+	nLastScrollTime = getTime();
 }
 
 ///////////
@@ -913,191 +1152,45 @@ void CChitin::Override_Update()
 
 void CInfinity::Override_AdjustViewPosition(byte nScrollState)
 {
-	const uint nCurrentTick = p_SDL_GetTicks();
-	// |
-	// Patch: Scroll based on microsecond measurements (versus the millisecond-based vanilla implementation)
-	// |
-	// | const uint nDeltaT = nCurrentTick >= this->m_nLastTickCount
-	// | 	? (std::min)(nCurrentTick - this->m_nLastTickCount, 500U)
-	// | 	: 500U;
-	// |
-	this->m_nLastTickCount = nCurrentTick;
-	// |
-	const long long nCurrentTime = getTime();
-	const int nScrollUpdateDelta = static_cast<int>(nCurrentTime - nLastScrollTime);
-	const int nDeltaT = (std::max)(1, (std::min)(nScrollUpdateDelta, 500000));
-	nLastScrollTime = nCurrentTime;
-
-	// Not scrolling
-	if (nScrollState == 0)
-	{
-		return;
-	}
-
-	// Hit edge of scrollable area
-	if (nScrollState == 9)
-	{
-		return;
-	}
-
-	// Stop auto scrolling
-	this->m_ptScrollDest.x = -1;
-	this->m_ptScrollDest.y = -1;
-
 	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
-	CInfGame *const pGame = pChitin->m_pObjectGame;
+	CWarp *const pActiveEngine = pChitin->pActiveEngine;
 
-	const int nSpeedBase = static_cast<int>(
-		static_cast<float>(*CVidMode::p_SCREENHEIGHT)        // Internal resolution height
-		/ pChitin->cVideo.pCurrentMode->nHeight              // Window height
-		/ (*CInfinity::p_MAXZOOM_OUT + 1.0f - this->m_fZoom) // Zoom factor
-		* pGame->GetScrollSpeed());                          // Scroll speed
-
-	// Patch: Scroll based on microsecond measurements (versus the millisecond-based vanilla implementation)
+	// Vanilla Bugfix: Scrolling keys should actually work on the map screen
 	// |
-	// | const int nSpeedFast   = nSpeedBase * 200;
-	// | const int nSpeedMedium = nSpeedBase * 150;
-	// | const int nSpeedSlow   = nSpeedBase * 100;
-	// |
-	const float nSpeedSlow   = nSpeedBase * 0.1f;
-	const float nSpeedMedium = nSpeedSlow * 1.5f;
-	const float nSpeedFast   = nSpeedSlow * 2.0f;
-
-	// Vanilla Bugfix: Don't reset exact-coordinate movement
-	// |
-	// | const int nExactX = this->nNewX * 10000;
-	// | const int nExactY = this->nNewY * 10000;
-	// |
-	// | this->m_ptCurrentPosExact.x = nExactX;
-	// | this->m_ptCurrentPosExact.y = nExactY;
-	// |
-	const int nExactX = this->m_ptCurrentPosExact.x;
-	const int nExactY = this->m_ptCurrentPosExact.y;
-
-	// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-	// |
-	// | int nDestX;
-	// | int nDestY;
-
-	switch (nScrollState)
+	if (pActiveEngine != pChitin->m_pEngineMap)
 	{
-		case 1: // Up
+		CScreenWorld *const pScreenWorld = pChitin->m_pEngineWorld;
+
+		// Patch: Don't adjust view position if autozooming
+		// |
+		if (pActiveEngine != pScreenWorld || !pScreenWorld->m_bAutoZooming)
 		{
-			const int nExactDestY = nExactY - static_cast<int>(nDeltaT * nSpeedMedium);
-
-			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-			// |
-			// | nDestX = nExactX / 10000;
-			// | nDestY = nExactDestY / 10000;
-
-			this->m_ptCurrentPosExact.y = nExactDestY;
-			break;
-		}
-		case 2: // Right + Up
-		{
-			const int nExactDestX = nExactX + static_cast<int>(nDeltaT * nSpeedMedium);
-			const int nExactDestY = nExactY - static_cast<int>(nDeltaT * nSpeedSlow);
-
-			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-			// |
-			// | nDestX = nExactDestX / 10000;
-			// | nDestY = nExactDestY / 10000;
-
-			this->m_ptCurrentPosExact.x = nExactDestX;
-			this->m_ptCurrentPosExact.y = nExactDestY;
-			break;
-		}
-		case 3: // Right
-		{
-			const int nExactDestX = nExactX + static_cast<int>(nDeltaT * nSpeedFast);
-
-			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-			// |
-			// | nDestX = nExactDestX / 10000;
-			// | nDestY = nExactY / 10000;
-
-			this->m_ptCurrentPosExact.x = nExactDestX;
-			break;
-		}
-		case 4: // Right + Down
-		{
-			const int nExactDestX = nExactX + static_cast<int>(nDeltaT * nSpeedMedium);
-			const int nExactDestY = nExactY + static_cast<int>(nDeltaT * nSpeedSlow);
-
-			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-			// |
-			// | nDestX = nExactDestX / 10000;
-			// | nDestY = nExactDestY / 10000;
-
-			this->m_ptCurrentPosExact.x = nExactDestX;
-			this->m_ptCurrentPosExact.y = nExactDestY;
-			break;
-		}
-		case 5: // Down
-		{
-			const int nExactDestY = nExactY + static_cast<int>(nDeltaT * nSpeedMedium);
-
-			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-			// |
-			// | nDestX = nExactX / 10000;
-			// | nDestY = nExactDestY / 10000;
-
-			this->m_ptCurrentPosExact.y = nExactDestY;
-			break;
-		}
-		case 6: // Left + Down
-		{
-			const int nExactDestX = nExactX - static_cast<int>(nDeltaT * nSpeedMedium);
-			const int nExactDestY = nExactY + static_cast<int>(nDeltaT * nSpeedSlow);
-
-			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-			// |
-			// | nDestX = nExactDestX / 10000;
-			// | nDestY = nExactDestY / 10000;
-
-			this->m_ptCurrentPosExact.x = nExactDestX;
-			this->m_ptCurrentPosExact.y = nExactDestY;
-			break;
-		}
-		case 7: // Left
-		{
-			const int nExactDestX = nExactX - static_cast<int>(nDeltaT * nSpeedFast);
-
-			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-			// |
-			// | nDestX = nExactDestX / 10000;
-			// | nDestY = nExactY / 10000;
-
-			this->m_ptCurrentPosExact.x = nExactDestX;
-			break;
-		}
-		case 8: // Left + Up
-		{
-			const int nExactDestX = nExactX - static_cast<int>(nDeltaT * nSpeedMedium);
-			const int nExactDestY = nExactY - static_cast<int>(nDeltaT * nSpeedSlow);
-
-			// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-			// |
-			// | nDestX = nExactDestX / 10000;
-			// | nDestY = nExactDestY / 10000;
-
-			this->m_ptCurrentPosExact.x = nExactDestX;
-			this->m_ptCurrentPosExact.y = nExactDestY;
-			break;
-		}
-		default:
-		{
-			return;
+			adjustViewPosition(this, nScrollState, nullptr);
 		}
 	}
+	else
+	{
+		CScreenWorld *const pScreenWorld = pChitin->m_pEngineWorld;
+		CRect *const pOriginalViewPort = &pScreenWorld->m_rOriginalViewPort;
 
-	// Vanilla Bugfix: Properly reset exact coordinates if CInfinity::FitViewPosition() snaps
-	// |
-	// | this->FitViewPosition(&nDestX, &nDestY, &this->rViewPort);
-	// | this->nNewX = nDestX;
-	// | this->nNewY = nDestY;
-	// |
-	setViewPositionFromExact(this);
+		beforeWorldScreenDeactivatedMenuStates.fZoom = pScreenWorld->m_fOriginalZoom;
+
+		CPoint ptOriginal { ptMapPosExact.x / 10000, ptMapPosExact.y / 10000 };
+
+		ExAdjustViewPositionOverrides state;
+		state.pMenuStateOverrides = &beforeWorldScreenDeactivatedMenuStates;
+		state.pPos                = &ptOriginal;
+		state.pPosExact           = &ptMapPosExact;
+		state.pViewPort           = pOriginalViewPort;
+
+		adjustViewPosition(this, nScrollState, &state);
+
+		const int nViewPortWidth = pOriginalViewPort->right - pOriginalViewPort->left;
+		const int nViewPortHeight = pOriginalViewPort->bottom - pOriginalViewPort->top;
+
+		pScreenWorld->m_ptOriginalView.x = ptOriginal.x + nViewPortWidth / 2;
+		pScreenWorld->m_ptOriginalView.y = ptOriginal.y + nViewPortHeight / 2;
+	}
 }
 
 // Vanilla Implementation - So broken it's been rewritten
@@ -1381,8 +1474,6 @@ void CInfinity::Override_Scroll(CPoint ptDest, short speed)
 		// | 
 		// | const int nStepX = (this->nNewX - ptDest.x) / nSpeedAbs;
 		// | const int nStepY = (this->nNewY - ptDest.y) / nSpeedAbs;
-		// |
-		ExInfinityData& exInfinityData = exInfinityDataMap[this];
 		// |
 		const int nExactDestX = ptDest.x * 10000;
 		const int nExactDestY = ptDest.y * 10000;
@@ -1836,8 +1927,6 @@ void CScreenWorld::Override_StartScroll(CPoint dest, short speed)
 	{
 		// Patch: Scale exponential scrolling speed to make it approximate vanilla timings (which is based around 30fps)
 		// |
-		ExInfinityData& exInfinityData = exInfinityDataMap[pInfinity];
-		// |
 		const int nExactDestX = dest.x * 10000;
 		const int nExactDestY = dest.y * 10000;
 		// |
@@ -1897,6 +1986,102 @@ int __cdecl EEex::Override_Infinity_TransitionMenu(lua_State* L)
 //-----------------------------------//
 //          Local Map Fixes          //
 //-----------------------------------//
+
+void static handleAreaAutoZoom()
+{
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+	CScreenWorld *const pScreenWorld = pChitin->m_pEngineWorld;
+	CInfGame *const pGame = pChitin->m_pObjectGame;
+	CGameArea *const pArea = pGame->m_gameAreas[pGame->m_visibleArea];
+	CInfinity *const pInfinity = &pArea->m_cInfinity;
+
+	if (!pScreenWorld->m_bAutoZooming)
+	{
+		// Vanilla Bugfix: Maintain centering for small areas when the user resizes UI elements that allow OOB
+		// |
+		if (pChitin->pActiveEngine != pChitin->m_pEngineMap)
+		{
+			int x = pInfinity->nNewX;
+			int y = pInfinity->nNewY;
+			pInfinity->FitViewPosition(&x, &y, &pInfinity->rViewPort);
+			pInfinity->nNewX = x;
+			pInfinity->nNewY = y;
+		}
+
+		return;
+	}
+
+	// Patch: Keep track of auto zoom time delta
+	// |
+	const long long nCurrentTime = getTime();
+	const long long nDeltaT = nCurrentTime - nLastAutoZoomTime;
+	nLastAutoZoomTime = nCurrentTime;
+
+	// Patch: Calculate zoom percentage using time (instead of a static number of ticks)
+	// |
+	nRemainingAutoZoomTime = (std::max)(0LL, nRemainingAutoZoomTime - nDeltaT);
+
+	CRect *const pViewPort = &pInfinity->rViewPort;
+
+	// Patch: Calculate zoom percentage using time (instead of a static number of ticks)
+	// |
+	if (nRemainingAutoZoomTime == 0)
+	{
+		// Patch: Calculate zoom percentage using time (instead of a static number of ticks)
+		// |
+		// | pScreenWorld->m_nZoomCurStep = 0;
+
+		pInfinity->SetZoom(pScreenWorld->m_fTargetZoom);
+
+		const int nViewPortWidth  = pViewPort->right - pViewPort->left;
+		const int nViewPortHeight = pViewPort->bottom - pViewPort->top;
+
+		const int nTargetX = (pScreenWorld->m_ptTarget.x - nViewPortWidth / 2) * 10000;
+		const int nTargetY = (pScreenWorld->m_ptTarget.y - nViewPortHeight / 2) * 10000;
+		// |
+		setViewPositionToExact(pInfinity, nTargetX, nTargetY);
+
+		pScreenWorld->m_bAutoZooming = 0;
+
+		// Patch: Don't hitch if resuming a scroll state
+		// |
+		nLastScrollTime = nCurrentTime;
+	}
+	else
+	{
+		const float fPercentComplete = (AUTO_ZOOM_TARGET_TIME - nRemainingAutoZoomTime) / static_cast<float>(AUTO_ZOOM_TARGET_TIME);
+
+		const float fZoomRange   = pScreenWorld->m_fTargetZoom - pScreenWorld->m_fPreviousZoom;
+		const float fNewZoom     = pScreenWorld->m_fPreviousZoom + fZoomRange * fPercentComplete;
+
+		pInfinity->SetZoom(fNewZoom);
+
+		const int nPreviousX = pScreenWorld->m_ptPreviousView.x;
+		const int nPreviousY = pScreenWorld->m_ptPreviousView.y;
+
+		const int nViewPortWidth  = pViewPort->right - pViewPort->left;
+		const int nViewPortHeight = pViewPort->bottom - pViewPort->top;
+
+		const int nDeltaX = pScreenWorld->m_ptTarget.x - nPreviousX;
+		const int nDeltaY = pScreenWorld->m_ptTarget.y - nPreviousY;
+
+		// Patch: Scroll via exact coordinates
+		// |
+		// | const int nNewX = (nPreviousX - nViewPortWidth / 2) + static_cast<int>(nDeltaX * fZoomPercent);
+		// | const int nNewY = (nPreviousY - nViewPortHeight / 2) + static_cast<int>(nDeltaY * fZoomPercent);
+		// |
+		// | pInfinity->SetViewPosition(nNewX, nNewY, 1);
+		// |
+		pInfinity->m_ptCurrentPosExact.x = (nPreviousX - nViewPortWidth / 2) * 10000 + static_cast<int>(nDeltaX * 10000 * fPercentComplete);
+		pInfinity->m_ptCurrentPosExact.y = (nPreviousY - nViewPortHeight / 2) * 10000 + static_cast<int>(nDeltaY * 10000 * fPercentComplete);
+		// |
+		setViewPositionFromExact(pInfinity);
+	}
+
+	// Patch: Handle uncapped fps
+	// |
+	pArea->m_cGameAreaNotes.UpdateButtonPositions();
+}
 
 static void zoomOutToLocalMap(long long nCurrentTime, bool bOverwriteOriginal, bool bForceInstant)
 {
@@ -1961,6 +2146,11 @@ static void zoomOutToLocalMap(long long nCurrentTime, bool bOverwriteOriginal, b
 
 	if (bOverwriteOriginal)
 	{
+		// Patch: Maintain map engine viewport position separately
+		// |
+		ptMapPosExact.x = pInfinity->m_ptCurrentPosExact.x;
+		ptMapPosExact.y = pInfinity->m_ptCurrentPosExact.y;
+
 		pScreenWorld->m_ptOriginalView    = ptPreviousView;
 		pScreenWorld->m_rOriginalViewPort = *pViewPort;
 		pScreenWorld->m_fOriginalZoom     = pScreenWorld->m_fPreviousZoom;
@@ -1972,10 +2162,8 @@ static void zoomOutToLocalMap(long long nCurrentTime, bool bOverwriteOriginal, b
 	// |
 	pScreenWorld->m_bAutoZooming = true;
 	// |
-	ExInfinityData *const exInfinityData = &exInfinityDataMap[pInfinity];
-	// |
-	exInfinityData->nAutoZoomTimeRemaining = AUTO_ZOOM_TARGET_TIME;
-	exInfinityData->nLastAutoZoomTime = nCurrentTime;
+	nRemainingAutoZoomTime = AUTO_ZOOM_TARGET_TIME;
+	nLastAutoZoomTime = nCurrentTime;
 
 	if (bForceInstant || pGame->m_options.m_bAreaMapZoom == 0)
 	{
@@ -1983,107 +2171,13 @@ static void zoomOutToLocalMap(long long nCurrentTime, bool bOverwriteOriginal, b
 		// |
 		// | pScreenWorld->m_nZoomCurStep = 10;
 		// |
-		exInfinityData->nAutoZoomTimeRemaining = 0;
+		nRemainingAutoZoomTime = 0;
 	}
 }
 
 ///////////
 // Hooks //
 ///////////
-
-void EEex::UncapFPS_Hook_HandleAreaAutoZoom()
-{
-	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
-	CScreenWorld *const pScreenWorld = pChitin->m_pEngineWorld;
-	CInfGame *const pGame = pChitin->m_pObjectGame;
-	CGameArea *const pArea = pGame->m_gameAreas[pGame->m_visibleArea];
-	CInfinity *const pInfinity = &pArea->m_cInfinity;
-
-	if (!pScreenWorld->m_bAutoZooming)
-	{
-		// Vanilla Bugfix: Maintain centering for small areas when the user resizes UI elements that allow OOB
-		// |
-		if (pChitin->pActiveEngine != pChitin->m_pEngineMap)
-		{
-			int x = pInfinity->nNewX;
-			int y = pInfinity->nNewY;
-			pInfinity->FitViewPosition(&x, &y, &pInfinity->rViewPort);
-			pInfinity->nNewX = x;
-			pInfinity->nNewY = y;
-		}
-
-		return;
-	}
-
-	// Patch: Keep track of auto zoom time delta
-	// |
-	ExInfinityData *const exInfinityData = &exInfinityDataMap[pInfinity];
-	// |
-	const long long nCurrentTime = getTime();
-	const long long nDeltaT = nCurrentTime - exInfinityData->nLastAutoZoomTime;
-	exInfinityData->nLastAutoZoomTime = nCurrentTime;
-
-	// Patch: Calculate zoom percentage using time (instead of a static number of ticks)
-	// |
-	exInfinityData->nAutoZoomTimeRemaining = (std::max)(0LL, exInfinityData->nAutoZoomTimeRemaining - nDeltaT);
-
-	CRect *const pViewPort = &pInfinity->rViewPort;
-
-	// Patch: Calculate zoom percentage using time (instead of a static number of ticks)
-	// |
-	if (exInfinityData->nAutoZoomTimeRemaining == 0)
-	{
-		// Patch: Calculate zoom percentage using time (instead of a static number of ticks)
-		// |
-		// | pScreenWorld->m_nZoomCurStep = 0;
-
-		pInfinity->SetZoom(pScreenWorld->m_fTargetZoom);
-
-		const int nViewPortWidth  = pViewPort->right - pViewPort->left;
-		const int nViewPortHeight = pViewPort->bottom - pViewPort->top;
-
-		const int nTargetX = (pScreenWorld->m_ptTarget.x - nViewPortWidth / 2) * 10000;
-		const int nTargetY = (pScreenWorld->m_ptTarget.y - nViewPortHeight / 2) * 10000;
-		// |
-		setViewPositionToExact(pInfinity, nTargetX, nTargetY);
-
-		pScreenWorld->m_bAutoZooming = 0;
-	}
-	else
-	{
-		const float fPercentComplete = (AUTO_ZOOM_TARGET_TIME - exInfinityData->nAutoZoomTimeRemaining) / static_cast<float>(AUTO_ZOOM_TARGET_TIME);
-
-		const float fZoomRange   = pScreenWorld->m_fTargetZoom - pScreenWorld->m_fPreviousZoom;
-		const float fNewZoom     = pScreenWorld->m_fPreviousZoom + fZoomRange * fPercentComplete;
-
-		pInfinity->SetZoom(fNewZoom);
-
-		const int nPreviousX = pScreenWorld->m_ptPreviousView.x;
-		const int nPreviousY = pScreenWorld->m_ptPreviousView.y;
-
-		const int nViewPortWidth  = pViewPort->right - pViewPort->left;
-		const int nViewPortHeight = pViewPort->bottom - pViewPort->top;
-
-		const int nDeltaX = pScreenWorld->m_ptTarget.x - nPreviousX;
-		const int nDeltaY = pScreenWorld->m_ptTarget.y - nPreviousY;
-
-		// Patch: Scroll via exact coordinates
-		// |
-		// | const int nNewX = (nPreviousX - nViewPortWidth / 2) + static_cast<int>(nDeltaX * fZoomPercent);
-		// | const int nNewY = (nPreviousY - nViewPortHeight / 2) + static_cast<int>(nDeltaY * fZoomPercent);
-		// |
-		// | pInfinity->SetViewPosition(nNewX, nNewY, 1);
-		// |
-		pInfinity->m_ptCurrentPosExact.x = (nPreviousX - nViewPortWidth / 2) * 10000 + static_cast<int>(nDeltaX * 10000 * fPercentComplete);
-		pInfinity->m_ptCurrentPosExact.y = (nPreviousY - nViewPortHeight / 2) * 10000 + static_cast<int>(nDeltaY * 10000 * fPercentComplete);
-		// |
-		setViewPositionFromExact(pInfinity);
-	}
-
-	// Patch: Handle uncapped fps
-	// |
-	pArea->m_cGameAreaNotes.UpdateButtonPositions();
-}
 
 void EEex::UncapFPS_Hook_OnAfterAreaActivated(CGameArea* pArea)
 {
@@ -2120,6 +2214,17 @@ void EEex::UncapFPS_Hook_OnBeforeAreaDeactivated(CGameArea* pArea)
 	setViewPositionFromExact(pInfinity);
 }
 
+void EEex::UncapFPS_Hook_OnBeforeAreaRendered()
+{
+	lua_State *const L = *p_g_lua;
+	luaCallProtected(L, 0, 0, [&](int _)
+	{
+		lua_getglobal(L, "EEex_UncapFPS_LuaHook_CheckKeyboardScroll");
+	});
+
+	handleAreaAutoZoom();
+}
+
 ///////////////
 // Overrides //
 ///////////////
@@ -2143,7 +2248,13 @@ void CScreenMap::Override_CenterViewPort(CPoint* ptPoint)
 	// |
 	// Patch: Directly call EEex's reimplementation (instead of the shim) to force fit even though the map engine is active
 	// |
+	beforeWorldScreenDeactivatedMenuStates.fZoom = pWorld->m_fOriginalZoom;
 	fitViewPosition(pInfinity, &nX, &nY, &pWorld->m_rOriginalViewPort, &beforeWorldScreenDeactivatedMenuStates, true);
+
+	// Patch: Maintain map engine viewport position separately
+	// |
+	ptMapPosExact.x = nX * 10000;
+	ptMapPosExact.y = nY * 10000;
 
 	pWorld->m_ptOriginalView.x = nX + nOriginalViewPortCenterX;
 	pWorld->m_ptOriginalView.y = nY + nOriginalViewPortCenterY;
@@ -2176,9 +2287,8 @@ void CScreenWorld::Override_ResetZoom()
 		// |
 		// | this->m_nZoomCurStep = 0;
 		// |
-		ExInfinityData *const exInfinityData = &exInfinityDataMap[pInfinity];
-		exInfinityData->nAutoZoomTimeRemaining = AUTO_ZOOM_TARGET_TIME;
-		exInfinityData->nLastAutoZoomTime = nCurrentTime;
+		nRemainingAutoZoomTime = AUTO_ZOOM_TARGET_TIME;
+		nLastAutoZoomTime = nCurrentTime;
 
 		if (pGame->m_options.m_bAreaMapZoom == 0)
 		{
@@ -2186,9 +2296,7 @@ void CScreenWorld::Override_ResetZoom()
 			// |
 			// | this->m_nZoomCurStep = 10;
 			// |
-			ExInfinityData *const exInfinityData = &exInfinityDataMap[pInfinity];
-			// |
-			exInfinityData->nAutoZoomTimeRemaining = 0;
+			nRemainingAutoZoomTime = 0;
 		}
 	}
 	else
@@ -2197,10 +2305,8 @@ void CScreenWorld::Override_ResetZoom()
 		// |
 		// | this->m_nZoomCurStep = 10 - this->m_nZoomCurStep;
 		// |
-		ExInfinityData *const exInfinityData = &exInfinityDataMap[pInfinity];
-		// |
-		exInfinityData->nAutoZoomTimeRemaining = AUTO_ZOOM_TARGET_TIME - exInfinityData->nAutoZoomTimeRemaining;
-		exInfinityData->nLastAutoZoomTime = nCurrentTime;
+		nRemainingAutoZoomTime = AUTO_ZOOM_TARGET_TIME - nRemainingAutoZoomTime;
+		nLastAutoZoomTime = nCurrentTime;
 	}
 }
 
@@ -2244,10 +2350,8 @@ void CScreenWorld::Override_ZoomToMap(bool bOverwriteOriginal)
 		// |
 		// | this->m_nZoomCurStep = 10 - this->m_nZoomCurStep;
 		// |
-		ExInfinityData *const exInfinityData = &exInfinityDataMap[pInfinity];
-		// |
-		exInfinityData->nAutoZoomTimeRemaining = AUTO_ZOOM_TARGET_TIME - exInfinityData->nAutoZoomTimeRemaining;
-		exInfinityData->nLastAutoZoomTime = nCurrentTime;
+		nRemainingAutoZoomTime = AUTO_ZOOM_TARGET_TIME - nRemainingAutoZoomTime;
+		nLastAutoZoomTime = nCurrentTime;
 	}
 }
 

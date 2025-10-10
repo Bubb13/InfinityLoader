@@ -285,6 +285,12 @@ static int tolua_function_EEex_ShouldEffectBypassOp120(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_UpdateLastScrollTime(lua_State* L)
+{
+	EEex::UpdateLastScrollTime();
+	return 0;
+}
+
 static int tolua_function_CGameSprite_getUUID(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
@@ -734,6 +740,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "SetINIString", &tolua_function_EEex_SetINIString);
 		tolua_function(L, "SetUIItemExtraScrollbarPad", &tolua_function_EEex_SetUIItemExtraScrollbarPad);
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
+		tolua_function(L, "UpdateLastScrollTime", &tolua_function_EEex_UpdateLastScrollTime);
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");

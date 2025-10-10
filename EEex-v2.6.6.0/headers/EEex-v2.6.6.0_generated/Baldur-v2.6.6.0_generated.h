@@ -4533,6 +4533,7 @@ namespace EEex
 	void SetINIString(const char* iniPath, const char* section, const char* key, const char* value);
 	void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
 	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
+	void UpdateLastScrollTime();
 };
 
 struct ConstCharString

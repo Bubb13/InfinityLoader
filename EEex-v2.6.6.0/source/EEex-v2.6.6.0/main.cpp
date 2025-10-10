@@ -191,8 +191,8 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnAfterAreaActivated"), EEex::UncapFPS_Hook_OnAfterAreaActivated);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted"), EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnBeforeAreaDeactivated"), EEex::UncapFPS_Hook_OnBeforeAreaDeactivated);
+	exportPattern(TEXT("EEex::UncapFPS_Hook_OnBeforeAreaRendered"), EEex::UncapFPS_Hook_OnBeforeAreaRendered);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated"), EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated);
-	exportPattern(TEXT("EEex::UncapFPS_Hook_HandleAreaAutoZoom"), EEex::UncapFPS_Hook_HandleAreaAutoZoom);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_HandleTransitionMenuFade"), EEex::UncapFPS_Hook_HandleTransitionMenuFade);
 
 	////////////////////
