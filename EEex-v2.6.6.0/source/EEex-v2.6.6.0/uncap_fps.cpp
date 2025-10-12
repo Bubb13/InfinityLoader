@@ -128,15 +128,18 @@ void RollingAverage<T>::recalculate(long long currentTime)
 
 RollingAverage<int> averageSyncUpdateDelta { 1000000 };
 ExMenuStateOverrides beforeWorldScreenDeactivatedMenuStates{};
-long long nLastScrollTime = 0;
 bool bAutoScrollFirstTick = false;
+bool bFullTick = false;
 long long nLastAutoZoomTime = 0;
+long long nLastScrollTime = 0;
 long long nLastSyncUpdateTime = 0;
 long long nLastTPSPrintTime = 0;
-long long nNextLightSyncUpdateTick = -1;
 long long nNextFullSyncUpdateTick = 0;
+long long nNextLightSyncUpdateTick = -1;
 long long nRemainingAutoZoomTime = 0;
 long long nRemainingScrollTime = 0;
+int nScreenShakeSavedX = 0;
+int nScreenShakeSavedY = 0;
 long long nTransitionStartTime = 0;
 long long nTransitionEndTime = 0;
 CPoint ptMapPosExact;
@@ -841,6 +844,70 @@ void EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated()
 	beforeWorldScreenDeactivatedMenuStates.bWorldQuicklootOpen = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_QUICKLOOT" });
 }
 
+void EEex::UncapFPS_Hook_HandleScreenShake(CInfinity* pInfinity)
+{
+	nScreenShakeSavedX = pInfinity->nNewX;
+	nScreenShakeSavedY = pInfinity->nNewY;
+	pInfinity->SetViewPosition(pInfinity->nNewX + pInfinity->m_screenShakeDelta.x / 1024, pInfinity->nNewY + pInfinity->m_screenShakeDelta.y / 1024, 1);
+
+	// Patch: Limit to 30 tps for uncapped fps
+	// |
+	if (!bFullTick)
+	{
+		return;
+	}
+
+	const uint nGameTime = (*p_g_pBaldurChitin)->m_pObjectGame->m_worldTime.m_gameTime;
+
+	if (pInfinity->m_screenShakeDelta.x < 1 || (nGameTime & 7) > 3)
+	{
+		pInfinity->m_screenShakeDelta.x = -pInfinity->m_screenShakeDelta.x;
+	}
+	else
+	{
+		const int nEffectiveShakeDeltaX = (std::min)(pInfinity->m_screenShakeDelta.x, pInfinity->m_screenShakeDecrease.x);
+		pInfinity->m_screenShakeDelta.x = nEffectiveShakeDeltaX - pInfinity->m_screenShakeDelta.x;
+
+		if ((p_rand() & 0x7FFF) * 2 < 0x8000)
+		{
+			pInfinity->m_screenShakeDelta.x = -pInfinity->m_screenShakeDelta.x;
+		}
+	}
+
+	if (pInfinity->m_screenShakeDelta.y < 1 || (nGameTime & 7) > 3)
+	{
+		pInfinity->m_screenShakeDelta.y = -pInfinity->m_screenShakeDelta.y;
+	}
+	else
+	{
+		const int nEffectiveShakeDeltaY = (std::min)(pInfinity->m_screenShakeDelta.y, pInfinity->m_screenShakeDecrease.y);
+		pInfinity->m_screenShakeDelta.y = nEffectiveShakeDeltaY - pInfinity->m_screenShakeDelta.y;
+
+		if ((p_rand() & 0x7FFF) * 2 < 0x8000)
+		{
+			pInfinity->m_screenShakeDelta.y = -pInfinity->m_screenShakeDelta.y;
+		}
+	}
+}
+
+void EEex::UncapFPS_Hook_HandleScreenShakePost(CInfinity* pInfinity)
+{
+	pInfinity->FitViewPosition(&nScreenShakeSavedX, &nScreenShakeSavedY, &pInfinity->rViewPort);
+
+	pInfinity->nNewX = nScreenShakeSavedX;
+	pInfinity->nNewY = nScreenShakeSavedY;
+
+	pInfinity->m_ptCurrentPosExact.x = nScreenShakeSavedX * 10000;
+	pInfinity->m_ptCurrentPosExact.y = nScreenShakeSavedY * 10000;
+
+	pInfinity->m_updateListenPosition = 1;
+
+	if (pInfinity->m_screenShakeDelta.x == 0 && pInfinity->m_screenShakeDelta.y == 0)
+	{
+		pInfinity->m_bScreenShake = 0;
+	}
+}
+
 void EEex::UncapFPS_Hook_HandleTransitionMenuFade()
 {
 	p_DrawDisable(DrawFeature::DRAW_TEXTURE_2D);
@@ -984,6 +1051,7 @@ void CChitin::Override_Update()
 	if (!EEex::UncapFPS_Enabled || nStartTime >= nNextFullSyncUpdateTick)
 	{
 		trackSyncUpdateDelta(nStartTime);
+		bFullTick = true;
 
 		/////////////////
 		// Search tick //
@@ -1114,6 +1182,7 @@ void CChitin::Override_Update()
 	else if (nNextLightSyncUpdateTick != -1 && nStartTime >= nNextLightSyncUpdateTick)
 	{
 		trackSyncUpdateDelta(nStartTime);
+		bFullTick = false;
 
 		this->m_displayStale = 1;
 
@@ -1467,11 +1536,11 @@ void CInfinity::Override_Scroll(CPoint ptDest, short speed)
 	if (speed < 0)
 	{
 		// Exponential scroll that moves by `delta / speed` every tick
-		
+
 		nRemainingScrollTime = (std::max)(0LL, nRemainingScrollTime - nDeltaT);
 
 		// Patch: Scroll via exact coordinates
-		// | 
+		// |
 		// | const int nStepX = (this->nNewX - ptDest.x) / nSpeedAbs;
 		// | const int nStepY = (this->nNewY - ptDest.y) / nSpeedAbs;
 		// |

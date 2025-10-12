@@ -180,6 +180,8 @@ namespace EEex {
 	void UncapFPS_Hook_OnBeforeAreaDeactivated(CGameArea* pArea);
 	void UncapFPS_Hook_OnBeforeAreaRendered();
 	void UncapFPS_Hook_OnBeforeWorldScreenDeactivated();
+	void UncapFPS_Hook_HandleScreenShake(CInfinity* pInfinity);
+	void UncapFPS_Hook_HandleScreenShakePost(CInfinity* pInfinity);
 	void UncapFPS_Hook_HandleTransitionMenuFade();
 
 	////////////////////

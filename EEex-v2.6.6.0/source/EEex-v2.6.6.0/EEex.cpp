@@ -4110,7 +4110,7 @@ void EEex::Menu_Hook_FreeUITemplate(uiItem* pItem) {
 	}
 
 	exUIItemData.erase(pItem);
-	
+
 	if (pItem == exInUseCaptureItem) {
 		exInUseCaptureItemDeleted = true;
 	}
