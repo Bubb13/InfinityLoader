@@ -51,6 +51,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("CInfinity::Override_Scroll"), getMemberPtr(&CInfinity::Override_Scroll));
 	exportPattern(TEXT("CMessageSetLastObject::Override_Run"), getMemberPtr(&CMessageSetLastObject::Override_Run));
 	exportPattern(TEXT("CScreenMap::Override_CenterViewPort"), getMemberPtr(&CScreenMap::Override_CenterViewPort));
+	exportPattern(TEXT("CScreenMap::Override_OnLButtonDblClk"), getMemberPtr(&CScreenMap::Override_OnLButtonDblClk));
 	exportPattern(TEXT("CScreenWorld::Override_EndDialog"), getMemberPtr(&CScreenWorld::Override_EndDialog));
 	exportPattern(TEXT("CScreenWorld::Override_ResetZoom"), getMemberPtr(&CScreenWorld::Override_ResetZoom));
 	exportPattern(TEXT("CScreenWorld::Override_StartScroll"), getMemberPtr(&CScreenWorld::Override_StartScroll));

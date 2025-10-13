@@ -3106,6 +3106,19 @@ void CGameAIBase::Override_ApplyTriggers() {
 	}
 }
 
+void CScreenMap::Override_OnLButtonDblClk(CPoint cPoint) {
+
+	CBaldurEngine *const pActiveEngine = reinterpret_cast<CBaldurEngine*>((*p_g_pBaldurChitin)->pActiveEngine);
+	pActiveEngine->OnLeftPanelButtonClick(0);
+
+	// Vanilla Bugfix: Fix closing the local area map with a double click resulting in the world screen responding to the button up event
+	// |
+	lua_State *const L = luaState();
+	luaCallProtected(L, 0, 0, [&](int _) {
+		lua_getglobal(L, "EEex_Fix_LuaHook_OnLocalMapDoubleClick");
+	});
+}
+
 /////////////////////////////
 //          Hooks          //
 /////////////////////////////

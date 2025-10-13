@@ -1500,6 +1500,16 @@ struct CButtonData
 	$constructor_fake Construct();
 };
 
+struct CScreenMap : CBaldurEngine
+{
+	nopointer static CScreenMap_vtbl* VFTable;
+};
+
+struct CBaldurEngine : CWarp
+{
+	$nobinding void OnLeftPanelButtonClick(uint dwButtonId);
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////

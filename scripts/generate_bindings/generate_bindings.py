@@ -1084,7 +1084,7 @@ class TypeReference:
 				parts.append(manipulatedNameNoTemplatesOrPointers)
 				alreadyHaveName = True
 			else:
-				parts.append(superRef._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=useUsertypeOverride,
+				parts.append(superRef._getAppliedNameInternal(mainState, sourceGroup, templateMappingTracker, useUsertypeOverride=False,
 					templateTypeMode=templateTypeMode, typeManipulator=typeManipulator))
 				parts.append("::")
 
@@ -1175,7 +1175,7 @@ class TypeReference:
 				parts.append(manipulatedNameNoTemplatesOrPointers)
 				alreadyHaveName = True
 			else:
-				parts.append(superRef.toString(useUsertypeOverride=useUsertypeOverride, templatesUseHeaderName=templatesUseHeaderName,
+				parts.append(superRef.toString(useUsertypeOverride=False, templatesUseHeaderName=templatesUseHeaderName,
 					iKnowWhatIAmDoing=iKnowWhatIAmDoing, typeManipulator=typeManipulator))
 				parts.append("::")
 
@@ -3268,12 +3268,14 @@ class Field:
 		self.type: FieldType = None
 		self.listI: int = None
 		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
+		self.static: bool = False
 
 	def shallowCopy(self, copy=None):
 		copy = copy if copy != None else Field()
 		copy.type = self.type
 		copy.listI = self.listI
 		self.lineGroupFlags.applyTo(copy.lineGroupFlags)
+		copy.static = self.static
 		return copy
 
 	def getName(self) -> str:
@@ -3368,6 +3370,9 @@ class FunctionField(Field):
 
 		parts = [indent, self.returnType.getHeaderName(typeManipulator=typeManipulator), " ("]
 
+		if self.static:
+			parts.append("static ")
+
 		if self.callConvention:
 			parts.append(self.callConvention)
 			parts.append(" ")
@@ -3440,7 +3445,6 @@ class VariableField(Field):
 		self.group = group
 		self.variableType: TypeReference = None
 		self.variableName: str = None
-		self.static: bool = False
 		self.nopointer: bool = False
 
 
@@ -3450,7 +3454,6 @@ class VariableField(Field):
 		copy.type = self.type
 		copy.variableType = self.variableType.shallowCopy()
 		copy.variableName = self.variableName
-		copy.static = self.static
 		copy.nopointer = self.nopointer
 		return copy
 
@@ -3941,7 +3944,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 						out.write(f"\t{groupOpenData.appliedNameUsertypeFunc}* self = ({groupOpenData.appliedNameUsertypeFunc}*)tolua_tousertype_dynamic(L, 1, 0, \"{groupOpenData.appliedNameUsertype}\");\n")
 						out.write(f"\tif (!self) tolua_error(L, \"invalid 'self' in accessing variable '{variableField.variableName}'\", NULL);\n")
 
-					varNameHeader = variableField.variableName if (isNormal and not variableField.static) else f"p_{variableField.variableName}"
+					varNameHeader = variableField.variableName if variableField.nopointer or (isNormal and not variableField.static) else f"p_{variableField.variableName}"
 					selfStr: str = None
 					if isNormal:
 						if group.groupType == "namespace" or variableField.static:
@@ -3989,7 +3992,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 					if not checkPrimitiveHandling(varType):
 
-						extraDeref: bool = not isNormal or variableField.static
+						extraDeref: bool = not variableField.nopointer and (not isNormal or variableField.static)
 						primitiveLike: bool = varType.isPrimitive() or varType.isEnum()
 
 						if isPointerCast:
@@ -4032,8 +4035,27 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 						shouldWritePointerCast = False
 
 				elif field.type == FieldType.FUNCTION:
+
 					# TODO: Not implemented
 					functionField: FunctionField = field
+
+					if isPointerCast:
+
+						if isNormal and group.groupType != "namespace" and not functionField.static:
+							out.write(f"\t{groupOpenData.appliedNameUsertypeFunc}* self = ({groupOpenData.appliedNameUsertypeFunc}*)tolua_tousertype_dynamic(L, 1, 0, \"{groupOpenData.appliedNameUsertype}\");\n")
+							out.write(f"\tif (!self) tolua_error(L, \"invalid 'self' in accessing variable '{functionField.functionName}'\", NULL);\n")
+
+						selfStr: str = None
+						if isNormal:
+							if group.groupType == "namespace" or functionField.static:
+								selfStr = f"{groupOpenData.appliedHeaderName}::"
+							else:
+								selfStr = "self->"
+						else:
+							selfStr = ""
+
+						out.write(f'\ttolua_pushusertype(L, (void*)&{selfStr}{functionField.functionName}, "VoidPointer");\n')
+
 					out.write("\treturn 1;\n")
 
 				out.write("}\n\n")
@@ -4073,7 +4095,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 							out.write(f"\t{groupOpenData.appliedNameUsertypeFunc}* self = ({groupOpenData.appliedNameUsertypeFunc}*)tolua_tousertype_dynamic(L, 1, 0, \"{groupOpenData.appliedNameUsertype}\");\n")
 							out.write(f"\tif (!self) tolua_error(L, \"invalid 'self' in accessing variable '{variableField.variableName}'\", NULL);\n")
 
-						varNameHeader = variableField.variableName if (isNormal and not variableField.static) else f"p_{variableField.variableName}"
+						varNameHeader = variableField.variableName if variableField.nopointer or (isNormal and not variableField.static) else f"p_{variableField.variableName}"
 
 						def checkPrimitiveHandling(varType: TypeReference):
 
@@ -4131,7 +4153,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 								if group.groupType == "namespace":
 									selfStr = f"{groupOpenData.appliedHeaderName}::"
 								elif variableField.static:
-									selfStr = f"*{groupOpenData.appliedHeaderName}::"
+									selfStr = f"{'*' if not variableField.nopointer else ''}{groupOpenData.appliedHeaderName}::"
 								else:
 									selfStr = "self->"
 							else:

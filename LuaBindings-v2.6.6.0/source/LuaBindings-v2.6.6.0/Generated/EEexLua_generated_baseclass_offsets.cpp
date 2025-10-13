@@ -996,13 +996,13 @@ void registerBaseclasses() {
 			{"EEex_CWarp", offsetofbase<CBaldurEngine, CWarp>()},
 		}},
 		{"CBaldurEngine::vtbl", {
-			{"EEex_CWarp::vtbl", offsetofbase<CBaldurEngine::vtbl, CWarp::vtbl>()},
+			{"CWarp::vtbl", offsetofbase<CBaldurEngine::vtbl, CWarp::vtbl>()},
 		}},
 		{"CDungeonMaster", {
 			{"EEex_CBaldurEngine", offsetofbase<CDungeonMaster, CBaldurEngine>()},
 		}},
 		{"CDungeonMaster::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CDungeonMaster::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CDungeonMaster::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"CResBinary", {
 			{"CRes", offsetofbase<CResBinary, CRes>()},
@@ -1020,13 +1020,13 @@ void registerBaseclasses() {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenMovies, CBaldurEngine>()},
 		}},
 		{"CScreenMovies::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenMovies::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenMovies::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenConnection", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenConnection, CBaldurEngine>()},
 		}},
 		{"CScreenConnection::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenConnection::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenConnection::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"CVidMosaic", {
 			{"CVidImage", offsetofbase<CVidMosaic, CVidImage>()},
@@ -1060,7 +1060,7 @@ void registerBaseclasses() {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenAI, CBaldurEngine>()},
 		}},
 		{"CScreenAI::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenAI::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenAI::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"CVidCell", {
 			{"CVidImage", offsetofbase<CVidCell, CVidImage>()},
@@ -1079,55 +1079,55 @@ void registerBaseclasses() {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenCreateChar, CBaldurEngine>()},
 		}},
 		{"CScreenCreateChar::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenCreateChar::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenCreateChar::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenCreateParty", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenCreateParty, CBaldurEngine>()},
 		}},
 		{"CScreenCreateParty::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenCreateParty::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenCreateParty::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenDLC", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenDLC, CBaldurEngine>()},
 		}},
 		{"CScreenDLC::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenDLC::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenDLC::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenLoad", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenLoad, CBaldurEngine>()},
 		}},
 		{"CScreenLoad::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenLoad::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenLoad::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenMap", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenMap, CBaldurEngine>()},
 		}},
 		{"CScreenMap::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenMap::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenMap::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenMultiPlayer", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenMultiPlayer, CBaldurEngine>()},
 		}},
 		{"CScreenMultiPlayer::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenMultiPlayer::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenMultiPlayer::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenOptions", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenOptions, CBaldurEngine>()},
 		}},
 		{"CScreenOptions::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenOptions::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenOptions::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenSave", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenSave, CBaldurEngine>()},
 		}},
 		{"CScreenSave::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenSave::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenSave::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenStart", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenStart, CBaldurEngine>()},
 		}},
 		{"CScreenStart::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenStart::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenStart::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CInfToolTip", {
 			{"CVidCell", offsetofbase<CInfToolTip, CVidCell>()},
@@ -1151,49 +1151,49 @@ void registerBaseclasses() {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenWorldMap, CBaldurEngine>()},
 		}},
 		{"CScreenWorldMap::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorldMap::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenWorldMap::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenWorld", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenWorld, CBaldurEngine>()},
 		}},
 		{"CScreenWorld::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWorld::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenWorld::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenWizSpell", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenWizSpell, CBaldurEngine>()},
 		}},
 		{"CScreenWizSpell::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenWizSpell::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenWizSpell::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenPriestSpell", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenPriestSpell, CBaldurEngine>()},
 		}},
 		{"CScreenPriestSpell::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenPriestSpell::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenPriestSpell::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenJournal", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenJournal, CBaldurEngine>()},
 		}},
 		{"CScreenJournal::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenJournal::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenJournal::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenInventory", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenInventory, CBaldurEngine>()},
 		}},
 		{"CScreenInventory::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenInventory::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenInventory::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenCharacter", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenCharacter, CBaldurEngine>()},
 		}},
 		{"CScreenCharacter::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenCharacter::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenCharacter::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CScreenChapter", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenChapter, CBaldurEngine>()},
 		}},
 		{"CScreenChapter::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenChapter::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenChapter::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"CProjectileBAMFileFormat", {
 			{"CProjectileFileFormat", offsetofbase<CProjectileBAMFileFormat, CProjectileFileFormat>()},
@@ -1226,19 +1226,19 @@ void registerBaseclasses() {
 			{"EEex_CBaldurEngine", offsetofbase<CBaldurProjector, CBaldurEngine>()},
 		}},
 		{"CBaldurProjector::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CBaldurProjector::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CBaldurProjector::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"EEex_CBaldurChitin", {
 			{"EEex_CChitin", offsetofbase<CBaldurChitin, CChitin>()},
 		}},
 		{"CBaldurChitin::vtbl", {
-			{"EEex_CChitin::vtbl", offsetofbase<CBaldurChitin::vtbl, CChitin::vtbl>()},
+			{"CChitin::vtbl", offsetofbase<CBaldurChitin::vtbl, CChitin::vtbl>()},
 		}},
 		{"EEex_CScreenStore", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenStore, CBaldurEngine>()},
 		}},
 		{"CScreenStore::vtbl", {
-			{"EEex_CBaldurEngine::vtbl", offsetofbase<CScreenStore::vtbl, CBaldurEngine::vtbl>()},
+			{"CBaldurEngine::vtbl", offsetofbase<CScreenStore::vtbl, CBaldurEngine::vtbl>()},
 		}},
 		{"CMessageSetLastObject", {
 			{"CMessage", offsetofbase<CMessageSetLastObject, CMessage>()},

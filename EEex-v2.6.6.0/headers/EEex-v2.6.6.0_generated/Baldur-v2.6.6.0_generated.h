@@ -91,6 +91,7 @@ struct CAreaFileContainer;
 struct CAreaFileProjectileObject;
 struct CAreaPoint;
 struct CBaldurChitin;
+struct CBaldurEngine;
 struct CButtonData;
 struct CChitin;
 struct CContingency;
@@ -7129,6 +7130,14 @@ struct CBaldurEngine : CWarp
 
 	CBaldurEngine() = delete;
 
+	typedef void (__thiscall *type_OnLeftPanelButtonClick)(CBaldurEngine* pThis, uint dwButtonId);
+	static type_OnLeftPanelButtonClick p_OnLeftPanelButtonClick;
+
+	void OnLeftPanelButtonClick(uint dwButtonId)
+	{
+		p_OnLeftPanelButtonClick(this, dwButtonId);
+	}
+
 	virtual int virtual_GetSelectedCharacter(int)
 	{
 		return *(int*)nullptr;
@@ -9227,6 +9236,7 @@ struct CScreenMap : CBaldurEngine
 		vtbl() = delete;
 	};
 
+	static CScreenMap::vtbl* VFTable;
 	Array<CKeyInfo,98> m_pVirtualKeys;
 	Array<int,98> m_pVirtualKeysFlags;
 	CPtrList m_lPopupStack;
@@ -9263,6 +9273,7 @@ struct CScreenMap : CBaldurEngine
 	CScreenMap() = delete;
 
 	void Override_CenterViewPort(CPoint* ptPoint);
+	void Override_OnLButtonDblClk(CPoint cPoint);
 };
 
 struct CScreenMultiPlayer : CBaldurEngine

@@ -57,7 +57,7 @@ struct CMessageSetLastObject : CMessage
 struct CScreenMap : CBaldurEngine
 {
 	$nobinding $external_implementation void Override_CenterViewPort(CPoint* ptPoint);
-	//$nobinding $external_implementation void Override_OnLButtonUp(CPoint cPoint);
+	$nobinding $external_implementation void Override_OnLButtonDblClk(CPoint cPoint);
 };
 
 struct CScreenWorld : CBaldurEngine
