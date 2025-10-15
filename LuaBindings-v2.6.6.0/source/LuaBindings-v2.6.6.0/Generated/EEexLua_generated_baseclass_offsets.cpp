@@ -1427,6 +1427,12 @@ void registerBaseclasses() {
 		{"CObjectMarker::vtbl", {
 			{"CGameObject::vtbl", offsetofbase<CObjectMarker::vtbl, CGameObject::vtbl>()},
 		}},
+		{"CGameText", {
+			{"CGameObject", offsetofbase<CGameText, CGameObject>()},
+		}},
+		{"CGameText::vtbl", {
+			{"CGameObject::vtbl", offsetofbase<CGameText::vtbl, CGameObject::vtbl>()},
+		}},
 		{"CGameTemporal", {
 			{"CGameObject", offsetofbase<CGameTemporal, CGameObject>()},
 		}},

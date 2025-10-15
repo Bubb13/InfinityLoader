@@ -40,11 +40,13 @@ static void exportPatterns() {
 	exportPattern(TEXT("CGameAIBase::Override_ApplyTriggers"), getMemberPtr(&CGameAIBase::Override_ApplyTriggers));
 	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), getMemberPtr(&CGameAIBase::Override_SetTrigger));
 	exportPattern(TEXT("CGameArea::Override_AddClairvoyanceObject(CGameSprite*,CPoint,int)"), getMemberPtr(&CGameArea::Override_AddClairvoyanceObject));
+	exportPattern(TEXT("CGameArea::Override_RenderZoomed"), getMemberPtr(&CGameArea::Override_RenderZoomed));
 	exportPattern(TEXT("CGameEffectList::Override_Unmarshal"), getMemberPtr(&CGameEffectList::Override_Unmarshal));
 	exportPattern(TEXT("CGameEffectUsability::Override_CheckUsability"), getMemberPtr(&CGameEffectUsability::Override_CheckUsability));
 	exportPattern(TEXT("CGameSprite::Override_CheckIfVisible"), getMemberPtr(&CGameSprite::Override_CheckIfVisible));
 	exportPattern(TEXT("CGameSprite::Override_Damage"), getMemberPtr(&CGameSprite::Override_Damage));
 	exportPattern(TEXT("CGameSprite::Override_SetVisualRange"), getMemberPtr(&CGameSprite::Override_SetVisualRange));
+	exportPattern(TEXT("CGameText::Override_Render"), getMemberPtr(&CGameText::Override_Render));
 	exportPattern(TEXT("CInfinity::Override_AdjustViewPosition"), getMemberPtr(&CInfinity::Override_AdjustViewPosition));
 	exportPattern(TEXT("CInfinity::Override_FitViewPosition"), getMemberPtr(&CInfinity::Override_FitViewPosition));
 	exportPattern(TEXT("CInfinity::Override_SetScrollDest"), getMemberPtr(&CInfinity::Override_SetScrollDest));

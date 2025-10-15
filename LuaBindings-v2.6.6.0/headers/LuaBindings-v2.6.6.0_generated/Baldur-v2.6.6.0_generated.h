@@ -137,6 +137,7 @@ struct CPoint;
 struct CProjectile;
 struct CRect;
 struct CRes;
+struct CResFont;
 template<class RES_CLASS, int RES_ID>
 struct CResHelper;
 struct CResPVR;
@@ -165,6 +166,7 @@ struct CVVCHashEntry;
 struct CVariable;
 struct CVariableHash;
 struct CVidCell;
+struct CVidFont;
 struct CVidMode;
 struct CWarp;
 struct CharString;
@@ -1260,6 +1262,12 @@ enum class EItemPreviewType : __int32
 	k_EItemPreviewType_ReservedMax = 255,
 };
 
+enum class DrawFilter : __int32
+{
+	DRAW_NEAREST = 9728,
+	DRAW_LINEAR = 9729,
+};
+
 enum class DrawFeature : __int32
 {
 	DRAW_TEXTURE_2D = 3553,
@@ -1280,6 +1288,13 @@ enum class DrawBlend : __int32
 	DRAW_ONE_MINUS_SRC_ALPHA = 7,
 	DRAW_DST_ALPHA = 8,
 	DRAW_ONE_MINUS_DST_ALPHA = 9,
+};
+
+enum class DepthLockState : __int32
+{
+	DEPTH_LOCKED_HARD = 0,
+	DEPTH_LOCKED_SOFT = 1,
+	DEPTH_UNLOCKED = 2,
 };
 
 enum class DP_ProviderID : __int32
@@ -1364,6 +1379,21 @@ enum class CButtonType : __int32
 	QUICK_WEAPON_3 = 29,
 	QUICK_WEAPON_4 = 30,
 	NONE = 100,
+};
+
+struct _730FDA81411627D18117760CFDFC5D48
+{
+	unsigned __int32 program : 4;
+	unsigned __int32 mode : 2;
+	unsigned __int32 projection : 2;
+	unsigned __int32 blending : 1;
+	unsigned __int32 srcBlend : 4;
+	unsigned __int32 dstBlend : 4;
+	unsigned __int32 tone : 3;
+	unsigned __int32 scissor : 1;
+	unsigned __int32 texture : 9;
+
+	_730FDA81411627D18117760CFDFC5D48() = delete;
 };
 
 struct _6B279AA1C7A281E7C97E085DB9F2DFBB
@@ -1527,6 +1557,38 @@ struct _D98D369160A0DDA2B95F5D0F301081BB
 	_D98D369160A0DDA2B95F5D0F301081BB() = delete;
 };
 
+union _DEC82102868918D992B707FF755C8272
+{
+	float y;
+	float g;
+
+	_DEC82102868918D992B707FF755C8272() = delete;
+};
+
+union _DCA4A7CF5EA786B859D71FBD4D5071B1
+{
+	float z;
+	float b;
+
+	_DCA4A7CF5EA786B859D71FBD4D5071B1() = delete;
+};
+
+union _982F841FE54CFF99ACD9FF52992C4925
+{
+	float w;
+	float a;
+
+	_982F841FE54CFF99ACD9FF52992C4925() = delete;
+};
+
+union _872C6102D0359DAE2EF3C8EA2BA4F27D
+{
+	float x;
+	float r;
+
+	_872C6102D0359DAE2EF3C8EA2BA4F27D() = delete;
+};
+
 enum class importStateType : __int32
 {
 	Character = 0,
@@ -1595,6 +1657,23 @@ struct file_t
 	file_t() = delete;
 };
 
+union drawState_t
+{
+	_730FDA81411627D18117760CFDFC5D48 __s0;
+	int all;
+
+	drawState_t() = delete;
+};
+
+struct drawCmd_t
+{
+	drawState_t state;
+	int primStart;
+	int primCount;
+
+	drawCmd_t() = delete;
+};
+
 struct cnetworkwindow_queueentry_st
 {
 	int dpIDFrom;
@@ -1624,8 +1703,6 @@ struct adjustmentData_t
 {
 	int maxAscent;
 	int maxDescent;
-
-	adjustmentData_t() = delete;
 };
 
 struct _EdgeDescription
@@ -3057,6 +3134,16 @@ union _9CC80BF4F2F1300360474CD60BF15E00
 	_9CC80BF4F2F1300360474CD60BF15E00() = delete;
 };
 
+struct _7A482BBA0D1D34ED5A2E6984BF7642B3
+{
+	int x;
+	int y;
+	int w;
+	int h;
+
+	_7A482BBA0D1D34ED5A2E6984BF7642B3() = delete;
+};
+
 struct keyword
 {
 	const char* name;
@@ -3099,6 +3186,22 @@ struct mosHeader_st
 	unsigned int nPaletteOffset;
 
 	mosHeader_st() = delete;
+};
+
+struct program_t
+{
+	unsigned int p;
+	unsigned int uST;
+	unsigned int uTcScale;
+	unsigned int uTex;
+	unsigned int uTex2;
+	unsigned int uColorTone;
+	unsigned int uZoomStrength;
+	unsigned int uTcClamp;
+	unsigned int uScreenHeight;
+	unsigned int uSpriteBlurAmount;
+
+	program_t() = delete;
 };
 
 struct sequenceTableEntry_st
@@ -3219,6 +3322,23 @@ struct CSize : tagSIZE
 	CSize() = delete;
 };
 
+struct texture_t
+{
+	unsigned int texture;
+	int w;
+	int h;
+	bool initialized;
+	bool deleted;
+	DrawFilter minFilter;
+	DrawFilter magFilter;
+	unsigned int wrapS;
+	unsigned int wrapT;
+	int internalFormat;
+	unsigned int altTexture;
+
+	texture_t() = delete;
+};
+
 struct uiColumn
 {
 	uiVariant* width;
@@ -3268,6 +3388,30 @@ struct uiVariant
 	uiVariant::value_t value;
 
 	uiVariant() = delete;
+};
+
+struct vec4_t
+{
+	_872C6102D0359DAE2EF3C8EA2BA4F27D ___u0;
+	_DEC82102868918D992B707FF755C8272 ___u1;
+	_DCA4A7CF5EA786B859D71FBD4D5071B1 ___u2;
+	_982F841FE54CFF99ACD9FF52992C4925 ___u3;
+
+	vec4_t() = delete;
+};
+
+struct vertex_t
+{
+	__int16 x;
+	__int16 y;
+	__int16 z;
+	__int16 s;
+	__int16 t;
+	unsigned int c;
+	__int16 s1;
+	__int16 t1;
+
+	vertex_t() = delete;
 };
 
 struct view_t
@@ -4996,6 +5140,14 @@ struct CResFont : CRes
 	void* font;
 
 	CResFont() = delete;
+
+	typedef void* (__thiscall *type_GetFont)(CResFont* pThis);
+	static type_GetFont p_GetFont;
+
+	void* GetFont()
+	{
+		return p_GetFont(this);
+	}
 };
 
 struct CResEffect : CRes
@@ -5541,6 +5693,11 @@ struct CTypedPtrList : CObject
 	void Destruct()
 	{
 		((CObList*)this)->Destruct();
+	}
+
+	void RemoveAll()
+	{
+		((CObList*)this)->RemoveAll();
 	}
 };
 
@@ -6466,6 +6623,9 @@ struct CObList : CObject
 	typedef CObList::CNode* (__thiscall *type_Find)(CObList* pThis, void* searchValue, CObList::CNode* startAfter);
 	static type_Find p_Find;
 
+	typedef void (__thiscall *type_RemoveAll)(CObList* pThis);
+	static type_RemoveAll p_RemoveAll;
+
 	void Construct(int size)
 	{
 		p_Construct(this, size);
@@ -6494,6 +6654,11 @@ struct CObList : CObject
 	CObList::CNode* Find(void* searchValue, CObList::CNode* startAfter)
 	{
 		return p_Find(this, searchValue, startAfter);
+	}
+
+	void RemoveAll()
+	{
+		p_RemoveAll(this);
 	}
 };
 
@@ -7451,6 +7616,55 @@ struct stbrp_context
 	stbrp_context() = delete;
 };
 
+struct _BB972E60500CC126FD974613927DE0B4
+{
+	bool enabled;
+	int t;
+	unsigned int fb;
+	Array<int,4> zoomSrc;
+	Array<int,4> zoomDst;
+	int defaultFbo;
+
+	_BB972E60500CC126FD974613927DE0B4() = delete;
+};
+
+struct _C0ECD3277D3C6A36B299CABE6156CF21
+{
+	Array<texture_t,512> textures;
+	Array<program_t,9> programs;
+	Array<vertex_t,2097120> verts;
+	Array<drawCmd_t,8192> cmds;
+	Array<vec4_t,4> projections;
+	bool useShaders;
+	bool has_pvrtc;
+	bool has_s3tc;
+	bool has_atc;
+	drawCmd_t user;
+	vertex_t v;
+	Array<drawState_t,4> stateStack;
+	int stateStackTop;
+	_7A482BBA0D1D34ED5A2E6984BF7642B3 viewport;
+	vec4_t vertScale;
+	vec4_t zoom;
+	int n;
+	SDL_Rect scissor;
+	drawState_t hwState;
+	drawState_t force;
+	_BB972E60500CC126FD974613927DE0B4 pp;
+	unsigned int uploadFormat;
+	int uploadType;
+	const char* extensions;
+	const char* versionstring;
+	int majorVersion;
+	int minorVersion;
+	int sortStart;
+	float blurAmount;
+	DepthLockState depthLockState;
+	int height;
+
+	_C0ECD3277D3C6A36B299CABE6156CF21() = delete;
+};
+
 struct glyphHashTable_t
 {
 	int numElements;
@@ -7782,11 +7996,17 @@ extern type_uiKillCapture p_uiKillCapture;
 typedef void (*type_uiLoadMenu)(CResText* menuRes);
 extern type_uiLoadMenu p_uiLoadMenu;
 
+typedef uint (*type_applycolor)(uint c, uint t);
+extern type_applycolor p_applycolor;
+
 typedef int (*type_Chitin_GetSectionCallback)(lua_State* L);
 extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
 
 typedef uint (*type_DrawAlpha)(uint alpha);
 extern type_DrawAlpha p_DrawAlpha;
+
+typedef void (*type_DrawBeginScaled)(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
+extern type_DrawBeginScaled p_DrawBeginScaled;
 
 typedef void (*type_DrawBindTexture)(int texture);
 extern type_DrawBindTexture p_DrawBindTexture;
@@ -7805,6 +8025,18 @@ extern type_DrawDisable p_DrawDisable;
 
 typedef void (*type_DrawEnable)(DrawFeature f);
 extern type_DrawEnable p_DrawEnable;
+
+typedef void (*type_DrawEndScaled)();
+extern type_DrawEndScaled p_DrawEndScaled;
+
+typedef void (*type_drawLetters)(int X, int Y, int W, const SDL_Rect* rClip, const letter_t* letters, int nletters, int horizontalAlignment, font_t* font, int pointSize, int cursorPosition, int cursor, int selectionStart, int selectionEnd, int nLines, bool inlineColor, int indent, float fOffsetX, float fOffsetY);
+extern type_drawLetters p_drawLetters;
+
+typedef void (*type_DrawOrtho11Begin)();
+extern type_DrawOrtho11Begin p_DrawOrtho11Begin;
+
+typedef void (*type_DrawOrtho11End)();
+extern type_DrawOrtho11End p_DrawOrtho11End;
 
 typedef void (*type_DrawPopState)();
 extern type_DrawPopState p_DrawPopState;
@@ -7887,6 +8119,12 @@ extern type_va p_va;
 typedef int (__cdecl *type_wordwrap)(letter_t* letters, int maxletters, int* numletters, char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);
 extern type_wordwrap p_wordwrap;
 
+typedef float (*type_XScreenToZoomed)(float x);
+extern type_XScreenToZoomed p_XScreenToZoomed;
+
+typedef float (*type_YScreenToZoomed)(float y);
+extern type_YScreenToZoomed p_YScreenToZoomed;
+
 extern char** p_afxPchNil;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 extern Array<keyword,124>* p_g_keywords;
@@ -7907,6 +8145,8 @@ extern ConstArray<byte,1765>* p_yy_lookahead;
 extern ConstArray<short,122>* p_yy_reduce_ofst;
 extern ConstArray<short,174>* p_yy_shift_ofst;
 extern ConstArray<_D98D369160A0DDA2B95F5D0F301081BB,157>* p_yyRuleInfo;
+extern Array<letter_t,262144>* p_g_letters;
+extern _C0ECD3277D3C6A36B299CABE6156CF21* p_gl;
 extern Array<char,16>* p_lang;
 extern int* p_optionsHaveChanged;
 extern Array<slicedRect,6>* p_slicedRects;
@@ -8802,8 +9042,16 @@ struct CVidMode
 
 	CVidMode() = delete;
 
+	typedef void (*type_FillRect3d)(const CRect* rDest, const CRect* rClip, uint rgbaColor);
+	static type_FillRect3d p_FillRect3d;
+
 	typedef void (__thiscall *type_Flip)(CVidMode* pThis, int bRenderCursor);
 	static type_Flip p_Flip;
+
+	static void FillRect3d(const CRect* rDest, const CRect* rClip, uint rgbaColor)
+	{
+		p_FillRect3d(rDest, rClip, rgbaColor);
+	}
 
 	void Flip(int bRenderCursor)
 	{
@@ -8905,6 +9153,30 @@ struct CVidFont : CResHelper<CResFont,1034>
 	int zoom;
 
 	CVidFont() = delete;
+
+	typedef int (__thiscall *type_GetStringHeight)(CVidFont* pThis, const CString* text, int w);
+	static type_GetStringHeight p_GetStringHeight;
+
+	typedef int (__thiscall *type_GetStringLength)(CVidFont* pThis, const CString* str, int w);
+	static type_GetStringLength p_GetStringLength;
+
+	typedef int (__thiscall *type_RenderTextWrap)(CVidFont* pThis, const char* text, int x, int y, int w, int h, CRect* rClip, int halign, int valign, bool shadow, bool backgroundRect);
+	static type_RenderTextWrap p_RenderTextWrap;
+
+	int GetStringHeight(const CString* text, int w)
+	{
+		return p_GetStringHeight(this, text, w);
+	}
+
+	int GetStringLength(const CString* str, int w)
+	{
+		return p_GetStringLength(this, str, w);
+	}
+
+	int RenderTextWrap(const char* text, int x, int y, int w, int h, CRect* rClip, int halign, int valign, bool shadow, bool backgroundRect)
+	{
+		return p_RenderTextWrap(this, text, x, y, w, h, rClip, halign, valign, shadow, backgroundRect);
+	}
 };
 
 struct CScreenCreateChar : CBaldurEngine
@@ -10917,6 +11189,13 @@ struct CNetwork
 
 struct CChitin
 {
+	enum class EngineMode : __int32
+	{
+		BG1 = 0,
+		BG2 = 1,
+		IWD = 2,
+	};
+
 	struct vtbl
 	{
 		void (__fastcall *SynchronousUpdate)(CChitin*);
@@ -10974,6 +11253,7 @@ struct CChitin
 		vtbl() = delete;
 	};
 
+	static CChitin::EngineMode* p_ENGINE_MODE;
 	static CString* p_m_sGameName;
 	static uint* p_TIMER_UPDATES_PER_SECOND;
 	int m_mouseLButton;
@@ -13358,6 +13638,9 @@ struct CGameArea
 	typedef void (__thiscall *type_OnDeactivation)(CGameArea* pThis);
 	static type_OnDeactivation p_OnDeactivation;
 
+	typedef void (__thiscall *type_Render)(CGameArea* pThis, CVidMode* pVidMode);
+	static type_Render p_Render;
+
 	int Override_AdjustTarget(CPoint start, CPoint* goal, byte personalSpace, short tolerance);
 	int Override_GetNearest(int startObject, const CAIObjectType* type, short range, const byte* terrainTable, int checkLOS, int seeInvisible, int ignoreSleeping, byte nNearest, int ignoreDead);
 	int Override_GetNearest2(CPoint center, const CAIObjectType* type, short range, const byte* terrainTable, int lineOfSight, int seeInvisible, byte nNearest);
@@ -13415,6 +13698,11 @@ struct CGameArea
 	void OnDeactivation()
 	{
 		p_OnDeactivation(this);
+	}
+
+	void Render(CVidMode* pVidMode)
+	{
+		p_Render(this, pVidMode);
 	}
 };
 
@@ -14669,6 +14957,24 @@ struct CObjectMarker : CGameObject
 	bool m_bHealthBarMarker;
 
 	CObjectMarker() = delete;
+};
+
+struct CGameText : CGameObject
+{
+	struct vtbl : CGameObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_nWidth;
+	CVidFont m_textFont;
+	int m_nDuration;
+	unsigned __int16 m_nBeginFade;
+	CString m_sText;
+	int m_iTarget;
+	CGameObject* m_pTarget;
+
+	CGameText() = delete;
 };
 
 struct CGameTemporal : CGameObject

@@ -440,6 +440,11 @@ struct CTypedPtrList : CObject
 	{
 		((CObList*)this)->Destruct();
 	}
+
+	void RemoveAll()
+	{
+		((CObList*)this)->RemoveAll();
+	}
 };
 
 ////////////////////////////////////
@@ -896,6 +901,7 @@ struct CObList : CObject
 	void Destruct();
 	CObList::CNode* AddTail(void* newElement);
 	CObList::CNode* Find(void* searchValue, CObList::CNode* startAfter);
+	void RemoveAll();
 };
 
 struct CGameObjectArray
@@ -956,6 +962,11 @@ struct CRes
 	$constructor_fake Construct();
 	void Destruct();
 	void* Demand();
+};
+
+struct CResFont : CRes
+{
+	$nobinding void* GetFont();
 };
 
 struct CInfButtonArray
@@ -1073,6 +1084,7 @@ struct CGameArea
 
 	$nobinding void OnActivation();
 	$nobinding void OnDeactivation();
+	$nobinding void Render(CVidMode* pVidMode);
 };
 
 struct CGameAreaClairvoyanceEntry
@@ -1143,6 +1155,8 @@ struct CVidMode
 	static ushort SCREENWIDTH;
 	static ushort SCREENHEIGHT;
 
+	$nobinding static void FillRect3d(const CRect* rDest, const CRect* rClip, uint rgbaColor);
+
 	void Flip(int bRenderCursor);
 };
 
@@ -1168,6 +1182,7 @@ struct CMessageStartVEF : CMessage
 
 struct CChitin
 {
+	static CChitin::EngineMode ENGINE_MODE;
 	static CString m_sGameName;
 	static uint TIMER_UPDATES_PER_SECOND;
 
@@ -1510,6 +1525,17 @@ struct CBaldurEngine : CWarp
 	$nobinding void OnLeftPanelButtonClick(uint dwButtonId);
 };
 
+struct CVidFont : CResHelper<CResFont,1034>
+{
+	$nobinding int GetStringHeight(const CString* text, int w);
+	$nobinding int GetStringLength(const CString* str, int w);
+	$nobinding int RenderTextWrap(primitive const char* text, int x, int y, int w, int h, CRect* rClip, int halign, int valign, bool shadow, bool backgroundRect);
+};
+
+$allow_default_construction(true) struct adjustmentData_t
+{
+};
+
 //////////////////////////////
 // Global Function Bindings //
 //////////////////////////////
@@ -1534,14 +1560,20 @@ bool __cdecl uiIsMenuOnStack(CString* sMenu);
 void uiKillCapture();
 void uiLoadMenu(CResText* menuRes);
 
+$nobinding uint applycolor(uint c, uint t);
 $nobinding int Chitin_GetSectionCallback(lua_State* L);
 $nobinding uint DrawAlpha(uint alpha);
+$nobinding void DrawBeginScaled(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
 $nobinding void DrawBindTexture(int texture);
 $nobinding void DrawBlendFunc(DrawBlend src, DrawBlend dst);
 $nobinding void DrawClear();
 $nobinding uint DrawColor(uint color);
 $nobinding void DrawDisable(DrawFeature f);
 $nobinding void DrawEnable(DrawFeature f);
+$nobinding void DrawEndScaled();
+$nobinding void drawLetters(int X, int Y, int W, const SDL_Rect* rClip, const letter_t* letters, int nletters, int horizontalAlignment, font_t* font, int pointSize, int cursorPosition, int cursor, int selectionStart, int selectionEnd, int nLines, bool inlineColor, int indent, float fOffsetX, float fOffsetY);
+$nobinding void DrawOrtho11Begin();
+$nobinding void DrawOrtho11End();
 $nobinding void DrawPopState();
 $nobinding void DrawPushState();
 $pattern_name(DrawQuad(CRect*,CRect*)) void DrawQuad(const CRect* rDest, const CRect* rClip);
@@ -1569,6 +1601,8 @@ $nobinding void uiSetHidden(bool bHidden);
 $nobinding int uiVariantAsInt(uiVariant* var);
 $nobinding char* __cdecl va(const char* format, ...);
 $nobinding int __cdecl wordwrap(letter_t* letters, int maxletters, int* numletters, char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);
+$nobinding float XScreenToZoomed(float x);
+$nobinding float YScreenToZoomed(float y);
 
 //////////////////////////////
 // Global Variable Bindings //
@@ -1595,6 +1629,8 @@ const short yy_reduce_ofst[122];
 const short yy_shift_ofst[174];
 const $D98D369160A0DDA2B95F5D0F301081BB yyRuleInfo[157];
 
+nobinding letter_t g_letters[262144];
+nobinding $C0ECD3277D3C6A36B299CABE6156CF21 gl;
 nobinding char lang[16];
 nobinding int optionsHaveChanged;
 nobinding slicedRect slicedRects[6];

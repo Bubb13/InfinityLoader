@@ -15,6 +15,7 @@
     <ClCompile Include="source\EEex-v2.6.6.0\coordinate_util.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\EEex.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\engine_reimplementations.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\font_util.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />
@@ -31,6 +32,7 @@
     <ClInclude Include="headers\EEex-v2.6.6.0\coordinate_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\EEex.h" />
     <ClInclude Include="headers\EEex-v2.6.6.0\EEexLua_generated.h" />
+    <ClInclude Include="headers\EEex-v2.6.6.0\font_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\lua_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\menu_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\time_util.hpp" />

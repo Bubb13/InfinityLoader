@@ -11,6 +11,7 @@ CGameSpawning
 CGameSprite
 CGameStatic
 CGameTemporal
+CGameText
 CGameTiledObject
 CGameTrigger
 CMessageAddClairvoyance

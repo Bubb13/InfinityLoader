@@ -699,6 +699,9 @@ void registerBaseclasses() {
 		{"CObjectMarker", {
 			{"CGameObject", offsetofbase<CObjectMarker, CGameObject>()},
 		}},
+		{"CGameText", {
+			{"CGameObject", offsetofbase<CGameText, CGameObject>()},
+		}},
 		{"CGameTemporal", {
 			{"CGameObject", offsetofbase<CGameTemporal, CGameObject>()},
 		}},

@@ -4859,6 +4859,105 @@ void EEex::Script_Hook_OnDestruct(CAIScript* pScript) {
 // Fix //
 /////////
 
+void CGameText::Override_Render(CGameArea* pArea, CVidMode* pVidMode)
+{
+	if (pVidMode != nullptr)
+	{
+		pArea->m_lGameTextObjects.AddTail(this->m_id);
+		return;
+	}
+
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+
+	if (pChitin->pActiveEngine == pChitin->m_pEngineMap)
+	{
+		return;
+	}
+
+	CInfinity *const pInfinity = &this->m_pArea->m_cInfinity;
+	CRect *const pViewPort = &pInfinity->rViewPort;
+	const float fZoom = pInfinity->m_fZoom;
+
+	const int nViewPortWidth  = pViewPort->right  - pViewPort->left;
+	const int nViewPortHeight = pViewPort->bottom - pViewPort->top;
+
+	const int nStringWidth = this->m_textFont.GetStringLength(&this->m_sText, this->m_nWidth) + 1;
+
+	const int nTextScreenWidth  = (std::min)(nStringWidth, nViewPortWidth);
+	const int nTextScreenHeight = this->m_textFont.GetStringHeight(&this->m_sText, nTextScreenWidth);
+
+	// Vanilla Bugfix: Keep text plates centered by accounting for zoom level when calculating world bounds
+	// |
+	// | const int nTextWorldWidth  = nTextScreenWidth;
+	// | const int nTextWorldHeight = nTextScreenHeight;
+	// |
+	const int nTextWorldWidth  = static_cast<int>(nTextScreenWidth  * fZoom);
+	const int nTextWorldHeight = static_cast<int>(nTextScreenHeight * fZoom);
+
+	const int nTextWorldLeft = this->m_pos.x - nTextWorldWidth / 2;
+	// |
+	// Vanilla Bugfix: Keep text plates above characters instead of centering on the y coordinate
+	// |
+	// | const int nTextWorldTop    = this->m_pos.y - nTextWorldHeight / 2 - this->m_posZ;
+	// |
+	const int nTextWorldTop    = this->m_pos.y - nTextWorldHeight - this->m_posZ;
+	// |
+	const int nTextWorldRight  = nTextWorldLeft + nTextWorldWidth;
+	const int nTextWorldBottom = nTextWorldTop  + nTextWorldHeight;
+
+	const int nVisWorldLeft   = pInfinity->nCurrentX;
+	const int nVisWorldTop    = pInfinity->nCurrentY;
+	const int nVisWorldRight  = nVisWorldLeft + nViewPortWidth;
+	const int nVisWorldBottom = nVisWorldTop  + nViewPortHeight;
+
+	if
+	(
+		nTextWorldLeft < nVisWorldRight
+		&&
+		nTextWorldTop < nVisWorldBottom
+		&&
+		nTextWorldRight >= nVisWorldLeft
+		&&
+		nTextWorldBottom >= nVisWorldTop
+		&&
+		this->m_pos.x >= nVisWorldLeft && this->m_pos.x < nVisWorldRight
+		&&
+		this->m_pos.y >= nVisWorldTop && this->m_pos.y < nVisWorldBottom
+	)
+	{
+		const int nScreenLeft = static_cast<int>((pViewPort->left + nTextWorldLeft - nVisWorldLeft) / fZoom);
+		const int nScreenTop  = static_cast<int>((pViewPort->top  + nTextWorldTop  - nVisWorldTop)  / fZoom);
+
+		CRect rClip { nScreenLeft, nScreenTop, nScreenLeft + nTextScreenWidth, nScreenTop + nTextScreenHeight };
+
+		if (rClip.left < 0)
+		{
+			rClip.left = 0;
+			rClip.right = nTextScreenWidth;
+		}
+
+		this->m_textFont.RenderTextWrap(
+			this->m_sText.m_pchData,                             // text
+			//
+			// Vanilla Bugfix: Render off the left side of the screen correctly
+			// |
+			// | rClip.left,
+			// | rClip.top,
+			// |
+			nScreenLeft,                                         // x
+			nScreenTop,                                          // y
+			//
+			nTextScreenWidth,                                    // w
+			nTextScreenHeight,                                   // h
+			&rClip,                                              // rClip
+			2,                                                   // halign
+			2,                                                   // valign
+			*CChitin::p_ENGINE_MODE == CChitin::EngineMode::IWD, // shadow
+			true                                                 // backgroundRect
+		);
+	}
+}
+
 void EEex::Fix_Hook_OnBeforeUIKillCapture() {
 
 	if (p_capture->item == nullptr || p_capture->item->type != uiItemType::ITEM_EDIT) {

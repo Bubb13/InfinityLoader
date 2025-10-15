@@ -1219,6 +1219,54 @@ void CChitin::Override_Update()
 	}
 }
 
+void CGameArea::Override_RenderZoomed()
+{
+	// Patch:
+	// |
+	EEex::UncapFPS_Hook_OnBeforeAreaRendered();
+
+	const int nViewPortLeft   = this->m_cInfinity.rViewPort.left;
+	const int nViewPortTop    = this->m_cInfinity.rViewPort.top;
+	const int nViewPortRight  = this->m_cInfinity.rViewPort.right;
+	const int nViewPortBottom = this->m_cInfinity.rViewPort.bottom;
+
+	const int nViewPortNotZoomedLeft   = this->m_cInfinity.rViewPortNotZoomed.left;
+	const int nViewPortNotZoomedTop    = this->m_cInfinity.rViewPortNotZoomed.top;
+	const int nViewPortNotZoomedRight  = this->m_cInfinity.rViewPortNotZoomed.right;
+	const int nViewPortNotZoomedBottom = this->m_cInfinity.rViewPortNotZoomed.bottom;
+
+	p_DrawBeginScaled(
+		nViewPortLeft,
+		nViewPortTop,
+		nViewPortRight - nViewPortLeft,
+		nViewPortBottom - nViewPortTop,
+		nViewPortNotZoomedLeft,
+		nViewPortNotZoomedTop,
+		nViewPortNotZoomedRight - nViewPortNotZoomedLeft,
+		nViewPortNotZoomedBottom - nViewPortNotZoomedTop
+	);
+
+	this->Render((*p_g_pBaldurChitin)->cVideo.pCurrentMode);
+
+	// Patch: Allow text objects to access the scaled projection matrix. Currently unused.
+	// |
+	// | p_DrawEndScaled();
+	// |
+	for (auto pNode = this->m_lGameTextObjects.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext)
+	{
+		CGameObject* pGameTextObject;
+
+		if (CGameObjectArray::GetShare(pNode->data, &pGameTextObject) == 0)
+		{
+			pGameTextObject->virtual_Render(this, nullptr);
+		}
+	}
+	// |
+	this->m_lGameTextObjects.RemoveAll();
+	// |
+	p_DrawEndScaled();
+}
+
 void CInfinity::Override_AdjustViewPosition(byte nScrollState)
 {
 	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;

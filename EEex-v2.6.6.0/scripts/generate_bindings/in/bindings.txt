@@ -20,6 +20,7 @@ struct CGameAIBase : CGameObject
 struct CGameArea
 {
 	$nobinding $external_implementation void Override_AddClairvoyanceObject(CGameSprite* pSprite, CPoint position, int duration);
+	$nobinding $external_implementation void Override_RenderZoomed();
 };
 
 struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
@@ -39,6 +40,11 @@ struct CGameSprite : CGameAIBase
 	$nobinding $external_implementation void Override_CheckIfVisible();
 	$nobinding $external_implementation CGameEffectDamage* Override_Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
 	$nobinding $external_implementation short Override_SetVisualRange(short newVisualRange);
+};
+
+struct CGameText : CGameObject
+{
+	$nobinding $external_implementation void Override_Render(CGameArea* pArea, CVidMode* pVidMode);
 };
 
 struct CInfinity

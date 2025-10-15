@@ -572,6 +572,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CProjectileChain");
 	tolua_usertype(L, "CProjectileLightningStorm");
 	tolua_usertype(L, "CObjectMarker");
+	tolua_usertype(L, "CGameText");
 	tolua_usertype(L, "CGameTemporal");
 	tolua_usertype(L, "CGameStatic");
 	tolua_usertype(L, "CGameSpawning");
@@ -1499,6 +1500,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CObjectMarker", "CObjectMarker", {"CGameObject"}, NULL);
 	tolua_beginmodule(L, "CObjectMarker");
+	tolua_endmodule(L);
+	tolua_cclass(L, "CGameText", "CGameText", {"CGameObject"}, NULL);
+	tolua_beginmodule(L, "CGameText");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CGameTemporal", "CGameTemporal", {"CGameObject"}, NULL);
 	tolua_beginmodule(L, "CGameTemporal");
