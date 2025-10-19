@@ -6,6 +6,7 @@
 
 #include "infinity_loader_common_api.h"
 #include "lua_bindings_core_api.h"
+#include "gl/glew.h"
 
 typedef char sbyte;
 typedef unsigned short ushort;
@@ -1260,6 +1261,27 @@ enum class EItemPreviewType : __int32
 	k_EItemPreviewType_EnvironmentMap_HorizontalCross = 3,
 	k_EItemPreviewType_EnvironmentMap_LatLong = 4,
 	k_EItemPreviewType_ReservedMax = 255,
+};
+
+enum class DrawTone : __int32
+{
+	DRAW_TONE_NORMAL = 0,
+	DRAW_TONE_GREY = 1,
+	DRAW_TONE_SEPIA = 2,
+	DRAW_TONE_YUV = 3,
+	DRAW_TONE_YUV_GREY = 4,
+	DRAW_TONE_SPRITE = 5,
+	DRAW_TONE_FONT = 6,
+	DRAW_TONE_SELECT = 7,
+	DRAW_TONE_SEAM = 8,
+};
+
+enum class DrawMode : __int32
+{
+	DRAW_POINTS = 0,
+	DRAW_LINES = 1,
+	DRAW_TRIANGLES = 2,
+	DRAW_TRIANGLE_STRIP = 3,
 };
 
 enum class DrawFilter : __int32
@@ -8005,6 +8027,9 @@ extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
 typedef uint (*type_DrawAlpha)(uint alpha);
 extern type_DrawAlpha p_DrawAlpha;
 
+typedef void (*type_DrawBegin)(DrawMode mode);
+extern type_DrawBegin p_DrawBegin;
+
 typedef void (*type_DrawBeginScaled)(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
 extern type_DrawBeginScaled p_DrawBeginScaled;
 
@@ -8020,11 +8045,17 @@ extern type_DrawClear p_DrawClear;
 typedef uint (*type_DrawColor)(uint color);
 extern type_DrawColor p_DrawColor;
 
+typedef void (*type_DrawColorTone)(DrawTone tone);
+extern type_DrawColorTone p_DrawColorTone;
+
 typedef void (*type_DrawDisable)(DrawFeature f);
 extern type_DrawDisable p_DrawDisable;
 
 typedef void (*type_DrawEnable)(DrawFeature f);
 extern type_DrawEnable p_DrawEnable;
+
+typedef void (*type_DrawEnd)();
+extern type_DrawEnd p_DrawEnd;
 
 typedef void (*type_DrawEndScaled)();
 extern type_DrawEndScaled p_DrawEndScaled;
@@ -8053,11 +8084,17 @@ extern type_drawSlice p_drawSlice;
 typedef void (*type_drawSliceSide)(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool wide);
 extern type_drawSliceSide p_drawSliceSide;
 
+typedef void (*type_DrawTexCoord)(int s, int t);
+extern type_DrawTexCoord p_DrawTexCoord;
+
 typedef void (__cdecl *type_DrawTransformToScreen)(SDL_Rect* w, SDL_Rect* s);
 extern type_DrawTransformToScreen p_DrawTransformToScreen;
 
 typedef float (__cdecl *type_DrawTransformToScreenH)(float h);
 extern type_DrawTransformToScreenH p_DrawTransformToScreenH;
+
+typedef void (*type_DrawVertex)(int x, int y);
+extern type_DrawVertex p_DrawVertex;
 
 typedef bool (__cdecl *type_eventMenu)(uiMenu* pMenu, SDL_Event* pEvent, SDL_Rect* pWindow);
 extern type_eventMenu p_eventMenu;
@@ -8147,6 +8184,8 @@ extern ConstArray<short,174>* p_yy_shift_ofst;
 extern ConstArray<_D98D369160A0DDA2B95F5D0F301081BB,157>* p_yyRuleInfo;
 extern Array<letter_t,262144>* p_g_letters;
 extern _C0ECD3277D3C6A36B299CABE6156CF21* p_gl;
+extern GLint (__cdecl **p_glGetUniformLocation)(GLuint program, const GLchar* name);
+extern void (__cdecl **p_glUniform1i)(GLint location, GLint v0);
 extern Array<char,16>* p_lang;
 extern int* p_optionsHaveChanged;
 extern Array<slicedRect,6>* p_slicedRects;

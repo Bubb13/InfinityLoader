@@ -58,6 +58,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("CScreenWorld::Override_ResetZoom"), getMemberPtr(&CScreenWorld::Override_ResetZoom));
 	exportPattern(TEXT("CScreenWorld::Override_StartScroll"), getMemberPtr(&CScreenWorld::Override_StartScroll));
 	exportPattern(TEXT("CScreenWorld::Override_ZoomToMap"), getMemberPtr(&CScreenWorld::Override_ZoomToMap));
+	exportPattern(TEXT("CVidTile::Override_RenderTexture"), getMemberPtr(&CVidTile::Override_RenderTexture));
 	exportPattern(TEXT("CVisibilityMap::Override_AddCharacter"), getMemberPtr(&CVisibilityMap::Override_AddCharacter));
 	exportPattern(TEXT("CVisibilityMap::Override_IsCharacterIdOnMap"), getMemberPtr(&CVisibilityMap::Override_IsCharacterIdOnMap));
 	exportPattern(TEXT("CVisibilityMap::Override_RemoveCharacter"), getMemberPtr(&CVisibilityMap::Override_RemoveCharacter));
@@ -193,6 +194,8 @@ static void exportPatterns() {
 
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnAfterAreaActivated"), EEex::UncapFPS_Hook_OnAfterAreaActivated);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted"), EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted);
+	exportPattern(TEXT("EEex::UncapFPS_Hook_OnAfterDrawInit"), EEex::UncapFPS_Hook_OnAfterDrawInit);
+	exportPattern(TEXT("EEex::UncapFPS_Hook_OnAfterWindowResized"), EEex::UncapFPS_Hook_OnAfterWindowResized);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnBeforeAreaDeactivated"), EEex::UncapFPS_Hook_OnBeforeAreaDeactivated);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnBeforeAreaRendered"), EEex::UncapFPS_Hook_OnBeforeAreaRendered);
 	exportPattern(TEXT("EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated"), EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated);

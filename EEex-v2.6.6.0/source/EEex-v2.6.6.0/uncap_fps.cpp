@@ -152,6 +152,16 @@ CPoint ptMapPosExact;
 // Miscellaneous Utility //
 ///////////////////////////
 
+static DrawTone operator|(const DrawTone& a, const DrawTone b)
+{
+	return static_cast<DrawTone>(static_cast<__int32>(a) | static_cast<__int32>(b));
+}
+
+static DrawTone operator&(const DrawTone& a, const DrawTone b)
+{
+	return static_cast<DrawTone>(static_cast<__int32>(a) & static_cast<__int32>(b));
+}
+
 static SDL_Keymod operator|(const SDL_Keymod& a, const SDL_Keymod b)
 {
 	return static_cast<SDL_Keymod>(static_cast<__int32>(a) | static_cast<__int32>(b));
@@ -834,6 +844,35 @@ void EEex::UncapFPS_Hook_OnAfterAreaEdgeScrollPossiblyStarted(CGameArea* pArea)
 		pArea->m_nScrollState = 9;
 		(*p_g_pBaldurChitin)->m_pObjectCursor->SetCursor(6, 0, -1);
 	}
+}
+
+static void setShaderResolution()
+{
+	CVidMode *const pVidMode = (*p_g_pBaldurChitin)->cVideo.pCurrentMode;
+
+	const GLint nProgramLocation = p_gl->programs[0].p;
+
+	const GLint uResolutionXLocation = (*p_glGetUniformLocation)(nProgramLocation, "uResolutionX");
+	(*p_glUniform1i)(uResolutionXLocation, pVidMode->nWidth);
+
+	const GLint uResolutionYLocation = (*p_glGetUniformLocation)(nProgramLocation, "uResolutionY");
+	(*p_glUniform1i)(uResolutionYLocation, pVidMode->nHeight);
+}
+
+void EEex::UncapFPS_Hook_OnAfterDrawInit()
+{
+	//setShaderResolution();
+}
+
+void EEex::UncapFPS_Hook_OnAfterWindowResized()
+{
+	lua_State *const L = *p_g_lua;
+	luaCallProtected(L, 0, 0, [&](int _)
+	{
+		lua_getglobal(L, "EEex_Menu_LuaHook_OnWindowSizeChanged");
+	});
+
+	//setShaderResolution();
 }
 
 void EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated()
@@ -2063,6 +2102,148 @@ void CScreenWorld::Override_StartScroll(CPoint dest, short speed)
 
 	pInfinity->SetScrollDest(&dest);
 	pInfinity->m_autoScrollSpeed = speed;
+}
+
+static void renderTileTexture(CVidTile* pTile, int nTextureId, CRect* rDest, int x, int y, uint dwFlags)
+{
+	CResTile *const pRes = pTile->pRes;
+	pRes->tis->Demand();
+
+	int nTextureLeft;
+	int nTextureTop;
+
+	if (pRes->tis->nSize == 12)
+	{
+		// PVRZ based
+		const uintptr_t nData = reinterpret_cast<uintptr_t>(pRes->tis->pData);
+		nTextureLeft = *reinterpret_cast<int*>(nData + static_cast<uintptr_t>(pRes->tileIndex) * 0xC + 0x4);
+		nTextureTop  = *reinterpret_cast<int*>(nData + static_cast<uintptr_t>(pRes->tileIndex) * 0xC + 0x8);
+	}
+	else
+	{
+		// Palette based
+		nTextureLeft = 0;
+		nTextureTop  = 0;
+	}
+
+	const int nTextureRight  = nTextureLeft + 64;
+	const int nTextureBottom = nTextureTop  + 64;
+
+	const int nTileRight  = x + 64;
+	const int nTileBottom = y + 64;
+
+	uint nSavedColor;
+
+	if (nTextureId == 0)
+	{
+		p_DrawDisable(DrawFeature::DRAW_TEXTURE_2D);
+		nSavedColor = p_DrawColor(0xFF000000);
+	}
+	else if (nTextureId != -1)
+	{
+		p_DrawBindTexture(nTextureId);
+	}
+
+	p_DrawPushState();
+
+	DrawTone drawTone = (dwFlags & 0x80000) != 0 ? DrawTone::DRAW_TONE_GREY : DrawTone::DRAW_TONE_NORMAL;
+
+	if ((*p_g_pBaldurChitin)->m_bRenderTilesLinear)
+	{
+		drawTone = DrawTone::DRAW_TONE_SEAM;
+	}
+
+	p_DrawColorTone(drawTone);
+	p_DrawBegin(DrawMode::DRAW_TRIANGLES);
+
+	if (nTextureId != 0)
+	{
+		p_DrawTexCoord(nTextureLeft, nTextureTop);
+	}
+
+	p_DrawVertex(x, y);
+
+	if (nTextureId != 0)
+	{
+		p_DrawTexCoord(nTextureLeft, nTextureBottom);
+	}
+
+	p_DrawVertex(x, nTileBottom);
+
+	if (nTextureId != 0)
+	{
+		p_DrawTexCoord(nTextureRight, nTextureTop);
+	}
+
+	p_DrawVertex(nTileRight, y);
+
+	if (nTextureId != 0)
+	{
+		p_DrawTexCoord(nTextureRight, nTextureTop);
+	}
+
+	p_DrawVertex(nTileRight, y);
+
+	if (nTextureId != 0)
+	{
+		p_DrawTexCoord(nTextureLeft, nTextureBottom);
+	}
+
+	p_DrawVertex(x, nTileBottom);
+
+	if (nTextureId != 0)
+	{
+		p_DrawTexCoord(nTextureRight, nTextureBottom);
+	}
+
+	p_DrawVertex(nTileRight, nTileBottom);
+	p_DrawEnd();
+
+	if (nTextureId == 0)
+	{
+		p_DrawColor(nSavedColor);
+	}
+
+	p_DrawPopState();
+}
+
+static void renderTileTextureDebug(CVidTile* pTile, int nTextureId, CRect* rDest, int x, int y, uint dwFlags)
+{
+	p_DrawDisable(DrawFeature::DRAW_TEXTURE_2D);
+	p_DrawPushState();
+
+	uint nSavedColor;
+
+	if (pTile->pRes->tileIndex % 2 == 0)
+	{
+		nSavedColor = p_DrawColor(0xFF0C879B);
+	}
+	else
+	{
+		nSavedColor = p_DrawColor(0xFF8B008B);
+	}
+
+	p_DrawBegin(DrawMode::DRAW_TRIANGLES);
+
+	const int nTileRight  = x + 64;
+	const int nTileBottom = y + 64;
+
+	p_DrawVertex(x, y);
+	p_DrawVertex(x, nTileBottom);
+	p_DrawVertex(nTileRight, y);
+	p_DrawVertex(nTileRight, y);
+	p_DrawVertex(x, nTileBottom);
+	p_DrawVertex(nTileRight, nTileBottom);
+
+	p_DrawEnd();
+	p_DrawColor(nSavedColor);
+	p_DrawPopState();
+}
+
+void CVidTile::Override_RenderTexture(int nTextureId, CRect* rDest, int x, int y, uint dwFlags)
+{
+	renderTileTexture(this, nTextureId, rDest, x, y, dwFlags);
+	//renderTileTextureDebug(this, nTextureId, rDest, x, y, dwFlags);
 }
 
 int __cdecl EEex::Override_Infinity_TransitionMenu(lua_State* L)
