@@ -47,6 +47,7 @@ namespace EEex {
 	//-----------------------------//
 
 	void Override_bootstrapLua();
+	bool __cdecl Override_bsearchrange(void* key, void* base, unsigned long long NumOfElements, unsigned long long SizeOfElements, int(__fastcall* Compare)(const void*, const void*), int* start, int* end);
 	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
 	void __cdecl Override_chWriteInifile();
 	//int __cdecl Override_fontWrap(char* text, SDL_Rect* r, SDL_Rect* rClip, int* horizontalAlignment, int* verticalAlignment, font_t* font, int* pointSize, letter_t* letters, int* nlines, int* nletters, int* pointIndex, bool* scale, adjustmentData_t* adjustData, int indent, bool bUseFontSizeFloor);

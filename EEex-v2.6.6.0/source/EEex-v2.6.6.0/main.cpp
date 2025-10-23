@@ -64,6 +64,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("CVisibilityMap::Override_RemoveCharacter"), getMemberPtr(&CVisibilityMap::Override_RemoveCharacter));
 	exportPattern(TEXT("CVisibilityMap::Override_UpDate"), getMemberPtr(&CVisibilityMap::Override_UpDate));
 	exportPattern(TEXT("EEex::Override_bootstrapLua"), EEex::Override_bootstrapLua);
+	exportPattern(TEXT("EEex::Override_bsearchrange"), EEex::Override_bsearchrange);
 	exportPattern(TEXT("EEex::Override_CGameEffect_CheckSave"), EEex::Override_CGameEffect_CheckSave);
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
 	//exportPattern(TEXT("EEex::Override_fontWrap"), EEex::Override_fontWrap);

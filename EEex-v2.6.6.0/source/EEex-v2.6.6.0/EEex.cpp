@@ -4859,6 +4859,101 @@ void EEex::Script_Hook_OnDestruct(CAIScript* pScript) {
 // Fix //
 /////////
 
+// The vanilla version of this function returns incorrect values for start / end in certain situations.
+// Written from scratch instead of trying to find the bug with the original implementation.
+bool __cdecl EEex::Override_bsearchrange(void* key, void* base, unsigned long long NumOfElements, unsigned long long SizeOfElements,
+	int (__fastcall* Compare)(const void*, const void*), int* start, int* end)
+{
+	int nLeftIndex  = 0;
+	int nRightIndex = static_cast<int>(NumOfElements) - 1;
+
+	while (nLeftIndex <= nRightIndex)
+	{
+		const int nMiddleIndex   = (nLeftIndex + nRightIndex) / 2;
+		const int nCompareResult = Compare(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(base) + nMiddleIndex * SizeOfElements), key);
+
+		if (nCompareResult < 0)
+		{
+			// key > val[nMiddleIndex], check further to the right
+			nLeftIndex = nMiddleIndex + 1;
+		}
+		else if (nCompareResult == 0)
+		{
+			// key == val[nMiddleIndex]
+
+			//////////////////////
+			// Left Side Search //
+			//////////////////////
+
+			int nLeftSideLeftIndex  = nLeftIndex;
+			int nLeftSideRightIndex = nMiddleIndex - 1;
+
+			while (nLeftSideLeftIndex <= nLeftSideRightIndex)
+			{
+				const int nLeftSideMiddleIndex   = (nLeftSideLeftIndex + nLeftSideRightIndex) / 2;
+				const int nLeftSideCompareResult = Compare(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(base) + nLeftSideMiddleIndex * SizeOfElements), key);
+
+				if (nLeftSideCompareResult < 0)
+				{
+					// Left side compare determined key > val[nLeftSideMiddleIndex], check further to the right
+					nLeftSideLeftIndex = nLeftSideMiddleIndex + 1;
+				}
+				else if (nLeftSideCompareResult == 0)
+				{
+					// Left side compare determined key == val[nLeftSideMiddleIndex], check further to the left
+					nLeftSideRightIndex = nLeftSideMiddleIndex - 1;
+				}
+				else
+				{
+					// Left side compare determined key < val[nLeftSideMiddleIndex], check further to the left (should never happen)
+					nLeftSideRightIndex = nLeftSideMiddleIndex - 1;
+				}
+			}
+
+			*start = nLeftSideRightIndex + 1;
+
+			///////////////////////
+			// Right Side Search //
+			///////////////////////
+
+			int nRightSideLeftIndex  = nMiddleIndex + 1;
+			int nRightSideRightIndex = nRightIndex;
+
+			while (nRightSideLeftIndex <= nRightSideRightIndex)
+			{
+				const int nRightSideMiddleIndex   = (nRightSideLeftIndex + nRightSideRightIndex) / 2;
+				const int nRightSideCompareResult = Compare(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(base) + nRightSideMiddleIndex * SizeOfElements), key);
+
+				if (nRightSideCompareResult < 0)
+				{
+					// Right side compare determined key > val[nRightSideMiddleIndex], check further to the right (should never happen)
+					nRightSideLeftIndex = nRightSideMiddleIndex + 1;
+				}
+				else if (nRightSideCompareResult == 0)
+				{
+					// Right side compare determined key == val[nRightSideMiddleIndex], check further to the right
+					nRightSideLeftIndex = nRightSideMiddleIndex + 1;
+				}
+				else
+				{
+					// Right side compare determined key < val[nRightSideMiddleIndex], check further to the left
+					nRightSideRightIndex = nRightSideMiddleIndex - 1;
+				}
+			}
+
+			*end = nRightSideLeftIndex - 1;
+			return true;
+		}
+		else
+		{
+			// key < val[nMiddleIndex], check further to the left
+			nRightIndex = nMiddleIndex - 1;
+		}
+	}
+
+	return false;
+}
+
 void CGameText::Override_Render(CGameArea* pArea, CVidMode* pVidMode)
 {
 	if (pVidMode != nullptr)
