@@ -58,6 +58,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("CScreenWorld::Override_ResetZoom"), getMemberPtr(&CScreenWorld::Override_ResetZoom));
 	exportPattern(TEXT("CScreenWorld::Override_StartScroll"), getMemberPtr(&CScreenWorld::Override_StartScroll));
 	exportPattern(TEXT("CScreenWorld::Override_ZoomToMap"), getMemberPtr(&CScreenWorld::Override_ZoomToMap));
+	exportPattern(TEXT("CVidPalette::Override_RealizeResource3d"), getMemberPtr(&CVidPalette::Override_RealizeResource3d));
 	exportPattern(TEXT("CVidTile::Override_RenderTexture"), getMemberPtr(&CVidTile::Override_RenderTexture));
 	exportPattern(TEXT("CVisibilityMap::Override_AddCharacter"), getMemberPtr(&CVisibilityMap::Override_AddCharacter));
 	exportPattern(TEXT("CVisibilityMap::Override_IsCharacterIdOnMap"), getMemberPtr(&CVisibilityMap::Override_IsCharacterIdOnMap));

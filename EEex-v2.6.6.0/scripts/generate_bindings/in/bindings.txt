@@ -74,6 +74,11 @@ struct CScreenWorld : CBaldurEngine
 	$nobinding $external_implementation void Override_ZoomToMap(bool bOverwriteOriginal);
 };
 
+struct CVidPalette
+{
+	$nobinding $external_implementation void Override_RealizeResource3d(uint* pDestPalette, uint dwFlags, CVIDIMG_PALETTEAFFECT* pAffectArgs, uint nTransVal);
+};
+
 struct CVidTile : CVidImage
 {
 	$nobinding $external_implementation void Override_RenderTexture(int nTextureId, CRect* rDest, int x, int y, uint dwFlags);

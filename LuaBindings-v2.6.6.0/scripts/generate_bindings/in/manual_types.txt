@@ -1152,17 +1152,31 @@ struct CAICondition
 
 struct CVidMode
 {
+	nobinding static byte NUM_FADE_FRAMES;
+
 	static ushort SCREENWIDTH;
 	static ushort SCREENHEIGHT;
 
 	$nobinding static void FillRect3d(const CRect* rDest, const CRect* rClip, uint rgbaColor);
 
+	uint ApplyBrightnessContrast(uint rgb);
 	void Flip(int bRenderCursor);
 };
 
 struct CVidPalette
 {
+	nobinding static byte m_SuppressTintMasks[7];
 	static uint RANGE_COLORS[256];
+
+	int GetAdd(CVIDPALETTE_COLOR* rgbInv, CVIDIMG_PALETTEAFFECT* pAffectArgs, int* nShiftBack, uint dwFlags);
+	int GetLight(CVIDPALETTE_COLOR* rgbLight, CVIDIMG_PALETTEAFFECT* pAffectArgs, uint dwFlags);
+	int GetReservedEntries(uint dwFlags);
+	int GetTint(CVIDPALETTE_COLOR* rgbTint, CVIDIMG_PALETTEAFFECT* pAffectArgs, int* nShiftBack, int* nMaxValue, uint dwFlags);
+	void SetAUCounter();
+};
+
+$allow_default_construction(true) struct CVIDPALETTE_COLOR
+{
 };
 
 struct CVisualEffect : CGameObject, CVisualEffectBase

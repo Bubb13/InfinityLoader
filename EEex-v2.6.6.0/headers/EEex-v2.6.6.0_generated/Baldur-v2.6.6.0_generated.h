@@ -168,12 +168,14 @@ struct CString;
 struct CTimerWorld;
 struct CTlkTable;
 struct CUIControlTextDisplay;
+struct CVIDIMG_PALETTEAFFECT;
 struct CVVCHashEntry;
 struct CVariable;
 struct CVariableHash;
 struct CVidCell;
 struct CVidFont;
 struct CVidMode;
+struct CVidPalette;
 struct CVidTile;
 struct CVisibilityMap;
 struct CWarp;
@@ -2745,6 +2747,13 @@ struct CVRamPool
 	st_tiledef* pTileDef;
 
 	CVRamPool() = delete;
+};
+
+struct CVIDPALETTE_COLOR
+{
+	int rgbRed;
+	int rgbGreen;
+	int rgbBlue;
 };
 
 struct CTlkFileOverride
@@ -8366,6 +8375,7 @@ struct CVisibilityMap
 
 struct CVidPalette
 {
+	static Array<byte,7>* p_m_SuppressTintMasks;
 	static Array<uint,256>* p_RANGE_COLORS;
 	unsigned __int64 m_nAUCounter;
 	unsigned __int64 m_nAUCounterBase;
@@ -8378,6 +8388,48 @@ struct CVidPalette
 	Array<unsigned __int8,7> m_rangeColors;
 
 	CVidPalette() = delete;
+
+	typedef int (__thiscall *type_GetAdd)(CVidPalette* pThis, CVIDPALETTE_COLOR* rgbInv, CVIDIMG_PALETTEAFFECT* pAffectArgs, int* nShiftBack, uint dwFlags);
+	static type_GetAdd p_GetAdd;
+
+	typedef int (__thiscall *type_GetLight)(CVidPalette* pThis, CVIDPALETTE_COLOR* rgbLight, CVIDIMG_PALETTEAFFECT* pAffectArgs, uint dwFlags);
+	static type_GetLight p_GetLight;
+
+	typedef int (__thiscall *type_GetReservedEntries)(CVidPalette* pThis, uint dwFlags);
+	static type_GetReservedEntries p_GetReservedEntries;
+
+	typedef int (__thiscall *type_GetTint)(CVidPalette* pThis, CVIDPALETTE_COLOR* rgbTint, CVIDIMG_PALETTEAFFECT* pAffectArgs, int* nShiftBack, int* nMaxValue, uint dwFlags);
+	static type_GetTint p_GetTint;
+
+	typedef void (__thiscall *type_SetAUCounter)(CVidPalette* pThis);
+	static type_SetAUCounter p_SetAUCounter;
+
+	int GetAdd(CVIDPALETTE_COLOR* rgbInv, CVIDIMG_PALETTEAFFECT* pAffectArgs, int* nShiftBack, uint dwFlags)
+	{
+		return p_GetAdd(this, rgbInv, pAffectArgs, nShiftBack, dwFlags);
+	}
+
+	int GetLight(CVIDPALETTE_COLOR* rgbLight, CVIDIMG_PALETTEAFFECT* pAffectArgs, uint dwFlags)
+	{
+		return p_GetLight(this, rgbLight, pAffectArgs, dwFlags);
+	}
+
+	int GetReservedEntries(uint dwFlags)
+	{
+		return p_GetReservedEntries(this, dwFlags);
+	}
+
+	int GetTint(CVIDPALETTE_COLOR* rgbTint, CVIDIMG_PALETTEAFFECT* pAffectArgs, int* nShiftBack, int* nMaxValue, uint dwFlags)
+	{
+		return p_GetTint(this, rgbTint, pAffectArgs, nShiftBack, nMaxValue, dwFlags);
+	}
+
+	void SetAUCounter()
+	{
+		p_SetAUCounter(this);
+	}
+
+	void Override_RealizeResource3d(uint* pDestPalette, uint dwFlags, CVIDIMG_PALETTEAFFECT* pAffectArgs, uint nTransVal);
 };
 
 struct CVIDIMG_PALETTEAFFECT
@@ -9166,6 +9218,7 @@ struct CSearchBitmap
 
 struct CVidMode
 {
+	static byte* p_NUM_FADE_FRAMES;
 	static ushort* p_SCREENWIDTH;
 	static ushort* p_SCREENHEIGHT;
 	int m_nPrintFile;
@@ -9216,12 +9269,20 @@ struct CVidMode
 	typedef void (*type_FillRect3d)(const CRect* rDest, const CRect* rClip, uint rgbaColor);
 	static type_FillRect3d p_FillRect3d;
 
+	typedef uint (__thiscall *type_ApplyBrightnessContrast)(CVidMode* pThis, uint rgb);
+	static type_ApplyBrightnessContrast p_ApplyBrightnessContrast;
+
 	typedef void (__thiscall *type_Flip)(CVidMode* pThis, int bRenderCursor);
 	static type_Flip p_Flip;
 
 	static void FillRect3d(const CRect* rDest, const CRect* rClip, uint rgbaColor)
 	{
 		p_FillRect3d(rDest, rClip, rgbaColor);
+	}
+
+	uint ApplyBrightnessContrast(uint rgb)
+	{
+		return p_ApplyBrightnessContrast(this, rgb);
 	}
 
 	void Flip(int bRenderCursor)
