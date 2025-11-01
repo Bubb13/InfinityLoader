@@ -55,7 +55,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;$(ProjectDir)headers/LuaBindings-v2.6.6.0;$(ProjectDir)headers/LuaBindings-v2.6.6.0_external;$(ProjectDir)headers/LuaBindings-v2.6.6.0_generated;$(ProjectDir)references/header/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/LuaBindings-v2.6.6.0;$(ProjectDir)headers/LuaBindings-v2.6.6.0_external;$(ProjectDir)headers/LuaBindings-v2.6.6.0_generated;$(ProjectDir)references/header/include;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -81,7 +81,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;$(ProjectDir)headers/LuaBindings-v2.6.6.0;$(ProjectDir)headers/LuaBindings-v2.6.6.0_external;$(ProjectDir)headers/LuaBindings-v2.6.6.0_generated;$(ProjectDir)references/header/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/LuaBindings-v2.6.6.0;$(ProjectDir)headers/LuaBindings-v2.6.6.0_external;$(ProjectDir)headers/LuaBindings-v2.6.6.0_generated;$(ProjectDir)references/header/include;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>

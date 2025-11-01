@@ -278,6 +278,12 @@ static int tolua_function_EEex_SetUIItemExtraScrollbarPad(lua_State* L)
 	return 0;
 }
 
+static int tolua_function_EEex_SetVSyncEnabled(lua_State* L)
+{
+	EEex::SetVSyncEnabled(tolua_function_toboolean(L, 1, "SetVSyncEnabled"), tolua_function_toboolean(L, 2, "SetVSyncEnabled"));
+	return 0;
+}
+
 static int tolua_function_EEex_ShouldEffectBypassOp120(lua_State* L)
 {
 	bool returnVal = EEex::ShouldEffectBypassOp120((CGameEffect*)tolua_tousertype_dynamic(L, 1, 0, "CGameEffect"));
@@ -740,6 +746,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
 		tolua_function(L, "SetINIString", &tolua_function_EEex_SetINIString);
 		tolua_function(L, "SetUIItemExtraScrollbarPad", &tolua_function_EEex_SetUIItemExtraScrollbarPad);
+		tolua_function(L, "SetVSyncEnabled", &tolua_function_EEex_SetVSyncEnabled);
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 		tolua_function(L, "UpdateLastScrollTime", &tolua_function_EEex_UpdateLastScrollTime);
 	tolua_endmodule(L);

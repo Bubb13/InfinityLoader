@@ -8,6 +8,18 @@ constexpr uintptr_t offsetofbase() {
 
 void registerBaseclasses() {
 	RegisterBaseclassOffsets({
+		{"ID3DXEffectPool", {
+			{"IUnknown", offsetofbase<ID3DXEffectPool, IUnknown>()},
+		}},
+		{"ID3DXBuffer", {
+			{"IUnknown", offsetofbase<ID3DXBuffer, IUnknown>()},
+		}},
+		{"ID3DXBaseEffect", {
+			{"IUnknown", offsetofbase<ID3DXBaseEffect, IUnknown>()},
+		}},
+		{"ID3DXEffect", {
+			{"ID3DXBaseEffect", offsetofbase<ID3DXEffect, ID3DXBaseEffect>()},
+		}},
 		{"CResInfTile", {
 			{"CResTile", offsetofbase<CResInfTile, CResTile>()},
 		}},

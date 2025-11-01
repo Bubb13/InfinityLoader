@@ -5,6 +5,8 @@
 #include <queue>
 #include <vector>
 
+#include <d3dx9.h>
+
 #include "infinity_loader_common_api.h"
 #include "lua_bindings_core_api.h"
 #include "gl/glew.h"
@@ -947,6 +949,13 @@ enum class SDL_EventType : __int32
 	SDL_LASTEVENT = 65535,
 };
 
+enum class RendererType : __int32
+{
+	RENDERER_OPENGL = 0,
+	RENDERER_DX9 = 1,
+	RENDERER_METAL = 2,
+};
+
 enum class EWorkshopVideoProvider : __int32
 {
 	k_EWorkshopVideoProviderNone = 0,
@@ -1751,6 +1760,20 @@ struct drawCmd_t
 	int primCount;
 
 	drawCmd_t() = delete;
+};
+
+struct d3dvertex_t
+{
+	float x;
+	float y;
+	float z;
+	unsigned int c;
+	float s;
+	float t;
+	float s1;
+	float t1;
+
+	d3dvertex_t() = delete;
 };
 
 struct cnetworkwindow_queueentry_st
@@ -3290,6 +3313,16 @@ struct program_t
 	program_t() = delete;
 };
 
+struct samplerState_t
+{
+	unsigned int nWrapS;
+	unsigned int nWrapT;
+	unsigned int nMinFilter;
+	unsigned int nMagFilter;
+
+	samplerState_t() = delete;
+};
+
 struct sequenceTableEntry_st
 {
 	__int16 nFrames;
@@ -3474,6 +3507,23 @@ struct uiVariant
 	uiVariant::value_t value;
 
 	uiVariant() = delete;
+};
+
+struct texture_t_DX
+{
+	IDirect3DTexture9* texture;
+	IDirect3DTexture9* altTexture;
+	int w;
+	int h;
+	bool generated;
+	bool deleted;
+	DrawFilter minFilter;
+	DrawFilter magFilter;
+	uint wrapS;
+	uint wrapT;
+	_D3DFORMAT internalFormat;
+
+	texture_t_DX() = delete;
 };
 
 struct vec4_t
@@ -4710,6 +4760,7 @@ namespace EEex
 	void RegisterSlicedRect(lua_State* L);
 	void SetINIString(const char* iniPath, const char* section, const char* key, const char* value);
 	void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
+	void SetVSyncEnabled(bool bEnabled, bool bResetDevice);
 	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	void UpdateLastScrollTime();
 };
@@ -7821,6 +7872,54 @@ struct _C0ECD3277D3C6A36B299CABE6156CF21
 	_C0ECD3277D3C6A36B299CABE6156CF21() = delete;
 };
 
+struct _E3958E369F0C9F787F3E14F852D69D7E
+{
+	bool enabled;
+	int t;
+	Array<int,4> zoomSrc;
+	Array<int,4> zoomDst;
+
+	_E3958E369F0C9F787F3E14F852D69D7E() = delete;
+};
+
+struct _734DBB4D47315AEC2910FBD1685ECB48
+{
+	void* d3dDll;
+	void* d3dxDll;
+	IDirect3D9* (__fastcall *D3DCreate)(unsigned int);
+	HRESULT* (__fastcall *D3DXCreateEffect)(IDirect3DDevice9*, const void*, unsigned int, const _D3DXMACRO*, ID3DXInclude*, unsigned int, ID3DXEffectPool*, ID3DXEffect**, ID3DXBuffer**);
+	IDirect3D9* d3dObject;
+	IDirect3DDevice9* d3dDevice;
+	_D3DPRESENT_PARAMETERS_ d3dpp;
+	Array<texture_t_DX,512> textures;
+	Array<program_t,18> programs;
+	d3dvertex_t* vertScratch;
+	IDirect3DVertexBuffer9* verts;
+	Array<drawCmd_t,8192> cmds;
+	Array<vec4_t,4> projections;
+	drawCmd_t user;
+	d3dvertex_t v;
+	Array<drawState_t,4> stateStack;
+	int stateStackTop;
+	_7A482BBA0D1D34ED5A2E6984BF7642B3 viewport;
+	vec4_t vertScale;
+	vec4_t zoom;
+	int n;
+	SDL_Rect scissor;
+	drawState_t hwState;
+	drawState_t force;
+	_E3958E369F0C9F787F3E14F852D69D7E pp;
+	_D3DFORMAT uploadFormat;
+	int sortStart;
+	float blurAmount;
+	bool forceReset;
+	DepthLockState depthLockState;
+	Array<samplerState_t,2> samplerStates;
+	IDirect3DVertexDeclaration9* dxVertexDecl;
+
+	_734DBB4D47315AEC2910FBD1685ECB48() = delete;
+};
+
 struct glyphHashTable_t
 {
 	int numElements;
@@ -8134,6 +8233,9 @@ extern type_SDL_GetWindowFlags p_SDL_GetWindowFlags;
 typedef SDL_Window* (*type_SDL_GetWindowFromID)(uint id);
 extern type_SDL_GetWindowFromID p_SDL_GetWindowFromID;
 
+typedef int (*type_SDL_GL_SetSwapInterval)(int interval);
+extern type_SDL_GL_SetSwapInterval p_SDL_GL_SetSwapInterval;
+
 typedef void (*type_stopEditCapture)();
 extern type_stopEditCapture p_stopEditCapture;
 
@@ -8298,6 +8400,7 @@ extern type_YScreenToZoomed p_YScreenToZoomed;
 
 extern char** p_afxPchNil;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
+extern RendererType* p_g_drawBackend;
 extern Array<keyword,124>* p_g_keywords;
 extern lua_State** p_g_lua;
 extern uiMenu** p_g_overlayMenu;
@@ -8316,6 +8419,7 @@ extern ConstArray<byte,1765>* p_yy_lookahead;
 extern ConstArray<short,122>* p_yy_reduce_ofst;
 extern ConstArray<short,174>* p_yy_shift_ofst;
 extern ConstArray<_D98D369160A0DDA2B95F5D0F301081BB,157>* p_yyRuleInfo;
+extern _734DBB4D47315AEC2910FBD1685ECB48* p_d3d;
 extern Array<letter_t,262144>* p_g_letters;
 extern _C0ECD3277D3C6A36B299CABE6156CF21* p_gl;
 extern GLint (__cdecl **p_glGetUniformLocation)(GLuint program, const GLchar* name);

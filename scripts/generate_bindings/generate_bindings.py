@@ -646,6 +646,10 @@ class MainState:
 		return self.groupsDict[name]
 
 
+	def removeGroup(self, name: str):
+		del self.groupsDict[name]
+
+
 	def tryGetGroup(self, name: str):
 		return self.groupsDict.get(name)
 
@@ -737,6 +741,7 @@ class TypeReference:
 
 		self.primitive: bool = False
 		self.noconst: bool = False
+		self.noabstract: bool = False
 
 		self.unsigned: bool = False
 		self.const: bool = False
@@ -756,6 +761,7 @@ class TypeReference:
 		self.const = other.const
 		self.long = other.long
 		self.noconst = other.noconst
+		self.noabstract = other.noabstract
 		self.primitive = other.primitive
 		self.sourceGroup = other.sourceGroup
 		self.sourceString = other.sourceString
@@ -1000,6 +1006,7 @@ class TypeReference:
 
 			toReturn.primitive = toReturn.primitive or self.primitive
 			toReturn.noconst = toReturn.noconst or self.noconst
+			toReturn.noabstract = toReturn.noabstract or self.noabstract
 			toReturn.setConst(toReturn.isConst() or self.isConst())
 
 		return toReturn
@@ -1260,6 +1267,7 @@ class TypeReference:
 		parts.append(f"{indent}templateTypes: {self.templateTypes}\n")
 		parts.append(f"{indent}primitive: {self.primitive}\n")
 		parts.append(f"{indent}noconst: {self.noconst}\n")
+		parts.append(f"{indent}noabstract: {self.noabstract}\n")
 		parts.append(f"{indent}unsigned: {self.unsigned}\n")
 		parts.append(f"{indent}const: {self.const}\n")
 		parts.append(f"{indent}volatile: {self.volatile}\n")
@@ -1887,7 +1895,7 @@ variablePatternGlobal = "^((?:(?:nopointer|nobinding|static)\\s+)*)(?!class|enum
 variablePatternLocal = "^\t((?:(?:nopointer|nobinding|static)\\s+)*)(?:__unaligned\\s+){0,1}(?:__declspec\\(align\\(\\d+\\)\\)\\s+){0,1}([, _a-zA-Z0-9*&:<>\\-$]+?)\\s*([_a-zA-Z0-9~]+)((?:\\[[_a-zA-Z0-9+]+\\])+)*(?:\\s*:\\s*([^\\s>]+?)){0,1}(?:\\s|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*;(?:\\s|(?:\\/\\/.*)|(?:\\/\\*(?:(?!\\*\\/).)*\\*\\/))*$"
 functionParameterTypeModifiers = (
 	"struct", "signed", "unsigned", "short", "long", "const", "volatile",
-	"noconst", "primitive" # Bindings specific
+	"noconst", "noabstract", "primitive" # Bindings specific
 )
 
 
@@ -3524,6 +3532,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 	primitive = False
 	noconst = False
+	noabstract = False
 	while True:
 		if primitiveMatch := re.fullmatch("primitive\\s+(.*)", str):
 			primitive = True
@@ -3531,6 +3540,9 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 		elif noconstMatch := re.fullmatch("noconst\\s+(.*)", str):
 			noconst = True
 			str = noconstMatch.group(1)
+		elif noabstractMatch := re.fullmatch("noabstract\\s+(.*)", str):
+			noabstract = True
+			str = noabstractMatch.group(1)
 		else:
 			break
 
@@ -3644,6 +3656,7 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 
 	typeRef.primitive = primitive
 	typeRef.noconst = noconst
+	typeRef.noabstract = noabstract
 
 	if superRef:
 		superRef.subRef = typeRef
@@ -3842,12 +3855,26 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 	def writeGroupWithTemplateUse(group: Group, templateMappingTracker: TemplateMappingTracker, currentTemplate: TemplateUse=None):
 
+		if currentTemplate != None:
+			templateMappingTracker.registerMapping(group.name, currentTemplate.tup)
+
+		for field in group.definedFields():
+
+			if field.type == FieldType.VARIABLE:
+
+				varField: VariableField = field
+				varType: TypeReference = varField.variableType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
+
+				if varType.isAbstractValue():
+
+					if currentTemplate != None:
+						templateMappingTracker.deregisterMapping(group.name)
+
+					return
+
 		groupOpenData = OpenGroupData()
 		groupOpenData.group = group
 		openDataGroups.append(groupOpenData)
-
-		if currentTemplate != None:
-			templateMappingTracker.registerMapping(group.name, currentTemplate.tup)
 
 		groupOpenData.appliedNameUsertypeNoOverride = group.getAppliedName(mainState, templateMappingTracker, templateTypeMode=TemplateTypeMode.HEADER)
 		groupOpenData.appliedNameUsertype = group.getAppliedName(mainState, templateMappingTracker, useUsertypeOverride=True, templateTypeMode=TemplateTypeMode.HEADER)

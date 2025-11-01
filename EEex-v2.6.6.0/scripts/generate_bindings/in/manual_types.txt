@@ -817,6 +817,21 @@ struct $D98D369160A0DDA2B95F5D0F301081BB
 	byte nrhs;
 };
 
+struct texture_t_DX
+{
+	IDirect3DTexture9* texture;
+	IDirect3DTexture9* altTexture;
+	int w;
+	int h;
+	bool generated;
+	bool deleted;
+	DrawFilter minFilter;
+	DrawFilter magFilter;
+	uint wrapS;
+	uint wrapT;
+	_D3DFORMAT internalFormat;
+};
+
 /////////////////////////////
 // Local Function Bindings //
 /////////////////////////////
@@ -1567,6 +1582,7 @@ int SDL_GetKeyFromName(primitive const char* name);
 primitive char* __cdecl SDL_GetKeyName(int key);
 uint SDL_GetWindowFlags(SDL_Window* window);
 SDL_Window* SDL_GetWindowFromID(uint id);
+int SDL_GL_SetSwapInterval(int interval);
 void stopEditCapture();
 uint strtoul(primitive const char* str, char** endptr, int base);
 bool __cdecl uiIsHidden();
@@ -1629,6 +1645,7 @@ $nobinding float YScreenToZoomed(float y);
 
 char* afxPchNil;
 $9B9540D9920A90D57A3D80DDD1A70514 capture;
+RendererType g_drawBackend;
 keyword g_keywords[124];
 lua_State* g_lua;
 uiMenu* g_overlayMenu;
@@ -1648,6 +1665,7 @@ const short yy_reduce_ofst[122];
 const short yy_shift_ofst[174];
 const $D98D369160A0DDA2B95F5D0F301081BB yyRuleInfo[157];
 
+nobinding $734DBB4D47315AEC2910FBD1685ECB48 d3d;
 nobinding letter_t g_letters[262144];
 nobinding $C0ECD3277D3C6A36B299CABE6156CF21 gl;
 nobinding GLint (__cdecl *glGetUniformLocation)(GLuint program, const GLchar* name);

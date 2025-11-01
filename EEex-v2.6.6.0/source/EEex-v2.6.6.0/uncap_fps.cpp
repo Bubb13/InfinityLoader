@@ -763,6 +763,26 @@ long long EEex::GetMicroseconds()
 	return getTime() - getInitTime();
 }
 
+void EEex::SetVSyncEnabled(bool bEnable, bool bResetDevice)
+{
+	if (*p_g_drawBackend == RendererType::RENDERER_DX9)
+	{
+		p_d3d->d3dpp.PresentationInterval = bEnable ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+		p_d3d->forceReset = true;
+
+		if (bResetDevice)
+		{
+			CBaldurChitin* const pChitin = *p_g_pBaldurChitin;
+			CVidMode* const pVidMode = pChitin->cVideo.pCurrentMode;
+			pChitin->OnResizeWindow(pVidMode->nWidth, pVidMode->nHeight);
+		}
+	}
+	else
+	{
+		p_SDL_GL_SetSwapInterval(bEnable);
+	}
+}
+
 void EEex::UpdateLastScrollTime()
 {
 	nLastScrollTime = getTime();
@@ -862,6 +882,12 @@ static void setShaderResolution()
 void EEex::UncapFPS_Hook_OnAfterDrawInit()
 {
 	//setShaderResolution();
+
+	lua_State *const L = *p_g_lua;
+	luaCallProtected(L, 0, 0, [&](int _)
+	{
+		lua_getglobal(L, "EEex_UncapFPS_LuaHook_OnAfterDrawInit");
+	});
 }
 
 void EEex::UncapFPS_Hook_OnAfterWindowResized()
@@ -1184,6 +1210,12 @@ void CChitin::Override_Update()
 			const long long nEndTime = getTime();
 			const long long nTimeTaken = nEndTime - nStartTime;
 
+			const long long nTarget = 1000000 / EEex::UncapFPS_FPSLimit;
+			if (nTimeTaken > nTarget)
+			{
+				//FPrint("Light frame took too long: %lld > %lld\n", nTimeTaken, nTarget);
+			}
+
 			const long long nTargetFullMicroseconds = 1000000 / *CChitin::p_TIMER_UPDATES_PER_SECOND - nTimeTaken;
 			nNextFullSyncUpdateTick = nEndTime + nTargetFullMicroseconds;
 
@@ -1219,6 +1251,7 @@ void CChitin::Override_Update()
 		}
 	}
 	else if (nNextLightSyncUpdateTick != -1 && nStartTime >= nNextLightSyncUpdateTick)
+	//else
 	{
 		trackSyncUpdateDelta(nStartTime);
 		bFullTick = false;
@@ -1236,6 +1269,12 @@ void CChitin::Override_Update()
 
 		const long long nEndTime = getTime();
 		const long long nTimeTaken = nEndTime - nStartTime;
+
+		const long long nTarget = 1000000 / EEex::UncapFPS_FPSLimit;
+		if (nTimeTaken > nTarget)
+		{
+			//FPrint("Light frame took too long: %lld > %lld\n", nTimeTaken, nTarget);
+		}
 
 		const int nEffectiveCap = EEex::UncapFPS_FPSLimit - *CChitin::p_TIMER_UPDATES_PER_SECOND;
 		nNextLightSyncUpdateTick = nEffectiveCap > 0 ? nEndTime + 1000000 / nEffectiveCap - nTimeTaken : -1;
