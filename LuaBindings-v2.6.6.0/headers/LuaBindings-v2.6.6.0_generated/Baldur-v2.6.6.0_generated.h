@@ -169,6 +169,7 @@ struct CVIDIMG_PALETTEAFFECT;
 struct CVVCHashEntry;
 struct CVariable;
 struct CVariableHash;
+struct CVidBitmap;
 struct CVidCell;
 struct CVidFont;
 struct CVidMode;
@@ -9109,6 +9110,14 @@ struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 	CString m_szResFileName;
 
 	CVidBitmap() = delete;
+
+	typedef int (__thiscall *type_GetPixelColor)(CVidBitmap* pThis, tagRGBQUAD* color, int x, int y);
+	static type_GetPixelColor p_GetPixelColor;
+
+	int GetPixelColor(tagRGBQUAD* color, int x, int y)
+	{
+		return p_GetPixelColor(this, color, x, y);
+	}
 };
 
 struct CScreenAI : CBaldurEngine
@@ -13833,6 +13842,9 @@ struct CGameArea
 	typedef void (__thiscall *type_ShowMonstersInArea)(CGameArea* pThis, CGameAreaClairvoyanceEntry* pEntry);
 	static type_ShowMonstersInArea p_ShowMonstersInArea;
 
+	typedef uint (__thiscall *type_GetTintColor)(CGameArea* pThis, CPoint* cPoint, byte listType);
+	static type_GetTintColor p_GetTintColor;
+
 	typedef void (__thiscall *type_OnActivation)(CGameArea* pThis);
 	static type_OnActivation p_OnActivation;
 
@@ -13889,6 +13901,11 @@ struct CGameArea
 	void ShowMonstersInArea(CGameAreaClairvoyanceEntry* pEntry)
 	{
 		p_ShowMonstersInArea(this, pEntry);
+	}
+
+	uint GetTintColor(CPoint* cPoint, byte listType)
+	{
+		return p_GetTintColor(this, cPoint, listType);
 	}
 
 	void OnActivation()

@@ -20,6 +20,7 @@ struct CGameAIBase : CGameObject
 struct CGameArea
 {
 	$nobinding $external_implementation void Override_AddClairvoyanceObject(CGameSprite* pSprite, CPoint position, int duration);
+	$nobinding $external_implementation uint Override_GetTintColor(CPoint* cPoint, byte listType);
 	$nobinding $external_implementation void Override_RenderZoomed();
 };
 

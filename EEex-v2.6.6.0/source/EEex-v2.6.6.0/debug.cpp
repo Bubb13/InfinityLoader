@@ -1,6 +1,183 @@
 
 #include "Baldur-v2.6.6.0_generated.h"
 
+uint CGameArea::Override_GetTintColor(CPoint* cPoint, byte listType)
+{
+	if (listType == 2 || this->m_bmLum.pRes == nullptr) // Flying creature or no light map
+	{
+		return 0xFFFFFF;
+	}
+
+	const int nRenderCode = (this->m_cInfinity.m_areaType & 0x40) != 0 ? this->m_cInfinity.m_renderDayNightCode : 1;
+
+	const int nXMod16 = cPoint->x % 16;
+	const int nYMod12 = cPoint->y % 12;
+
+	const int nXToNextLumCoord = 16 - nXMod16;
+	const int nYToNextLumCoord = 12 - nYMod12;
+
+	tagRGBQUAD rgbTL{};
+	tagRGBQUAD rgbTR{};
+	tagRGBQUAD rgbBL{};
+	tagRGBQUAD rgbBR{};
+
+	// These are uninitialized in the engine
+	int nRgbTLRed   = 0x42;
+	int nRgbTLGreen = 0x42;
+	int nRgbTLBlue  = 0x42;
+
+	int nRgbTRRed   = 0x42;
+	int nRgbTRGreen = 0x42;
+	int nRgbTRBlue  = 0x42;
+
+	int nRgbBLRed   = 0x42;
+	int nRgbBLGreen = 0x42;
+	int nRgbBLBlue  = 0x42;
+
+	int nRgbBRRed   = 0x42;
+	int nRgbBRGreen = 0x42;
+	int nRgbBRBlue  = 0x42;
+
+	if ((nRenderCode & 1) != 0)
+	{
+		const int nLightMapX = cPoint->x / this->m_lightmapRatio.cx;
+		const int nLightMapY = cPoint->y / this->m_lightmapRatio.cy;
+
+		this->m_bmLum.GetPixelColor(&rgbTL, nLightMapX, nLightMapY);
+
+		if (this->m_bmLum.GetPixelColor(&rgbTR, nLightMapX + 1, nLightMapY) == 0)
+		{
+			rgbTR = rgbTL;
+		}
+
+		if (this->m_bmLum.GetPixelColor(&rgbBL, nLightMapX, nLightMapY + 1) == 0)
+		{
+			rgbBL = rgbTL;
+		}
+
+		if (this->m_bmLum.GetPixelColor(&rgbBR, nLightMapX + 1, nLightMapY + 1) == 0)
+		{
+			rgbBR = rgbTL;
+		}
+	}
+
+	if ((nRenderCode & 2) == 0 || this->m_pbmLumNight == nullptr)
+	{
+		nRgbTLRed   = rgbTL.rgbRed;
+		nRgbTLGreen = rgbTL.rgbGreen;
+		nRgbTLBlue  = rgbTL.rgbBlue;
+
+		nRgbTRRed   = rgbTR.rgbRed;
+		nRgbTRGreen = rgbTR.rgbGreen;
+		nRgbTRBlue  = rgbTR.rgbBlue;
+
+		nRgbBLRed   = rgbBL.rgbRed;
+		nRgbBLGreen = rgbBL.rgbGreen;
+		nRgbBLBlue  = rgbBL.rgbBlue;
+
+		nRgbBRRed   = rgbBR.rgbRed;
+		nRgbBRGreen = rgbBR.rgbGreen;
+		nRgbBRBlue  = rgbBR.rgbBlue;
+	}
+	else // (nRenderCode & 2) != 0 && this->m_pbmLumNight != nullptr
+	{
+		// Night and has night light map
+
+		const int xLum = cPoint->x / 16;
+		const int yLum = cPoint->y / 12;
+
+		tagRGBQUAD rgbNightTL;
+		tagRGBQUAD rgbNightTR;
+		tagRGBQUAD rgbNightBL;
+		tagRGBQUAD rgbNightBR;
+
+		this->m_pbmLumNight->GetPixelColor(&rgbNightTL, xLum, yLum);
+
+		if (this->m_pbmLumNight->GetPixelColor(&rgbNightTR, xLum + 1, yLum) == 0)
+		{
+			rgbNightTR = rgbNightTL;
+		}
+
+		if (this->m_pbmLumNight->GetPixelColor(&rgbNightBL, xLum, yLum + 1) == 0)
+		{
+			rgbNightBL = rgbNightTL;
+		}
+
+		if (this->m_pbmLumNight->GetPixelColor(&rgbNightBR, xLum + 1, yLum + 1) == 0)
+		{
+			rgbNightBR = rgbNightTL;
+		}
+
+		const int nRgbNightTLRed   = rgbNightTL.rgbRed;
+		const int nRgbNightTLGreen = rgbNightTL.rgbGreen;
+		const int nRgbNightTLBlue  = rgbNightTL.rgbBlue;
+
+		const int nRgbNightTRRed   = rgbNightTR.rgbRed;
+		const int nRgbNightTRGreen = rgbNightTR.rgbGreen;
+		const int nRgbNightTRBlue  = rgbNightTR.rgbBlue;
+
+		const int nRgbNightBLRed   = rgbNightBL.rgbRed;
+		const int nRgbNightBLGreen = rgbNightBL.rgbGreen;
+		const int nRgbNightBLBlue  = rgbNightBL.rgbBlue;
+
+		const int nRgbNightBRRed   = rgbNightBR.rgbRed;
+		const int nRgbNightBRGreen = rgbNightBR.rgbGreen;
+		const int nRgbNightBRBlue  = rgbNightBR.rgbBlue;
+
+		if ((nRenderCode & 1) == 0)
+		{
+			// Not day
+			const int nMixTopRed   = ((nRgbNightTLRed   * nXToNextLumCoord) + (nRgbNightTRRed   * nXMod16)) / 16;
+			const int nMixTopGreen = ((nRgbNightTLGreen * nXToNextLumCoord) + (nRgbNightTRGreen * nXMod16)) / 16;
+			const int nMixTopBlue  = ((nRgbNightTLBlue  * nXToNextLumCoord) + (nRgbNightTRBlue  * nXMod16)) / 16;
+
+			const int nMixBottomRed   = ((nRgbNightBLRed   * nXToNextLumCoord) + (nRgbNightBRRed   * nXMod16)) / 16;
+			const int nMixBottomGreen = ((nRgbNightBLGreen * nXToNextLumCoord) + (nRgbNightBRGreen * nXMod16)) / 16;
+			const int nMixBottomBlue  = ((nRgbNightBLBlue  * nXToNextLumCoord) + (nRgbNightBRBlue  * nXMod16)) / 16;
+
+			const int nMixRed   = ((nMixTopRed   * nYToNextLumCoord) + (nMixBottomRed   * nYMod12)) / 12;
+			const int nMixGreen = ((nMixTopGreen * nYToNextLumCoord) + (nMixBottomGreen * nYMod12)) / 12;
+			const int nMixBlue  = ((nMixTopBlue  * nYToNextLumCoord) + (nMixBottomBlue  * nYMod12)) / 12;
+
+			return (nMixBlue & 0xFF) << 16 | (nMixGreen & 0xFF) << 8 | (nMixRed & 0xFF);
+		}
+
+		// Both day and night (nRenderCode == 3) - not used?
+		const int nDayIntensity = this->m_cInfinity.m_dayLightIntensity;
+		const int nNightIntensity = 255 - nDayIntensity;
+
+		nRgbTLRed   = ((nRgbTLRed   * nDayIntensity) + (nRgbNightTLRed   * nNightIntensity)) / 256;
+		nRgbTLGreen = ((nRgbTLGreen * nDayIntensity) + (nRgbNightTLGreen * nNightIntensity)) / 256;
+		nRgbTLBlue  = ((nRgbTLBlue  * nDayIntensity) + (nRgbNightTLBlue  * nNightIntensity)) / 256;
+
+		nRgbTRRed   = ((nRgbTRRed   * nDayIntensity) + (nRgbNightTRRed   * nNightIntensity)) / 256;
+		nRgbTRGreen = ((nRgbTRGreen * nDayIntensity) + (nRgbNightTRGreen * nNightIntensity)) / 256;
+		nRgbTRBlue  = ((nRgbTRBlue  * nDayIntensity) + (nRgbNightTRBlue  * nNightIntensity)) / 256;
+
+		nRgbBLRed   = ((nRgbBLRed   * nDayIntensity) + (nRgbNightBLRed   * nNightIntensity)) / 256;
+		nRgbBLGreen = ((nRgbBLGreen * nDayIntensity) + (nRgbNightBLGreen * nNightIntensity)) / 256;
+		nRgbBLBlue  = ((nRgbBLBlue  * nDayIntensity) + (nRgbNightBLRed   * nNightIntensity)) / 256;
+
+		nRgbBRRed   = ((nRgbBRRed   * nDayIntensity) + (nRgbNightBRRed   * nNightIntensity)) / 256;
+		nRgbBRGreen = ((nRgbBRGreen * nDayIntensity) + (nRgbNightBRGreen * nNightIntensity)) / 256;
+		nRgbBRBlue  = ((nRgbBRBlue  * nDayIntensity) + (nRgbNightBRBlue  * nNightIntensity)) / 256;
+	}
+
+	const int nMixTopRed   = ((nRgbTLRed   * nXToNextLumCoord) + (nRgbTRRed   * nXMod16)) / 16;
+	const int nMixTopGreen = ((nRgbTLGreen * nXToNextLumCoord) + (nRgbTRGreen * nXMod16)) / 16;
+	const int nMixTopBlue  = ((nRgbTLBlue  * nXToNextLumCoord) + (nRgbTRBlue  * nXMod16)) / 16;
+
+	const int nMixBottomRed   = ((nRgbBLRed   * nXToNextLumCoord) + (nRgbBRRed   * nXMod16)) / 16;
+	const int nMixBottomGreen = ((nRgbBLGreen * nXToNextLumCoord) + (nRgbBRGreen * nXMod16)) / 16;
+	const int nMixBottomBlue  = ((nRgbBLBlue  * nXToNextLumCoord) + (nRgbBRBlue  * nXMod16)) / 16;
+
+	const int nMixRed   = ((nMixTopRed   * nYToNextLumCoord) + (nMixBottomRed   * nYMod12)) / 12;
+	const int nMixGreen = ((nMixTopGreen * nYToNextLumCoord) + (nMixBottomGreen * nYMod12)) / 12;
+	const int nMixBlue  = ((nMixTopBlue  * nYToNextLumCoord) + (nMixBottomBlue  * nYMod12)) / 12;
+
+	return (nMixBlue & 0xFF) << 16 | (nMixGreen & 0xFF) << 8 | (nMixRed & 0xFF);
+}
+
 void CVidPalette::Override_RealizeResource3d(uint* pDestPalette, uint dwFlags, CVIDIMG_PALETTEAFFECT* pAffectArgs, uint nTransVal)
 {
 	// pAffectArgs is CVidCell::mPaletteAffects

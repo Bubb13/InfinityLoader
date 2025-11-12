@@ -1097,6 +1097,7 @@ struct CGameArea
 	void OnActionButtonClickGround(CPoint* pt);
 	void ShowMonstersInArea(CGameAreaClairvoyanceEntry* pEntry);
 
+	$nobinding uint GetTintColor(CPoint* cPoint, byte listType);
 	$nobinding void OnActivation();
 	$nobinding void OnDeactivation();
 	$nobinding void Render(CVidMode* pVidMode);
@@ -1552,6 +1553,11 @@ struct CScreenMap : CBaldurEngine
 struct CBaldurEngine : CWarp
 {
 	$nobinding void OnLeftPanelButtonClick(uint dwButtonId);
+};
+
+struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
+{
+	int GetPixelColor(tagRGBQUAD* color, int x, int y);
 };
 
 struct CVidFont : CResHelper<CResFont,1034>

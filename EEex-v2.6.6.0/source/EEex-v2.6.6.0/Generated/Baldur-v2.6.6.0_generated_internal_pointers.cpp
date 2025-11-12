@@ -185,6 +185,7 @@ CAIScriptFile::type_ParseObjectType CAIScriptFile::p_ParseObjectType;
 CAIScriptFile::type_ParseResponseString CAIScriptFile::p_ParseResponseString;
 CSound::type_Construct CSound::p_Construct;
 CSound::type_Destruct CSound::p_Destruct;
+CVidBitmap::type_GetPixelColor CVidBitmap::p_GetPixelColor;
 CSearchBitmap::type_GetCost CSearchBitmap::p_GetCost;
 CSearchBitmap::type_GetLOSCost CSearchBitmap::p_GetLOSCost;
 CSearchBitmap::type_GetNearestOpenSquare CSearchBitmap::p_GetNearestOpenSquare;
@@ -252,6 +253,7 @@ CGameArea::type_GetAllInRange_Overload_VertListPos CGameArea::p_GetAllInRange_Ov
 CGameArea::type_ApplyEffect CGameArea::p_ApplyEffect;
 CGameArea::type_OnActionButtonClickGround CGameArea::p_OnActionButtonClickGround;
 CGameArea::type_ShowMonstersInArea CGameArea::p_ShowMonstersInArea;
+CGameArea::type_GetTintColor CGameArea::p_GetTintColor;
 CGameArea::type_OnActivation CGameArea::p_OnActivation;
 CGameArea::type_OnDeactivation CGameArea::p_OnDeactivation;
 CGameArea::type_Render CGameArea::p_Render;
@@ -507,6 +509,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CAIScriptFile::ParseResponseString"), CAIScriptFile::p_ParseResponseString);
 	attemptFillPointer(TEXT("CSound::Construct"), CSound::p_Construct);
 	attemptFillPointer(TEXT("CSound::Destruct"), CSound::p_Destruct);
+	attemptFillPointer(TEXT("CVidBitmap::GetPixelColor"), CVidBitmap::p_GetPixelColor);
 	attemptFillPointer(TEXT("CSearchBitmap::GetCost"), CSearchBitmap::p_GetCost);
 	attemptFillPointer(TEXT("CSearchBitmap::GetLOSCost"), CSearchBitmap::p_GetLOSCost);
 	attemptFillPointer(TEXT("CSearchBitmap::GetNearestOpenSquare"), CSearchBitmap::p_GetNearestOpenSquare);
@@ -574,6 +577,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CGameArea::ApplyEffect"), CGameArea::p_ApplyEffect);
 	attemptFillPointer(TEXT("CGameArea::OnActionButtonClickGround"), CGameArea::p_OnActionButtonClickGround);
 	attemptFillPointer(TEXT("CGameArea::ShowMonstersInArea"), CGameArea::p_ShowMonstersInArea);
+	attemptFillPointer(TEXT("CGameArea::GetTintColor"), CGameArea::p_GetTintColor);
 	attemptFillPointer(TEXT("CGameArea::OnActivation"), CGameArea::p_OnActivation);
 	attemptFillPointer(TEXT("CGameArea::OnDeactivation"), CGameArea::p_OnDeactivation);
 	attemptFillPointer(TEXT("CGameArea::Render"), CGameArea::p_Render);
