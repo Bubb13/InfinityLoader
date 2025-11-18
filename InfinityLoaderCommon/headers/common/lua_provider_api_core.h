@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include <Windows.h>
+
 #include "dll_api.h"
 
 #ifdef LUA_PROVIDER_EXPORT
@@ -31,9 +33,9 @@ LUA_PROVIDER_API_VAR int LUA_REGISTRYINDEX;
 LUA_PROVIDER_API_VAR int LUA_RIDX_GLOBALS;
 LUA_PROVIDER_API_VAR int LUA_GLOBALSINDEX;
 
-//////////////////
-// Lua Wrappers //
-//////////////////
+///////////////////////////
+// Standard Lua Wrappers //
+///////////////////////////
 
 LUA_PROVIDER_API int lua_absindex(lua_State* L, int idx);
 LUA_PROVIDER_API lua_CFunction lua_atpanic(lua_State* L, lua_CFunction panicf);
@@ -93,6 +95,12 @@ LUA_PROVIDER_API lua_State* luaL_newstate();
 LUA_PROVIDER_API void luaL_openlibs(lua_State* L);
 LUA_PROVIDER_API int luaL_ref(lua_State* L, int t);
 LUA_PROVIDER_API void luaL_traceback(lua_State* L, lua_State* L1, const char* msg, int level);
+
+/////////////////////////
+// Custom Lua Wrappers //
+/////////////////////////
+
+LUA_PROVIDER_API int luaL_loadpathx(lua_State* L, const TCHAR* path, const char* mode);
 
 /////////////
 // Utility //

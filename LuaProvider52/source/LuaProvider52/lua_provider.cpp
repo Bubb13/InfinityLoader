@@ -70,10 +70,23 @@ static DWORD setLuaPointerInternal(
 	}
 	else {
 		TryRetErr( getLuaProc(hLuaLibrary, luaFuncName, funcPtrOut) )
-		TryRetDefErrCode ( checkExportPattern(luaPatternName, funcPtrOut) )
+		TryRetDefErrCode( checkExportPattern(luaPatternName, funcPtrOut) )
 	}
 
 	return ERROR_SUCCESS;
+}
+
+template<typename PointerType>
+bool fillPointerFromSinglePattern(const String& patternName, PointerType& pointerOut) {
+
+	PatternValueHandle handle;
+	if (sharedState().GetPatternValue(patternName, handle) != PatternValueType::SINGLE) {
+		FPrintT(TEXT("[!][LuaProvider.dll] fillPointerFromSinglePattern() - [%s].Type must be SINGLE\n"), patternName.c_str());
+		return false;
+	}
+
+	pointerOut = reinterpret_cast<PointerType>(sharedState().GetSinglePatternValue(handle));
+	return true;
 }
 
 #define setLuaPointer(luaFuncName) \
@@ -83,6 +96,10 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 
 	sharedState() = sharedDLL;
 	HMODULE hLuaLibrary = luaLibrary();
+
+	///////////////////////////
+	// Standard Lua Pointers //
+	///////////////////////////
 
 	setLuaPointer(lua_atpanic)
 	setLuaPointer(lua_callk)
@@ -139,6 +156,19 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	setLuaPointer(luaL_openlibs)
 	setLuaPointer(luaL_ref)
 	setLuaPointer(luaL_traceback)
+
+	/////////////////////////
+	// Custom Lua Pointers //
+	/////////////////////////
+
+	if (luaMode() == LuaMode::INTERNAL) {
+		TryRetDefErrCode( fillPointerFromSinglePattern(TEXT("Hardcoded_luaL_loadfilexptr"), p_luaL_loadfilexptr) );
+		TryRetDefErrCode( fillPointerFromSinglePattern(TEXT("Hardcoded_wfopen"), p_wfopen) );
+	}
+	else {
+		TryRetErr( getLuaProc(luaLibrary(), "luaL_loadfilexptr", p_luaL_loadfilexptr) );
+		TryRetErr( getLuaProc(luaLibrary(), "wrapper_wfopen", p_wfopen) );
+	}
 
 	return ERROR_SUCCESS;
 }

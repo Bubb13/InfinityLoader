@@ -61,13 +61,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <PreprocessorDefinitions>SHARED_MEMORY_DLL_HOST;ASMJIT_STATIC;ASMTK_STATIC;WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;SHARED_MEMORY_DLL_HOST;ASMJIT_STATIC;ASMTK_STATIC;WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)lib\$(Platform)\minizip.lib;$(SolutionDir)lib\$(Platform)\zlibstatic.lib;%(AdditionalDependencies);dbghelp.lib</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>infinity_loader_dll.def</ModuleDefinitionFile>
@@ -81,19 +81,19 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(ProjectDir);$(ProjectDir)headers/InfinityLoaderDLL</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)headers/InfinityLoaderDLL;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)lib_headers/minizip;$(SolutionDir)lib_headers/zlib</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <PreprocessorDefinitions>SHARED_MEMORY_DLL_HOST;ASMJIT_STATIC;ASMTK_STATIC;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;SHARED_MEMORY_DLL_HOST;ASMJIT_STATIC;ASMTK_STATIC;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;dbghelp.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)lib\$(Platform)\minizip.lib;$(SolutionDir)lib\$(Platform)\zlibstatic.lib;%(AdditionalDependencies);dbghelp.lib</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>infinity_loader_dll.def</ModuleDefinitionFile>
@@ -184,7 +184,11 @@
     <ClInclude Include="asmtk\globals.h" />
     <ClInclude Include="asmtk\parserutils.h" />
     <ClInclude Include="asmtk\strtod.h" />
+    <ClInclude Include="headers\InfinityLoaderDLL\file_util.hpp" />
+    <ClInclude Include="headers\InfinityLoaderDLL\ini_util.hpp" />
+    <ClInclude Include="headers\InfinityLoaderDLL\lua_util.hpp" />
     <ClInclude Include="headers\InfinityLoaderDLL\pointers.h" />
+    <ClInclude Include="headers\InfinityLoaderDLL\protection_util.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asmjit\core\archtraits.cpp" />
@@ -238,8 +242,12 @@
     <ClCompile Include="asmtk\asmparser.cpp" />
     <ClCompile Include="asmtk\asmtokenizer.cpp" />
     <ClCompile Include="source\InfinityLoaderDLL\common.cpp" />
+    <ClCompile Include="source\InfinityLoaderDLL\file_util.cpp" />
     <ClCompile Include="source\InfinityLoaderDLL\infinity_loader_dll.cpp" />
+    <ClCompile Include="source\InfinityLoaderDLL\ini_util.cpp" />
+    <ClCompile Include="source\InfinityLoaderDLL\lua_util.cpp" />
     <ClCompile Include="source\InfinityLoaderDLL\pointers.cpp" />
+    <ClCompile Include="source\InfinityLoaderDLL\protection_util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />

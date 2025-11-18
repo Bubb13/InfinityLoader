@@ -70,7 +70,7 @@ static DWORD setLuaPointerInternal(
 	}
 	else {
 		TryRetErr( getLuaProc(hLuaLibrary, luaFuncName, funcPtrOut) )
-		TryRetDefErrCode ( checkExportPattern(luaPatternName, funcPtrOut) )
+		TryRetDefErrCode( checkExportPattern(luaPatternName, funcPtrOut) )
 	}
 
 	return ERROR_SUCCESS;
@@ -101,22 +101,22 @@ static DWORD switchLuaImplementations(const HMODULE hLuaLibrary, const char *con
 	if (luaVersion == TEXT("5.1")) {
 		// lua_pcall
 		linkMatchingAPI(51, lua, pcall)
-		// lua_pcallk
-		linkMismatchingAPI(51, lua, pcallk)
-		// lua_tonumber
-		linkMatchingAPI(51, lua, tonumber)
-		// lua_tonumberx
-		linkMismatchingAPI(51, lua, tonumberx)
+			// lua_pcallk
+			linkMismatchingAPI(51, lua, pcallk)
+			// lua_tonumber
+			linkMatchingAPI(51, lua, tonumber)
+			// lua_tonumberx
+			linkMismatchingAPI(51, lua, tonumberx)
 	}
 	else if (luaVersion == TEXT("5.2")) {
 		// lua_pcall
 		linkMismatchingAPI(52, lua, pcall)
-		// lua_pcallk
-		linkMatchingAPI(52, lua, pcallk)
-		// lua_tonumber
-		linkMismatchingAPI(52, lua, tonumber)
-		// lua_tonumberx
-		linkMatchingAPI(52, lua, tonumberx)
+			// lua_pcallk
+			linkMatchingAPI(52, lua, pcallk)
+			// lua_tonumber
+			linkMismatchingAPI(52, lua, tonumber)
+			// lua_tonumberx
+			linkMatchingAPI(52, lua, tonumberx)
 	}
 	else {
 		FPrint("[!][LuaProvider.dll] switchLuaImplementations() - Invalid [General].%s value (must be \"5.1\" or \"5.2\"); initialization failed\n", luaVersionKey);
@@ -129,6 +129,19 @@ static DWORD switchLuaImplementations(const HMODULE hLuaLibrary, const char *con
 #undef linkMismatchingAPI
 #undef linkMatchingAPI
 
+template<typename PointerType>
+bool fillPointerFromSinglePattern(const String& patternName, PointerType& pointerOut) {
+
+	PatternValueHandle handle;
+	if (sharedState().GetPatternValue(patternName, handle) != PatternValueType::SINGLE) {
+		FPrintT(TEXT("[!][LuaProvider.dll] fillPointerFromSinglePattern() - [%s].Type must be SINGLE\n"), patternName.c_str());
+		return false;
+	}
+
+	pointerOut = reinterpret_cast<PointerType>(sharedState().GetSinglePatternValue(handle));
+	return true;
+}
+
 #define setLuaPointer(luaFuncName) \
 	TryRetErr ( setLuaPointerInternal(TEXT("InitLuaProvider"), hLuaLibrary, TEXT("Hardcoded_"#luaFuncName), #luaFuncName, p_##luaFuncName) )
 
@@ -136,6 +149,10 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 
 	sharedState() = sharedDLL;
 	const HMODULE hLuaLibrary = luaLibrary();
+
+	////////////////////////////////
+	// Switchable Implementations //
+	////////////////////////////////
 
 	if (hLuaLibrary == INVALID_HANDLE_VALUE) {
 		String internalLuaVersion;
@@ -147,6 +164,10 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 		TryRetLastErr( GetINIStrDef(iniPath(), TEXT("General"), TEXT("LuaVersionExternal"), TEXT("5.1"), externalLuaVersion) )
 		switchLuaImplementations(hLuaLibrary, "LuaVersionExternal", externalLuaVersion);
 	}
+
+	///////////////////////////
+	// Standard Lua Pointers //
+	///////////////////////////
 
 	setLuaPointer(lua_atpanic)
 	setLuaPointer(lua_callk)
@@ -202,6 +223,19 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	setLuaPointer(luaL_openlibs)
 	setLuaPointer(luaL_ref)
 	setLuaPointer(luaL_traceback) // TODO: Should be switched above
+
+	/////////////////////////
+	// Custom Lua Pointers //
+	/////////////////////////
+
+	if (luaMode() == LuaMode::INTERNAL) {
+		TryRetDefErrCode( fillPointerFromSinglePattern(TEXT("Hardcoded_luaL_loadfilexptr"), p_luaL_loadfilexptr) );
+		TryRetDefErrCode( fillPointerFromSinglePattern(TEXT("Hardcoded_wfopen"), p_wfopen) );
+	}
+	else {
+		TryRetErr( getLuaProc(luaLibrary(), "luaL_loadfilexptr", p_luaL_loadfilexptr) );
+		TryRetErr( getLuaProc(luaLibrary(), "wrapper_wfopen", p_wfopen) );
+	}
 
 	return ERROR_SUCCESS;
 }

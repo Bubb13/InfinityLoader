@@ -270,6 +270,18 @@
     <ClInclude Include="headers\InfinityLoaderDLL\pointers.h">
       <Filter>Header Files\InfinityLoaderDLL</Filter>
     </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderDLL\file_util.hpp">
+      <Filter>Header Files\InfinityLoaderDLL</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderDLL\lua_util.hpp">
+      <Filter>Header Files\InfinityLoaderDLL</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderDLL\ini_util.hpp">
+      <Filter>Header Files\InfinityLoaderDLL</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\InfinityLoaderDLL\protection_util.hpp">
+      <Filter>Header Files\InfinityLoaderDLL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asmjit\core\archtraits.cpp">
@@ -429,6 +441,18 @@
       <Filter>Source Files\InfinityLoaderDLL</Filter>
     </ClCompile>
     <ClCompile Include="source\InfinityLoaderDLL\infinity_loader_dll.cpp">
+      <Filter>Source Files\InfinityLoaderDLL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InfinityLoaderDLL\file_util.cpp">
+      <Filter>Source Files\InfinityLoaderDLL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InfinityLoaderDLL\lua_util.cpp">
+      <Filter>Source Files\InfinityLoaderDLL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InfinityLoaderDLL\ini_util.cpp">
+      <Filter>Source Files\InfinityLoaderDLL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InfinityLoaderDLL\protection_util.cpp">
       <Filter>Source Files\InfinityLoaderDLL</Filter>
     </ClCompile>
   </ItemGroup>

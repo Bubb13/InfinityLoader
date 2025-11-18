@@ -19,9 +19,9 @@ EXPORT int LUA_REGISTRYINDEX = -10000;
 EXPORT int LUA_RIDX_GLOBALS;
 EXPORT int LUA_GLOBALSINDEX = -10002;
 
-//////////////
-// Pointers //
-//////////////
+///////////////////////////
+// Standard Lua Pointers //
+///////////////////////////
 
 type_lua_atpanic p_lua_atpanic;
 type_lua_callk p_lua_callk;
@@ -80,6 +80,13 @@ type_luaL_newstate p_luaL_newstate;
 type_luaL_openlibs p_luaL_openlibs;
 type_luaL_ref p_luaL_ref;
 type_luaL_traceback p_luaL_traceback;
+
+/////////////////////////
+// Custom Lua Pointers //
+/////////////////////////
+
+type_luaL_loadfilexptr p_luaL_loadfilexptr;
+type_wfopen p_wfopen;
 
 ////////////////////////////////
 // Switchable Implementations //
@@ -144,9 +151,9 @@ lua_Number lua52_tonumberx(lua_State* L, int index, int* isnum) {
 	return p_lua_tonumberx(L, index, isnum);
 }
 
-/////////////
-// Exports //
-/////////////
+//////////////////////////
+// Standard Lua Exports //
+//////////////////////////
 
 EXPORT lua_CFunction lua_atpanic(lua_State* L, lua_CFunction panicf) {
 	return p_lua_atpanic(L, panicf);
@@ -389,6 +396,19 @@ EXPORT void luaL_traceback(lua_State* L, lua_State* L1, const char* msg, int lev
 	p_luaL_traceback(L, L1, msg, level);
 }
 
+////////////////////////
+// Custom Lua Exports //
+////////////////////////
+
+EXPORT int luaL_loadpathx(lua_State* L, const TCHAR* path, const char* mode) {
+
+	// Only handling `wfopen()` - be lazy and error if not compiling with unicode.
+	static_assert(std::is_same<String, std::wstring>::value);
+
+	FILE *const file = p_wfopen(path, L"r");
+	return p_luaL_loadfilexptr(L, file, mode);
+}
+
 ///////////////////////
 // Reimplementations //
 ///////////////////////
@@ -432,7 +452,7 @@ EXPORT bool CheckLuaArgBoundsInt8(lua_State* L, const int argI, __int8& resultVa
 }
 
 EXPORT bool CheckLuaArgBoundsInt16(lua_State* L, const int argI, __int16& resultVal, std::string& error) {
- 	return checkLuaArgBounds<__int16>(L, argI, resultVal, error);
+	return checkLuaArgBounds<__int16>(L, argI, resultVal, error);
 }
 
 EXPORT bool CheckLuaArgBoundsInt32(lua_State* L, const int argI, __int32& resultVal, std::string& error) {

@@ -15,9 +15,9 @@ EXTERN_EXPORT int LUA_REGISTRYINDEX;
 EXTERN_EXPORT int LUA_RIDX_GLOBALS;
 EXTERN_EXPORT int LUA_GLOBALSINDEX;
 
-//////////////
-// Pointers //
-//////////////
+///////////////////////////
+// Standard Lua Pointers //
+///////////////////////////
 
 typedef lua_CFunction (*type_lua_atpanic)(lua_State* L, lua_CFunction panicf);
 extern type_lua_atpanic p_lua_atpanic;
@@ -189,6 +189,16 @@ extern type_luaL_ref p_luaL_ref;
 
 typedef void (*type_luaL_traceback)(lua_State* L, lua_State* L1, const char* msg, int level);
 extern type_luaL_traceback p_luaL_traceback;
+
+/////////////////////////
+// Custom Lua Pointers //
+/////////////////////////
+
+typedef int (*type_luaL_loadfilexptr)(lua_State* L, FILE* fp, const char* mode);
+extern type_luaL_loadfilexptr p_luaL_loadfilexptr;
+
+typedef FILE* (*type_wfopen)(const wchar_t* file, const wchar_t* mode);
+extern type_wfopen p_wfopen;
 
 ////////////////////////////////
 // Switchable Implementations //
