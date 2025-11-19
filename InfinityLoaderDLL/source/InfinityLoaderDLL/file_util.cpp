@@ -272,7 +272,7 @@ const String& getScriptFolder()
 	return sScriptFolder;
 }
 
-DWORD prepareExtenderScripts(const String& sEngineName)
+DWORD prepareExtenderScripts(const String* sEngineName)
 {
 	bool hasScriptFolder;
 	TryRetErr( GetINIStr(iniPath(), TEXT("General"), TEXT("ScriptFolder"), sScriptFolder, hasScriptFolder) );
@@ -291,16 +291,20 @@ DWORD prepareExtenderScripts(const String& sEngineName)
 		return lastError;
 	}
 
-	String writeableDirectory{};
-
-	if (getWriteableDirectory(writeableDirectory) == ERROR_SUCCESS)
+	if (sEngineName != nullptr)
 	{
-		const String writableDirectoryZips = String{ writeableDirectory }.append(TEXT("\\")).append(sEngineName).append(TEXT("\\*.zip"));
-		checkFolderForZips(writableDirectoryZips, scriptFolderPath);
+		String writeableDirectory{};
+
+		if (getWriteableDirectory(writeableDirectory) == ERROR_SUCCESS)
+		{
+			const String writableDirectoryZips = String{ writeableDirectory }.append(TEXT("\\")).append(*sEngineName).append(TEXT("\\*.zip"));
+			checkFolderForZips(writableDirectoryZips, scriptFolderPath);
+		}
+
+		checkFolderForZips(workingFolder() + TEXT("*.zip"), scriptFolderPath);
+		checkFolderForZips(workingFolder() + TEXT("dlc\\*.zip"), scriptFolderPath);
+		checkFolderForZips(workingFolder() + TEXT("workshop\\*.mod"), scriptFolderPath);
 	}
 
-	checkFolderForZips(workingFolder() + TEXT("*.zip"), scriptFolderPath);
-	checkFolderForZips(workingFolder() + TEXT("dlc\\*.zip"), scriptFolderPath);
-	checkFolderForZips(workingFolder() + TEXT("workshop\\*.mod"), scriptFolderPath);
 	return ERROR_SUCCESS;
 }

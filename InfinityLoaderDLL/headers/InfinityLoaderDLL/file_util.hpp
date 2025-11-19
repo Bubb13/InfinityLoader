@@ -8,4 +8,4 @@
 //-----------------------------//
 
 const String& getScriptFolder();
-DWORD prepareExtenderScripts(const String& sEngineName);
+DWORD prepareExtenderScripts(const String* sEngineName);

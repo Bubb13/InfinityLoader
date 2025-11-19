@@ -1448,20 +1448,29 @@ static void initLuaState(lua_State *const L) {
 
 static DWORD prepareExtenderScriptsAfterLuaInitialization(lua_State *const L) {
 
-	const String engineLuaFilePath = String{ workingFolder() } + TEXT("engine.lua");
-	callLuaFile(L, engineLuaFilePath.c_str());
-	lua_getglobal(L, "engine_name"); // 1 [ ..., engine_name ]
+	bool eeZipSupport;
+	TryRetErr( GetINIBoolDef(iniPath(), TEXT("General"), TEXT("EEZipSupport"), false, eeZipSupport) );
 
-	if (!lua_isstring(L, -1)) {
-		Print("[!][InfinityLoaderDLL.dll] prepareExtenderScriptsAfterLuaInitialization() - invalid `engine_name` type; string expected\n");
-		lua_pop(L, 1);               // 0 [ ... ]
-		return -1;
+	if (eeZipSupport) {
+
+		const String engineLuaFilePath = workingFolder() + TEXT("engine.lua");
+		callLuaFile(L, engineLuaFilePath.c_str());
+		lua_getglobal(L, "engine_name"); // 1 [ ..., engine_name ]
+
+		if (!lua_isstring(L, -1)) {
+			Print("[!][InfinityLoaderDLL.dll] prepareExtenderScriptsAfterLuaInitialization() - invalid `engine_name` type; string expected\n");
+			lua_pop(L, 1);               // 0 [ ... ]
+			return -1;
+		}
+
+		const String sEngineName = NulTermStrToStr(lua_tostring(L, -1));
+		lua_pop(L, 1);                   // 0 [ ... ]
+
+		return prepareExtenderScripts(&sEngineName);
 	}
-
-	const String sEngineName = NulTermStrToStr(lua_tostring(L, -1));
-	lua_pop(L, 1);                   // 0 [ ... ]
-
-	return prepareExtenderScripts(sEngineName);
+	else {
+		return prepareExtenderScripts(nullptr);
+	}
 }
 
 /////////////////////////////////////
