@@ -101,22 +101,22 @@ static DWORD switchLuaImplementations(const HMODULE hLuaLibrary, const char *con
 	if (luaVersion == TEXT("5.1")) {
 		// lua_pcall
 		linkMatchingAPI(51, lua, pcall)
-			// lua_pcallk
-			linkMismatchingAPI(51, lua, pcallk)
-			// lua_tonumber
-			linkMatchingAPI(51, lua, tonumber)
-			// lua_tonumberx
-			linkMismatchingAPI(51, lua, tonumberx)
+		// lua_pcallk
+		linkMismatchingAPI(51, lua, pcallk)
+		// lua_tonumber
+		linkMatchingAPI(51, lua, tonumber)
+		// lua_tonumberx
+		linkMismatchingAPI(51, lua, tonumberx)
 	}
 	else if (luaVersion == TEXT("5.2")) {
 		// lua_pcall
 		linkMismatchingAPI(52, lua, pcall)
-			// lua_pcallk
-			linkMatchingAPI(52, lua, pcallk)
-			// lua_tonumber
-			linkMismatchingAPI(52, lua, tonumber)
-			// lua_tonumberx
-			linkMatchingAPI(52, lua, tonumberx)
+		// lua_pcallk
+		linkMatchingAPI(52, lua, pcallk)
+		// lua_tonumber
+		linkMismatchingAPI(52, lua, tonumber)
+		// lua_tonumberx
+		linkMatchingAPI(52, lua, tonumberx)
 	}
 	else {
 		FPrint("[!][LuaProvider.dll] switchLuaImplementations() - Invalid [General].%s value (must be \"5.1\" or \"5.2\"); initialization failed\n", luaVersionKey);

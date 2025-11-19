@@ -364,3 +364,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+###########
+# Allowed #
+###########
+
+!/lib/Win32
+!/lib/*/*.pdb
