@@ -188,7 +188,7 @@ static DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
 	}
 
 	if (luaMode() == LuaMode::INTERNAL) {
-		// Required by LuaBindings.dll
+		// Required by LuaProvider.dll
 		PatternValueHandle unused;
 		findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_luaL_loadfilexptr"), unused);
 		findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_wfopen"), unused);
