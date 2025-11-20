@@ -1,4 +1,6 @@
 
+#include <filesystem>
+
 #include "file_util.hpp"
 #include "lua_util.hpp"
 
@@ -16,8 +18,18 @@ bool callLuaFile(lua_State* L, const TCHAR* luaFilePath)
 
 void callScriptFile(lua_State* L, const TCHAR* name)
 {
-	const String luaFile = String{ workingFolder() }.append(getScriptFolder()).append(TEXT("\\")).append(name).append(TEXT(".lua"));
-	callLuaFile(L, luaFile.c_str());
+	const String scriptFolderRoot = String{ workingFolder() }.append(getScriptFolder()).append(TEXT("\\"));
+	const String scriptFileOverride = String{ scriptFolderRoot }.append(TEXT("override\\")).append(name).append(TEXT(".lua"));
+
+	if (std::filesystem::exists(scriptFileOverride))
+	{
+		callLuaFile(L, scriptFileOverride.c_str());
+	}
+	else
+	{
+		const String scriptFile = String{ scriptFolderRoot }.append(name).append(TEXT(".lua"));
+		callLuaFile(L, scriptFile.c_str());
+	}
 }
 
 int callScriptFileA(lua_State* L, const char* name)

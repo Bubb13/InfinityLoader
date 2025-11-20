@@ -263,6 +263,25 @@ static void checkFolderForZips(const String& sSearchFolderPath, const String& sS
 	});
 }
 
+static bool createDirectory(const TCHAR *const sPath)
+{
+	try
+	{
+		std::filesystem::create_directory(sPath);
+		return true;
+	}
+	catch (const std::filesystem::filesystem_error& error)
+	{
+		FPrintT(TEXT("[!][InfinityLoaderDLL.dll] createDirectory() - Failed to create \"%s\": %s\n"), sPath, NulTermStrToStr(error.code().message().c_str()).c_str());
+		return false;
+	}
+}
+
+static bool createDirectory(const String& sPath)
+{
+	return createDirectory(sPath.c_str());
+}
+
 //-----------------------------//
 //          Functions          //
 //-----------------------------//
@@ -284,12 +303,10 @@ DWORD prepareExtenderScripts(const String* sEngineName)
 	}
 
 	const String scriptFolderPath = String{ workingFolder() }.append(sScriptFolder).append(TEXT("\\"));
+	const String scriptFolderOverridePath = String{ scriptFolderPath }.append(TEXT("override\\"));
 
-	if (const DWORD lastError = CreateDirectory(scriptFolderPath.c_str(), NULL); lastError != ERROR_SUCCESS && lastError != ERROR_ALREADY_EXISTS)
-	{
-		FPrint("[!][InfinityLoaderDLL.dll] prepareExtenderScripts() - CreateDirectory() failed (%d)\n", lastError);
-		return lastError;
-	}
+	TryRetDefErrCode( createDirectory(scriptFolderPath) );
+	TryRetDefErrCode( createDirectory(scriptFolderOverridePath) );
 
 	if (sEngineName != nullptr)
 	{
@@ -298,12 +315,12 @@ DWORD prepareExtenderScripts(const String* sEngineName)
 		if (getWriteableDirectory(writeableDirectory) == ERROR_SUCCESS)
 		{
 			const String writableDirectoryZips = String{ writeableDirectory }.append(TEXT("\\")).append(*sEngineName).append(TEXT("\\*.zip"));
-			checkFolderForZips(writableDirectoryZips, scriptFolderPath);
+			checkFolderForZips(writableDirectoryZips, scriptFolderOverridePath);
 		}
 
-		checkFolderForZips(workingFolder() + TEXT("*.zip"), scriptFolderPath);
-		checkFolderForZips(workingFolder() + TEXT("dlc\\*.zip"), scriptFolderPath);
-		checkFolderForZips(workingFolder() + TEXT("workshop\\*.mod"), scriptFolderPath);
+		checkFolderForZips(workingFolder() + TEXT("*.zip"), scriptFolderOverridePath);
+		checkFolderForZips(workingFolder() + TEXT("dlc\\*.zip"), scriptFolderOverridePath);
+		checkFolderForZips(workingFolder() + TEXT("workshop\\*.mod"), scriptFolderOverridePath);
 	}
 
 	return ERROR_SUCCESS;
