@@ -8,6 +8,7 @@
 
 #include "Baldur-v2.6.6.0_generated.h"
 #include "EEex.h"
+#include "infinity_loader_util_api.h"
 #include "lua_util.hpp"
 #include "menu_util.hpp"
 #include "time_util.hpp"
@@ -2672,6 +2673,10 @@ void __cdecl EEex::Override_chWriteInifile() {
 		}
 	}
 	*p_optionsHaveChanged = 0;
+}
+
+void __cdecl EEex::Override_crashHandler(EXCEPTION_POINTERS* pExceptionPointers) {
+	DumpCrashInfo(pExceptionPointers);
 }
 
 int __cdecl EEex::Override_Infinity_WriteINILine(lua_State* L) {

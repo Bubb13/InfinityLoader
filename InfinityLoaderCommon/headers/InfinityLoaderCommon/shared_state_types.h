@@ -5,11 +5,10 @@
 #include <queue>
 #include <shared_mutex>
 
-#include "dll_api.h"
 #include "infinity_loader_common_types.h"
 #include "lua_provider_api_core.h"
 #include "opaque_object.h"
-#include "shared_state_mapped_memory.h"
+#include "shared_state_mapped_memory_types.h"
 
 #include <Windows.h>
 

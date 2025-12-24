@@ -55,19 +55,18 @@ bool luaCallProtected(lua_State* L, int nArg, int nReturn, std::function<bool(in
 {
 	const int top = lua_gettop(L);
 
-	lua_getglobal(L, "debug");                                                               //           1 [ debug ]
-	lua_getfield(L, -1, "traceback");                                                        //           2 [ debug, traceback ]
+	lua_pushstring(L, "InfinityLoader_ErrorMessageHandler");                                 //           1 [ "InfinityLoader_ErrorMessageHandler" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);                                                        //           1 [ InfinityLoader_ErrorMessageHandler ]
 
-	if (setup(top) && lua_pcallk(L, nArg, nReturn, top + 2, 0, nullptr) == LUA_OK)
-	{                                                                                        // nReturn + 2 [ debug, traceback, return1, ..., returnN ]
-		lua_remove(L, top + 2);                                                              // nReturn + 1 [ debug, return1, ..., returnN ]
+	if (setup(top) && lua_pcallk(L, nArg, nReturn, top + 1, 0, nullptr) == LUA_OK)
+	{                                                                                        // nReturn + 1 [ EEex_ErrorMessageHandler, return1, ..., returnN ]
 		lua_remove(L, top + 1);                                                              //     nReturn [ return1, ..., returnN ]
 		return true;
 	}
 	else
-	{                                                                                        //           3 [ debug, traceback, errorMessage ]
-		FPrint("[!][InfinityLoaderDLL.dll] luaCallProtected() - %s\n", lua_tostring(L, -1));
-		lua_pop(L, 3);                                                                       //           0 [ ]
+	{                                                                                        //           2 [ EEex_ErrorMessageHandler, errorMessage ]
+		FPrint("[protected] %s\n", lua_tostring(L, -1));
+		lua_pop(L, 2);                                                                       //           0 [ ]
 		return false;
 	}
 }

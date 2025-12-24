@@ -68,6 +68,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Override_bsearchrange"), EEex::Override_bsearchrange);
 	exportPattern(TEXT("EEex::Override_CGameEffect_CheckSave"), EEex::Override_CGameEffect_CheckSave);
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
+	exportPattern(TEXT("EEex::Override_crashHandler"), EEex::Override_crashHandler);
 	//exportPattern(TEXT("EEex::Override_fontWrap"), EEex::Override_fontWrap);
 	exportPattern(TEXT("EEex::Override_Infinity_TransitionMenu"), EEex::Override_Infinity_TransitionMenu);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);

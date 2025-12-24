@@ -6,6 +6,7 @@
 #include "asmjit/asmjit.h"
 #include "asmtk/asmtk.h"
 #include "infinity_loader_common_api.h"
+#include "infinity_loader_util_api.h"
 #include "ini_util.hpp"
 #include "lua_provider_api.h"
 #include "lua_util.hpp"
@@ -48,7 +49,9 @@ StringA luaGlobalsPrefix;
 ///////////////////////
 
 template<typename CheckFunc>
-static asmjit::Error jitAt(uint8_t* dst, asmjit::CodeHolder* code, const CheckFunc checkFunc) noexcept {
+static asmjit::Error jitAt(uint8_t*& dst, asmjit::CodeHolder* code, const CheckFunc checkFunc, bool& canceledFromLua) noexcept {
+
+	canceledFromLua = false;
 
 	ASMJIT_PROPAGATE(code->flatten());
 	ASMJIT_PROPAGATE(code->resolveUnresolvedLinks());
@@ -70,8 +73,10 @@ static asmjit::Error jitAt(uint8_t* dst, asmjit::CodeHolder* code, const CheckFu
 
 		codeSize = code->codeSize();
 		uint8_t* newDst = checkFunc(codeSize);
-		if (newDst == reinterpret_cast<uint8_t*>(-1))
+		if (newDst == reinterpret_cast<uint8_t*>(-1)) {
+			canceledFromLua = true;
 			return asmjit::kErrorOk;
+		}
 		else if (newDst)
 			dst = newDst;
 		else
@@ -93,6 +98,28 @@ static asmjit::Error jitAt(uint8_t* dst, asmjit::CodeHolder* code, const CheckFu
 	}
 
 	rt.flush(dst, codeSize);
+	return asmjit::kErrorOk;
+}
+
+static asmjit::Error jitGetSize(uint8_t* dst, asmjit::CodeHolder* code, size_t& sizeOut) noexcept {
+
+	ASMJIT_PROPAGATE(code->flatten());
+	ASMJIT_PROPAGATE(code->resolveUnresolvedLinks());
+
+	size_t estimatedCodeSize = code->codeSize();
+	if (ASMJIT_UNLIKELY(estimatedCodeSize == 0))
+		return asmjit::DebugUtils::errored(asmjit::kErrorNoCodeGenerated);
+
+	// Recalculate the final code size and shrink the memory we allocated for it
+	// in case that some relocations didn't require records in an address table.
+
+	// Relocate the code.
+	asmjit::Error err = code->relocateToBase(reinterpret_cast<uint64_t>(dst));
+	if (ASMJIT_UNLIKELY(err)) {
+		return err;
+	}
+
+	sizeOut = code->codeSize();
 	return asmjit::kErrorOk;
 }
 
@@ -297,16 +324,8 @@ static int freeLua(lua_State* L) {
 	return 0;
 }
 
-static int getProcAddressLua(lua_State* L) {
-	const HMODULE hModule = reinterpret_cast<HMODULE>(lua_tointeger(L, 1));
-	const FARPROC proc = GetProcAddress(hModule, lua_tostring(L, 2));
-	lua_pushinteger(L, reinterpret_cast<lua_Integer>(proc));
-	return 1;
-}
-
-static int getLuaRegistryIndexLua(lua_State* L) {
-	castLuaIntArg(1, int, Int, n)
-	lua_rawgeti(L, LUA_REGISTRYINDEX, n);
+static int getImageBaseLua(lua_State* L) {
+	lua_pushinteger(L, sharedState().ImageBase());
 	return 1;
 }
 
@@ -319,6 +338,12 @@ static int getLuaLibraryProcLua(lua_State* L) {
 	return 1;
 }
 
+static int getLuaRegistryIndexLua(lua_State* L) {
+	castLuaIntArg(1, int, Int, n)
+	lua_rawgeti(L, LUA_REGISTRYINDEX, n);
+	return 1;
+}
+
 static int getMicrosecondsLua(lua_State* L) {
 	lua_pushinteger(L, static_cast<lua_Integer>(CurrentMicroseconds() - initTime()));
 	return 1;
@@ -328,6 +353,49 @@ static int getPatternMapLua(lua_State* L) {
 	lua_pushstring(L, "InfinityLoader_Patterns"); // 1 [ "InfinityLoader_Patterns" ]
 	lua_rawget(L, LUA_REGISTRYINDEX);             // 1 [ registry["InfinityLoader_Patterns"] ]
 	return 1;
+}
+
+static int getProcAddressLua(lua_State* L) {
+	const HMODULE hModule = reinterpret_cast<HMODULE>(lua_tointeger(L, 1));
+	const FARPROC proc = GetProcAddress(hModule, lua_tostring(L, 2));
+	lua_pushinteger(L, reinterpret_cast<lua_Integer>(proc));
+	return 1;
+}
+
+static bool initializeLuaBindings(const char *const bindingsFileName, LoadedBindings& loadedBindings) {
+
+	const StringA bindingsPath = StringA{ workingFolderA() }.append(bindingsFileName).append(".dll");
+
+	if (loadedBindings.hHandle = LoadLibraryA(bindingsPath.c_str()); !loadedBindings.hHandle) {
+		FPrint("[!][InfinityLoaderDLL.dll] initializeLuaBindings() - LoadLibraryA(\"%s\") failed (%d)\n", bindingsPath.c_str(), GetLastError());
+		return true;
+	}
+
+	FARPROC initProcFar;
+	if (initProcFar = GetProcAddress(loadedBindings.hHandle, "InitBindings"); !initProcFar) {
+		FPrint("[!][InfinityLoaderDLL.dll] initializeLuaBindings() - GetProcAddress() failed (%d)\n", GetLastError());
+		return true;
+	}
+
+	typedef void(__stdcall* type_Init)(SharedState);
+	const type_Init initProc = reinterpret_cast<type_Init>(initProcFar);
+	initProc(sharedState());
+
+	loadedBindings.loadState = LoadedBindings::LoadState::Initialized;
+	return false;
+}
+
+static int initializeLuaBindingsLua(lua_State* L) {
+
+	const char* bindingsFileName = lua_tolstring(L, 1, nullptr);
+	LoadedBindings& loadedBindings = loadedBindingsMap[bindingsFileName];
+
+	if (loadedBindings.loadState != LoadedBindings::LoadState::Uninitialized) {
+		return 0;
+	}
+
+	initializeLuaBindings(bindingsFileName, loadedBindings);
+	return 0;
 }
 
 static int iterateRegexLua(lua_State* L) {
@@ -383,6 +451,120 @@ static int iterateRegexLua(lua_State* L) {
 	return 0;
 }
 
+// Expects:   0 [ ... ]
+// End Stack: 1 [ ..., jitMetadataT ]
+static void jitPushMetadataTable(lua_State* L, asmjit::CodeHolder& code, void* dst) {
+
+	lua_newtable(L);                                                                     // 1 [ ..., jitMetadataT ]
+
+	lua_pushstring(L, "labelAddresses");                                                 // 2 [ ..., jitMetadataT, "labelAddresses" ]
+	lua_newtable(L);                                                                     // 3 [ ..., jitMetadataT, "labelAddresses", labelAddressesT ]
+
+	int i = 1;
+	for (const auto labelEntry : code.labelEntries()) {
+		if (labelEntry->isBound() && labelEntry->hasName()) {
+			lua_pushstring(L, labelEntry->name());                                       // 4 [ ..., jitMetadataT, "labelAddresses", labelAddressesT, labelName ]
+			lua_pushinteger(L, reinterpret_cast<uintptr_t>(dst) + labelEntry->offset()); // 5 [ ..., jitMetadataT, "labelAddresses", labelAddressesT, labelName, labelAddress ]
+			lua_rawset(L, -3);                                                           // 3 [ ..., jitMetadataT, "labelAddresses", labelAddressesT ]
+		}
+	}
+
+	lua_rawset(L, -3);                                                                   // 1 [ ..., jitMetadataT ]
+}
+
+// Expects:   0 [ ... ]
+// End Stack: 1 [ ..., jitMetadataT ]
+static void jitPushErrorMessageTable(lua_State* L, const int errorType, const char *const errorMessage){
+
+	lua_newtable(L);                   // 1 [ jitMetadataT ]
+
+	lua_pushstring(L, "errorType");    // 2 [ jitMetadataT, "errorType" ]
+	lua_pushinteger(L, errorType);     // 3 [ jitMetadataT, "errorType", errorType ]
+	lua_rawset(L, -3);                 // 1 [ jitMetadataT ]
+
+	lua_pushstring(L, "errorMessage"); // 2 [ jitMetadataT, "errorMessage" ]
+	lua_pushstring(L, errorMessage);   // 3 [ jitMetadataT, "errorMessage", errorMessage ]
+	lua_rawset(L, -3);                 // 1 [ jitMetadataT ]
+}
+
+// Expects:   3 [ initialAddress, checkFunc, assemblyStr ]
+// End Stack: 1 [ ..., jitMetadataT ]
+static int jitAtInternalLua(lua_State* L) {
+
+	asmjit::CodeHolder code;
+	code.init(rt.environment());
+
+	asmjit::x86::Assembler a(&code);
+	asmtk::AsmParser p(&a);
+
+	if (asmjit::Error err = p.parse(lua_tostring(L, 3))) {
+		jitPushErrorMessageTable(L, 0, asmjit::DebugUtils::errorAsString(err));   // 4 [ initialAddress, checkFunc, assemblyStr, jitMetadataT ]
+		return 1;
+	}
+
+	uint8_t* dst = reinterpret_cast<uint8_t*>(lua_tointeger(L, 1));
+	std::string errorMessage{};
+
+	auto checkFunc = [&](size_t size) {
+
+		lua_getglobal(L, "debug");                                                // 4 [ initialAddress, checkFunc, assemblyStr, ..., debug ]
+		lua_getfield(L, -1, "traceback");                                         // 5 [ initialAddress, checkFunc, assemblyStr, ..., debug, traceback ]
+
+		lua_pushvalue(L, 2);                                                      // 6 [ initialAddress, checkFunc, assemblyStr, ..., debug, traceback, func ]
+		lua_pushinteger(L, size);                                                 // 7 [ initialAddress, checkFunc, assemblyStr, ..., debug, traceback, func, size ]
+		
+		if (lua_pcallk(L, 1, 1, -3, 0, nullptr) != LUA_OK) {
+																				  // 6 [ initialAddress, checkFunc, assemblyStr, ..., debug, traceback, errorMessage ]
+			errorMessage = lua_tostring(L, -1);
+			lua_pop(L, 3);                                                        // 3 [ initialAddress, checkFunc, assemblyStr, ... ]
+			return reinterpret_cast<uint8_t*>(-1);
+		}
+																				  // 6 [ initialAddress, checkFunc, assemblyStr, ..., debug, traceback, result ]
+		uint8_t *const newDst = reinterpret_cast<uint8_t*>(lua_tointeger(L, -1));
+		lua_pop(L, 3);                                                            // 3 [ initialAddress, checkFunc, assemblyStr, ... ]
+		return newDst;
+	};
+
+	bool canceledFromLua;
+
+	if (asmjit::Error err = jitAt(dst, &code, checkFunc, canceledFromLua)) {
+		jitPushErrorMessageTable(L, 0, asmjit::DebugUtils::errorAsString(err));   // 4 [ initialAddress, checkFunc, assemblyStr, jitMetadataT ]
+		return 1;
+	}
+
+	if (canceledFromLua) {
+		jitPushErrorMessageTable(L, 1, errorMessage.c_str());                     // 4 [ initialAddress, checkFunc, assemblyStr, jitMetadataT ]
+		return 1;
+	}
+																									   
+	jitPushMetadataTable(L, code, dst);                                           // 4 [ initialAddress, checkFunc, assemblyStr, jitMetadataT ]
+	return 1;
+}
+
+static int jitGetSizeLua(lua_State* L) {
+
+	asmjit::CodeHolder code;
+	code.init(rt.environment());
+
+	asmjit::x86::Assembler a(&code);
+	asmtk::AsmParser p(&a);
+
+	if (asmjit::Error err = p.parse(lua_tostring(L, 2))) {
+		FPrint("[!][InfinityLoaderDLL.dll] %sJITGetSize() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
+		return 0;
+	}
+
+	size_t size;
+
+	if (asmjit::Error err = jitGetSize(reinterpret_cast<uint8_t*>(lua_tointeger(L, 1)), &code, size)) {
+		FPrint("[!][InfinityLoaderDLL.dll] %sJITGetSize() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
+		return 0;
+	}
+
+	lua_pushinteger(L, size);
+	return 1;
+}
+
 static int jitLua(lua_State* L) {
 
 	asmjit::CodeHolder code;
@@ -402,77 +584,45 @@ static int jitLua(lua_State* L) {
 		return 0;
 	}
 
-	lua_pushinteger(L, reinterpret_cast<uintptr_t>(ptr));
-	return 1;
-}
-
-static int jitAtInternalLua(lua_State* L) {
-
-	asmjit::CodeHolder code;
-	code.init(rt.environment());
-
-	asmjit::x86::Assembler a(&code);
-	asmtk::AsmParser p(&a);
-
-	if (asmjit::Error err = p.parse(lua_tostring(L, 3))) {
-		FPrint("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
-		return 0;
-	}
-
-	auto checkFunc = [&](size_t size) {
-
-		lua_getglobal(L, "debug");                                                                                              // [ debug ]
-		lua_getfield(L, -1, "traceback");                                                                                       // [ debug, traceback ]
-
-		lua_pushvalue(L, 2);                                                                                                    // [ debug, traceback, func ]
-		lua_pushinteger(L, size);                                                                                               // [ debug, traceback, func, size ]
-		if (lua_pcallk(L, 1, 1, -3, 0, nullptr) != LUA_OK) {
-																																// [ debug, traceback, errorMessage ]
-			FPrint("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), lua_tostring(L, -1));
-			lua_pop(L, 3);                                                                                                      // [ ]
-			return reinterpret_cast<uint8_t*>(-1);
-		}
-																																// [ debug, traceback, result ]
-		uint8_t* newDst = reinterpret_cast<uint8_t*>(lua_tointeger(L, -1));
-		lua_pop(L, 3);                                                                                                          // [ ]
-		return newDst;
-	};
-
-	if (asmjit::Error err = jitAt(reinterpret_cast<uint8_t*>(lua_tointeger(L, 1)), &code, checkFunc)) {
-		FPrint("[!][InfinityLoaderDLL.dll] %sJITAtInternal() - AsmJit failed: %s\n", luaGlobalsPrefix.c_str(), asmjit::DebugUtils::errorAsString(err));
-		return 0;
-	}
-
-	return 0;
-}
-
-static bool initializeLuaBindings(const char *const bindingsFileName, LoadedBindings& loadedBindings) {
-
-	const StringA bindingsPath = StringA{ workingFolderA() }.append(bindingsFileName).append(".dll");
-
-	if (loadedBindings.hHandle = LoadLibraryA(bindingsPath.c_str()); !loadedBindings.hHandle) {
-		FPrint("[!][InfinityLoaderDLL.dll] initializeLuaBindings() - LoadLibraryA(\"%s\") failed (%d)\n", bindingsPath.c_str(), GetLastError());
-		return true;
-	}
-
-	FARPROC initProcFar;
-	if (initProcFar = GetProcAddress(loadedBindings.hHandle, "InitBindings"); !initProcFar) {
-		FPrint("[!][InfinityLoaderDLL.dll] initializeLuaBindings() - GetProcAddress() failed (%d)\n", GetLastError());
-		return true;
-	}
-
-	typedef void(__stdcall* type_Init)(SharedState);
-	const type_Init initProc = reinterpret_cast<type_Init>(initProcFar);
-	initProc(sharedState());
-
-	loadedBindings.loadState = LoadedBindings::LoadState::Initialized;
-	return false;
+	lua_pushinteger(L, reinterpret_cast<uintptr_t>(ptr));                                                                                     // 1 [ address ]
+	jitPushMetadataTable(L, code, ptr);                                                                                                       // 2 [ address, jitMetadataT ]
+	return 2;
 }
 
 static int loadLibraryLua(lua_State *const L) {
 	const HMODULE hModule = LoadLibraryA(lua_tostring(L, 1));
 	lua_pushinteger(L, reinterpret_cast<lua_Integer>(hModule));
 	return 1;
+}
+
+static int lshiftLua(lua_State* L) {
+	lua_pushinteger(L, static_cast<UnsignedLuaInt>(lua_tointeger(L, 1)) << static_cast<UnsignedLuaInt>(lua_tointeger(L, 2)));
+	return 1;
+}
+
+static int mallocLua(lua_State* L) {
+	castLuaIntArg(1, size_t, SizeT, size)
+	lua_pushinteger(L, reinterpret_cast<lua_Integer>(p_malloc(size)));
+	return 1;
+}
+
+static int memcpyLua(lua_State* L) {
+	castLuaIntArg(3, size_t, SizeT, size)
+	memcpy(reinterpret_cast<void*>(lua_tointeger(L, 1)), reinterpret_cast<void*>(lua_tointeger(L, 2)), size);
+	return 0;
+}
+
+static int memsetLua(lua_State* L) {
+	castLuaIntArg(2, int, Int, val)
+	castLuaIntArg(3, size_t, SizeT, size)
+	memset(reinterpret_cast<void*>(lua_tointeger(L, 1)), val, size);
+	return 0;
+}
+
+static int messageBoxInternalLua(lua_State* L) {
+	castLuaIntArg(2, UINT, UInt, uType)
+	MessageBoxA(NULL, lua_tostring(L, 1), extenderName.c_str(), uType);
+	return 0;
 }
 
 static int openLuaBindingsLua(lua_State *const L) {
@@ -520,56 +670,13 @@ static int openLuaBindingsLua(lua_State *const L) {
 	return 0;
 }
 
-static int initializeLuaBindingsLua(lua_State* L) {
-
-	const char* bindingsFileName = lua_tolstring(L, 1, nullptr);
-	LoadedBindings& loadedBindings = loadedBindingsMap[bindingsFileName];
-
-	if (loadedBindings.loadState != LoadedBindings::LoadState::Uninitialized) {
-		return 0;
-	}
-
-	initializeLuaBindings(bindingsFileName, loadedBindings);
-	return 0;
-}
-
-static int lshiftLua(lua_State* L) {
-	lua_pushinteger(L, static_cast<UnsignedLuaInt>(lua_tointeger(L, 1)) << static_cast<UnsignedLuaInt>(lua_tointeger(L, 2)));
-	return 1;
-}
-
-static int mallocLua(lua_State* L) {
-	castLuaIntArg(1, size_t, SizeT, size)
-	lua_pushinteger(L, reinterpret_cast<lua_Integer>(p_malloc(size)));
-	return 1;
-}
-
-static int memcpyLua(lua_State* L) {
-	castLuaIntArg(3, size_t, SizeT, size)
-	memcpy(reinterpret_cast<void*>(lua_tointeger(L, 1)), reinterpret_cast<void*>(lua_tointeger(L, 2)), size);
-	return 0;
-}
-
-static int memsetLua(lua_State* L) {
-	castLuaIntArg(2, int, Int, val)
-	castLuaIntArg(3, size_t, SizeT, size)
-	memset(reinterpret_cast<void*>(lua_tointeger(L, 1)), val, size);
-	return 0;
-}
-
-static int messageBoxInternalLua(lua_State* L) {
-	castLuaIntArg(2, UINT, UInt, uType)
-	MessageBoxA(NULL, lua_tostring(L, 1), extenderName.c_str(), uType);
+static int printErrLua(lua_State* L) {
+	PrintErr(lua_tostring(L, 1));
 	return 0;
 }
 
 static int printLua(lua_State* L) {
 	Print(lua_tostring(L, 1));
-	return 0;
-}
-
-static int printErrLua(lua_State* L) {
-	PrintErr(lua_tostring(L, 1));
 	return 0;
 }
 
@@ -600,8 +707,30 @@ static int read8Lua(lua_State* L) {
 	return 1;
 }
 
+static int readLStringLua(lua_State* L) {
+	const char *const data { reinterpret_cast<char*>(lua_tointeger(L, 1)) };
+	castLuaIntArg(2, size_t, SizeT, length)
+	char *const localCopy { reinterpret_cast<char*>(alloca(length + 1)) };
+	size_t i { 0 };
+	for (; i < length; ++i) {
+		const char readVal { data[i] };
+		if (readVal == '\0') {
+			break;
+		}
+		localCopy[i] = readVal;
+	}
+	localCopy[i] = '\0';
+	lua_pushstring(L, localCopy);
+	return 1;
+}
+
 static int readPointerLua(lua_State* L) {
 	lua_pushinteger(L, *reinterpret_cast<uintptr_t*>(lua_tointeger(L, 1)));
+	return 1;
+}
+
+static int readStringLua(lua_State* L) {
+	lua_pushstring(L, reinterpret_cast<const char*>(lua_tointeger(L, 1)));
 	return 1;
 }
 
@@ -627,31 +756,34 @@ static int readU8Lua(lua_State* L) {
 	return 1;
 }
 
-static int readLString(lua_State* L) {
-	const char *const data { reinterpret_cast<char*>(lua_tointeger(L, 1)) };
-	castLuaIntArg(2, size_t, SizeT, length)
-	char *const localCopy { reinterpret_cast<char*>(alloca(length + 1)) };
-	size_t i { 0 };
-	for (; i < length; ++i) {
-		const char readVal { data[i] };
-		if (readVal == '\0') {
-			break;
-		}
-		localCopy[i] = readVal;
-	}
-	localCopy[i] = '\0';
-	lua_pushstring(L, localCopy);
-	return 1;
-}
-
-static int readString(lua_State* L) {
-	lua_pushstring(L, reinterpret_cast<const char*>(lua_tointeger(L, 1)));
-	return 1;
-}
-
 static int rshiftLua(lua_State* L) {
 	lua_pushinteger(L, static_cast<UnsignedLuaInt>(lua_tointeger(L, 1)) >> static_cast<UnsignedLuaInt>(lua_tointeger(L, 2)));
 	return 1;
+}
+
+static int rtlAddFunctionTableLua(lua_State* L) {
+	castLuaIntArg(1, uintptr_t, UIntPtr, FunctionTable)
+	castLuaIntArg(2, uint32_t, UInt32, EntryCount)
+	castLuaIntArg(3, uint64_t, UInt64, BaseAddress)
+	RtlAddFunctionTable(reinterpret_cast<PRUNTIME_FUNCTION>(FunctionTable), EntryCount, BaseAddress);
+	return 0;
+}
+
+static int rtlLookupFunctionEntryLua(lua_State* L) {
+
+	castLuaIntArg(1, DWORD64, UInt64, ControlPc)
+
+	DWORD64 ImageBase;
+	UNWIND_HISTORY_TABLE HistoryTable;
+	PRUNTIME_FUNCTION result = RtlLookupFunctionEntry(ControlPc, &ImageBase, &HistoryTable);
+
+	if (result != nullptr) {
+		lua_pushinteger(L, reinterpret_cast<uintptr_t>(result));
+		return 1;
+	}
+	else {
+		return 0;
+	}
 }
 
 static int runWithStackLua(lua_State* L) {
@@ -678,7 +810,7 @@ static int runWithStackLua(lua_State* L) {
 	return 0;
 }
 
-static int runWithString(lua_State* L) {
+static int runWithStringLua(lua_State* L) {
 
 	lua_getglobal(L, "debug");                                           // [ debug ]
 	lua_getfield(L, -1, "traceback");                                    // [ debug, traceback ]
@@ -810,8 +942,57 @@ static int write8Lua(lua_State* L) {
 	return 0;
 }
 
+static int writeLStringLua(lua_State* L) {
+
+	char* dst = reinterpret_cast<char*>(lua_tointeger(L, 1));
+	const char* src = lua_tostring(L, 2);
+	castLuaIntArg(3, size_t, SizeT, limit)
+
+	const char *const dstLimit = dst + limit;
+
+	for (; dst < dstLimit; ++src) {
+		const char srcChar = *src;
+		*dst++ = srcChar;
+		if (srcChar == '\0') {
+			break;
+		}
+	}
+
+	for (; dst < dstLimit; ++dst) {
+		*dst = '\0';
+	}
+
+	return 0;
+}
+
 static int writePointerLua(lua_State* L) {
 	*reinterpret_cast<uintptr_t*>(lua_tointeger(L, 1)) = lua_tointeger(L, 2);
+	return 0;
+}
+
+static int writeStringAutoLua(lua_State* L) {
+	const char* str = lua_tostring(L, 1);
+	size_t len = strlen(str);
+	char* newStr = reinterpret_cast<char*>(p_malloc(len + 1));
+	char* newStrWPtr = newStr;
+	for (size_t i = 0; i < len; ++i) {
+		*newStrWPtr++ = *str++;
+	}
+	*newStrWPtr = '\0';
+	lua_pushinteger(L, reinterpret_cast<uintptr_t>(newStr));
+	return 1;
+}
+
+static int writeStringLua(lua_State* L) {
+	char* writePtr = reinterpret_cast<char*>(lua_tointeger(L, 1));
+	const char* str = lua_tostring(L, 2);
+	while (true) {
+		const char existingChar = *str++;
+		*writePtr++ = existingChar;
+		if (existingChar == '\0') {
+			break;
+		}
+	}
 	return 0;
 }
 
@@ -837,55 +1018,6 @@ static int writeU8Lua(lua_State* L) {
 	castLuaIntArg(2, unsigned __int8, UInt8, val)
 	*reinterpret_cast<unsigned __int8*>(lua_tointeger(L, 1)) = val;
 	return 0;
-}
-
-static int writeLStringLua(lua_State* L) {
-
-	char* dst = reinterpret_cast<char*>(lua_tointeger(L, 1));
-	const char* src = lua_tostring(L, 2);
-	castLuaIntArg(3, size_t, SizeT, limit)
-
-	const char *const dstLimit = dst + limit;
-
-	for (; dst < dstLimit; ++src) {
-		const char srcChar = *src;
-		*dst++ = srcChar;
-		if (srcChar == '\0') {
-			break;
-		}
-	}
-
-	for (; dst < dstLimit; ++dst) {
-		*dst = '\0';
-	}
-
-	return 0;
-}
-
-static int writeStringLua(lua_State* L) {
-	char* writePtr = reinterpret_cast<char*>(lua_tointeger(L, 1));
-	const char* str = lua_tostring(L, 2);
-	while (true) {
-		const char existingChar = *str++;
-		*writePtr++ = existingChar;
-		if (existingChar == '\0') {
-			break;
-		}
-	}
-	return 0;
-}
-
-static int writeStringAutoLua(lua_State* L) {
-	const char* str = lua_tostring(L, 1);
-	size_t len = strlen(str);
-	char* newStr = reinterpret_cast<char*>(p_malloc(len + 1));
-	char* newStrWPtr = newStr;
-	for (size_t i = 0; i < len; ++i) {
-		*newStrWPtr++ = *str++;
-	}
-	*newStrWPtr = '\0';
-	lua_pushinteger(L, reinterpret_cast<uintptr_t>(newStr));
-	return 1;
 }
 
 ////////////////////////////
@@ -995,7 +1127,22 @@ static void exportExistingPatterns(lua_State *const L) {
 	lua_pop(L, 1);                                                                    // 0 [ ... ]
 }
 
+constexpr const char *const hardcodedErrorHandler = R"(
+	return function(err)
+		if type(err) == "string" and err:find("stack traceback:") then
+			return err
+		end
+		return debug.traceback(err)
+	end
+)";
+
 static void onLuaStateInitialized(lua_State *const L) {
+
+	lua_pushstring(L, "InfinityLoader_ErrorMessageHandler"); // 1 [ ..., "InfinityLoader_ErrorMessageHandler" ]
+	luaL_loadstring(L, hardcodedErrorHandler);               // 2 [ ..., "InfinityLoader_ErrorMessageHandler", hardcodedErrorHandlerChunk ]
+	lua_call(L, 0, 1);                                       // 2 [ ..., "InfinityLoader_ErrorMessageHandler", hardcodedErrorHandler ]
+	lua_rawset(L, LUA_REGISTRYINDEX);                        // 0 [ ... ]
+
 	exportExistingPatterns(L);
 }
 
@@ -1385,6 +1532,7 @@ static void initLuaState(lua_State *const L) {
 	exposeToLua(L, prefixed("ExposeToLua"), exposeToLuaLua);
 	exposeToLua(L, prefixed("Extract"), extractLua);
 	exposeToLua(L, prefixed("Free"), freeLua);
+	exposeToLua(L, prefixed("GetImageBase"), getImageBaseLua);
 	exposeToLua(L, prefixed("GetLuaRegistryIndex"), getLuaRegistryIndexLua);
 	exposeToLua(L, prefixed("GetLuaLibraryProc"), getLuaLibraryProcLua);
 	exposeToLua(L, prefixed("GetMicroseconds"), getMicrosecondsLua);
@@ -1395,6 +1543,7 @@ static void initLuaState(lua_State *const L) {
 	exposeToLua(L, prefixed("IterateRegex"), iterateRegexLua);
 	exposeToLua(L, prefixed("JIT"), jitLua);
 	exposeToLua(L, prefixed("JITAtInternal"), jitAtInternalLua);
+	exposeToLua(L, prefixed("JITGetSize"), jitGetSizeLua);
 	exposeToLua(L, prefixed("LoadLibrary"), loadLibraryLua);
 	exposeToLua(L, prefixed("LShift"), lshiftLua);
 	exposeToLua(L, prefixed("Malloc"), mallocLua);
@@ -1419,11 +1568,13 @@ static void initLuaState(lua_State *const L) {
 	exposeToLua(L, prefixed("ReadU64"), readU64Lua);
 #endif
 	exposeToLua(L, prefixed("ReadU8"), readU8Lua);
-	exposeToLua(L, prefixed("ReadLString"), readLString);
-	exposeToLua(L, prefixed("ReadString"), readString);
+	exposeToLua(L, prefixed("ReadLString"), readLStringLua);
+	exposeToLua(L, prefixed("ReadString"), readStringLua);
 	exposeToLua(L, prefixed("RShift"), rshiftLua);
+	exposeToLua(L, prefixed("RtlAddFunctionTable"), rtlAddFunctionTableLua);
+	exposeToLua(L, prefixed("RtlLookupFunctionEntry"), rtlLookupFunctionEntryLua);
 	exposeToLua(L, prefixed("RunWithStack"), runWithStackLua);
-	exposeToLua(L, prefixed("RunWithString"), runWithString);
+	exposeToLua(L, prefixed("RunWithString"), runWithStringLua);
 	exposeToLua(L, prefixed("SelectFromTables"), selectFromTablesLua);
 	exposeToLua(L, prefixed("SetLuaRegistryIndex"), setLuaRegistryIndexLua);
 	exposeToLua(L, prefixed("SetSegmentProtection"), setSegmentProtectionLua);
@@ -1817,7 +1968,7 @@ static DWORD patchExe() {
 static byte init(HANDLE mappedMemoryHandle) {
 
 	SharedStateMappedMemory mappedMemory;
-	if (InitMappedMemory(mappedMemoryHandle, mappedMemory) || SharedState::Create(mappedMemory, sharedState())) {
+	if (InitMappedMemory(mappedMemoryHandle, mappedMemory) || CreateSharedState(mappedMemory, sharedState()) || InitUtil(sharedState())) {
 		return 1;
 	}
 

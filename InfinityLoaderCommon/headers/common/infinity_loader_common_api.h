@@ -44,6 +44,7 @@ public:
 
 IMPORT DWORD CreateMappedMemory(HANDLE& mappedMemoryHandleOut, SharedStateMappedMemory& mappedMemoryOut);
 IMPORT DWORD InitMappedMemory(HANDLE mappedMemoryHandle, SharedStateMappedMemory& mappedMemoryOut);
+IMPORT DWORD CreateSharedState(SharedStateMappedMemory mappedMemory, SharedState& sharedStateOut);
 
 /////////////
 // Logging //
@@ -117,9 +118,3 @@ IMPORT std::string WideStrToStr(const std::wstring& wstr);
 IMPORT std::wstring StrToWideStr(const std::string& str);
 IMPORT String NulTermStrToStr(const char* str);
 IMPORT StringA StrToStrA(const String& string);
-
-////////////////////////
-// Exception Handling //
-////////////////////////
-
-IMPORT void DumpCrashInfo(EXCEPTION_POINTERS* pointers);

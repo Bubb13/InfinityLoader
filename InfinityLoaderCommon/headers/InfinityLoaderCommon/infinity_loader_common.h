@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "dll_api.h"
 #include "infinity_loader_common_types.h"
 
 /////////////

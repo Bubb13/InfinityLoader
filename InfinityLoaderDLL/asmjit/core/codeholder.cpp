@@ -983,8 +983,17 @@ Error CodeHolder::relocateToBase(uint64_t baseAddress) noexcept {
           // Cannot be null as we have just matched the `AddressTableEntry`.
           ASMJIT_ASSERT(addressTableSection != nullptr);
 
+          // START Bubb patch to always count table entries, even if they were already assigned
+
+          //if (!atEntry->hasAssignedSlot())
+          //  atEntry->_slot = addressTableEntryCount++;
+
           if (!atEntry->hasAssignedSlot())
-            atEntry->_slot = addressTableEntryCount++;
+            atEntry->_slot = addressTableEntryCount;
+
+          ++addressTableEntryCount;
+
+          // END Bubb patch
 
           size_t atEntryIndex = size_t(atEntry->slot()) * addressSize;
           uint64_t addrSrc = sectionOffset + sourceOffset + regionSize;
@@ -998,21 +1007,45 @@ Error CodeHolder::relocateToBase(uint64_t baseAddress) noexcept {
           uint32_t byte0 = 0xFF;
           uint32_t byte1 = buffer[valueOffset - 1];
 
-          if (byte1 == 0xE8) {
-            // Patch CALL/MOD byte to FF /2 (-> 0x15).
-            byte1 = x86EncodeMod(0, 2, 5);
-          }
-          else if (byte1 == 0xE9) {
-            // Patch JMP/MOD byte to FF /4 (-> 0x25).
-            byte1 = x86EncodeMod(0, 4, 5);
-          }
-          else {
-            return DebugUtils::errored(kErrorInvalidRelocEntry);
+          // START Bubb patch to stop already relocated code from erroring due to mutated instruction(s)
+          // Assumes a relocation will never change the viability of a 32-bit displacement if the instruction previously required an address table
+
+          //if (byte1 == 0xE8) {
+          //  // Patch CALL/MOD byte to FF /2 (-> 0x15).
+          //  byte1 = x86EncodeMod(0, 2, 5);
+          //}
+          //else if (byte1 == 0xE9) {
+          //  // Patch JMP/MOD byte to FF /4 (-> 0x25).
+          //  byte1 = x86EncodeMod(0, 4, 5);
+          //}
+          //else {
+          //  return DebugUtils::errored(kErrorInvalidRelocEntry);
+          //}
+
+          //// Patch `jmp/call` instruction.
+          //buffer[valueOffset - 2] = uint8_t(byte0);
+          //buffer[valueOffset - 1] = uint8_t(byte1);
+
+          if (byte1 == 0xE8 || byte1 == 0xE9) {
+
+              if (byte1 == 0xE8) {
+                // Patch CALL/MOD byte to FF /2 (-> 0x15).
+                byte1 = x86EncodeMod(0, 2, 5);
+              }
+              else if (byte1 == 0xE9) {
+                // Patch JMP/MOD byte to FF /4 (-> 0x25).
+                byte1 = x86EncodeMod(0, 4, 5);
+              }
+              else {
+                return DebugUtils::errored(kErrorInvalidRelocEntry);
+              }
+
+              // Patch `jmp/call` instruction.
+              buffer[valueOffset - 2] = uint8_t(byte0);
+              buffer[valueOffset - 1] = uint8_t(byte1);
           }
 
-          // Patch `jmp/call` instruction.
-          buffer[valueOffset - 2] = uint8_t(byte0);
-          buffer[valueOffset - 1] = uint8_t(byte1);
+          // END Bubb patch
 
           Support::writeU64uLE(addressTableEntryData + atEntryIndex, re->payload());
         }

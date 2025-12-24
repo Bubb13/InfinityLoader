@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "dll_api.h"
 #include "opaque_object_api.h"
 
 #include <Windows.h>

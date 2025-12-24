@@ -4,6 +4,8 @@
 #include <functional>
 #include <mutex>
 
+#include "dll_api.h"
+
 // The OpaqueObject class has been designed to hide its implementation from users - it uses
 // PImpl and dynamic memory allocation. OpaqueObject subclasses should provide a static
 // Create() function to create new objects. The implementation of OpaqueObject, and the
@@ -43,6 +45,8 @@ namespace OpaqueObject {
 		Obj<T>& operator=(const Obj<T>& other);
 		// Destructor
 		~Obj();
+		// Functions
+		bool IsValid();
 	};
 
 	template<typename T>
@@ -52,7 +56,7 @@ namespace OpaqueObject {
 		size_t refCount = 1;
 		AllocFunc allocFunc;
 		FreeFunc freeFunc;
-		T* data;
+		T* data = nullptr;
 	};
 
 	template<typename T>
@@ -168,6 +172,12 @@ namespace OpaqueObject {
 			freeData(lk1);
 		}
 	}
+
+	// Functions
+	template<typename T>
+	bool Obj<T>::IsValid() {
+		return imp->data != nullptr;
+	}
 }
 
 #define OpaqueObjectBoilerplateDef(className)                                             \
@@ -178,7 +188,8 @@ namespace OpaqueObject {
 	EXPORT className(className&& other) noexcept;                                         \
 	EXPORT className& operator=(className&& other) noexcept;                              \
 	EXPORT className& operator=(const className& other);                                  \
-	EXPORT ~className();
+	EXPORT ~className();                                                                  \
+	EXPORT bool IsValid();
 
 #define OpaqueObjectBoilerplateImp(className, dataClassName)                                        \
 	className::className(AllocFunc allocFunc, FreeFunc freeFunc, OpaqueObject::AllocMode allocMode) \
@@ -206,4 +217,8 @@ namespace OpaqueObject {
 		return *this;                                                                               \
 	}                                                                                               \
 																									\
-	EXPORT className::~className() {}
+	EXPORT className::~className() {}                                                               \
+																									\
+	EXPORT bool className::IsValid() {                                                              \
+		return OpaqueObject::Obj<dataClassName>::IsValid();											\
+	}

@@ -2,9 +2,7 @@
 #pragma once
 
 #include <functional>
-#include <map>
 
-#include "dll_api.h"
 #include "infinity_loader_common_types.h"
 #include "lua_provider_api_core.h"
 #include "opaque_object_api.h"
@@ -30,8 +28,6 @@ private:
 	void* imp;
 public:
 	OpaqueObjectBoilerplateAPIDef(SharedState)
-	// Static Functions
-	IMPORT static DWORD Create(SharedStateMappedMemory mappedMemory, SharedState& sharedStateOut);
 	// Non-Static Functions
 	IMPORT DWORD InitState();
 	IMPORT SharedStateMappedMemory& MappedMemory();

@@ -67,7 +67,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(CoreLibraryDependencies);$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)lib\$(Platform)\minizip.lib;$(SolutionDir)lib\$(Platform)\zlibstatic.lib;%(AdditionalDependencies);dbghelp.lib</AdditionalDependencies>
+      <AdditionalDependencies>dbghelp.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderUtil.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)lib\$(Platform)\minizip.lib;$(SolutionDir)lib\$(Platform)\zlibstatic.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>infinity_loader_dll.def</ModuleDefinitionFile>
@@ -93,7 +93,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(CoreLibraryDependencies);$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)lib\$(Platform)\minizip.lib;$(SolutionDir)lib\$(Platform)\zlibstatic.lib;%(AdditionalDependencies);dbghelp.lib</AdditionalDependencies>
+      <AdditionalDependencies>dbghelp.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderUtil.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(SolutionDir)lib\$(Platform)\minizip.lib;$(SolutionDir)lib\$(Platform)\zlibstatic.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>infinity_loader_dll.def</ModuleDefinitionFile>

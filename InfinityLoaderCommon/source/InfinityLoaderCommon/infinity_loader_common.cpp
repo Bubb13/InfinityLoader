@@ -9,9 +9,9 @@
 #include <ranges>
 
 #include "infinity_loader_common.h"
-#include "shared_state_mapped_memory.h"
-
-#include <dbghelp.h>
+#include "shared_state_types.h"
+#include "shared_state_macros.h"
+#include "shared_state_mapped_memory_macros.h"
 
 /////////////
 // Globals //
@@ -58,6 +58,12 @@ EXPORT DWORD InitMappedMemory(HANDLE mappedMemoryHandle, SharedStateMappedMemory
 	TryRetErr( SharedStateMappedMemory::CreateFromHandle(mappedMemoryHandle, mappedMemory()) )
 	mappedMemoryHandle() = mappedMemoryHandle;
 	mappedMemoryOut = mappedMemory();
+	return ERROR_SUCCESS;
+}
+
+EXPORT DWORD CreateSharedState(SharedStateMappedMemory mappedMemory, SharedState& sharedStateOut) {
+	TryRetErr( SharedState::Create(mappedMemory, sharedState()) )
+	sharedStateOut = sharedState();
 	return ERROR_SUCCESS;
 }
 
@@ -784,7 +790,8 @@ EXPORT DWORD AllocateNear(uintptr_t address, size_t size, uintptr_t& allocatedOu
 			return lastError;
 		}
 
-		address -= info.dwAllocationGranularity;
+		// Must probe forward because IMAGE_RUNTIME_FUNCTION_ENTRY ibo fields can't hold negative offsets
+		address += info.dwAllocationGranularity;
 	}
 
 	return 0;
@@ -818,201 +825,4 @@ EXPORT StringA StrToStrA(const String& string) {
 #else
 	return WideStrToStr(string);
 #endif
-}
-
-////////////////////////
-// Exception Handling //
-////////////////////////
-
-const TCHAR *const sCrashWithLogFormat = TEXT(R"(Crash detected with error code 0x%X.
-
-.dmp (big) saved to:
-
-%s
-
-.dmp (small) saved to:
-
-%s
-
-.log saved to:
-
-%s
-
-The game will exit after you press OK.)");
-
-const TCHAR *const sCrashWithoutLogFormat = TEXT(R"(Crash detected with error code 0x%X.
-
-.dmp (big) saved to:
-
-%s
-
-.dmp (small) saved to:
-
-%s
-
-The game will exit after you press OK.)");
-
-EXPORT void DumpCrashInfo(EXCEPTION_POINTERS* pointers)
-{
-	///////////////////////
-	// Find output paths //
-	///////////////////////
-
-	OStringStream dmpNameStream{};
-	dmpNameStream << getWorkingFolder();
-	dmpNameStream << "InfinityLoader_Crash";
-
-	const String dmpFolderPath = dmpNameStream.str();
-
-	if (!std::filesystem::exists(dmpFolderPath)) {
-		std::filesystem::create_directory(dmpFolderPath);
-	}
-
-	String logName{};
-	bool hasLogFile;
-	GetINIStr(getINIPath(), TEXT("General"), TEXT("LogFile"), logName, hasLogFile); // Error intentionally ignored
-
-	String builtDmpNameBig{};
-	String builtDmpName{};
-	String builtLogName{};
-
-	for (size_t attemptI = 0; ; ++attemptI) {
-
-		dmpNameStream.str(TEXT(""));
-		dmpNameStream.clear();
-		dmpNameStream << dmpFolderPath << "\\InfinityLoader_Crash_" << attemptI << "_big" << ".dmp";
-
-		builtDmpNameBig = dmpNameStream.str();
-
-		if (std::filesystem::exists(builtDmpNameBig)) {
-			continue;
-		}
-
-		dmpNameStream.str(TEXT(""));
-		dmpNameStream.clear();
-		dmpNameStream << dmpFolderPath << "\\InfinityLoader_Crash_" << attemptI << "_small" << ".dmp";
-
-		builtDmpName = dmpNameStream.str();
-
-		if (std::filesystem::exists(builtDmpName)) {
-			continue;
-		}
-
-		if (!hasLogFile) {
-			break;
-		}
-
-		dmpNameStream.str(TEXT(""));
-		dmpNameStream.clear();
-		dmpNameStream << dmpFolderPath << "\\InfinityLoader_Crash_" << attemptI << ".log";
-
-		builtLogName = dmpNameStream.str();
-
-		if (!std::filesystem::exists(builtLogName)) {
-			break;
-		}
-	}
-
-	////////////////////////////////////
-	// MINIDUMP_EXCEPTION_INFORMATION //
-	////////////////////////////////////
-
-	MINIDUMP_EXCEPTION_INFORMATION exceptionInfo{};
-	exceptionInfo.ThreadId = GetCurrentThreadId();
-	exceptionInfo.ExceptionPointers = pointers;
-	exceptionInfo.ClientPointers = FALSE;
-
-	////////////////////
-	// Write big dump //
-	////////////////////
-
-	const HANDLE hFileBig = CreateFile(
-		builtDmpNameBig.c_str(),
-		GENERIC_WRITE,
-		NULL,
-		NULL,
-		CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL,
-		NULL
-	);
-
-	const MINIDUMP_TYPE bigDumpType = static_cast<MINIDUMP_TYPE>(
-		  MiniDumpWithFullMemory
-		| MiniDumpWithHandleData
-		| MiniDumpWithUnloadedModules
-		| MiniDumpWithProcessThreadData
-		| MiniDumpWithFullMemoryInfo
-		| MiniDumpWithThreadInfo
-		| MiniDumpWithFullAuxiliaryState
-		| MiniDumpIgnoreInaccessibleMemory
-		| MiniDumpWithTokenInformation
-	);
-
-	MiniDumpWriteDump(
-		GetCurrentProcess(),
-		GetCurrentProcessId(),
-		hFileBig,
-		bigDumpType,
-		&exceptionInfo,
-		NULL,
-		NULL
-	);
-
-	CloseHandle(hFileBig);
-
-	//////////////////////
-	// Write small dump //
-	//////////////////////
-
-	const HANDLE hFile = CreateFile(
-		builtDmpName.c_str(),
-		GENERIC_WRITE,
-		NULL,
-		NULL,
-		CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL,
-		NULL
-	);
-
-	const MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(
-		  MiniDumpWithDataSegs
-		| MiniDumpWithIndirectlyReferencedMemory
-	);
-
-	MiniDumpWriteDump(
-		GetCurrentProcess(),
-		GetCurrentProcessId(),
-		hFile,
-		dumpType,
-		&exceptionInfo,
-		NULL,
-		NULL
-	);
-
-	CloseHandle(hFile);
-
-	//////////////
-	// Copy log //
-	//////////////
-
-	if (hasLogFile) {
-		CopyFile(logName.c_str(), builtLogName.c_str(), FALSE);
-	}
-
-	/////////////////////////
-	// Display message box //
-	/////////////////////////
-
-	const DWORD exceptionCode = pointers->ExceptionRecord->ExceptionCode;
-
-	if (hasLogFile)
-	{
-		MessageBoxFormat(TEXT("InfinityLoaderCommon.dll"), MB_ICONERROR, sCrashWithLogFormat,
-			exceptionCode, builtDmpNameBig.c_str(), builtDmpName.c_str(), builtLogName.c_str());
-	}
-	else
-	{
-		MessageBoxFormat(TEXT("InfinityLoaderCommon.dll"), MB_ICONERROR, sCrashWithoutLogFormat,
-			exceptionCode, builtDmpNameBig.c_str(), builtDmpName.c_str());
-	}
 }

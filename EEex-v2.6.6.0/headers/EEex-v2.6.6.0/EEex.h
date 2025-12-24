@@ -50,6 +50,7 @@ namespace EEex {
 	bool __cdecl Override_bsearchrange(void* key, void* base, unsigned long long NumOfElements, unsigned long long SizeOfElements, int(__fastcall* Compare)(const void*, const void*), int* start, int* end);
 	int Override_CGameEffect_CheckSave(CGameEffect* pEffect, CGameSprite* pSprite, byte* saveVSDeathRollRaw, byte* saveVSWandsRollRaw, byte* saveVSPolyRollRaw, byte* saveVSBreathRollRaw, byte* saveVSSpellRollRaw, byte* resistMagicRollRaw);
 	void __cdecl Override_chWriteInifile();
+	void __cdecl Override_crashHandler(EXCEPTION_POINTERS* pExceptionPointers);
 	//int __cdecl Override_fontWrap(char* text, SDL_Rect* r, SDL_Rect* rClip, int* horizontalAlignment, int* verticalAlignment, font_t* font, int* pointSize, letter_t* letters, int* nlines, int* nletters, int* pointIndex, bool* scale, adjustmentData_t* adjustData, int indent, bool bUseFontSizeFloor);
 	int __cdecl Override_Infinity_TransitionMenu(lua_State* L);
 	int __cdecl Override_Infinity_WriteINILine(lua_State* L);

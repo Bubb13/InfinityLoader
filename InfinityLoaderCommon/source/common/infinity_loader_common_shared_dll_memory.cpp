@@ -1,4 +1,3 @@
 
 #include "shared_state_api.h"
-
-SharedState sharedState{};
+#include "shared_state_impl.cpp"

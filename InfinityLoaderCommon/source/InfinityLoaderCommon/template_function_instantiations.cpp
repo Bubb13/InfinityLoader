@@ -1,6 +1,5 @@
 
 #include "template_functions.h"
-#include "dll_api.h"
 
 template<>
 bool decimalStrToIntegerTemplate<bool>(const String& decimalStr, bool& result) {

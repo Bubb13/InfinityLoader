@@ -1,9 +1,6 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include "dll_api.h"
 #include "opaque_object.h"
 
 class AssemblyWriterData {
