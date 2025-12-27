@@ -214,13 +214,6 @@ static DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
 		FPrint("[?][InfinityLoaderDLL.dll] findPatterns() - Using cached pattern addresses: %s\n", attemptUseCached ? "true" : "false");
 	}
 
-	if (luaMode() == LuaMode::INTERNAL) {
-		// Required by LuaProvider.dll
-		PatternValueHandle unused;
-		findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_luaL_loadfilexptr"), unused);
-		findINICategoryPattern(sectionPtr, sectionSize, iniPath(), TEXT("Hardcoded_wfopen"), unused);
-	}
-
 	DWORD returnVal = 0;
 	forEveryINISectionName(dbPath(), [&](const String section) {
 
