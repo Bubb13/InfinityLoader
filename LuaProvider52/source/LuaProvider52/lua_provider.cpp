@@ -8,11 +8,7 @@
 //////////
 
 template<typename FunctionPtr>
-static bool checkExportPattern(const String& name, FunctionPtr value) {
-
-	if (sharedState().LuaMode() != LuaMode::EXTERNAL) {
-		return true;
-	}
+static bool exportPattern(const String& name, FunctionPtr value) {
 
 	PatternValueHandle handle;
 	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, handle)) {
@@ -22,6 +18,16 @@ static bool checkExportPattern(const String& name, FunctionPtr value) {
 
 	sharedState().SetSinglePatternValue(handle, reinterpret_cast<void*>(value));
 	return true;
+}
+
+template<typename FunctionPtr>
+static bool checkExportPattern(const String& name, FunctionPtr value) {
+
+	if (sharedState().LuaMode() != LuaMode::EXTERNAL) {
+		return true;
+	}
+
+	return exportPattern(name, value);
 }
 
 template<typename out_type>
@@ -76,19 +82,6 @@ static DWORD setLuaPointerInternal(
 	return ERROR_SUCCESS;
 }
 
-template<typename PointerType>
-bool fillPointerFromSinglePattern(const String& patternName, PointerType& pointerOut) {
-
-	PatternValueHandle handle;
-	if (sharedState().GetPatternValue(patternName, handle) != PatternValueType::SINGLE) {
-		FPrintT(TEXT("[!][LuaProvider.dll] fillPointerFromSinglePattern() - [%s].Type must be SINGLE\n"), patternName.c_str());
-		return false;
-	}
-
-	pointerOut = reinterpret_cast<PointerType>(sharedState().GetSinglePatternValue(handle));
-	return true;
-}
-
 #define setLuaPointer(luaFuncName) \
 	TryRetErr ( setLuaPointerInternal(TEXT("InitLuaProvider"), hLuaLibrary, TEXT("Hardcoded_"#luaFuncName), #luaFuncName, p_##luaFuncName) )
 
@@ -115,11 +108,13 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	setLuaPointer(lua_isnumber)
 	setLuaPointer(lua_isstring)
 	setLuaPointer(lua_isuserdata)
+	setLuaPointer(lua_load)
 	setLuaPointer(lua_newuserdata)
 	setLuaPointer(lua_next)
 	setLuaPointer(lua_pcallk)
 	setLuaPointer(lua_pushboolean)
 	setLuaPointer(lua_pushcclosure)
+	setLuaPointer(lua_pushfstring)
 	setLuaPointer(lua_pushinteger)
 	setLuaPointer(lua_pushlightuserdata)
 	setLuaPointer(lua_pushlstring)
@@ -161,14 +156,8 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	// Custom Lua Pointers //
 	/////////////////////////
 
-	if (luaMode() == LuaMode::INTERNAL) {
-		TryRetDefErrCode( fillPointerFromSinglePattern(TEXT("Hardcoded_luaL_loadfilexptr"), p_luaL_loadfilexptr) );
-		TryRetDefErrCode( fillPointerFromSinglePattern(TEXT("Hardcoded_wfopen"), p_wfopen) );
-	}
-	else {
-		TryRetErr( getLuaProc(luaLibrary(), "luaL_loadfilexptr", p_luaL_loadfilexptr) );
-		TryRetErr( getLuaProc(luaLibrary(), "wrapper_wfopen", p_wfopen) );
-	}
+	TryRetDefErrCode( exportPattern(TEXT("lua_wfopen"), _wfopen) )
+	TryRetDefErrCode( exportPattern(TEXT("luaL_loadfilexnamedptr"), luaL_loadfilexnamedptr) )
 
 	return ERROR_SUCCESS;
 }

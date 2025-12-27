@@ -8,39 +8,31 @@
 //          Functions          //
 //-----------------------------//
 
-bool callLuaFile(lua_State* L, const TCHAR* luaFilePath)
+bool callLuaFile(lua_State* L, const char* chunkName, const TCHAR* luaFilePath)
 {
 	return luaCallProtected(L, 0, 0, [&](int _) -> bool
 	{
-		return luaL_loadpathx(L, luaFilePath, nullptr) == LUA_OK;
+		return luaL_loadpathx(L, chunkName, luaFilePath, nullptr) == LUA_OK;
 	});
 }
 
-void callScriptFile(lua_State* L, const TCHAR* name)
+bool callScriptFile(lua_State* L, const char* fileName)
 {
+	const StringA fileNameWithExtension = StringA{ fileName }.append(".lua");
+	const String fileNameWithExtensionT = StrAToStr(fileNameWithExtension);
+
 	const String scriptFolderRoot = String{ workingFolder() }.append(getScriptFolder()).append(TEXT("\\"));
-	const String scriptFileOverride = String{ scriptFolderRoot }.append(TEXT("override\\")).append(name).append(TEXT(".lua"));
+	const String scriptFileOverride = String{ scriptFolderRoot }.append(TEXT("override\\")).append(fileNameWithExtensionT);
 
 	if (std::filesystem::exists(scriptFileOverride))
 	{
-		callLuaFile(L, scriptFileOverride.c_str());
+		return callLuaFile(L, fileNameWithExtension.c_str(), scriptFileOverride.c_str());
 	}
 	else
 	{
-		const String scriptFile = String{ scriptFolderRoot }.append(name).append(TEXT(".lua"));
-		callLuaFile(L, scriptFile.c_str());
+		const String scriptFile = String{ scriptFolderRoot }.append(fileNameWithExtensionT);
+		return callLuaFile(L, fileNameWithExtension.c_str(), scriptFile.c_str());
 	}
-}
-
-int callScriptFileA(lua_State* L, const char* name)
-{
-#if _UNICODE
-	const String nameT = NulTermStrToStr(name);
-	callScriptFile(L, nameT.c_str());
-#else
-	callScriptFile(L, name);
-#endif
-	return 0;
 }
 
 void exposeToLua(lua_State* L, const char* exposedName, lua_CFunction func)

@@ -1,4 +1,6 @@
 
+#include <stdexcept>
+
 #include "infinity_loader_common_api.h"
 #include "lua_pointers.h"
 #include "shared_state_api.h"
@@ -8,11 +10,7 @@
 //////////
 
 template<typename FunctionPtr>
-static bool checkExportPattern(const String& name, FunctionPtr value) {
-
-	if (sharedState().LuaMode() != LuaMode::EXTERNAL) {
-		return true;
-	}
+static bool exportPattern(const String& name, FunctionPtr value) {
 
 	PatternValueHandle handle;
 	if (sharedState().GetOrCreatePatternValue(name, PatternValueType::SINGLE, handle)) {
@@ -22,6 +20,16 @@ static bool checkExportPattern(const String& name, FunctionPtr value) {
 
 	sharedState().SetSinglePatternValue(handle, reinterpret_cast<void*>(value));
 	return true;
+}
+
+template<typename FunctionPtr>
+static bool checkExportPattern(const String& name, FunctionPtr value) {
+
+	if (sharedState().LuaMode() != LuaMode::EXTERNAL) {
+		return true;
+	}
+
+	return exportPattern(name, value);
 }
 
 template<typename out_type>
@@ -77,49 +85,94 @@ static DWORD setLuaPointerInternal(
 }
 
 template<typename BackupType, typename OutType>
-static bool tryLinkAPIInternal(const HMODULE hLuaLibrary, const char* const name, const String& luaPatternName, BackupType& backup, OutType& out) {
+static bool linkMismatchingAPIIInternal(const HMODULE hLuaLibrary, const char* const procName, const String& patternName, BackupType& backupAPITranslationProc, OutType& funcPtrOut) {
 	if (hLuaLibrary != INVALID_HANDLE_VALUE) {
-		if (out = reinterpret_cast<OutType>(GetProcAddress(hLuaLibrary, name)); out == 0) {
-			out = backup;
+		if (funcPtrOut = reinterpret_cast<OutType>(GetProcAddress(hLuaLibrary, procName)); funcPtrOut == 0) {
+			funcPtrOut = backupAPITranslationProc;
 		}
 	}
 	else {
-		out = backup;
+		funcPtrOut = backupAPITranslationProc;
 	}
-	return checkExportPattern(luaPatternName, out);
+	return checkExportPattern(patternName, funcPtrOut);
 }
 
-#define linkMatchingAPI(apiNum, luaPrefix, luaFuncName) \
-	imp_##luaPrefix##_##luaFuncName = luaPrefix##apiNum##_##luaFuncName; \
-	TryRetErr ( setLuaPointerInternal(TEXT("switchLuaImplementations"), hLuaLibrary, TEXT("Hardcoded_"#luaPrefix"_"#luaFuncName), #luaPrefix"_"#luaFuncName, p_##luaPrefix##_##luaFuncName) )
+// "Matching" means the function being linked to physically exists in the target Lua version.
+// Functions that exist via a #define are NOT considered matching, as they are not physically present.
+//
+// Switch to matching function by setting imp_* directly to function ptr.
+// If LuaPatchMode == INTERNAL attempt to fetch pointer from patterns.
+// If LuaPatchMode != INTERNAL attempt to fetch pointer from Lua DLL.
+// Export proc if LuaPatchMode == EXTERNAL.
+
+#define linkMatchingAPI(luaPrefix, luaFuncName) \
+	TryRetErr ( setLuaPointerInternal(TEXT("switchLuaImplementations"), hLuaLibrary, TEXT("Hardcoded_"#luaPrefix"_"#luaFuncName), #luaPrefix"_"#luaFuncName, p_##luaPrefix##_##luaFuncName) ) \
+	imp_##luaPrefix##_##luaFuncName = p_##luaPrefix##_##luaFuncName;
+
+#define linkMatchingAPIUnderAlias(luaPrefix, luaFuncPtrName, luaFuncAlias) \
+	TryRetErr ( setLuaPointerInternal(TEXT("switchLuaImplementations"), hLuaLibrary, TEXT("Hardcoded_"#luaPrefix"_"#luaFuncAlias), #luaPrefix"_"#luaFuncAlias, p_##luaPrefix##_##luaFuncPtrName) ) \
+	imp_##luaPrefix##_##luaFuncPtrName = p_##luaPrefix##_##luaFuncPtrName;
+
+// "Mismatching" means the function being linked to does NOT physically exist in the target Lua version.
+// Functions that exist via a #define are considered mismatching, as they are not physically present.
+//
+// Switch to:
+//   *) If LuaPatchMode != INTERNAL, proc fetched from Lua DLL.
+//   *) if LuaPatchMode == INTERNAL or DLL didn't contain function, mismatching func translator (lua51/lua52).
+//
+// Export proc if LuaPatchMode == EXTERNAL.
 
 #define linkMismatchingAPI(apiNum, luaPrefix, luaFuncName) \
-	TryRetDefErrCode ( tryLinkAPIInternal(hLuaLibrary, #luaPrefix"_"#luaFuncName, TEXT("Hardcoded_"#luaPrefix"_"#luaFuncName), luaPrefix##apiNum##_##luaFuncName, imp_##luaPrefix##_##luaFuncName) )
+	TryRetDefErrCode ( linkMismatchingAPIIInternal(hLuaLibrary, #luaPrefix"_"#luaFuncName, TEXT("Hardcoded_"#luaPrefix"_"#luaFuncName), luaPrefix##apiNum##_##luaFuncName, imp_##luaPrefix##_##luaFuncName) )
 
 static DWORD switchLuaImplementations(const HMODULE hLuaLibrary, const char *const luaVersionKey, const String& luaVersion) {
 
-	if (luaVersion == TEXT("5.1")) {
+	const bool is51 = luaVersion == TEXT("5.1");
+	const bool is51LuaJIT = !is51 && luaVersion == TEXT("5.1-LuaJIT");
+
+	if (is51 || is51LuaJIT) {
+
+		if (is51) {
+			// lua_load
+			linkMatchingAPI(lua, load)
+			// lua_loadx
+			linkMismatchingAPI(51, lua, loadx)
+		}
+		else if (is51LuaJIT) {
+			// lua_load
+			linkMatchingAPI(lua, load)
+			// lua_loadx
+			linkMatchingAPI(lua, loadx)
+		}
+		else {
+			throw std::invalid_argument{"[LuaProvider.dll] Unhandled Lua version"};
+		}
+
 		// lua_pcall
-		linkMatchingAPI(51, lua, pcall)
+		linkMatchingAPI(lua, pcall)
 		// lua_pcallk
 		linkMismatchingAPI(51, lua, pcallk)
 		// lua_tonumber
-		linkMatchingAPI(51, lua, tonumber)
+		linkMatchingAPI(lua, tonumber)
 		// lua_tonumberx
 		linkMismatchingAPI(51, lua, tonumberx)
 	}
 	else if (luaVersion == TEXT("5.2")) {
+		// lua_load
+		linkMismatchingAPI(52, lua, load)
+		// lua_loadx
+		linkMatchingAPIUnderAlias(lua, loadx, load)
 		// lua_pcall
 		linkMismatchingAPI(52, lua, pcall)
 		// lua_pcallk
-		linkMatchingAPI(52, lua, pcallk)
+		linkMatchingAPI(lua, pcallk)
 		// lua_tonumber
 		linkMismatchingAPI(52, lua, tonumber)
 		// lua_tonumberx
-		linkMatchingAPI(52, lua, tonumberx)
+		linkMatchingAPI(lua, tonumberx)
 	}
 	else {
-		FPrint("[!][LuaProvider.dll] switchLuaImplementations() - Invalid [General].%s value (must be \"5.1\" or \"5.2\"); initialization failed\n", luaVersionKey);
+		FPrint("[!][LuaProvider.dll] switchLuaImplementations() - Invalid [General].%s value (must be \"5.1\" or \"5.1-LuaJIT\" or \"5.2\"); initialization failed\n", luaVersionKey);
 		return -1;
 	}
 
@@ -127,20 +180,8 @@ static DWORD switchLuaImplementations(const HMODULE hLuaLibrary, const char *con
 }
 
 #undef linkMismatchingAPI
+#undef linkMatchingAPIUnderAlias
 #undef linkMatchingAPI
-
-template<typename PointerType>
-bool fillPointerFromSinglePattern(const String& patternName, PointerType& pointerOut) {
-
-	PatternValueHandle handle;
-	if (sharedState().GetPatternValue(patternName, handle) != PatternValueType::SINGLE) {
-		FPrintT(TEXT("[!][LuaProvider.dll] fillPointerFromSinglePattern() - [%s].Type must be SINGLE\n"), patternName.c_str());
-		return false;
-	}
-
-	pointerOut = reinterpret_cast<PointerType>(sharedState().GetSinglePatternValue(handle));
-	return true;
-}
 
 #define setLuaPointer(luaFuncName) \
 	TryRetErr ( setLuaPointerInternal(TEXT("InitLuaProvider"), hLuaLibrary, TEXT("Hardcoded_"#luaFuncName), #luaFuncName, p_##luaFuncName) )
@@ -185,9 +226,9 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	setLuaPointer(lua_isuserdata)
 	setLuaPointer(lua_newuserdata)
 	setLuaPointer(lua_next)
-	setLuaPointer(lua_pcallk)
 	setLuaPointer(lua_pushboolean)
 	setLuaPointer(lua_pushcclosure)
+	setLuaPointer(lua_pushfstring)
 	setLuaPointer(lua_pushinteger)
 	setLuaPointer(lua_pushlightuserdata)
 	setLuaPointer(lua_pushlstring)
@@ -228,14 +269,8 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	// Custom Lua Pointers //
 	/////////////////////////
 
-	if (luaMode() == LuaMode::INTERNAL) {
-		TryRetDefErrCode( fillPointerFromSinglePattern(TEXT("Hardcoded_luaL_loadfilexptr"), p_luaL_loadfilexptr) );
-		TryRetDefErrCode( fillPointerFromSinglePattern(TEXT("Hardcoded_wfopen"), p_wfopen) );
-	}
-	else {
-		TryRetErr( getLuaProc(luaLibrary(), "luaL_loadfilexptr", p_luaL_loadfilexptr) );
-		TryRetErr( getLuaProc(luaLibrary(), "wrapper_wfopen", p_wfopen) );
-	}
+	TryRetDefErrCode( exportPattern(TEXT("lua_wfopen"), _wfopen) )
+	TryRetDefErrCode( exportPattern(TEXT("luaL_loadfilexnamedptr"), luaL_loadfilexnamedptr) )
 
 	return ERROR_SUCCESS;
 }

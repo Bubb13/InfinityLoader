@@ -163,10 +163,6 @@ LUALIB_API void (luaL_pushresult) (luaL_Buffer *B);
 //////////////////////
 
 LUALIB_API int luaL_len(lua_State* L, int idx);
-LUALIB_API int luaL_loadfilexptr(lua_State* L, FILE* fp, const char* mode);
-LUALIB_API FILE* wrapper_wfopen(wchar_t* filename, wchar_t* mode);
-LUALIB_API int wrapper_fprintf(FILE* stream, const char* format, ...);
-LUALIB_API int wrapper_fclose(FILE* stream);
 
 ////////////////////
 // END Bubb Patch //

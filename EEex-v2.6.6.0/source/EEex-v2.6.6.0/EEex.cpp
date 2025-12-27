@@ -52,16 +52,6 @@ constexpr uintptr_t HOOK_INTEGRITY_WATCHDOG_STACK_SNAPSHOT_SIZE = 256;
 
 //#define PROJECTILE_MUTATORS_DISABLED
 
-//---------------------------//
-//          Globals          //
-//---------------------------//
-
-typedef int(*type_wrapper_fprintf)(FILE* stream, const char* format, ...);
-type_wrapper_fprintf wrapper_fprintf;
-
-typedef int(*type_wrapper_fclose)(FILE* stream);
-type_wrapper_fclose wrapper_fclose;
-
 /////////////////////////////
 // Hook Integrity Watchdog //
 /////////////////////////////
@@ -2669,7 +2659,7 @@ void __cdecl EEex::Override_chWriteInifile() {
 			lua_getglobal(L, "printIni");
 			lua_pushlightuserdata(L, buf);
 			lua_callk(L, 1, 0, 0, nullptr);
-			wrapper_fclose(buf);
+			fclose(buf);
 		}
 	}
 	*p_optionsHaveChanged = 0;
@@ -2679,12 +2669,16 @@ void __cdecl EEex::Override_crashHandler(EXCEPTION_POINTERS* pExceptionPointers)
 	DumpCrashInfo(pExceptionPointers);
 }
 
+#undef fprintf
+
 int __cdecl EEex::Override_Infinity_WriteINILine(lua_State* L) {
 	_iobuf *const buf = reinterpret_cast<_iobuf*>(lua_touserdata(L, 1));
 	const char *const line = lua_tolstring(L, 2, nullptr);
-	wrapper_fprintf(buf, "%s", line);
+	fprintf(buf, "%s", line);
 	return 0;
 }
+
+#define fprintf error
 
 int CAICondition::Override_Hold(CTypedPtrList<CPtrList, CAITrigger*>* pTriggerList, CGameAIBase* pCaller)
 {
@@ -5267,9 +5261,4 @@ void EEex::InitEEex() {
 	EEex::Projectile_LuaHook_GlobalMutators_Enabled = false;
 	initProjectileMutator();
 	EEex::StutterDetector_Enabled = false;
-
-	if (luaMode() == LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL) {
-		getLuaProc("wrapper_fclose", wrapper_fclose);
-		getLuaProc("wrapper_fprintf", wrapper_fprintf);
-	}
 }

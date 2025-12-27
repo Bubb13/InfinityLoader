@@ -23,6 +23,7 @@ struct lua_State; // Hide implementation
 typedef int (*lua_CFunction)(lua_State* L);
 typedef ptrdiff_t lua_Integer;
 typedef double lua_Number;
+typedef const char* (*lua_Reader)(lua_State* L, void* ud, size_t* sz);
 
 ////////////////////
 // Config Globals //
@@ -32,6 +33,7 @@ LUA_PROVIDER_API_VAR int LUA_VERSION_NUM;
 LUA_PROVIDER_API_VAR int LUA_REGISTRYINDEX;
 LUA_PROVIDER_API_VAR int LUA_RIDX_GLOBALS;
 LUA_PROVIDER_API_VAR int LUA_GLOBALSINDEX;
+LUA_PROVIDER_API_VAR int LUA_ERRFILE;
 
 ///////////////////////////
 // Standard Lua Wrappers //
@@ -52,12 +54,15 @@ LUA_PROVIDER_API int lua_iscfunction(lua_State* L, int index);
 LUA_PROVIDER_API int lua_isnumber(lua_State* L, int index);
 LUA_PROVIDER_API int lua_isstring(lua_State* L, int index);
 LUA_PROVIDER_API int lua_isuserdata(lua_State* L, int index);
+LUA_PROVIDER_API int lua_load(lua_State* L, lua_Reader reader, void* data, const char* source);
+LUA_PROVIDER_API int lua_loadx(lua_State* L, lua_Reader reader, void* data, const char* source, const char* mode);
 LUA_PROVIDER_API void* lua_newuserdata(lua_State* L, size_t size);
 LUA_PROVIDER_API int lua_next(lua_State* L, int index);
 LUA_PROVIDER_API int lua_pcall(lua_State* L, int nargs, int nresults, int msgh);
 LUA_PROVIDER_API int lua_pcallk(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k);
 LUA_PROVIDER_API void lua_pushboolean(lua_State* L, int b);
 LUA_PROVIDER_API void lua_pushcclosure(lua_State* L, lua_CFunction fn, int n);
+LUA_PROVIDER_API const char* lua_pushfstring(lua_State* L, const char* fmt, ...);
 LUA_PROVIDER_API void lua_pushinteger(lua_State* L, lua_Integer n);
 LUA_PROVIDER_API void lua_pushlightuserdata(lua_State* L, void* p);
 LUA_PROVIDER_API const char* lua_pushlstring(lua_State* L, const char* s, size_t len);
@@ -100,7 +105,7 @@ LUA_PROVIDER_API void luaL_traceback(lua_State* L, lua_State* L1, const char* ms
 // Custom Lua Wrappers //
 /////////////////////////
 
-LUA_PROVIDER_API int luaL_loadpathx(lua_State* L, const TCHAR* path, const char* mode);
+LUA_PROVIDER_API int luaL_loadpathx(lua_State* L, const char* name, const TCHAR* path, const char* mode);
 
 /////////////
 // Utility //

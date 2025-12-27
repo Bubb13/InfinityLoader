@@ -826,3 +826,11 @@ EXPORT StringA StrToStrA(const String& string) {
 	return WideStrToStr(string);
 #endif
 }
+
+EXPORT String StrAToStr(const StringA& string) {
+#ifndef UNICODE
+	return string;
+#else
+	return StrToWideStr(string);
+#endif
+}

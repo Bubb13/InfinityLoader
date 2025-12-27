@@ -18,6 +18,7 @@ EXPORT int LUA_REGISTRYINDEX = -10000;
 // A Lua 5.2 LuaProvider should properly define this.
 EXPORT int LUA_RIDX_GLOBALS;
 EXPORT int LUA_GLOBALSINDEX = -10002;
+EXPORT int LUA_ERRFILE = 6;
 
 ///////////////////////////
 // Standard Lua Pointers //
@@ -37,12 +38,15 @@ type_lua_iscfunction p_lua_iscfunction;
 type_lua_isnumber p_lua_isnumber;
 type_lua_isstring p_lua_isstring;
 type_lua_isuserdata p_lua_isuserdata;
+type_lua_load p_lua_load;
+type_lua_loadx p_lua_loadx;
 type_lua_newuserdata p_lua_newuserdata;
 type_lua_next p_lua_next;
 type_lua_pcall p_lua_pcall;
 type_lua_pcallk p_lua_pcallk;
 type_lua_pushboolean p_lua_pushboolean;
 type_lua_pushcclosure p_lua_pushcclosure;
+type_lua_pushfstring p_lua_pushfstring;
 type_lua_pushinteger p_lua_pushinteger;
 type_lua_pushlightuserdata p_lua_pushlightuserdata;
 type_lua_pushlstring p_lua_pushlstring;
@@ -81,26 +85,36 @@ type_luaL_openlibs p_luaL_openlibs;
 type_luaL_ref p_luaL_ref;
 type_luaL_traceback p_luaL_traceback;
 
-/////////////////////////
-// Custom Lua Pointers //
-/////////////////////////
-
-type_luaL_loadfilexptr p_luaL_loadfilexptr;
-type_wfopen p_wfopen;
-
 ////////////////////////////////
 // Switchable Implementations //
 ////////////////////////////////
+
+//----------//
+// lua_load //
+//----------//
+
+type_lua_load imp_lua_load;
+
+int lua52_load(lua_State* L, lua_Reader reader, void* data, const char* source) {
+	return p_lua_loadx(L, reader, data, source, nullptr);
+}
+
+//-----------//
+// lua_loadx //
+//-----------//
+
+type_lua_loadx imp_lua_loadx;
+
+int lua51_loadx(lua_State* L, lua_Reader reader, void* data, const char* source, const char* mode) {
+	if (mode != nullptr) Print("[!][LuaProvider.dll] lua51_loadx() - Unhandled lua52 argument (mode)\n");
+	return p_lua_load(L, reader, data, source);
+}
 
 //-----------//
 // lua_pcall //
 //-----------//
 
 type_lua_pcall imp_lua_pcall;
-
-int lua51_pcall(lua_State* L, int nargs, int nresults, int msgh) {
-	return p_lua_pcall(L, nargs, nresults, msgh);
-}
 
 int lua52_pcall(lua_State* L, int nargs, int nresults, int msgh) {
 	return p_lua_pcallk(L, nargs, nresults, msgh, 0, nullptr);
@@ -118,19 +132,11 @@ int lua51_pcallk(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lu
 	return p_lua_pcall(L, nargs, nresults, errfunc);
 }
 
-int lua52_pcallk(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k) {
-	return p_lua_pcallk(L, nargs, nresults, errfunc, ctx, k);
-}
-
 //--------------//
 // lua_tonumber //
 //--------------//
 
 type_lua_tonumber imp_lua_tonumber;
-
-lua_Number lua51_tonumber(lua_State* L, int index) {
-	return p_lua_tonumber(L, index);
-}
 
 lua_Number lua52_tonumber(lua_State* L, int index) {
 	return p_lua_tonumberx(L, index, nullptr);
@@ -145,10 +151,6 @@ type_lua_tonumberx imp_lua_tonumberx;
 lua_Number lua51_tonumberx(lua_State* L, int index, int* isnum) {
 	if (isnum != nullptr) Print("[!][LuaProvider.dll] lua51_tonumberx() - Unhandled lua52 argument (isnum)\n");
 	return p_lua_tonumber(L, index);
-}
-
-lua_Number lua52_tonumberx(lua_State* L, int index, int* isnum) {
-	return p_lua_tonumberx(L, index, isnum);
 }
 
 //////////////////////////
@@ -211,6 +213,14 @@ EXPORT int lua_isuserdata(lua_State* L, int index) {
 	return p_lua_isuserdata(L, index);
 }
 
+EXPORT int lua_load(lua_State* L, lua_Reader reader, void* data, const char* source) {
+	return imp_lua_load(L, reader, data, source);
+}
+
+EXPORT int lua_loadx(lua_State* L, lua_Reader reader, void* data, const char* source, const char* mode) {
+	return imp_lua_loadx(L, reader, data, source, mode);
+}
+
 EXPORT void* lua_newuserdata(lua_State* L, size_t size) {
 	return p_lua_newuserdata(L, size);
 }
@@ -233,6 +243,10 @@ EXPORT void lua_pushboolean(lua_State* L, int b) {
 
 EXPORT void lua_pushcclosure(lua_State* L, lua_CFunction fn, int n) {
 	p_lua_pushcclosure(L, fn, n);
+}
+
+EXPORT __attribute((naked)) const char* lua_pushfstring(lua_State* L, const char* fmt, ...) {
+	__asm__("jmp %0" : : "m" (p_lua_pushfstring));
 }
 
 EXPORT void lua_pushinteger(lua_State* L, lua_Integer n) {
@@ -396,17 +410,62 @@ EXPORT void luaL_traceback(lua_State* L, lua_State* L1, const char* msg, int lev
 	p_luaL_traceback(L, L1, msg, level);
 }
 
+////////////////////////////////
+// Custom Lua Pattern Exports //
+////////////////////////////////
+
+struct FileReaderCtx {
+	FILE* fp;
+	char buf[LUAL_BUFFERSIZE];
+};
+
+static const char* reader_file(lua_State*, void* ud, size_t* size)
+{
+	FileReaderCtx* ctx = (FileReaderCtx*)ud;
+
+	if (feof(ctx->fp)) {
+		return NULL;
+	}
+
+	*size = fread(ctx->buf, 1, sizeof(ctx->buf), ctx->fp);
+	return *size > 0 ? ctx->buf : NULL;
+}
+
+int luaL_loadfilexnamedptr(lua_State* L, FILE* fp, const char* mode, const char* name)
+{
+	FileReaderCtx ctx;
+	int status;
+	const char *chunkname;
+
+	ctx.fp = fp;
+
+	if (ctx.fp == NULL) {
+		lua_pushstring(L, "invalid stream");
+		return LUA_ERRFILE;
+	}
+
+	chunkname = lua_pushfstring(L, "@%s", name);
+	status = lua_loadx(L, reader_file, &ctx, chunkname, mode);
+
+	if (ferror(ctx.fp)) {
+		lua_pop(L, 2);
+		lua_pushfstring(L, "cannot read %s: %s", chunkname, strerror(errno));
+		fclose(ctx.fp);
+		return LUA_ERRFILE;
+	}
+
+	lua_remove(L, -2);
+	fclose(ctx.fp);
+	return status;
+}
+
 ////////////////////////
 // Custom Lua Exports //
 ////////////////////////
 
-EXPORT int luaL_loadpathx(lua_State* L, const TCHAR* path, const char* mode) {
-
-	// Only handling `wfopen()` - be lazy and error if not compiling with unicode.
-	static_assert(std::is_same<String, std::wstring>::value);
-
-	FILE *const file = p_wfopen(path, L"r");
-	return p_luaL_loadfilexptr(L, file, mode);
+EXPORT int luaL_loadpathx(lua_State* L, const char* name, const TCHAR* path, const char* mode) {
+	FILE *const file = fopenT(path, TEXT("r"));
+	return luaL_loadfilexnamedptr(L, file, mode, name);
 }
 
 ///////////////////////

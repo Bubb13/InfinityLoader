@@ -118,3 +118,4 @@ IMPORT std::string WideStrToStr(const std::wstring& wstr);
 IMPORT std::wstring StrToWideStr(const std::string& str);
 IMPORT String NulTermStrToStr(const char* str);
 IMPORT StringA StrToStrA(const String& string);
+IMPORT String StrAToStr(const StringA& string);

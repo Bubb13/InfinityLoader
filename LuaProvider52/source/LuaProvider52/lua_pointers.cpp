@@ -19,6 +19,7 @@ EXPORT int LUA_RIDX_GLOBALS = 2;
 // Invalid dummy value for code that supports both Lua 5.1 and Lua 5.2.
 // A Lua 5.1 LuaProvider should properly define this.
 EXPORT int LUA_GLOBALSINDEX;
+EXPORT int LUA_ERRFILE = 7;
 
 ///////////////////////////
 // Standard Lua Pointers //
@@ -38,11 +39,13 @@ type_lua_iscfunction p_lua_iscfunction;
 type_lua_isnumber p_lua_isnumber;
 type_lua_isstring p_lua_isstring;
 type_lua_isuserdata p_lua_isuserdata;
+type_lua_load p_lua_load;
 type_lua_newuserdata p_lua_newuserdata;
 type_lua_next p_lua_next;
 type_lua_pcallk p_lua_pcallk;
 type_lua_pushboolean p_lua_pushboolean;
 type_lua_pushcclosure p_lua_pushcclosure;
+type_lua_pushfstring p_lua_pushfstring;
 type_lua_pushinteger p_lua_pushinteger;
 type_lua_pushlightuserdata p_lua_pushlightuserdata;
 type_lua_pushlstring p_lua_pushlstring;
@@ -79,13 +82,6 @@ type_luaL_newstate p_luaL_newstate;
 type_luaL_openlibs p_luaL_openlibs;
 type_luaL_ref p_luaL_ref;
 type_luaL_traceback p_luaL_traceback;
-
-/////////////////////////
-// Custom Lua Pointers //
-/////////////////////////
-
-type_luaL_loadfilexptr p_luaL_loadfilexptr;
-type_wfopen p_wfopen;
 
 //////////////////////////
 // Standard Lua Exports //
@@ -147,12 +143,24 @@ EXPORT int lua_isuserdata(lua_State* L, int index) {
 	return p_lua_isuserdata(L, index);
 }
 
+EXPORT int lua_load(lua_State* L, lua_Reader reader, void* data, const char* source) {
+	return p_lua_load(L, reader, data, source, nullptr);
+}
+
+EXPORT int lua_loadx(lua_State* L, lua_Reader reader, void* data, const char* source, const char* mode) {
+	return p_lua_load(L, reader, data, source, mode);
+}
+
 EXPORT void* lua_newuserdata(lua_State* L, size_t size) {
 	return p_lua_newuserdata(L, size);
 }
 
 EXPORT int lua_next(lua_State* L, int index) {
 	return p_lua_next(L, index);
+}
+
+EXPORT int lua_pcall(lua_State* L, int nargs, int nresults, int msgh) {
+	return p_lua_pcallk(L, nargs, nresults, msgh, 0, nullptr);
 }
 
 EXPORT int lua_pcallk(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k) {
@@ -165,6 +173,10 @@ EXPORT void lua_pushboolean(lua_State* L, int b) {
 
 EXPORT void lua_pushcclosure(lua_State* L, lua_CFunction fn, int n) {
 	p_lua_pushcclosure(L, fn, n);
+}
+
+EXPORT __attribute((naked)) const char* lua_pushfstring(lua_State* L, const char* fmt, ...) {
+	__asm__("jmp %0" : : "m" (p_lua_pushfstring));
 }
 
 EXPORT void lua_pushinteger(lua_State* L, lua_Integer n) {
@@ -259,6 +271,10 @@ EXPORT const char* lua_tolstring(lua_State* L, int index, size_t* len) {
 	return p_lua_tolstring(L, index, len);
 }
 
+EXPORT lua_Number lua_tonumber(lua_State* L, int index) {
+	return p_lua_tonumberx(L, index, nullptr);
+}
+
 EXPORT lua_Number lua_tonumberx(lua_State* L, int index, int* isnum)
 {
 	return p_lua_tonumberx(L, index, isnum);
@@ -324,31 +340,154 @@ EXPORT void luaL_traceback(lua_State* L, lua_State* L1, const char* msg, int lev
 	p_luaL_traceback(L, L1, msg, level);
 }
 
+////////////////////////////////
+// Custom Lua Pattern Exports //
+////////////////////////////////
+
+struct LoadF {
+	int n;                      /* number of pre-read characters */
+	FILE* f;                    /* file being read */
+	char buff[LUAL_BUFFERSIZE]; /* area for reading file */
+};
+
+static const char* getF(lua_State*, void* ud, size_t* size) {
+
+	LoadF* lf = (LoadF*)ud;
+
+	if (lf->n > 0) {   /* are there pre-read characters to be read? */
+		*size = lf->n; /* return them (chars already in buffer) */
+		lf->n = 0;     /* no more pre-read characters */
+	}
+	else { /* read a block from file */
+
+		/* 'fread' can return > 0 *and* set the EOF flag. If next call to
+		   'getF' called 'fread', it might still wait for user input.
+		   The next check avoids this problem. */
+		if (feof(lf->f)) {
+			return NULL;
+		}
+
+		*size = fread(lf->buff, 1, sizeof(lf->buff), lf->f); /* read block */
+	}
+
+	return lf->buff;
+}
+
+static int errfile(lua_State* L, const char* what, int fnameindex) {
+	const char* serr = strerror(errno);
+	const char* filename = lua_tostring(L, fnameindex) + 1;
+	lua_pushfstring(L, "cannot %s %s: %s", what, filename, serr);
+	lua_remove(L, fnameindex);
+	return LUA_ERRFILE;
+}
+
+static int skipBOM(LoadF* lf) {
+
+	const char* p = "\xEF\xBB\xBF"; /* Utf8 BOM mark */
+	int c;
+	lf->n = 0;
+
+	do {
+		c = getc(lf->f);
+
+		if (c == EOF || c != *(const unsigned char*)p++) {
+			return c;
+		}
+
+		lf->buff[lf->n++] = c; /* to be read by the parser */
+	}
+	while (*p != '\0');
+
+	lf->n = 0;          /* prefix matched; discard it */
+	return getc(lf->f); /* return next character */
+}
+
+/*
+** reads the first character of file 'f' and skips an optional BOM mark
+** in its beginning plus its first line if it starts with '#'. Returns
+** true if it skipped the first line.  In any case, '*cp' has the
+** first "valid" character of the file (after the optional BOM and
+** a first-line comment).
+*/
+static int skipcomment(LoadF* lf, int* cp) {
+
+	int c = *cp = skipBOM(lf);
+
+	if (c == '#') { /* first line is a comment (Unix exec. file)? */
+
+		/* skip first line */
+		do {
+			c = getc(lf->f);
+		}
+		while (c != EOF && c != '\n');
+
+		*cp = getc(lf->f); /* skip end-of-line, if present */
+		return 1;          /* there was a comment */
+	}
+	else {
+		return 0; /* no comment */
+	}
+}
+
+int luaL_loadfilexnamedptr(lua_State* L, FILE* file, const char* mode, const char* filename) {
+
+	LoadF lf;
+	int status, readstatus;
+	int c;
+	int fnameindex = lua_gettop(L) + 1; /* index of filename on the stack */
+
+	lua_pushfstring(L, "@%s", filename);
+	lf.f = file;
+
+	if (lf.f == NULL) {
+		return errfile(L, "open", fnameindex);
+	}
+
+	if (skipcomment(&lf, &c)) { /* read initial portion */
+		lf.buff[lf.n++] = '\n'; /* add line to correct line numbers */
+	}
+
+	if (c != EOF) {
+		lf.buff[lf.n++] = c; /* 'c' is the first character of the stream */
+	}
+
+	status = lua_loadx(L, getF, &lf, lua_tostring(L, -1), mode);
+	readstatus = ferror(lf.f);
+
+	if (file) {
+		fclose(lf.f); /* close file (even in case of errors) */
+	}
+
+	if (readstatus) {
+		lua_settop(L, fnameindex); /* ignore results from `lua_load' */
+		return errfile(L, "read", fnameindex);
+	}
+
+	lua_remove(L, fnameindex);
+	return status;
+}
+
 ////////////////////////
 // Custom Lua Exports //
 ////////////////////////
 
-EXPORT int luaL_loadpathx(lua_State* L, const TCHAR* path, const char* mode) {
-
-	// Only handling `wfopen()` - be lazy and error if not compiling with unicode.
-	static_assert(std::is_same<String, std::wstring>::value);
-
-	FILE *const file = p_wfopen(path, L"r");
-	return p_luaL_loadfilexptr(L, file, mode);
+EXPORT int luaL_loadpathx(lua_State* L, const char* name, const TCHAR* path, const char* mode) {
+	FILE *const file = fopenT(path, TEXT("r"));
+	return luaL_loadfilexnamedptr(L, file, mode, name);
 }
 
 ///////////////////////
 // Reimplementations //
 ///////////////////////
 
+#define lua_cast(t, exp) ((t)(exp))
+#define lua_cast_int(i) lua_cast(int, (i))
+#define lua_ispseudo(i) ((i) <= LUA_REGISTRYINDEX)
+
 EXPORT int lua_absindex(lua_State* L, int idx) {
 	return (idx > 0 || lua_ispseudo(idx))
 		? idx
 		: lua_cast_int(L->top - L->ci->func + idx);
-}
-
-EXPORT lua_Number lua_tonumber(lua_State* L, int index) {
-	return lua_tonumberx(L, index, nullptr);
 }
 
 /////////////
@@ -386,7 +525,7 @@ EXPORT bool CheckLuaArgBoundsInt8(lua_State* L, const int argI, __int8& resultVa
 }
 
 EXPORT bool CheckLuaArgBoundsInt16(lua_State* L, const int argI, __int16& resultVal, std::string& error) {
- 	return checkLuaArgBounds<__int16>(L, argI, resultVal, error);
+	return checkLuaArgBounds<__int16>(L, argI, resultVal, error);
 }
 
 EXPORT bool CheckLuaArgBoundsInt32(lua_State* L, const int argI, __int32& resultVal, std::string& error) {

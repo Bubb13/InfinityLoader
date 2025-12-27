@@ -32,6 +32,7 @@ typedef std::ifstream IFStream;
 #define _vsnprintfT_s _vsnprintf_s
 #define fputsT fputs
 #define toLowerT tolower
+#define fopenT fopen
 #else
 typedef std::wstring String;
 typedef std::wstring_view StringView;
@@ -44,6 +45,7 @@ typedef std::wifstream IFStream;
 #define _vsnprintfT_s _vsnwprintf_s
 #define fputsT fputws
 #define toLowerT towlower
+#define fopenT _wfopen
 #endif
 
 #define Print(str) FilePrint(stdout, str)

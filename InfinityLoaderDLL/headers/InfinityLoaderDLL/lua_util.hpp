@@ -7,8 +7,7 @@
 //          Functions          //
 //-----------------------------//
 
-bool callLuaFile(lua_State* L, const TCHAR* luaFilePath);
-void callScriptFile(lua_State* L, const TCHAR* name);
-int callScriptFileA(lua_State* L, const char* name);
+bool callLuaFile(lua_State* L, const char* chunkName, const TCHAR* luaFilePath);
+bool callScriptFile(lua_State* L, const char* fileName);
 void exposeToLua(lua_State* L, const char* exposedName, lua_CFunction func);
 bool luaCallProtected(lua_State* L, int nArg, int nReturn, std::function<bool(int)> setup);

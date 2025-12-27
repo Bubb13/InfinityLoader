@@ -1,19 +1,7 @@
 
 #pragma once
 
-#include "dll_api.h"
 #include "lua/lua.h"
-
-////////////////////
-// Config Globals //
-////////////////////
-
-EXTERN_EXPORT int LUA_VERSION_NUM;
-EXTERN_EXPORT int LUA_REGISTRYINDEX;
-// Invalid dummy value for code that supports both Lua 5.1 and Lua 5.2.
-// A Lua 5.2 LuaProvider should properly define this.
-EXTERN_EXPORT int LUA_RIDX_GLOBALS;
-EXTERN_EXPORT int LUA_GLOBALSINDEX;
 
 ///////////////////////////
 // Standard Lua Pointers //
@@ -61,6 +49,12 @@ extern type_lua_isstring p_lua_isstring;
 typedef int (*type_lua_isuserdata)(lua_State* L, int index);
 extern type_lua_isuserdata p_lua_isuserdata;
 
+typedef int (*type_lua_load)(lua_State* L, lua_Reader reader, void* data, const char* source);
+extern type_lua_load p_lua_load;
+
+typedef int (*type_lua_loadx)(lua_State* L, lua_Reader reader, void* data, const char* source, const char* mode);
+extern type_lua_loadx p_lua_loadx;
+
 typedef void* (*type_lua_newuserdata)(lua_State* L, size_t size);
 extern type_lua_newuserdata p_lua_newuserdata;
 
@@ -78,6 +72,9 @@ extern type_lua_pushboolean p_lua_pushboolean;
 
 typedef void (*type_lua_pushcclosure)(lua_State* L, lua_CFunction fn, int n);
 extern type_lua_pushcclosure p_lua_pushcclosure;
+
+typedef const char* (*type_lua_pushfstring)(lua_State* L, const char* fmt, ...);
+extern type_lua_pushfstring p_lua_pushfstring;
 
 typedef void (*type_lua_pushinteger)(lua_State* L, lua_Integer n);
 extern type_lua_pushinteger p_lua_pushinteger;
@@ -190,32 +187,30 @@ extern type_luaL_ref p_luaL_ref;
 typedef void (*type_luaL_traceback)(lua_State* L, lua_State* L1, const char* msg, int level);
 extern type_luaL_traceback p_luaL_traceback;
 
-/////////////////////////
-// Custom Lua Pointers //
-/////////////////////////
-
-typedef int (*type_luaL_loadfilexptr)(lua_State* L, FILE* fp, const char* mode);
-extern type_luaL_loadfilexptr p_luaL_loadfilexptr;
-
-typedef FILE* (*type_wfopen)(const wchar_t* file, const wchar_t* mode);
-extern type_wfopen p_wfopen;
-
 ////////////////////////////////
 // Switchable Implementations //
 ////////////////////////////////
 
+extern type_lua_load imp_lua_load;
+int lua52_load(lua_State* L, lua_Reader reader, void* data, const char* source);
+
+extern type_lua_loadx imp_lua_loadx;
+int lua51_loadx(lua_State* L, lua_Reader reader, void* data, const char* source, const char* mode);
+
 extern type_lua_pcall imp_lua_pcall;
-int lua51_pcall(lua_State* L, int nargs, int nresults, int msgh);
 int lua52_pcall(lua_State* L, int nargs, int nresults, int msgh);
 
 extern type_lua_pcallk imp_lua_pcallk;
 int lua51_pcallk(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k);
-int lua52_pcallk(lua_State* L, int nargs, int nresults, int errfunc, int ctx, lua_CFunction k);
 
 extern type_lua_tonumber imp_lua_tonumber;
-lua_Number lua51_tonumber(lua_State* L, int index);
 lua_Number lua52_tonumber(lua_State* L, int index);
 
 extern type_lua_tonumberx imp_lua_tonumberx;
 lua_Number lua51_tonumberx(lua_State* L, int index, int* isnum);
-lua_Number lua52_tonumberx(lua_State* L, int index, int* isnum);
+
+////////////////////////////////
+// Custom Lua Pattern Exports //
+////////////////////////////////
+
+int luaL_loadfilexnamedptr(lua_State* L, FILE* fp, const char* mode, const char* name);

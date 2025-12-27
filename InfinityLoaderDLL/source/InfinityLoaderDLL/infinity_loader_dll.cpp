@@ -292,7 +292,7 @@ static int disableCodeProtectionLua(lua_State* L) {
 }
 
 static int doFileLua(lua_State* L) {
-	callScriptFileA(L, lua_tostring(L, 1));
+	callScriptFile(L, lua_tostring(L, 1));
 	return 0;
 }
 
@@ -1605,7 +1605,7 @@ static DWORD prepareExtenderScriptsAfterLuaInitialization(lua_State *const L) {
 	if (eeZipSupport) {
 
 		const String engineLuaFilePath = workingFolder() + TEXT("engine.lua");
-		callLuaFile(L, engineLuaFilePath.c_str());
+		callLuaFile(L, "engine.lua", engineLuaFilePath.c_str());
 		lua_getglobal(L, "engine_name"); // 1 [ ..., engine_name ]
 
 		if (!lua_isstring(L, -1)) {
@@ -1629,7 +1629,7 @@ static DWORD prepareExtenderScriptsAfterLuaInitialization(lua_State *const L) {
 /////////////////////////////////////
 
 static void __stdcall doLuaFileExport(lua_State *const L, const char *const str) {
-	callScriptFileA(L, str);
+	callScriptFile(L, str);
 }
 
 static lua_State* __stdcall getLuaStateExport() {
@@ -1794,7 +1794,7 @@ static DWORD initLua(bool bFromPatch = false) {
 	if (luaMode() == LuaMode::INTERNAL) {
 		fillPatternPointerCleanup("Hardcoded_free", free)
 		fillPatternPointerCleanup("Hardcoded_malloc", malloc);
-		callScriptFileA(L, prefixed("Main"));
+		callScriptFile(L, prefixed("Main"));
 	}
 	else {
 
@@ -1811,10 +1811,10 @@ static DWORD initLua(bool bFromPatch = false) {
 		fillExportedPointerCleanup(TEXT("Hardcoded_malloc"), p_malloc, malloc);
 
 		if (luaMode() == LuaMode::REPLACE_INTERNAL_WITH_EXTERNAL) {
-			callScriptFileA(L, prefixed("EarlyMain"));
+			callScriptFile(L, prefixed("EarlyMain"));
 		}
 		else {
-			callScriptFileA(L, prefixed("Main"));
+			callScriptFile(L, prefixed("Main"));
 		}
 
 		fillPatternPointerCleanup("Hardcoded_free", free);
@@ -1842,7 +1842,7 @@ static void initLuaPatch() {
 
 static void delayedMainCall() {
 	TryRetTruthy( attachToConsole() )
-	callScriptFileA(luaState(), prefixed("Main"));
+	callScriptFile(luaState(), prefixed("Main"));
 	TryRetTruthy( detatchFromConsole() )
 }
 

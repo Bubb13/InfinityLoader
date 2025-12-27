@@ -1,19 +1,7 @@
 
 #pragma once
 
-#include "dll_api.h"
 #include "lua/lua.h"
-
-////////////////////
-// Config Globals //
-////////////////////
-
-EXTERN_EXPORT int LUA_VERSION_NUM;
-EXTERN_EXPORT int LUA_REGISTRYINDEX;
-EXTERN_EXPORT int LUA_RIDX_GLOBALS;
-// Invalid dummy value for code that supports both Lua 5.1 and Lua 5.2.
-// A Lua 5.1 LuaProvider should properly define this.
-EXTERN_EXPORT int LUA_GLOBALSINDEX;
 
 ///////////////////////////
 // Standard Lua Pointers //
@@ -61,6 +49,9 @@ extern type_lua_isstring p_lua_isstring;
 typedef int (*type_lua_isuserdata)(lua_State* L, int index);
 extern type_lua_isuserdata p_lua_isuserdata;
 
+typedef int (*type_lua_load)(lua_State* L, lua_Reader reader, void* data, const char* source, const char* mode);
+extern type_lua_load p_lua_load;
+
 typedef void* (*type_lua_newuserdata)(lua_State* L, size_t size);
 extern type_lua_newuserdata p_lua_newuserdata;
 
@@ -75,6 +66,9 @@ extern type_lua_pushboolean p_lua_pushboolean;
 
 typedef void (*type_lua_pushcclosure)(lua_State* L, lua_CFunction fn, int n);
 extern type_lua_pushcclosure p_lua_pushcclosure;
+
+typedef const char* (*type_lua_pushfstring)(lua_State* L, const char* fmt, ...);
+extern type_lua_pushfstring p_lua_pushfstring;
 
 typedef void (*type_lua_pushinteger)(lua_State* L, lua_Integer n);
 extern type_lua_pushinteger p_lua_pushinteger;
@@ -184,27 +178,8 @@ extern type_luaL_ref p_luaL_ref;
 typedef void (*type_luaL_traceback)(lua_State* L, lua_State* L1, const char* msg, int level);
 extern type_luaL_traceback p_luaL_traceback;
 
-/////////////////////////
-// Custom Lua Pointers //
-/////////////////////////
+////////////////////////////////
+// Custom Lua Pattern Exports //
+////////////////////////////////
 
-typedef int (*type_luaL_loadfilexptr)(lua_State* L, FILE* fp, const char* mode);
-extern type_luaL_loadfilexptr p_luaL_loadfilexptr;
-
-typedef FILE* (*type_wfopen)(const wchar_t* file, const wchar_t* mode);
-extern type_wfopen p_wfopen;
-
-///////////////////////
-// Reimplementations //
-///////////////////////
-
-EXPORT int lua_absindex(lua_State* L, int idx);
-EXPORT lua_Number lua_tonumber(lua_State* L, int index);
-
-/////////////
-// Defines //
-/////////////
-
-#define lua_cast(t, exp) ((t)(exp))
-#define lua_cast_int(i) lua_cast(int, (i))
-#define lua_ispseudo(i) ((i) <= LUA_REGISTRYINDEX)
+int luaL_loadfilexnamedptr(lua_State* L, FILE* fp, const char* mode, const char* name);
