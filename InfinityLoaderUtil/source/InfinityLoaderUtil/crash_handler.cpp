@@ -256,12 +256,12 @@ EXPORT void DumpCrashInfo(EXCEPTION_POINTERS* pointers)
 
 	if (hasLogFile || bWroteLuaOnlyLog)
 	{
-		MessageBoxFormat(TEXT("InfinityLoaderUtil.dll"), MB_ICONERROR, sCrashWithLogFormat,
+		MessageBoxFormat(TEXT("InfinityLoaderUtil.dll"), MB_ICONERROR | MB_SYSTEMMODAL, sCrashWithLogFormat,
 			exceptionCode, builtDmpNameBig.c_str(), builtDmpName.c_str(), builtLogName.c_str());
 	}
 	else
 	{
-		MessageBoxFormat(TEXT("InfinityLoaderUtil.dll"), MB_ICONERROR, sCrashWithoutLogFormat,
+		MessageBoxFormat(TEXT("InfinityLoaderUtil.dll"), MB_ICONERROR | MB_SYSTEMMODAL, sCrashWithoutLogFormat,
 			exceptionCode, builtDmpNameBig.c_str(), builtDmpName.c_str());
 	}
 }

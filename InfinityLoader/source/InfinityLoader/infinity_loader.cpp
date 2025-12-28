@@ -523,14 +523,26 @@ static DWORD init() {
 	return ERROR_SUCCESS;
 }
 
-static int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers) {
+static LONG WINAPI unhandledExceptionFilter(PEXCEPTION_POINTERS pointers) {
 	DumpCrashInfo(pointers);
-	exit(code);
+	TerminateProcess(GetCurrentProcess(), pointers->ExceptionRecord->ExceptionCode);
+	return EXCEPTION_CONTINUE_SEARCH; // To silence compiler; TerminateProcess() doesn't return
+}
+
+static int exceptionFilter(PEXCEPTION_POINTERS pointers) {
+	if (IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH; // Don't dump info or terminate when a debugger is attached
+	DumpCrashInfo(pointers);
+	TerminateProcess(GetCurrentProcess(), pointers->ExceptionRecord->ExceptionCode);
+	return EXCEPTION_CONTINUE_SEARCH; // To silence compiler; TerminateProcess() doesn't return
 }
 
 int main(int argc, char* argv[]) {
 
 	__try {
+
+		// Registers an exception filter that is called right before the process is about to terminate.
+		// This is used to write crash info for regions not protected by __try and __except in InfinityLoader.exe.
+		SetUnhandledExceptionFilter(unhandledExceptionFilter);
 
 		if (!inheritedConsole()) {
 			hideConsole();
@@ -550,7 +562,7 @@ int main(int argc, char* argv[]) {
 			std::cin.get();
 		}
 	}
-	__except (exceptionFilter(GetExceptionCode(), GetExceptionInformation())) {}
+	__except (exceptionFilter(GetExceptionInformation())) {}
 
 	return 0;
 }

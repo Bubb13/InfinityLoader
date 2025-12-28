@@ -44,6 +44,16 @@ StringA extenderName;
 StringA luaGlobalsPrefix;
 #define prefixed(str) std::format("{}"##str, luaGlobalsPrefix).c_str()
 
+////////////////////////////////
+// Unhandled Exception Filter //
+////////////////////////////////
+
+static LONG WINAPI unhandledExceptionFilter(PEXCEPTION_POINTERS pointers) {
+	DumpCrashInfo(pointers);
+	TerminateProcess(GetCurrentProcess(), pointers->ExceptionRecord->ExceptionCode);
+	return EXCEPTION_CONTINUE_SEARCH; // To silence compiler; TerminateProcess() doesn't return
+}
+
 ///////////////////////
 // General Functions //
 ///////////////////////
@@ -505,7 +515,7 @@ static int jitAtInternalLua(lua_State* L) {
 
 		lua_pushvalue(L, 2);                                                      // 6 [ initialAddress, checkFunc, assemblyStr, ..., debug, traceback, func ]
 		lua_pushinteger(L, size);                                                 // 7 [ initialAddress, checkFunc, assemblyStr, ..., debug, traceback, func, size ]
-		
+
 		if (lua_pcallk(L, 1, 1, -3, 0, nullptr) != LUA_OK) {
 																				  // 6 [ initialAddress, checkFunc, assemblyStr, ..., debug, traceback, errorMessage ]
 			errorMessage = lua_tostring(L, -1);
@@ -529,7 +539,7 @@ static int jitAtInternalLua(lua_State* L) {
 		jitPushErrorMessageTable(L, 1, errorMessage.c_str());                     // 4 [ initialAddress, checkFunc, assemblyStr, jitMetadataT ]
 		return 1;
 	}
-																									   
+
 	jitPushMetadataTable(L, code, dst);                                           // 4 [ initialAddress, checkFunc, assemblyStr, jitMetadataT ]
 	return 1;
 }
@@ -1379,6 +1389,10 @@ static DWORD writeReplaceLogFunction(bool disable_fprintf = false) {
 
 static void winMainHook() {
 
+	// Even though this is initially registered in Init(), the hooked process may override it during its
+	// own CRT startup. Reregistering after the process has initialized its CRT to regain control.
+	SetUnhandledExceptionFilter(unhandledExceptionFilter);
+
 	if (debug()) {
 		Print("[?][InfinityLoaderDLL.dll] winMainHook() - Debug output 2 (Windows: No, Proton: Yes)...\n");
 	}
@@ -2002,30 +2016,24 @@ static byte init(HANDLE mappedMemoryHandle) {
 	return 0;
 }
 
-static int exceptionFilter(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
-	if (IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH;
+static int exceptionFilter(PEXCEPTION_POINTERS pointers) {
+	if (IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH; // Don't dump info or terminate when a debugger is attached
 	DumpCrashInfo(pointers);
-	codeOut = code;
-	return EXCEPTION_EXECUTE_HANDLER;
-}
-
-static int exceptionFilterIgnoreIfSubsequent(unsigned int code, _EXCEPTION_POINTERS* pointers, unsigned int& codeOut) {
-	if (!codeOut) {
-		if (IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH;
-		DumpCrashInfo(pointers);
-		codeOut = code;
-	}
-	return EXCEPTION_EXECUTE_HANDLER;
+	TerminateProcess(GetCurrentProcess(), pointers->ExceptionRecord->ExceptionCode);
+	return EXCEPTION_CONTINUE_SEARCH; // To silence compiler; TerminateProcess() doesn't return
 }
 
 // Don't remove __stdcall - the patch that calls this function assumes the stack gets cleaned up
 void __stdcall Init(HANDLE mappedMemoryHandle) {
 
-	unsigned int exitCode = 0;
-
 	__try {
 
-		if (byte result = init(mappedMemoryHandle)) {
+		// Registers an exception filter that is called right before the process is about to terminate.
+		// This is used to write crash info for exceptions raised in both the target process, and any
+		// regions not protected by __try and __except in InfinityLoaderDLL.dll.
+		SetUnhandledExceptionFilter(unhandledExceptionFilter);
+
+		if (const byte result = init(mappedMemoryHandle)) {
 			if (result == 2) {
 				goto errorLogged;
 			}
@@ -2035,28 +2043,16 @@ void __stdcall Init(HANDLE mappedMemoryHandle) {
 		if (patchExe()) {
 			goto errorLogged;
 		}
-	}
-	__except (exceptionFilter(GetExceptionCode(), GetExceptionInformation(), exitCode)) {}
 
-	goto cleanup;
+		goto cleanup;
 
-errorLogged:;
-
-	__try {
+	errorLogged:;
 		ShowWindow(GetConsoleWindow(), SW_SHOW);
 		Print("Press any key to continue . . .\n");
 		_getch(); // TODO: This properly blocks, unlike `std::cin.get()`. Is something wrong with binding to the parent's console handles?
-	}
-	__except (exceptionFilterIgnoreIfSubsequent(GetExceptionCode(), GetExceptionInformation(), exitCode)) {}
 
-cleanup:;
-
-	__try {
+	cleanup:;
 		detatchFromConsole();
 	}
-	__except (exceptionFilterIgnoreIfSubsequent(GetExceptionCode(), GetExceptionInformation(), exitCode)) {}
-
-	if (exitCode) {
-		exit(exitCode);
-	}
+	__except (exceptionFilter(GetExceptionInformation())) {}
 }
