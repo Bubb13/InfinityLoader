@@ -458,21 +458,22 @@ static int iterateRegexLua(lua_State* L) {
 // End Stack: 1 [ ..., jitMetadataT ]
 static void jitPushMetadataTable(lua_State* L, asmjit::CodeHolder& code, void* dst) {
 
-	lua_newtable(L);                                                                     // 1 [ ..., jitMetadataT ]
+	lua_newtable(L);                                                                                                          // 1 [ ..., jitMetadataT ]
 
-	lua_pushstring(L, "labelAddresses");                                                 // 2 [ ..., jitMetadataT, "labelAddresses" ]
-	lua_newtable(L);                                                                     // 3 [ ..., jitMetadataT, "labelAddresses", labelAddressesT ]
+	lua_pushstring(L, "labelAddresses");                                                                                      // 2 [ ..., jitMetadataT, "labelAddresses" ]
+	lua_newtable(L);                                                                                                          // 3 [ ..., jitMetadataT, "labelAddresses", labelAddressesT ]
 
 	int i = 1;
 	for (const auto labelEntry : code.labelEntries()) {
 		if (labelEntry->isBound() && labelEntry->hasName()) {
-			lua_pushstring(L, labelEntry->name());                                       // 4 [ ..., jitMetadataT, "labelAddresses", labelAddressesT, labelName ]
-			lua_pushinteger(L, reinterpret_cast<uintptr_t>(dst) + labelEntry->offset()); // 5 [ ..., jitMetadataT, "labelAddresses", labelAddressesT, labelName, labelAddress ]
-			lua_rawset(L, -3);                                                           // 3 [ ..., jitMetadataT, "labelAddresses", labelAddressesT ]
+			const lua_Integer labelAddress = reinterpret_cast<uintptr_t>(dst) + static_cast<uintptr_t>(labelEntry->offset());
+			lua_pushstring(L, labelEntry->name());                                                                            // 4 [ ..., jitMetadataT, "labelAddresses", labelAddressesT, labelName ]
+			lua_pushinteger(L, labelAddress);                                                                                 // 5 [ ..., jitMetadataT, "labelAddresses", labelAddressesT, labelName, labelAddress ]
+			lua_rawset(L, -3);                                                                                                // 3 [ ..., jitMetadataT, "labelAddresses", labelAddressesT ]
 		}
 	}
 
-	lua_rawset(L, -3);                                                                   // 1 [ ..., jitMetadataT ]
+	lua_rawset(L, -3);                                                                                                        // 1 [ ..., jitMetadataT ]
 }
 
 // Expects:   0 [ ... ]
@@ -764,6 +765,7 @@ static int rshiftLua(lua_State* L) {
 	return 1;
 }
 
+#if defined(_WIN64)
 static int rtlAddFunctionTableLua(lua_State* L) {
 	castLuaIntArg(1, uintptr_t, UIntPtr, FunctionTable)
 	castLuaIntArg(2, uint32_t, UInt32, EntryCount)
@@ -788,6 +790,7 @@ static int rtlLookupFunctionEntryLua(lua_State* L) {
 		return 0;
 	}
 }
+#endif
 
 static int runWithStackLua(lua_State* L) {
 
@@ -1578,8 +1581,10 @@ static void initLuaState(lua_State *const L) {
 	exposeToLua(L, prefixed("ReadLString"), readLStringLua);
 	exposeToLua(L, prefixed("ReadString"), readStringLua);
 	exposeToLua(L, prefixed("RShift"), rshiftLua);
+#if defined(_WIN64)
 	exposeToLua(L, prefixed("RtlAddFunctionTable"), rtlAddFunctionTableLua);
 	exposeToLua(L, prefixed("RtlLookupFunctionEntry"), rtlLookupFunctionEntryLua);
+#endif
 	exposeToLua(L, prefixed("RunWithStack"), runWithStackLua);
 	exposeToLua(L, prefixed("RunWithString"), runWithStringLua);
 	exposeToLua(L, prefixed("SelectFromTables"), selectFromTablesLua);
