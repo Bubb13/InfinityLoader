@@ -58,8 +58,53 @@ static LONG WINAPI unhandledExceptionFilter(PEXCEPTION_POINTERS pointers) {
 // General Functions //
 ///////////////////////
 
+static asmjit::Error jitAt(uint8_t* dst, const char *const assembly) noexcept {
+
+	// Init code holder
+	asmjit::CodeHolder code;
+	code.init(rt.environment());
+
+	// Init assembler
+	asmjit::x86::Assembler a(&code);
+	asmtk::AsmParser p(&a);
+
+	// Parse + assemble
+	TryRetErr( p.parse(assembly) )
+	TryRetErr( code.flatten() )
+	TryRetErr( code.resolveUnresolvedLinks() )
+
+	const size_t codeSize = code.codeSize();
+
+	if (ASMJIT_UNLIKELY(codeSize == 0)) {
+		return asmjit::DebugUtils::errored(asmjit::kErrorNoCodeGenerated);
+	}
+
+	// Relocate
+	TryRetErr( code.relocateToBase(reinterpret_cast<uint64_t>(dst)) )
+
+	// Write
+	for (const asmjit::Section *const section : code._sections) {
+
+		const size_t offset = size_t(section->offset());
+		const size_t bufferSize = size_t(section->bufferSize());
+		const size_t virtualSize = size_t(section->virtualSize());
+
+		ASMJIT_ASSERT(offset + bufferSize <= codeSize);
+		memcpy(dst + offset, section->data(), bufferSize);
+
+		if (virtualSize > bufferSize) {
+			ASMJIT_ASSERT(offset + virtualSize <= codeSize);
+			memset(dst + offset + bufferSize, 0, virtualSize - bufferSize);
+		}
+	}
+
+	// Flush
+	rt.flush(dst, codeSize);
+	return asmjit::kErrorOk;
+}
+
 template<typename CheckFunc>
-static asmjit::Error jitAt(uint8_t*& dst, asmjit::CodeHolder* code, const CheckFunc checkFunc, bool& canceledFromLua) noexcept {
+static asmjit::Error jitAtInternal(uint8_t*& dst, asmjit::CodeHolder* code, const CheckFunc checkFunc, bool& canceledFromLua) noexcept {
 
 	canceledFromLua = false;
 
@@ -531,7 +576,7 @@ static int jitAtInternalLua(lua_State* L) {
 
 	bool canceledFromLua;
 
-	if (asmjit::Error err = jitAt(dst, &code, checkFunc, canceledFromLua)) {
+	if (asmjit::Error err = jitAtInternal(dst, &code, checkFunc, canceledFromLua)) {
 		jitPushErrorMessageTable(L, 0, asmjit::DebugUtils::errorAsString(err));   // 4 [ initialAddress, checkFunc, assemblyStr, jitMetadataT ]
 		return 1;
 	}
@@ -1972,6 +2017,73 @@ static DWORD patchExe() {
 	#pragma pop_macro("printInitFailed")
 }
 
+static void disableSetUnhandledExceptionFilter()
+{
+	const HMODULE kernelbase = findLoadedModule(TEXT("kernelbase.dll"));
+
+	if (kernelbase == nullptr)
+	{
+		FPrint("[!][InfinityLoaderDLL.dll] disableSetUnhandledExceptionFilter() - Failed to find kernelbase.dll\n");
+		return;
+	}
+
+	void* kernelbaseTextPointer;
+	DWORD kernelbaseTextSize;
+
+	if (!findSectionInfo(kernelbase, ".text", kernelbaseTextPointer, kernelbaseTextSize))
+	{
+		FPrint("[!][InfinityLoaderDLL.dll] disableSetUnhandledExceptionFilter() - Failed to find kernelbase.dll .text section\n");
+		return;
+	}
+
+	uint8_t *const pSetUnhandledExceptionFilter = reinterpret_cast<uint8_t*>(GetProcAddress(kernelbase, "SetUnhandledExceptionFilter"));
+
+	if (pSetUnhandledExceptionFilter == nullptr)
+	{
+		FPrint("[!][InfinityLoaderDLL.dll] disableSetUnhandledExceptionFilter() - Failed to find SetUnhandledExceptionFilter()\n");
+		return;
+	}
+
+	DWORD oldProtection;
+	VirtualProtect(kernelbaseTextPointer, kernelbaseTextSize, PAGE_EXECUTE_READWRITE, &oldProtection);
+
+#ifdef _WIN64
+	const asmjit::Error err = jitAt(pSetUnhandledExceptionFilter, std::format(R"(
+		mov rax, {:p}
+		ret
+		)",
+		reinterpret_cast<void*>(unhandledExceptionFilter)
+	).c_str());
+#else
+	const asmjit::Error err = jitAt(pSetUnhandledExceptionFilter, std::format(R"(
+		mov eax, {:p}
+		ret 0x4
+		)",
+		reinterpret_cast<void*>(unhandledExceptionFilter)
+	).c_str());
+#endif
+
+	if (err) {
+		FPrint("[!][InfinityLoaderDLL.dll] disableSetUnhandledExceptionFilter() - JIT failed: %s\n", asmjit::DebugUtils::errorAsString(err));
+	}
+
+	VirtualProtect(kernelbaseTextPointer, kernelbaseTextSize, oldProtection, &oldProtection);
+}
+
+static bool checkDisableSetUnhandledExceptionFilter()
+{
+	bool aggressiveCrashHandler;
+	TryRetErr( GetINIBoolDef(iniPath(), TEXT("General"), TEXT("AggressiveCrashHandler"), false, aggressiveCrashHandler) );
+
+	if (aggressiveCrashHandler)
+	{
+		// Aggressively patches `SetUnhandledExceptionFilter()` in KernelBase.dll to do nothing.
+		disableSetUnhandledExceptionFilter();
+	}
+
+	return false;
+}
+
 // Return:
 //   0 -> No Error
 //   1 -> Error (no console output)
@@ -2045,7 +2157,7 @@ void __stdcall Init(HANDLE mappedMemoryHandle) {
 			return;
 		}
 
-		if (patchExe()) {
+		if (checkDisableSetUnhandledExceptionFilter() || patchExe()) {
 			goto errorLogged;
 		}
 
