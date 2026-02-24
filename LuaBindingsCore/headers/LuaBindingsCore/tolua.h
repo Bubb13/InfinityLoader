@@ -99,19 +99,21 @@ typedef struct tolua_Error tolua_Error;
 // Internal //
 //////////////
 
-void original_tolua_pushusertype(lua_State* L, void* value, const char* type);
-int tolua_bnd_cast(lua_State* L);
-int tolua_bnd_release(lua_State* L);
-int tolua_bnd_releaseownership(lua_State* L);
-int tolua_bnd_takeownership(lua_State* L);
+// Disabled due to changes to "tolua_gc" and "tolua_ubox" registry functionality
+//void original_tolua_pushusertype(lua_State* L, void* value, const char* type);
+//int tolua_bnd_cast(lua_State* L);
+//int tolua_bnd_release(lua_State* L);
+//int tolua_bnd_releaseownership(lua_State* L);
+//int tolua_bnd_takeownership(lua_State* L);
+//void* tolua_clone(lua_State* L, void* value, lua_CFunction func);
+//void tolua_release(lua_State* L, void* value);
+
 int tolua_bnd_type(lua_State* L);
 void tolua_classevents(lua_State* L);
-void* tolua_clone(lua_State* L, void* value, lua_CFunction func);
 void tolua_getmetatable(lua_State* L, const char* name);
 int tolua_ismodulemetatable(lua_State* L);
 void tolua_moduleevents(lua_State* L);
 void tolua_newmetatable(lua_State* L, const char* name);
-void tolua_release(lua_State* L, void* value);
 const char* tolua_tostring(lua_State* L, int narg, const char* def);
 void* tolua_tousertype(lua_State* L, int narg, void* def);
 

@@ -130,76 +130,76 @@ int tolua_bnd_type(lua_State* L)
 }
 
 // Expects [ t ]
-int tolua_bnd_takeownership(lua_State* L) {
-	lua_CFunction func = 0;
-	if (lua_isuserdata(L, 1)) {
-		if (lua_getmetatable(L, 1)) {
-			void* u;                         // 2 [ t, mt ]
-			lua_pushstring(L, ".collector"); // 3 [ t, mt, ".collector" ]
-			lua_rawget(L, -2);               // 2 [ t, mt[".collector"] ]
-			func = lua_iscfunction(L, -1) ? lua_tocfunction(L, -1) : NULL;
-			lua_pop(L, 2);                   // 0 [ ]
-			u = *((void**)lua_touserdata(L, 1));
-			tolua_clone(L, u, func);
-		}
-	}
-	lua_pushboolean(L, func != 0);
-	return 1;
-}
+//int tolua_bnd_takeownership(lua_State* L) {
+//	lua_CFunction func = 0;
+//	if (lua_isuserdata(L, 1)) {
+//		if (lua_getmetatable(L, 1)) {
+//			void* u;                         // 2 [ t, mt ]
+//			lua_pushstring(L, ".collector"); // 3 [ t, mt, ".collector" ]
+//			lua_rawget(L, -2);               // 2 [ t, mt[".collector"] ]
+//			func = lua_iscfunction(L, -1) ? lua_tocfunction(L, -1) : NULL;
+//			lua_pop(L, 2);                   // 0 [ ]
+//			u = *((void**)lua_touserdata(L, 1));
+//			tolua_clone(L, u, func);
+//		}
+//	}
+//	lua_pushboolean(L, func != 0);
+//	return 1;
+//}
 
 /* Release ownership
  */
 // Expects [ t ]
-int tolua_bnd_releaseownership(lua_State* L)
-{
-	int done = 0;
-	if (lua_isuserdata(L, 1))
-	{
-		void* u = *((void**)lua_touserdata(L, 1));
-		lua_pushstring(L, "tolua_gc");    // 2 [ t, "tolua_gc" ]
-		lua_rawget(L, LUA_REGISTRYINDEX); // 2 [ t, registry["tolua_gc"] ]
-		lua_pushlightuserdata(L, u);      // 3 [ t, registry["tolua_gc"], lud(ptr) ]
-		lua_rawget(L, -2);                // 3 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
-		lua_pushlightuserdata(L, u);      // 4 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr) ]
-		lua_pushnil(L);                   // 5 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr), nil ]
-		lua_rawset(L, -4);                // 3 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
-		done = 1;
-	}
-	lua_pushboolean(L, done != 0);
-	return 1;
-}
+//int tolua_bnd_releaseownership(lua_State* L)
+//{
+//	int done = 0;
+//	if (lua_isuserdata(L, 1))
+//	{
+//		void* u = *((void**)lua_touserdata(L, 1));
+//		lua_pushstring(L, "tolua_gc");    // 2 [ t, "tolua_gc" ]
+//		lua_rawget(L, LUA_REGISTRYINDEX); // 2 [ t, registry["tolua_gc"] ]
+//		lua_pushlightuserdata(L, u);      // 3 [ t, registry["tolua_gc"], lud(ptr) ]
+//		lua_rawget(L, -2);                // 3 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
+//		lua_pushlightuserdata(L, u);      // 4 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr) ]
+//		lua_pushnil(L);                   // 5 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr), nil ]
+//		lua_rawset(L, -4);                // 3 [ t, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
+//		done = 1;
+//	}
+//	lua_pushboolean(L, done != 0);
+//	return 1;
+//}
 
-int tolua_bnd_cast(lua_State* L) {
-	void* v = tolua_tousertype(L, 1, NULL);
-	const char* s = tolua_tostring(L, 2, NULL);
-	if (!v) {
-		lua_pushnil(L);
-	}
-	else if (v && s) {
-		tolua_getmetatable(L, s); // TODO: Metatable
-		if (lua_isnil(L, -1)) {
-			tolua_error(L, "Unknown 'type' for 'tolua.cast' function", NULL);
-		}
-		original_tolua_pushusertype(L, v, s);
-	}
-	else {
-		tolua_error(L, "Invalid arguments for 'tolua.cast' function", NULL);
-	}
-	return 1;
-}
+//int tolua_bnd_cast(lua_State* L) {
+//	void* v = tolua_tousertype(L, 1, NULL);
+//	const char* s = tolua_tostring(L, 2, NULL);
+//	if (!v) {
+//		lua_pushnil(L);
+//	}
+//	else if (v && s) {
+//		tolua_getmetatable(L, s); // TODO: Metatable
+//		if (lua_isnil(L, -1)) {
+//			tolua_error(L, "Unknown 'type' for 'tolua.cast' function", NULL);
+//		}
+//		original_tolua_pushusertype(L, v, s);
+//	}
+//	else {
+//		tolua_error(L, "Invalid arguments for 'tolua.cast' function", NULL);
+//	}
+//	return 1;
+//}
 
 /* Release
 ** Function to be called by a Lua code that uses a function to explicitly
 ** release a mapped object. This function is automatically called by all
 ** destructors bound by tolua and by all collected objects.
 */
-int tolua_bnd_release(lua_State* L)
-{
-	void* value = tolua_tousertype(L, 1, NULL);
-	if (value)
-		tolua_release(L, value);
-	return 1;
-}
+//int tolua_bnd_release(lua_State* L)
+//{
+//	void* value = tolua_tousertype(L, 1, NULL);
+//	if (value)
+//		tolua_release(L, value);
+//	return 1;
+//}
 
 /*
 ** Function to return peer table associated to a given object
@@ -299,46 +299,46 @@ int tolua_bnd_release(lua_State* L)
 //}
 
 // Deletes the ubox associated with value
-void tolua_release(lua_State* L, void* value) {
+//void tolua_release(lua_State* L, void* value) {
+//
+//	//////////////////////////////////////////////
+//	// tolua_ubox = registry["tolua_ubox"]      //
+//	// local valLUD = lud(value)                //
+//	// local ubox = ud2ubox(tolua_ubox[valLUD]) //
+//	// if ubox ~= nullptr then                  //
+//	//     *ubox = nullptr                      //
+//	// end                                      //
+//	// tolua_ubox[valLUD] = nil                 //
+//	//////////////////////////////////////////////
+//
+//	void** p;
+//	lua_pushstring(L, "tolua_ubox");  // 1 [ "tolua_ubox" ]
+//	lua_rawget(L, LUA_REGISTRYINDEX); // 1 [ registry["tolua_ubox"] ]
+//	lua_pushlightuserdata(L, value);  // 2 [ registry["tolua_ubox"], lud(value) ]
+//	lua_rawget(L, -2);                // 2 [ registry["tolua_ubox"], registry["tolua_ubox"][lud(value)] ]
+//	p = (void**)lua_touserdata(L, -1);
+//	if (p) *p = NULL;
+//	lua_pop(L, 1);                    // 1 [ registry["tolua_ubox"] ]
+//	lua_pushlightuserdata(L, value);  // 2 [ registry["tolua_ubox"], lud(value) ]
+//	lua_pushnil(L);                   // 3 [ registry["tolua_ubox"], lud(value), nil ]
+//	lua_rawset(L, -3);                // 1 [ registry["tolua_ubox"] ]
+//	lua_pop(L, 1);                    // 0 [ ]
+//}
 
-	//////////////////////////////////////////////
-	// tolua_ubox = registry["tolua_ubox"]      //
-	// local valLUD = lud(value)                //
-	// local ubox = ud2ubox(tolua_ubox[valLUD]) //
-	// if ubox ~= nullptr then                  //
-	//     *ubox = nullptr                      //
-	// end                                      //
-	// tolua_ubox[valLUD] = nil                 //
-	//////////////////////////////////////////////
-
-	void** p;
-	lua_pushstring(L, "tolua_ubox");  // 1 [ "tolua_ubox" ]
-	lua_rawget(L, LUA_REGISTRYINDEX); // 1 [ registry["tolua_ubox"] ]
-	lua_pushlightuserdata(L, value);  // 2 [ registry["tolua_ubox"], lud(value) ]
-	lua_rawget(L, -2);                // 2 [ registry["tolua_ubox"], registry["tolua_ubox"][lud(value)] ]
-	p = (void**)lua_touserdata(L, -1);
-	if (p) *p = NULL;
-	lua_pop(L, 1);                    // 1 [ registry["tolua_ubox"] ]
-	lua_pushlightuserdata(L, value);  // 2 [ registry["tolua_ubox"], lud(value) ]
-	lua_pushnil(L);                   // 3 [ registry["tolua_ubox"], lud(value), nil ]
-	lua_rawset(L, -3);                // 1 [ registry["tolua_ubox"] ]
-	lua_pop(L, 1);                    // 0 [ ]
-}
-
-void* tolua_clone(lua_State* L, void* value, lua_CFunction func) {
-
-	/////////////////////////////////////////////
-	// registry["tolua_gc"][lud(value)] = func //
-	/////////////////////////////////////////////
-
-	lua_pushstring(L, "tolua_gc");    // 1 [ "tolua_gc" ]
-	lua_rawget(L, LUA_REGISTRYINDEX); // 1 [ registry["tolua_gc"] ]
-	lua_pushlightuserdata(L, value);  // 2 [ registry["tolua_gc"], lud(value) ]
-	lua_pushcfunction(L, func);       // 3 [ registry["tolua_gc"], lud(value), func ]
-	lua_rawset(L, -3);                // 1 [ registry["tolua_gc"] ]
-	lua_pop(L, 1);                    // 0 [ ]
-	return value;
-}
+//void* tolua_clone(lua_State* L, void* value, lua_CFunction func) {
+//
+//	/////////////////////////////////////////////
+//	// registry["tolua_gc"][lud(value)] = func //
+//	/////////////////////////////////////////////
+//
+//	lua_pushstring(L, "tolua_gc");    // 1 [ "tolua_gc" ]
+//	lua_rawget(L, LUA_REGISTRYINDEX); // 1 [ registry["tolua_gc"] ]
+//	lua_pushlightuserdata(L, value);  // 2 [ registry["tolua_gc"], lud(value) ]
+//	lua_pushcfunction(L, func);       // 3 [ registry["tolua_gc"], lud(value), func ]
+//	lua_rawset(L, -3);                // 1 [ registry["tolua_gc"] ]
+//	lua_pop(L, 1);                    // 0 [ ]
+//	return value;
+//}
 
 //static void original_tolua_usertype(lua_State* L, const char* type)
 //{

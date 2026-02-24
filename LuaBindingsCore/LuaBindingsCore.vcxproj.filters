@@ -22,9 +22,6 @@
     <Filter Include="Source Files\LuaBindingsCore">
       <UniqueIdentifier>{e3b2915c-2e79-4a0d-953a-199b3286a43c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\common\tolua">
-      <UniqueIdentifier>{d544ffd2-476d-40dc-bc0f-59d454077f65}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Build Tasks">
       <UniqueIdentifier>{c7a0dc13-f920-4f18-9c88-ed9e2099209f}</UniqueIdentifier>
     </Filter>
@@ -32,9 +29,6 @@
   <ItemGroup>
     <ClInclude Include="headers\common\lua_bindings_core_api.h">
       <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\common\tolua\tolua.h">
-      <Filter>Header Files\common\tolua</Filter>
     </ClInclude>
     <ClInclude Include="headers\LuaBindingsCore\tolua_event.h">
       <Filter>Header Files\LuaBindingsCore</Filter>

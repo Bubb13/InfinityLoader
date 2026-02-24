@@ -103,13 +103,32 @@ int pointerToUserDataLua(lua_State * g_lua) {
 //
 // Expects [ ..., ud, func ]
 int setUserDataGarbageCollectionFunctionLua(lua_State* L) {
-	void* ptr = *reinterpret_cast<void**>(lua_touserdata(L, -2));
+
+	////////////////////////////////////////
+	// local gcReg = registry["tolua_gc"] //
+	// local gcT = gcReg[lud(ptr)]        //
+	// if type(gcT) == "table" then       //
+	//     gcT["gcFunc"] = func           //
+	// end                                //
+	////////////////////////////////////////
+
+	void *const ptr = *reinterpret_cast<void**>(lua_touserdata(L, -2));
 	lua_pushstring(L, "tolua_gc");    // 3 [ ..., ud, func, "tolua_gc" ]
 	lua_rawget(L, LUA_REGISTRYINDEX); // 3 [ ..., ud, func, registry["tolua_gc"] ]
-	lua_pushlightuserdata(L, ptr);    // 4 [ ..., ud, func, registry["tolua_gc"], lud(value) ]
-	lua_pushvalue(L, -3);             // 5 [ ..., ud, func, registry["tolua_gc"], lud(value), func ]
-	lua_rawset(L, -3);                // 3 [ ..., ud, func, registry["tolua_gc"] ]
-	lua_pop(L, 1);                    // 2 [ ..., ud, func ]
+
+	lua_pushlightuserdata(L, ptr);    // 4 [ ..., ud, func, registry["tolua_gc"], lud(ptr) ]
+	lua_rawget(L, -2);                // 4 [ ..., ud, func, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] -> gcT ]
+
+	if (lua_istable(L, -1)) {
+		lua_pushstring(L, "gcFunc");  // 5 [ ..., ud, func, registry["tolua_gc"], gcT, "gcFunc" ]
+		lua_pushvalue(L, -4);         // 6 [ ..., ud, func, registry["tolua_gc"], gcT, "gcFunc", func ]
+		lua_rawset(L, -3);            // 4 [ ..., ud, func, registry["tolua_gc"], gcT ]
+	}
+	else {
+		FPrint("[!][LuaBindingsCore.dll] setUserDataGarbageCollectionFunctionLua() - Userdata is missing its gc table\n");
+	}
+
+	lua_pop(L, 2);                    // 2 [ ..., ud, func ]
 	return 0;
 }
 

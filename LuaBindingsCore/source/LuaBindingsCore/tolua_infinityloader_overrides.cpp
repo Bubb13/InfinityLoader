@@ -792,9 +792,10 @@ EXPORT void tolua_cclass(lua_State* L, const char* lname, const char* name, std:
 
 	lua_pushstring(L, lname);                     // 2 [ ..., module, lname ]
 	tolua_getmetatable(L, name);                  // 3 [ ..., module, lname, getmetatable(name) ]
-	lua_pushstring(L, ".collector");              // 4 [ ..., module, lname, getmetatable(name), ".collector" ]
-	lua_pushcfunction(L, col);                    // 5 [ ..., module, lname, getmetatable(name), ".collector", col ]
-	lua_rawset(L, -3);                            // 3 [ ..., module, lname, getmetatable(name) ]
+	// Disabled due to changes to "tolua_gc" and "tolua_ubox" registry functionality
+	//lua_pushstring(L, ".collector");            // 4 [ ..., module, lname, getmetatable(name), ".collector" ]
+	//lua_pushcfunction(L, col);                  // 5 [ ..., module, lname, getmetatable(name), ".collector", col ]
+	//lua_rawset(L, -3);                          // 3 [ ..., module, lname, getmetatable(name) ]
 	lua_rawset(L, -3);                            // 1 [ ..., module ]
 }
 
@@ -900,10 +901,10 @@ EXPORT void tolua_open(lua_State* L) {
 		tolua_module(L, "tolua", 0);
 		tolua_beginmodule(L, "tolua");
 		tolua_function(L, "type", tolua_bnd_type);
-		tolua_function(L, "takeownership", tolua_bnd_takeownership);
-		tolua_function(L, "releaseownership", tolua_bnd_releaseownership);
-		tolua_function(L, "cast", tolua_bnd_cast);
-		tolua_function(L, "release", tolua_bnd_release);
+		//tolua_function(L, "takeownership", tolua_bnd_takeownership);
+		//tolua_function(L, "releaseownership", tolua_bnd_releaseownership);
+		//tolua_function(L, "cast", tolua_bnd_cast);
+		//tolua_function(L, "release", tolua_bnd_release);
 		//tolua_function(L, "getpeertable", tolua_bnd_getpeertable);
 		tolua_endmodule(L);
 		tolua_endmodule(L);
@@ -915,13 +916,63 @@ EXPORT void tolua_open(lua_State* L) {
 // Pattern export: "Hardcoded_tolua_pushusertype" //
 //************************************************//
 EXPORT void tolua_pushusertype(lua_State* L, void* value, const char* type) {
+
+	///////////////////////////////////////////////////
+	// if value == nullptr then                      //
+	//     return nil                                //
+	// else                                          //
+	//     local ud = ptr2ud(value)                  //
+	//     local gcReg = registry["tolua_gc"]        //
+	//     local gcT = gcReg[ptr2lud(value)]         //
+	//     if gcT == nil then                        //
+	//         gcT = { ["refCount"] = 1 }            //
+	//         gcReg[ptr2lud(value)] = gcT           //
+	//     else                                      //
+	//         gcT["refCount"] = gcT["refCount"] + 1 //
+	//     end                                       //
+	//     return ud                                 //
+	// end                                           //
+	///////////////////////////////////////////////////
+
 	if (value == nullptr) {
-		lua_pushnil(L);
+		lua_pushnil(L);                                                       // 1 [ ..., nil ]
 	}
 	else {
-		*(void**)lua_newuserdata(L, sizeof(void*)) = value;
-		tolua_getmetatable(L, type);
-		lua_setmetatable(L, -2);
+		*reinterpret_cast<void**>(lua_newuserdata(L, sizeof(void*))) = value; // 1 [ ..., ud ]
+		tolua_getmetatable(L, type);                                          // 2 [ ..., ud, mt ]
+		lua_setmetatable(L, -2);                                              // 1 [ ..., ud ]
+
+		lua_pushstring(L, "tolua_gc");                                        // 2 [ ..., ud, "tolua_gc" ]
+		lua_rawget(L, LUA_REGISTRYINDEX);                                     // 2 [ ..., ud, registry["tolua_gc"] ]
+
+		lua_pushlightuserdata(L, value);                                      // 3 [ ..., ud, registry["tolua_gc"], lud(value) ]
+		lua_rawget(L, -2);                                                    // 3 [ ..., ud, registry["tolua_gc"], registry["tolua_gc"][lud(value)] -> gcT ]
+
+		if (lua_isnil(L, -1)) {
+
+			lua_pop(L, 1);                                                    // 2 [ ..., ud, registry["tolua_gc"] ]
+			lua_newtable(L);                                                  // 3 [ ..., ud, registry["tolua_gc"], gcT ]
+
+			lua_pushstring(L, "refCount");                                    // 4 [ ..., ud, registry["tolua_gc"], gcT, "refCount" ]
+			lua_pushinteger(L, 1);                                            // 5 [ ..., ud, registry["tolua_gc"], gcT, "refCount", 1 ]
+			lua_rawset(L, -3);                                                // 3 [ ..., ud, registry["tolua_gc"], gcT ]
+
+			lua_pushlightuserdata(L, value);                                  // 4 [ ..., ud, registry["tolua_gc"], gcT, lud(value) ]
+			lua_pushvalue(L, -2);                                             // 5 [ ..., ud, registry["tolua_gc"], gcT, lud(value), gcT ]
+			lua_rawset(L, -4);                                                // 3 [ ..., ud, registry["tolua_gc"], gcT ]
+		}
+		else {
+			lua_pushstring(L, "refCount");                                    // 4 [ ..., ud, registry["tolua_gc"], gcT, "refCount" ]
+			lua_rawget(L, -2);                                                // 4 [ ..., ud, registry["tolua_gc"], gcT, refCount ]
+			const lua_Integer newRefCount = lua_tointeger(L, -1) + 1;
+			lua_pop(L, 1);                                                    // 3 [ ..., ud, registry["tolua_gc"], gcT ]
+
+			lua_pushstring(L, "refCount");                                    // 4 [ ..., ud, registry["tolua_gc"], gcT, "refCount" ]
+			lua_pushinteger(L, newRefCount);                                  // 5 [ ..., ud, registry["tolua_gc"], gcT, "refCount", newRefCount ]
+			lua_rawset(L, -3);                                                // 3 [ ..., ud, registry["tolua_gc"], gcT ]
+		}
+
+		lua_pop(L, 2);                                                        // 1 [ ..., ud ]
 	}
 }
 

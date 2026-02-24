@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\common\lua_bindings_core_api.h" />
-    <ClInclude Include="headers\common\tolua\tolua.h" />
     <ClInclude Include="headers\LuaBindingsCore\tolua.h" />
     <ClInclude Include="headers\LuaBindingsCore\tolua_event.h" />
     <ClInclude Include="headers\LuaBindingsCore\tolua_infinityloader_overrides.h" />

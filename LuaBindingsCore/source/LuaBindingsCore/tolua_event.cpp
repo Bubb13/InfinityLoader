@@ -508,47 +508,122 @@ static int class_len_event(lua_State* L) {
 // Expects   [ table ]
 // End Stack [ table ]
 // Returns   0
+//static int original_class_gc_event(lua_State* L) {
+//
+//	//////////////////////////////////////////////////////////////////////////////////
+//	// if type(table) == "userdata" then                                            //
+//	//     local ptr = ud2ptr(table)                                                //
+//	//     local ptrLUD = lud(ptr)                                                  //
+//	//     local gcRegV = registry["tolua_gc"][ptrLUD]                              //
+//	//     if gcRegV ~= nil then                                                    //
+//	//         registry["tolua_gc"][ptrLUD] = nil                                   //
+//	//         if type(gcRegV) == "function" then                                   //
+//	//             gcRegV(table)                                                    //
+//	//         elseif type(gcRegV) == "userdata" and ud2ptr(gcRegV) == nullptr then //
+//	//             free(ptr)                                                        //
+//	//             tolua_release(ptr)                                               //
+//	//         end                                                                  //
+//	//     end                                                                      //
+//	// end                                                                          //
+//	//////////////////////////////////////////////////////////////////////////////////
+//
+//	if (lua_type(L, 1) == LUA_TUSERDATA) {
+//
+//		const int top = lua_gettop(L);
+//		void *const ud = *reinterpret_cast<void**>(lua_touserdata(L, 1));
+//		lua_pushstring(L, "tolua_gc");    // 2 [ table, "tolua_gc" ]
+//		lua_rawget(L, LUA_REGISTRYINDEX); // 2 [ table, registry["tolua_gc"] ]
+//		lua_pushlightuserdata(L, ud);     // 3 [ table, registry["tolua_gc"], lud(ptr) ]
+//		lua_rawget(L, -2);                // 3 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
+//
+//		if (!lua_isnil(L, -1)) {
+//
+//			lua_pushlightuserdata(L, ud); // 4 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr) ]
+//			lua_pushnil(L);               // 5 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr), nil ]
+//			lua_rawset(L, -4);            // 3 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
+//
+//			if (lua_isfunction(L, -1)) {
+//				lua_pushvalue(L, 1);      // 4 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], table ]
+//				lua_call(L, 1, 0);        // 2 [ table, registry["tolua_gc"] ]
+//			}
+//			else if (lua_isuserdata(L, -1) && *((void**)lua_touserdata(L, -1)) == NULL) {
+//				free(ud);
+//				tolua_release(L, ud);
+//			}
+//		}
+//		lua_settop(L, top);               // 1 [ table ]
+//	}
+//	return 0;
+//}
+
+// Expects   [ table ]
+// End Stack [ table ]
+// Returns   0
 static int class_gc_event(lua_State* L) {
 
-	//////////////////////////////////////////////////////////////////////////////////
-	// if type(table) == "userdata" then                                            //
-	//     local ptr = ud2ptr(table)                                                //
-	//     local ptrLUD = lud(ptr)                                                  //
-	//     local gcRegV = registry["tolua_gc"][ptrLUD]                              //
-	//     if gcRegV ~= nil then                                                    //
-	//         registry["tolua_gc"][ptrLUD] = nil                                   //
-	//         if type(gcRegV) == "function" then                                   //
-	//             gcRegV(table)                                                    //
-	//         elseif type(gcRegV) == "userdata" and ud2ptr(gcRegV) == nullptr then //
-	//             free(ptr)                                                        //
-	//             tolua_release(ptr)                                               //
-	//         end                                                                  //
-	//     end                                                                      //
-	// end                                                                          //
-	//////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////
+	// if type(table) == "userdata" then               //
+	//     local ptr = ud2ptr(table)                   //
+	//     local gcReg = registry["tolua_gc"]          //
+	//     local gcT = gcReg[lud(ptr)]                 //
+	//     if gcT ~= nil then                          //
+	//         local newRefCount = gcT["refCount"] - 1 //
+	//         if newRefCount > 0 then                 //
+	//             gcT["refCount"] = newRefCount       //
+	//         else                                    //
+	// 	           local gcFunc = gcT["gcFunc"]        //
+	//             if type(gcFunc) == "function" then  //
+	//                 gcFunc(table)                   //
+	//             end                                 //
+	//             gcReg[lud(ptr)] = nil               //
+	//         end                                     //
+	//     end                                         //
+	// end                                             //
+	/////////////////////////////////////////////////////
 
 	if (lua_type(L, 1) == LUA_TUSERDATA) {
-		int top = lua_gettop(L);
-		void* u = *((void**)lua_touserdata(L, 1));
-		lua_pushstring(L, "tolua_gc");    // 2 [ table, "tolua_gc" ]
-		lua_rawget(L, LUA_REGISTRYINDEX); // 2 [ table, registry["tolua_gc"] ]
-		lua_pushlightuserdata(L, u);      // 3 [ table, registry["tolua_gc"], lud(ptr) ]
-		lua_rawget(L, -2);                // 3 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
+
+		lua_pushstring(L, "tolua_gc");                                     // 2 [ table, "tolua_gc" ]
+		lua_rawget(L, LUA_REGISTRYINDEX);                                  // 2 [ table, registry["tolua_gc"] ]
+
+		void *const ptr = *reinterpret_cast<void**>(lua_touserdata(L, 1));
+		lua_pushlightuserdata(L, ptr);                                     // 3 [ table, registry["tolua_gc"], lud(ptr) ]
+		lua_rawget(L, -2);                                                 // 3 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] -> gcT ]
+
 		if (!lua_isnil(L, -1)) {
-			lua_pushlightuserdata(L, u);  // 4 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr) ]
-			lua_pushnil(L);               // 5 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], lud(ptr), nil ]
-			lua_rawset(L, -4);            // 3 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)] ]
-			if (lua_isfunction(L, -1)) {
-				lua_pushvalue(L, 1);      // 4 [ table, registry["tolua_gc"], registry["tolua_gc"][lud(ptr)], table ]
-				lua_call(L, 1, 0);        // 2 [ table, registry["tolua_gc"] ]
+
+			lua_pushstring(L, "refCount");                                 // 4 [ table, registry["tolua_gc"], gcT, "refCount" ]
+			lua_rawget(L, -2);                                             // 4 [ table, registry["tolua_gc"], gcT, refCount ]
+			const lua_Integer newRefCount = lua_tointeger(L, -1) - 1;
+			lua_pop(L, 1);                                                 // 3 [ table, registry["tolua_gc"], gcT ]
+
+			if (newRefCount > 0) {
+				lua_pushstring(L, "refCount");                             // 4 [ table, registry["tolua_gc"], gcT, "refCount" ]
+				lua_pushinteger(L, newRefCount);                           // 5 [ table, registry["tolua_gc"], gcT, "refCount", newRefCount ]
+				lua_rawset(L, -3);                                         // 3 [ table, registry["tolua_gc"], gcT ]
 			}
-			else if (lua_isuserdata(L, -1) && *((void**)lua_touserdata(L, -1)) == NULL) {
-				free(u);
-				tolua_release(L, u);
+			else {
+
+				lua_pushstring(L, "gcFunc");                               // 4 [ table, registry["tolua_gc"], gcT, "gcFunc" ]
+				lua_rawget(L, -2);                                         // 4 [ table, registry["tolua_gc"], gcT, gcFunc ]
+
+				if (lua_isfunction(L, -1)) {
+					lua_pushvalue(L, 1);                                   // 5 [ table, registry["tolua_gc"], gcT, gcFunc, table ]
+					lua_call(L, 1, 0);                                     // 3 [ table, registry["tolua_gc"], gcT ]
+				}
+				else {
+					lua_pop(L, 1);                                         // 3 [ table, registry["tolua_gc"], gcT ]
+				}
+
+				lua_pushlightuserdata(L, ptr);                             // 4 [ table, registry["tolua_gc"], gcT, lud(ptr) ]
+				lua_pushnil(L);                                            // 5 [ table, registry["tolua_gc"], gcT, lud(ptr), nil ]
+				lua_rawset(L, -4);                                         // 3 [ table, registry["tolua_gc"], gcT ]
 			}
 		}
-		lua_settop(L, top);               // 1 [ table ]
+
+		lua_pop(L, 2);                                                     // 1 [ table ]
 	}
+
 	return 0;
 }
 
