@@ -2022,7 +2022,7 @@ void __cdecl EEex::Override_uiDoFile(char* fileName) {
 
 				if (pErrorMessage != nullptr) {
 					p_SDL_ShowSimpleMessageBox(0x10, CChitin::p_m_sGameName->m_pchData, pErrorMessage, (*p_g_pBaldurChitin)->cVideo.pCurrentMode->m_pWindow);
-					p_SDL_Log("Error [%s] in %s", pResBuffer, fullFileName->m_pchData);
+					p_SDL_Log("Error [%s] in %s", pErrorMessage, fullFileName->m_pchData);
 				}
 			}
 		}
