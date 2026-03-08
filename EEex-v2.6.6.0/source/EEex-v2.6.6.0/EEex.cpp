@@ -2916,10 +2916,25 @@ void CMessageSetLastObject::Override_Run() {
 	}
 }
 
+static void onEventTriggerSet(CGameAIBase *const pAIBase, CAITrigger *const pTrigger) {
+
+	if (!EEex::AIBase_LuaHook_OnEventTriggerSet_Enabled) {
+		return;
+	}
+
+	lua_State *const L = *p_g_lua;
+	luaCallProtected(L, 2, 0, [&](int) {
+		lua_getglobal(L, "EEex_AIBase_LuaHook_OnEventTriggerSet"); // 1 [ ..., EEex_AIBase_LuaHook_OnEventTriggerSet ]
+		pushGameObjectUD(L, pAIBase);                              // 2 [ ..., EEex_AIBase_LuaHook_OnEventTriggerSet, pAIBaseUD ]
+		tolua_pushusertype(L, pTrigger, "CAITrigger");             // 3 [ ..., EEex_AIBase_LuaHook_OnEventTriggerSet, pAIBaseUD, pTriggerUD ]
+	});
+}
+
 void CGameAIBase::Override_SetTrigger(const CAITrigger* pTrigger) {
 
 	CAITrigger *const pTriggerCopy = newEngineObj<CAITrigger>(pTrigger);
 
+	onEventTriggerSet(this, pTriggerCopy);
 	this->m_pendingTriggers.AddTail(pTriggerCopy);
 	this->m_bNewTrigger = 1;
 

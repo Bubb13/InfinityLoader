@@ -3,6 +3,24 @@
 #include "Baldur-v2.6.6.0_lua_generated.h"
 #include "lua_bindings_core_api.h"
 
+static int tolua_get_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::AIBase_LuaHook_OnEventTriggerSet_Enabled);
+	return 1;
+}
+
+static int tolua_set_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled(lua_State* L)
+{
+	EEex::AIBase_LuaHook_OnEventTriggerSet_Enabled = tolua_setter_toboolean(L, "AIBase_LuaHook_OnEventTriggerSet_Enabled");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_AIBase_LuaHook_OnEventTriggerSet_Enabled(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::AIBase_LuaHook_OnEventTriggerSet_Enabled, "Primitive<bool>");
+	return 1;
+}
+
 static int tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled(lua_State* L)
 {
 	tolua_pushboolean(L, (bool)EEex::Opcode_LuaHook_AfterListsResolved_Enabled);
@@ -709,6 +727,8 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex", "EEex", {}, NULL);
 	tolua_beginmodule(L, "EEex");
+		tolua_variable(L, "AIBase_LuaHook_OnEventTriggerSet_Enabled", tolua_get_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled, tolua_set_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled);
+		tolua_variable(L, "reference_AIBase_LuaHook_OnEventTriggerSet_Enabled", tolua_get_EEex_reference_AIBase_LuaHook_OnEventTriggerSet_Enabled, NULL);
 		tolua_variable(L, "Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled, tolua_set_EEex_Opcode_LuaHook_AfterListsResolved_Enabled);
 		tolua_variable(L, "reference_Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_reference_Opcode_LuaHook_AfterListsResolved_Enabled, NULL);
 		tolua_variable(L, "Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_Projectile_LuaHook_GlobalMutators_Enabled, tolua_set_EEex_Projectile_LuaHook_GlobalMutators_Enabled);

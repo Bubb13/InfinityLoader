@@ -860,13 +860,14 @@ struct CAIIdList : CResHelper<CResText,1008>
 struct CAIObjectType
 {
 	static CAIObjectType NOONE;
+	static CAIObjectType ANYONE;
 	$binding_name(Construct_Overload_Manual) $pattern_name(Construct(byte,byte,byte,byte,byte,byte,byte,int)) $constructor_fake Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance);
 	void Decode(CGameAIBase* caller);
 	CGameObject* GetShare(CGameAIBase* caller, int checkBackList);
 	CGameObject* GetShareType(CGameAIBase* caller, CGameObjectType type, int checkBackList);
 	byte OfType(const CAIObjectType* type, int checkForNonSprites, int noNonSprites, int deathMatchAllowance) const;
 	void Set(const CAIObjectType* that);
-	$nobinding bool operator==(const CAIObjectType* y);
+	$binding_name(Equals) $pattern_name(operator==) bool operator==(const CAIObjectType* y);
 
 	$binding_name(Construct_Overload_Copy) $constructor_fake Construct(const CAIObjectType* toCopy)
 	{

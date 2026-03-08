@@ -114,6 +114,7 @@ namespace EEex
 	///////////
 
 	// Globals
+	bool AIBase_LuaHook_OnEventTriggerSet_Enabled;
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	bool Projectile_LuaHook_GlobalMutators_Enabled;
 	bool StutterDetector_Enabled;

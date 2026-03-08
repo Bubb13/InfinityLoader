@@ -13997,6 +13997,7 @@ struct CAreaFileCharacterEntryPoint
 struct CAIObjectType
 {
 	static CAIObjectType* p_NOONE;
+	static CAIObjectType* p_ANYONE;
 	CString m_name;
 	unsigned __int8 m_EnemyAlly;
 	unsigned __int8 m_General;
@@ -14028,8 +14029,8 @@ struct CAIObjectType
 	typedef void (__thiscall *type_Set)(CAIObjectType* pThis, const CAIObjectType* that);
 	static type_Set p_Set;
 
-	typedef bool (__thiscall *type_operator_equ_equ)(CAIObjectType* pThis, const CAIObjectType* y);
-	static type_operator_equ_equ p_operator_equ_equ;
+	typedef bool (__thiscall *type_Equals)(CAIObjectType* pThis, const CAIObjectType* y);
+	static type_Equals p_Equals;
 
 	void Construct(byte EnemyAlly, byte General, byte Race, byte Class, byte Specifics, byte Gender, byte Alignment, int Instance)
 	{
@@ -14063,7 +14064,7 @@ struct CAIObjectType
 
 	bool operator==(const CAIObjectType* y)
 	{
-		return p_operator_equ_equ(this, y);
+		return p_Equals(this, y);
 	}
 
 	void Construct(const CAIObjectType* toCopy)
