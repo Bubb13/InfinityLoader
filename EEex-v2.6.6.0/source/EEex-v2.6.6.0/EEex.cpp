@@ -1805,6 +1805,23 @@ static void addItemToMenu(uiMenu* pMenu, uiItem* pItem) {
 	pItem->menu = pMenu;
 }
 
+static uiItem* createBlankUIItem() {
+
+	uiItem *const pNewItem = reinterpret_cast<uiItem*>(p_malloc(sizeof(uiItem)));
+	memset(pNewItem, 0, sizeof(uiItem));
+
+	pNewItem->list.showHighlight = 1;
+	pNewItem->edit.cursor = -1;
+
+	return pNewItem;
+}
+
+static uiItem* copyUIItem(const uiItem *const pToCopy) {
+	uiItem *const pCopy = reinterpret_cast<uiItem*>(p_malloc(sizeof(uiItem)));
+	*pCopy = *pToCopy;
+	return pCopy;
+}
+
 static uiItem* createTemplateFromCopy(lua_State* L, const char* menuName, const char* templateName, uiItem* pItem) {
 
 	uiMenu *const pMenu = p_findMenu(menuName, 0, 0);
@@ -1813,11 +1830,10 @@ static uiItem* createTemplateFromCopy(lua_State* L, const char* menuName, const 
 		return nullptr;
 	}
 
-	uiItem *const pTemplate = reinterpret_cast<uiItem*>(p_malloc(sizeof(uiItem)));
-	*pTemplate = *pItem;
+	uiItem *const pTemplate = copyUIItem(pItem);
 	pTemplate->next = nullptr;
 
-	uiItem *const pTemplateHolder = reinterpret_cast<uiItem*>(p_malloc(sizeof(uiItem)));
+	uiItem *const pTemplateHolder = createBlankUIItem();
 
 	const std::string& storedTemplateName = *exTemplateNames.emplace(templateName).first;
 	pTemplateHolder->type = uiItemType::ITEM_TEMPLATE;
@@ -1854,8 +1870,7 @@ static uiItem* uiCreateFromTemplate(
 		return nullptr;
 	}
 
-	uiItem *const pNewItem = reinterpret_cast<uiItem*>(p_malloc(sizeof(uiItem)));
-	*pNewItem = *pTemplateItem->uiTemplate.item;
+	uiItem *const pNewItem = copyUIItem(pTemplateItem->uiTemplate.item);
 	pNewItem->instanceId = instanceId;
 	pNewItem->templateName = pTemplateItem->name;
 	pNewItem->area.x = x;
