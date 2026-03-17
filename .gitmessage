@@ -1,0 +1,34 @@
+# <type>(<scope>): <imperative summary>
+#
+# Example:
+# fix(eeex): carry op138 state across Hit and Damage
+#
+# Conventional Commit guidance:
+# - type: feat, fix, refactor, perf, build, docs, test, chore
+# - scope: use one precise InfinityLoader area
+# - summary: imperative, specific, <= 72 chars, no trailing period
+#
+# Suggested InfinityLoader scopes:
+# eeex, loader, common, dll, luabindings, luaprovider, deploy, build, docs
+#
+# Why:
+# - Explain the concrete engine-side bug, regression, or requirement.
+# - Prefer observable runtime behavior over generic rationale.
+#
+# What:
+# - Summarize the native/runtime changes made.
+# - Mention touched exports, hook points, generated bindings, or patterns as needed.
+#
+# Validation:
+# - Record build status.
+# - Record pattern checks, symbol checks, or runtime verification.
+# - Mention affected engine variants when relevant.
+#
+# Risks / Notes:
+# - Document deployment requirements, compatibility assumptions, or follow-up work.
+#
+# Refs:
+# - Optional issue, dump, artifact, or reverse-engineering note.
+#
+# BREAKING CHANGE:
+# - Optional footer when behavior or interfaces change incompatibly.

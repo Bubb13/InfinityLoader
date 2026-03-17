@@ -81,6 +81,11 @@ namespace EEex {
 
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
+	// op138
+	// This needs native support in addition to the Lua-side repo because the callback
+	// result must survive across multiple engine phases: ApplyEffect() -> action start
+	// -> Hit() roll formatting -> Damage() roll formatting -> final damage application.
+	bool Opcode_Hook_Op138_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	// op248
 	void Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect);
 	// op249
@@ -120,6 +125,12 @@ namespace EEex {
 	void Sprite_Hook_OnDestruct(CGameSprite* pSprite);
 	void Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite);
 	void Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite);
+	// Rewrites only the raw damage Roll:X basis used by op138.
+	int Sprite_Hook_AdjustDamageRollBasis(CGameSprite* pSprite, CGameSprite* pTargetSprite, int currentBaseDamageRoll);
+	// Rewrites the displayed / effective attack roll used by op138.
+	int Sprite_Hook_OnBeforeFormatRollCall(CGameSprite* pSprite, CGameSprite* pTargetSprite, CGameEffect* pEffect, int roll);
+	// Restores the natural d20 roll for the later critical-hit / critical-miss checks.
+	int Sprite_Hook_GetNaturalRollForLateHitLogic(CGameSprite* pSprite, CGameSprite* pTargetSprite, int currentRoll);
 
 	////////////
 	// Action //

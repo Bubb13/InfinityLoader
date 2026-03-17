@@ -84,6 +84,11 @@ static void exportPatterns() {
 
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
+	// op138
+	// Export the native entry point used by the Lua-side opcode patch. The rest of the
+	// feature is also exported below because opcode 138 has to hand state across later
+	// attack phases that Lua alone cannot keep synchronized.
+	exportPattern(TEXT("EEex::Opcode_Hook_Op138_ApplyEffect"), EEex::Opcode_Hook_Op138_ApplyEffect);
 	// op248
 	exportPattern(TEXT("EEex::Opcode_Hook_OnOp248AddTail"), EEex::Opcode_Hook_OnOp248AddTail);
 	// op249
@@ -123,11 +128,19 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Sprite_Hook_OnDestruct"), EEex::Sprite_Hook_OnDestruct);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnAfterEffectListUnmarshalled"), EEex::Sprite_Hook_OnAfterEffectListUnmarshalled);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeEffectListMarshalled"), EEex::Sprite_Hook_OnBeforeEffectListMarshalled);
+	// op138 base-damage-roll interception
+	exportPattern(TEXT("EEex::Sprite_Hook_AdjustDamageRollBasis"), EEex::Sprite_Hook_AdjustDamageRollBasis);
+	// op138 base-attack-roll interception
+	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeFormatRollCall"), EEex::Sprite_Hook_OnBeforeFormatRollCall);
+	// op138 crit logic keeps using the natural d20 roll
+	exportPattern(TEXT("EEex::Sprite_Hook_GetNaturalRollForLateHitLogic"), EEex::Sprite_Hook_GetNaturalRollForLateHitLogic);
 
 	////////////
 	// Action //
 	////////////
 
+	// op138 / AttackOnce needs to know when the engine has transitioned from movement into
+	// the real attack action for the chosen target.
 	exportPattern(TEXT("EEex::Action_Hook_OnAfterSpriteStartedAction"), EEex::Action_Hook_OnAfterSpriteStartedAction);
 
 	//////////

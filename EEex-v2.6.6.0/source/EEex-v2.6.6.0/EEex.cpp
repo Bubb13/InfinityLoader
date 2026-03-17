@@ -133,11 +133,195 @@ struct ExEffectInfo {
 
 std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
 
+// Single op138 attack record.
+//
+// Lifecycle:
+// 1. Opcode_Hook_Op138_ApplyEffect() creates this record while the opcode is still in
+//    CGameEffectSetSequence::ApplyEffect().
+// 2. The record is queued while the sprite transitions into a real Attack() action.
+// 3. The first matching Hit() roll consumes the queued record, runs the Lua callback,
+//    and promotes it into activeOp138DamageOverrides.
+// 4. The later Damage() path uses the active record to rewrite the base damage roll and,
+//    optionally, force final damage to zero.
+// 5. Override_Damage() clears the active record once the real hit has finished applying.
+struct PendingOp138Attack {
+	// Either the original opcode effect (before ownership transfer) or a private copy held
+	// alive for the Lua callback. The copy is needed because the original engine effect may
+	// be marked done / destroyed long before the eventual attack roll happens.
+	CGameEffect* pOpcodeEffect = nullptr;
+
+	// Best-effort cached attacker / target pointers for the current phase. IDs remain the
+	// authoritative identity because pointers can be absent or refreshed between phases.
+	CGameSprite* pAttacker = nullptr;
+	CGameSprite* pTarget = nullptr;
+	int attackerID = -1;
+	int targetID = -1;
+
+	// Natural d20 roll captured from Hit() before any Lua override is applied. Later crit
+	// and critical-miss checks deliberately use this value instead of the overridden roll.
+	bool hasNaturalRoll = false;
+	int naturalRoll = 0;
+
+	// Tracks ownership of the copied opcode effect so every exit path can destroy it once.
+	bool ownsOpcodeEffect = false;
+
+	// Set only after the engine has actually transitioned into an attack action for the
+	// expected target. This prevents movement/pathing actions from accidentally consuming
+	// a queued op138 attack before the first real swing exists.
+	bool actionStarted = false;
+
+	// Lua callback metadata taken from m_res.
+	char callbackName[9]{};
+	bool hasCallback = false;
+	bool callbackResolved = false;
+
+	// Callback outputs. These are "base" rolls only; the engine still layers its normal
+	// hit and damage modifiers afterward unless forceFinalDamageZeroOnClampedZero applies.
+	bool hasDamageOverride = false;
+	bool hasRollOverride = false;
+	int damageOverride = 0;
+	int rollOverride = 0;
+
+	// Optional third Lua return value. Only meaningful when the returned base damage roll
+	// clamps to zero, in which case the final applied damage is also forced to zero.
+	bool forceFinalDamageZeroOnClampedZero = false;
+};
+
+// op138 cannot be implemented in Lua alone. The opcode starts in ApplyEffect(), but the
+// callback result has to survive until the engine later starts the real attack action,
+// formats the hit roll, computes the damage roll, and finally applies damage. Lua can
+// redirect execution into the feature, but it cannot keep this state synchronized across
+// those disjoint native phases by itself. These thread-local containers are therefore the
+// core of the native bridge that the Lua-side patches talk to.
+//
+// queuedOp138Attacks:
+//     apply-time records waiting for the corresponding real attack action / first roll.
+//
+// activeOp138DamageOverrides:
+//     records whose callback has already been evaluated and are now waiting for the later
+//     Damage() call of that same real hit.
+thread_local std::vector<PendingOp138Attack> queuedOp138Attacks{};
+thread_local std::vector<PendingOp138Attack> activeOp138DamageOverrides{};
+
+// Captured only during the silent preview Damage() call. The JIT hook stores the exact
+// engine Roll:X basis here so the callback sees the same base damage roll that the later
+// real swing would have produced without consuming RNG or spamming the combat log.
+thread_local bool op138PreviewHasBaseDamageRoll = false;
+thread_local int op138PreviewBaseDamageRoll = 0;
+
+constexpr short ACTION_ID_EEEX_ATTACK_ONCE = 475;
+constexpr short ACTION_ID_ATTACK = 3;
+constexpr short ACTION_ID_ATTACK_ONE_ROUND = 105;
+constexpr ptrdiff_t CRT_PTD_RAND_SEED_OFFSET = 0x28;
+constexpr int OP138_MIN_ATTACK_ROLL = 1;
+constexpr int OP138_MAX_ATTACK_ROLL = 20;
+constexpr int OP138_MIN_DAMAGE_ROLL = 0;
+
 ////////////////
 // Projectile //
 ////////////////
 
 std::unordered_map<uintptr_t, std::pair<const char*, EEex::ProjectileType>> projVFTableToType{};
+
+thread_local int op138VanillaApplyDepth = 0;
+thread_local int op138SilentPreviewDepth = 0;
+
+using type___acrt_getptd = void* (*)();
+
+static type___acrt_getptd resolveAcrtGetPtd() {
+	static type___acrt_getptd cached = []() -> type___acrt_getptd {
+		// The silent preview must restore CRT rand() state exactly, otherwise the preview
+		// would consume RNG and the later real swing would no longer match the callback
+		// input. There is no exported "get rand seed" helper, so recover __acrt_getptd()
+		// from the prologue of rand() once and cache it.
+		if (p_rand == nullptr) {
+			return nullptr;
+		}
+
+		const auto* const pRandBytes = reinterpret_cast<const unsigned char*>(p_rand);
+		if (
+			pRandBytes[0] != 0x48 || pRandBytes[1] != 0x83 || pRandBytes[2] != 0xEC || pRandBytes[3] != 0x28
+			||
+			pRandBytes[4] != 0xE8
+		) {
+			return nullptr;
+		}
+
+		const int relativeCall = *reinterpret_cast<const int*>(pRandBytes + 5);
+		return reinterpret_cast<type___acrt_getptd>(const_cast<unsigned char*>(pRandBytes) + 9 + relativeCall);
+	}();
+
+	return cached;
+}
+
+static unsigned int* tryGetCRTRandSeedPtr() {
+	// MSVC stores the per-thread rand() seed inside the per-thread CRT data block. Once
+	// __acrt_getptd() is known, this helper resolves the seed field used by rand().
+	const auto pGetPtd = resolveAcrtGetPtd();
+	if (pGetPtd == nullptr) {
+		return nullptr;
+	}
+
+	void* const pPtd = pGetPtd();
+	if (pPtd == nullptr) {
+		return nullptr;
+	}
+
+	return reinterpret_cast<unsigned int*>(reinterpret_cast<unsigned char*>(pPtd) + CRT_PTD_RAND_SEED_OFFSET);
+}
+
+static int* tryGetDisplayExtraCombatInfoPtr() {
+	// The preview damage roll should be invisible to the player. Toggle the same gameplay
+	// option that controls the extra combat log Roll:X lines while the preview runs.
+	if (p_g_pBaldurChitin == nullptr || *p_g_pBaldurChitin == nullptr) {
+		return nullptr;
+	}
+
+	CInfGame* const pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
+	if (pGame == nullptr) {
+		return nullptr;
+	}
+
+	return &pGame->m_options.m_bDisplayExtraCombatInfo;
+}
+
+class ScopedOp138SilentPreview {
+public:
+	ScopedOp138SilentPreview() {
+		// Snapshot both sources of externally visible side effects:
+		// - CRT rand() seed, so the preview does not perturb the later real swing
+		// - combat-log detail option, so the preview does not emit fake Roll:X feedback
+		pSavedRandSeed = tryGetCRTRandSeedPtr();
+		if (pSavedRandSeed != nullptr) {
+			savedRandSeed = *pSavedRandSeed;
+		}
+		pSavedDisplayExtraCombatInfo = tryGetDisplayExtraCombatInfoPtr();
+		if (pSavedDisplayExtraCombatInfo != nullptr) {
+			savedDisplayExtraCombatInfo = *pSavedDisplayExtraCombatInfo;
+			*pSavedDisplayExtraCombatInfo = 0;
+		}
+		++op138SilentPreviewDepth;
+	}
+
+	~ScopedOp138SilentPreview() {
+		// Restore in reverse order so the preview leaves no lasting state behind.
+		if (op138SilentPreviewDepth > 0) {
+			--op138SilentPreviewDepth;
+		}
+		if (pSavedDisplayExtraCombatInfo != nullptr) {
+			*pSavedDisplayExtraCombatInfo = savedDisplayExtraCombatInfo;
+		}
+		if (pSavedRandSeed != nullptr) {
+			*pSavedRandSeed = savedRandSeed;
+		}
+	}
+
+private:
+	unsigned int* pSavedRandSeed = nullptr;
+	unsigned int savedRandSeed = 0;
+	int* pSavedDisplayExtraCombatInfo = nullptr;
+	int savedDisplayExtraCombatInfo = 0;
+};
 
 ////////////
 // Sprite //
@@ -634,6 +818,355 @@ void registerProjVFTableType(const TCHAR* patternName, std::pair<const char*, EE
 			FPrintT(TEXT("[!][EEex.dll] registerProjVFTableType() - [%s].Type must be SINGLE\n"), patternName);
 			break;
 		}
+	}
+}
+
+static void destroyOwnedOp138Effect(PendingOp138Attack& pendingAttack) {
+	// All containers erase through this helper so ownership of the copied opcode effect is
+	// handled in one place. The original engine effect is never destroyed here.
+	if (!pendingAttack.ownsOpcodeEffect || pendingAttack.pOpcodeEffect == nullptr) {
+		return;
+	}
+	pendingAttack.pOpcodeEffect->virtual_Destruct(1);
+	pendingAttack.pOpcodeEffect = nullptr;
+	pendingAttack.ownsOpcodeEffect = false;
+}
+
+static void eraseQueuedOp138Attack(size_t index) {
+	destroyOwnedOp138Effect(queuedOp138Attacks[index]);
+	queuedOp138Attacks.erase(queuedOp138Attacks.begin() + index);
+}
+
+static void eraseActiveOp138DamageOverride(size_t index) {
+	destroyOwnedOp138Effect(activeOp138DamageOverrides[index]);
+	activeOp138DamageOverrides.erase(activeOp138DamageOverrides.begin() + index);
+}
+
+static void eraseQueuedOp138AttacksForSprite(CGameSprite* pSprite) {
+	// Sprite destruction, area transitions, or other cleanup can invalidate queued op138
+	// records. Drop anything that references this sprite as attacker or target.
+	if (pSprite == nullptr || queuedOp138Attacks.empty()) {
+		return;
+	}
+
+	for (size_t i = queuedOp138Attacks.size(); i-- > 0;) {
+		const PendingOp138Attack& pendingAttack = queuedOp138Attacks[i];
+		if
+		(
+			(pendingAttack.pAttacker == pSprite || pendingAttack.attackerID == pSprite->m_id)
+			||
+			(pendingAttack.pTarget == pSprite || pendingAttack.targetID == pSprite->m_id)
+		)
+		{
+			eraseQueuedOp138Attack(i);
+		}
+	}
+}
+
+static void eraseActiveOp138DamageOverridesForSprite(CGameSprite* pSprite) {
+	// Same cleanup rule for already-activated damage overrides.
+	if (pSprite == nullptr || activeOp138DamageOverrides.empty()) {
+		return;
+	}
+
+	for (size_t i = activeOp138DamageOverrides.size(); i-- > 0;) {
+		const PendingOp138Attack& pendingAttack = activeOp138DamageOverrides[i];
+		if
+		(
+			(pendingAttack.pAttacker == pSprite || pendingAttack.attackerID == pSprite->m_id)
+			||
+			(pendingAttack.pTarget == pSprite || pendingAttack.targetID == pSprite->m_id)
+		)
+		{
+			eraseActiveOp138DamageOverride(i);
+		}
+	}
+}
+
+static bool isValidOp138CallbackName(const char* callbackName) {
+	// Keep the runtime enforcement aligned with the documented opcode contract:
+	// <= 8 chars, uppercase, digits, or underscore.
+	if (callbackName[0] == '\0') {
+		return false;
+	}
+
+	for (size_t i = 0; i < 8; ++i) {
+		const char c = callbackName[i];
+		if (c == '\0') {
+			return true;
+		}
+		if (!(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9') && c != '_') {
+			return false;
+		}
+	}
+
+	return callbackName[8] == '\0';
+}
+
+static CGameEffect* copyOp138Effect(CGameEffect* pEffect) {
+	// The callback should see an effect object that remains valid through the later attack
+	// phases, so make a private copy when possible.
+	if (pEffect == nullptr) {
+		return nullptr;
+	}
+
+	return pEffect->virtual_Copy();
+}
+
+static CGameObject* tryGetSharedObject(int objectID) {
+	// Resolve a shared game object from the global object array without throwing or logging.
+	if (objectID == -1) {
+		return nullptr;
+	}
+
+	CGameObject* pObject;
+	if (CGameObjectArray::GetShare(objectID, &pObject) != 0) {
+		return nullptr;
+	}
+	return pObject;
+}
+
+static CGameSprite* tryGetSharedSprite(int objectID, CGameSprite* pRejectSprite) {
+	// Restrict the shared-object resolution to sprites and optionally reject self.
+	CGameObject* const pObject = tryGetSharedObject(objectID);
+	if (pObject == nullptr || pObject->virtual_GetObjectType() != CGameObjectType::SPRITE) {
+		return nullptr;
+	}
+
+	CGameSprite* pSprite = reinterpret_cast<CGameSprite*>(pObject);
+	return pSprite != pRejectSprite ? pSprite : nullptr;
+}
+
+static CGameSprite* resolveOp138Target(CGameEffect* pEffect, CGameSprite* pSprite) {
+	// Resolution order is based on how op138 is commonly authored:
+	// 1. sourceTarget already points at the eventual victim
+	// 2. the sprite's current live targeting state points at the victim
+	// 3. sourceId or sprite target fallback if the enclosing cast populated those instead
+	//
+	// This is deliberately tolerant because many op138 uses still target "self" while the
+	// parent SPL/ITM targets another creature.
+	if (CGameSprite* pTarget = tryGetSharedSprite(pEffect->m_sourceTarget, pSprite); pTarget != nullptr) {
+		return pTarget;
+	}
+	if (CGameObject* pTargetObject = pSprite->m_lTargeted.GetShareType(pSprite, CGameObjectType::SPRITE, 0);
+		pTargetObject != nullptr && pTargetObject != pSprite)
+	{
+		return reinterpret_cast<CGameSprite*>(pTargetObject);
+	}
+	if (CGameObject* pTargetObject = pSprite->GetTargetShareType(static_cast<byte>(CGameObjectType::SPRITE));
+		pTargetObject != nullptr && pTargetObject != pSprite)
+	{
+		return reinterpret_cast<CGameSprite*>(pTargetObject);
+	}
+	if (CGameSprite* pTarget = tryGetSharedSprite(pEffect->m_sourceId, pSprite); pTarget != nullptr) {
+		return pTarget;
+	}
+	if (CGameSprite* pTarget = tryGetSharedSprite(pSprite->m_targetId, pSprite); pTarget != nullptr) {
+		return pTarget;
+	}
+	return nullptr;
+}
+
+static void queueOp138AttackAction(CGameSprite* pAttacker, CGameSprite* pTarget) {
+	if (pAttacker == nullptr || pTarget == nullptr) {
+		return;
+	}
+
+	// The custom wrapper action exists only to hand control back to the normal Attack()
+	// path while preserving the target chosen by opcode 138. The one-swing stop happens
+	// later, once the first real matched roll is consumed.
+	CPoint targetPoint{pTarget->m_pos.x, pTarget->m_pos.y};
+	EngineVal<CAIAction> attackAction{ACTION_ID_EEEX_ATTACK_ONCE, &targetPoint, 0, -1};
+	attackAction->m_acteeID.Set(pTarget->virtual_GetAIType());
+	attackAction->m_dest = targetPoint;
+	pAttacker->virtual_AddAction(&*attackAction);
+}
+
+static void stopCurrentSpriteAction(CGameSprite* pSprite) {
+	if (pSprite == nullptr) {
+		return;
+	}
+
+	// Attack(3) is allowed to handle pathing/projectiles normally. Once the first real
+	// roll tied to the queued op138 state is seen, force NoAction() to stop after exactly
+	// one swing instead of trying to predict engine-internal attack counters in Lua.
+	CPoint idlePoint{pSprite->m_pos.x, pSprite->m_pos.y};
+	EngineVal<CAIAction> noAction{0, &idlePoint, 0, -1};
+	pSprite->virtual_SetCurrAction(&*noAction);
+}
+
+static int previewOp138BaseDamageRoll(CGameSprite* pAttacker, CGameSprite* pTarget) {
+	// The Lua callback needs the same base damage roll that the combat log later prints as
+	// Roll:X. Generate a silent preview through the real Damage() path, then let the later
+	// real swing replay the same base roll and modifiers.
+	ScopedOp138SilentPreview scopedPreview{};
+	op138PreviewHasBaseDamageRoll = false;
+	op138PreviewBaseDamageRoll = 0;
+
+	const auto weaponSlot = pAttacker->m_equipment.m_selectedWeapon;
+	if (weaponSlot >= std::size(pAttacker->m_equipment.m_items.data)) {
+		return 0;
+	}
+
+	CItem* const pWeapon = pAttacker->m_equipment.m_items[weaponSlot];
+	if (pWeapon == nullptr) {
+		return 0;
+	}
+
+	const int attackNum = pAttacker->m_equipment.m_selectedWeaponAbility;
+	Item_ability_st* const pAbility = pWeapon->GetAbility(attackNum);
+	if (pAbility == nullptr) {
+		return 0;
+	}
+
+	short launcherSlot = -1;
+	CItem* const pLauncher = pAttacker->GetLauncher(pAbility, &launcherSlot);
+	CAIObjectType* const pTargetType = const_cast<CAIObjectType*>(pTarget->virtual_GetAIType());
+	CGameEffectDamage* const pPreviewEffect = pAttacker->Damage(
+		pWeapon,
+		pLauncher,
+		attackNum,
+		0,
+		pTargetType,
+		pAttacker->m_nDirection,
+		pTarget->m_nDirection,
+		pTarget,
+		0
+	);
+
+	if (pPreviewEffect == nullptr) {
+		return 0;
+	}
+
+	const int baseDamageRoll = op138PreviewHasBaseDamageRoll ? op138PreviewBaseDamageRoll : pPreviewEffect->m_effectAmount;
+	// The JIT hook normally provides the authoritative Roll:X basis. The effect amount is
+	// only a fallback if the hook was somehow not reached.
+	pPreviewEffect->virtual_Destruct(1);
+	return baseDamageRoll;
+}
+
+static bool callOp138LuaCallback(PendingOp138Attack& pendingAttack, int rollIn, int damageIn) {
+	// This is called exactly once per queued op138 attack, at the first matched real Hit()
+	// roll. From that point forward, the active record carries the callback output into the
+	// later damage phase.
+	if (!pendingAttack.hasCallback) {
+		return false;
+	}
+	pendingAttack.callbackResolved = true;
+
+	lua_State *const L = luaState();
+
+	// Validate the callback symbol first so bad m_res data fails cleanly before any values
+	// are pushed onto the Lua stack.
+	lua_getglobal(L, pendingAttack.callbackName); // 1 [ ..., callback ]
+	if (!lua_isfunction(L, -1)) {
+		FPrint("[!][EEex.dll] op138 - callback \"%s\" is missing or not a function\n", pendingAttack.callbackName);
+		lua_pop(L, 1);                            // 0 [ ... ]
+		return false;
+	}
+	lua_pop(L, 1);                                // 0 [ ... ]
+
+	if (!luaCallProtected(L, 4, 3, [&](int) {
+		// Stack contract:
+		//   callback(op138Effect, attackerSprite, baseAttackRoll, baseDamageRoll)
+		//       -> newBaseAttackRoll, newBaseDamageRoll[, forceFinalDamageZero]
+		lua_getglobal(L, pendingAttack.callbackName);                  // 1 [ ..., callback ]
+		tolua_pushusertype(L, pendingAttack.pOpcodeEffect, "CGameEffect"); // 2 [ ..., callback, op138UD ]
+		tolua_pushusertype(L, pendingAttack.pAttacker, "CGameSprite");     // 3 [ ..., callback, op138UD, spriteUD ]
+		lua_pushinteger(L, rollIn);                                     // 4 [ ..., callback, op138UD, spriteUD, roll ]
+		lua_pushinteger(L, damageIn);                                   // 5 [ ..., callback, op138UD, spriteUD, roll, damage ]
+	})) {
+		return false;
+	}
+
+	const bool validRoll = lua_isnumber(L, -3);
+	const bool validDamage = lua_isnumber(L, -2);
+	const bool validFinalDamageZeroFlag = lua_type(L, -1) == LUA_TNIL || lua_isboolean(L, -1);
+	if (!validRoll || !validDamage || !validFinalDamageZeroFlag) {
+		FPrint(
+			"[!][EEex.dll] op138 - callback \"%s\" must return two integers and an optional boolean\n",
+			pendingAttack.callbackName
+		);
+		lua_pop(L, 3); // 0 [ ... ]
+		return false;
+	}
+
+	pendingAttack.rollOverride = clamp(
+		static_cast<int>(lua_tointeger(L, -3)),
+		OP138_MIN_ATTACK_ROLL,
+		OP138_MAX_ATTACK_ROLL
+	);
+	pendingAttack.damageOverride = (std::max)(
+		static_cast<int>(lua_tointeger(L, -2)),
+		OP138_MIN_DAMAGE_ROLL
+	);
+	// The optional boolean is only meaningful when the damage roll was clamped to zero.
+	// In that case the caller can request that the final applied damage ignore later
+	// engine modifiers too, instead of just replacing the base damage roll with zero.
+	pendingAttack.forceFinalDamageZeroOnClampedZero =
+		lua_toboolean(L, -1) != 0
+		&&
+		pendingAttack.damageOverride == OP138_MIN_DAMAGE_ROLL;
+	pendingAttack.hasRollOverride = true;
+	pendingAttack.hasDamageOverride = true;
+	lua_pop(L, 3); // 0 [ ... ]
+	return true;
+}
+
+static size_t findQueuedOp138AttackIndex(CGameSprite* pAttacker, CGameSprite* pTarget) {
+	// Match only records whose real attack action has already begun. This avoids consuming
+	// a queued op138 attack while the sprite is still walking into range.
+	if (queuedOp138Attacks.empty() || pAttacker == nullptr || pTarget == nullptr) {
+		return static_cast<size_t>(-1);
+	}
+
+	for (size_t i = queuedOp138Attacks.size(); i-- > 0;) {
+		const PendingOp138Attack& pendingAttack = queuedOp138Attacks[i];
+		if
+		(
+			pendingAttack.actionStarted
+			&&
+			pendingAttack.attackerID == pAttacker->m_id
+			&&
+			pendingAttack.targetID == pTarget->m_id
+		)
+		{
+			return i;
+		}
+	}
+	return static_cast<size_t>(-1);
+}
+
+static size_t findActiveOp138DamageOverrideIndex(CGameSprite* pAttacker, CGameSprite* pTarget) {
+	// Once the callback has run, attacker+target identity is enough to bind the later
+	// Damage() call back to the correct op138 record.
+	if (activeOp138DamageOverrides.empty() || pAttacker == nullptr || pTarget == nullptr) {
+		return static_cast<size_t>(-1);
+	}
+
+	for (size_t i = activeOp138DamageOverrides.size(); i-- > 0;) {
+		const PendingOp138Attack& pendingAttack = activeOp138DamageOverrides[i];
+		if (pendingAttack.attackerID == pAttacker->m_id && pendingAttack.targetID == pTarget->m_id) {
+			return i;
+		}
+	}
+	return static_cast<size_t>(-1);
+}
+
+static void discardStaleOp138DamageOverrides(CGameSprite* pAttacker) {
+	// If the attacker starts a new unrelated attack roll before the prior op138 hit ever
+	// reaches Damage(), the old override is stale and must not bleed into the new swing.
+	if (pAttacker == nullptr || activeOp138DamageOverrides.empty()) {
+		return;
+	}
+
+	for (size_t i = activeOp138DamageOverrides.size(); i-- > 0;) {
+		const PendingOp138Attack& pendingAttack = activeOp138DamageOverrides[i];
+		if (pendingAttack.attackerID != pAttacker->m_id) {
+			continue;
+		}
+
+		eraseActiveOp138DamageOverride(i);
 	}
 }
 
@@ -3318,6 +3851,99 @@ bool EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect) {
 }
 
 //-------//
+// op138 //
+//-------//
+
+bool EEex::Opcode_Hook_Op138_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_Op138_ApplyEffect")
+
+	if (op138VanillaApplyDepth != 0) {
+		// The hook re-enters ApplyEffect() when it deliberately calls the original
+		// SetSequence::ApplyEffect below. That recursive pass must fall through untouched.
+		return false;
+	}
+
+	if (pEffect == nullptr || pSprite == nullptr) {
+		return false;
+	}
+
+	char callbackName[9]{};
+	pEffect->m_res.toNullTerminatedStr(callbackName);
+
+	switch (pEffect->m_dWFlags) {
+		case 0:    // SEQ_ATTACK
+		case 8:    // SEQ_SHOOT
+		case 11:   // SEQ_ATTACK_SLASH
+		case 12:   // SEQ_ATTACK_BACKSLASH
+		case 13:   // SEQ_ATTACK_JAB
+			break;
+		default:
+			return false;
+	}
+
+	if ((pEffect->m_effectAmount & 1) == 0) {
+		return false;
+	}
+
+	if (pEffect->m_done != 0) {
+		// Vanilla has already finalized the effect once, so report it handled and do not
+		// queue a second real attack.
+		return true;
+	}
+
+	// Most op138 setups still target the attacker and rely on the parent SPL/ITM target.
+	// Resolve the eventual victim here before the effect marks itself done, then queue a
+	// normal attack action that will move into range / fire projectiles as usual.
+	CGameSprite *const pTarget = resolveOp138Target(pEffect, pSprite);
+	if (pTarget == nullptr) {
+		FPrint("[!][EEex.dll] op138 - failed to resolve target (sourceTarget=%d, sourceId=%d, spriteTarget=%d, targetedInstance=%d)\n",
+			pEffect->m_sourceTarget, pEffect->m_sourceId, pSprite->m_targetId, pSprite->m_lTargeted.m_Instance);
+		return false;
+	}
+
+	PendingOp138Attack pendingAttack{};
+	pendingAttack.pOpcodeEffect = pEffect;
+	pendingAttack.pAttacker = pSprite;
+	pendingAttack.pTarget = pTarget;
+	pendingAttack.attackerID = pSprite->m_id;
+	pendingAttack.targetID = pTarget->m_id;
+
+	if (isValidOp138CallbackName(callbackName)) {
+		strcpy_s(pendingAttack.callbackName, callbackName);
+		pendingAttack.hasCallback = true;
+		if (CGameEffect* const pCopiedEffect = copyOp138Effect(pEffect); pCopiedEffect != nullptr) {
+			pendingAttack.pOpcodeEffect = pCopiedEffect;
+			pendingAttack.ownsOpcodeEffect = true;
+		}
+		else {
+			FPrint("[!][EEex.dll] op138 - failed to copy opcode effect for callback \"%s\"\n", callbackName);
+			pendingAttack.hasCallback = false;
+			pendingAttack.callbackName[0] = '\0';
+		}
+	}
+	else if (callbackName[0] != '\0') {
+		FPrint("[!][EEex.dll] op138 - callback name \"%s\" must be <= 8 chars and uppercase\n", callbackName);
+	}
+
+	// Let vanilla ApplyEffect() do its own sequence setup / bookkeeping first. Earlier
+	// attempts that bypassed this were fragile, especially for ranged and move-into-range
+	// cases where the engine still needed its normal attack preparation.
+	++op138VanillaApplyDepth;
+	pEffect->virtual_ApplyEffect(pSprite);
+	--op138VanillaApplyDepth;
+
+	// From here on the native bridge takes over: store the pending record and queue a
+	// normal attack action that will eventually surface in the later action / Hit() hooks.
+	queuedOp138Attacks.emplace_back(pendingAttack);
+	queueOp138AttackAction(pSprite, pTarget);
+
+	return true;
+
+	STUTTER_LOG_END
+}
+
+//-------//
 // op248 //
 //-------//
 
@@ -3778,6 +4404,107 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 // Sprite //
 ////////////
 
+int EEex::Sprite_Hook_OnBeforeFormatRollCall(CGameSprite* pSprite, CGameSprite* pTargetSprite, CGameEffect* pEffect, int roll) {
+
+	STUTTER_LOG_START(int, "EEex::Sprite_Hook_OnBeforeFormatRollCall")
+
+	(void)pEffect;
+
+	discardStaleOp138DamageOverrides(pSprite);
+
+	// If this roll is not the first real Hit() roll for a queued op138 attack, leave the
+	// engine untouched.
+	const size_t queuedAttackIndex = findQueuedOp138AttackIndex(pSprite, pTargetSprite);
+	if (queuedAttackIndex == static_cast<size_t>(-1)) {
+		return roll;
+	}
+
+	// Move the record out of the queued container before doing any work so later cleanup
+	// paths cannot consume it twice.
+	PendingOp138Attack pendingAttack = queuedOp138Attacks[queuedAttackIndex];
+	pendingAttack.pAttacker = pSprite;
+	pendingAttack.pTarget = pTargetSprite;
+	pendingAttack.hasNaturalRoll = true;
+	pendingAttack.naturalRoll = roll;
+	queuedOp138Attacks[queuedAttackIndex].ownsOpcodeEffect = false;
+	queuedOp138Attacks[queuedAttackIndex].pOpcodeEffect = nullptr;
+
+	eraseQueuedOp138Attack(queuedAttackIndex);
+
+	if (!pendingAttack.callbackResolved) {
+		// The callback sees the natural attack roll and the raw damage Roll:X basis that the
+		// engine would later use for this same hit.
+		const int baseDamageRoll = previewOp138BaseDamageRoll(pSprite, pTargetSprite);
+		if (callOp138LuaCallback(pendingAttack, roll, baseDamageRoll)) {
+			// Promote the record into the "waiting for Damage()" state before returning the
+			// overridden attack roll to the engine.
+			activeOp138DamageOverrides.emplace_back(pendingAttack);
+			pendingAttack.ownsOpcodeEffect = false;
+			pendingAttack.pOpcodeEffect = nullptr;
+			stopCurrentSpriteAction(pSprite);
+			return pendingAttack.rollOverride;
+		}
+	}
+
+	const int returnRoll = pendingAttack.hasRollOverride ? pendingAttack.rollOverride : roll;
+	// Even if the callback was absent / invalid, this is still a one-shot op138 attack.
+	stopCurrentSpriteAction(pSprite);
+	destroyOwnedOp138Effect(pendingAttack);
+	return returnRoll;
+
+	STUTTER_LOG_END
+}
+
+int EEex::Sprite_Hook_AdjustDamageRollBasis(CGameSprite* pSprite, CGameSprite* pTargetSprite, int currentBaseDamageRoll) {
+
+	STUTTER_LOG_START(int, "EEex::Sprite_Hook_AdjustDamageRollBasis")
+
+	if (op138SilentPreviewDepth > 0) {
+		// Preview mode: capture the authoritative Roll:X basis, but do not modify it.
+		op138PreviewHasBaseDamageRoll = true;
+		op138PreviewBaseDamageRoll = currentBaseDamageRoll;
+		return currentBaseDamageRoll;
+	}
+
+	const size_t activeDamageOverrideIndex = findActiveOp138DamageOverrideIndex(pSprite, pTargetSprite);
+	if (activeDamageOverrideIndex == static_cast<size_t>(-1)) {
+		return currentBaseDamageRoll;
+	}
+
+	PendingOp138Attack& pendingAttack = activeOp138DamageOverrides[activeDamageOverrideIndex];
+	if (!pendingAttack.callbackResolved || !pendingAttack.hasDamageOverride) {
+		return currentBaseDamageRoll;
+	}
+
+	// Only replace the raw Roll:X basis. The engine still layers its normal damage
+	// modifiers afterward unless the callback explicitly requested a forced final zero.
+	return clampToType<short>(pendingAttack.damageOverride);
+
+	STUTTER_LOG_END
+}
+
+int EEex::Sprite_Hook_GetNaturalRollForLateHitLogic(CGameSprite* pSprite, CGameSprite* pTargetSprite, int currentRoll) {
+	// Both late crit and late critical-miss checks use this helper. The visible / effective
+	// attack roll can be overridden, but these specific checks must continue to reason about
+	// the underlying natural d20 result.
+
+	STUTTER_LOG_START(int, "EEex::Sprite_Hook_GetNaturalRollForLateHitLogic")
+
+	const size_t activeDamageOverrideIndex = findActiveOp138DamageOverrideIndex(pSprite, pTargetSprite);
+	if (activeDamageOverrideIndex == static_cast<size_t>(-1)) {
+		return currentRoll;
+	}
+
+	const PendingOp138Attack& pendingAttack = activeOp138DamageOverrides[activeDamageOverrideIndex];
+	if (!pendingAttack.hasNaturalRoll) {
+		return currentRoll;
+	}
+
+	return pendingAttack.naturalRoll;
+
+	STUTTER_LOG_END
+}
+
 void EEex::Sprite_Hook_OnConstruct(CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnConstruct")
@@ -3790,6 +4517,9 @@ void EEex::Sprite_Hook_OnConstruct(CGameSprite* pSprite) {
 void EEex::Sprite_Hook_OnDestruct(CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnDestruct")
+
+	eraseQueuedOp138AttacksForSprite(pSprite);
+	eraseActiveOp138DamageOverridesForSprite(pSprite);
 
 	if (auto itr = exSpriteDataMap.find(pSprite); itr != exSpriteDataMap.end()) {
 		ExSpriteData& exData = itr->second;
@@ -3885,8 +4615,27 @@ CGameEffectDamage* CGameSprite::Override_Damage(
 	CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage,
 	CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing)
 {
+	// The existing EEex override point is the safest place to finalize op138 damage state,
+	// because it already wraps the real engine Damage() call that both melee and ranged
+	// attacks flow through.
 	Item_ability_st *const pAbility = curWeaponIn->GetAbility(curAttackNum);
 	CGameEffectDamage *const pEffect = this->Damage(curWeaponIn, pLauncher, curAttackNum, criticalDamage, type, facing, myFacing, target, lastSwing);
+
+	if (pEffect != nullptr) {
+		const size_t activeDamageOverrideIndex = findActiveOp138DamageOverrideIndex(this, target);
+		if (activeDamageOverrideIndex != static_cast<size_t>(-1))
+		{
+			const PendingOp138Attack& pendingAttack = activeOp138DamageOverrides[activeDamageOverrideIndex];
+			if (pendingAttack.forceFinalDamageZeroOnClampedZero) {
+				// This is the one case where op138 intentionally bypasses later damage bonuses:
+				// the callback asked for "base damage clamped to zero means final damage is zero".
+				pEffect->m_effectAmount = 0;
+			}
+			// Damage() has now consumed everything the bridge needed. Clear the active record
+			// before falling back into the generic EEex AlterBaseWeaponDamage Lua hook below.
+			eraseActiveOp138DamageOverride(activeDamageOverrideIndex);
+		}
+	}
 
 	CItem *const pLeftHandItem = this->m_equipment.m_items[9];
 	const bool isLeftHand = lastSwing && pLeftHandItem != nullptr && pLeftHandItem->pRes->pHeader->itemType != 12;
@@ -3991,6 +4740,41 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 	STUTTER_LOG_START(void, "EEex::Action_Hook_OnAfterSpriteStartedAction")
 
 	lua_State *const L = luaState();
+
+	if (pSprite != nullptr && !queuedOp138Attacks.empty()) {
+
+		const CAIAction& curAction = pSprite->m_curAction;
+		const int currentTargetID = curAction.m_acteeID.m_Instance;
+
+		for (size_t i = queuedOp138Attacks.size(); i-- > 0;) {
+			PendingOp138Attack& pendingAttack = queuedOp138Attacks[i];
+			if (pendingAttack.attackerID != pSprite->m_id || pendingAttack.actionStarted) {
+				continue;
+			}
+
+			if
+			(
+				pendingAttack.targetID == currentTargetID
+				&&
+				(
+					curAction.m_actionID == ACTION_ID_EEEX_ATTACK_ONCE
+					||
+					curAction.m_actionID == ACTION_ID_ATTACK
+					||
+					curAction.m_actionID == ACTION_ID_ATTACK_ONE_ROUND
+				)
+			)
+			{
+				// Reaching weapon range can start intermediary actions before the engine finally
+				// transitions into Attack(). Mark the queued op138 record only when the real
+				// attack action for the expected target actually begins.
+				pendingAttack.actionStarted = true;
+				pendingAttack.pAttacker = pSprite;
+				pendingAttack.pTarget = tryGetSharedSprite(pendingAttack.targetID, pSprite);
+				break;
+			}
+		}
+	}
 
 	auto& enableActionListenerEffects = exStatDataMap[pSprite->GetActiveStats()].enableActionListenerEffects;
 	if (!enableActionListenerEffects.empty()) {
