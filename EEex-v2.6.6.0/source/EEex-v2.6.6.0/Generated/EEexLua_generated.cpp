@@ -613,6 +613,8 @@ static void tolua_reg_types(lua_State* L)
 }
 
 void registerBaseclasses();
+#define offsetoftype(member, ...) offsetof(__VA_ARGS__, member)
+
 int OpenBindingsInternal(lua_State* L)
 {
 	registerBaseclasses();

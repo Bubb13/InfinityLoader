@@ -8,7 +8,7 @@
 from enum import Enum
 from io import TextIOWrapper
 from itertools import islice
-from typing import Callable, Generic, Match, Pattern, Tuple, TypeVar
+from typing import cast, Callable, Generic, Match, Pattern, Tuple, TypeVar
 import importlib.util
 import os
 import re
@@ -3924,20 +3924,34 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			writeFieldBindings: bool = False
 
 			assert field.type in (FieldType.VARIABLE, FieldType.FUNCTION), "field.type unhandled in writeGroupWithTemplateUse()"
+			if field.lineGroupFlags.isFlagged("noBindings"): return
+
 			if field.type == FieldType.VARIABLE:
 				variableField: VariableField = field
-				if variableField.lineGroupFlags.isFlagged("noBindings"): return
 				if len(variableField.variableType.arrayParts) > 0: return # These use GenericArray functions
 				fieldNameStr = variableField.variableName
 				writeFieldBindings = True
 			elif field.type == FieldType.FUNCTION:
 				functionField: FunctionField = field
-				if functionField.lineGroupFlags.isFlagged("noBindings"): return
+				fieldNameStr = functionField.functionName
 				if group.isVGroup:
-					fieldNameStr = functionField.functionName
 					writeFieldBindings = True
 				else:
 					funcPointerFieldImplementations.append(functionField.toImplementation(group, isFunctionPointer=True))
+
+			# Writing offsetof_* constant which returns the offset of the member
+			if (
+				not isPointerCast
+				and not group.lineGroupFlags.isFlagged("noHardcodedBindings")
+				and group.groupType not in ("enum", "namespace")
+				and not field.static
+				and (field.type != FieldType.VARIABLE or cast(VariableField, field).variableType.bitFieldPart is None)
+			):
+				offsetofConstant = OpenConstantData()
+				offsetofConstant.name = f"offsetof_{fieldNameStr}"
+				offsetofConstant.valueType = OpenConstantType.STRING
+				offsetofConstant.value = f"offsetoftype({fieldNameStr}, {groupOpenData.appliedHeaderName})"
+				groupOpenData.constantBindings.append(offsetofConstant)
 
 			if writeFieldBindings:
 
@@ -4533,6 +4547,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 	out.write("}\n\n")
 
 	out.write("void registerBaseclasses();\n")
+	out.write("#define offsetoftype(member, ...) offsetof(__VA_ARGS__, member)\n\n")
 	out.write("int OpenBindingsInternal(lua_State* L)\n")
 	out.write("{\n")
 	out.write("\tregisterBaseclasses();\n")
