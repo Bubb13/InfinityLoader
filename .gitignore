@@ -365,6 +365,10 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+# Google Drive File Stream
+/.tmp.driveupload
+/.tmp.drivedownload
+
 ###########
 # Allowed #
 ###########
