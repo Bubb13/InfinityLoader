@@ -10275,6 +10275,40 @@ struct CVVCHashEntry
 	CVVCHashEntry() = delete;
 };
 
+struct CVEFVidCellBase
+{
+	CResRef m_cVidCellRef;
+	CResRef m_cShadowVidCellRef;
+	unsigned int m_bltFlags;
+	unsigned int m_bltInfo;
+	unsigned int m_bltFlagsExtra;
+	unsigned int m_bltInfoExtra;
+	CPoint m_offset;
+	unsigned int m_offsetFlags;
+	int m_animationSpeed;
+	int m_numDirections;
+	int m_direction;
+	unsigned int m_directionFlags;
+	CResRef m_cNewPaletteRef;
+	int m_height;
+	CPoint m_glowSize;
+	unsigned int m_glowIntensity;
+	int m_nDuration;
+	CResRef m_cVVCResRes;
+	int m_nStartSequence;
+	int m_nLoopSequence;
+	int m_nCurrentSequence;
+	unsigned int m_sequenceFlags;
+	CResRef m_cStartSoundRef;
+	CResRef m_cLoopSoundRef;
+	CResRef m_cAlphaBamRef;
+	int m_nEndSequence;
+	CResRef m_cEndSoundRef;
+	Array<unsigned int,84> m_extra;
+
+	CVEFVidCellBase() = delete;
+};
+
 struct CVEFEvent
 {
 	int m_nTimeFrame;
@@ -14478,6 +14512,26 @@ struct CGameObject
 	}
 };
 
+struct CGameChunk : CGameObject
+{
+	struct vtbl : CGameObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<unsigned __int8,16> m_visibleTerrainTable;
+	CGameAnimation m_animation;
+	int m_animationRunning;
+	CPoint m_posDelta;
+	int m_posZDelta;
+	unsigned __int8 m_doBounce;
+	unsigned __int8 m_duration;
+	unsigned __int8 m_durationFade;
+	CSound m_sound;
+
+	CGameChunk() = delete;
+};
+
 struct CGameFireball3d : CGameObject
 {
 	struct vtbl : CGameObject::vtbl
@@ -14560,6 +14614,60 @@ struct CVisualEffect : CGameObject, CVisualEffectBase
 	{
 		return p_Load(name, pArea, start, targetId, targetPos, height, linkToObject, speed);
 	}
+};
+
+struct CVEFVidCell : CGameObject, CVEFVidCellBase
+{
+	struct vtbl : CGameObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CVidCell* m_cVidCell;
+	CVidCell* m_cShadowVidCell;
+	CVidPalette m_palette;
+	CVidBitmap m_newPalette;
+	int m_done;
+	int m_newDirection;
+	Array<unsigned __int8,16> m_terrainTable;
+	CSound m_sound;
+	CVidCell* m_cAlphaBam;
+	unsigned __int8 m_level;
+	unsigned __int8 m_nCurSound;
+	unsigned int m_renderMask;
+	unsigned int m_renderType;
+	unsigned int m_myRenderMask;
+	int m_priority;
+
+	CVEFVidCell() = delete;
+};
+
+struct CSparkleCluster : CGameObject
+{
+	struct vtbl : CGameObject::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CVidMode* m_pVidMode;
+	CTypedPtrList<CPtrList,CParticle*> m_particleList;
+	unsigned int m_colorStart;
+	unsigned int m_colorFade1;
+	unsigned int m_colorFade2;
+	unsigned int m_colorFade3;
+	unsigned int m_colorFade4;
+	unsigned __int8 m_fade1Height;
+	unsigned __int8 m_fade2Height;
+	unsigned __int8 m_fade3Height;
+	unsigned __int8 m_fade4Height;
+	CRect m_rBounding;
+	unsigned __int16 m_wType;
+	unsigned int m_nTimer;
+	unsigned __int16 m_nConjureDuration;
+	CPoint m_explosionDir;
+	int m_nGravity;
+
+	CSparkleCluster() = delete;
 };
 
 struct CProjectile : CGameObject

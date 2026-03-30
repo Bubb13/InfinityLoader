@@ -1258,6 +1258,12 @@ void registerBaseclasses() {
 		{"CMessageSetLastObject::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageSetLastObject::vtbl, CMessage::vtbl>()},
 		}},
+		{"CGameChunk", {
+			{"CGameObject", offsetofbase<CGameChunk, CGameObject>()},
+		}},
+		{"CGameChunk::vtbl", {
+			{"CGameObject::vtbl", offsetofbase<CGameChunk::vtbl, CGameObject::vtbl>()},
+		}},
 		{"CGameFireball3d", {
 			{"CGameObject", offsetofbase<CGameFireball3d, CGameObject>()},
 		}},
@@ -1270,6 +1276,19 @@ void registerBaseclasses() {
 		}},
 		{"CVisualEffect::vtbl", {
 			{"CGameObject::vtbl", offsetofbase<CVisualEffect::vtbl, CGameObject::vtbl>()},
+		}},
+		{"CVEFVidCell", {
+			{"CGameObject", offsetofbase<CVEFVidCell, CGameObject>()},
+			{"CVEFVidCellBase", offsetofbase<CVEFVidCell, CVEFVidCellBase>()},
+		}},
+		{"CVEFVidCell::vtbl", {
+			{"CGameObject::vtbl", offsetofbase<CVEFVidCell::vtbl, CGameObject::vtbl>()},
+		}},
+		{"CSparkleCluster", {
+			{"CGameObject", offsetofbase<CSparkleCluster, CGameObject>()},
+		}},
+		{"CSparkleCluster::vtbl", {
+			{"CGameObject::vtbl", offsetofbase<CSparkleCluster::vtbl, CGameObject::vtbl>()},
 		}},
 		{"CProjectile", {
 			{"CGameObject", offsetofbase<CProjectile, CGameObject>()},

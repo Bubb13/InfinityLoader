@@ -608,12 +608,22 @@ void registerBaseclasses() {
 		{"CMessageSetLastObject", {
 			{"CMessage", offsetofbase<CMessageSetLastObject, CMessage>()},
 		}},
+		{"CGameChunk", {
+			{"CGameObject", offsetofbase<CGameChunk, CGameObject>()},
+		}},
 		{"CGameFireball3d", {
 			{"CGameObject", offsetofbase<CGameFireball3d, CGameObject>()},
 		}},
 		{"CVisualEffect", {
 			{"CGameObject", offsetofbase<CVisualEffect, CGameObject>()},
 			{"CVisualEffectBase", offsetofbase<CVisualEffect, CVisualEffectBase>()},
+		}},
+		{"CVEFVidCell", {
+			{"CGameObject", offsetofbase<CVEFVidCell, CGameObject>()},
+			{"CVEFVidCellBase", offsetofbase<CVEFVidCell, CVEFVidCellBase>()},
+		}},
+		{"CSparkleCluster", {
+			{"CGameObject", offsetofbase<CSparkleCluster, CGameObject>()},
 		}},
 		{"CProjectile", {
 			{"CGameObject", offsetofbase<CProjectile, CGameObject>()},
