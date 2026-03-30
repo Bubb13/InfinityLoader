@@ -3804,8 +3804,9 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 
 	class OpenConstantType(Enum):
-		INTEGER = 1
-		STRING = 2
+		INTEGER_LITERAL = 1
+		INTEGER_EXPRESSION = 2
+		STRING_LITERAL = 3
 
 	class OpenConstantData:
 		def __init__(self) -> None:
@@ -3886,7 +3887,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name != "void" and not group.lineGroupFlags.isFlagged("noHardcodedBindings"):
 			sizeofConstant = OpenConstantData()
 			sizeofConstant.name = "sizeof"
-			sizeofConstant.valueType = OpenConstantType.STRING
+			sizeofConstant.valueType = OpenConstantType.INTEGER_EXPRESSION
 			sizeofConstant.value = f"sizeof({groupOpenData.appliedHeaderName})"
 			groupOpenData.constantBindings.append(sizeofConstant)
 
@@ -3895,13 +3896,13 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 			sizeConstant = OpenConstantData()
 			sizeConstant.name = "size"
-			sizeConstant.valueType = OpenConstantType.INTEGER
+			sizeConstant.valueType = OpenConstantType.INTEGER_LITERAL
 			sizeConstant.value = int(currentTemplate.tup[1].getHeaderName())
 			groupOpenData.constantBindings.append(sizeConstant)
 
 			lastIndexConstant = OpenConstantData()
 			lastIndexConstant.name = "lastIndex"
-			lastIndexConstant.valueType = OpenConstantType.INTEGER
+			lastIndexConstant.valueType = OpenConstantType.INTEGER_LITERAL
 			lastIndexConstant.value = int(currentTemplate.tup[1].getHeaderName()) - 1
 			groupOpenData.constantBindings.append(lastIndexConstant)
 
@@ -3949,9 +3950,19 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			):
 				offsetofConstant = OpenConstantData()
 				offsetofConstant.name = f"offsetof_{fieldNameStr}"
-				offsetofConstant.valueType = OpenConstantType.STRING
+				offsetofConstant.valueType = OpenConstantType.INTEGER_EXPRESSION
 				offsetofConstant.value = f"offsetoftype({fieldNameStr}, {groupOpenData.appliedHeaderName})"
 				groupOpenData.constantBindings.append(offsetofConstant)
+
+			# Writing usertype_* constant which returns the usertype name of the member
+			if not isPointerCast and not group.lineGroupFlags.isFlagged("noHardcodedBindings") and field.type == FieldType.VARIABLE:
+				variableField: VariableField = field
+				varType: TypeReference = variableField.variableType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
+				usertypeConstant = OpenConstantData()
+				usertypeConstant.name = f"usertype_{fieldNameStr}"
+				usertypeConstant.valueType = OpenConstantType.STRING_LITERAL
+				usertypeConstant.value = f"\"{varType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)}\""
+				groupOpenData.constantBindings.append(usertypeConstant)
 
 			if writeFieldBindings:
 
@@ -4478,7 +4489,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		def handleEnumTuple(enumTuple: Tuple[str, str]):
 			openConstantData = OpenConstantData()
 			openConstantData.name = enumTuple[0]
-			openConstantData.valueType = OpenConstantType.INTEGER
+			openConstantData.valueType = OpenConstantType.INTEGER_LITERAL
 			openConstantData.value = enumTuple[1]
 			groupOpenData.constantBindings.append(openConstantData)
 
@@ -4645,7 +4656,12 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 		# Write constant mappings
 		for constantOpenData in openData.constantBindings:
-			out.write(f"\t\ttolua_constant(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
+			if constantOpenData.valueType in (OpenConstantType.INTEGER_LITERAL, OpenConstantType.INTEGER_EXPRESSION):
+				out.write(f"\t\ttolua_constant(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
+			elif constantOpenData.valueType == OpenConstantType.STRING_LITERAL:
+				out.write(f"\t\ttolua_constantstring(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
+			else:
+				assert False, f"Unhandled OpenConstantType: {constantOpenData.valueType}"
 
 		out.write("\ttolua_endmodule(L);\n")
 

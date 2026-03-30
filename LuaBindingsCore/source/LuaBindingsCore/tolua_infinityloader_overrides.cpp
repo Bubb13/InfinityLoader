@@ -411,53 +411,132 @@ static void getOrCreateTableI(lua_State* L, int tableI, int i) {
 
 static void mapBases(lua_State* L, const char* name, std::initializer_list<const char*>& bases) {
 
+	///////////////////////////////////////////////
+	// local mtToBasesT = registry["tolua_base"] //
+	//                                           //
+	// local mt = mt(name)                       //
+	// local basesT = mtToBasesT[mt]             //
+	//                                           //
+	// if type(basesT) ~= "table" then           //
+	//     basesT = {}                           //
+	//     mtToBasesT[mt] = basesT               //
+	// end                                       //
+	//                                           //
+	// for i, baseName in ipairs(bases) do       //
+	//                                           //
+	//     local baseEntry = basesT[i]           //
+	//                                           //
+	//     if type(baseEntry) ~= "table" then    //
+	//         baseEntry = {}                    //
+	//         basesT[i] = baseEntry             //
+	//     end                                   //
+	//                                           //
+	//     baseEntry["mt"] = mt(baseName)        //
+	// end                                       //
+	///////////////////////////////////////////////
+
 	lua_pushstring(L, "tolua_base");     // 1 [ ..., "tolua_base" ]
-	lua_rawget(L, LUA_REGISTRYINDEX);    // 1 [ ..., registry["tolua_base"] ]
+	lua_rawget(L, LUA_REGISTRYINDEX);    // 1 [ ..., registry["tolua_base"] -> mtToBasesT ]
 
-	tolua_getmetatable(L, name);         // 2 [ ..., registry["tolua_base"], mt(name) ]
-	getOrCreateTable(L, -2);             // 2 [ ..., registry["tolua_base"], registry["tolua_base"][mt(name)] -> baseT ]
+	tolua_getmetatable(L, name);         // 2 [ ..., mtToBasesT, mt(name) -> mt ]
+	getOrCreateTable(L, -2);             // 2 [ ..., mtToBasesT, mtToBasesT[mt] -> basesT ]
 
-	int i{ 0 };
-	for (const char* base : bases) {
+	int i = 0;
+	for (const char *const baseName : bases) {
 
-		getOrCreateTableI(L, -1, ++i);   // 3 [ ..., registry["tolua_base"], baseT, baseT[i] ]
+		getOrCreateTableI(L, -1, ++i);   // 3 [ ..., mtToBasesT, basesT, basesT[i] -> baseEntry ]
 
-		lua_pushstring(L, "mt");         // 4 [ ..., registry["tolua_base"], baseT, baseT[i], "mt" ]
-		tolua_getmetatable(L, base);     // 5 [ ..., registry["tolua_base"], baseT, baseT[i], "mt", mt(base) ]
-		lua_rawset(L, -3);               // 3 [ ..., registry["tolua_base"], baseT, baseT[i] ]
+		lua_pushstring(L, "mt");         // 4 [ ..., mtToBasesT, basesT, baseEntry, "mt" ]
+		tolua_getmetatable(L, baseName); // 5 [ ..., mtToBasesT, basesT, baseEntry, "mt", mt(baseName) ]
+		lua_rawset(L, -3);               // 3 [ ..., mtToBasesT, basesT, baseEntry ]
 
-		lua_pop(L, 1);                   // 2 [ ..., registry["tolua_base"], baseT ]
+		lua_pop(L, 1);                   // 2 [ ..., mtToBasesT, basesT ]
 	}
 
-	lua_pushstring(L, "tolua_base_map"); // 3 [ ..., registry["tolua_base"], baseT, "tolua_base_map" ]
-	lua_rawget(L, LUA_REGISTRYINDEX);    // 3 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"] ]
+	////////////////////////////////////////////////////////////////////////////
+	// local mtToBaseMapT = registry["tolua_base_map"]                        //
+	//                                                                        //
+	// local mt = mt(name)                                                    //
+	// local baseMapT = mtToBaseMapT[mt]                                      //
+	//                                                                        //
+	// if type(baseMapT) ~= "table" then                                      //
+	//     baseMapT = {}                                                      //
+	//     mtToBaseMapT[mt] = baseMapT                                        //
+	// end                                                                    //
+	//                                                                        //
+	// local toProcess = {}                                                   //
+	// table.insert(toProcess, { name, 0 })                                   //
+	//                                                                        //
+	// local baseI = 0                                                        //
+	//                                                                        //
+	// while toProcess[1] ~= nil do                                           //
+	//                                                                        //
+	//     local back = toProcess[#toProcess]                                 //
+	//     local baseName = back[1]                                           //
+	//     local offset = back[2]                                             //
+	//                                                                        //
+	//     local baseMT = mt(baseName)                                        //
+	//                                                                        //
+	//     if type(baseMT) == "table" then                                    //
+	// 	       baseI = baseI + 1                                              //
+	//         baseMapT[baseI] = { ["mt"] = baseMT, ["offset"] = offset }     //
+	//     end                                                                //
+	//                                                                        //
+	//     if (baseclassOffsets.contains(baseName)) then                      //
+	//         for nestedBaseName, nestedOffset in pairs(baseclassOffsets) do //
+	//             table.insert(toProcess, { nestedBaseName, nestedOffset })  //
+	//         end                                                            //
+	//     end                                                                //
+	// end                                                                    //
+	////////////////////////////////////////////////////////////////////////////
 
-	tolua_getmetatable(L, name);         // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], mt(name) ]
-	getOrCreateTable(L, -2);             // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], registry["tolua_base_map"][mt(name)] -> baseMapT ]
+	lua_pushstring(L, "tolua_base_map");       // 3 [ ..., mtToBasesT, basesT, "tolua_base_map" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);          // 3 [ ..., mtToBasesT, basesT, registry["tolua_base_map"] -> mtToBaseMapT ]
 
-	// base, offset
+	tolua_getmetatable(L, name);               // 4 [ ..., mtToBasesT, basesT, mtToBaseMapT, mt(name) -> mt ]
+	getOrCreateTable(L, -2);                   // 4 [ ..., mtToBasesT, basesT, mtToBaseMapT, mtToBaseMapT[mt] -> baseMapT ]
+
+	// baseName, offset
 	std::vector<std::pair<const char*, uintptr_t>> toProcess{};
 	toProcess.emplace_back(name, 0);
 
+	int baseI = 0;
+
 	while (!toProcess.empty()) {
 
-		std::pair<const char*, uintptr_t>& pair = toProcess.back();
-		const char* base = pair.first;
-		uintptr_t offset = pair.second;
+		const std::pair<const char*, uintptr_t>& pair = toProcess.back();
+		const char *const baseName = pair.first;
+		const uintptr_t offset = pair.second;
 		toProcess.pop_back();
 
-		lua_pushstring(L, base);         // 5 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseMapT, base ]
-		lua_pushinteger(L, offset);      // 6 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseMapT, base, offset ]
-		lua_rawset(L, -3);               // 4 [ ..., registry["tolua_base"], baseT, registry["tolua_base_map"], baseMapT ]
+		tolua_getmetatable(L, baseName);       // 5 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT, baseMT ]
 
-		if (baseclassOffsets.contains(base)) {
-			for (const auto& basePair : baseclassOffsets[base]) {
+		if (lua_istable(L, -1)) {
+
+			getOrCreateTableI(L, -2, ++baseI); // 6 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT, baseMT, baseMapT[baseI] -> baseT ]
+
+			lua_pushstring(L, "mt");           // 7 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT, baseMT, baseT, "mt" ]
+			lua_pushvalue(L, -3);              // 8 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT, baseMT, baseT, "mt", baseMT ]
+			lua_rawset(L, -3);                 // 6 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT, baseMT, baseT ]
+
+			lua_pushstring(L, "offset");       // 7 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT, baseMT, baseT, "offset" ]
+			lua_pushinteger(L, offset);        // 8 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT, baseMT, baseT, "offset", offset ]
+			lua_rawset(L, -3);                 // 6 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT, baseMT, baseT ]
+
+			lua_pop(L, 2);                     // 4 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT ]
+		}
+		else {
+			lua_pop(L, 1);                     // 4 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT ]
+		}
+
+		if (baseclassOffsets.contains(baseName)) {
+			for (const auto& basePair : baseclassOffsets[baseName]) {
 				toProcess.emplace_back(basePair.first.c_str(), offset + basePair.second);
 			}
 		}
 	}
 
-	lua_pop(L, 4);                       // 0 [ ... ]
+	lua_pop(L, 4);                             // 0 [ ... ]
 }
 
 static void tolua_push_globals_table(lua_State* L) {
@@ -637,6 +716,51 @@ int class_newindex_event(lua_State* L) {
 	return 0;
 }
 
+// Expects   [ ..., mt, key ]
+// End Stack [ ..., mt, key, value ]
+static void moduleGetOnBase(lua_State* L) {
+
+	lua_pushstring(L, "tolua_base_map");   // 3 [ ..., mt, key, "tolua_base_map" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);      // 3 [ ..., mt, key, registry["tolua_base_map"] -> mtToBaseMapT ]
+
+	lua_pushvalue(L, -3);                  // 4 [ ..., mt, key, mtToBaseMapT, mt ]
+	lua_rawget(L, -2);                     // 4 [ ..., mt, key, mtToBaseMapT, mtToBaseMapT[mt] -> baseMapT ]
+
+	// Validate that there are baseclasses mapped for the given metatable
+	if (!lua_istable(L, -1)) {
+		lua_pop(L, 2);                     // 2 [ ..., mt, key ]
+		lua_pushnil(L);                    // 3 [ ..., mt, key, nil ]
+		return;
+	}
+
+	// Iterate baseclasses (baseI == 1 is the class itself)
+	for (int baseI = 2; ; ++baseI) {
+
+		lua_pushinteger(L, baseI);         // 5 [ ..., mt, key, mtToBaseMapT, baseMapT, baseI ]
+		lua_rawget(L, -2);                 // 5 [ ..., mt, key, mtToBaseMapT, baseMapT, baseMapT[baseI] -> baseT ]
+
+		if (!lua_istable(L, -1)) {
+			lua_pop(L, 3);                 // 2 [ ..., mt, key ]
+			lua_pushnil(L);                // 3 [ ..., mt, key, nil ]
+			return;
+		}
+
+		lua_pushstring(L, "mt");           // 6 [ ..., mt, key, mtToBaseMapT, baseMapT, baseT, "mt" ]
+		lua_rawget(L, -2);                 // 6 [ ..., mt, key, mtToBaseMapT, baseMapT, baseT, baseT["mt"] -> baseMT ]
+
+		lua_pushvalue(L, -5);              // 7 [ ..., mt, key, mtToBaseMapT, baseMapT, baseT, baseMT, key ]
+		lua_rawget(L, -2);                 // 7 [ ..., mt, key, mtToBaseMapT, baseMapT, baseT, baseMT, baseMT[key] -> value ]
+
+		if (!lua_isnil(L, -1)) {
+			lua_insert(L, -5);             // 7 [ ..., mt, key, value, mtToBaseMapT, baseMapT, baseT, baseMT ]
+			lua_pop(L, 4);                 // 3 [ ..., mt, key, value ]
+			return;
+		}
+
+		lua_pop(L, 3);                     // 4 [ ..., mt, key, mtToBaseMapT, baseMapT ]
+	}
+}
+
 //***********************************************//
 // Pattern export: "override_module_index_event" //
 //***********************************************//
@@ -659,9 +783,12 @@ int module_index_event(lua_State* L) {
 
 	lua_pushstring(L, ".get");         // 3 [ table, key, ".get" ]
 	lua_rawget(L, -3);                 // 3 [ table, key, table[".get"] ]
+
 	if (lua_istable(L, -1)) {
+
 		lua_pushvalue(L, 2);           // 4 [ table, key, table[".get"], key ]
 		lua_rawget(L, -2);             // 4 [ table, key, table[".get"], table[".get"][key] ]
+
 		if (lua_iscfunction(L, -1)) {
 			lua_call(L, 0, 1);         // 3 [ table, key, table[".get"], retVal ]
 			return 1;
@@ -669,39 +796,17 @@ int module_index_event(lua_State* L) {
 		else if (lua_istable(L, -1)) {
 			return 1;
 		}
+
+		lua_pop(L, 1);                 // 3 [ table, key, table[".get"] ]
 	}
 
-	////////////////////////////////////////////
-	// local mt = getmetatable(table)         //
-	// if mt then                             //
-	//     local mtIndex = mt["__index"][key] //
-	//     if type(key) == "function" then    //
-	//         return mtIndex(table, key)     //
-	//     elseif type(key) == "table" then   //
-	//         return mtIndex[key]            //
-	//     end                                //
-	// end                                    //
-	////////////////////////////////////////////
+	lua_pop(L, 1);                     // 2 [ table, key ]
 
-	// Note: Below lua_isfunction() and lua_istable() using wrong index?
+	/////////////////////////////////////
+	// Attempt to fetch from baseclass //
+	/////////////////////////////////////
 
-									   // 3 [ table, key, table[".get"], ... ]
-	if (lua_getmetatable(L, 1)) {      // TODO: Metatable
-									   // 4 [ table, key, table[".get"], ..., mt(table) ]
-		lua_pushstring(L, "__index");  // 5 [ table, key, table[".get"], ..., mt(table), "__index" ]
-		lua_rawget(L, -2);             // 5 [ table, key, table[".get"], ..., mt(table), mt(table)["__index"] ]
-		lua_pushvalue(L, 1);           // 6 [ table, key, table[".get"], ..., mt(table), mt(table)["__index"], table ]
-		lua_pushvalue(L, 2);           // 7 [ table, key, table[".get"], ..., mt(table), mt(table)["__index"], table, key ]
-		if (lua_isfunction(L, -1)) {
-			lua_call(L, 2, 1);         // 5 [ table, key, table[".get"], ..., mt(table), retVal ]
-			return 1;
-		}
-		else if (lua_istable(L, -1)) {
-			lua_gettable(L, -3);       // 7 [ table, key, table[".get"], ..., mt(table), mt(table)["__index"], table, mt(table)["__index"][key] ]
-			return 1;
-		}
-	}
-	lua_pushnil(L);                    // 4 [ table, key, table[".get"], ..., nil ]
+	moduleGetOnBase(L);
 	return 1;
 }
 
@@ -740,14 +845,15 @@ int module_newindex_event(lua_State* L) {
 //**********************************************//
 // Pattern export: "override_tolua_beginmodule" //
 //**********************************************//
-// Expects [ module ]
+// Expects   [ ..., module ]
+// End Stack [ ..., module, module[name] or _G ]
 EXPORT void tolua_beginmodule(lua_State* L, const char* name) {
 	if (name) {
-		lua_pushstring(L, name);     // [ module, name ]
-		lua_rawget(L, -2);           // [ module[name] ]
+		lua_pushstring(L, name);     // 2 [ ..., module, name ]
+		lua_rawget(L, -2);           // 2 [ ..., module, module[name] ]
 	}
 	else {
-		tolua_push_globals_table(L); // [ module, _G ]
+		tolua_push_globals_table(L); // 2 [ ..., module, _G ]
 	}
 }
 
@@ -1133,44 +1239,80 @@ EXPORT char tolua_setter_tochar(lua_State *const L, const char *const variableNa
 }
 
 EXPORT void* tolua_tousertype_dynamic(lua_State* L, int index, void* def, const char* targetUsertype) {
-	if (lua_gettop(L) < abs(index)) {
+
+	if (abs(index) > lua_gettop(L)) {
 		return def;
 	}
-	else {
 
-		index = lua_absindex(L, index);
+	index = lua_absindex(L, index);
 
-		void** u = reinterpret_cast<void**>(lua_touserdata(L, index));
-		if (u == nullptr) {
-			return u;
-		}
-
-		void* ptr = *u;
-
-		lua_pushstring(L, "tolua_base_map"); // 1 [ ...,"tolua_base_map" ]
-		lua_rawget(L, LUA_REGISTRYINDEX);    // 1 [ ..., registry["tolua_base_map"] ]
-
-		if (!lua_getmetatable(L, index)) {
-			lua_pop(L, 1);                   // 0 [ ... ]
-			return ptr;
-		}
-											 // 2 [ ..., registry["tolua_base_map"], mt ]
-		lua_rawget(L, -2);                   // 2 [ ..., registry["tolua_base_map"], registry["tolua_base_map"][mt] ]
-
-		if (lua_isnil(L, -1)) {
-			lua_pop(L, 2);                   // 0 [ ... ]
-			return ptr;
-		}
-
-		lua_pushstring(L, targetUsertype);   // 3 [ ..., registry["tolua_base_map"], registry["tolua_base_map"][mt], targetUsertype ]
-		lua_rawget(L, -2);                   // 3 [ ..., registry["tolua_base_map"], registry["tolua_base_map"][mt], registry["tolua_base_map"][mt][targetUsertype] ]
-
-		lua_Integer offset{ 0 };
-		if (lua_isnumber(L, -1)) {
-			offset = lua_tointeger(L, -1);
-		}
-
-		lua_pop(L, 3);                       // 0 [ ... ]
-		return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + offset);
+	void** u = reinterpret_cast<void**>(lua_touserdata(L, index));
+	if (u == nullptr) {
+		return nullptr;
 	}
+
+	void* ptr = *u;
+
+	lua_pushstring(L, "tolua_base_map");   // 1 [ ...,"tolua_base_map" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);      // 1 [ ..., registry["tolua_base_map"] -> mtToBaseMapT ]
+
+	// Fetch and validate metatable of userdata in existing index
+	if (!lua_getmetatable(L, index)) {
+		lua_pop(L, 1);                     // 0 [ ... ]
+		return ptr;
+	}
+										   // 2 [ ..., mtToBaseMapT, mt ]
+	lua_rawget(L, -2);                     // 2 [ ..., mtToBaseMapT, mtToBaseMapT[mt] -> baseMapT ]
+
+	// Validate that there are baseclasses mapped for the given metatable
+	if (!lua_istable(L, -1)) {
+		lua_pop(L, 2);                     // 0 [ ... ]
+		return ptr;
+	}
+
+	// Fetch metatable of target usertype
+	tolua_getmetatable(L, targetUsertype); // 3 [ ..., mtToBaseMapT, baseMapT, targetMT ]
+
+	// Validate metatable of target usertype
+	if (!lua_istable(L, -1)) {
+		lua_pop(L, 3);                     // 0 [ ... ]
+		return ptr;
+	}
+
+	lua_Integer offset = 0;
+
+	// Iterate baseclasses, match on target metatable, get offset to transform original usertype to target usertype
+	for (int baseI = 1; ; ++baseI) {
+
+		lua_pushinteger(L, baseI);         // 4 [ ..., mtToBaseMapT, baseMapT, targetMT, baseI ]
+		lua_rawget(L, -3);                 // 4 [ ..., mtToBaseMapT, baseMapT, targetMT, baseMapT[baseI] -> baseT ]
+
+		// Detect end of baseclass entries
+		if (!lua_istable(L, -1)) {
+			lua_pop(L, 1);                 // 3 [ ..., mtToBaseMapT, baseMapT, targetMT ]
+			break;
+		}
+
+		lua_pushstring(L, "mt");           // 5 [ ..., mtToBaseMapT, baseMapT, targetMT, baseT, "mt" ]
+		lua_rawget(L, -2);                 // 5 [ ..., mtToBaseMapT, baseMapT, targetMT, baseT, baseT["mt"] -> mt ]
+
+		if (lua_rawequal(L, -3, -1)) {
+
+			lua_pushstring(L, "offset");   // 6 [ ..., mtToBaseMapT, baseMapT, targetMT, baseT, mt, "offset" ]
+			lua_rawget(L, -3);             // 6 [ ..., mtToBaseMapT, baseMapT, targetMT, baseT, mt, baseT["offset"] -> offset ]
+
+			if (lua_isnumber(L, -1)) {
+				offset = lua_tointeger(L, -1);
+			}
+
+			lua_pop(L, 3);                 // 3 [ ..., mtToBaseMapT, baseMapT, targetMT ]
+			break;
+		}
+		else {
+			lua_pop(L, 2);                 // 3 [ ..., mtToBaseMapT, baseMapT, targetMT ]
+		}
+	}
+										   // 3 [ ..., mtToBaseMapT, baseMapT, targetMT ]
+	lua_pop(L, 3);                         // 0 [ ... ]
+	return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + offset);
 }

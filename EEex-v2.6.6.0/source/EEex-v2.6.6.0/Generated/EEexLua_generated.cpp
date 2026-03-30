@@ -774,6 +774,14 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "SetVSyncEnabled", &tolua_function_EEex_SetVSyncEnabled);
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 		tolua_function(L, "UpdateLastScrollTime", &tolua_function_EEex_UpdateLastScrollTime);
+		tolua_constantstring(L, "usertype_AIBase_LuaHook_OnEventTriggerSet_Enabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_Opcode_LuaHook_AfterListsResolved_Enabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_Projectile_LuaHook_GlobalMutators_Enabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_StutterDetector_Enabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_UncapFPS_BusyWaitThreshold", "Primitive<int>");
+		tolua_constantstring(L, "usertype_UncapFPS_Enabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_UncapFPS_FPSLimit", "Primitive<int>");
+		tolua_constantstring(L, "usertype_UncapFPS_RemoveMiddleMouseScrollMultiplier", "Primitive<bool>");
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
 	tolua_beginmodule(L, "EEex::ProjectileType");

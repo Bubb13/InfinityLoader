@@ -18,6 +18,7 @@ typedef void*(__cdecl* type_malloc)(size_t size);
 // Custom //
 ////////////
 
+IMPORT void tolua_constantstring(lua_State* L, const char* name, const char* value);
 IMPORT bool tolua_function_toboolean(lua_State* L, int narg, const char* functionName);
 IMPORT char tolua_function_tochar(lua_State* L, int narg, const char* functionName);
 IMPORT const char* tolua_function_tostring(lua_State* L, int narg, const char* functionName);
