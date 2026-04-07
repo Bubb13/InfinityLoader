@@ -1,4 +1,6 @@
 
+#include <queue>
+
 #include "infinity_loader_common_api.h"
 #include "tolua.h"
 #include "tolua_infinityloader_overrides.h"
@@ -82,6 +84,49 @@ static int dumpStack(lua_State* L) {
 		dumpStackIndex(L, label.c_str(), i);
 	}
 	return 0;
+}
+
+// Expects   2+ [ ..., t, ..., key, ... ]
+// End Stack 2+ [ ..., t, ..., key, ..., t[key] -> value? ]
+// Returns   0-1
+static bool rawGetOnTable(lua_State* L, int tIndex, int keyIndex) {
+
+	if (!lua_istable(L, tIndex)) {
+		return false;
+	}
+
+	tIndex = lua_absindex(L, tIndex);
+	lua_pushvalue(L, keyIndex); // 3+ [ ..., t, ..., key, ..., key ]
+	lua_rawget(L, tIndex);      // 3+ [ ..., t, ..., key, ..., t[key] -> value ]
+	return true;
+}
+
+// Expects   2+ [ ..., t, ..., key1, key2, ... ]
+// End Stack 2+ [ ..., t, ..., key1, key2, ..., value? ]
+// Returns   0-1
+static bool getPath(lua_State* L, int tIndex, int keysStartIndex, int numKeys) {
+
+	keysStartIndex = lua_absindex(L, keysStartIndex);
+
+	int i = keysStartIndex;
+	const int keysEndIndex = keysStartIndex + numKeys;
+
+	if (!rawGetOnTable(L, tIndex, i++)) {
+		return false;
+	}
+										 // 3+ [ ..., t, ..., key1, key2, ..., t[key1] -> curValue ]
+	for (; i < keysEndIndex; ++i) {
+
+		if (!rawGetOnTable(L, -1, i)) {
+										 // 3+ [ ..., t, ..., key1, key2, ..., curValue ]
+			lua_pop(L, 1);               // 2+ [ ..., t, ..., key1, key2, ... ]
+			return false;
+		}
+										 // 4+ [ ..., t, ..., key1, key2, ..., curValue -> lastValue, curValue[keyN] -> curValue ]
+		lua_remove(L, -2);               // 3+ [ ..., t, ..., key1, key2, ..., curValue ]
+	}
+										 // 3+ [ ..., t, ..., key1, key2, ..., curValue -> value ]
+	return true;
 }
 
 /////////////
@@ -497,17 +542,17 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 	getOrCreateTable(L, -2);                   // 4 [ ..., mtToBasesT, basesT, mtToBaseMapT, mtToBaseMapT[mt] -> baseMapT ]
 
 	// baseName, offset
-	std::vector<std::pair<const char*, uintptr_t>> toProcess{};
-	toProcess.emplace_back(name, 0);
+	std::queue<std::pair<const char*, uintptr_t>> toProcess{};
+	toProcess.emplace(name, 0);
 
 	int baseI = 0;
 
 	while (!toProcess.empty()) {
 
-		const std::pair<const char*, uintptr_t>& pair = toProcess.back();
+		const std::pair<const char*, uintptr_t>& pair = toProcess.front();
 		const char *const baseName = pair.first;
 		const uintptr_t offset = pair.second;
-		toProcess.pop_back();
+		toProcess.pop();
 
 		tolua_getmetatable(L, baseName);       // 5 [ ..., mtToBasesT, basesT, mtToBaseMapT, baseMapT, baseMT ]
 
@@ -531,7 +576,7 @@ static void mapBases(lua_State* L, const char* name, std::initializer_list<const
 
 		if (baseclassOffsets.contains(baseName)) {
 			for (const auto& basePair : baseclassOffsets[baseName]) {
-				toProcess.emplace_back(basePair.first.c_str(), offset + basePair.second);
+				toProcess.emplace(basePair.first.c_str(), offset + basePair.second);
 			}
 		}
 	}

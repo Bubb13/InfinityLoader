@@ -48,6 +48,56 @@ int getUserTypeLua(lua_State* L) {
 	return 1;
 }
 
+// Expects   [ ..., mt ]
+// End Stack [ ..., mt, metadataT ]
+int getUserTypeBaseclassMetadataLua(lua_State* L) {
+
+	lua_pushstring(L, "tolua_base_map"); // 2 [ ..., mt, "tolua_base_map" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);    // 2 [ ..., mt, registry["tolua_base_map"] -> mtToBaseMapT ]
+
+	lua_pushvalue(L, -2);                // 3 [ ..., mt, mtToBaseMapT, mt ]
+	lua_rawget(L, -2);                   // 3 [ ..., mt, mtToBaseMapT, mtToBaseMapT[mt] -> baseMapT ]
+
+	// Validate that there are baseclasses mapped for the given metatable
+	if (!lua_istable(L, -1)) {
+		lua_pop(L, 2);                   // 2 [ ..., mt ]
+		lua_pushnil(L);                  // 3 [ ..., mt, nil ]
+		return 1;
+	}
+
+	lua_newtable(L);                     // 4 [ ..., mt, mtToBaseMapT, baseMapT, metadataT ]
+
+	// Iterate baseclasses (baseI == 1 is the class itself)
+	for (int baseI = 1; ; ++baseI) {
+
+		lua_rawgeti(L, -2, baseI);       // 5 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseMapT[baseI] -> baseT ]
+
+		if (!lua_istable(L, -1)) {
+			lua_pop(L, 1);               // 4 [ ..., mt, mtToBaseMapT, baseMapT, metadataT ]
+			break;
+		}
+
+		lua_newtable(L);                 // 6 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT, baseTCopy ]
+
+		lua_pushstring(L, "mt");         // 7 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT, baseTCopy, "mt" ]
+		lua_pushstring(L, "mt");         // 8 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT, baseTCopy, "mt", "mt" ]
+		lua_rawget(L, -4);               // 8 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT, baseTCopy, "mt", baseT["mt"] -> baseMT ]
+		lua_rawset(L, -3);               // 6 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT, baseTCopy ]
+
+		lua_pushstring(L, "offset");     // 7 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT, baseTCopy, "offset" ]
+		lua_pushstring(L, "offset");     // 8 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT, baseTCopy, "offset", "offset" ]
+		lua_rawget(L, -4);               // 8 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT, baseTCopy, "offset", baseT["offset"] -> baseOffset ]
+		lua_rawset(L, -3);               // 6 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT, baseTCopy ]
+
+		lua_rawseti(L, -3, baseI);       // 5 [ ..., mt, mtToBaseMapT, baseMapT, metadataT, baseT ]
+		lua_pop(L, 1);                   // 4 [ ..., mt, mtToBaseMapT, baseMapT, metadataT ]
+	}
+										 // 4 [ ..., mt, mtToBaseMapT, baseMapT, metadataT ]
+	lua_insert(L, -3);                   // 4 [ ..., mt, metadataT, mtToBaseMapT, baseMapT ]
+	lua_pop(L, 2);                       // 4 [ ..., mt, metadataT ]
+	return 1;
+}
+
 int lightUserDataToPointerLua(lua_State* L) {
 	if (const void *const ptr = lua_touserdata(L, 1); ptr == nullptr) {
 		lua_pushnil(L);
@@ -203,6 +253,9 @@ static void initLuaState(lua_State *const L) {
 
 	exposeToLua(L, prefixed("GetUserType"), getUserTypeLua);
 	exposeToLua(L, prefixed("GetUT"), getUserTypeLua);
+
+	exposeToLua(L, prefixed("GetUserTypeBaseclassMetadata"), getUserTypeBaseclassMetadataLua);
+	exposeToLua(L, prefixed("GetUTBaseclassMetadata"), getUserTypeBaseclassMetadataLua);
 
 	exposeToLua(L, prefixed("LightUserDataToPointer"), lightUserDataToPointerLua);
 	exposeToLua(L, prefixed("LightUDToPtr"), lightUserDataToPointerLua);

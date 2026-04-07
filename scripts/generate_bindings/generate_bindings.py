@@ -3808,11 +3808,23 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		INTEGER_EXPRESSION = 2
 		STRING_LITERAL = 3
 
+
 	class OpenConstantData:
 		def __init__(self) -> None:
 			self.name: str = None
 			self.valueType: OpenConstantType = None
 			self.value = None
+
+
+	class GroupedOpenConstantData:
+
+		__slots__ = ("entryMap")
+		def __init__(self) -> None:
+			self.entryMap: dict[str, list[OpenConstantData]] = {}
+
+		def add(self, moduleName: str, entry: OpenConstantData) -> None:
+			entries: list[OpenConstantData] = self.entryMap.setdefault(moduleName, [])
+			entries.append(entry)
 
 
 	class OpenGroupData:
@@ -3826,6 +3838,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			self.fieldBindings: list[OpenFieldData] = []
 			self.functionBindings: list[OpenFunctionData] = []
 			self.constantBindings: list[OpenConstantData] = []
+			self.groupedConstantBindings: GroupedOpenConstantData = GroupedOpenConstantData()
 			self.hasReasonForOutput: bool = False
 
 
@@ -3949,10 +3962,10 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				and (field.type != FieldType.VARIABLE or cast(VariableField, field).variableType.bitFieldPart is None)
 			):
 				offsetofConstant = OpenConstantData()
-				offsetofConstant.name = f"offsetof_{fieldNameStr}"
+				offsetofConstant.name = fieldNameStr
 				offsetofConstant.valueType = OpenConstantType.INTEGER_EXPRESSION
 				offsetofConstant.value = f"offsetoftype({fieldNameStr}, {groupOpenData.appliedHeaderName})"
-				groupOpenData.constantBindings.append(offsetofConstant)
+				groupOpenData.groupedConstantBindings.add(".offsetof", offsetofConstant)
 
 			# Writing usertype_* constant which returns the usertype name of the member
 			if not isPointerCast and not group.lineGroupFlags.isFlagged("noHardcodedBindings") and field.type == FieldType.VARIABLE:
@@ -4654,14 +4667,25 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		for functionOpenData in openData.functionBindings:
 			out.write(f"\t\ttolua_function(L, \"{functionOpenData.functionName}\", &{functionOpenData.functionBindingName});\n")
 
-		# Write constant mappings
-		for constantOpenData in openData.constantBindings:
+
+		def writeConstantBinding(indent: str, constantOpenData: OpenConstantData):
 			if constantOpenData.valueType in (OpenConstantType.INTEGER_LITERAL, OpenConstantType.INTEGER_EXPRESSION):
-				out.write(f"\t\ttolua_constant(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
+				out.write(f"{indent}tolua_constant(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
 			elif constantOpenData.valueType == OpenConstantType.STRING_LITERAL:
-				out.write(f"\t\ttolua_constantstring(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
+				out.write(f"{indent}tolua_constantstring(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
 			else:
 				assert False, f"Unhandled OpenConstantType: {constantOpenData.valueType}"
+
+		# Write constant mappings
+		for constantOpenData in openData.constantBindings:
+			writeConstantBinding("\t\t", constantOpenData)
+
+		for moduleName, constantBindings in openData.groupedConstantBindings.entryMap.items():
+			out.write(f"\t\ttolua_module(L, \"{moduleName}\", 0);\n")
+			out.write(f"\t\ttolua_beginmodule(L, \"{moduleName}\");\n")
+			for constantOpenData in constantBindings:
+				writeConstantBinding("\t\t\t", constantOpenData)
+			out.write(f"\t\ttolua_endmodule(L);\n")
 
 		out.write("\ttolua_endmodule(L);\n")
 
