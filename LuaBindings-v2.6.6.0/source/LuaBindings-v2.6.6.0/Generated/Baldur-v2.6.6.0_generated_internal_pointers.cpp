@@ -158,6 +158,7 @@ CAbilityId::type_Construct CAbilityId::p_Construct;
 CButtonData::type_Construct CButtonData::p_Construct;
 CGameDialogSprite::type_EndDialog CGameDialogSprite::p_EndDialog;
 CGameDialogSprite::type_ResetDialogStates CGameDialogSprite::p_ResetDialogStates;
+CMessageStartVEF::type_Construct CMessageStartVEF::p_Construct;
 CResHelper<CResCRE,1009>::type_SetResRef CResHelper<CResCRE,1009>::p_SetResRef;
 C2DArray::type_Construct C2DArray::p_Construct;
 C2DArray::type_Load C2DArray::p_Load;
@@ -482,6 +483,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CButtonData::Construct"), CButtonData::p_Construct);
 	attemptFillPointer(TEXT("CGameDialogSprite::EndDialog"), CGameDialogSprite::p_EndDialog);
 	attemptFillPointer(TEXT("CGameDialogSprite::ResetDialogStates"), CGameDialogSprite::p_ResetDialogStates);
+	attemptFillPointer(TEXT("CMessageStartVEF::Construct"), CMessageStartVEF::p_Construct);
 	attemptFillPointer(TEXT("CResHelper<CResCRE,1009>::SetResRef"), CResHelper<CResCRE,1009>::p_SetResRef);
 	attemptFillPointer(TEXT("C2DArray::Construct"), C2DArray::p_Construct);
 	attemptFillPointer(TEXT("C2DArray::Load"), C2DArray::p_Load);

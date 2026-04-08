@@ -134,6 +134,7 @@ struct CMemINIValue;
 struct CMessage;
 struct CMessageHandler;
 struct CMessageSetLastObject;
+struct CMessageStartVEF;
 struct CMoveListEntry;
 struct CNetwork;
 struct CObList;
@@ -153,10 +154,12 @@ struct CResTileSet;
 struct CRuleTables;
 struct CSaveGameSlot;
 struct CSavedGamePartyCreature;
+struct CSavedGameStoredLocation;
 struct CScreenMap;
 struct CScreenStore;
 struct CScreenWorld;
 struct CSearchBitmap;
+struct CSearchRequest;
 struct CSelectiveBonus;
 struct CSelectiveWeaponType;
 struct CSequenceSound;
@@ -6907,6 +6910,83 @@ struct CMessage
 	}
 };
 
+struct CMessageWeaponImmumityUpdate : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesWeapon m_weaponImmunities;
+
+	CMessageWeaponImmumityUpdate() = delete;
+};
+
+struct CMessageVisualEffect : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_nEffectType;
+	unsigned __int8 m_nEffectProperty;
+
+	CMessageVisualEffect() = delete;
+};
+
+struct CMessageVisibilityMapMove : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_moveOntoList;
+
+	CMessageVisibilityMapMove() = delete;
+};
+
+struct CMessageVerbalConstant : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_verbalConstant;
+	unsigned __int8 m_overHead;
+
+	CMessageVerbalConstant() = delete;
+};
+
+struct CMessageUseItemCharges : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_slotNum;
+	__int16 m_nCharges;
+	__int16 m_nAbilityNum;
+
+	CMessageUseItemCharges() = delete;
+};
+
+struct CMessageUpdateStoredPartyLocations : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bPocketPlane;
+	CTypedPtrList<CPtrList,CSavedGameStoredLocation*> m_storedLocations;
+
+	CMessageUpdateStoredPartyLocations() = delete;
+};
+
 struct CMessageUpdateReaction : CMessage
 {
 	struct vtbl : CMessage::vtbl
@@ -6949,6 +7029,411 @@ struct CMessageUpdateMachineState : CMessage
 	}
 };
 
+struct CMessageUpdateImmunities : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesAIType m_cImmunitiesAIType;
+
+	CMessageUpdateImmunities() = delete;
+};
+
+struct CMessageUnlock : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_dwFlags;
+
+	CMessageUnlock() = delete;
+};
+
+struct CMessageTriggerStatus : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_dwFlags;
+	unsigned __int16 m_trapDetected;
+	unsigned __int16 m_trapActivated;
+
+	CMessageTriggerStatus() = delete;
+};
+
+struct CMessageTakeCreatureItems : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_itemType;
+
+	CMessageTakeCreatureItems() = delete;
+};
+
+struct CMessageStopFollow : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageStopFollow() = delete;
+};
+
+struct CMessageStopEscapeArea : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageStopEscapeArea() = delete;
+};
+
+struct CMessageStopActions : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageStopActions() = delete;
+};
+
+struct CMessageStaticStart : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bStart;
+
+	CMessageStaticStart() = delete;
+};
+
+struct CMessageStaticSequence : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int16 m_bSequence;
+
+	CMessageStaticSequence() = delete;
+};
+
+struct CMessageStartSong : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_music;
+	unsigned __int8 m_slot;
+
+	CMessageStartSong() = delete;
+};
+
+struct CMessageStartScroll : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_sAreaString;
+	CPoint m_src;
+	CPoint m_dest;
+	unsigned __int8 m_speed;
+
+	CMessageStartScroll() = delete;
+};
+
+struct CMessageStartFollow : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageStartFollow() = delete;
+};
+
+struct CMessageStartCombatMusic : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageStartCombatMusic() = delete;
+};
+
+struct CMessageSpritePetrify : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bPetrify;
+
+	CMessageSpritePetrify() = delete;
+};
+
+struct CMessageSpriteDeath : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_nDeathType;
+
+	CMessageSpriteDeath() = delete;
+};
+
+struct CMessageSpawnPtSpawn : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CPoint m_ptFacingTowards;
+
+	CMessageSpawnPtSpawn() = delete;
+};
+
+struct CMessageSpawnPtActivate : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bActivate;
+
+	CMessageSpawnPtActivate() = delete;
+};
+
+struct CMessageSetVariable : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_sAreaName;
+	CString m_sGlobalName;
+	int m_nValue;
+	unsigned __int8 m_bIncrement;
+
+	CMessageSetVariable() = delete;
+};
+
+struct CMessageSetTimeStop : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_time;
+
+	CMessageSetTimeStop() = delete;
+};
+
+struct CMessageSetTarget : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CPoint m_dest;
+	CSearchRequest* m_request;
+	unsigned __int8 m_frontList;
+
+	CMessageSetTarget() = delete;
+};
+
+struct CMessageSetStateOverrideTime : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_time;
+
+	CMessageSetStateOverrideTime() = delete;
+};
+
+struct CMessageSetStateOverrideFlag : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_cutSceneMode;
+
+	CMessageSetStateOverrideFlag() = delete;
+};
+
+struct CMessageSetSound : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_strref;
+	unsigned __int8 m_soundId;
+
+	CMessageSetSound() = delete;
+};
+
+struct CMessageSetSequence : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_sequence;
+
+	CMessageSetSequence() = delete;
+};
+
+struct CMessageSetPath : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_nPath;
+	int* m_pPath;
+	__int16 m_currPath;
+	CPoint m_currDest;
+	int m_position;
+	CString m_sAreaString;
+
+	CMessageSetPath() = delete;
+};
+
+struct CMessageSetNumTimesTalkedTo : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_nNumTimesTalkedTo;
+
+	CMessageSetNumTimesTalkedTo() = delete;
+};
+
+struct CMessageSetInStore : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bState;
+
+	CMessageSetInStore() = delete;
+};
+
+struct CMessageSetInDialog : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bState;
+	__int16 m_nType;
+
+	CMessageSetInDialog() = delete;
+};
+
+struct CMessageSetInCutScene : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_status;
+
+	CMessageSetInCutScene() = delete;
+};
+
+struct CMessageSetHappiness : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_happiness;
+
+	CMessageSetHappiness() = delete;
+};
+
+struct CMessageSetForceActionPick : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bOpenDoor;
+
+	CMessageSetForceActionPick() = delete;
+};
+
+struct CMessageSetFamiliarSummoner : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_bDone;
+	int m_nSummoner;
+
+	CMessageSetFamiliarSummoner() = delete;
+};
+
+struct CMessageSetDrawPoly : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_time;
+
+	CMessageSetDrawPoly() = delete;
+};
+
 struct CMessageSetDirection : CMessage
 {
 	struct vtbl : CMessage::vtbl
@@ -6970,6 +7455,432 @@ struct CMessageSetDirection : CMessage
 	}
 };
 
+struct CMessageSetDialogWait : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_wait;
+	int m_waitTarget;
+
+	CMessageSetDialogWait() = delete;
+};
+
+struct CMessageSetDialogPausing : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bOpenDoor;
+
+	CMessageSetDialogPausing() = delete;
+};
+
+struct CMessageSetCurrentActionId : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_face;
+
+	CMessageSetCurrentActionId() = delete;
+};
+
+struct CMessageSetCommandPause : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_commandPause;
+
+	CMessageSetCommandPause() = delete;
+};
+
+struct CMessageSetBanterBlockTime : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_time;
+
+	CMessageSetBanterBlockTime() = delete;
+};
+
+struct CMessageSetBanterBlockFlag : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_cutSceneMode;
+
+	CMessageSetBanterBlockFlag() = delete;
+};
+
+struct CMessageSetAreaFlag : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_dFlag;
+	int m_bSet;
+
+	CMessageSetAreaFlag() = delete;
+};
+
+struct CMessageSetActiveImprisonment : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_active;
+
+	CMessageSetActiveImprisonment() = delete;
+};
+
+struct CMessageSetActive : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_active;
+
+	CMessageSetActive() = delete;
+};
+
+struct CMessageSetAISpeed : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_nAISpeed;
+
+	CMessageSetAISpeed() = delete;
+};
+
+struct CMessageScreenShake : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int16 m_duration;
+	char m_magnitudeX;
+	char m_magnitudeY;
+	unsigned __int8 m_bOverride;
+
+	CMessageScreenShake() = delete;
+};
+
+struct CMessageSaveGame : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_nSlot;
+
+	CMessageSaveGame() = delete;
+};
+
+struct CMessageResetMorale : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_bMoraleFailure;
+	int m_iMoraleLevel;
+
+	CMessageResetMorale() = delete;
+};
+
+struct CMessageReputationChange : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_deltaRep;
+
+	CMessageReputationChange() = delete;
+};
+
+struct CMessageRemoveReplies : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_name;
+	int m_entryIndex;
+	int m_marker;
+	unsigned int m_nameColor;
+
+	CMessageRemoveReplies() = delete;
+};
+
+struct CMessageRemoveItem : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_slotNum;
+
+	CMessageRemoveItem() = delete;
+};
+
+struct CMessagePlaySound : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_showText;
+	int m_showCircle;
+	unsigned __int8 m_soundId;
+
+	CMessagePlaySound() = delete;
+};
+
+struct CMessagePartyGold : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_gold;
+	unsigned __int8 m_bAdjustment;
+	unsigned __int8 m_bFeedback;
+
+	CMessagePartyGold() = delete;
+};
+
+struct CMessageNonControlledDialogStart : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_dialogRes;
+	int m_NPCId;
+
+	CMessageNonControlledDialogStart() = delete;
+};
+
+struct CMessageNonControlledDialogReturn : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_return;
+
+	CMessageNonControlledDialogReturn() = delete;
+};
+
+struct CMessageMoveGlobal : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_sArea;
+	CPoint m_ptStart;
+
+	CMessageMoveGlobal() = delete;
+};
+
+struct CMessageMakeGlobal : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageMakeGlobal() = delete;
+};
+
+struct CMessageLoadDialog : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_dialogRes;
+	int m_NPCId;
+	int m_bItemDialog;
+
+	CMessageLoadDialog() = delete;
+};
+
+struct CMessageLeaveParty : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageLeaveParty() = delete;
+};
+
+struct CMessageInsertResponse : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CAIResponse m_response;
+	int m_checkCurrentResponse;
+	int m_clearActions;
+
+	CMessageInsertResponse() = delete;
+};
+
+struct CMessageHeartbeat : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageHeartbeat() = delete;
+};
+
+struct CMessageForcePosition : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CPoint m_face;
+
+	CMessageForcePosition() = delete;
+};
+
+struct CMessageFireSpell : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_dialogRes;
+	int m_NPCId;
+
+	CMessageFireSpell() = delete;
+};
+
+struct CMessageFireProjectile : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int16 m_projectileType;
+	int m_projectileTargetId;
+	CPoint m_projectileTarget;
+	int m_height;
+
+	CMessageFireProjectile() = delete;
+};
+
+struct CMessageFamiliarAdd : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bFamiliarAdd;
+
+	CMessageFamiliarAdd() = delete;
+};
+
+struct CMessageFakeExpireCheck : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_nTime;
+
+	CMessageFakeExpireCheck() = delete;
+};
+
+struct CMessageFadeColor : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bFadeTo;
+	unsigned __int8 m_redFade;
+	unsigned __int8 m_greenFade;
+	unsigned __int8 m_blueFade;
+
+	CMessageFadeColor() = delete;
+};
+
+struct CMessageExploreArea : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_sAreaString;
+
+	CMessageExploreArea() = delete;
+};
+
+struct CMessageExitStoreMode : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageExitStoreMode() = delete;
+};
+
 struct CMessageExitDialogMode : CMessage
 {
 	struct vtbl : CMessage::vtbl
@@ -6989,6 +7900,110 @@ struct CMessageExitDialogMode : CMessage
 		m_targetId = target;
 		m_bButtonPushed = bButtonPushed;
 	}
+};
+
+struct CMessageEscapeArea : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageEscapeArea() = delete;
+};
+
+struct CMessageEnterDialogMode : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageEnterDialogMode() = delete;
+};
+
+struct CMessageEnterDialog : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_entryNum;
+	unsigned __int8 m_newDialog;
+	int m_bItemDialog;
+	int m_bSuppressName;
+
+	CMessageEnterDialog() = delete;
+};
+
+struct CMessageDropPath : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageDropPath() = delete;
+};
+
+struct CMessageDoorStatus : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_dwFlags;
+	unsigned __int16 m_trapDetected;
+	unsigned __int16 m_trapActivated;
+	unsigned __int8 m_bOpen;
+
+	CMessageDoorStatus() = delete;
+};
+
+struct CMessageDoorOpen : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bOpenDoor;
+
+	CMessageDoorOpen() = delete;
+};
+
+struct CMessageDisplayTextRefSend : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_name;
+	unsigned int m_text;
+	unsigned int m_nameColor;
+	unsigned int m_textColor;
+	int m_marker;
+	unsigned __int8 m_moveToTop;
+	unsigned __int8 m_overHead;
+
+	CMessageDisplayTextRefSend() = delete;
+};
+
+struct CMessageDisplayTextRefPoint : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_text;
+	unsigned int m_textColor;
+	CPoint m_point;
+
+	CMessageDisplayTextRefPoint() = delete;
 };
 
 struct CMessageDisplayTextRef : CMessage
@@ -7066,6 +8081,192 @@ struct CMessageDisplayText : CMessage
 		m_overHead = 0;
 		m_overrideDialogMode = 0;
 	}
+};
+
+struct CMessageDisableAI : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int m_bDisable;
+
+	CMessageDisableAI() = delete;
+};
+
+struct CMessageCutSceneModeStatus : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_cutSceneMode;
+
+	CMessageCutSceneModeStatus() = delete;
+};
+
+struct CMessageCutSceneLite : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_cutSceneMode;
+
+	CMessageCutSceneLite() = delete;
+};
+
+struct CMessageContainerStatus : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned int m_dwFlags;
+	unsigned __int16 m_trapDetected;
+	unsigned __int16 m_trapActivated;
+
+	CMessageContainerStatus() = delete;
+};
+
+struct CMessageContainerItems : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int16 m_nItems;
+	CItem** m_pItems;
+
+	CMessageContainerItems() = delete;
+};
+
+struct CMessageColorUpdate : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CColorRanges m_appliedColorRanges;
+	CColorEffects m_appliedColorEffects;
+
+	CMessageColorUpdate() = delete;
+};
+
+struct CMessageColorReset : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageColorReset() = delete;
+};
+
+struct CMessageClearTriggers : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageClearTriggers() = delete;
+};
+
+struct CMessageClearGroupSlot : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_slotNum;
+
+	CMessageClearGroupSlot() = delete;
+};
+
+struct CMessageClearDialogOnMachine : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageClearDialogOnMachine() = delete;
+};
+
+struct CMessageClearDialogActions : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageClearDialogActions() = delete;
+};
+
+struct CMessageClearActions : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CMessageClearActions() = delete;
+};
+
+struct CMessageCheckForForcedDialogEnd : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_bOverrideAction;
+
+	CMessageCheckForForcedDialogEnd() = delete;
+};
+
+struct CMessageChangeDirection : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	__int16 m_face;
+
+	CMessageChangeDirection() = delete;
+};
+
+struct CMessageAnimationChange : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int16 m_animationId;
+
+	CMessageAnimationChange() = delete;
+};
+
+struct CMessageAllowDialogInterrupt : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	unsigned __int8 m_cutSceneMode;
+
+	CMessageAllowDialogInterrupt() = delete;
 };
 
 struct CMessageAddEffect : CMessage
@@ -8076,6 +9277,19 @@ struct CVariable : CAreaVariable
 	}
 };
 
+struct CMessageSetVariableAll : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CString m_sAreaName;
+	CVariable m_variable;
+
+	CMessageSetVariableAll() = delete;
+};
+
 struct DP_Player
 {
 	unsigned int id;
@@ -8932,6 +10146,352 @@ struct CGameDialogSprite
 	{
 		p_ResetDialogStates(this);
 	}
+};
+
+struct CMessageAddVVCInternal : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_res;
+
+	CMessageAddVVCInternal() = delete;
+};
+
+struct CMessageChangeStoreMarkup : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_sStore;
+	unsigned int m_buy;
+	unsigned int m_sell;
+
+	CMessageChangeStoreMarkup() = delete;
+};
+
+struct CMessageCleanAir : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_resref;
+	CResRef m_table;
+
+	CMessageCleanAir() = delete;
+};
+
+struct CMessageDreamScriptResRef : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_cResRefDialog;
+
+	CMessageDreamScriptResRef() = delete;
+};
+
+struct CMessageFamiliarRemoveResRef : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_resRef;
+	unsigned __int8 m_nAlignment;
+	unsigned __int8 m_nLevel;
+
+	CMessageFamiliarRemoveResRef() = delete;
+};
+
+struct CMessageForceRandomEncounter : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_cRes;
+	CString m_sEntryPoint;
+
+	CMessageForceRandomEncounter() = delete;
+};
+
+struct CMessagePlaySoundRef : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_cResSound;
+	unsigned __int8 m_nChannel;
+	unsigned __int8 m_bPositioned;
+	int m_bSendToMe;
+
+	CMessagePlaySoundRef() = delete;
+};
+
+struct CMessageRemoveVVCInternal : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_res;
+	unsigned __int8 m_level;
+
+	CMessageRemoveVVCInternal() = delete;
+};
+
+struct CMessageSetAreaScript : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_script;
+	__int16 m_nSlot;
+
+	CMessageSetAreaScript() = delete;
+};
+
+struct CMessageSetCampaign : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_campaign;
+
+	CMessageSetCampaign() = delete;
+};
+
+struct CMessageSetCurrentArea : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_cResRefDialog;
+
+	CMessageSetCurrentArea() = delete;
+};
+
+struct CMessageSetDialogResRef : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_cResRefDialog;
+
+	CMessageSetDialogResRef() = delete;
+};
+
+struct CMessageSetMusic : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_sArea;
+	unsigned int m_music;
+	unsigned __int8 m_slot;
+
+	CMessageSetMusic() = delete;
+};
+
+struct CMessageSetPortraitLarge : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_cResRefDialog;
+
+	CMessageSetPortraitLarge() = delete;
+};
+
+struct CMessageSetPortraitSmall : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_cResRefDialog;
+
+	CMessageSetPortraitSmall() = delete;
+};
+
+struct CMessageSetRestEncounterProbability : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_sArea;
+	unsigned __int8 m_prob;
+	unsigned __int8 m_bDayProb;
+
+	CMessageSetRestEncounterProbability() = delete;
+};
+
+struct CMessageSetWorldmap : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_worldmap;
+
+	CMessageSetWorldmap() = delete;
+};
+
+struct CMessageSetWorldmapAreaFlag : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_area;
+	int m_value;
+	int m_setreset;
+
+	CMessageSetWorldmapAreaFlag() = delete;
+};
+
+struct CMessageStartTextScreen : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_screen;
+
+	CMessageStartTextScreen() = delete;
+};
+
+struct CMessageStartVEF : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_res;
+	CString m_sAreaString;
+	CPoint m_start;
+	CPoint m_target;
+	__int16 m_height;
+
+	CMessageStartVEF() = delete;
+
+	typedef void (__thiscall *type_Construct)(CMessageStartVEF* pThis, const CResRef* ref, const CString* area, const CPoint* start, const CPoint targetPt, short height, int caller, int target);
+	static type_Construct p_Construct;
+
+	void Construct(const CResRef* ref, const CString* area, const CPoint* start, const CPoint targetPt, short height, int caller, int target)
+	{
+		p_Construct(this, ref, area, start, targetPt, height, caller, target);
+	}
+};
+
+struct CMessageStaticPalette : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_res;
+
+	CMessageStaticPalette() = delete;
+};
+
+struct CMessageStoreDemand : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_store;
+
+	CMessageStoreDemand() = delete;
+};
+
+struct CMessageStoreRelease : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_store;
+
+	CMessageStoreRelease() = delete;
+};
+
+struct CMessageStoreRemoveItem : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_store;
+	CResRef m_itemId;
+	unsigned int m_flags;
+
+	CMessageStoreRemoveItem() = delete;
+};
+
+struct CMessageStoreReplaceItem : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_store;
+	CResRef m_oldItem;
+	CResRef m_newItem;
+
+	CMessageStoreReplaceItem() = delete;
+};
+
+struct CMessageUpdateScript : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_resref;
+	__int16 m_level;
+
+	CMessageUpdateScript() = delete;
 };
 
 template<class RES_CLASS, int RES_ID>
@@ -11992,6 +13552,66 @@ struct CChitin
 	}
 };
 
+struct CMessageSpriteUpdate : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	int* m_pPath;
+	__int16 m_nPath;
+	__int16 m_currPath;
+	CPoint m_ptDest;
+	CString m_sAreaString;
+	__int16 m_nSequence;
+	CPoint m_ptPosition;
+	__int16 m_nFacing;
+	unsigned int m_dwState;
+	__int16 m_nHitPoints;
+	__int16 m_nMaxHitPoints;
+	__int16 m_nArmorClass;
+	__int16 m_nACCrushingMod;
+	__int16 m_nACMissileMod;
+	__int16 m_nACPiercingMod;
+	__int16 m_nACSlashingMod;
+	__int16 m_nPortraitIcons;
+	int* m_pPortraitIcons;
+	unsigned __int8 m_nEnemyAlly;
+	unsigned __int8 m_nEnemyAllyLive;
+	unsigned __int8 m_nGeneral;
+	unsigned __int8 m_nGeneralLive;
+	unsigned __int8 m_bMoraleFailure;
+	unsigned __int8 m_nMoveScale;
+	int m_nHPCONBonusTotalOld;
+	unsigned __int8 m_bLevelUp;
+	unsigned __int8 m_bSummonDisable;
+	unsigned __int8 m_bDoNotJump;
+	unsigned __int8 m_bSanctuary;
+	unsigned __int8 m_bDisableCircle;
+	unsigned __int8 m_bHeld;
+	unsigned __int8 m_bActiveImprisonment;
+	__int16 m_nTranslucency;
+	unsigned __int8 m_bImmuneToBackstabs;
+	Array<unsigned int,8> m_spellState;
+	unsigned __int16 m_nBitsRequired;
+
+	CMessageSpriteUpdate() = delete;
+};
+
+struct CMessageColorChange : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	Array<unsigned __int8,7> m_colors;
+	unsigned __int8 m_bApply;
+
+	CMessageColorChange() = delete;
+};
+
 struct CMachineStates
 {
 	Array<CMachineState,6> m_machineStates;
@@ -12039,6 +13659,58 @@ struct CItem : CResHelper<CResItem,1005>
 	virtual void virtual_Destruct()
 	{
 	}
+};
+
+struct CMessageTransformItem : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CItem m_item;
+	CResRef m_cRes;
+
+	CMessageTransformItem() = delete;
+};
+
+struct CMessageReplaceItem : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CItem m_item;
+	CResRef m_cRes;
+
+	CMessageReplaceItem() = delete;
+};
+
+struct CMessageContainerAddItem : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CItem m_item;
+	__int16 m_slotNum;
+	unsigned __int8 m_bCompressContainer;
+
+	CMessageContainerAddItem() = delete;
+};
+
+struct CMessageAddItem : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CItem m_item;
+
+	CMessageAddItem() = delete;
 };
 
 struct CInfinity
@@ -12327,6 +13999,18 @@ struct CGameSpriteEquipment
 	CGameSprite* m_pSprite;
 
 	CGameSpriteEquipment() = delete;
+};
+
+struct CMessageSpriteEquipment : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CGameSpriteEquipment m_equipment;
+
+	CMessageSpriteEquipment() = delete;
 };
 
 struct CGameSaveCharacter
@@ -13522,6 +15206,20 @@ struct CCreatureFileItem
 	CCreatureFileItem() = delete;
 };
 
+struct CMessageStoreAddItem : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CResRef m_store;
+	CCreatureFileItem m_item;
+	unsigned int m_storeFlags;
+
+	CMessageStoreAddItem() = delete;
+};
+
 struct CCreatureFileHeader
 {
 	unsigned int m_name;
@@ -14329,6 +16027,30 @@ struct CAIAction
 	}
 };
 
+struct CMessageAddAction : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CAIAction m_action;
+
+	CMessageAddAction() = delete;
+};
+
+struct CMessageInsertAction : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CAIAction m_action;
+
+	CMessageInsertAction() = delete;
+};
+
 struct CSpawn
 {
 	enum class ePMode : __int32
@@ -14492,6 +16214,32 @@ struct CMessageSetLastObject : CMessage
 	CMessageSetLastObject() = delete;
 
 	void Override_Run();
+};
+
+struct CMessageSetLastAttacker : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CAIObjectType m_lAttacker;
+
+	CMessageSetLastAttacker() = delete;
+};
+
+struct CMessageEnterStoreMode : CMessage
+{
+	struct vtbl : CMessage::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CAIObjectType m_cAIProprietor;
+	CAIObjectType m_cAICustomer;
+	CResRef m_cResStore;
+
+	CMessageEnterStoreMode() = delete;
 };
 
 struct CGameObject
