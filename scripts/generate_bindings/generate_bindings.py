@@ -373,7 +373,7 @@ def buildInstantiationStr(groupName: str, templateTypesTup):
 	return "".join(groupNameParts)
 
 
-def splitKeepBrackets(stringIn, toSplit, toSplitInclude=[], noSplit=[]) -> list[str]:
+def splitKeepBrackets(stringIn, toSplit, toSplitInclude=[], noSplit=[], keepTogetherStart=["<"], keepTogetherEnd=[">"]) -> list[str]:
 
 	def inList(string, i, l):
 		for v in l:
@@ -391,11 +391,12 @@ def splitKeepBrackets(stringIn, toSplit, toSplitInclude=[], noSplit=[]) -> list[
 
 		incAmount = 1
 
-		char = stringIn[i]
-		if char == "<":
+		if (keepTogetherStartLen := inList(stringIn, i, keepTogetherStart)) != -1:
 			level += 1
-		elif char == ">":
+			incAmount = keepTogetherStartLen
+		elif (keepTogetherLenEnd := inList(stringIn, i, keepTogetherEnd)) != -1:
 			level -= 1
+			incAmount = keepTogetherLenEnd
 		elif level == 0:
 
 			noSplitLen = inList(stringIn, i, noSplit)
@@ -1919,7 +1920,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 			yield funcParameter
 
 
-	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$delayed_pointer|\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\)|\\$allow_references|\\$instantiations\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=*& ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$delayed_pointer|\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\([\\S ]+\\)|\\$allow_references|\\$instantiations\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=*& ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1929,7 +1930,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 		allowReferences: bool = False
 
 		if keywordMatch := functionImplementationMatch.group(1):
-			for keyword in keywordMatch.strip().split(" "):
+			for keyword in splitKeepBrackets(keywordMatch.strip(), [" "], keepTogetherStart=["("], keepTogetherEnd=[")"]):
 				if keyword == "$nobinding":
 					assert not state.currentFunctionImplementation.lineGroupFlags.isExplicitlyFlagged("noBindings"), "nobinding already defined"
 					state.currentFunctionImplementation.lineGroupFlags.setFlag("noBindings", FlagSource.EXPLICIT)
@@ -1948,7 +1949,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 				elif bindingNameMatch := re.match("^\\$binding_name\\((\\S+)\\)$", keyword):
 					assert not state.currentFunctionImplementation.bindingName, "bindingName already defined"
 					state.currentFunctionImplementation.setBindingName(bindingNameMatch.group(1))
-				elif patternNameMatch := re.match("^\\$pattern_name\\((\\S+)\\)$", keyword):
+				elif patternNameMatch := re.match("^\\$pattern_name\\(([\\S ]+)\\)$", keyword):
 					assert not state.currentFunctionImplementation.patternName, "pattern_name already defined"
 					state.currentFunctionImplementation.patternName = patternNameMatch.group(1)
 				elif keyword == "$allow_references":
@@ -1963,7 +1964,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 							templateTypes.append(defineTypeRef(mainState, group, templateTypeStr, TypeRefSourceType.TEMPLATE))
 						state.currentFunctionImplementation.instantiations.append(tuple(templateTypes))
 				else:
-					assert False, "Bad bindings directive"
+					assert False, f"Bad bindings directive: {keyword}"
 
 		state.currentFunctionImplementation.isStatic = functionImplementationMatch.group(2) != None
 

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <d3dx9.h>
+#include <mbstring.h>
 
 #include "infinity_loader_common_api.h"
 #include "lua_bindings_core_api.h"
@@ -4960,6 +4961,9 @@ struct CString
 	typedef void (__thiscall *type_Destruct)(CString* pThis);
 	static type_Destruct p_Destruct;
 
+	typedef void (__thiscall *type_MakeUpper)(CString* pThis);
+	static type_MakeUpper p_MakeUpper;
+
 	typedef void (__thiscall *type_AssignmentOperator_Overload_String)(const CString* pThis, const char* lpsz);
 	static type_AssignmentOperator_Overload_String p_AssignmentOperator_Overload_String;
 
@@ -4985,6 +4989,11 @@ struct CString
 	}
 
 	void Construct();
+
+	void MakeUpper()
+	{
+		p_MakeUpper(this);
+	}
 
 	void operator=(const char* lpsz) const
 	{
@@ -10545,33 +10554,93 @@ struct C2DArray : CResHelper<CResText,1012>
 	typedef void (__thiscall *type_Construct)(C2DArray* pThis);
 	static type_Construct p_Construct;
 
-	typedef void (__thiscall *type_Load)(C2DArray* pThis, const CResRef* res);
-	static type_Load p_Load;
-
-	typedef const CString* (__thiscall *type_GetAtLabels)(C2DArray* pThis, const CString* nX, const CString* nY);
-	static type_GetAtLabels p_GetAtLabels;
-
 	typedef void (__thiscall *type_Destruct)(C2DArray* pThis);
 	static type_Destruct p_Destruct;
+
+	typedef const CString* (__thiscall *type_GetAtCStringLabels)(C2DArray* pThis, const CString* nX, const CString* nY);
+	static type_GetAtCStringLabels p_GetAtCStringLabels;
+
+	typedef void (__thiscall *type_Load)(C2DArray* pThis, const CResRef* res);
+	static type_Load p_Load;
 
 	void Construct()
 	{
 		p_Construct(this);
 	}
 
-	void Load(const CResRef* res)
-	{
-		p_Load(this, res);
-	}
-
-	const CString* GetAtLabels(const CString* nX, const CString* nY)
-	{
-		return p_GetAtLabels(this, nX, nY);
-	}
-
 	void Destruct()
 	{
 		p_Destruct(this);
+	}
+
+	int FindColumnLabel(const char* sLabel)
+	{
+		EngineVal<CString> sLabelUppercase { sLabel };
+		sLabelUppercase->MakeUpper();
+
+		const auto sSearchingForLabel = reinterpret_cast<const unsigned char*>(sLabelUppercase->m_pchData);
+
+		for (int x = 0; x < this->m_nSizeX; ++x)
+		{
+			const auto sExistingLabel = reinterpret_cast<const unsigned char*>(this->m_pNamesX->getReference(x)->m_pchData);
+
+			if (_mbscmp(sExistingLabel, sSearchingForLabel) == 0)
+			{
+				return x;
+			}
+		}
+
+		return -1;
+	}
+
+	int FindRowLabel(const char* sLabel)
+	{
+		EngineVal<CString> sLabelUppercase { sLabel };
+		sLabelUppercase->MakeUpper();
+
+		const auto sSearchingForLabel = reinterpret_cast<const unsigned char*>(sLabelUppercase->m_pchData);
+
+		for (int y = 0; y < this->m_nSizeY; ++y)
+		{
+			const auto sExistingLabel = reinterpret_cast<const unsigned char*>(this->m_pNamesY->getReference(y)->m_pchData);
+
+			if (_mbscmp(sExistingLabel, sSearchingForLabel) == 0)
+			{
+				return y;
+			}
+		}
+
+		return -1;
+	}
+
+	const CString* GetAt(int x, int y)
+	{
+		if (x >= 0 && x < this->m_nSizeX && y >= 0 && y < this->m_nSizeY)
+		{
+			return this->m_pArray->getReference(y * this->m_nSizeX + x);
+		}
+		return &this->m_default;
+	}
+
+	const CString* GetAt(const char* nX, const char* nY)
+	{
+		const int nColumnIndex = this->FindColumnLabel(nX);
+		if (nColumnIndex == -1) return &this->m_default;
+
+		const int nRowIndex = this->FindRowLabel(nY);
+		if (nRowIndex == -1) return &this->m_default;
+
+		return this->GetAt(nColumnIndex, nRowIndex);
+	}
+
+	const CString* GetAt(const CString* nX, const CString* nY)
+	{
+		return p_GetAtCStringLabels(this, nX, nY);
+	}
+
+	void Load(const CResRef* res)
+	{
+		p_Load(this, res);
 	}
 };
 
