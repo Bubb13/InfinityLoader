@@ -839,9 +839,70 @@ struct texture_t_DX
 struct C2DArray : CResHelper<CResText,1012>
 {
 	$constructor_fake Construct();
-	void Load(const CResRef* res);
-	const CString* GetAtLabels(const CString* nX, const CString* nY);
 	void Destruct();
+
+	int FindColumnLabel(primitive const char* sLabel)
+	{
+		EngineVal<CString> sLabelUppercase { sLabel };
+		sLabelUppercase->MakeUpper();
+
+		const auto sSearchingForLabel = reinterpret_cast<const unsigned char*>(sLabelUppercase->m_pchData);
+
+		for (int x = 0; x < this->m_nSizeX; ++x)
+		{
+			const auto sExistingLabel = reinterpret_cast<const unsigned char*>(this->m_pNamesX->getReference(x)->m_pchData);
+
+			if (_mbscmp(sExistingLabel, sSearchingForLabel) == 0)
+			{
+				return x;
+			}
+		}
+
+		return -1;
+	}
+
+	int FindRowLabel(primitive const char* sLabel)
+	{
+		EngineVal<CString> sLabelUppercase { sLabel };
+		sLabelUppercase->MakeUpper();
+
+		const auto sSearchingForLabel = reinterpret_cast<const unsigned char*>(sLabelUppercase->m_pchData);
+
+		for (int y = 0; y < this->m_nSizeY; ++y)
+		{
+			const auto sExistingLabel = reinterpret_cast<const unsigned char*>(this->m_pNamesY->getReference(y)->m_pchData);
+
+			if (_mbscmp(sExistingLabel, sSearchingForLabel) == 0)
+			{
+				return y;
+			}
+		}
+
+		return -1;
+	}
+
+	$binding_name(GetAtPoint) const CString* GetAt(int x, int y)
+	{
+		if (x >= 0 && x < this->m_nSizeX && y >= 0 && y < this->m_nSizeY)
+		{
+			return this->m_pArray->getReference(y * this->m_nSizeX + x);
+		}
+		return &this->m_default;
+	}
+
+	$binding_name(GetAtLabels) const CString* GetAt(primitive const char* nX, primitive const char* nY)
+	{
+		const int nColumnIndex = this->FindColumnLabel(nX);
+		if (nColumnIndex == -1) return &this->m_default;
+
+		const int nRowIndex = this->FindRowLabel(nY);
+		if (nRowIndex == -1) return &this->m_default;
+
+		return this->GetAt(nColumnIndex, nRowIndex);
+	}
+
+	$binding_name(GetAtCStringLabels) $pattern_name(GetAt(const CString*,const CString*)) const CString* GetAt(const CString* nX, const CString* nY);
+	void Load(const CResRef* res);
 };
 
 struct CAbilityId
@@ -1049,6 +1110,7 @@ struct CString
 		m_pchData = *p_afxPchNil;
 	}
 
+	void MakeUpper();
 	$binding_name(AssignmentOperator_Overload_String) $pattern_name(operator=(char*)) void operator=(primitive const char* lpsz) const;
 	$binding_name(AssignmentOperator_Overload_CString) $pattern_name(operator=(CString*)) void operator=(const CString* other) const;
 

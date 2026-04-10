@@ -446,23 +446,314 @@ void registerBaseclasses() {
 		{"CObList", {
 			{"CObject", offsetofbase<CObList, CObject>()},
 		}},
+		{"CMessageWeaponImmumityUpdate", {
+			{"CMessage", offsetofbase<CMessageWeaponImmumityUpdate, CMessage>()},
+		}},
+		{"CMessageVisualEffect", {
+			{"CMessage", offsetofbase<CMessageVisualEffect, CMessage>()},
+		}},
+		{"CMessageVisibilityMapMove", {
+			{"CMessage", offsetofbase<CMessageVisibilityMapMove, CMessage>()},
+		}},
+		{"CMessageVerbalConstant", {
+			{"CMessage", offsetofbase<CMessageVerbalConstant, CMessage>()},
+		}},
+		{"CMessageUseItemCharges", {
+			{"CMessage", offsetofbase<CMessageUseItemCharges, CMessage>()},
+		}},
+		{"CMessageUpdateStoredPartyLocations", {
+			{"CMessage", offsetofbase<CMessageUpdateStoredPartyLocations, CMessage>()},
+		}},
 		{"CMessageUpdateReaction", {
 			{"CMessage", offsetofbase<CMessageUpdateReaction, CMessage>()},
 		}},
 		{"CMessageUpdateMachineState", {
 			{"CMessage", offsetofbase<CMessageUpdateMachineState, CMessage>()},
 		}},
+		{"CMessageUpdateImmunities", {
+			{"CMessage", offsetofbase<CMessageUpdateImmunities, CMessage>()},
+		}},
+		{"CMessageUnlock", {
+			{"CMessage", offsetofbase<CMessageUnlock, CMessage>()},
+		}},
+		{"CMessageTriggerStatus", {
+			{"CMessage", offsetofbase<CMessageTriggerStatus, CMessage>()},
+		}},
+		{"CMessageTakeCreatureItems", {
+			{"CMessage", offsetofbase<CMessageTakeCreatureItems, CMessage>()},
+		}},
+		{"CMessageStopFollow", {
+			{"CMessage", offsetofbase<CMessageStopFollow, CMessage>()},
+		}},
+		{"CMessageStopEscapeArea", {
+			{"CMessage", offsetofbase<CMessageStopEscapeArea, CMessage>()},
+		}},
+		{"CMessageStopActions", {
+			{"CMessage", offsetofbase<CMessageStopActions, CMessage>()},
+		}},
+		{"CMessageStaticStart", {
+			{"CMessage", offsetofbase<CMessageStaticStart, CMessage>()},
+		}},
+		{"CMessageStaticSequence", {
+			{"CMessage", offsetofbase<CMessageStaticSequence, CMessage>()},
+		}},
+		{"CMessageStartSong", {
+			{"CMessage", offsetofbase<CMessageStartSong, CMessage>()},
+		}},
+		{"CMessageStartScroll", {
+			{"CMessage", offsetofbase<CMessageStartScroll, CMessage>()},
+		}},
+		{"CMessageStartFollow", {
+			{"CMessage", offsetofbase<CMessageStartFollow, CMessage>()},
+		}},
+		{"CMessageStartCombatMusic", {
+			{"CMessage", offsetofbase<CMessageStartCombatMusic, CMessage>()},
+		}},
+		{"CMessageSpritePetrify", {
+			{"CMessage", offsetofbase<CMessageSpritePetrify, CMessage>()},
+		}},
+		{"CMessageSpriteDeath", {
+			{"CMessage", offsetofbase<CMessageSpriteDeath, CMessage>()},
+		}},
+		{"CMessageSpawnPtSpawn", {
+			{"CMessage", offsetofbase<CMessageSpawnPtSpawn, CMessage>()},
+		}},
+		{"CMessageSpawnPtActivate", {
+			{"CMessage", offsetofbase<CMessageSpawnPtActivate, CMessage>()},
+		}},
+		{"CMessageSetVariable", {
+			{"CMessage", offsetofbase<CMessageSetVariable, CMessage>()},
+		}},
+		{"CMessageSetTimeStop", {
+			{"CMessage", offsetofbase<CMessageSetTimeStop, CMessage>()},
+		}},
+		{"CMessageSetTarget", {
+			{"CMessage", offsetofbase<CMessageSetTarget, CMessage>()},
+		}},
+		{"CMessageSetStateOverrideTime", {
+			{"CMessage", offsetofbase<CMessageSetStateOverrideTime, CMessage>()},
+		}},
+		{"CMessageSetStateOverrideFlag", {
+			{"CMessage", offsetofbase<CMessageSetStateOverrideFlag, CMessage>()},
+		}},
+		{"CMessageSetSound", {
+			{"CMessage", offsetofbase<CMessageSetSound, CMessage>()},
+		}},
+		{"CMessageSetSequence", {
+			{"CMessage", offsetofbase<CMessageSetSequence, CMessage>()},
+		}},
+		{"CMessageSetPath", {
+			{"CMessage", offsetofbase<CMessageSetPath, CMessage>()},
+		}},
+		{"CMessageSetNumTimesTalkedTo", {
+			{"CMessage", offsetofbase<CMessageSetNumTimesTalkedTo, CMessage>()},
+		}},
+		{"CMessageSetInStore", {
+			{"CMessage", offsetofbase<CMessageSetInStore, CMessage>()},
+		}},
+		{"CMessageSetInDialog", {
+			{"CMessage", offsetofbase<CMessageSetInDialog, CMessage>()},
+		}},
+		{"CMessageSetInCutScene", {
+			{"CMessage", offsetofbase<CMessageSetInCutScene, CMessage>()},
+		}},
+		{"CMessageSetHappiness", {
+			{"CMessage", offsetofbase<CMessageSetHappiness, CMessage>()},
+		}},
+		{"CMessageSetForceActionPick", {
+			{"CMessage", offsetofbase<CMessageSetForceActionPick, CMessage>()},
+		}},
+		{"CMessageSetFamiliarSummoner", {
+			{"CMessage", offsetofbase<CMessageSetFamiliarSummoner, CMessage>()},
+		}},
+		{"CMessageSetDrawPoly", {
+			{"CMessage", offsetofbase<CMessageSetDrawPoly, CMessage>()},
+		}},
 		{"CMessageSetDirection", {
 			{"CMessage", offsetofbase<CMessageSetDirection, CMessage>()},
 		}},
+		{"CMessageSetDialogWait", {
+			{"CMessage", offsetofbase<CMessageSetDialogWait, CMessage>()},
+		}},
+		{"CMessageSetDialogPausing", {
+			{"CMessage", offsetofbase<CMessageSetDialogPausing, CMessage>()},
+		}},
+		{"CMessageSetCurrentActionId", {
+			{"CMessage", offsetofbase<CMessageSetCurrentActionId, CMessage>()},
+		}},
+		{"CMessageSetCommandPause", {
+			{"CMessage", offsetofbase<CMessageSetCommandPause, CMessage>()},
+		}},
+		{"CMessageSetBanterBlockTime", {
+			{"CMessage", offsetofbase<CMessageSetBanterBlockTime, CMessage>()},
+		}},
+		{"CMessageSetBanterBlockFlag", {
+			{"CMessage", offsetofbase<CMessageSetBanterBlockFlag, CMessage>()},
+		}},
+		{"CMessageSetAreaFlag", {
+			{"CMessage", offsetofbase<CMessageSetAreaFlag, CMessage>()},
+		}},
+		{"CMessageSetActiveImprisonment", {
+			{"CMessage", offsetofbase<CMessageSetActiveImprisonment, CMessage>()},
+		}},
+		{"CMessageSetActive", {
+			{"CMessage", offsetofbase<CMessageSetActive, CMessage>()},
+		}},
+		{"CMessageSetAISpeed", {
+			{"CMessage", offsetofbase<CMessageSetAISpeed, CMessage>()},
+		}},
+		{"CMessageScreenShake", {
+			{"CMessage", offsetofbase<CMessageScreenShake, CMessage>()},
+		}},
+		{"CMessageSaveGame", {
+			{"CMessage", offsetofbase<CMessageSaveGame, CMessage>()},
+		}},
+		{"CMessageResetMorale", {
+			{"CMessage", offsetofbase<CMessageResetMorale, CMessage>()},
+		}},
+		{"CMessageReputationChange", {
+			{"CMessage", offsetofbase<CMessageReputationChange, CMessage>()},
+		}},
+		{"CMessageRemoveReplies", {
+			{"CMessage", offsetofbase<CMessageRemoveReplies, CMessage>()},
+		}},
+		{"CMessageRemoveItem", {
+			{"CMessage", offsetofbase<CMessageRemoveItem, CMessage>()},
+		}},
+		{"CMessagePlaySound", {
+			{"CMessage", offsetofbase<CMessagePlaySound, CMessage>()},
+		}},
+		{"CMessagePartyGold", {
+			{"CMessage", offsetofbase<CMessagePartyGold, CMessage>()},
+		}},
+		{"CMessageNonControlledDialogStart", {
+			{"CMessage", offsetofbase<CMessageNonControlledDialogStart, CMessage>()},
+		}},
+		{"CMessageNonControlledDialogReturn", {
+			{"CMessage", offsetofbase<CMessageNonControlledDialogReturn, CMessage>()},
+		}},
+		{"CMessageMoveGlobal", {
+			{"CMessage", offsetofbase<CMessageMoveGlobal, CMessage>()},
+		}},
+		{"CMessageMakeGlobal", {
+			{"CMessage", offsetofbase<CMessageMakeGlobal, CMessage>()},
+		}},
+		{"CMessageLoadDialog", {
+			{"CMessage", offsetofbase<CMessageLoadDialog, CMessage>()},
+		}},
+		{"CMessageLeaveParty", {
+			{"CMessage", offsetofbase<CMessageLeaveParty, CMessage>()},
+		}},
+		{"CMessageInsertResponse", {
+			{"CMessage", offsetofbase<CMessageInsertResponse, CMessage>()},
+		}},
+		{"CMessageHeartbeat", {
+			{"CMessage", offsetofbase<CMessageHeartbeat, CMessage>()},
+		}},
+		{"CMessageForcePosition", {
+			{"CMessage", offsetofbase<CMessageForcePosition, CMessage>()},
+		}},
+		{"CMessageFireSpell", {
+			{"CMessage", offsetofbase<CMessageFireSpell, CMessage>()},
+		}},
+		{"CMessageFireProjectile", {
+			{"CMessage", offsetofbase<CMessageFireProjectile, CMessage>()},
+		}},
+		{"CMessageFamiliarAdd", {
+			{"CMessage", offsetofbase<CMessageFamiliarAdd, CMessage>()},
+		}},
+		{"CMessageFakeExpireCheck", {
+			{"CMessage", offsetofbase<CMessageFakeExpireCheck, CMessage>()},
+		}},
+		{"CMessageFadeColor", {
+			{"CMessage", offsetofbase<CMessageFadeColor, CMessage>()},
+		}},
+		{"CMessageExploreArea", {
+			{"CMessage", offsetofbase<CMessageExploreArea, CMessage>()},
+		}},
+		{"CMessageExitStoreMode", {
+			{"CMessage", offsetofbase<CMessageExitStoreMode, CMessage>()},
+		}},
 		{"CMessageExitDialogMode", {
 			{"CMessage", offsetofbase<CMessageExitDialogMode, CMessage>()},
+		}},
+		{"CMessageEscapeArea", {
+			{"CMessage", offsetofbase<CMessageEscapeArea, CMessage>()},
+		}},
+		{"CMessageEnterDialogMode", {
+			{"CMessage", offsetofbase<CMessageEnterDialogMode, CMessage>()},
+		}},
+		{"CMessageEnterDialog", {
+			{"CMessage", offsetofbase<CMessageEnterDialog, CMessage>()},
+		}},
+		{"CMessageDropPath", {
+			{"CMessage", offsetofbase<CMessageDropPath, CMessage>()},
+		}},
+		{"CMessageDoorStatus", {
+			{"CMessage", offsetofbase<CMessageDoorStatus, CMessage>()},
+		}},
+		{"CMessageDoorOpen", {
+			{"CMessage", offsetofbase<CMessageDoorOpen, CMessage>()},
+		}},
+		{"CMessageDisplayTextRefSend", {
+			{"CMessage", offsetofbase<CMessageDisplayTextRefSend, CMessage>()},
+		}},
+		{"CMessageDisplayTextRefPoint", {
+			{"CMessage", offsetofbase<CMessageDisplayTextRefPoint, CMessage>()},
 		}},
 		{"CMessageDisplayTextRef", {
 			{"CMessage", offsetofbase<CMessageDisplayTextRef, CMessage>()},
 		}},
 		{"CMessageDisplayText", {
 			{"CMessage", offsetofbase<CMessageDisplayText, CMessage>()},
+		}},
+		{"CMessageDisableAI", {
+			{"CMessage", offsetofbase<CMessageDisableAI, CMessage>()},
+		}},
+		{"CMessageCutSceneModeStatus", {
+			{"CMessage", offsetofbase<CMessageCutSceneModeStatus, CMessage>()},
+		}},
+		{"CMessageCutSceneLite", {
+			{"CMessage", offsetofbase<CMessageCutSceneLite, CMessage>()},
+		}},
+		{"CMessageContainerStatus", {
+			{"CMessage", offsetofbase<CMessageContainerStatus, CMessage>()},
+		}},
+		{"CMessageContainerItems", {
+			{"CMessage", offsetofbase<CMessageContainerItems, CMessage>()},
+		}},
+		{"CMessageColorUpdate", {
+			{"CMessage", offsetofbase<CMessageColorUpdate, CMessage>()},
+		}},
+		{"CMessageColorReset", {
+			{"CMessage", offsetofbase<CMessageColorReset, CMessage>()},
+		}},
+		{"CMessageClearTriggers", {
+			{"CMessage", offsetofbase<CMessageClearTriggers, CMessage>()},
+		}},
+		{"CMessageClearGroupSlot", {
+			{"CMessage", offsetofbase<CMessageClearGroupSlot, CMessage>()},
+		}},
+		{"CMessageClearDialogOnMachine", {
+			{"CMessage", offsetofbase<CMessageClearDialogOnMachine, CMessage>()},
+		}},
+		{"CMessageClearDialogActions", {
+			{"CMessage", offsetofbase<CMessageClearDialogActions, CMessage>()},
+		}},
+		{"CMessageClearActions", {
+			{"CMessage", offsetofbase<CMessageClearActions, CMessage>()},
+		}},
+		{"CMessageCheckForForcedDialogEnd", {
+			{"CMessage", offsetofbase<CMessageCheckForForcedDialogEnd, CMessage>()},
+		}},
+		{"CMessageChangeDirection", {
+			{"CMessage", offsetofbase<CMessageChangeDirection, CMessage>()},
+		}},
+		{"CMessageAnimationChange", {
+			{"CMessage", offsetofbase<CMessageAnimationChange, CMessage>()},
+		}},
+		{"CMessageAllowDialogInterrupt", {
+			{"CMessage", offsetofbase<CMessageAllowDialogInterrupt, CMessage>()},
 		}},
 		{"CMessageAddEffect", {
 			{"CMessage", offsetofbase<CMessageAddEffect, CMessage>()},
@@ -500,11 +791,92 @@ void registerBaseclasses() {
 		{"CResBinary", {
 			{"CRes", offsetofbase<CResBinary, CRes>()},
 		}},
+		{"CMessageSetVariableAll", {
+			{"CMessage", offsetofbase<CMessageSetVariableAll, CMessage>()},
+		}},
 		{"EEex_CScreenMovies", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenMovies, CBaldurEngine>()},
 		}},
 		{"EEex_CScreenConnection", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenConnection, CBaldurEngine>()},
+		}},
+		{"CMessageAddVVCInternal", {
+			{"CMessage", offsetofbase<CMessageAddVVCInternal, CMessage>()},
+		}},
+		{"CMessageChangeStoreMarkup", {
+			{"CMessage", offsetofbase<CMessageChangeStoreMarkup, CMessage>()},
+		}},
+		{"CMessageCleanAir", {
+			{"CMessage", offsetofbase<CMessageCleanAir, CMessage>()},
+		}},
+		{"CMessageDreamScriptResRef", {
+			{"CMessage", offsetofbase<CMessageDreamScriptResRef, CMessage>()},
+		}},
+		{"CMessageFamiliarRemoveResRef", {
+			{"CMessage", offsetofbase<CMessageFamiliarRemoveResRef, CMessage>()},
+		}},
+		{"CMessageForceRandomEncounter", {
+			{"CMessage", offsetofbase<CMessageForceRandomEncounter, CMessage>()},
+		}},
+		{"CMessagePlaySoundRef", {
+			{"CMessage", offsetofbase<CMessagePlaySoundRef, CMessage>()},
+		}},
+		{"CMessageRemoveVVCInternal", {
+			{"CMessage", offsetofbase<CMessageRemoveVVCInternal, CMessage>()},
+		}},
+		{"CMessageSetAreaScript", {
+			{"CMessage", offsetofbase<CMessageSetAreaScript, CMessage>()},
+		}},
+		{"CMessageSetCampaign", {
+			{"CMessage", offsetofbase<CMessageSetCampaign, CMessage>()},
+		}},
+		{"CMessageSetCurrentArea", {
+			{"CMessage", offsetofbase<CMessageSetCurrentArea, CMessage>()},
+		}},
+		{"CMessageSetDialogResRef", {
+			{"CMessage", offsetofbase<CMessageSetDialogResRef, CMessage>()},
+		}},
+		{"CMessageSetMusic", {
+			{"CMessage", offsetofbase<CMessageSetMusic, CMessage>()},
+		}},
+		{"CMessageSetPortraitLarge", {
+			{"CMessage", offsetofbase<CMessageSetPortraitLarge, CMessage>()},
+		}},
+		{"CMessageSetPortraitSmall", {
+			{"CMessage", offsetofbase<CMessageSetPortraitSmall, CMessage>()},
+		}},
+		{"CMessageSetRestEncounterProbability", {
+			{"CMessage", offsetofbase<CMessageSetRestEncounterProbability, CMessage>()},
+		}},
+		{"CMessageSetWorldmap", {
+			{"CMessage", offsetofbase<CMessageSetWorldmap, CMessage>()},
+		}},
+		{"CMessageSetWorldmapAreaFlag", {
+			{"CMessage", offsetofbase<CMessageSetWorldmapAreaFlag, CMessage>()},
+		}},
+		{"CMessageStartTextScreen", {
+			{"CMessage", offsetofbase<CMessageStartTextScreen, CMessage>()},
+		}},
+		{"CMessageStartVEF", {
+			{"CMessage", offsetofbase<CMessageStartVEF, CMessage>()},
+		}},
+		{"CMessageStaticPalette", {
+			{"CMessage", offsetofbase<CMessageStaticPalette, CMessage>()},
+		}},
+		{"CMessageStoreDemand", {
+			{"CMessage", offsetofbase<CMessageStoreDemand, CMessage>()},
+		}},
+		{"CMessageStoreRelease", {
+			{"CMessage", offsetofbase<CMessageStoreRelease, CMessage>()},
+		}},
+		{"CMessageStoreRemoveItem", {
+			{"CMessage", offsetofbase<CMessageStoreRemoveItem, CMessage>()},
+		}},
+		{"CMessageStoreReplaceItem", {
+			{"CMessage", offsetofbase<CMessageStoreReplaceItem, CMessage>()},
+		}},
+		{"CMessageUpdateScript", {
+			{"CMessage", offsetofbase<CMessageUpdateScript, CMessage>()},
 		}},
 		{"CAIIdList", {
 			{"CResHelper<CResText,1008>", offsetofbase<CAIIdList, CResHelper<CResText,1008>>()},
@@ -584,8 +956,29 @@ void registerBaseclasses() {
 		{"EEex_CScreenChapter", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenChapter, CBaldurEngine>()},
 		}},
+		{"CMessageSpriteUpdate", {
+			{"CMessage", offsetofbase<CMessageSpriteUpdate, CMessage>()},
+		}},
+		{"CMessageColorChange", {
+			{"CMessage", offsetofbase<CMessageColorChange, CMessage>()},
+		}},
 		{"CItem", {
 			{"CResHelper<CResItem,1005>", offsetofbase<CItem, CResHelper<CResItem,1005>>()},
+		}},
+		{"CMessageTransformItem", {
+			{"CMessage", offsetofbase<CMessageTransformItem, CMessage>()},
+		}},
+		{"CMessageReplaceItem", {
+			{"CMessage", offsetofbase<CMessageReplaceItem, CMessage>()},
+		}},
+		{"CMessageContainerAddItem", {
+			{"CMessage", offsetofbase<CMessageContainerAddItem, CMessage>()},
+		}},
+		{"CMessageAddItem", {
+			{"CMessage", offsetofbase<CMessageAddItem, CMessage>()},
+		}},
+		{"CMessageSpriteEquipment", {
+			{"CMessage", offsetofbase<CMessageSpriteEquipment, CMessage>()},
 		}},
 		{"CGameEffect", {
 			{"CGameEffectBase", offsetofbase<CGameEffect, CGameEffectBase>()},
@@ -596,11 +989,20 @@ void registerBaseclasses() {
 		{"CGameEffectUsability", {
 			{"CGameEffect", offsetofbase<CGameEffectUsability, CGameEffect>()},
 		}},
+		{"CMessageStoreAddItem", {
+			{"CMessage", offsetofbase<CMessageStoreAddItem, CMessage>()},
+		}},
 		{"EEex_CBaldurProjector", {
 			{"EEex_CBaldurEngine", offsetofbase<CBaldurProjector, CBaldurEngine>()},
 		}},
 		{"EEex_CBaldurChitin", {
 			{"EEex_CChitin", offsetofbase<CBaldurChitin, CChitin>()},
+		}},
+		{"CMessageAddAction", {
+			{"CMessage", offsetofbase<CMessageAddAction, CMessage>()},
+		}},
+		{"CMessageInsertAction", {
+			{"CMessage", offsetofbase<CMessageInsertAction, CMessage>()},
 		}},
 		{"EEex_CScreenStore", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenStore, CBaldurEngine>()},
@@ -608,12 +1010,28 @@ void registerBaseclasses() {
 		{"CMessageSetLastObject", {
 			{"CMessage", offsetofbase<CMessageSetLastObject, CMessage>()},
 		}},
+		{"CMessageSetLastAttacker", {
+			{"CMessage", offsetofbase<CMessageSetLastAttacker, CMessage>()},
+		}},
+		{"CMessageEnterStoreMode", {
+			{"CMessage", offsetofbase<CMessageEnterStoreMode, CMessage>()},
+		}},
+		{"CGameChunk", {
+			{"CGameObject", offsetofbase<CGameChunk, CGameObject>()},
+		}},
 		{"CGameFireball3d", {
 			{"CGameObject", offsetofbase<CGameFireball3d, CGameObject>()},
 		}},
 		{"CVisualEffect", {
 			{"CGameObject", offsetofbase<CVisualEffect, CGameObject>()},
 			{"CVisualEffectBase", offsetofbase<CVisualEffect, CVisualEffectBase>()},
+		}},
+		{"CVEFVidCell", {
+			{"CGameObject", offsetofbase<CVEFVidCell, CGameObject>()},
+			{"CVEFVidCellBase", offsetofbase<CVEFVidCell, CVEFVidCellBase>()},
+		}},
+		{"CSparkleCluster", {
+			{"CGameObject", offsetofbase<CSparkleCluster, CGameObject>()},
 		}},
 		{"CProjectile", {
 			{"CGameObject", offsetofbase<CProjectile, CGameObject>()},

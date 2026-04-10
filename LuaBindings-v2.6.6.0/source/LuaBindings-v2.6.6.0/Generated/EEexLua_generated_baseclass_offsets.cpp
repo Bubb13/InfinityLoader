@@ -920,6 +920,42 @@ void registerBaseclasses() {
 		{"CObList::vtbl", {
 			{"CObject::vtbl", offsetofbase<CObList::vtbl, CObject::vtbl>()},
 		}},
+		{"CMessageWeaponImmumityUpdate", {
+			{"CMessage", offsetofbase<CMessageWeaponImmumityUpdate, CMessage>()},
+		}},
+		{"CMessageWeaponImmumityUpdate::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageWeaponImmumityUpdate::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageVisualEffect", {
+			{"CMessage", offsetofbase<CMessageVisualEffect, CMessage>()},
+		}},
+		{"CMessageVisualEffect::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageVisualEffect::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageVisibilityMapMove", {
+			{"CMessage", offsetofbase<CMessageVisibilityMapMove, CMessage>()},
+		}},
+		{"CMessageVisibilityMapMove::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageVisibilityMapMove::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageVerbalConstant", {
+			{"CMessage", offsetofbase<CMessageVerbalConstant, CMessage>()},
+		}},
+		{"CMessageVerbalConstant::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageVerbalConstant::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageUseItemCharges", {
+			{"CMessage", offsetofbase<CMessageUseItemCharges, CMessage>()},
+		}},
+		{"CMessageUseItemCharges::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageUseItemCharges::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageUpdateStoredPartyLocations", {
+			{"CMessage", offsetofbase<CMessageUpdateStoredPartyLocations, CMessage>()},
+		}},
+		{"CMessageUpdateStoredPartyLocations::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageUpdateStoredPartyLocations::vtbl, CMessage::vtbl>()},
+		}},
 		{"CMessageUpdateReaction", {
 			{"CMessage", offsetofbase<CMessageUpdateReaction, CMessage>()},
 		}},
@@ -932,17 +968,467 @@ void registerBaseclasses() {
 		{"CMessageUpdateMachineState::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageUpdateMachineState::vtbl, CMessage::vtbl>()},
 		}},
+		{"CMessageUpdateImmunities", {
+			{"CMessage", offsetofbase<CMessageUpdateImmunities, CMessage>()},
+		}},
+		{"CMessageUpdateImmunities::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageUpdateImmunities::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageUnlock", {
+			{"CMessage", offsetofbase<CMessageUnlock, CMessage>()},
+		}},
+		{"CMessageUnlock::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageUnlock::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageTriggerStatus", {
+			{"CMessage", offsetofbase<CMessageTriggerStatus, CMessage>()},
+		}},
+		{"CMessageTriggerStatus::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageTriggerStatus::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageTakeCreatureItems", {
+			{"CMessage", offsetofbase<CMessageTakeCreatureItems, CMessage>()},
+		}},
+		{"CMessageTakeCreatureItems::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageTakeCreatureItems::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStopFollow", {
+			{"CMessage", offsetofbase<CMessageStopFollow, CMessage>()},
+		}},
+		{"CMessageStopFollow::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStopFollow::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStopEscapeArea", {
+			{"CMessage", offsetofbase<CMessageStopEscapeArea, CMessage>()},
+		}},
+		{"CMessageStopEscapeArea::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStopEscapeArea::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStopActions", {
+			{"CMessage", offsetofbase<CMessageStopActions, CMessage>()},
+		}},
+		{"CMessageStopActions::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStopActions::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStaticStart", {
+			{"CMessage", offsetofbase<CMessageStaticStart, CMessage>()},
+		}},
+		{"CMessageStaticStart::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStaticStart::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStaticSequence", {
+			{"CMessage", offsetofbase<CMessageStaticSequence, CMessage>()},
+		}},
+		{"CMessageStaticSequence::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStaticSequence::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStartSong", {
+			{"CMessage", offsetofbase<CMessageStartSong, CMessage>()},
+		}},
+		{"CMessageStartSong::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStartSong::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStartScroll", {
+			{"CMessage", offsetofbase<CMessageStartScroll, CMessage>()},
+		}},
+		{"CMessageStartScroll::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStartScroll::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStartFollow", {
+			{"CMessage", offsetofbase<CMessageStartFollow, CMessage>()},
+		}},
+		{"CMessageStartFollow::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStartFollow::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStartCombatMusic", {
+			{"CMessage", offsetofbase<CMessageStartCombatMusic, CMessage>()},
+		}},
+		{"CMessageStartCombatMusic::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStartCombatMusic::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSpritePetrify", {
+			{"CMessage", offsetofbase<CMessageSpritePetrify, CMessage>()},
+		}},
+		{"CMessageSpritePetrify::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSpritePetrify::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSpriteDeath", {
+			{"CMessage", offsetofbase<CMessageSpriteDeath, CMessage>()},
+		}},
+		{"CMessageSpriteDeath::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSpriteDeath::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSpawnPtSpawn", {
+			{"CMessage", offsetofbase<CMessageSpawnPtSpawn, CMessage>()},
+		}},
+		{"CMessageSpawnPtSpawn::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSpawnPtSpawn::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSpawnPtActivate", {
+			{"CMessage", offsetofbase<CMessageSpawnPtActivate, CMessage>()},
+		}},
+		{"CMessageSpawnPtActivate::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSpawnPtActivate::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetVariable", {
+			{"CMessage", offsetofbase<CMessageSetVariable, CMessage>()},
+		}},
+		{"CMessageSetVariable::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetVariable::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetTimeStop", {
+			{"CMessage", offsetofbase<CMessageSetTimeStop, CMessage>()},
+		}},
+		{"CMessageSetTimeStop::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetTimeStop::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetTarget", {
+			{"CMessage", offsetofbase<CMessageSetTarget, CMessage>()},
+		}},
+		{"CMessageSetTarget::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetTarget::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetStateOverrideTime", {
+			{"CMessage", offsetofbase<CMessageSetStateOverrideTime, CMessage>()},
+		}},
+		{"CMessageSetStateOverrideTime::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetStateOverrideTime::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetStateOverrideFlag", {
+			{"CMessage", offsetofbase<CMessageSetStateOverrideFlag, CMessage>()},
+		}},
+		{"CMessageSetStateOverrideFlag::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetStateOverrideFlag::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetSound", {
+			{"CMessage", offsetofbase<CMessageSetSound, CMessage>()},
+		}},
+		{"CMessageSetSound::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetSound::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetSequence", {
+			{"CMessage", offsetofbase<CMessageSetSequence, CMessage>()},
+		}},
+		{"CMessageSetSequence::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetSequence::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetPath", {
+			{"CMessage", offsetofbase<CMessageSetPath, CMessage>()},
+		}},
+		{"CMessageSetPath::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetPath::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetNumTimesTalkedTo", {
+			{"CMessage", offsetofbase<CMessageSetNumTimesTalkedTo, CMessage>()},
+		}},
+		{"CMessageSetNumTimesTalkedTo::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetNumTimesTalkedTo::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetInStore", {
+			{"CMessage", offsetofbase<CMessageSetInStore, CMessage>()},
+		}},
+		{"CMessageSetInStore::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetInStore::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetInDialog", {
+			{"CMessage", offsetofbase<CMessageSetInDialog, CMessage>()},
+		}},
+		{"CMessageSetInDialog::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetInDialog::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetInCutScene", {
+			{"CMessage", offsetofbase<CMessageSetInCutScene, CMessage>()},
+		}},
+		{"CMessageSetInCutScene::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetInCutScene::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetHappiness", {
+			{"CMessage", offsetofbase<CMessageSetHappiness, CMessage>()},
+		}},
+		{"CMessageSetHappiness::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetHappiness::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetForceActionPick", {
+			{"CMessage", offsetofbase<CMessageSetForceActionPick, CMessage>()},
+		}},
+		{"CMessageSetForceActionPick::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetForceActionPick::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetFamiliarSummoner", {
+			{"CMessage", offsetofbase<CMessageSetFamiliarSummoner, CMessage>()},
+		}},
+		{"CMessageSetFamiliarSummoner::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetFamiliarSummoner::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetDrawPoly", {
+			{"CMessage", offsetofbase<CMessageSetDrawPoly, CMessage>()},
+		}},
+		{"CMessageSetDrawPoly::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetDrawPoly::vtbl, CMessage::vtbl>()},
+		}},
 		{"CMessageSetDirection", {
 			{"CMessage", offsetofbase<CMessageSetDirection, CMessage>()},
 		}},
 		{"CMessageSetDirection::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageSetDirection::vtbl, CMessage::vtbl>()},
 		}},
+		{"CMessageSetDialogWait", {
+			{"CMessage", offsetofbase<CMessageSetDialogWait, CMessage>()},
+		}},
+		{"CMessageSetDialogWait::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetDialogWait::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetDialogPausing", {
+			{"CMessage", offsetofbase<CMessageSetDialogPausing, CMessage>()},
+		}},
+		{"CMessageSetDialogPausing::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetDialogPausing::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetCurrentActionId", {
+			{"CMessage", offsetofbase<CMessageSetCurrentActionId, CMessage>()},
+		}},
+		{"CMessageSetCurrentActionId::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetCurrentActionId::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetCommandPause", {
+			{"CMessage", offsetofbase<CMessageSetCommandPause, CMessage>()},
+		}},
+		{"CMessageSetCommandPause::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetCommandPause::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetBanterBlockTime", {
+			{"CMessage", offsetofbase<CMessageSetBanterBlockTime, CMessage>()},
+		}},
+		{"CMessageSetBanterBlockTime::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetBanterBlockTime::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetBanterBlockFlag", {
+			{"CMessage", offsetofbase<CMessageSetBanterBlockFlag, CMessage>()},
+		}},
+		{"CMessageSetBanterBlockFlag::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetBanterBlockFlag::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetAreaFlag", {
+			{"CMessage", offsetofbase<CMessageSetAreaFlag, CMessage>()},
+		}},
+		{"CMessageSetAreaFlag::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetAreaFlag::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetActiveImprisonment", {
+			{"CMessage", offsetofbase<CMessageSetActiveImprisonment, CMessage>()},
+		}},
+		{"CMessageSetActiveImprisonment::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetActiveImprisonment::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetActive", {
+			{"CMessage", offsetofbase<CMessageSetActive, CMessage>()},
+		}},
+		{"CMessageSetActive::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetActive::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetAISpeed", {
+			{"CMessage", offsetofbase<CMessageSetAISpeed, CMessage>()},
+		}},
+		{"CMessageSetAISpeed::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetAISpeed::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageScreenShake", {
+			{"CMessage", offsetofbase<CMessageScreenShake, CMessage>()},
+		}},
+		{"CMessageScreenShake::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageScreenShake::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSaveGame", {
+			{"CMessage", offsetofbase<CMessageSaveGame, CMessage>()},
+		}},
+		{"CMessageSaveGame::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSaveGame::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageResetMorale", {
+			{"CMessage", offsetofbase<CMessageResetMorale, CMessage>()},
+		}},
+		{"CMessageResetMorale::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageResetMorale::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageReputationChange", {
+			{"CMessage", offsetofbase<CMessageReputationChange, CMessage>()},
+		}},
+		{"CMessageReputationChange::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageReputationChange::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageRemoveReplies", {
+			{"CMessage", offsetofbase<CMessageRemoveReplies, CMessage>()},
+		}},
+		{"CMessageRemoveReplies::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageRemoveReplies::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageRemoveItem", {
+			{"CMessage", offsetofbase<CMessageRemoveItem, CMessage>()},
+		}},
+		{"CMessageRemoveItem::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageRemoveItem::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessagePlaySound", {
+			{"CMessage", offsetofbase<CMessagePlaySound, CMessage>()},
+		}},
+		{"CMessagePlaySound::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessagePlaySound::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessagePartyGold", {
+			{"CMessage", offsetofbase<CMessagePartyGold, CMessage>()},
+		}},
+		{"CMessagePartyGold::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessagePartyGold::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageNonControlledDialogStart", {
+			{"CMessage", offsetofbase<CMessageNonControlledDialogStart, CMessage>()},
+		}},
+		{"CMessageNonControlledDialogStart::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageNonControlledDialogStart::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageNonControlledDialogReturn", {
+			{"CMessage", offsetofbase<CMessageNonControlledDialogReturn, CMessage>()},
+		}},
+		{"CMessageNonControlledDialogReturn::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageNonControlledDialogReturn::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageMoveGlobal", {
+			{"CMessage", offsetofbase<CMessageMoveGlobal, CMessage>()},
+		}},
+		{"CMessageMoveGlobal::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageMoveGlobal::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageMakeGlobal", {
+			{"CMessage", offsetofbase<CMessageMakeGlobal, CMessage>()},
+		}},
+		{"CMessageMakeGlobal::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageMakeGlobal::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageLoadDialog", {
+			{"CMessage", offsetofbase<CMessageLoadDialog, CMessage>()},
+		}},
+		{"CMessageLoadDialog::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageLoadDialog::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageLeaveParty", {
+			{"CMessage", offsetofbase<CMessageLeaveParty, CMessage>()},
+		}},
+		{"CMessageLeaveParty::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageLeaveParty::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageInsertResponse", {
+			{"CMessage", offsetofbase<CMessageInsertResponse, CMessage>()},
+		}},
+		{"CMessageInsertResponse::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageInsertResponse::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageHeartbeat", {
+			{"CMessage", offsetofbase<CMessageHeartbeat, CMessage>()},
+		}},
+		{"CMessageHeartbeat::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageHeartbeat::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageForcePosition", {
+			{"CMessage", offsetofbase<CMessageForcePosition, CMessage>()},
+		}},
+		{"CMessageForcePosition::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageForcePosition::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageFireSpell", {
+			{"CMessage", offsetofbase<CMessageFireSpell, CMessage>()},
+		}},
+		{"CMessageFireSpell::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageFireSpell::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageFireProjectile", {
+			{"CMessage", offsetofbase<CMessageFireProjectile, CMessage>()},
+		}},
+		{"CMessageFireProjectile::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageFireProjectile::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageFamiliarAdd", {
+			{"CMessage", offsetofbase<CMessageFamiliarAdd, CMessage>()},
+		}},
+		{"CMessageFamiliarAdd::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageFamiliarAdd::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageFakeExpireCheck", {
+			{"CMessage", offsetofbase<CMessageFakeExpireCheck, CMessage>()},
+		}},
+		{"CMessageFakeExpireCheck::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageFakeExpireCheck::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageFadeColor", {
+			{"CMessage", offsetofbase<CMessageFadeColor, CMessage>()},
+		}},
+		{"CMessageFadeColor::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageFadeColor::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageExploreArea", {
+			{"CMessage", offsetofbase<CMessageExploreArea, CMessage>()},
+		}},
+		{"CMessageExploreArea::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageExploreArea::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageExitStoreMode", {
+			{"CMessage", offsetofbase<CMessageExitStoreMode, CMessage>()},
+		}},
+		{"CMessageExitStoreMode::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageExitStoreMode::vtbl, CMessage::vtbl>()},
+		}},
 		{"CMessageExitDialogMode", {
 			{"CMessage", offsetofbase<CMessageExitDialogMode, CMessage>()},
 		}},
 		{"CMessageExitDialogMode::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageExitDialogMode::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageEscapeArea", {
+			{"CMessage", offsetofbase<CMessageEscapeArea, CMessage>()},
+		}},
+		{"CMessageEscapeArea::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageEscapeArea::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageEnterDialogMode", {
+			{"CMessage", offsetofbase<CMessageEnterDialogMode, CMessage>()},
+		}},
+		{"CMessageEnterDialogMode::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageEnterDialogMode::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageEnterDialog", {
+			{"CMessage", offsetofbase<CMessageEnterDialog, CMessage>()},
+		}},
+		{"CMessageEnterDialog::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageEnterDialog::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageDropPath", {
+			{"CMessage", offsetofbase<CMessageDropPath, CMessage>()},
+		}},
+		{"CMessageDropPath::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageDropPath::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageDoorStatus", {
+			{"CMessage", offsetofbase<CMessageDoorStatus, CMessage>()},
+		}},
+		{"CMessageDoorStatus::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageDoorStatus::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageDoorOpen", {
+			{"CMessage", offsetofbase<CMessageDoorOpen, CMessage>()},
+		}},
+		{"CMessageDoorOpen::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageDoorOpen::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageDisplayTextRefSend", {
+			{"CMessage", offsetofbase<CMessageDisplayTextRefSend, CMessage>()},
+		}},
+		{"CMessageDisplayTextRefSend::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageDisplayTextRefSend::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageDisplayTextRefPoint", {
+			{"CMessage", offsetofbase<CMessageDisplayTextRefPoint, CMessage>()},
+		}},
+		{"CMessageDisplayTextRefPoint::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageDisplayTextRefPoint::vtbl, CMessage::vtbl>()},
 		}},
 		{"CMessageDisplayTextRef", {
 			{"CMessage", offsetofbase<CMessageDisplayTextRef, CMessage>()},
@@ -955,6 +1441,102 @@ void registerBaseclasses() {
 		}},
 		{"CMessageDisplayText::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageDisplayText::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageDisableAI", {
+			{"CMessage", offsetofbase<CMessageDisableAI, CMessage>()},
+		}},
+		{"CMessageDisableAI::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageDisableAI::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageCutSceneModeStatus", {
+			{"CMessage", offsetofbase<CMessageCutSceneModeStatus, CMessage>()},
+		}},
+		{"CMessageCutSceneModeStatus::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageCutSceneModeStatus::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageCutSceneLite", {
+			{"CMessage", offsetofbase<CMessageCutSceneLite, CMessage>()},
+		}},
+		{"CMessageCutSceneLite::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageCutSceneLite::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageContainerStatus", {
+			{"CMessage", offsetofbase<CMessageContainerStatus, CMessage>()},
+		}},
+		{"CMessageContainerStatus::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageContainerStatus::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageContainerItems", {
+			{"CMessage", offsetofbase<CMessageContainerItems, CMessage>()},
+		}},
+		{"CMessageContainerItems::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageContainerItems::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageColorUpdate", {
+			{"CMessage", offsetofbase<CMessageColorUpdate, CMessage>()},
+		}},
+		{"CMessageColorUpdate::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageColorUpdate::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageColorReset", {
+			{"CMessage", offsetofbase<CMessageColorReset, CMessage>()},
+		}},
+		{"CMessageColorReset::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageColorReset::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageClearTriggers", {
+			{"CMessage", offsetofbase<CMessageClearTriggers, CMessage>()},
+		}},
+		{"CMessageClearTriggers::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageClearTriggers::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageClearGroupSlot", {
+			{"CMessage", offsetofbase<CMessageClearGroupSlot, CMessage>()},
+		}},
+		{"CMessageClearGroupSlot::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageClearGroupSlot::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageClearDialogOnMachine", {
+			{"CMessage", offsetofbase<CMessageClearDialogOnMachine, CMessage>()},
+		}},
+		{"CMessageClearDialogOnMachine::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageClearDialogOnMachine::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageClearDialogActions", {
+			{"CMessage", offsetofbase<CMessageClearDialogActions, CMessage>()},
+		}},
+		{"CMessageClearDialogActions::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageClearDialogActions::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageClearActions", {
+			{"CMessage", offsetofbase<CMessageClearActions, CMessage>()},
+		}},
+		{"CMessageClearActions::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageClearActions::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageCheckForForcedDialogEnd", {
+			{"CMessage", offsetofbase<CMessageCheckForForcedDialogEnd, CMessage>()},
+		}},
+		{"CMessageCheckForForcedDialogEnd::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageCheckForForcedDialogEnd::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageChangeDirection", {
+			{"CMessage", offsetofbase<CMessageChangeDirection, CMessage>()},
+		}},
+		{"CMessageChangeDirection::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageChangeDirection::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageAnimationChange", {
+			{"CMessage", offsetofbase<CMessageAnimationChange, CMessage>()},
+		}},
+		{"CMessageAnimationChange::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageAnimationChange::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageAllowDialogInterrupt", {
+			{"CMessage", offsetofbase<CMessageAllowDialogInterrupt, CMessage>()},
+		}},
+		{"CMessageAllowDialogInterrupt::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageAllowDialogInterrupt::vtbl, CMessage::vtbl>()},
 		}},
 		{"CMessageAddEffect", {
 			{"CMessage", offsetofbase<CMessageAddEffect, CMessage>()},
@@ -1025,6 +1607,12 @@ void registerBaseclasses() {
 		{"CVariable", {
 			{"CAreaVariable", offsetofbase<CVariable, CAreaVariable>()},
 		}},
+		{"CMessageSetVariableAll", {
+			{"CMessage", offsetofbase<CMessageSetVariableAll, CMessage>()},
+		}},
+		{"CMessageSetVariableAll::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetVariableAll::vtbl, CMessage::vtbl>()},
+		}},
 		{"CVidTile", {
 			{"CVidImage", offsetofbase<CVidTile, CVidImage>()},
 		}},
@@ -1039,6 +1627,162 @@ void registerBaseclasses() {
 		}},
 		{"CScreenConnection::vtbl", {
 			{"CBaldurEngine::vtbl", offsetofbase<CScreenConnection::vtbl, CBaldurEngine::vtbl>()},
+		}},
+		{"CMessageAddVVCInternal", {
+			{"CMessage", offsetofbase<CMessageAddVVCInternal, CMessage>()},
+		}},
+		{"CMessageAddVVCInternal::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageAddVVCInternal::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageChangeStoreMarkup", {
+			{"CMessage", offsetofbase<CMessageChangeStoreMarkup, CMessage>()},
+		}},
+		{"CMessageChangeStoreMarkup::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageChangeStoreMarkup::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageCleanAir", {
+			{"CMessage", offsetofbase<CMessageCleanAir, CMessage>()},
+		}},
+		{"CMessageCleanAir::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageCleanAir::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageDreamScriptResRef", {
+			{"CMessage", offsetofbase<CMessageDreamScriptResRef, CMessage>()},
+		}},
+		{"CMessageDreamScriptResRef::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageDreamScriptResRef::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageFamiliarRemoveResRef", {
+			{"CMessage", offsetofbase<CMessageFamiliarRemoveResRef, CMessage>()},
+		}},
+		{"CMessageFamiliarRemoveResRef::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageFamiliarRemoveResRef::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageForceRandomEncounter", {
+			{"CMessage", offsetofbase<CMessageForceRandomEncounter, CMessage>()},
+		}},
+		{"CMessageForceRandomEncounter::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageForceRandomEncounter::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessagePlaySoundRef", {
+			{"CMessage", offsetofbase<CMessagePlaySoundRef, CMessage>()},
+		}},
+		{"CMessagePlaySoundRef::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessagePlaySoundRef::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageRemoveVVCInternal", {
+			{"CMessage", offsetofbase<CMessageRemoveVVCInternal, CMessage>()},
+		}},
+		{"CMessageRemoveVVCInternal::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageRemoveVVCInternal::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetAreaScript", {
+			{"CMessage", offsetofbase<CMessageSetAreaScript, CMessage>()},
+		}},
+		{"CMessageSetAreaScript::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetAreaScript::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetCampaign", {
+			{"CMessage", offsetofbase<CMessageSetCampaign, CMessage>()},
+		}},
+		{"CMessageSetCampaign::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetCampaign::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetCurrentArea", {
+			{"CMessage", offsetofbase<CMessageSetCurrentArea, CMessage>()},
+		}},
+		{"CMessageSetCurrentArea::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetCurrentArea::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetDialogResRef", {
+			{"CMessage", offsetofbase<CMessageSetDialogResRef, CMessage>()},
+		}},
+		{"CMessageSetDialogResRef::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetDialogResRef::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetMusic", {
+			{"CMessage", offsetofbase<CMessageSetMusic, CMessage>()},
+		}},
+		{"CMessageSetMusic::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetMusic::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetPortraitLarge", {
+			{"CMessage", offsetofbase<CMessageSetPortraitLarge, CMessage>()},
+		}},
+		{"CMessageSetPortraitLarge::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetPortraitLarge::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetPortraitSmall", {
+			{"CMessage", offsetofbase<CMessageSetPortraitSmall, CMessage>()},
+		}},
+		{"CMessageSetPortraitSmall::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetPortraitSmall::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetRestEncounterProbability", {
+			{"CMessage", offsetofbase<CMessageSetRestEncounterProbability, CMessage>()},
+		}},
+		{"CMessageSetRestEncounterProbability::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetRestEncounterProbability::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetWorldmap", {
+			{"CMessage", offsetofbase<CMessageSetWorldmap, CMessage>()},
+		}},
+		{"CMessageSetWorldmap::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetWorldmap::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSetWorldmapAreaFlag", {
+			{"CMessage", offsetofbase<CMessageSetWorldmapAreaFlag, CMessage>()},
+		}},
+		{"CMessageSetWorldmapAreaFlag::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetWorldmapAreaFlag::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStartTextScreen", {
+			{"CMessage", offsetofbase<CMessageStartTextScreen, CMessage>()},
+		}},
+		{"CMessageStartTextScreen::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStartTextScreen::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStartVEF", {
+			{"CMessage", offsetofbase<CMessageStartVEF, CMessage>()},
+		}},
+		{"CMessageStartVEF::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStartVEF::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStaticPalette", {
+			{"CMessage", offsetofbase<CMessageStaticPalette, CMessage>()},
+		}},
+		{"CMessageStaticPalette::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStaticPalette::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStoreDemand", {
+			{"CMessage", offsetofbase<CMessageStoreDemand, CMessage>()},
+		}},
+		{"CMessageStoreDemand::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStoreDemand::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStoreRelease", {
+			{"CMessage", offsetofbase<CMessageStoreRelease, CMessage>()},
+		}},
+		{"CMessageStoreRelease::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStoreRelease::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStoreRemoveItem", {
+			{"CMessage", offsetofbase<CMessageStoreRemoveItem, CMessage>()},
+		}},
+		{"CMessageStoreRemoveItem::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStoreRemoveItem::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageStoreReplaceItem", {
+			{"CMessage", offsetofbase<CMessageStoreReplaceItem, CMessage>()},
+		}},
+		{"CMessageStoreReplaceItem::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStoreReplaceItem::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageUpdateScript", {
+			{"CMessage", offsetofbase<CMessageUpdateScript, CMessage>()},
+		}},
+		{"CMessageUpdateScript::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageUpdateScript::vtbl, CMessage::vtbl>()},
 		}},
 		{"CVidMosaic", {
 			{"CVidImage", offsetofbase<CVidMosaic, CVidImage>()},
@@ -1213,8 +1957,50 @@ void registerBaseclasses() {
 		{"CProjectileAreaFileFormat", {
 			{"CProjectileBAMFileFormat", offsetofbase<CProjectileAreaFileFormat, CProjectileBAMFileFormat>()},
 		}},
+		{"CMessageSpriteUpdate", {
+			{"CMessage", offsetofbase<CMessageSpriteUpdate, CMessage>()},
+		}},
+		{"CMessageSpriteUpdate::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSpriteUpdate::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageColorChange", {
+			{"CMessage", offsetofbase<CMessageColorChange, CMessage>()},
+		}},
+		{"CMessageColorChange::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageColorChange::vtbl, CMessage::vtbl>()},
+		}},
 		{"CItem", {
 			{"CResHelper<CResItem,1005>", offsetofbase<CItem, CResHelper<CResItem,1005>>()},
+		}},
+		{"CMessageTransformItem", {
+			{"CMessage", offsetofbase<CMessageTransformItem, CMessage>()},
+		}},
+		{"CMessageTransformItem::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageTransformItem::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageReplaceItem", {
+			{"CMessage", offsetofbase<CMessageReplaceItem, CMessage>()},
+		}},
+		{"CMessageReplaceItem::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageReplaceItem::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageContainerAddItem", {
+			{"CMessage", offsetofbase<CMessageContainerAddItem, CMessage>()},
+		}},
+		{"CMessageContainerAddItem::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageContainerAddItem::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageAddItem", {
+			{"CMessage", offsetofbase<CMessageAddItem, CMessage>()},
+		}},
+		{"CMessageAddItem::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageAddItem::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageSpriteEquipment", {
+			{"CMessage", offsetofbase<CMessageSpriteEquipment, CMessage>()},
+		}},
+		{"CMessageSpriteEquipment::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSpriteEquipment::vtbl, CMessage::vtbl>()},
 		}},
 		{"CGameEffect", {
 			{"CGameEffectBase", offsetofbase<CGameEffect, CGameEffectBase>()},
@@ -1234,6 +2020,12 @@ void registerBaseclasses() {
 		{"CDerivedStats", {
 			{"CDerivedStatsTemplate", offsetofbase<CDerivedStats, CDerivedStatsTemplate>()},
 		}},
+		{"CMessageStoreAddItem", {
+			{"CMessage", offsetofbase<CMessageStoreAddItem, CMessage>()},
+		}},
+		{"CMessageStoreAddItem::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageStoreAddItem::vtbl, CMessage::vtbl>()},
+		}},
 		{"EEex_CBaldurProjector", {
 			{"EEex_CBaldurEngine", offsetofbase<CBaldurProjector, CBaldurEngine>()},
 		}},
@@ -1245,6 +2037,18 @@ void registerBaseclasses() {
 		}},
 		{"CBaldurChitin::vtbl", {
 			{"CChitin::vtbl", offsetofbase<CBaldurChitin::vtbl, CChitin::vtbl>()},
+		}},
+		{"CMessageAddAction", {
+			{"CMessage", offsetofbase<CMessageAddAction, CMessage>()},
+		}},
+		{"CMessageAddAction::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageAddAction::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageInsertAction", {
+			{"CMessage", offsetofbase<CMessageInsertAction, CMessage>()},
+		}},
+		{"CMessageInsertAction::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageInsertAction::vtbl, CMessage::vtbl>()},
 		}},
 		{"EEex_CScreenStore", {
 			{"EEex_CBaldurEngine", offsetofbase<CScreenStore, CBaldurEngine>()},
@@ -1258,6 +2062,24 @@ void registerBaseclasses() {
 		{"CMessageSetLastObject::vtbl", {
 			{"CMessage::vtbl", offsetofbase<CMessageSetLastObject::vtbl, CMessage::vtbl>()},
 		}},
+		{"CMessageSetLastAttacker", {
+			{"CMessage", offsetofbase<CMessageSetLastAttacker, CMessage>()},
+		}},
+		{"CMessageSetLastAttacker::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageSetLastAttacker::vtbl, CMessage::vtbl>()},
+		}},
+		{"CMessageEnterStoreMode", {
+			{"CMessage", offsetofbase<CMessageEnterStoreMode, CMessage>()},
+		}},
+		{"CMessageEnterStoreMode::vtbl", {
+			{"CMessage::vtbl", offsetofbase<CMessageEnterStoreMode::vtbl, CMessage::vtbl>()},
+		}},
+		{"CGameChunk", {
+			{"CGameObject", offsetofbase<CGameChunk, CGameObject>()},
+		}},
+		{"CGameChunk::vtbl", {
+			{"CGameObject::vtbl", offsetofbase<CGameChunk::vtbl, CGameObject::vtbl>()},
+		}},
 		{"CGameFireball3d", {
 			{"CGameObject", offsetofbase<CGameFireball3d, CGameObject>()},
 		}},
@@ -1270,6 +2092,19 @@ void registerBaseclasses() {
 		}},
 		{"CVisualEffect::vtbl", {
 			{"CGameObject::vtbl", offsetofbase<CVisualEffect::vtbl, CGameObject::vtbl>()},
+		}},
+		{"CVEFVidCell", {
+			{"CGameObject", offsetofbase<CVEFVidCell, CGameObject>()},
+			{"CVEFVidCellBase", offsetofbase<CVEFVidCell, CVEFVidCellBase>()},
+		}},
+		{"CVEFVidCell::vtbl", {
+			{"CGameObject::vtbl", offsetofbase<CVEFVidCell::vtbl, CGameObject::vtbl>()},
+		}},
+		{"CSparkleCluster", {
+			{"CGameObject", offsetofbase<CSparkleCluster, CGameObject>()},
+		}},
+		{"CSparkleCluster::vtbl", {
+			{"CGameObject::vtbl", offsetofbase<CSparkleCluster::vtbl, CGameObject::vtbl>()},
 		}},
 		{"CProjectile", {
 			{"CGameObject", offsetofbase<CProjectile, CGameObject>()},

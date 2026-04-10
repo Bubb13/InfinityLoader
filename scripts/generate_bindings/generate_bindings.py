@@ -373,7 +373,7 @@ def buildInstantiationStr(groupName: str, templateTypesTup):
 	return "".join(groupNameParts)
 
 
-def splitKeepBrackets(stringIn, toSplit, toSplitInclude=[], noSplit=[]) -> list[str]:
+def splitKeepBrackets(stringIn, toSplit, toSplitInclude=[], noSplit=[], keepTogetherStart=["<"], keepTogetherEnd=[">"]) -> list[str]:
 
 	def inList(string, i, l):
 		for v in l:
@@ -391,11 +391,12 @@ def splitKeepBrackets(stringIn, toSplit, toSplitInclude=[], noSplit=[]) -> list[
 
 		incAmount = 1
 
-		char = stringIn[i]
-		if char == "<":
+		if (keepTogetherStartLen := inList(stringIn, i, keepTogetherStart)) != -1:
 			level += 1
-		elif char == ">":
+			incAmount = keepTogetherStartLen
+		elif (keepTogetherLenEnd := inList(stringIn, i, keepTogetherEnd)) != -1:
 			level -= 1
+			incAmount = keepTogetherLenEnd
 		elif level == 0:
 
 			noSplitLen = inList(stringIn, i, noSplit)
@@ -1919,7 +1920,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 			yield funcParameter
 
 
-	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$delayed_pointer|\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\(\\S+\\)|\\$allow_references|\\$instantiations\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=*& ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
+	functionImplementationMatch: Match = re.match("^\\s*(?!typedef)((?:(?:\\$delayed_pointer|\\$nobinding|\\$nodeclaration|\\$external_implementation|\\$pass_lua_state|\\$eof_body|\\$binding_name\\(\\S+\\)|\\$pattern_name\\([\\S ]+\\)|\\$allow_references|\\$instantiations\\(\\S+\\))\\s+)*)(?:(static)\\s+)?(?:(?:(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+)?(?:(__cdecl|__stdcall|__thiscall)\\s+)?(operator\\s*)([_a-zA-Z0-9\\[\\]=*& ]+?))|(?:([, _a-zA-Z0-9*&:<>$]+?)\\s+(?:(__cdecl|__stdcall|__thiscall)\\s+)?([_a-zA-Z0-9]+)))\\s*\\(\\s*((?:[, _a-zA-Z0-9*:<>&]+?\\s+[_a-zA-Z0-9]+(?:\\s*,(?!\\s*\\)))?)*)\\s*(?:(\\.\\.\\.)\\s*)?\\)\\s*(const)?\\s*(?:(;))?$", line)
 	if functionImplementationMatch:
 
 		state.currentFunctionImplementation = FunctionImplementation()
@@ -1929,7 +1930,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 		allowReferences: bool = False
 
 		if keywordMatch := functionImplementationMatch.group(1):
-			for keyword in keywordMatch.strip().split(" "):
+			for keyword in splitKeepBrackets(keywordMatch.strip(), [" "], keepTogetherStart=["("], keepTogetherEnd=[")"]):
 				if keyword == "$nobinding":
 					assert not state.currentFunctionImplementation.lineGroupFlags.isExplicitlyFlagged("noBindings"), "nobinding already defined"
 					state.currentFunctionImplementation.lineGroupFlags.setFlag("noBindings", FlagSource.EXPLICIT)
@@ -1948,7 +1949,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 				elif bindingNameMatch := re.match("^\\$binding_name\\((\\S+)\\)$", keyword):
 					assert not state.currentFunctionImplementation.bindingName, "bindingName already defined"
 					state.currentFunctionImplementation.setBindingName(bindingNameMatch.group(1))
-				elif patternNameMatch := re.match("^\\$pattern_name\\((\\S+)\\)$", keyword):
+				elif patternNameMatch := re.match("^\\$pattern_name\\(([\\S ]+)\\)$", keyword):
 					assert not state.currentFunctionImplementation.patternName, "pattern_name already defined"
 					state.currentFunctionImplementation.patternName = patternNameMatch.group(1)
 				elif keyword == "$allow_references":
@@ -1963,7 +1964,7 @@ def processCommonGroupLines(mainState: MainState, state: CheckLinesState, line: 
 							templateTypes.append(defineTypeRef(mainState, group, templateTypeStr, TypeRefSourceType.TEMPLATE))
 						state.currentFunctionImplementation.instantiations.append(tuple(templateTypes))
 				else:
-					assert False, "Bad bindings directive"
+					assert False, f"Bad bindings directive: {keyword}"
 
 		state.currentFunctionImplementation.isStatic = functionImplementationMatch.group(2) != None
 
@@ -3804,14 +3805,27 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 
 	class OpenConstantType(Enum):
-		INTEGER = 1
-		STRING = 2
+		INTEGER_LITERAL = 1
+		INTEGER_EXPRESSION = 2
+		STRING_LITERAL = 3
+
 
 	class OpenConstantData:
 		def __init__(self) -> None:
 			self.name: str = None
 			self.valueType: OpenConstantType = None
 			self.value = None
+
+
+	class GroupedOpenConstantData:
+
+		__slots__ = ("entryMap")
+		def __init__(self) -> None:
+			self.entryMap: dict[str, list[OpenConstantData]] = {}
+
+		def add(self, moduleName: str, entry: OpenConstantData) -> None:
+			entries: list[OpenConstantData] = self.entryMap.setdefault(moduleName, [])
+			entries.append(entry)
 
 
 	class OpenGroupData:
@@ -3825,6 +3839,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			self.fieldBindings: list[OpenFieldData] = []
 			self.functionBindings: list[OpenFunctionData] = []
 			self.constantBindings: list[OpenConstantData] = []
+			self.groupedConstantBindings: GroupedOpenConstantData = GroupedOpenConstantData()
 			self.hasReasonForOutput: bool = False
 
 
@@ -3886,7 +3901,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		if group != mainState.globalGroup and group.groupType not in ("enum", "namespace") and group.name != "void" and not group.lineGroupFlags.isFlagged("noHardcodedBindings"):
 			sizeofConstant = OpenConstantData()
 			sizeofConstant.name = "sizeof"
-			sizeofConstant.valueType = OpenConstantType.STRING
+			sizeofConstant.valueType = OpenConstantType.INTEGER_EXPRESSION
 			sizeofConstant.value = f"sizeof({groupOpenData.appliedHeaderName})"
 			groupOpenData.constantBindings.append(sizeofConstant)
 
@@ -3895,13 +3910,13 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 
 			sizeConstant = OpenConstantData()
 			sizeConstant.name = "size"
-			sizeConstant.valueType = OpenConstantType.INTEGER
+			sizeConstant.valueType = OpenConstantType.INTEGER_LITERAL
 			sizeConstant.value = int(currentTemplate.tup[1].getHeaderName())
 			groupOpenData.constantBindings.append(sizeConstant)
 
 			lastIndexConstant = OpenConstantData()
 			lastIndexConstant.name = "lastIndex"
-			lastIndexConstant.valueType = OpenConstantType.INTEGER
+			lastIndexConstant.valueType = OpenConstantType.INTEGER_LITERAL
 			lastIndexConstant.value = int(currentTemplate.tup[1].getHeaderName()) - 1
 			groupOpenData.constantBindings.append(lastIndexConstant)
 
@@ -3948,10 +3963,20 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 				and (field.type != FieldType.VARIABLE or cast(VariableField, field).variableType.bitFieldPart is None)
 			):
 				offsetofConstant = OpenConstantData()
-				offsetofConstant.name = f"offsetof_{fieldNameStr}"
-				offsetofConstant.valueType = OpenConstantType.STRING
+				offsetofConstant.name = fieldNameStr
+				offsetofConstant.valueType = OpenConstantType.INTEGER_EXPRESSION
 				offsetofConstant.value = f"offsetoftype({fieldNameStr}, {groupOpenData.appliedHeaderName})"
-				groupOpenData.constantBindings.append(offsetofConstant)
+				groupOpenData.groupedConstantBindings.add(".offsetof", offsetofConstant)
+
+			# Writing usertype_* constant which returns the usertype name of the member
+			if not isPointerCast and not group.lineGroupFlags.isFlagged("noHardcodedBindings") and field.type == FieldType.VARIABLE:
+				variableField: VariableField = field
+				varType: TypeReference = variableField.variableType.checkReplaceTemplateType(mainState, group, templateMappingTracker)
+				usertypeConstant = OpenConstantData()
+				usertypeConstant.name = f"usertype_{fieldNameStr}"
+				usertypeConstant.valueType = OpenConstantType.STRING_LITERAL
+				usertypeConstant.value = f"\"{varType.getAppliedUserTypeName(mainState, group, templateMappingTracker, useUsertypeOverride=True)}\""
+				groupOpenData.constantBindings.append(usertypeConstant)
 
 			if writeFieldBindings:
 
@@ -4478,7 +4503,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		def handleEnumTuple(enumTuple: Tuple[str, str]):
 			openConstantData = OpenConstantData()
 			openConstantData.name = enumTuple[0]
-			openConstantData.valueType = OpenConstantType.INTEGER
+			openConstantData.valueType = OpenConstantType.INTEGER_LITERAL
 			openConstantData.value = enumTuple[1]
 			groupOpenData.constantBindings.append(openConstantData)
 
@@ -4643,9 +4668,25 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		for functionOpenData in openData.functionBindings:
 			out.write(f"\t\ttolua_function(L, \"{functionOpenData.functionName}\", &{functionOpenData.functionBindingName});\n")
 
+
+		def writeConstantBinding(indent: str, constantOpenData: OpenConstantData):
+			if constantOpenData.valueType in (OpenConstantType.INTEGER_LITERAL, OpenConstantType.INTEGER_EXPRESSION):
+				out.write(f"{indent}tolua_constant(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
+			elif constantOpenData.valueType == OpenConstantType.STRING_LITERAL:
+				out.write(f"{indent}tolua_constantstring(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
+			else:
+				assert False, f"Unhandled OpenConstantType: {constantOpenData.valueType}"
+
 		# Write constant mappings
 		for constantOpenData in openData.constantBindings:
-			out.write(f"\t\ttolua_constant(L, \"{constantOpenData.name}\", {constantOpenData.value});\n")
+			writeConstantBinding("\t\t", constantOpenData)
+
+		for moduleName, constantBindings in openData.groupedConstantBindings.entryMap.items():
+			out.write(f"\t\ttolua_module(L, \"{moduleName}\", 0);\n")
+			out.write(f"\t\ttolua_beginmodule(L, \"{moduleName}\");\n")
+			for constantOpenData in constantBindings:
+				writeConstantBinding("\t\t\t", constantOpenData)
+			out.write(f"\t\ttolua_endmodule(L);\n")
 
 		out.write("\ttolua_endmodule(L);\n")
 

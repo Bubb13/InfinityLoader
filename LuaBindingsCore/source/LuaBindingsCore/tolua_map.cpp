@@ -351,14 +351,15 @@ int tolua_bnd_type(lua_State* L)
 //	mapsuper(L, type, ctype);
 //}
 
-// Expects [ module ]
-//static void original_tolua_beginmodule(lua_State* L, const char* name) {
+// Expects [ ..., module ]
+// End Stack [ ..., module, module[name] or _G ]
+//static void tolua_beginmodule(lua_State* L, const char* name) {
 //	if (name) {
-//		lua_pushstring(L, name);     // [ module, name ]
-//		lua_rawget(L, -2);           // [ module[name] ]
+//		lua_pushstring(L, name);     // 2 [ ..., module, name ]
+//		lua_rawget(L, -2);           // 2 [ ..., module, module[name] ]
 //	}
 //	else {
-//		tolua_push_globals_table(L); // [ module, _G ]
+//		tolua_push_globals_table(L); // 2 [ ..., module, _G ]
 //	}
 //}
 
@@ -471,6 +472,13 @@ EXPORT void tolua_constant(lua_State* L, const char* name, double value)
 {
 	lua_pushstring(L, name);
 	tolua_pushnumber(L, value);
+	lua_rawset(L, -3);
+}
+
+EXPORT void tolua_constantstring(lua_State* L, const char* name, const char* value)
+{
+	lua_pushstring(L, name);
+	tolua_pushstring(L, value);
 	lua_rawset(L, -3);
 }
 

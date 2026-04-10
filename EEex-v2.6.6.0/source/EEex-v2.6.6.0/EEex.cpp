@@ -5214,7 +5214,7 @@ void initProjectileMutator() {
 
 int getExtendedStatField(C2DArray* pXStats2DA, const char* name, int id, const char* field, int def, int& pVal) {
 
-	const CString *const strVal = pXStats2DA->GetAtLabels(EngineVal<CString>{field}, EngineVal<CString>{name});
+	const CString *const strVal = pXStats2DA->GetAt(field, name);
 
 	if (strcmp(strVal->m_pchData, "*") == 0) {
 		pVal = def;

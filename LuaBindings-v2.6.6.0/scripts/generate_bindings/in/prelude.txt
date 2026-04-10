@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <d3dx9.h>
+#include <mbstring.h>
 
 #include "infinity_loader_common_api.h"
 #include "lua_bindings_core_api.h"
