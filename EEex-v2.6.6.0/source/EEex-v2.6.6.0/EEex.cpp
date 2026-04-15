@@ -5082,6 +5082,26 @@ void CGameText::Override_Render(CGameArea* pArea, CVidMode* pVidMode)
 	}
 }
 
+void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand) {
+
+	if (bOffHand) {
+		return;
+	}
+	
+	const C2DArray& WSPECIAL = (*p_g_pBaldurChitin)->m_pObjectGame->m_ruleTables.m_tWeaponSpecialization;
+	const CString *const sCell = WSPECIAL.GetAt(2, nProficiencyLevel);
+
+	int nBonus = 0;
+
+	if (sscanf(sCell->m_pchData, "%d", &nBonus) != 1) {
+		#pragma warning(disable:6031)
+		sscanf(WSPECIAL.m_default.m_pchData, "%d", &nBonus);
+		#pragma warning(default:6031)
+	}
+
+	pSprite->m_derivedStats.m_nPhysicalSpeed -= nBonus;
+}
+
 void EEex::Fix_Hook_OnBeforeUIKillCapture() {
 
 	if (p_capture->item == nullptr || p_capture->item->type != uiItemType::ITEM_EDIT) {

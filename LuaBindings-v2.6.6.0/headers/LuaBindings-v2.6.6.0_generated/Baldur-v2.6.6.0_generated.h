@@ -10421,7 +10421,7 @@ struct C2DArray : CResHelper<CResText,1012>
 	typedef void (__thiscall *type_Destruct)(C2DArray* pThis);
 	static type_Destruct p_Destruct;
 
-	typedef const CString* (__thiscall *type_GetAtCStringLabels)(C2DArray* pThis, const CString* nX, const CString* nY);
+	typedef const CString* (__thiscall *type_GetAtCStringLabels)(const C2DArray* pThis, const CString* nX, const CString* nY);
 	static type_GetAtCStringLabels p_GetAtCStringLabels;
 
 	typedef void (__thiscall *type_Load)(C2DArray* pThis, const CResRef* res);
@@ -10437,7 +10437,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		p_Destruct(this);
 	}
 
-	int FindColumnLabel(const char* sLabel)
+	int FindColumnLabel(const char* sLabel) const
 	{
 		EngineVal<CString> sLabelUppercase { sLabel };
 		sLabelUppercase->MakeUpper();
@@ -10457,7 +10457,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return -1;
 	}
 
-	int FindRowLabel(const char* sLabel)
+	int FindRowLabel(const char* sLabel) const
 	{
 		EngineVal<CString> sLabelUppercase { sLabel };
 		sLabelUppercase->MakeUpper();
@@ -10477,7 +10477,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return -1;
 	}
 
-	const CString* GetAt(int x, int y)
+	const CString* GetAt(int x, int y) const
 	{
 		if (x >= 0 && x < this->m_nSizeX && y >= 0 && y < this->m_nSizeY)
 		{
@@ -10486,7 +10486,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return &this->m_default;
 	}
 
-	const CString* GetAt(const char* nX, const char* nY)
+	const CString* GetAt(const char* nX, const char* nY) const
 	{
 		const int nColumnIndex = this->FindColumnLabel(nX);
 		if (nColumnIndex == -1) return &this->m_default;
@@ -10497,7 +10497,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return this->GetAt(nColumnIndex, nRowIndex);
 	}
 
-	const CString* GetAt(const CString* nX, const CString* nY)
+	const CString* GetAt(const CString* nX, const CString* nY) const
 	{
 		return p_GetAtCStringLabels(this, nX, nY);
 	}

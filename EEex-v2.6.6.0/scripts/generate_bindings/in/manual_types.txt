@@ -841,7 +841,7 @@ struct C2DArray : CResHelper<CResText,1012>
 	$constructor_fake Construct();
 	void Destruct();
 
-	int FindColumnLabel(primitive const char* sLabel)
+	int FindColumnLabel(primitive const char* sLabel) const
 	{
 		EngineVal<CString> sLabelUppercase { sLabel };
 		sLabelUppercase->MakeUpper();
@@ -861,7 +861,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return -1;
 	}
 
-	int FindRowLabel(primitive const char* sLabel)
+	int FindRowLabel(primitive const char* sLabel) const
 	{
 		EngineVal<CString> sLabelUppercase { sLabel };
 		sLabelUppercase->MakeUpper();
@@ -881,7 +881,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return -1;
 	}
 
-	$binding_name(GetAtPoint) const CString* GetAt(int x, int y)
+	$binding_name(GetAtPoint) const CString* GetAt(int x, int y) const
 	{
 		if (x >= 0 && x < this->m_nSizeX && y >= 0 && y < this->m_nSizeY)
 		{
@@ -890,7 +890,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return &this->m_default;
 	}
 
-	$binding_name(GetAtLabels) const CString* GetAt(primitive const char* nX, primitive const char* nY)
+	$binding_name(GetAtLabels) const CString* GetAt(primitive const char* nX, primitive const char* nY) const
 	{
 		const int nColumnIndex = this->FindColumnLabel(nX);
 		if (nColumnIndex == -1) return &this->m_default;
@@ -901,7 +901,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return this->GetAt(nColumnIndex, nRowIndex);
 	}
 
-	$binding_name(GetAtCStringLabels) $pattern_name(GetAt(const CString*,const CString*)) const CString* GetAt(const CString* nX, const CString* nY);
+	$binding_name(GetAtCStringLabels) $pattern_name(GetAt(const CString*,const CString*)) const CString* GetAt(const CString* nX, const CString* nY) const;
 	void Load(const CResRef* res);
 };
 
