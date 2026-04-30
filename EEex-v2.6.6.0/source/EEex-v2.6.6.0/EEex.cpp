@@ -1955,6 +1955,150 @@ void EEex::SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad) {
 //          Overrides          //
 /////////////////////////////////
 
+int CAICondition::Override_Hold(CTypedPtrList<CPtrList, CAITrigger*>* pTriggerList, CGameAIBase* pCaller)
+{
+	auto pNode = this->m_triggerList.m_pNodeHead;
+	if (pNode == nullptr) {
+		return 1;
+	}
+
+	bool bRet = false;
+	int nORCounter = 0;
+
+	bool bNextTriggerObject = false;
+	CGameAIBase* pNextTriggerObject = nullptr;
+
+	// EEex
+	int nTrigger = 0;
+
+	do
+	{
+		if (nORCounter <= 0) {
+			bRet = false;
+		}
+
+		CAITrigger *const pTrigger = pNode->data;
+		const short nTriggerID = pTrigger->m_triggerID;
+
+		if (nTriggerID == 0x4089) // OR
+		{
+			nORCounter = pTrigger->m_specificID;
+		}
+		else if (nTriggerID == 0x40E0) // NextTriggerObject
+		{
+			EngineVal<CAIObjectType> nextTriggerObjectType{ &pTrigger->m_triggerCause };
+			nextTriggerObjectType->Decode(pCaller);
+
+			bNextTriggerObject = true;
+			pNextTriggerObject = reinterpret_cast<CGameAIBase*>(nextTriggerObjectType->GetShareType(pCaller, CGameObjectType::AIBASE, 0));
+
+			if (pNextTriggerObject != nullptr && nORCounter < 1) {
+				bRet = true;
+			}
+		}
+		else {
+			--nORCounter;
+		}
+
+		if (nTriggerID != 0x40E0) // NOT NextTriggerObject
+		{
+			if (bNextTriggerObject)
+			{
+				if (pNextTriggerObject != nullptr)
+				{
+					// EEex
+					if (EEex::bInTrackedResponse)
+					{
+						for (auto callback : triggerHitCallbacks) {
+							callback(nTrigger);
+						}
+					}
+
+					bNextTriggerObject = false;
+					const bool bTriggerHolds = this->TriggerHolds(pTrigger, pTriggerList, pNextTriggerObject);
+					bRet |= bTriggerHolds;
+
+					// EEex
+					if (EEex::bInTrackedResponse)
+					{
+						for (auto callback : triggerEvaluatedCallbacks) {
+							callback(bTriggerHolds);
+						}
+					}
+				}
+			}
+			else
+			{
+				// EEex
+				if (EEex::bInTrackedResponse)
+				{
+					for (auto callback : triggerHitCallbacks) {
+						callback(nTrigger);
+					}
+				}
+
+				const bool bTriggerHolds = this->TriggerHolds(pTrigger, pTriggerList, pCaller);
+				bRet |= bTriggerHolds;
+
+				// EEex
+				if (EEex::bInTrackedResponse)
+				{
+					for (auto callback : triggerEvaluatedCallbacks) {
+						callback(bTriggerHolds);
+					}
+				}
+			}
+		}
+
+		if (!bRet && nORCounter < 1) // Fail
+		{
+			break;
+		}
+
+		pNode = pNode->pNext;
+
+		// EEex
+		++nTrigger;
+	}
+	while (pNode != nullptr);
+
+	return bRet;
+}
+
+int CAICondition::Override_TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList, CAITrigger*>* pTriggerList, CGameAIBase* pCaller)
+{
+	bool nRet = false;
+
+	if ((pTrigger->m_triggerID & 0x4000) == 0) // Event-driven trigger
+	{
+		for (auto pNode = pTriggerList->m_pNodeHead; pNode != nullptr; pNode = pNode->pNext)
+		{
+			pTrigger->m_triggerCause.Decode(pCaller);
+			nRet = pNode->data->OfType(pTrigger);
+
+			if ((pTrigger->m_flags & 1) != 0) // Inverted
+			{
+				nRet = !nRet;
+			}
+
+			if (nRet) {
+				break;
+			}
+		}
+	}
+	else // Status trigger
+	{
+		nRet = pCaller->virtual_EvaluateStatusTrigger(pTrigger);
+
+		if ((pTrigger->m_flags & 1) != 0) // Inverted
+		{
+			nRet = !nRet;
+		}
+	}
+
+	return nRet;
+}
+
 void CChitin::Override_SynchronousUpdate() {
 
 	CWarp *const pActiveEngine = this->pActiveEngine;
@@ -2015,49 +2159,313 @@ void CChitin::Override_SynchronousUpdate() {
 	}
 }
 
-void __cdecl EEex::Override_uiDoFile(char* fileName) {
+void updateScriptingObject(CGameAIBase* pAIBase, EEex_ScriptingObject scriptingObject, CAIObjectType* pToSet, CAIObjectType* pToSetWith) {
 
-	lua_State* const L = *p_g_lua;
+	if (*pToSet != pToSetWith) {
 
-	EngineVal<CString> fullFileName{};
-	fullFileName->Format("%s.lua", fileName);
+		pToSet->Set(pToSetWith);
 
-	const CResRef resref { fileName };
-	CRes *const pRes = p_dimmGetResObject(&resref, 0x409, false);
-
-	if (pRes != nullptr) {
-
-		const char *const pResBuffer = reinterpret_cast<char*>(pRes->Demand());
-
-		if (luaL_loadbufferx(L, pResBuffer, pRes->nSize, fullFileName->m_pchData, nullptr) == LUA_OK) {
-
-			if (lua_pcallk(L, 0, -1, 0, 0, nullptr) != LUA_OK) {
-
-				const char *const pErrorMessage = lua_tolstring(L, -1, nullptr);
-
-				if (pErrorMessage != nullptr) {
-					p_SDL_ShowSimpleMessageBox(0x10, CChitin::p_m_sGameName->m_pchData, pErrorMessage, (*p_g_pBaldurChitin)->cVideo.pCurrentMode->m_pWindow);
-					p_SDL_Log("Error [%s] in %s", pErrorMessage, fullFileName->m_pchData);
-				}
-			}
-		}
-		else {
-			const char *const pErrorMessage = lua_tolstring(L, -1, nullptr);
-			p_SDL_ShowSimpleMessageBox(0x10, CChitin::p_m_sGameName->m_pchData, pErrorMessage, (*p_g_pBaldurChitin)->cVideo.pCurrentMode->m_pWindow);
-			p_SDL_Log("Err: %s", pErrorMessage);
-		}
-
-		pRes->virtual_Dump();
-	}
-
-	EngineVal<CString> langFile{};
-	langFile->Format("L_%s", static_cast<char*>(*p_lang));
-
-	if (_stricmp(fileName, langFile->m_pchData) == 0) {
-		luaCallProtected(L, 0, 0, [&](int _) {
-			lua_getglobal(L, "EEex_Menu_LuaHook_AfterTranslationLoaded"); // 1 [ ..., EEex_Menu_LuaHook_AfterTranslationLoaded ]
+		lua_State *const L = *p_g_lua;
+		luaCallProtected(L, 2, 0, [&](int _) {
+			lua_getglobal(L, "EEex_AIBase_LuaHook_OnScriptingObjectUpdated"); // 1 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated ]
+			tolua_pushusertype(L, pAIBase, "CGameAIBase");                    // 2 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated, pAIBaseUD ]
+			lua_pushinteger(L, static_cast<__int32>(scriptingObject));        // 3 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated, pAIBaseUD, scriptingObject ]
 		});
 	}
+}
+
+void CGameAIBase::Override_ApplyTriggers() {
+
+	CBaldurChitin *const pBaldurChitin = *p_g_pBaldurChitin;
+	CInfGame *const pGame = pBaldurChitin->m_pObjectGame;
+
+	if (pGame->m_worldTime.m_gameTime % 3600 == 0) {
+		CMessageUpdateReaction *const pMessage = newEngineObj<CMessageUpdateReaction>(11, this->m_id, this->m_id);
+		pBaldurChitin->m_cMessageHandler.AddMessage(pMessage, 0);
+	}
+
+	if (this->virtual_GetObjectType() == CGameObjectType::SPRITE) {
+		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(this);
+		pSprite->GetActiveStats()->m_cContingencyList.Process(pSprite);
+	}
+
+	for (auto pNode = this->m_pendingTriggers.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+
+		CAITrigger *const pTrigger = pNode->data;
+		if ((pTrigger->m_flags & 4) != 0) {
+			continue;
+		}
+		pTrigger->m_flags |= 4;
+
+		switch (pTrigger->m_triggerID) {
+
+			case 0x0002: { // AttackedBy
+
+				this->virtual_AutoPause(2);
+				this->m_lAttackStyle = pTrigger->m_specificID;
+
+				if
+				(
+					pGame->GetCharacterPortraitNum(this->m_id) == -1
+					||
+					pGame->GetCharacterPortraitNum(pTrigger->m_triggerCause.m_Instance) == -1
+				)
+				{
+					updateScriptingObject(this, EEex_ScriptingObject::ATTACKER, &this->m_lAttacker, &pTrigger->m_triggerCause);
+				}
+				break;
+			}
+			case 0x0003: { // Help
+				updateScriptingObject(this, EEex_ScriptingObject::HELP, &this->m_lHelp, &pTrigger->m_triggerCause);
+				break;
+			}
+			case 0x0006: { // ReceivedOrder
+				updateScriptingObject(this, EEex_ScriptingObject::ORDERED_BY, &this->m_lOrderedBy, &pTrigger->m_triggerCause);
+				break;
+			}
+			case 0x0007: { // Said
+				updateScriptingObject(this, EEex_ScriptingObject::TALKED_TO, &this->m_lTalkedTo, &pTrigger->m_triggerCause);
+				break;
+			}
+			case 0x0020: { // HitBy
+
+				this->virtual_AutoPause(4);
+				this->m_lAttackStyle = pTrigger->m_specificID;
+
+				updateScriptingObject(this, EEex_ScriptingObject::HITTER, &this->m_lHitter, &pTrigger->m_triggerCause);
+				break;
+			}
+			case 0x002F: { // Heard
+				updateScriptingObject(this, EEex_ScriptingObject::HEARD, &this->m_lHeard, &pTrigger->m_triggerCause);
+				break;
+			}
+			case 0x0097: { // Summoned
+				updateScriptingObject(this, EEex_ScriptingObject::SUMMONED_BY, &this->m_lSummonedBy, &pTrigger->m_triggerCause);
+				break;
+			}
+		}
+
+		if (pGame->SAVE_OBJECT_LIST.Find(pTrigger->m_triggerID) != nullptr) {
+			updateScriptingObject(this, EEex_ScriptingObject::TRIGGER, &this->m_lTrigger, &pTrigger->m_triggerCause);
+		}
+
+		if (this->virtual_GetObjectType() == CGameObjectType::SPRITE) {
+			CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(this);
+			pSprite->GetActiveStats()->m_cContingencyList.ProcessTrigger(pSprite, pTrigger);
+		}
+	}
+}
+
+static void onEventTriggerSet(CGameAIBase *const pAIBase, CAITrigger *const pTrigger) {
+
+	if (!EEex::AIBase_LuaHook_OnEventTriggerSet_Enabled) {
+		return;
+	}
+
+	lua_State *const L = *p_g_lua;
+	luaCallProtected(L, 2, 0, [&](int) {
+		lua_getglobal(L, "EEex_AIBase_LuaHook_OnEventTriggerSet"); // 1 [ ..., EEex_AIBase_LuaHook_OnEventTriggerSet ]
+		pushGameObjectUD(L, pAIBase);                              // 2 [ ..., EEex_AIBase_LuaHook_OnEventTriggerSet, pAIBaseUD ]
+		tolua_pushusertype(L, pTrigger, "CAITrigger");             // 3 [ ..., EEex_AIBase_LuaHook_OnEventTriggerSet, pAIBaseUD, pTriggerUD ]
+	});
+}
+
+void CGameAIBase::Override_SetTrigger(const CAITrigger* pTrigger) {
+
+	CAITrigger *const pTriggerCopy = newEngineObj<CAITrigger>(pTrigger);
+
+	onEventTriggerSet(this, pTriggerCopy);
+	this->m_pendingTriggers.AddTail(pTriggerCopy);
+	this->m_bNewTrigger = 1;
+
+	if ((pTriggerCopy->m_flags & 4) != 0) {
+		return;
+	}
+	pTriggerCopy->m_flags |= 4;
+
+	CInfGame *const pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
+
+	switch (pTriggerCopy->m_triggerID) {
+
+		case 0x0002: { // AttackedBy
+
+			this->virtual_AutoPause(2);
+
+			CGameSprite* pSprite = reinterpret_cast<CGameSprite*>(pTriggerCopy->m_triggerCause.GetShareType(this, CGameObjectType::SPRITE, 0));
+			if (pSprite != nullptr) {
+				// I don't know why the engine repeats this
+				pSprite = reinterpret_cast<CGameSprite*>(pTriggerCopy->m_triggerCause.GetShareType(this, CGameObjectType::SPRITE, 0));
+				if ((pSprite->GetActiveStats()->m_generalState & 0x800) != 0) {
+					break;
+				}
+			}
+
+			this->m_lAttackStyle = pTriggerCopy->m_specificID;
+			if
+			(
+				pGame->GetCharacterPortraitNum(this->m_id) == -1
+				||
+				pGame->GetCharacterPortraitNum(pTriggerCopy->m_triggerCause.m_Instance) == -1
+			)
+			{
+				updateScriptingObject(this, EEex_ScriptingObject::ATTACKER, &this->m_lAttacker, &pTriggerCopy->m_triggerCause);
+			}
+			break;
+		}
+		case 0x0003: { // Help
+			updateScriptingObject(this, EEex_ScriptingObject::HELP, &this->m_lHelp, &pTriggerCopy->m_triggerCause);
+			break;
+		}
+		case 0x0006: { // ReceivedOrder
+			updateScriptingObject(this, EEex_ScriptingObject::ORDERED_BY, &this->m_lOrderedBy, &pTriggerCopy->m_triggerCause);
+			break;
+		}
+		case 0x0007: { // Said
+			updateScriptingObject(this, EEex_ScriptingObject::TALKED_TO, &this->m_lTalkedTo, &pTriggerCopy->m_triggerCause);
+			break;
+		}
+		case 0x0020: { // HitBy
+
+			this->virtual_AutoPause(4);
+			this->m_lAttackStyle = pTriggerCopy->m_specificID;
+
+			updateScriptingObject(this, EEex_ScriptingObject::HITTER, &this->m_lHitter, &pTriggerCopy->m_triggerCause);
+			break;
+		}
+		case 0x002F: { // Heard
+			updateScriptingObject(this, EEex_ScriptingObject::HEARD, &this->m_lHeard, &pTriggerCopy->m_triggerCause);
+			break;
+		}
+		case 0x004C: { // Entered
+			if (this->virtual_GetObjectType() == CGameObjectType::TRIGGER) {
+				CGameTrigger *const pTrigger = reinterpret_cast<CGameTrigger*>(this);
+				if ((pTrigger->m_dwFlags & 2) == 0) {
+					pTrigger->SetDrawPoly(0);
+				}
+			}
+			break;
+		}
+		case 0x0052: { // Opened
+			if (this->virtual_GetObjectType() == CGameObjectType::DOOR) {
+				CGameDoor *const pDoor = reinterpret_cast<CGameDoor*>(this);
+				if ((pDoor->m_dwFlags & 4) == 0) {
+					pDoor->SetDrawPoly(0);
+				}
+			}
+			else {
+				if (this->virtual_GetObjectType() == CGameObjectType::CONTAINER) {
+					CGameContainer *const pContainer = reinterpret_cast<CGameContainer*>(this);
+					if ((pContainer->m_dwFlags & 8) == 0) {
+						pContainer->SetDrawPoly(0);
+					}
+				}
+			}
+			break;
+		}
+		case 0x0097: { // Summoned
+			updateScriptingObject(this, EEex_ScriptingObject::SUMMONED_BY, &this->m_lSummonedBy, &pTriggerCopy->m_triggerCause);
+			break;
+		}
+	}
+
+	if (pGame->SAVE_OBJECT_LIST.Find(pTriggerCopy->m_triggerID) != nullptr) {
+		updateScriptingObject(this, EEex_ScriptingObject::TRIGGER, &this->m_lTrigger, &pTriggerCopy->m_triggerCause);
+	}
+
+	if (this->virtual_GetObjectType() == CGameObjectType::SPRITE) {
+		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(this);
+		pSprite->GetActiveStats()->m_cContingencyList.ProcessTrigger(pSprite, pTriggerCopy);
+	}
+}
+
+void CMessageSetLastObject::Override_Run() {
+
+	CGameObject* pObject;
+	if
+	(
+		CGameObjectArray::GetShare(this->m_targetId, &pObject) != 0
+		||
+		(pObject->virtual_GetObjectType() & CGameObjectType::AIBASE) == 0
+	)
+	{
+		return;
+	}
+
+	if (pObject->virtual_GetObjectType() == CGameObjectType::SPRITE) {
+		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(pObject);
+		if ((pSprite->m_derivedStats.m_generalState & 0x80) != 0 || (pSprite->m_baseStats.m_generalState & 0x80) != 0) {
+			// STONE_DEATH
+			return;
+		}
+	}
+
+	CGameAIBase *const pAIBase = reinterpret_cast<CGameAIBase*>(pObject);
+
+	switch (this->m_type) {
+		case 0x0002: { // AttackedBy
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::ATTACKER, &pAIBase->m_lAttacker, &this->m_lAttacker);
+			pAIBase->m_lAttackerSent.Set(&this->m_lAttacker);
+			break;
+		}
+		case 0x0003: { // Help
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::HELP, &pAIBase->m_lHelp, &this->m_lAttacker);
+			pAIBase->m_lHelpSent.Set(&this->m_lAttacker);
+			break;
+		}
+		case 0x0006: { // ReceivedOrder
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::ORDERED_BY, &pAIBase->m_lOrderedBy, &this->m_lAttacker);
+			pAIBase->m_lOrderedBySent.Set(&this->m_lAttacker);
+			break;
+		}
+		case 0x0007: { // Said
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::TALKED_TO, &pAIBase->m_lTalkedTo, &this->m_lAttacker);
+			pAIBase->m_lTalkedToSent.Set(&this->m_lAttacker);
+			break;
+		}
+		case 0x0020: { // HitBy
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::HITTER, &pAIBase->m_lHitter, &this->m_lAttacker);
+			pAIBase->m_lHitterSent.Set(&this->m_lAttacker);
+			break;
+		}
+		case 0x002F: { // Heard
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::HEARD, &pAIBase->m_lHeard, &this->m_lAttacker);
+			pAIBase->m_lHeardSent.Set(&this->m_lAttacker);
+			break;
+		}
+		case 0x004B: { // Killed
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::KILLED, &pAIBase->m_lKilled, &this->m_lAttacker);
+			pAIBase->m_lKilledSent.Set(&this->m_lAttacker);
+			break;
+		}
+		case 0x0097: { // Summoned
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::SUMMONED_BY, &pAIBase->m_lSummonedBy, &this->m_lAttacker);
+			pAIBase->m_lSummonedBySent.Set(&this->m_lAttacker);
+			break;
+		}
+		case 0x401C: { // See
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::SEEN, &pAIBase->m_lSeen, &this->m_lAttacker);
+			pAIBase->m_lSeenSent.Set(&this->m_lAttacker);
+			break;
+		}
+		default: {
+			updateScriptingObject(pAIBase, EEex_ScriptingObject::TRIGGER, &pAIBase->m_lTrigger, &this->m_lAttacker);
+			pAIBase->m_lTriggerSent.Set(&this->m_lAttacker);
+			break;
+		}
+	}
+}
+
+void CScreenMap::Override_OnLButtonDblClk(CPoint cPoint) {
+
+	CBaldurEngine *const pActiveEngine = reinterpret_cast<CBaldurEngine*>((*p_g_pBaldurChitin)->pActiveEngine);
+	pActiveEngine->OnLeftPanelButtonClick(0);
+
+	// Vanilla Bugfix: Fix closing the local area map with a double click resulting in the world screen responding to the button up event
+	// |
+	lua_State *const L = luaState();
+	luaCallProtected(L, 0, 0, [&](int _) {
+		lua_getglobal(L, "EEex_Fix_LuaHook_OnLocalMapDoubleClick");
+	});
 }
 
 void EEex::Override_bootstrapLua() {
@@ -2137,114 +2545,6 @@ end
 		lua_pcallk(L, 0, -1, 0, 0, nullptr);
 	}
 }
-
-//int __cdecl EEex::Override_fontWrap(
-//	char* text,
-//	SDL_Rect* r,
-//	SDL_Rect* rClip,
-//	int* horizontalAlignment,
-//	int* verticalAlignment,
-//	font_t* font,
-//	int* pointSize,
-//	letter_t* letters,
-//	int* nlines,
-//	int* nletters,
-//	int* pointIndex,
-//	bool* scale,
-//	adjustmentData_t* adjustData,
-//	int indent,
-//	bool bUseFontSizeFloor)
-//{
-//	const int maxLines = (*verticalAlignment >> 16) & 0xFFF;
-//	*verticalAlignment &= 0xFFFF;
-//
-//	if (r->h == 0xFFFFFF)
-//	{
-//		*verticalAlignment = 0;
-//	}
-//
-//	SDL_Rect rTransformed;
-//	SDL_Rect rClipTransformed;
-//
-//	p_DrawTransformToScreen(r, &rTransformed);
-//	p_DrawTransformToScreen(rClip, &rClipTransformed);
-//
-//	int nAlignAdjX = 0;
-//
-//	if ((*horizontalAlignment & 4) != 0) {
-//		nAlignAdjX = rClipTransformed.w - rClipTransformed.x;
-//	}
-//
-//	if ((*horizontalAlignment & 8) != 0) {
-//		nAlignAdjX = rTransformed.w;
-//	}
-//
-//	int nAlignAdjY = 0;
-//
-//	if ((*verticalAlignment & 4) != 0) {
-//		nAlignAdjY = rClipTransformed.h - rClipTransformed.y;
-//	}
-//
-//	if ((*verticalAlignment & 8) != 0) {
-//		nAlignAdjY = rTransformed.h;
-//	}
-//
-//	*horizontalAlignment = *horizontalAlignment & 0xFFFFFFF3; // Unset 0x4 | 0x8
-//	*verticalAlignment = *verticalAlignment & 0xFFFFFFF3; // Unset 0x4 | 0x8
-//
-//	int nFinalPoint = static_cast<int>(p_DrawTransformToScreenH(static_cast<float>(*pointSize)));
-//
-//	if (bUseFontSizeFloor)
-//	{
-//		nFinalPoint = (std::max)(10, nFinalPoint);
-//	}
-//
-//	nFinalPoint = (std::min)(nFinalPoint, 79);
-//	nFinalPoint = static_cast<int>(floor(nFinalPoint));
-//
-//	line_metric *const pNewLineMetrics = font->newLineMetrics;
-//	int lastLineHeight;
-//
-//	for (; nFinalPoint > 1 && (nAlignAdjX != 0 || nAlignAdjY != 0); --nFinalPoint)
-//	{
-//		line_metric *const pNewLineMetric = &pNewLineMetrics[nFinalPoint];
-//		const float fLineHeight = pNewLineMetric->ascent - pNewLineMetric->descent + pNewLineMetric->line_spacing - 0.001f;
-//
-//		if (nAlignAdjY < 1 || fLineHeight <= nAlignAdjY)
-//		{
-//			*nlines = p_wordwrap(letters, 0x40000, nletters, text, rTransformed.w, font, nFinalPoint, *pointIndex, maxLines, &lastLineHeight, adjustData, indent);
-//
-//			if
-//			(
-//				(nAlignAdjY < 1 || *nlines * fLineHeight <= nAlignAdjY)
-//				&&
-//				(nAlignAdjX < 1 || letters->w <= nAlignAdjX)
-//			)
-//			{
-//				break;
-//			}
-//		}
-//	}
-//
-//	if (*nletters == 0)
-//	{
-//		*nlines = p_wordwrap(letters, 0x40000, nletters, text, rTransformed.w, font, nFinalPoint, *pointIndex, maxLines, &lastLineHeight, adjustData, indent);
-//	}
-//
-//	r->x = rTransformed.x;
-//	r->y = rTransformed.y;
-//	r->w = rTransformed.w;
-//	r->h = rTransformed.h;
-//	rClip->x = rClipTransformed.x;
-//	rClip->y = rClipTransformed.y;
-//	rClip->w = rClipTransformed.w;
-//	rClip->h = rClipTransformed.h;
-//	*pointSize = nFinalPoint;
-//
-//	line_metric *const pNewLineMetric = &pNewLineMetrics[nFinalPoint];
-//	const int nLineHeight = static_cast<int>(ceil(pNewLineMetric->ascent - pNewLineMetric->descent + pNewLineMetric->line_spacing));
-//	return nLineHeight * *nlines;
-//}
 
 int checkNoSavingThrowsAndEvasion(CGameEffect *const pEffect, CGameSprite *const pTarget) {
 
@@ -2684,6 +2984,114 @@ void __cdecl EEex::Override_crashHandler(EXCEPTION_POINTERS* pExceptionPointers)
 	DumpCrashInfo(pExceptionPointers);
 }
 
+//int __cdecl EEex::Override_fontWrap(
+//	char* text,
+//	SDL_Rect* r,
+//	SDL_Rect* rClip,
+//	int* horizontalAlignment,
+//	int* verticalAlignment,
+//	font_t* font,
+//	int* pointSize,
+//	letter_t* letters,
+//	int* nlines,
+//	int* nletters,
+//	int* pointIndex,
+//	bool* scale,
+//	adjustmentData_t* adjustData,
+//	int indent,
+//	bool bUseFontSizeFloor)
+//{
+//	const int maxLines = (*verticalAlignment >> 16) & 0xFFF;
+//	*verticalAlignment &= 0xFFFF;
+//
+//	if (r->h == 0xFFFFFF)
+//	{
+//		*verticalAlignment = 0;
+//	}
+//
+//	SDL_Rect rTransformed;
+//	SDL_Rect rClipTransformed;
+//
+//	p_DrawTransformToScreen(r, &rTransformed);
+//	p_DrawTransformToScreen(rClip, &rClipTransformed);
+//
+//	int nAlignAdjX = 0;
+//
+//	if ((*horizontalAlignment & 4) != 0) {
+//		nAlignAdjX = rClipTransformed.w - rClipTransformed.x;
+//	}
+//
+//	if ((*horizontalAlignment & 8) != 0) {
+//		nAlignAdjX = rTransformed.w;
+//	}
+//
+//	int nAlignAdjY = 0;
+//
+//	if ((*verticalAlignment & 4) != 0) {
+//		nAlignAdjY = rClipTransformed.h - rClipTransformed.y;
+//	}
+//
+//	if ((*verticalAlignment & 8) != 0) {
+//		nAlignAdjY = rTransformed.h;
+//	}
+//
+//	*horizontalAlignment = *horizontalAlignment & 0xFFFFFFF3; // Unset 0x4 | 0x8
+//	*verticalAlignment = *verticalAlignment & 0xFFFFFFF3; // Unset 0x4 | 0x8
+//
+//	int nFinalPoint = static_cast<int>(p_DrawTransformToScreenH(static_cast<float>(*pointSize)));
+//
+//	if (bUseFontSizeFloor)
+//	{
+//		nFinalPoint = (std::max)(10, nFinalPoint);
+//	}
+//
+//	nFinalPoint = (std::min)(nFinalPoint, 79);
+//	nFinalPoint = static_cast<int>(floor(nFinalPoint));
+//
+//	line_metric *const pNewLineMetrics = font->newLineMetrics;
+//	int lastLineHeight;
+//
+//	for (; nFinalPoint > 1 && (nAlignAdjX != 0 || nAlignAdjY != 0); --nFinalPoint)
+//	{
+//		line_metric *const pNewLineMetric = &pNewLineMetrics[nFinalPoint];
+//		const float fLineHeight = pNewLineMetric->ascent - pNewLineMetric->descent + pNewLineMetric->line_spacing - 0.001f;
+//
+//		if (nAlignAdjY < 1 || fLineHeight <= nAlignAdjY)
+//		{
+//			*nlines = p_wordwrap(letters, 0x40000, nletters, text, rTransformed.w, font, nFinalPoint, *pointIndex, maxLines, &lastLineHeight, adjustData, indent);
+//
+//			if
+//			(
+//				(nAlignAdjY < 1 || *nlines * fLineHeight <= nAlignAdjY)
+//				&&
+//				(nAlignAdjX < 1 || letters->w <= nAlignAdjX)
+//			)
+//			{
+//				break;
+//			}
+//		}
+//	}
+//
+//	if (*nletters == 0)
+//	{
+//		*nlines = p_wordwrap(letters, 0x40000, nletters, text, rTransformed.w, font, nFinalPoint, *pointIndex, maxLines, &lastLineHeight, adjustData, indent);
+//	}
+//
+//	r->x = rTransformed.x;
+//	r->y = rTransformed.y;
+//	r->w = rTransformed.w;
+//	r->h = rTransformed.h;
+//	rClip->x = rClipTransformed.x;
+//	rClip->y = rClipTransformed.y;
+//	rClip->w = rClipTransformed.w;
+//	rClip->h = rClipTransformed.h;
+//	*pointSize = nFinalPoint;
+//
+//	line_metric *const pNewLineMetric = &pNewLineMetrics[nFinalPoint];
+//	const int nLineHeight = static_cast<int>(ceil(pNewLineMetric->ascent - pNewLineMetric->descent + pNewLineMetric->line_spacing));
+//	return nLineHeight * *nlines;
+//}
+
 #undef fprintf
 
 int __cdecl EEex::Override_Infinity_WriteINILine(lua_State* L) {
@@ -2695,457 +3103,49 @@ int __cdecl EEex::Override_Infinity_WriteINILine(lua_State* L) {
 
 #define fprintf error
 
-int CAICondition::Override_Hold(CTypedPtrList<CPtrList, CAITrigger*>* pTriggerList, CGameAIBase* pCaller)
-{
-	auto pNode = this->m_triggerList.m_pNodeHead;
-	if (pNode == nullptr) {
-		return 1;
-	}
+void __cdecl EEex::Override_uiDoFile(char* fileName) {
 
-	bool bRet = false;
-	int nORCounter = 0;
+	lua_State *const L = *p_g_lua;
 
-	bool bNextTriggerObject = false;
-	CGameAIBase* pNextTriggerObject = nullptr;
+	EngineVal<CString> fullFileName{};
+	fullFileName->Format("%s.lua", fileName);
 
-	// EEex
-	int nTrigger = 0;
+	const CResRef resref { fileName };
+	CRes *const pRes = p_dimmGetResObject(&resref, 0x409, false);
 
-	do
-	{
-		if (nORCounter <= 0) {
-			bRet = false;
-		}
+	if (pRes != nullptr) {
 
-		CAITrigger *const pTrigger = pNode->data;
-		const short nTriggerID = pTrigger->m_triggerID;
+		const char *const pResBuffer = reinterpret_cast<char*>(pRes->Demand());
 
-		if (nTriggerID == 0x4089) // OR
-		{
-			nORCounter = pTrigger->m_specificID;
-		}
-		else if (nTriggerID == 0x40E0) // NextTriggerObject
-		{
-			EngineVal<CAIObjectType> nextTriggerObjectType{ &pTrigger->m_triggerCause };
-			nextTriggerObjectType->Decode(pCaller);
+		if (luaL_loadbufferx(L, pResBuffer, pRes->nSize, fullFileName->m_pchData, nullptr) == LUA_OK) {
 
-			bNextTriggerObject = true;
-			pNextTriggerObject = reinterpret_cast<CGameAIBase*>(nextTriggerObjectType->GetShareType(pCaller, CGameObjectType::AIBASE, 0));
+			if (lua_pcallk(L, 0, -1, 0, 0, nullptr) != LUA_OK) {
 
-			if (pNextTriggerObject != nullptr && nORCounter < 1) {
-				bRet = true;
+				const char *const pErrorMessage = lua_tolstring(L, -1, nullptr);
+
+				if (pErrorMessage != nullptr) {
+					p_SDL_ShowSimpleMessageBox(0x10, CChitin::p_m_sGameName->m_pchData, pErrorMessage, (*p_g_pBaldurChitin)->cVideo.pCurrentMode->m_pWindow);
+					p_SDL_Log("Error [%s] in %s", pErrorMessage, fullFileName->m_pchData);
+				}
 			}
 		}
 		else {
-			--nORCounter;
+			const char *const pErrorMessage = lua_tolstring(L, -1, nullptr);
+			p_SDL_ShowSimpleMessageBox(0x10, CChitin::p_m_sGameName->m_pchData, pErrorMessage, (*p_g_pBaldurChitin)->cVideo.pCurrentMode->m_pWindow);
+			p_SDL_Log("Err: %s", pErrorMessage);
 		}
 
-		if (nTriggerID != 0x40E0) // NOT NextTriggerObject
-		{
-			if (bNextTriggerObject)
-			{
-				if (pNextTriggerObject != nullptr)
-				{
-					// EEex
-					if (EEex::bInTrackedResponse)
-					{
-						for (auto callback : triggerHitCallbacks) {
-							callback(nTrigger);
-						}
-					}
-
-					bNextTriggerObject = false;
-					const bool bTriggerHolds = this->TriggerHolds(pTrigger, pTriggerList, pNextTriggerObject);
-					bRet |= bTriggerHolds;
-
-					// EEex
-					if (EEex::bInTrackedResponse)
-					{
-						for (auto callback : triggerEvaluatedCallbacks) {
-							callback(bTriggerHolds);
-						}
-					}
-				}
-			}
-			else
-			{
-				// EEex
-				if (EEex::bInTrackedResponse)
-				{
-					for (auto callback : triggerHitCallbacks) {
-						callback(nTrigger);
-					}
-				}
-
-				const bool bTriggerHolds = this->TriggerHolds(pTrigger, pTriggerList, pCaller);
-				bRet |= bTriggerHolds;
-
-				// EEex
-				if (EEex::bInTrackedResponse)
-				{
-					for (auto callback : triggerEvaluatedCallbacks) {
-						callback(bTriggerHolds);
-					}
-				}
-			}
-		}
-
-		if (!bRet && nORCounter < 1) // Fail
-		{
-			break;
-		}
-
-		pNode = pNode->pNext;
-
-		// EEex
-		++nTrigger;
-	}
-	while (pNode != nullptr);
-
-	return bRet;
-}
-
-int CAICondition::Override_TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList, CAITrigger*>* pTriggerList, CGameAIBase* pCaller)
-{
-	bool nRet = false;
-
-	if ((pTrigger->m_triggerID & 0x4000) == 0) // Event-driven trigger
-	{
-		for (auto pNode = pTriggerList->m_pNodeHead; pNode != nullptr; pNode = pNode->pNext)
-		{
-			pTrigger->m_triggerCause.Decode(pCaller);
-			nRet = pNode->data->OfType(pTrigger);
-
-			if ((pTrigger->m_flags & 1) != 0) // Inverted
-			{
-				nRet = !nRet;
-			}
-
-			if (nRet) {
-				break;
-			}
-		}
-	}
-	else // Status trigger
-	{
-		nRet = pCaller->virtual_EvaluateStatusTrigger(pTrigger);
-
-		if ((pTrigger->m_flags & 1) != 0) // Inverted
-		{
-			nRet = !nRet;
-		}
+		pRes->virtual_Dump();
 	}
 
-	return nRet;
-}
+	EngineVal<CString> langFile{};
+	langFile->Format("L_%s", static_cast<char*>(*p_lang));
 
-void updateScriptingObject(CGameAIBase* pAIBase, EEex_ScriptingObject scriptingObject, CAIObjectType* pToSet, CAIObjectType* pToSetWith) {
-
-	if (*pToSet != pToSetWith) {
-
-		pToSet->Set(pToSetWith);
-
-		lua_State *const L = *p_g_lua;
-		luaCallProtected(L, 2, 0, [&](int _) {
-			lua_getglobal(L, "EEex_AIBase_LuaHook_OnScriptingObjectUpdated"); // 1 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated ]
-			tolua_pushusertype(L, pAIBase, "CGameAIBase");                    // 2 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated, pAIBaseUD ]
-			lua_pushinteger(L, static_cast<__int32>(scriptingObject));        // 3 [ ..., EEex_AIBase_LuaHook_OnScriptingObjectUpdated, pAIBaseUD, scriptingObject ]
+	if (_stricmp(fileName, langFile->m_pchData) == 0) {
+		luaCallProtected(L, 0, 0, [&](int _) {
+			lua_getglobal(L, "EEex_Menu_LuaHook_AfterTranslationLoaded"); // 1 [ ..., EEex_Menu_LuaHook_AfterTranslationLoaded ]
 		});
 	}
-}
-
-void CMessageSetLastObject::Override_Run() {
-
-	CGameObject* pObject;
-	if
-	(
-		CGameObjectArray::GetShare(this->m_targetId, &pObject) != 0
-		||
-		(pObject->virtual_GetObjectType() & CGameObjectType::AIBASE) == 0
-	)
-	{
-		return;
-	}
-
-	if (pObject->virtual_GetObjectType() == CGameObjectType::SPRITE) {
-		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(pObject);
-		if ((pSprite->m_derivedStats.m_generalState & 0x80) != 0 || (pSprite->m_baseStats.m_generalState & 0x80) != 0) {
-			// STONE_DEATH
-			return;
-		}
-	}
-
-	CGameAIBase *const pAIBase = reinterpret_cast<CGameAIBase*>(pObject);
-
-	switch (this->m_type) {
-		case 0x0002: { // AttackedBy
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::ATTACKER, &pAIBase->m_lAttacker, &this->m_lAttacker);
-			pAIBase->m_lAttackerSent.Set(&this->m_lAttacker);
-			break;
-		}
-		case 0x0003: { // Help
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::HELP, &pAIBase->m_lHelp, &this->m_lAttacker);
-			pAIBase->m_lHelpSent.Set(&this->m_lAttacker);
-			break;
-		}
-		case 0x0006: { // ReceivedOrder
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::ORDERED_BY, &pAIBase->m_lOrderedBy, &this->m_lAttacker);
-			pAIBase->m_lOrderedBySent.Set(&this->m_lAttacker);
-			break;
-		}
-		case 0x0007: { // Said
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::TALKED_TO, &pAIBase->m_lTalkedTo, &this->m_lAttacker);
-			pAIBase->m_lTalkedToSent.Set(&this->m_lAttacker);
-			break;
-		}
-		case 0x0020: { // HitBy
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::HITTER, &pAIBase->m_lHitter, &this->m_lAttacker);
-			pAIBase->m_lHitterSent.Set(&this->m_lAttacker);
-			break;
-		}
-		case 0x002F: { // Heard
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::HEARD, &pAIBase->m_lHeard, &this->m_lAttacker);
-			pAIBase->m_lHeardSent.Set(&this->m_lAttacker);
-			break;
-		}
-		case 0x004B: { // Killed
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::KILLED, &pAIBase->m_lKilled, &this->m_lAttacker);
-			pAIBase->m_lKilledSent.Set(&this->m_lAttacker);
-			break;
-		}
-		case 0x0097: { // Summoned
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::SUMMONED_BY, &pAIBase->m_lSummonedBy, &this->m_lAttacker);
-			pAIBase->m_lSummonedBySent.Set(&this->m_lAttacker);
-			break;
-		}
-		case 0x401C: { // See
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::SEEN, &pAIBase->m_lSeen, &this->m_lAttacker);
-			pAIBase->m_lSeenSent.Set(&this->m_lAttacker);
-			break;
-		}
-		default: {
-			updateScriptingObject(pAIBase, EEex_ScriptingObject::TRIGGER, &pAIBase->m_lTrigger, &this->m_lAttacker);
-			pAIBase->m_lTriggerSent.Set(&this->m_lAttacker);
-			break;
-		}
-	}
-}
-
-static void onEventTriggerSet(CGameAIBase *const pAIBase, CAITrigger *const pTrigger) {
-
-	if (!EEex::AIBase_LuaHook_OnEventTriggerSet_Enabled) {
-		return;
-	}
-
-	lua_State *const L = *p_g_lua;
-	luaCallProtected(L, 2, 0, [&](int) {
-		lua_getglobal(L, "EEex_AIBase_LuaHook_OnEventTriggerSet"); // 1 [ ..., EEex_AIBase_LuaHook_OnEventTriggerSet ]
-		pushGameObjectUD(L, pAIBase);                              // 2 [ ..., EEex_AIBase_LuaHook_OnEventTriggerSet, pAIBaseUD ]
-		tolua_pushusertype(L, pTrigger, "CAITrigger");             // 3 [ ..., EEex_AIBase_LuaHook_OnEventTriggerSet, pAIBaseUD, pTriggerUD ]
-	});
-}
-
-void CGameAIBase::Override_SetTrigger(const CAITrigger* pTrigger) {
-
-	CAITrigger *const pTriggerCopy = newEngineObj<CAITrigger>(pTrigger);
-
-	onEventTriggerSet(this, pTriggerCopy);
-	this->m_pendingTriggers.AddTail(pTriggerCopy);
-	this->m_bNewTrigger = 1;
-
-	if ((pTriggerCopy->m_flags & 4) != 0) {
-		return;
-	}
-	pTriggerCopy->m_flags |= 4;
-
-	CInfGame *const pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
-
-	switch (pTriggerCopy->m_triggerID) {
-
-		case 0x0002: { // AttackedBy
-
-			this->virtual_AutoPause(2);
-
-			CGameSprite* pSprite = reinterpret_cast<CGameSprite*>(pTriggerCopy->m_triggerCause.GetShareType(this, CGameObjectType::SPRITE, 0));
-			if (pSprite != nullptr) {
-				// I don't know why the engine repeats this
-				pSprite = reinterpret_cast<CGameSprite*>(pTriggerCopy->m_triggerCause.GetShareType(this, CGameObjectType::SPRITE, 0));
-				if ((pSprite->GetActiveStats()->m_generalState & 0x800) != 0) {
-					break;
-				}
-			}
-
-			this->m_lAttackStyle = pTriggerCopy->m_specificID;
-			if
-			(
-				pGame->GetCharacterPortraitNum(this->m_id) == -1
-				||
-				pGame->GetCharacterPortraitNum(pTriggerCopy->m_triggerCause.m_Instance) == -1
-			)
-			{
-				updateScriptingObject(this, EEex_ScriptingObject::ATTACKER, &this->m_lAttacker, &pTriggerCopy->m_triggerCause);
-			}
-			break;
-		}
-		case 0x0003: { // Help
-			updateScriptingObject(this, EEex_ScriptingObject::HELP, &this->m_lHelp, &pTriggerCopy->m_triggerCause);
-			break;
-		}
-		case 0x0006: { // ReceivedOrder
-			updateScriptingObject(this, EEex_ScriptingObject::ORDERED_BY, &this->m_lOrderedBy, &pTriggerCopy->m_triggerCause);
-			break;
-		}
-		case 0x0007: { // Said
-			updateScriptingObject(this, EEex_ScriptingObject::TALKED_TO, &this->m_lTalkedTo, &pTriggerCopy->m_triggerCause);
-			break;
-		}
-		case 0x0020: { // HitBy
-
-			this->virtual_AutoPause(4);
-			this->m_lAttackStyle = pTriggerCopy->m_specificID;
-
-			updateScriptingObject(this, EEex_ScriptingObject::HITTER, &this->m_lHitter, &pTriggerCopy->m_triggerCause);
-			break;
-		}
-		case 0x002F: { // Heard
-			updateScriptingObject(this, EEex_ScriptingObject::HEARD, &this->m_lHeard, &pTriggerCopy->m_triggerCause);
-			break;
-		}
-		case 0x004C: { // Entered
-			if (this->virtual_GetObjectType() == CGameObjectType::TRIGGER) {
-				CGameTrigger *const pTrigger = reinterpret_cast<CGameTrigger*>(this);
-				if ((pTrigger->m_dwFlags & 2) == 0) {
-					pTrigger->SetDrawPoly(0);
-				}
-			}
-			break;
-		}
-		case 0x0052: { // Opened
-			if (this->virtual_GetObjectType() == CGameObjectType::DOOR) {
-				CGameDoor *const pDoor = reinterpret_cast<CGameDoor*>(this);
-				if ((pDoor->m_dwFlags & 4) == 0) {
-					pDoor->SetDrawPoly(0);
-				}
-			}
-			else {
-				if (this->virtual_GetObjectType() == CGameObjectType::CONTAINER) {
-					CGameContainer *const pContainer = reinterpret_cast<CGameContainer*>(this);
-					if ((pContainer->m_dwFlags & 8) == 0) {
-						pContainer->SetDrawPoly(0);
-					}
-				}
-			}
-			break;
-		}
-		case 0x0097: { // Summoned
-			updateScriptingObject(this, EEex_ScriptingObject::SUMMONED_BY, &this->m_lSummonedBy, &pTriggerCopy->m_triggerCause);
-			break;
-		}
-	}
-
-	if (pGame->SAVE_OBJECT_LIST.Find(pTriggerCopy->m_triggerID) != nullptr) {
-		updateScriptingObject(this, EEex_ScriptingObject::TRIGGER, &this->m_lTrigger, &pTriggerCopy->m_triggerCause);
-	}
-
-	if (this->virtual_GetObjectType() == CGameObjectType::SPRITE) {
-		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(this);
-		pSprite->GetActiveStats()->m_cContingencyList.ProcessTrigger(pSprite, pTriggerCopy);
-	}
-}
-
-void CGameAIBase::Override_ApplyTriggers() {
-
-	CBaldurChitin *const pBaldurChitin = *p_g_pBaldurChitin;
-	CInfGame *const pGame = pBaldurChitin->m_pObjectGame;
-
-	if (pGame->m_worldTime.m_gameTime % 3600 == 0) {
-		CMessageUpdateReaction *const pMessage = newEngineObj<CMessageUpdateReaction>(11, this->m_id, this->m_id);
-		pBaldurChitin->m_cMessageHandler.AddMessage(pMessage, 0);
-	}
-
-	if (this->virtual_GetObjectType() == CGameObjectType::SPRITE) {
-		CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(this);
-		pSprite->GetActiveStats()->m_cContingencyList.Process(pSprite);
-	}
-
-	for (auto pNode = this->m_pendingTriggers.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
-
-		CAITrigger *const pTrigger = pNode->data;
-		if ((pTrigger->m_flags & 4) != 0) {
-			continue;
-		}
-		pTrigger->m_flags |= 4;
-
-		switch (pTrigger->m_triggerID) {
-
-			case 0x0002: { // AttackedBy
-
-				this->virtual_AutoPause(2);
-				this->m_lAttackStyle = pTrigger->m_specificID;
-
-				if
-				(
-					pGame->GetCharacterPortraitNum(this->m_id) == -1
-					||
-					pGame->GetCharacterPortraitNum(pTrigger->m_triggerCause.m_Instance) == -1
-				)
-				{
-					updateScriptingObject(this, EEex_ScriptingObject::ATTACKER, &this->m_lAttacker, &pTrigger->m_triggerCause);
-				}
-				break;
-			}
-			case 0x0003: { // Help
-				updateScriptingObject(this, EEex_ScriptingObject::HELP, &this->m_lHelp, &pTrigger->m_triggerCause);
-				break;
-			}
-			case 0x0006: { // ReceivedOrder
-				updateScriptingObject(this, EEex_ScriptingObject::ORDERED_BY, &this->m_lOrderedBy, &pTrigger->m_triggerCause);
-				break;
-			}
-			case 0x0007: { // Said
-				updateScriptingObject(this, EEex_ScriptingObject::TALKED_TO, &this->m_lTalkedTo, &pTrigger->m_triggerCause);
-				break;
-			}
-			case 0x0020: { // HitBy
-
-				this->virtual_AutoPause(4);
-				this->m_lAttackStyle = pTrigger->m_specificID;
-
-				updateScriptingObject(this, EEex_ScriptingObject::HITTER, &this->m_lHitter, &pTrigger->m_triggerCause);
-				break;
-			}
-			case 0x002F: { // Heard
-				updateScriptingObject(this, EEex_ScriptingObject::HEARD, &this->m_lHeard, &pTrigger->m_triggerCause);
-				break;
-			}
-			case 0x0097: { // Summoned
-				updateScriptingObject(this, EEex_ScriptingObject::SUMMONED_BY, &this->m_lSummonedBy, &pTrigger->m_triggerCause);
-				break;
-			}
-		}
-
-		if (pGame->SAVE_OBJECT_LIST.Find(pTrigger->m_triggerID) != nullptr) {
-			updateScriptingObject(this, EEex_ScriptingObject::TRIGGER, &this->m_lTrigger, &pTrigger->m_triggerCause);
-		}
-
-		if (this->virtual_GetObjectType() == CGameObjectType::SPRITE) {
-			CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(this);
-			pSprite->GetActiveStats()->m_cContingencyList.ProcessTrigger(pSprite, pTrigger);
-		}
-	}
-}
-
-void CScreenMap::Override_OnLButtonDblClk(CPoint cPoint) {
-
-	CBaldurEngine *const pActiveEngine = reinterpret_cast<CBaldurEngine*>((*p_g_pBaldurChitin)->pActiveEngine);
-	pActiveEngine->OnLeftPanelButtonClick(0);
-
-	// Vanilla Bugfix: Fix closing the local area map with a double click resulting in the world screen responding to the button up event
-	// |
-	lua_State *const L = luaState();
-	luaCallProtected(L, 0, 0, [&](int _) {
-		lua_getglobal(L, "EEex_Fix_LuaHook_OnLocalMapDoubleClick");
-	});
 }
 
 /////////////////////////////
