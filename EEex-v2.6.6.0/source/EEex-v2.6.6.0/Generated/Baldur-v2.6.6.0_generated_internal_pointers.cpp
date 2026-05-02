@@ -189,6 +189,7 @@ CAIScriptFile::type_ParseResponseString CAIScriptFile::p_ParseResponseString;
 CSound::type_Construct CSound::p_Construct;
 CSound::type_Destruct CSound::p_Destruct;
 CVidBitmap::type_Construct CVidBitmap::p_Construct;
+CVidBitmap::type_Destruct CVidBitmap::p_Destruct;
 CVidBitmap::type_GetPixelColor CVidBitmap::p_GetPixelColor;
 CVidBitmap::type_GetPixelValueOrZero CVidBitmap::p_GetPixelValueOrZero;
 CVidBitmap::type_SetResRef CVidBitmap::p_SetResRef;
@@ -519,6 +520,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CSound::Construct"), CSound::p_Construct);
 	attemptFillPointer(TEXT("CSound::Destruct"), CSound::p_Destruct);
 	attemptFillPointer(TEXT("CVidBitmap::Construct"), CVidBitmap::p_Construct);
+	attemptFillPointer(TEXT("CVidBitmap::Destruct"), CVidBitmap::p_Destruct);
 	attemptFillPointer(TEXT("CVidBitmap::GetPixelColor"), CVidBitmap::p_GetPixelColor);
 	attemptFillPointer(TEXT("CVidBitmap::GetPixelValue(int,int)"), CVidBitmap::p_GetPixelValueOrZero);
 	attemptFillPointer(TEXT("CVidBitmap::SetResRef"), CVidBitmap::p_SetResRef);

@@ -10879,6 +10879,9 @@ struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 	typedef void (__thiscall *type_Construct)(CVidBitmap* pThis);
 	static type_Construct p_Construct;
 
+	typedef void (__thiscall *type_Destruct)(CVidBitmap* pThis);
+	static type_Destruct p_Destruct;
+
 	typedef int (__thiscall *type_GetPixelColor)(CVidBitmap* pThis, tagRGBQUAD* color, int x, int y);
 	static type_GetPixelColor p_GetPixelColor;
 
@@ -10891,6 +10894,11 @@ struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 	void Construct()
 	{
 		p_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
 	}
 
 	int GetPixelColor(tagRGBQUAD* color, int x, int y)
