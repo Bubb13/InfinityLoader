@@ -95,6 +95,8 @@ namespace EEex {
 	bool Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals(CGameSprite* pSprite);
 	// op319
 	bool Opcode_Hook_Op319_IsInverted(CGameEffect* pEffect);
+	// op342
+	void Opcode_Hook_Op342_OnUnhandledParam2(CGameEffect* pEffect, CGameSprite* pSprite);
 	// New op400
 	int Opcode_Hook_SetTemporaryAIScript_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_SetTemporaryAIScript_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
@@ -124,6 +126,7 @@ namespace EEex {
 	void Sprite_Hook_OnDestruct(CGameSprite* pSprite);
 	void Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite);
 	void Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite);
+	byte Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttacks);
 
 	////////////
 	// Action //

@@ -49,8 +49,8 @@ static void exportPatterns() {
 	exportPattern(TEXT("CGameText::Override_Render"), getMemberPtr(&CGameText::Override_Render));
 	exportPattern(TEXT("CInfinity::Override_AdjustViewPosition"), getMemberPtr(&CInfinity::Override_AdjustViewPosition));
 	exportPattern(TEXT("CInfinity::Override_FitViewPosition"), getMemberPtr(&CInfinity::Override_FitViewPosition));
-	exportPattern(TEXT("CInfinity::Override_SetScrollDest"), getMemberPtr(&CInfinity::Override_SetScrollDest));
 	exportPattern(TEXT("CInfinity::Override_Scroll"), getMemberPtr(&CInfinity::Override_Scroll));
+	exportPattern(TEXT("CInfinity::Override_SetScrollDest"), getMemberPtr(&CInfinity::Override_SetScrollDest));
 	exportPattern(TEXT("CMessageSetLastObject::Override_Run"), getMemberPtr(&CMessageSetLastObject::Override_Run));
 	exportPattern(TEXT("CScreenMap::Override_CenterViewPort"), getMemberPtr(&CScreenMap::Override_CenterViewPort));
 	exportPattern(TEXT("CScreenMap::Override_OnLButtonDblClk"), getMemberPtr(&CScreenMap::Override_OnLButtonDblClk));
@@ -113,6 +113,8 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals"), EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals);
 	// op319
 	exportPattern(TEXT("EEex::Opcode_Hook_Op319_IsInverted"), EEex::Opcode_Hook_Op319_IsInverted);
+	// op342
+	exportPattern(TEXT("EEex::Opcode_Hook_Op342_OnUnhandledParam2"), EEex::Opcode_Hook_Op342_OnUnhandledParam2);
 	// New op400
 	exportPattern(TEXT("EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect"), EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove"), EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove);
@@ -142,6 +144,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Sprite_Hook_OnDestruct"), EEex::Sprite_Hook_OnDestruct);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnAfterEffectListUnmarshalled"), EEex::Sprite_Hook_OnAfterEffectListUnmarshalled);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeEffectListMarshalled"), EEex::Sprite_Hook_OnBeforeEffectListMarshalled);
+	exportPattern(TEXT("EEex::Sprite_Hook_OnGetAttackFrameType"), EEex::Sprite_Hook_OnGetAttackFrameType);
 
 	////////////
 	// Action //

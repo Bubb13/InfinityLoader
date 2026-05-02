@@ -141,6 +141,7 @@ std::unordered_map<uintptr_t, std::pair<const char*, EEex::ProjectileType>> proj
 
 struct ExSpriteData {
 
+	EngineVal<CVidBitmap> combatRoundsOverride[5]{};
 	Array<int, 3> oldDisabledSpellTypes;
 	int oldDisableSpells = 0;
 	uint64_t uuid = 0;
@@ -3531,6 +3532,28 @@ int CGameEffectUsability::Override_CheckUsability(CGameSprite* pSprite) {
 	return match ^ EEex::Opcode_Hook_Op319_IsInverted(this);
 }
 
+//-------//
+// op342 //
+//-------//
+
+void EEex::Opcode_Hook_Op342_OnUnhandledParam2(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	if (pEffect->m_dWFlags == 5) { // Override combat_round_* in animation INI
+
+		const int nCombatRoundSlot = pEffect->m_effectAmount;
+
+		if (nCombatRoundSlot < 0 || nCombatRoundSlot > 4) {
+			// Invalid combat round slot
+			pEffect->m_done = true;
+			return;
+		}
+
+		ExSpriteData& exData = exSpriteDataMap[pSprite];
+		exData.combatRoundsOverride[nCombatRoundSlot]->SetResRef(&pEffect->m_res, true, true);
+		pSprite->m_animation.m_overrides |= (0x4 << (nCombatRoundSlot + 1));
+	}
+}
+
 //-----------//
 // New op400 //
 //-----------//
@@ -3953,6 +3976,38 @@ void EEex::Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite) {
 	}
 
 	STUTTER_LOG_END
+}
+
+static byte getAttackFrameTypeReimplementation(CVidBitmap* aBitmaps, byte numAttacks, byte speedFactor, byte combatFrame) {
+
+	if (numAttacks <= 5 && speedFactor <= 10) {
+
+		if (combatFrame > 100) {
+			return 15;
+		}
+
+		return aBitmaps[numAttacks - 1].GetPixelValue(combatFrame, speedFactor);
+	}
+
+	return 0;
+}
+
+byte EEex::Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttacks) {
+
+	const CGameAnimation *const pAnimation = &pSprite->m_animation;
+	const byte nSpeedFactor = static_cast<byte>(pSprite->m_speedFactor);
+	const byte nAttackFrame = static_cast<byte>(pSprite->m_attackFrame);
+
+	if ((pAnimation->m_overrides & (0x4 << numAttacks)) != 0) { // Override combat_round_* in animation INI
+
+		// Passing `combatRoundsOverride` as a raw `CVidBitmap` array requires that the `EngineVal` wrapper isn't adding any fields
+		static_assert(sizeof(EngineVal<CVidBitmap>) == sizeof(CVidBitmap));
+
+		ExSpriteData& exData = exSpriteDataMap[pSprite];
+		return getAttackFrameTypeReimplementation(&**exData.combatRoundsOverride, numAttacks, nSpeedFactor, nAttackFrame);
+	}
+
+	return pAnimation->m_animation->virtual_GetAttackFrameType(numAttacks, nSpeedFactor, nAttackFrame);
 }
 
 CGameEffectDamage* CGameSprite::Override_Damage(
@@ -5087,7 +5142,7 @@ void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProf
 	if (bOffHand) {
 		return;
 	}
-	
+
 	const C2DArray& WSPECIAL = (*p_g_pBaldurChitin)->m_pObjectGame->m_ruleTables.m_tWeaponSpecialization;
 	const CString *const sCell = WSPECIAL.GetAt(2, nProficiencyLevel);
 

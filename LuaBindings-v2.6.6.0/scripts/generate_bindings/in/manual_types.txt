@@ -1620,7 +1620,10 @@ struct CBaldurEngine : CWarp
 
 struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 {
+	$constructor_fake Construct();
 	int GetPixelColor(tagRGBQUAD* color, int x, int y);
+	$binding_name(GetPixelValueOrZero) $pattern_name(GetPixelValue(int,int)) byte GetPixelValue(int x, int y);
+	void SetResRef(const CResRef* cNewResRef, int bSetAutoRequest, int bWarningIfMissing);
 };
 
 struct CVidFont : CResHelper<CResFont,1034>

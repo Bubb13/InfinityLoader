@@ -10876,12 +10876,36 @@ struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 
 	CVidBitmap() = delete;
 
+	typedef void (__thiscall *type_Construct)(CVidBitmap* pThis);
+	static type_Construct p_Construct;
+
 	typedef int (__thiscall *type_GetPixelColor)(CVidBitmap* pThis, tagRGBQUAD* color, int x, int y);
 	static type_GetPixelColor p_GetPixelColor;
+
+	typedef byte (__thiscall *type_GetPixelValueOrZero)(CVidBitmap* pThis, int x, int y);
+	static type_GetPixelValueOrZero p_GetPixelValueOrZero;
+
+	typedef void (__thiscall *type_SetResRef)(CVidBitmap* pThis, const CResRef* cNewResRef, int bSetAutoRequest, int bWarningIfMissing);
+	static type_SetResRef p_SetResRef;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
 
 	int GetPixelColor(tagRGBQUAD* color, int x, int y)
 	{
 		return p_GetPixelColor(this, color, x, y);
+	}
+
+	byte GetPixelValue(int x, int y)
+	{
+		return p_GetPixelValueOrZero(this, x, y);
+	}
+
+	void SetResRef(const CResRef* cNewResRef, int bSetAutoRequest, int bWarningIfMissing)
+	{
+		p_SetResRef(this, cNewResRef, bSetAutoRequest, bWarningIfMissing);
 	}
 };
 
