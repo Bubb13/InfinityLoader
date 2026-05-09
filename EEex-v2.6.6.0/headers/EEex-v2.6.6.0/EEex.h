@@ -55,6 +55,7 @@ namespace EEex {
 	int __cdecl Override_Infinity_TransitionMenu(lua_State* L);
 	int __cdecl Override_Infinity_WriteINILine(lua_State* L);
 	void __cdecl Override_uiDoFile(char* fileName);
+	void __cdecl Override_uiDrawMenuStack();
 	bool __cdecl Override_uiEventMenuStack(SDL_Event* pEvent, SDL_Rect* pWindow);
 
 	//-------------------------//

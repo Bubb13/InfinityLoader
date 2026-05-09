@@ -73,6 +73,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Override_Infinity_TransitionMenu"), EEex::Override_Infinity_TransitionMenu);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);
 	exportPattern(TEXT("EEex::Override_uiDoFile"), EEex::Override_uiDoFile);
+	exportPattern(TEXT("EEex::Override_uiDrawMenuStack"), EEex::Override_uiDrawMenuStack);
 	exportPattern(TEXT("EEex::Override_uiEventMenuStack"), EEex::Override_uiEventMenuStack);
 
 	/////////////////////////////

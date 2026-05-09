@@ -140,6 +140,7 @@ long long nRemainingAutoZoomTime = 0;
 long long nRemainingScrollTime = 0;
 int nScreenShakeSavedX = 0;
 int nScreenShakeSavedY = 0;
+long long nTooltipEnableTime = 0;
 long long nTransitionStartTime = 0;
 long long nTransitionEndTime = 0;
 CPoint ptMapPosExact;
@@ -2318,6 +2319,91 @@ int __cdecl EEex::Override_Infinity_TransitionMenu(lua_State* L)
 	}
 
 	return 0;
+}
+
+void __cdecl EEex::Override_uiDrawMenuStack()
+{
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+	CScreenWorld *const pWorld = pChitin->m_pEngineWorld;
+
+	if
+	(
+		(pChitin->pActiveEngine == pWorld && p_uiIsHidden())
+		||
+		pWorld->m_bWaitToRender
+	)
+	{
+		return;
+	}
+
+	const uint nTooltipDelay = pChitin->m_pObjectGame->m_options.m_toolTips;
+
+	// |
+	// Patch: Enable UI tooltips based on microsecond measurements (versus the tick-based vanilla implementation)
+	// |
+	// | if
+	// | (
+	// |     (!pChitin->m_bIsTouchUI || *p_fingerDown)
+	// |     &&
+	// |     nTooltipDelay != 99 && static_cast<uint>(p_tooltip->count) > nTooltipDelay
+	// | )
+	// | {
+	// |     p_tooltip->on = true;
+	// | }
+	// |
+	// | ++p_tooltip->count;
+	// |
+	const long long nCurTime = getTime();
+	// |
+	if (p_tooltip->count == nTooltipDelay || (GetAsyncKeyState(VK_TAB) & 0x8000) != 0)
+	{
+		// Pressing tab (to force the tooltip) sets `p_tooltip->count = nTooltipDelay`, which has been detected.
+		// This patch also directly checks the TAB key state, which is a bit hacky, but the vanilla implementation
+		// has an annoying flicker to the tooltip if the tab key is held down while the mouse is moved. The engine
+		// usually waits a tick to display the tooltip, but this patch immediately enables the tooltip to prevent
+		// flicker.
+		p_tooltip->count = -1;
+		nTooltipEnableTime = nCurTime;
+	}
+	else if (p_tooltip->count == 0)
+	{
+		// Engine has started the tooltip timer. The default implementation never immediately enables the tooltip,
+		// but this patch can do so for `nTooltipDelay == 0` to prevent flicker when the mouse is moved.
+		p_tooltip->count = -1;
+		nTooltipEnableTime = nCurTime + nTooltipDelay * 33333LL;
+	}
+	// |
+	if
+	(
+		(!pChitin->m_bIsTouchUI || *p_fingerDown)
+		&&
+		nTooltipDelay != 99 && nCurTime >= nTooltipEnableTime
+	)
+	{
+		p_tooltip->on = true;
+	}
+
+	const SDL_Rect rWindow { 0, 0, *CVidMode::p_SCREENWIDTH, *CVidMode::p_SCREENHEIGHT };
+
+	if (uiMenu *const g_backgroundMenu = *p_g_backgroundMenu; g_backgroundMenu != nullptr)
+	{
+		p_drawMenu(g_backgroundMenu, &rWindow);
+	}
+
+	for (int nMenuIndex = 0; ; ++nMenuIndex)
+	{
+		uiMenu *const pMenu = getStackMenu(nMenuIndex);
+		if (pMenu == nullptr) break;
+		p_drawMenu(pMenu, &rWindow);
+	}
+
+	if (uiMenu *const g_overlayMenu = *p_g_overlayMenu; g_overlayMenu != nullptr)
+	{
+		p_drawMenu(g_overlayMenu, &rWindow);
+	}
+
+	p_drawTop(&rWindow);
+	p_uiHandleTooltip();
 }
 
 //-----------------------------------//

@@ -3741,6 +3741,19 @@ struct slicedRect
 	}
 };
 
+struct _820A8B7015E7E0FD9144A7C186FBF075
+{
+	SDL_Point pt;
+	bool on;
+	const char* text;
+	SDL_Rect r;
+	int count;
+	const char* lastText;
+	bool playedSound;
+
+	_820A8B7015E7E0FD9144A7C186FBF075() = delete;
+};
+
 struct _9B9540D9920A90D57A3D80DDD1A70514
 {
 	bool (__fastcall *f)(uiMenu*, const SDL_Rect*, SDL_Event*);
@@ -9524,6 +9537,9 @@ extern type_DrawEndScaled p_DrawEndScaled;
 typedef void (*type_drawLetters)(int X, int Y, int W, const SDL_Rect* rClip, const letter_t* letters, int nletters, int horizontalAlignment, font_t* font, int pointSize, int cursorPosition, int cursor, int selectionStart, int selectionEnd, int nLines, bool inlineColor, int indent, float fOffsetX, float fOffsetY);
 extern type_drawLetters p_drawLetters;
 
+typedef bool (__cdecl *type_drawMenu)(uiMenu* m, const SDL_Rect* window);
+extern type_drawMenu p_drawMenu;
+
 typedef void (*type_DrawOrtho11Begin)();
 extern type_DrawOrtho11Begin p_DrawOrtho11Begin;
 
@@ -9547,6 +9563,9 @@ extern type_drawSliceSide p_drawSliceSide;
 
 typedef void (*type_DrawTexCoord)(int s, int t);
 extern type_DrawTexCoord p_DrawTexCoord;
+
+typedef bool (__cdecl *type_drawTop)(const SDL_Rect* window);
+extern type_drawTop p_drawTop;
 
 typedef void (__cdecl *type_DrawTransformToScreen)(SDL_Rect* w, SDL_Rect* s);
 extern type_DrawTransformToScreen p_DrawTransformToScreen;
@@ -9599,6 +9618,9 @@ extern type_uiDrawSlicedRect p_uiDrawSlicedRect;
 typedef int (*type_uiExecLuaInt)(int id);
 extern type_uiExecLuaInt p_uiExecLuaInt;
 
+typedef void (__cdecl *type_uiHandleTooltip)();
+extern type_uiHandleTooltip p_uiHandleTooltip;
+
 typedef bool (*type_uiPop)(const char* name);
 extern type_uiPop p_uiPop;
 
@@ -9625,6 +9647,8 @@ extern type_YScreenToZoomed p_YScreenToZoomed;
 
 extern char** p_afxPchNil;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
+extern bool* p_fingerDown;
+extern uiMenu** p_g_backgroundMenu;
 extern RendererType* p_g_drawBackend;
 extern Array<keyword,124>* p_g_keywords;
 extern lua_State** p_g_lua;
@@ -9637,6 +9661,7 @@ extern Array<uiMenu*,256>* p_menuStack;
 extern int* p_nextStackMenuIdx;
 extern int* p_numMenus;
 extern CTypedPtrArray<CPtrArray,CRes*>* p_resources;
+extern _820A8B7015E7E0FD9144A7C186FBF075* p_tooltip;
 extern _A92C2F5FC159A4FE55DD6CCAABD58E72* p_transition;
 extern ConstArray<ushort,1765>* p_yy_action;
 extern ConstArray<ushort,329>* p_yy_default;
