@@ -4389,7 +4389,7 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 			elif functionImplementation.isDestructor:
 				out.write(f"self->~{groupOpenData.appliedHeaderName}(")
 			elif isNormal and group.groupType != "namespace" and not functionImplementation.isStatic:
-				out.write(f"self->{functionNameHeader}(")
+				out.write(f"(self->{functionNameHeader})(")
 			else:
 				classStr = f"{groupOpenData.appliedHeaderName}::" if isNormal else ""
 				funcNameStr: str = f"(*p_{functionNameHeader})" if functionImplementation.isFunctionPointer else functionNameHeader

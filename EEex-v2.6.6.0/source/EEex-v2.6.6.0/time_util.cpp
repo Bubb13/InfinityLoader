@@ -1,12 +1,14 @@
 
-#include "Windows.h"
+#include <Windows.h>
+
+#include "time_util.hpp"
 
 //---------------------------//
 //          Globals          //
 //---------------------------//
 
-long long numTicksInMicrosecond;
-long long initTime;
+TimeType numTicksInMicrosecond;
+TimeType initTime;
 
 //-----------------------------//
 //          Functions          //
@@ -14,42 +16,42 @@ long long initTime;
 
 DWORD getHighestRefreshRate()
 {
-    DWORD highestRefreshRate = 0;
+	DWORD highestRefreshRate = 0;
 
-    DISPLAY_DEVICE displayDevice;
-    displayDevice.cb = sizeof(DISPLAY_DEVICE);
+	DISPLAY_DEVICE displayDevice;
+	displayDevice.cb = sizeof(DISPLAY_DEVICE);
 
-    DEVMODE devMode;
-    devMode.dmSize = sizeof(DEVMODE);
-    devMode.dmDriverExtra = 0;
+	DEVMODE devMode;
+	devMode.dmSize = sizeof(DEVMODE);
+	devMode.dmDriverExtra = 0;
 
-    for (DWORD deviceIndex = 0; EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0); ++deviceIndex)
-    {
-        if ((displayDevice.StateFlags & DISPLAY_DEVICE_ACTIVE) == 0)
-        {
-            continue;
-        }
+	for (DWORD deviceIndex = 0; EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0); ++deviceIndex)
+	{
+		if ((displayDevice.StateFlags & DISPLAY_DEVICE_ACTIVE) == 0)
+		{
+			continue;
+		}
 
-        if (!EnumDisplaySettings(displayDevice.DeviceName, ENUM_CURRENT_SETTINGS, &devMode))
-        {
-            continue;
-        }
+		if (!EnumDisplaySettings(displayDevice.DeviceName, ENUM_CURRENT_SETTINGS, &devMode))
+		{
+			continue;
+		}
 
-        if (devMode.dmDisplayFrequency > highestRefreshRate)
-        {
-            highestRefreshRate = devMode.dmDisplayFrequency;
-        }
-    }
+		if (devMode.dmDisplayFrequency > highestRefreshRate)
+		{
+			highestRefreshRate = devMode.dmDisplayFrequency;
+		}
+	}
 
-    return highestRefreshRate;
+	return highestRefreshRate;
 }
 
-long long getInitTime()
+TimeType getInitTime()
 {
 	return initTime;
 }
 
-long long getTime()
+TimeType getTime()
 {
 	LARGE_INTEGER result;
 	QueryPerformanceCounter(&result);

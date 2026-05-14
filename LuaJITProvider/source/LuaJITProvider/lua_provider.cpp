@@ -214,6 +214,7 @@ EXPORT DWORD InitLuaProvider(SharedState sharedDLL) {
 	setLuaPointer(lua_callk)
 	setLuaPointer(lua_concat)
 	setLuaPointer(lua_createtable)
+	setLuaPointer(lua_gc)
 	setLuaPointer(lua_getfield)
 	setLuaPointer(lua_getglobal)
 	setLuaPointer(lua_getmetatable)

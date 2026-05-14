@@ -2,10 +2,16 @@
 #pragma once
 
 //-----------------------------//
+//          Type Defs          //
+//-----------------------------//
+
+typedef long long TimeType;
+
+//-----------------------------//
 //          Functions          //
 //-----------------------------//
 
 DWORD getHighestRefreshRate();
-long long getInitTime();
-long long getTime();
+TimeType getInitTime();
+TimeType getTime();
 void initTimeUtil();

@@ -8,9 +8,11 @@
 
 #include "Baldur-v2.6.6.0_generated.h"
 #include "EEex.h"
+#include "engine_function_names.hpp"
 #include "infinity_loader_util_api.h"
 #include "lua_util.hpp"
 #include "menu_util.hpp"
+#include "profiler.hpp"
 #include "time_util.hpp"
 #include "uncap_fps.hpp"
 #include "util.hpp"
@@ -385,11 +387,7 @@ bool EEex::IsMarshallingCopy() {
 //          Stutter Util          //
 //--------------------------------//
 
-long long currentMicroseconds() {
-	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-}
-
-void exitStutterLog(const char *const name, long long timeTaken) {
+void exitStutterLog(const char *const name, TimeType timeTaken) {
 
 	lua_State *const L = *p_g_lua;
 	lua_getglobal(L, "EEex_StutterDetector_Private_Times");                       // 1 [ ..., EEex_StutterDetector_Private_Times ]
@@ -449,9 +447,9 @@ RetType logStutter(const char* name, std::function<RetType()> func) {
 
 	bool oldTopLevel = topLevel;
 	topLevel = false;
-	long long startTime = currentMicroseconds();
+	TimeType startTime = getTime();
 	RetType ret = func();
-	long long timeTaken = currentMicroseconds() - startTime;
+	TimeType timeTaken = getTime() - startTime;
 	topLevel = oldTopLevel;
 	exitStutterLog(name, timeTaken);
 	return ret;
@@ -467,9 +465,9 @@ void logStutter<void>(const char* name, std::function<void()> func) {
 
 	bool oldTopLevel = topLevel;
 	topLevel = false;
-	long long startTime = currentMicroseconds();
+	TimeType startTime = getTime();
 	func();
-	long long timeTaken = currentMicroseconds() - startTime;
+	TimeType timeTaken = getTime() - startTime;
 	topLevel = oldTopLevel;
 	exitStutterLog(name, timeTaken);
 }
@@ -5366,4 +5364,8 @@ void EEex::InitEEex() {
 	EEex::Projectile_LuaHook_GlobalMutators_Enabled = false;
 	initProjectileMutator();
 	EEex::StutterDetector_Enabled = false;
+
+	//LoadFunctionNames();
+	//Profiler_RegisterTrace("Render", 0x140136300, 15);
+	//Profiler_RegisterTrace("AI", 0x140131BF0, 5);
 }

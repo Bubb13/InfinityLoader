@@ -2,6 +2,7 @@
 #include "Baldur-v2.6.6.0_generated.h"
 #include "EEex.h"
 #include "EEexLua_generated.h"
+#include "profiler.hpp"
 
 static void exportPattern(const String& name, void* value) {
 
@@ -226,6 +227,12 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::bNoUUID"), &EEex::bNoUUID);
 	exportPattern(TEXT("EEex::bStripUUID"), &EEex::bStripUUID);
 	exportPattern(TEXT("EEex::CGameSprite_Hit_Roll"), &EEex::CGameSprite_Hit_Roll);
+
+	////////////////////////////////
+	//          Profiler          //
+	////////////////////////////////
+
+	//exportPattern(TEXT("Profiler_Trace"), Profiler_Trace);
 }
 
 void __stdcall InitBindings(SharedState argSharedState) {

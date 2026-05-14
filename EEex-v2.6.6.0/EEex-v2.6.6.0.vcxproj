@@ -15,6 +15,7 @@
     <ClCompile Include="source\EEex-v2.6.6.0\coordinate_util.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\debug.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\EEex.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\engine_function_names.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\engine_reimplementations.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\font_util.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
@@ -23,6 +24,7 @@
     <ClCompile Include="source\EEex-v2.6.6.0\lua_util.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\main.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\menu_util.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\profiler.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\time_util.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\uncap_fps.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\util.cpp" />
@@ -33,9 +35,11 @@
     <ClInclude Include="headers\EEex-v2.6.6.0\coordinate_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\EEex.h" />
     <ClInclude Include="headers\EEex-v2.6.6.0\EEexLua_generated.h" />
+    <ClInclude Include="headers\EEex-v2.6.6.0\engine_function_names.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\font_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\lua_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\menu_util.hpp" />
+    <ClInclude Include="headers\EEex-v2.6.6.0\profiler.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\time_util.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\uncap_fps.hpp" />
     <ClInclude Include="headers\EEex-v2.6.6.0\util.hpp" />
@@ -45,6 +49,9 @@
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />
     <None Include="EEex-v2.6.6.0.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="source\EEex-v2.6.6.0\profiler_assembly.asm" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -69,6 +76,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -146,5 +154,6 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
 </Project>

@@ -1651,6 +1651,7 @@ uiMenu* findMenu(primitive const char* name, int panel, int state);
 int rand();
 void restoreMenuStack();
 void saveMenuStack();
+SDL_VideoDisplay* SDL_GetDisplayForWindow(SDL_Window* window);
 int SDL_GetKeyFromName(primitive const char* name);
 primitive char* __cdecl SDL_GetKeyName(int key);
 uint SDL_GetWindowFlags(SDL_Window* window);

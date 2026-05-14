@@ -1,8 +1,8 @@
 
 #include <deque>
 
-#include "EEex.h"
 #include "coordinate_util.hpp"
+#include "EEex.h"
 #include "lua_util.hpp"
 #include "menu_util.hpp"
 #include "time_util.hpp"
@@ -11,7 +11,7 @@
 //          Constants          //
 //-----------------------------//
 
-constexpr long long AUTO_ZOOM_TARGET_TIME = 10 * 1000000LL / 30;
+constexpr TimeType AUTO_ZOOM_TARGET_TIME = 10 * 1000000LL / 30;
 
 // Empirically derived; lower values increase the smoothness of the "snap" at the
 // end of an exponential autoscroll at the cost of drawing out the autoscroll.
@@ -62,27 +62,27 @@ class RollingAverage
 {
 	struct Entry
 	{
-		const long long timestamp;
+		const TimeType timestamp;
 		const T value;
 
-		Entry(long long timestamp, T value) : timestamp(timestamp), value(value) {}
+		Entry(TimeType timestamp, T value) : timestamp(timestamp), value(value) {}
 	};
 
-	const long long timeWindow;
+	const TimeType timeWindow;
 
 	T currentAverage = 0;
 	std::deque<Entry> queue{};
 
 public:
-	RollingAverage(long long timeWindow);
+	RollingAverage(TimeType timeWindow);
 	T get();
 	T getLast();
-	void push(long long currentTime, T value);
-	void recalculate(long long currentTime);
+	void push(TimeType currentTime, T value);
+	void recalculate(TimeType currentTime);
 };
 
 template<typename T>
-RollingAverage<T>::RollingAverage(long long timeWindow) : timeWindow(timeWindow) {}
+RollingAverage<T>::RollingAverage(TimeType timeWindow) : timeWindow(timeWindow) {}
 
 template<typename T>
 T RollingAverage<T>::get()
@@ -97,15 +97,15 @@ T RollingAverage<T>::getLast()
 }
 
 template<typename T>
-void RollingAverage<T>::push(long long currentTime, T value)
+void RollingAverage<T>::push(TimeType currentTime, T value)
 {
 	queue.emplace_back(currentTime, value);
 }
 
 template<typename T>
-void RollingAverage<T>::recalculate(long long currentTime)
+void RollingAverage<T>::recalculate(TimeType currentTime)
 {
-	const long long dropTime = currentTime - this->timeWindow;
+	const TimeType dropTime = currentTime - this->timeWindow;
 
 	while (!queue.empty() && queue.front().timestamp < dropTime)
 	{
@@ -130,19 +130,20 @@ RollingAverage<int> averageSyncUpdateDelta { 1000000 };
 ExMenuStateOverrides beforeWorldScreenDeactivatedMenuStates{};
 bool bAutoScrollFirstTick = false;
 bool bFullTick = false;
-long long nLastAutoZoomTime = 0;
-long long nLastScrollTime = 0;
-long long nLastSyncUpdateTime = 0;
-long long nLastTPSPrintTime = 0;
-long long nNextFullSyncUpdateTick = 0;
-long long nNextLightSyncUpdateTick = -1;
-long long nRemainingAutoZoomTime = 0;
-long long nRemainingScrollTime = 0;
+bool bVSyncEnabled = true;
+TimeType nLastAutoZoomTime = 0;
+TimeType nLastScrollTime = 0;
+TimeType nLastSyncUpdateTime = 0;
+TimeType nLastTPSPrintTime = 0;
+TimeType nNextFullSyncUpdateTick = 0;
+TimeType nNextLightSyncUpdateTick = -1;
+TimeType nRemainingAutoZoomTime = 0;
+TimeType nRemainingScrollTime = 0;
 int nScreenShakeSavedX = 0;
 int nScreenShakeSavedY = 0;
-long long nTooltipEnableTime = 0;
-long long nTransitionStartTime = 0;
-long long nTransitionEndTime = 0;
+TimeType nTooltipEnableTime = 0;
+TimeType nTransitionStartTime = 0;
+TimeType nTransitionEndTime = 0;
 CPoint ptMapPosExact;
 
 //-----------------------------//
@@ -466,7 +467,7 @@ static void adjustViewPosition(CInfinity* pInfinity, byte nScrollState, ExAdjust
 	// |
 	pInfinity->m_nLastTickCount = nCurrentTick;
 	// |
-	const long long nCurrentTime = getTime();
+	const TimeType nCurrentTime = getTime();
 	const int nScrollUpdateDelta = static_cast<int>(nCurrentTime - nLastScrollTime);
 	const int nDeltaT = (std::max)(1, (std::min)(nScrollUpdateDelta, 500000));
 	nLastScrollTime = nCurrentTime;
@@ -735,7 +736,7 @@ static ExpScrollResult expScrollNumSteps(int src, int dst, int minStep, int thre
 	}
 }
 
-static int expScrollScaleSpeedToTime(int src, int dst, int minStep, int threshold, int microsecondDelta, long long targetMicroseconds)
+static int expScrollScaleSpeedToTime(int src, int dst, int minStep, int threshold, int microsecondDelta, TimeType targetMicroseconds)
 {
 	if (std::abs(src - dst) <= threshold)
 	{
@@ -759,7 +760,7 @@ static int expScrollScaleSpeedToTime(int src, int dst, int minStep, int threshol
 // Lua Functions //
 ///////////////////
 
-long long EEex::GetMicroseconds()
+TimeType EEex::GetMicroseconds()
 {
 	return getTime() - getInitTime();
 }
@@ -782,6 +783,8 @@ void EEex::SetVSyncEnabled(bool bEnable, bool bResetDevice)
 	{
 		p_SDL_GL_SetSwapInterval(bEnable);
 	}
+
+	bVSyncEnabled = bEnable;
 }
 
 void EEex::UpdateLastScrollTime()
@@ -1013,7 +1016,7 @@ void EEex::UncapFPS_Hook_HandleTransitionMenuFade()
 	// | 	p_uiPush(p_transition->newMenu->name);
 	// | }
 	// |
-	const long long nCurrentTime = getTime();
+	const TimeType nCurrentTime = getTime();
 	// |
 	if (nCurrentTime >= nTransitionEndTime)
 	{
@@ -1038,8 +1041,8 @@ void EEex::UncapFPS_Hook_HandleTransitionMenuFade()
 	}
 	else
 	{
-		const long long nCurrentProgress = nCurrentTime - nTransitionStartTime;
-		const long long nTotalDistance = nTransitionEndTime - nTransitionStartTime;
+		const TimeType nCurrentProgress = nCurrentTime - nTransitionStartTime;
+		const TimeType nTotalDistance = nTransitionEndTime - nTransitionStartTime;
 		const float fPercent = static_cast<float>(nCurrentProgress) / nTotalDistance;
 
 		if (p_transition->state == 1)
@@ -1057,7 +1060,7 @@ void EEex::UncapFPS_Hook_HandleTransitionMenuFade()
 // Overrides //
 ///////////////
 
-static void trackSyncUpdateDelta(long long nStartTime)
+static void trackSyncUpdateDelta(TimeType nStartTime)
 {
 	const int nSyncUpdateDelta = static_cast<int>(nStartTime - nLastSyncUpdateTime);
 	nLastSyncUpdateTime = nStartTime;
@@ -1071,9 +1074,17 @@ static void trackSyncUpdateDelta(long long nStartTime)
 	//}
 }
 
+static int getWindowRefreshRate()
+{
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+	SDL_Window *const pWindow = pChitin->cVideo.pCurrentMode->m_pWindow;
+	SDL_VideoDisplay *const pVideoDisplay = p_SDL_GetDisplayForWindow(pWindow);
+	return pVideoDisplay->current_mode.refresh_rate;
+}
+
 void CChitin::Override_Update()
 {
-	const long long nStartTime = getTime();
+	const TimeType nStartTime = getTime();
 
 	//////////////////////////////////////////////////////////////////////
 	// Dump Lua values that were not properly cleaned up from the stack //
@@ -1111,6 +1122,8 @@ void CChitin::Override_Update()
 			}
 		}
 	}
+
+	const bool bUsingFPSLimit = EEex::UncapFPS_FPSLimitEnabled && (!bVSyncEnabled || EEex::UncapFPS_FPSLimit < getWindowRefreshRate());
 
 	// Patch: Run "full ticks" at 30tps like normal, and (if uncapped) run in-between "light" ticks that only render the game
 	// |
@@ -1158,6 +1171,7 @@ void CChitin::Override_Update()
 			this->m_displayStale = 0;
 			this->m_bInSyncUpdate = 1;
 			this->virtual_SynchronousUpdate();
+			lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
 			this->m_bInSyncUpdate = 0;
 			this->m_AIStale = 1;
 		}
@@ -1208,23 +1222,30 @@ void CChitin::Override_Update()
 		}
 		else
 		{
-			const long long nEndTime = getTime();
-			const long long nTimeTaken = nEndTime - nStartTime;
+			const TimeType nEndTime = getTime();
+			const TimeType nTimeTaken = nEndTime - nStartTime;
 
-			const long long nTarget = 1000000 / EEex::UncapFPS_FPSLimit;
+			const TimeType nTarget = 1000000 / EEex::UncapFPS_FPSLimit;
 			if (nTimeTaken > nTarget)
 			{
 				//FPrint("Light frame took too long: %lld > %lld\n", nTimeTaken, nTarget);
 			}
 
-			const long long nTargetFullMicroseconds = 1000000 / *CChitin::p_TIMER_UPDATES_PER_SECOND - nTimeTaken;
+			const TimeType nTargetFullMicroseconds = (1000000 / *CChitin::p_TIMER_UPDATES_PER_SECOND) - nTimeTaken;
 			nNextFullSyncUpdateTick = nEndTime + nTargetFullMicroseconds;
 
 			// Check reschedule light ticks if they are disabled
 			if (nNextLightSyncUpdateTick == -1)
 			{
-				const int nEffectiveCap = EEex::UncapFPS_FPSLimit - *CChitin::p_TIMER_UPDATES_PER_SECOND;
-				nNextLightSyncUpdateTick = nEffectiveCap > 0 ? nEndTime + 1000000 / nEffectiveCap - nTimeTaken : -1;
+				if (!bUsingFPSLimit)
+				{
+					nNextLightSyncUpdateTick = 0;
+				}
+				else
+				{
+					const int nEffectiveCap = EEex::UncapFPS_FPSLimit - *CChitin::p_TIMER_UPDATES_PER_SECOND;
+					nNextLightSyncUpdateTick = nEffectiveCap > 0 ? nEndTime + (1000000 / nEffectiveCap) - nTimeTaken : -1;
+				}
 			}
 		}
 
@@ -1264,32 +1285,40 @@ void CChitin::Override_Update()
 			this->m_displayStale = 0;
 			this->m_bInSyncUpdate = 1;
 			this->virtual_SynchronousUpdate();
+			lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
 			this->m_bInSyncUpdate = 0;
 			this->m_AIStale = 1;
 		}
 
-		const long long nEndTime = getTime();
-		const long long nTimeTaken = nEndTime - nStartTime;
+		const TimeType nEndTime = getTime();
+		const TimeType nTimeTaken = nEndTime - nStartTime;
 
-		const long long nTarget = 1000000 / EEex::UncapFPS_FPSLimit;
+		const TimeType nTarget = 1000000 / EEex::UncapFPS_FPSLimit;
 		if (nTimeTaken > nTarget)
 		{
 			//FPrint("Light frame took too long: %lld > %lld\n", nTimeTaken, nTarget);
 		}
 
-		const int nEffectiveCap = EEex::UncapFPS_FPSLimit - *CChitin::p_TIMER_UPDATES_PER_SECOND;
-		nNextLightSyncUpdateTick = nEffectiveCap > 0 ? nEndTime + 1000000 / nEffectiveCap - nTimeTaken : -1;
+		if (!bUsingFPSLimit)
+		{
+			nNextLightSyncUpdateTick = 0;
+		}
+		else
+		{
+			const int nEffectiveCap = EEex::UncapFPS_FPSLimit - *CChitin::p_TIMER_UPDATES_PER_SECOND;
+			nNextLightSyncUpdateTick = nEffectiveCap > 0 ? nEndTime + (1000000 / nEffectiveCap) - nTimeTaken : -1;
+		}
 	}
 
 	// Patch: If uncapped, sleep for a small amount so the main update loop doesn't hog the CPU
 	// |
-	if (EEex::UncapFPS_Enabled && EEex::UncapFPS_BusyWaitThreshold != 0)
+	if (EEex::UncapFPS_Enabled && EEex::UncapFPS_BusyWaitThreshold != 0 && bUsingFPSLimit)
 	{
-		const long long nNextTick = nNextLightSyncUpdateTick != -1 && nNextLightSyncUpdateTick < nNextFullSyncUpdateTick
+		const TimeType nNextTick = nNextLightSyncUpdateTick != -1 && nNextLightSyncUpdateTick < nNextFullSyncUpdateTick
 			? nNextLightSyncUpdateTick
 			: nNextFullSyncUpdateTick;
 
-		const long long nDelayMilliseconds = (nNextTick - getTime()) / 1000;
+		const TimeType nDelayMilliseconds = (nNextTick - getTime()) / 1000;
 
 		if (nDelayMilliseconds >= EEex::UncapFPS_BusyWaitThreshold)
 		{
@@ -1650,7 +1679,7 @@ void CInfinity::Override_Scroll(CPoint ptDest, short speed)
 	// |
 	this->m_nLastTickCount = nCurrentTick;
 	// |
-	const long long nCurrentTime = getTime();
+	const TimeType nCurrentTime = getTime();
 	const int nScrollUpdateDelta = bAutoScrollFirstTick ? averageSyncUpdateDelta.getLast() : static_cast<int>(nCurrentTime - nLastScrollTime);
 	const int nDeltaT = (std::max)(1, (std::min)(nScrollUpdateDelta, 500000));
 	bAutoScrollFirstTick = false;
@@ -2353,7 +2382,7 @@ void __cdecl EEex::Override_uiDrawMenuStack()
 	// |
 	// | ++p_tooltip->count;
 	// |
-	const long long nCurTime = getTime();
+	const TimeType nCurTime = getTime();
 	// |
 	if (p_tooltip->count == nTooltipDelay || (GetAsyncKeyState(VK_TAB) & 0x8000) != 0)
 	{
@@ -2436,8 +2465,8 @@ void static handleAreaAutoZoom()
 
 	// Patch: Keep track of auto zoom time delta
 	// |
-	const long long nCurrentTime = getTime();
-	const long long nDeltaT = nCurrentTime - nLastAutoZoomTime;
+	const TimeType nCurrentTime = getTime();
+	const TimeType nDeltaT = nCurrentTime - nLastAutoZoomTime;
 	nLastAutoZoomTime = nCurrentTime;
 
 	// Patch: Calculate zoom percentage using time (instead of a static number of ticks)
@@ -2506,7 +2535,7 @@ void static handleAreaAutoZoom()
 	pArea->m_cGameAreaNotes.UpdateButtonPositions();
 }
 
-static void zoomOutToLocalMap(long long nCurrentTime, bool bOverwriteOriginal, bool bForceInstant)
+static void zoomOutToLocalMap(TimeType nCurrentTime, bool bOverwriteOriginal, bool bForceInstant)
 {
 	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
 	CScreenWorld *const pScreenWorld = pChitin->m_pEngineWorld;
@@ -2704,7 +2733,7 @@ void CScreenWorld::Override_ResetZoom()
 	CInfGame *const pGame = pChitin->m_pObjectGame;
 	CInfinity *const pInfinity = &pGame->m_gameAreas[pGame->m_visibleArea]->m_cInfinity;
 
-	const long long nCurrentTime = getTime();
+	const TimeType nCurrentTime = getTime();
 
 	if (!this->m_bAutoZooming)
 	{
@@ -2743,7 +2772,7 @@ void CScreenWorld::Override_ZoomToMap(bool bOverwriteOriginal)
 	CInfGame *const pGame = pChitin->m_pObjectGame;
 	CInfinity *const pInfinity = &pGame->m_gameAreas[pGame->m_visibleArea]->m_cInfinity;
 
-	const long long nCurrentTime = getTime();
+	const TimeType nCurrentTime = getTime();
 
 	if (!this->m_bAutoZooming)
 	{
@@ -2788,7 +2817,10 @@ void CScreenWorld::Override_ZoomToMap(bool bOverwriteOriginal)
 
 void initUncapFPS()
 {
-	const long long initTime = getInitTime();
+	const TimeType initTime = getInitTime();
 	nLastSyncUpdateTime = initTime;
 	nLastScrollTime = initTime;
+
+	lua_gc(sharedState().LuaState(), LUA_GCSTOP, 0);
+	EEex::UncapFPS_LuaGCSteps = 50;
 }

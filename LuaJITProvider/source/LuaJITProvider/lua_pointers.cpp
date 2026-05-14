@@ -28,6 +28,7 @@ type_lua_atpanic p_lua_atpanic;
 type_lua_callk p_lua_callk;
 type_lua_concat p_lua_concat;
 type_lua_createtable p_lua_createtable;
+type_lua_gc p_lua_gc;
 type_lua_getfield p_lua_getfield;
 type_lua_getglobal p_lua_getglobal;
 type_lua_getmetatable p_lua_getmetatable;
@@ -171,6 +172,10 @@ EXPORT void lua_concat(lua_State* L, int n) {
 
 EXPORT void lua_createtable(lua_State* L, int narr, int nrec) {
 	p_lua_createtable(L, narr, nrec);
+}
+
+EXPORT int lua_gc(lua_State* L, int what, int data) {
+	return p_lua_gc(L, what, data);
 }
 
 EXPORT void lua_getfield(lua_State* L, int idx, const char* k) {

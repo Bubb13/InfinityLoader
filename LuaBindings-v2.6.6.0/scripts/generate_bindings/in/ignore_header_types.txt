@@ -68,6 +68,7 @@ GCheader
 GCObject
 global_State
 HDC__
+HGLRC__
 HMONITOR__
 HWND__
 ID3DXBaseEffect

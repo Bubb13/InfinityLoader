@@ -129,6 +129,42 @@ static int tolua_get_EEex_reference_UncapFPS_FPSLimit(lua_State* L)
 	return 1;
 }
 
+static int tolua_get_EEex_UncapFPS_FPSLimitEnabled(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::UncapFPS_FPSLimitEnabled);
+	return 1;
+}
+
+static int tolua_set_EEex_UncapFPS_FPSLimitEnabled(lua_State* L)
+{
+	EEex::UncapFPS_FPSLimitEnabled = tolua_setter_toboolean(L, "UncapFPS_FPSLimitEnabled");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_UncapFPS_FPSLimitEnabled(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::UncapFPS_FPSLimitEnabled, "Primitive<bool>");
+	return 1;
+}
+
+static int tolua_get_EEex_UncapFPS_LuaGCSteps(lua_State* L)
+{
+	lua_pushinteger(L, (lua_Integer)EEex::UncapFPS_LuaGCSteps);
+	return 1;
+}
+
+static int tolua_set_EEex_UncapFPS_LuaGCSteps(lua_State* L)
+{
+	EEex::UncapFPS_LuaGCSteps = tolua_setter_tointeger<int>(L, "UncapFPS_LuaGCSteps");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_UncapFPS_LuaGCSteps(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::UncapFPS_LuaGCSteps, "Primitive<int>");
+	return 1;
+}
+
 static int tolua_get_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier(lua_State* L)
 {
 	tolua_pushboolean(L, (bool)EEex::UncapFPS_RemoveMiddleMouseScrollMultiplier);
@@ -319,7 +355,7 @@ static int tolua_function_CGameSprite_getUUID(lua_State* L)
 {
 	CGameSprite* self = (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite");
 	if (!self) tolua_error(L, "invalid 'self' in calling function 'getUUID'", NULL);
-	uint64_t returnVal = self->GetUUID();
+	uint64_t returnVal = (self->GetUUID)();
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
 }
@@ -335,6 +371,8 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "frameTableEntry_st::_anonymous_tag_");
 	tolua_usertype(L, "SDL_SysWMmsg");
 	tolua_usertype(L, "SDL_SysWMmsg::msg_t");
+	tolua_usertype(L, "SDL_SysWMinfo");
+	tolua_usertype(L, "SDL_SysWMinfo::info_t");
 	tolua_usertype(L, "Udata");
 	tolua_usertype(L, "TString");
 	tolua_usertype(L, "ISteamUserStats");
@@ -620,6 +658,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "EEex_CBaldurEngine");
 	tolua_usertype(L, "CDungeonMaster");
 	tolua_usertype(L, "uiItem");
+	tolua_usertype(L, "SDL_VideoDevice");
 	tolua_usertype(L, "CResBinary");
 	tolua_usertype(L, "CMessageSetVariableAll");
 	tolua_usertype(L, "EngineGlobals");
@@ -824,6 +863,12 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "SDL_SysWMmsg::msg_t", "SDL_SysWMmsg::msg_t", {}, NULL);
 	tolua_beginmodule(L, "SDL_SysWMmsg::msg_t");
 	tolua_endmodule(L);
+	tolua_cclass(L, "SDL_SysWMinfo", "SDL_SysWMinfo", {}, NULL);
+	tolua_beginmodule(L, "SDL_SysWMinfo");
+	tolua_endmodule(L);
+	tolua_cclass(L, "SDL_SysWMinfo::info_t", "SDL_SysWMinfo::info_t", {}, NULL);
+	tolua_beginmodule(L, "SDL_SysWMinfo::info_t");
+	tolua_endmodule(L);
 	tolua_cclass(L, "Udata", "Udata", {}, NULL);
 	tolua_beginmodule(L, "Udata");
 	tolua_endmodule(L);
@@ -882,6 +927,10 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_UncapFPS_Enabled", tolua_get_EEex_reference_UncapFPS_Enabled, NULL);
 		tolua_variable(L, "UncapFPS_FPSLimit", tolua_get_EEex_UncapFPS_FPSLimit, tolua_set_EEex_UncapFPS_FPSLimit);
 		tolua_variable(L, "reference_UncapFPS_FPSLimit", tolua_get_EEex_reference_UncapFPS_FPSLimit, NULL);
+		tolua_variable(L, "UncapFPS_FPSLimitEnabled", tolua_get_EEex_UncapFPS_FPSLimitEnabled, tolua_set_EEex_UncapFPS_FPSLimitEnabled);
+		tolua_variable(L, "reference_UncapFPS_FPSLimitEnabled", tolua_get_EEex_reference_UncapFPS_FPSLimitEnabled, NULL);
+		tolua_variable(L, "UncapFPS_LuaGCSteps", tolua_get_EEex_UncapFPS_LuaGCSteps, tolua_set_EEex_UncapFPS_LuaGCSteps);
+		tolua_variable(L, "reference_UncapFPS_LuaGCSteps", tolua_get_EEex_reference_UncapFPS_LuaGCSteps, NULL);
 		tolua_variable(L, "UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier, tolua_set_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier);
 		tolua_variable(L, "reference_UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_reference_UncapFPS_RemoveMiddleMouseScrollMultiplier, NULL);
 		tolua_function(L, "CreateTemplateFromCopy", &tolua_function_EEex_CreateTemplateFromCopy);
@@ -917,6 +966,8 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_constantstring(L, "usertype_UncapFPS_BusyWaitThreshold", "Primitive<int>");
 		tolua_constantstring(L, "usertype_UncapFPS_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_UncapFPS_FPSLimit", "Primitive<int>");
+		tolua_constantstring(L, "usertype_UncapFPS_FPSLimitEnabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_UncapFPS_LuaGCSteps", "Primitive<int>");
 		tolua_constantstring(L, "usertype_UncapFPS_RemoveMiddleMouseScrollMultiplier", "Primitive<bool>");
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex::ProjectileType", "EEex::ProjectileType", {"__int32"}, NULL);
@@ -1748,6 +1799,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "uiItem", "uiItem", {}, NULL);
 	tolua_beginmodule(L, "uiItem");
+	tolua_endmodule(L);
+	tolua_cclass(L, "SDL_VideoDevice", "SDL_VideoDevice", {}, NULL);
+	tolua_beginmodule(L, "SDL_VideoDevice");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CResBinary", "CResBinary", {"CRes"}, NULL);
 	tolua_beginmodule(L, "CResBinary");

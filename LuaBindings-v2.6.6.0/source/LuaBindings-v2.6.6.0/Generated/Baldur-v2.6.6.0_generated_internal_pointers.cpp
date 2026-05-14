@@ -55,6 +55,7 @@ type_findMenu p_findMenu;
 type_rand p_rand;
 type_restoreMenuStack p_restoreMenuStack;
 type_saveMenuStack p_saveMenuStack;
+type_SDL_GetDisplayForWindow p_SDL_GetDisplayForWindow;
 type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
 type_SDL_GetKeyName p_SDL_GetKeyName;
 type_SDL_GetWindowFlags p_SDL_GetWindowFlags;
@@ -391,6 +392,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("rand"), p_rand);
 	attemptFillPointer(TEXT("restoreMenuStack"), p_restoreMenuStack);
 	attemptFillPointer(TEXT("saveMenuStack"), p_saveMenuStack);
+	attemptFillPointer(TEXT("SDL_GetDisplayForWindow"), p_SDL_GetDisplayForWindow);
 	attemptFillPointer(TEXT("SDL_GetKeyFromName"), p_SDL_GetKeyFromName);
 	attemptFillPointer(TEXT("SDL_GetKeyName"), p_SDL_GetKeyName);
 	attemptFillPointer(TEXT("SDL_GetWindowFlags"), p_SDL_GetWindowFlags);

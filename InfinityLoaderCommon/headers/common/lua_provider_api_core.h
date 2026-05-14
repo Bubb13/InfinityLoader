@@ -44,6 +44,7 @@ LUA_PROVIDER_API lua_CFunction lua_atpanic(lua_State* L, lua_CFunction panicf);
 LUA_PROVIDER_API void lua_callk(lua_State* L, int nargs, int nresults, int ctx, lua_CFunction k);
 LUA_PROVIDER_API void lua_concat(lua_State* L, int n);
 LUA_PROVIDER_API void lua_createtable(lua_State* L, int narr, int nrec);
+LUA_PROVIDER_API int lua_gc(lua_State* L, int what, int data);
 LUA_PROVIDER_API void lua_getfield(lua_State* L, int idx, const char* k);
 LUA_PROVIDER_API void lua_getglobal(lua_State* L, const char* name);
 LUA_PROVIDER_API int lua_getmetatable(lua_State* L, int objindex);
@@ -140,6 +141,16 @@ LUA_PROVIDER_API bool CheckLuaArgBoundsUIntPtr(lua_State* L, const int argI, siz
 #define LUA_TFUNCTION 6
 #define LUA_TUSERDATA 7
 #define LUA_TTHREAD 8
+
+#define LUA_GCSTOP 0
+#define LUA_GCRESTART 1
+#define LUA_GCCOLLECT 2
+#define LUA_GCCOUNT 3
+#define LUA_GCCOUNTB 4
+#define LUA_GCSTEP 5
+#define LUA_GCSETPAUSE 6
+#define LUA_GCSETSTEPMUL 7
+#define LUA_GCISRUNNING 9
 
 #define lua_call(L, n, r) lua_callk(L, (n), (r), 0, NULL)
 #define lua_isboolean(L, n) (lua_type(L, (n)) == LUA_TBOOLEAN)
