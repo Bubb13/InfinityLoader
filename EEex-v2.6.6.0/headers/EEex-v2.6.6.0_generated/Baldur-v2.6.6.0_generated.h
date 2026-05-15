@@ -4902,6 +4902,10 @@ namespace EEex
 	void ForceScrollbarRenderForItemName(lua_State* L);
 	const char* FormatPointerAsEngine(uintptr_t ptr);
 	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	int GetMissMeleeEffectCount(CGameSprite* pSprite);
+	CGameEffect* GetMissMeleeEffect(CGameSprite* pSprite, int index);
+	int GetMissRangedEffectCount(CGameSprite* pSprite);
+	CGameEffect* GetMissRangedEffect(CGameSprite* pSprite, int index);
 	int GetHighestRefreshRate();
 	void GetINIString(lua_State* L, const char* iniPath, const char* section, const char* key, const char* def);
 	long long GetMicroseconds();

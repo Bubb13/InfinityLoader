@@ -41,6 +41,10 @@ namespace EEex {
 	void DeepCopyIndex(lua_State* L, int index);
 	void InitEEex();
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+	int GetMissMeleeEffectCount(CGameSprite* pSprite);
+	CGameEffect* GetMissMeleeEffect(CGameSprite* pSprite, int index);
+	int GetMissRangedEffectCount(CGameSprite* pSprite);
+	CGameEffect* GetMissRangedEffect(CGameSprite* pSprite, int index);
 
 	//-----------------------------//
 	//          Overrides          //
@@ -87,9 +91,9 @@ namespace EEex {
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
 	// op248
-	void Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect);
+	void Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect, CTypedPtrList<CPtrList, CGameEffect*>::CNode* pNode, CGameSprite* pSprite);
 	// op249
-	void Opcode_Hook_OnOp249AddTail(CGameEffect* pOp249, CGameEffect* pEffect);
+	void Opcode_Hook_OnOp249AddTail(CGameEffect* pOp249, CGameEffect* pEffect, CTypedPtrList<CPtrList, CGameEffect*>::CNode* pNode, CGameSprite* pSprite);
 	// op280
 	void Opcode_Hook_Op280_BeforeApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	int Opcode_Hook_Op280_GetForcedWildSurgeNumber(CGameSprite* pSprite);
@@ -112,6 +116,10 @@ namespace EEex {
 	// New op409
 	int Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
+	// New op410
+	void Opcode_Hook_ApplyMissMeleeEffects(CGameSprite* pAttacker, CGameSprite* pTarget);
+	// New op411
+	void Opcode_Hook_ApplyMissRangedEffects(CGameSprite* pAttacker, CGameSprite* pTarget);
 
 	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect);
 	int Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite);

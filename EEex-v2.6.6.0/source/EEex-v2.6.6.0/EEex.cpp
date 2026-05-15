@@ -103,6 +103,10 @@ struct ExStatData {
 	std::vector<CGameEffect*> projectileMutatorEffects;
 	// op409
 	std::vector<EnabledActionListenerData> enableActionListenerEffects;
+	// op410
+	std::vector<CGameEffect*> missMeleeEffects;
+	// op411
+	std::vector<CGameEffect*> missRangedEffects;
 };
 
 std::unordered_map<void*, ExStatData> exStatDataMap{};
@@ -126,7 +130,7 @@ std::unordered_map<void*, ExScriptData> exScriptDataMap{};
 ////////////
 
 struct ExEffectInfo {
-	bool bypassOp120;
+	bool bypassOp120 = false;
 };
 
 std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
@@ -217,6 +221,151 @@ void removeCachedEffect(CDerivedStats& stats, std::vector<T> ExStatData::*const 
 void removeCachedEffect(CDerivedStats& stats, std::vector<CGameEffect*> ExStatData::*const vectorPtr, const CGameEffect *const pEffect) {
 	const auto compare = [&](const CGameEffect *const &data) -> bool { return data == pEffect; };
 	removeCachedEffect<CGameEffect*>(stats, vectorPtr, compare);
+}
+
+using CApplyEffectListNode = CTypedPtrList<CPtrList, CGameEffect*>::CNode;
+
+void destroyOwnedEffect(CGameEffect *const pEffect) {
+
+	if (pEffect != nullptr) {
+		pEffect->virtual_Destruct(1);
+	}
+}
+
+void destroyOwnedEffects(std::vector<CGameEffect*>& effects) {
+
+	for (CGameEffect *const pEffect : effects) {
+		destroyOwnedEffect(pEffect);
+	}
+
+	effects.clear();
+}
+
+CGameEffect* copyOwnedEffect(CGameEffect *const pEffect) {
+
+	if (pEffect == nullptr) {
+		return nullptr;
+	}
+
+	CGameEffect *const pCopy = pEffect->virtual_Copy();
+
+	if (pCopy != nullptr) {
+		exEffectInfoMap[pCopy] = exEffectInfoMap[pEffect];
+	}
+
+	return pCopy;
+}
+
+void copyOwnedEffects(std::vector<CGameEffect*>& effects, const std::vector<CGameEffect*>& otherEffects) {
+
+	for (CGameEffect *const pOtherEffect : otherEffects) {
+		if (CGameEffect *const pCopy = copyOwnedEffect(pOtherEffect)) {
+			effects.emplace_back(pCopy);
+		}
+	}
+}
+
+void replaceOwnedEffects(std::vector<CGameEffect*>& effects, const std::vector<CGameEffect*>& otherEffects) {
+	destroyOwnedEffects(effects);
+	copyOwnedEffects(effects, otherEffects);
+}
+
+void destroyOwnedMissEffects(ExStatData& exStatData) {
+	destroyOwnedEffects(exStatData.missMeleeEffects);
+	destroyOwnedEffects(exStatData.missRangedEffects);
+}
+
+void transferAddedEffectToMissList(CGameSprite *const pSprite, CApplyEffectList& sourceList, CApplyEffectListNode *const pNode,
+	CGameEffect *const pEffect, std::vector<CGameEffect*> ExStatData::*const missListPtr)
+{
+	if (pSprite == nullptr || pEffect == nullptr || pNode == nullptr) {
+		return;
+	}
+
+	if (sourceList.m_pNodeTail == pNode && pNode->data == pEffect) {
+		// op410/op411 reuse the vanilla op248/op249 ApplyEffect() decoders. Those
+		// decoders append the child effect to the normal on-hit lists; immediately
+		// detach that exact new node and make EEex responsible for destroying it.
+		sourceList.RemoveAt(pNode);
+		(exStatDataMap[&pSprite->m_derivedStats].*missListPtr).emplace_back(pEffect);
+	}
+}
+
+std::vector<CGameEffect*>* getMissEffectList(CGameSprite *const pSprite, const bool ranged) {
+
+	if (pSprite == nullptr) {
+		return nullptr;
+	}
+
+	std::vector<CGameEffect*> ExStatData::*const listPtr = ranged ? &ExStatData::missRangedEffects : &ExStatData::missMeleeEffects;
+	CDerivedStats *const pActiveStats = pSprite->GetActiveStats();
+
+	if (pActiveStats != nullptr) {
+		// Most reads should come from the active derived-stat object, which may be
+		// m_derivedStats, m_tempStats, or m_bonusStats depending on the caller.
+		if (auto it = exStatDataMap.find(pActiveStats); it != exStatDataMap.end() && !(it->second.*listPtr).empty()) {
+			return &(it->second.*listPtr);
+		}
+	}
+
+	if (pActiveStats != &pSprite->m_derivedStats) {
+		// During application, op248/op249 populate m_derivedStats before stat-list
+		// propagation has copied the EEex-owned children into the active list.
+		if (auto it = exStatDataMap.find(&pSprite->m_derivedStats); it != exStatDataMap.end() && !(it->second.*listPtr).empty()) {
+			return &(it->second.*listPtr);
+		}
+	}
+
+	return nullptr;
+}
+
+CGameEffect* getMissEffect(CGameSprite *const pSprite, const bool ranged, const int index) {
+
+	if (index < 0) {
+		return nullptr;
+	}
+
+	std::vector<CGameEffect*> *const pList = getMissEffectList(pSprite, ranged);
+
+	if (pList == nullptr || static_cast<size_t>(index) >= pList->size()) {
+		return nullptr;
+	}
+
+	return (*pList)[index];
+}
+
+CGameEffect* copyEffectForMissApplication(CGameSprite *const pAttacker, CGameSprite *const pTarget, CGameEffect *const pEffect) {
+
+	if (pAttacker == nullptr || pTarget == nullptr || pEffect == nullptr) {
+		return nullptr;
+	}
+
+	CGameEffect *const pExtraEffect = copyOwnedEffect(pEffect);
+
+	if (pExtraEffect == nullptr) {
+		return nullptr;
+	}
+
+	// Match the existing op248/op249 helper behavior: child effects originate
+	// from the attacker, but their source target / target position is the attack
+	// target that was missed.
+	pExtraEffect->m_sourceId = pAttacker->m_id;
+	pExtraEffect->m_source = pAttacker->m_pos;
+	pExtraEffect->m_sourceTarget = pTarget->m_id;
+	pExtraEffect->m_target = pTarget->m_pos;
+
+	return pExtraEffect;
+}
+
+void sendAddEffectMessage(CGameEffect *const pEffect, const int caller, const int target) {
+
+	if (pEffect == nullptr || p_g_pBaldurChitin == nullptr || *p_g_pBaldurChitin == nullptr) {
+		destroyOwnedEffect(pEffect);
+		return;
+	}
+
+	CMessageAddEffect *const pMessage = newEngineObj<CMessageAddEffect>(pEffect, false, 1, caller, target);
+	(*p_g_pBaldurChitin)->m_cMessageHandler.AddMessage(pMessage, false);
 }
 
 //-----------------------------//
@@ -1565,6 +1714,26 @@ long EEex::MatchObject(lua_State *const L, CGameObject *const pStartObject, cons
 
 bool EEex::ShouldEffectBypassOp120(CGameEffect* pEffect) {
 	return exEffectInfoMap[pEffect].bypassOp120;
+}
+
+int EEex::GetMissMeleeEffectCount(CGameSprite* pSprite) {
+
+	std::vector<CGameEffect*> *const pList = getMissEffectList(pSprite, false);
+	return pList != nullptr ? static_cast<int>(pList->size()) : 0;
+}
+
+CGameEffect* EEex::GetMissMeleeEffect(CGameSprite* pSprite, int index) {
+	return getMissEffect(pSprite, false, index);
+}
+
+int EEex::GetMissRangedEffectCount(CGameSprite* pSprite) {
+
+	std::vector<CGameEffect*> *const pList = getMissEffectList(pSprite, true);
+	return pList != nullptr ? static_cast<int>(pList->size()) : 0;
+}
+
+CGameEffect* EEex::GetMissRangedEffect(CGameSprite* pSprite, int index) {
+	return getMissEffect(pSprite, true, index);
 }
 
 int EEex::GetExtendedStatValue(CGameSprite* pSprite, int exStatId) {
@@ -3224,6 +3393,10 @@ void EEex::Stats_Hook_OnDestruct(CDerivedStats* pStats) {
 
 	STUTTER_LOG_START(void, "EEex::Stats_Hook_OnDestruct")
 
+	if (auto it = exStatDataMap.find(pStats); it != exStatDataMap.end()) {
+		destroyOwnedMissEffects(it->second);
+	}
+
 	exStatDataMap.erase(pStats);
 
 	STUTTER_LOG_END
@@ -3254,6 +3427,9 @@ void EEex::Stats_Hook_OnReload(CGameSprite* pSprite) {
 
 	// op409
 	exStatData.enableActionListenerEffects.clear();
+
+	// op410 / op411
+	destroyOwnedMissEffects(exStatData);
 
 	STUTTER_LOG_END
 }
@@ -3306,6 +3482,12 @@ void EEex::Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats) {
 		data.pEffect = otherEnableActionListener.pEffect;
 	}
 
+	// op410 / op411
+	if (pStats != pOtherStats) {
+		replaceOwnedEffects(exStatData.missMeleeEffects, otherExStatData.missMeleeEffects);
+		replaceOwnedEffects(exStatData.missRangedEffects, otherExStatData.missRangedEffects);
+	}
+
 	STUTTER_LOG_END
 }
 
@@ -3356,6 +3538,12 @@ void EEex::Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStat
 		data.pEffect = otherEnableActionListener.pEffect;
 	}
 
+	// op410 / op411
+	if (pStats != pOtherStats) {
+		copyOwnedEffects(exStatData.missMeleeEffects, otherExStatData.missMeleeEffects);
+		copyOwnedEffects(exStatData.missRangedEffects, otherExStatData.missRangedEffects);
+	}
+
 	STUTTER_LOG_END
 }
 
@@ -3394,12 +3582,20 @@ bool EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect) {
 // op248 //
 //-------//
 
-void EEex::Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect) {
+void EEex::Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect, CApplyEffectListNode* pNode, CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnOp248AddTail")
 
+	if (pOp248 == nullptr || pEffect == nullptr) {
+		return;
+	}
+
 	if ((pOp248->m_special & 1) != 0) {
 		exEffectInfoMap[pEffect].bypassOp120 = true;
+	}
+
+	if (pOp248->m_effectId == 410 && pSprite != nullptr) {
+		transferAddedEffectToMissList(pSprite, pSprite->m_derivedStats.m_cExtraMeleeEffects, pNode, pEffect, &ExStatData::missMeleeEffects);
 	}
 
 	STUTTER_LOG_END
@@ -3409,12 +3605,20 @@ void EEex::Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect)
 // op249 //
 //-------//
 
-void EEex::Opcode_Hook_OnOp249AddTail(CGameEffect* pOp249, CGameEffect* pEffect) {
+void EEex::Opcode_Hook_OnOp249AddTail(CGameEffect* pOp249, CGameEffect* pEffect, CApplyEffectListNode* pNode, CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnOp249AddTail")
 
+	if (pOp249 == nullptr || pEffect == nullptr) {
+		return;
+	}
+
 	if ((pOp249->m_special & 1) != 0) {
 		exEffectInfoMap[pEffect].bypassOp120 = true;
+	}
+
+	if (pOp249->m_effectId == 411 && pSprite != nullptr) {
+		transferAddedEffectToMissList(pSprite, pSprite->m_derivedStats.m_cExtraRangedEffects, pNode, pEffect, &ExStatData::missRangedEffects);
 	}
 
 	STUTTER_LOG_END
@@ -3707,9 +3911,9 @@ void EEex::Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSpr
 	STUTTER_LOG_END
 }
 
-//-----------------//
-// START New op409 //
-//-----------------//
+//-----------//
+// New op409 //
+//-----------//
 
 int EEex::Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
@@ -3736,8 +3940,164 @@ void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGame
 	STUTTER_LOG_END
 }
 
+//-----------//
+// New op410 //
+//-----------//
+
+void EEex::Opcode_Hook_ApplyMissMeleeEffects(CGameSprite* pAttacker, CGameSprite* pTarget) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_ApplyMissMeleeEffects")
+
+	if (pAttacker == nullptr || pTarget == nullptr) {
+		return;
+	}
+
+	std::vector<CGameEffect*> *const pMissEffects = getMissEffectList(pAttacker, false);
+
+	if (pMissEffects != nullptr) {
+		for (CGameEffect *const pEffect : *pMissEffects) {
+
+			if (pEffect == nullptr) {
+				continue;
+			}
+
+			if ((pEffect->m_special & 4) != 0 && pAttacker->m_equipment.m_selectedWeapon != 10) {
+				continue;
+			}
+
+			sendAddEffectMessage(copyEffectForMissApplication(pAttacker, pTarget, pEffect), pAttacker->m_id, pTarget->m_id);
+		}
+	}
+
+	STUTTER_LOG_END
+}
+
+//-----------------//
+// START New op411 //
+//-----------------//
+
+void EEex::Opcode_Hook_ApplyMissRangedEffects(CGameSprite* pAttacker, CGameSprite* pTarget) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_ApplyMissRangedEffects")
+
+	if (pAttacker == nullptr || pTarget == nullptr) {
+		return;
+	}
+
+	std::vector<CGameEffect*> *const pMissEffects = getMissEffectList(pAttacker, true);
+
+	if (pMissEffects == nullptr) {
+		return;
+	}
+
+	for (CGameEffect *const pEffect : *pMissEffects) {
+
+		CGameEffect *const pExtraEffect = copyEffectForMissApplication(pAttacker, pTarget, pEffect);
+
+		if (pExtraEffect == nullptr) {
+			continue;
+		}
+
+		switch (pExtraEffect->m_targetType) {
+			case 0: {
+				// Vanilla op249 only treats target type 1 specially; target type 0
+				// normally falls through to projectile delivery. A miss has no later
+				// projectile hit to resolve against, so deliver preset-target children
+				// directly to the creature whose attack roll was missed.
+				sendAddEffectMessage(pExtraEffect, pAttacker->m_id, pTarget->m_id);
+				break;
+			}
+
+			case 1: {
+				sendAddEffectMessage(pExtraEffect, pAttacker->m_id, pAttacker->m_id);
+				break;
+			}
+
+			case 3: {
+				pExtraEffect->m_flags |= 4;
+				pAttacker->ApplyEffectToParty(pExtraEffect);
+				destroyOwnedEffect(pExtraEffect);
+				break;
+			}
+
+			case 4: {
+				pExtraEffect->m_flags |= 4;
+				if (pAttacker->m_pArea != nullptr) {
+					pAttacker->m_pArea->ApplyEffect(pExtraEffect, false, false, 0, nullptr);
+				}
+				destroyOwnedEffect(pExtraEffect);
+				break;
+			}
+
+			case 5: {
+				pExtraEffect->m_flags |= 4;
+				if (pAttacker->m_pArea != nullptr) {
+					pAttacker->m_pArea->ApplyEffect(pExtraEffect, true, false, 0, nullptr);
+				}
+				destroyOwnedEffect(pExtraEffect);
+				break;
+			}
+
+			case 6: {
+				pExtraEffect->m_flags |= 4;
+				CInfGame *const pGame = p_g_pBaldurChitin != nullptr && *p_g_pBaldurChitin != nullptr ? (*p_g_pBaldurChitin)->m_pObjectGame : nullptr;
+
+				if (pGame != nullptr && pGame->GetCharacterPortraitNum(pAttacker->m_id) == -1) {
+					if (pAttacker->m_pArea != nullptr) {
+						pAttacker->m_pArea->ApplyEffect(pExtraEffect, false, true, pAttacker->m_typeAI.m_Specifics, nullptr);
+					}
+				}
+				else {
+					pAttacker->ApplyEffectToParty(pExtraEffect);
+				}
+
+				destroyOwnedEffect(pExtraEffect);
+				break;
+			}
+
+			case 7: {
+				pExtraEffect->m_flags |= 4;
+				destroyOwnedEffect(pExtraEffect);
+				break;
+			}
+
+			case 8: {
+				pExtraEffect->m_flags |= 4;
+				if (pAttacker->m_pArea != nullptr) {
+					pAttacker->m_pArea->ApplyEffect(pExtraEffect, false, false, 0, pAttacker);
+				}
+				destroyOwnedEffect(pExtraEffect);
+				break;
+			}
+
+			case 9: {
+				pExtraEffect->m_flags |= 8;
+				if (pAttacker->m_curProjectile != nullptr) {
+					pAttacker->m_curProjectile->AddEffect(pExtraEffect);
+				}
+				else {
+					destroyOwnedEffect(pExtraEffect);
+				}
+				break;
+			}
+
+			default: {
+				if (pAttacker->m_curProjectile != nullptr) {
+					pAttacker->m_curProjectile->AddEffect(pExtraEffect);
+				}
+				else {
+					destroyOwnedEffect(pExtraEffect);
+				}
+				break;
+			}
+		}
+	}
+
+	STUTTER_LOG_END
+}
+
 //---------------//
-// END New op409 //
+// END New op411 //
 //---------------//
 
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
