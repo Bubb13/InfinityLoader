@@ -131,6 +131,10 @@ static void exportPatterns() {
 	// New op409
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_ApplyEffect"), EEex::Opcode_Hook_EnableActionListener_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_OnRemove"), EEex::Opcode_Hook_EnableActionListener_OnRemove);
+	// New op410
+	exportPattern(TEXT("EEex::Opcode_Hook_ApplyMissMeleeEffects"), EEex::Opcode_Hook_ApplyMissMeleeEffects);
+	// New op411
+	exportPattern(TEXT("EEex::Opcode_Hook_ApplyMissRangedEffects"), EEex::Opcode_Hook_ApplyMissRangedEffects);
 
 	exportPattern(TEXT("EEex::Opcode_Hook_OnCopy"), EEex::Opcode_Hook_OnCopy);
 	exportPattern(TEXT("EEex::Opcode_Hook_OnDestruct"), EEex::Opcode_Hook_OnDestruct);

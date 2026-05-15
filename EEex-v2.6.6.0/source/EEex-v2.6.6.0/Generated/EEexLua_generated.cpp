@@ -234,6 +234,34 @@ static int tolua_function_EEex_GetExtendedStatValue(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_GetMissMeleeEffectCount(lua_State* L)
+{
+	int returnVal = EEex::GetMissMeleeEffectCount((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"));
+	lua_pushinteger(L, (lua_Integer)returnVal);
+	return 1;
+}
+
+static int tolua_function_EEex_GetMissMeleeEffect(lua_State* L)
+{
+	CGameEffect* returnVal = EEex::GetMissMeleeEffect((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"), tolua_function_tointeger<int>(L, 2, "GetMissMeleeEffect"));
+	tolua_pushusertype(L, (void*)returnVal, "CGameEffect");
+	return 1;
+}
+
+static int tolua_function_EEex_GetMissRangedEffectCount(lua_State* L)
+{
+	int returnVal = EEex::GetMissRangedEffectCount((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"));
+	lua_pushinteger(L, (lua_Integer)returnVal);
+	return 1;
+}
+
+static int tolua_function_EEex_GetMissRangedEffect(lua_State* L)
+{
+	CGameEffect* returnVal = EEex::GetMissRangedEffect((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"), tolua_function_tointeger<int>(L, 2, "GetMissRangedEffect"));
+	tolua_pushusertype(L, (void*)returnVal, "CGameEffect");
+	return 1;
+}
+
 static int tolua_function_EEex_GetHighestRefreshRate(lua_State* L)
 {
 	int returnVal = EEex::GetHighestRefreshRate();
@@ -941,6 +969,10 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "ForceScrollbarRenderForItemName", &tolua_function_EEex_ForceScrollbarRenderForItemName);
 		tolua_function(L, "FormatPointerAsEngine", &tolua_function_EEex_FormatPointerAsEngine);
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
+		tolua_function(L, "GetMissMeleeEffectCount", &tolua_function_EEex_GetMissMeleeEffectCount);
+		tolua_function(L, "GetMissMeleeEffect", &tolua_function_EEex_GetMissMeleeEffect);
+		tolua_function(L, "GetMissRangedEffectCount", &tolua_function_EEex_GetMissRangedEffectCount);
+		tolua_function(L, "GetMissRangedEffect", &tolua_function_EEex_GetMissRangedEffect);
 		tolua_function(L, "GetHighestRefreshRate", &tolua_function_EEex_GetHighestRefreshRate);
 		tolua_function(L, "GetINIString", &tolua_function_EEex_GetINIString);
 		tolua_function(L, "GetMicroseconds", &tolua_function_EEex_GetMicroseconds);
