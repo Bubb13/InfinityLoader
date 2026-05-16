@@ -105,6 +105,9 @@ static void exportPatterns() {
 
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
+	// op122 / op255
+	exportPattern(TEXT("EEex::Opcode_Hook_CGameEffectCreateItem_BeforePlaceItem"), EEex::Opcode_Hook_CGameEffectCreateItem_BeforePlaceItem);
+	exportPattern(TEXT("EEex::Opcode_Hook_CGameEffectCreateItem_AfterPlaceItem"), EEex::Opcode_Hook_CGameEffectCreateItem_AfterPlaceItem);
 	// op248
 	exportPattern(TEXT("EEex::Opcode_Hook_OnOp248AddTail"), EEex::Opcode_Hook_OnOp248AddTail);
 	// op249

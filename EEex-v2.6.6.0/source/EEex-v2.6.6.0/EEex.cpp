@@ -3390,6 +3390,54 @@ bool EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect) {
 	STUTTER_LOG_END
 }
 
+//-----------------------------------------//
+// op122/255 - CGameEffectCreateItem Hooks //
+//-----------------------------------------//
+
+void EEex::Opcode_Hook_CGameEffectCreateItem_BeforePlaceItem(CGameEffect* pEffect, CItem* pItem) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_CGameEffectCreateItem_BeforePlaceItem")
+
+	if (pEffect != nullptr && pItem != nullptr && pEffect->m_dWFlags > 0) {
+		// The Create Item opcode reuses m_dWFlags as an item-flag override.
+		pItem->m_flags = pEffect->m_dWFlags;
+	}
+
+	STUTTER_LOG_END
+}
+
+void EEex::Opcode_Hook_CGameEffectCreateItem_AfterPlaceItem(CGameEffect* pEffect, CGameSprite* pSprite, CItem* pItem) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_CGameEffectCreateItem_AfterPlaceItem")
+
+	if (pEffect == nullptr || pSprite == nullptr || pItem == nullptr || (pEffect->m_special & 1) == 0) {
+		return;
+	}
+
+	int slot = -1;
+	for (int i = 0; i < 39; ++i) {
+		if (pSprite->m_equipment.m_items.data[i] == pItem) {
+			slot = i;
+			break;
+		}
+	}
+
+	// The opcode stores only a single scalar aux value. Clear the field when the placed
+	// item didn't end up in the live equipment array so callers never observe a stale slot.
+	lua_State* const L = luaState();
+	getUDAux(L, pSprite);
+	if (slot >= 0) {
+		lua_pushinteger(L, static_cast<lua_Integer>(slot));
+	}
+	else {
+		lua_pushnil(L);
+	}
+	lua_setfield(L, -2, "EEex_CGameEffectCreateItem_Slot");
+	lua_pop(L, 1);
+
+	STUTTER_LOG_END
+}
+
 //-------//
 // op248 //
 //-------//
