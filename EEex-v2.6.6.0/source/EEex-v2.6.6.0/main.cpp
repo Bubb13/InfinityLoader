@@ -131,6 +131,11 @@ static void exportPatterns() {
 	// New op409
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_ApplyEffect"), EEex::Opcode_Hook_EnableActionListener_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_OnRemove"), EEex::Opcode_Hook_EnableActionListener_OnRemove);
+	// New op412
+	exportPattern(TEXT("EEex::Opcode_Hook_ScreenEffectsList_ApplyEffect"), EEex::Opcode_Hook_ScreenEffectsList_ApplyEffect);
+	exportPattern(TEXT("EEex::Opcode_Hook_ScreenEffectsList_OnRemove"), EEex::Opcode_Hook_ScreenEffectsList_OnRemove);
+	exportPattern(TEXT("EEex::Opcode_Hook_ScreenEffectsList_OnBeforeAddEffect"), EEex::Opcode_Hook_ScreenEffectsList_OnBeforeAddEffect);
+	exportPattern(TEXT("EEex::Opcode_Hook_ScreenEffectsList_Flush"), EEex::Opcode_Hook_ScreenEffectsList_Flush);
 
 	exportPattern(TEXT("EEex::Opcode_Hook_OnCopy"), EEex::Opcode_Hook_OnCopy);
 	exportPattern(TEXT("EEex::Opcode_Hook_OnDestruct"), EEex::Opcode_Hook_OnDestruct);
