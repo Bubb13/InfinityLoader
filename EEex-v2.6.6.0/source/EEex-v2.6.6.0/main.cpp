@@ -109,6 +109,9 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Opcode_Hook_OnOp248AddTail"), EEex::Opcode_Hook_OnOp248AddTail);
 	// op249
 	exportPattern(TEXT("EEex::Opcode_Hook_OnOp249AddTail"), EEex::Opcode_Hook_OnOp249AddTail);
+	// op261
+	exportPattern(TEXT("EEex::Opcode_Hook_Op261_SelectRandomSpell"), EEex::Opcode_Hook_Op261_SelectRandomSpell);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op261_ShouldStopAfterCurrentLevel"), EEex::Opcode_Hook_Op261_ShouldStopAfterCurrentLevel);
 	// op280
 	exportPattern(TEXT("EEex::Opcode_Hook_Op280_BeforeApplyEffect"), EEex::Opcode_Hook_Op280_BeforeApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_Op280_GetForcedWildSurgeNumber"), EEex::Opcode_Hook_Op280_GetForcedWildSurgeNumber);

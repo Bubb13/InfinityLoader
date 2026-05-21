@@ -90,6 +90,9 @@ namespace EEex {
 	void Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect);
 	// op249
 	void Opcode_Hook_OnOp249AddTail(CGameEffect* pOp249, CGameEffect* pEffect);
+	// op261
+	CCreatureFileMemorizedSpell* Opcode_Hook_Op261_SelectRandomSpell(CGameEffect* pEffect, CGameSprite* pSprite, CCreatureFileMemorizedSpell* pVanillaSpell, CTypedPtrList<CPtrList, CCreatureFileMemorizedSpell*>* pMemorizedList);
+	bool Opcode_Hook_Op261_ShouldStopAfterCurrentLevel(CGameEffect* pEffect);
 	// op280
 	void Opcode_Hook_Op280_BeforeApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	int Opcode_Hook_Op280_GetForcedWildSurgeNumber(CGameSprite* pSprite);
