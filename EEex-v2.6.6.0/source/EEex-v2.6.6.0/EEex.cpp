@@ -590,6 +590,23 @@ void getUDAux(lua_State *const L, void *const ptr) {
 	lua_remove(L, -2);                          // 1 [ ..., t ]
 }
 
+static void callLuaUDAuxLightUDHandler(const char* functionName, void* ptr) {
+	lua_State *const L = luaState();
+	luaCallProtected(L, 1, 0, [&](int) {
+		lua_getglobal(L, functionName);
+		lua_pushlightuserdata(L, ptr);
+	});
+}
+
+static void callLuaUDAuxLightUDHandler(const char* functionName, void* srcPtr, void* dstPtr) {
+	lua_State *const L = luaState();
+	luaCallProtected(L, 2, 0, [&](int) {
+		lua_getglobal(L, functionName);
+		lua_pushlightuserdata(L, srcPtr);
+		lua_pushlightuserdata(L, dstPtr);
+	});
+}
+
 // Expects: n     [ ... ]
 // Returns: n + 1 [ ..., castPtrUD ]
 void getCastUD(lua_State* L, const char* castBaseName, const char* castFuncName, void* toCastPtr) {
@@ -3816,6 +3833,7 @@ void EEex::Opcode_Hook_OnCopy(CGameEffect* pSrcEffect, CGameEffect* pDstEffect) 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnCopy")
 
 	exEffectInfoMap[pDstEffect] = exEffectInfoMap[pSrcEffect];
+	callLuaUDAuxLightUDHandler("EEex_UDAux_Private_CopyByLightUD", pSrcEffect, pDstEffect);
 
 	STUTTER_LOG_END
 }
@@ -3825,6 +3843,7 @@ void EEex::Opcode_Hook_OnDestruct(CGameEffect* pEffect) {
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnDestruct")
 
 	exEffectInfoMap.erase(pEffect);
+	callLuaUDAuxLightUDHandler("EEex_UDAux_Private_DeleteByLightUD", pEffect);
 
 	STUTTER_LOG_END
 }
@@ -4104,6 +4123,12 @@ void CGameEffectList::Override_Unmarshal(byte* pData, uint nSize, CGameSprite* p
 				// Normal effect decode
 				CGameEffect *const pEffect = CGameEffect::DecodeEffectFromBase(pEffectBase);
 				this->AddTail(pEffect);
+			}
+		}
+
+		if (pSprite != nullptr) {
+			for (auto* pNode = this->m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+				pNode->data->virtual_OnLoad(pSprite);
 			}
 		}
 	}
