@@ -139,6 +139,10 @@ namespace EEex {
 	void UDAux_Hook_OnBeforeAreaUnmarshal(CGameArea* pArea, unsigned char* pData, unsigned int size);
 	void UDAux_Hook_OnAfterAreaContainerConstruct(CGameContainer* pContainer);
 	void UDAux_Hook_OnAfterAreaUnmarshal(int result);
+	void UDAux_Hook_OnBeforeStoreInventoryClear(CStore* pStore);
+	unsigned char* UDAux_Hook_OnStoreMarshalData(CStore* pStore, unsigned char* pData, unsigned int size, unsigned int* pOutSize);
+	void UDAux_Hook_OnBeforeStoreLoad(CStore* pStore, unsigned char* pData, CResStore* pResStore);
+	void UDAux_Hook_OnAfterStoreLoad(CStore* pStore);
 
 	////////////
 	// Action //

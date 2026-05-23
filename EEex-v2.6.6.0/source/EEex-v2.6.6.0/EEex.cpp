@@ -613,6 +613,12 @@ namespace {
 
 constexpr char UDAUX_AREA_EXTENSION_SIGNATURE[8] = { 'X', '-', 'U', 'D', 'A', '1', '.', '0' };
 constexpr unsigned int UDAUX_AREA_EXTENSION_FOOTER_SIZE = sizeof(UDAUX_AREA_EXTENSION_SIGNATURE) + sizeof(uint32_t);
+constexpr char UDAUX_STORE_EXTENSION_SIGNATURE[8] = { 'X', '-', 'U', 'D', 'S', '1', '.', '0' };
+constexpr unsigned int UDAUX_STORE_EXTENSION_FOOTER_SIZE = sizeof(UDAUX_STORE_EXTENSION_SIGNATURE) + sizeof(uint32_t);
+
+// Store load hooks receive the engine's CRes* pointer, including the vfptr. The generated
+// CRes binding omits that vfptr, so read nSize by the documented engine offset instead.
+constexpr size_t CRES_NSIZE_ENGINE_OFFSET = 0x48;
 
 struct UDAuxAreaMarshalContext {
 	CGameArea* pArea = nullptr;
@@ -628,8 +634,14 @@ struct UDAuxAreaUnmarshalContext {
 	bool active = false;
 };
 
+struct UDAuxStoreUnmarshalContext {
+	CStore* pStore = nullptr;
+	bool active = false;
+};
+
 thread_local UDAuxAreaMarshalContext udaAuxAreaMarshalContext;
 thread_local UDAuxAreaUnmarshalContext udaAuxAreaUnmarshalContext;
+thread_local UDAuxStoreUnmarshalContext udaAuxStoreUnmarshalContext;
 
 static bool callLuaUDAuxNoReturn(const char* functionName, int nArgs, const std::function<void(lua_State*)>& pushArgs) {
 	lua_State *const L = luaState();
@@ -639,13 +651,14 @@ static bool callLuaUDAuxNoReturn(const char* functionName, int nArgs, const std:
 	});
 }
 
-static unsigned int callLuaUDAuxSizeReturn(const char* functionName) {
+static unsigned int callLuaUDAuxSizeReturn(const char* functionName, int nArgs, const std::function<void(lua_State*)>& pushArgs) {
 
 	lua_State *const L = luaState();
 	unsigned int toReturn = 0;
 
-	if (!luaCallProtected(L, 0, 1, [&](int) {
+	if (!luaCallProtected(L, nArgs, 1, [&](int) {
 		lua_getglobal(L, functionName);
+		pushArgs(L);
 	})) {
 		return 0;
 	}
@@ -667,28 +680,43 @@ static unsigned int callLuaUDAuxSizeReturn(const char* functionName) {
 	return toReturn;
 }
 
-static bool callLuaUDAuxAreaMemoryHandler(const char* functionName, unsigned char* pMemory, unsigned int size) {
+static unsigned int callLuaUDAuxSizeReturn(const char* functionName) {
+	return callLuaUDAuxSizeReturn(functionName, 0, [](lua_State*) {});
+}
+
+static bool callLuaUDAuxMemoryHandler(const char* functionName, unsigned char* pMemory, unsigned int size) {
 	return callLuaUDAuxNoReturn(functionName, 2, [&](lua_State* L) {
 		lua_pushinteger(L, reinterpret_cast<lua_Integer>(pMemory));
 		lua_pushinteger(L, size);
 	});
 }
 
-static bool findUDAuxAreaExtension(unsigned char* pData, unsigned int size, unsigned char** ppPayload, unsigned int* pPayloadSize) {
+static bool findUDAuxExtension(
+	unsigned char* pData,
+	unsigned int size,
+	const char* pSignature,
+	unsigned int signatureSize,
+	unsigned int footerSize,
+	const char* extensionName,
+	unsigned char** ppPayload,
+	unsigned int* pPayloadSize)
+{
 
-	if (pData == nullptr || size < UDAUX_AREA_EXTENSION_FOOTER_SIZE) {
+	// EEex extensions are appended as: original data, payload, 8-byte signature, uint32 payload size.
+	// This keeps legacy readers compatible because the base resource remains byte-for-byte first.
+	if (pData == nullptr || size < footerSize) {
 		return false;
 	}
 
-	unsigned char* const pFooter = pData + size - UDAUX_AREA_EXTENSION_FOOTER_SIZE;
-	if (std::memcmp(pFooter, UDAUX_AREA_EXTENSION_SIGNATURE, sizeof(UDAUX_AREA_EXTENSION_SIGNATURE)) != 0) {
+	unsigned char* const pFooter = pData + size - footerSize;
+	if (std::memcmp(pFooter, pSignature, signatureSize) != 0) {
 		return false;
 	}
 
 	uint32_t payloadSize = 0;
-	std::memcpy(&payloadSize, pFooter + sizeof(UDAUX_AREA_EXTENSION_SIGNATURE), sizeof(payloadSize));
-	if (payloadSize > size - UDAUX_AREA_EXTENSION_FOOTER_SIZE) {
-		FPrint("[!][EEex.dll] Ignoring malformed X-UDA1.0 area extension: payload size exceeds area size\n");
+	std::memcpy(&payloadSize, pFooter + signatureSize, sizeof(payloadSize));
+	if (payloadSize > size - footerSize) {
+		FPrint("[!][EEex.dll] Ignoring malformed %s extension: payload size exceeds resource size\n", extensionName);
 		return false;
 	}
 
@@ -697,10 +725,62 @@ static bool findUDAuxAreaExtension(unsigned char* pData, unsigned int size, unsi
 	return true;
 }
 
+static bool findUDAuxAreaExtension(unsigned char* pData, unsigned int size, unsigned char** ppPayload, unsigned int* pPayloadSize) {
+	return findUDAuxExtension(
+		pData,
+		size,
+		UDAUX_AREA_EXTENSION_SIGNATURE,
+		sizeof(UDAUX_AREA_EXTENSION_SIGNATURE),
+		UDAUX_AREA_EXTENSION_FOOTER_SIZE,
+		"X-UDA1.0 area",
+		ppPayload,
+		pPayloadSize
+	);
+}
+
+static bool findUDAuxStoreExtension(unsigned char* pData, unsigned int size, unsigned char** ppPayload, unsigned int* pPayloadSize) {
+	return findUDAuxExtension(
+		pData,
+		size,
+		UDAUX_STORE_EXTENSION_SIGNATURE,
+		sizeof(UDAUX_STORE_EXTENSION_SIGNATURE),
+		UDAUX_STORE_EXTENSION_FOOTER_SIZE,
+		"X-UDS1.0 store",
+		ppPayload,
+		pPayloadSize
+	);
+}
+
+static unsigned int getCResEngineSize(CRes* pRes) {
+	return *reinterpret_cast<unsigned int*>(reinterpret_cast<unsigned char*>(pRes) + CRES_NSIZE_ENGINE_OFFSET);
+}
+
+static void pushUDAuxStoreItemPointerTable(lua_State* L, CStore* pStore) {
+
+	// CStore is not exposed as a Lua userdata type. Snapshot ordinal -> pointer in C++ and let
+	// Lua wrap individual CStoreFileItem pointers, which are valid until the inventory is cleared.
+	lua_newtable(L);
+	if (pStore == nullptr) {
+		return;
+	}
+
+	int index = 1;
+	for (auto* pNode = pStore->m_lInventory.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+		if (pNode->data != nullptr) {
+			lua_pushinteger(L, index);
+			lua_pushinteger(L, reinterpret_cast<lua_Integer>(pNode->data));
+			lua_rawset(L, -3);
+		}
+		++index;
+	}
+}
+
 }
 
 void EEex::UDAux_Hook_OnBeforeAreaMarshal(CGameArea* pArea, unsigned char** ppData, unsigned int* pSize) {
 
+	// CGameArea::Marshal invokes CGameContainer::Marshal for each container. Keep the area output
+	// pointers here so the after-marshal hook can append one extension after the vanilla blob exists.
 	udaAuxAreaMarshalContext = { pArea, ppData, pSize, true };
 
 	callLuaUDAuxNoReturn("EEex_UDAux_Private_BeginAreaMarshal", 1, [&](lua_State* L) {
@@ -714,6 +794,7 @@ void EEex::UDAux_Hook_OnAreaContainerMarshal(CGameContainer* pContainer) {
 		return;
 	}
 
+	// The callback order is the save order, so Lua can persist container and item aux by ordinal.
 	callLuaUDAuxNoReturn("EEex_UDAux_Private_OnAreaContainerMarshal", 1, [&](lua_State* L) {
 		tolua_pushusertype(L, pContainer, "CGameContainer");
 	});
@@ -755,7 +836,7 @@ void EEex::UDAux_Hook_OnAfterAreaMarshal() {
 	}
 
 	std::memcpy(pNewData, *context.ppData, oldSize);
-	if (!callLuaUDAuxAreaMemoryHandler("EEex_UDAux_Private_WriteAreaMarshalExtensionPayload", pNewData + oldSize, payloadSize)) {
+	if (!callLuaUDAuxMemoryHandler("EEex_UDAux_Private_WriteAreaMarshalExtensionPayload", pNewData + oldSize, payloadSize)) {
 		p_free(pNewData);
 		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaMarshal", 0, [](lua_State*) {});
 		return;
@@ -772,6 +853,8 @@ void EEex::UDAux_Hook_OnAfterAreaMarshal() {
 
 void EEex::UDAux_Hook_OnBeforeAreaUnmarshal(CGameArea* pArea, unsigned char* pData, unsigned int size) {
 
+	// Parse the extension before vanilla unmarshal creates containers. Container aux is applied
+	// from the constructor hook, after each CGameContainer has rebuilt its item list.
 	callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaUnmarshal", 0, [](lua_State*) {});
 	udaAuxAreaUnmarshalContext = { pArea, pData, size, false };
 
@@ -782,7 +865,7 @@ void EEex::UDAux_Hook_OnBeforeAreaUnmarshal(CGameArea* pArea, unsigned char* pDa
 	}
 
 	udaAuxAreaUnmarshalContext.active = true;
-	if (!callLuaUDAuxAreaMemoryHandler("EEex_UDAux_Private_BeginAreaUnmarshal", pPayload, payloadSize)) {
+	if (!callLuaUDAuxMemoryHandler("EEex_UDAux_Private_BeginAreaUnmarshal", pPayload, payloadSize)) {
 		udaAuxAreaUnmarshalContext.active = false;
 	}
 }
@@ -809,6 +892,112 @@ void EEex::UDAux_Hook_OnAfterAreaUnmarshal(int result) {
 	callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaUnmarshal", 1, [&](lua_State* L) {
 		lua_pushinteger(L, result);
 	});
+}
+
+void EEex::UDAux_Hook_OnBeforeStoreInventoryClear(CStore* pStore) {
+
+	if (pStore == nullptr) {
+		return;
+	}
+
+	// SetResRef and destruction both drain m_lInventory. Delete aux before the CStoreFileItem
+	// allocations disappear, and cancel any pending import for this store before old data wins.
+	if (udaAuxStoreUnmarshalContext.pStore == pStore) {
+		udaAuxStoreUnmarshalContext = {};
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreUnmarshal", 0, [](lua_State*) {});
+	}
+
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_OnStoreInventoryClear", 1, [&](lua_State* L) {
+		pushUDAuxStoreItemPointerTable(L, pStore);
+	});
+}
+
+unsigned char* EEex::UDAux_Hook_OnStoreMarshalData(CStore* pStore, unsigned char* pData, unsigned int size, unsigned int* pOutSize) {
+
+	if (pOutSize != nullptr) {
+		*pOutSize = size;
+	}
+
+	if (pStore == nullptr || pData == nullptr || pOutSize == nullptr) {
+		return pData;
+	}
+
+	const unsigned int payloadSize = callLuaUDAuxSizeReturn("EEex_UDAux_Private_CalculateStoreMarshalExtensionSize", 1, [&](lua_State* L) {
+		pushUDAuxStoreItemPointerTable(L, pStore);
+	});
+	if (payloadSize == 0) {
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreMarshal", 0, [](lua_State*) {});
+		return pData;
+	}
+
+	if (size > UINT32_MAX - payloadSize - UDAUX_STORE_EXTENSION_FOOTER_SIZE) {
+		FPrint("[!][EEex.dll] Could not append X-UDS1.0 store extension: size overflow\n");
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreMarshal", 0, [](lua_State*) {});
+		return pData;
+	}
+
+	const unsigned int newSize = size + payloadSize + UDAUX_STORE_EXTENSION_FOOTER_SIZE;
+	unsigned char* const pNewData = reinterpret_cast<unsigned char*>(p_malloc(newSize));
+	if (pNewData == nullptr) {
+		FPrint("[!][EEex.dll] Could not append X-UDS1.0 store extension: allocation failed\n");
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreMarshal", 0, [](lua_State*) {});
+		return pData;
+	}
+
+	std::memcpy(pNewData, pData, size);
+	if (!callLuaUDAuxMemoryHandler("EEex_UDAux_Private_WriteStoreMarshalExtensionPayload", pNewData + size, payloadSize)) {
+		p_free(pNewData);
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreMarshal", 0, [](lua_State*) {});
+		return pData;
+	}
+	std::memcpy(pNewData + size + payloadSize, UDAUX_STORE_EXTENSION_SIGNATURE, sizeof(UDAUX_STORE_EXTENSION_SIGNATURE));
+	std::memcpy(pNewData + size + payloadSize + sizeof(UDAUX_STORE_EXTENSION_SIGNATURE), &payloadSize, sizeof(payloadSize));
+
+	// The following dimmServiceFromMemory() call consumes the pointer and size we return here.
+	// Free only the original transient marshal buffer after the replacement is fully populated.
+	p_free(pData);
+	*pOutSize = newSize;
+
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreMarshal", 0, [](lua_State*) {});
+	return pNewData;
+}
+
+void EEex::UDAux_Hook_OnBeforeStoreLoad(CStore* pStore, unsigned char* pData, CResStore* pResStore) {
+
+	// Store resources are demanded before m_lInventory is rebuilt. Capture the extension now,
+	// then apply it after SetResRef has copied file items into runtime CStoreFileItem nodes.
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreUnmarshal", 0, [](lua_State*) {});
+	udaAuxStoreUnmarshalContext = { pStore, false };
+
+	if (pStore == nullptr || pData == nullptr || pResStore == nullptr) {
+		return;
+	}
+
+	unsigned char* pPayload = nullptr;
+	unsigned int payloadSize = 0;
+	if (!findUDAuxStoreExtension(pData, getCResEngineSize(pResStore), &pPayload, &payloadSize)) {
+		return;
+	}
+
+	udaAuxStoreUnmarshalContext.active = true;
+	if (!callLuaUDAuxMemoryHandler("EEex_UDAux_Private_BeginStoreUnmarshal", pPayload, payloadSize)) {
+		udaAuxStoreUnmarshalContext.active = false;
+	}
+}
+
+void EEex::UDAux_Hook_OnAfterStoreLoad(CStore* pStore) {
+
+	if (!udaAuxStoreUnmarshalContext.active || udaAuxStoreUnmarshalContext.pStore != pStore) {
+		udaAuxStoreUnmarshalContext = {};
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreUnmarshal", 0, [](lua_State*) {});
+		return;
+	}
+
+	udaAuxStoreUnmarshalContext = {};
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_OnStoreLoaded", 1, [&](lua_State* L) {
+		pushUDAuxStoreItemPointerTable(L, pStore);
+	});
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreUnmarshal", 0, [](lua_State*) {});
 }
 
 // Expects: n     [ ... ]
@@ -4037,6 +4226,8 @@ void EEex::Opcode_Hook_OnCopy(CGameEffect* pSrcEffect, CGameEffect* pDstEffect) 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnCopy")
 
 	exEffectInfoMap[pDstEffect] = exEffectInfoMap[pSrcEffect];
+	// Effect copies are real engine-owned effects; persistent aux follows the copy so later
+	// save/load sees the copied effect state, not the source pointer's lifetime.
 	callLuaUDAuxLightUDHandler("EEex_UDAux_Private_CopyByLightUD", pSrcEffect, pDstEffect);
 
 	STUTTER_LOG_END
@@ -4047,6 +4238,7 @@ void EEex::Opcode_Hook_OnDestruct(CGameEffect* pEffect) {
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnDestruct")
 
 	exEffectInfoMap.erase(pEffect);
+	// Effects own their userdata lifetime. Clear both transient and persistent UDAux state here.
 	callLuaUDAuxLightUDHandler("EEex_UDAux_Private_DeleteByLightUD", pEffect);
 
 	STUTTER_LOG_END
@@ -4294,7 +4486,8 @@ void CGameEffectList::Override_Unmarshal(byte* pData, uint nSize, CGameSprite* p
 
 			if (memcmp(&pEffectBase->m_version, "X-BIV1.0", 8) == 0) { // Is this effect the start of EEex's binary data?
 
-				// Call out to Lua to parse it
+				// Call out to Lua before OnLoad runs for any decoded v2 effect, so persistent
+				// CGameEffect UDAux is restored by ordinal before scripts observe the effect.
 				if (luaCallProtected(L, 2, 1, [&](int) {
 					lua_getglobal(L, "EEex_Sprite_LuaHook_ReadExtraEffectListUnmarshal"); // 1 [ ..., EEex_Sprite_LuaHook_ReadExtraEffectListUnmarshal ]
 					tolua_pushusertype(L, pSprite, "CGameSprite");                        // 2 [ ..., EEex_Sprite_LuaHook_ReadExtraEffectListUnmarshal, pSpriteUD ]
