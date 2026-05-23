@@ -1,5 +1,7 @@
 
 #include <chrono>
+#include <cstdint>
+#include <cstring>
 #include <optional>
 #include <sstream>
 #include <unordered_set>
@@ -604,6 +606,208 @@ static void callLuaUDAuxLightUDHandler(const char* functionName, void* srcPtr, v
 		lua_getglobal(L, functionName);
 		lua_pushlightuserdata(L, srcPtr);
 		lua_pushlightuserdata(L, dstPtr);
+	});
+}
+
+namespace {
+
+constexpr char UDAUX_AREA_EXTENSION_SIGNATURE[8] = { 'X', '-', 'U', 'D', 'A', '1', '.', '0' };
+constexpr unsigned int UDAUX_AREA_EXTENSION_FOOTER_SIZE = sizeof(UDAUX_AREA_EXTENSION_SIGNATURE) + sizeof(uint32_t);
+
+struct UDAuxAreaMarshalContext {
+	CGameArea* pArea = nullptr;
+	unsigned char** ppData = nullptr;
+	unsigned int* pSize = nullptr;
+	bool active = false;
+};
+
+struct UDAuxAreaUnmarshalContext {
+	CGameArea* pArea = nullptr;
+	unsigned char* pData = nullptr;
+	unsigned int size = 0;
+	bool active = false;
+};
+
+thread_local UDAuxAreaMarshalContext udaAuxAreaMarshalContext;
+thread_local UDAuxAreaUnmarshalContext udaAuxAreaUnmarshalContext;
+
+static bool callLuaUDAuxNoReturn(const char* functionName, int nArgs, const std::function<void(lua_State*)>& pushArgs) {
+	lua_State *const L = luaState();
+	return luaCallProtected(L, nArgs, 0, [&](int) {
+		lua_getglobal(L, functionName);
+		pushArgs(L);
+	});
+}
+
+static unsigned int callLuaUDAuxSizeReturn(const char* functionName) {
+
+	lua_State *const L = luaState();
+	unsigned int toReturn = 0;
+
+	if (!luaCallProtected(L, 0, 1, [&](int) {
+		lua_getglobal(L, functionName);
+	})) {
+		return 0;
+	}
+
+	if (!lua_isnumber(L, -1)) {
+		FPrint("[!][EEex.dll] %s() returned %s instead of number\n", functionName, lua_typename(L, lua_type(L, -1)));
+	}
+	else {
+		lua_Number luaSize = lua_tonumber(L, -1);
+		if (luaSize < 0 || luaSize > static_cast<lua_Number>(UINT32_MAX) || luaSize != static_cast<lua_Number>(static_cast<uint32_t>(luaSize))) {
+			FPrint("[!][EEex.dll] %s() returned invalid size %.0f\n", functionName, luaSize);
+		}
+		else {
+			toReturn = static_cast<unsigned int>(luaSize);
+		}
+	}
+
+	lua_pop(L, 1);
+	return toReturn;
+}
+
+static bool callLuaUDAuxAreaMemoryHandler(const char* functionName, unsigned char* pMemory, unsigned int size) {
+	return callLuaUDAuxNoReturn(functionName, 2, [&](lua_State* L) {
+		lua_pushinteger(L, reinterpret_cast<lua_Integer>(pMemory));
+		lua_pushinteger(L, size);
+	});
+}
+
+static bool findUDAuxAreaExtension(unsigned char* pData, unsigned int size, unsigned char** ppPayload, unsigned int* pPayloadSize) {
+
+	if (pData == nullptr || size < UDAUX_AREA_EXTENSION_FOOTER_SIZE) {
+		return false;
+	}
+
+	unsigned char* const pFooter = pData + size - UDAUX_AREA_EXTENSION_FOOTER_SIZE;
+	if (std::memcmp(pFooter, UDAUX_AREA_EXTENSION_SIGNATURE, sizeof(UDAUX_AREA_EXTENSION_SIGNATURE)) != 0) {
+		return false;
+	}
+
+	uint32_t payloadSize = 0;
+	std::memcpy(&payloadSize, pFooter + sizeof(UDAUX_AREA_EXTENSION_SIGNATURE), sizeof(payloadSize));
+	if (payloadSize > size - UDAUX_AREA_EXTENSION_FOOTER_SIZE) {
+		FPrint("[!][EEex.dll] Ignoring malformed X-UDA1.0 area extension: payload size exceeds area size\n");
+		return false;
+	}
+
+	*ppPayload = pFooter - payloadSize;
+	*pPayloadSize = payloadSize;
+	return true;
+}
+
+}
+
+void EEex::UDAux_Hook_OnBeforeAreaMarshal(CGameArea* pArea, unsigned char** ppData, unsigned int* pSize) {
+
+	udaAuxAreaMarshalContext = { pArea, ppData, pSize, true };
+
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_BeginAreaMarshal", 1, [&](lua_State* L) {
+		tolua_pushusertype(L, pArea, "CGameArea");
+	});
+}
+
+void EEex::UDAux_Hook_OnAreaContainerMarshal(CGameContainer* pContainer) {
+
+	if (!udaAuxAreaMarshalContext.active) {
+		return;
+	}
+
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_OnAreaContainerMarshal", 1, [&](lua_State* L) {
+		tolua_pushusertype(L, pContainer, "CGameContainer");
+	});
+}
+
+void EEex::UDAux_Hook_OnAfterAreaMarshal() {
+
+	if (!udaAuxAreaMarshalContext.active) {
+		return;
+	}
+
+	UDAuxAreaMarshalContext context = udaAuxAreaMarshalContext;
+	udaAuxAreaMarshalContext = {};
+
+	if (context.ppData == nullptr || context.pSize == nullptr || *context.ppData == nullptr) {
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaMarshal", 0, [](lua_State*) {});
+		return;
+	}
+
+	const unsigned int payloadSize = callLuaUDAuxSizeReturn("EEex_UDAux_Private_CalculateAreaMarshalExtensionSize");
+	if (payloadSize == 0) {
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaMarshal", 0, [](lua_State*) {});
+		return;
+	}
+
+	const unsigned int oldSize = *context.pSize;
+	if (oldSize > UINT32_MAX - payloadSize - UDAUX_AREA_EXTENSION_FOOTER_SIZE) {
+		FPrint("[!][EEex.dll] Could not append X-UDA1.0 area extension: size overflow\n");
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaMarshal", 0, [](lua_State*) {});
+		return;
+	}
+
+	const unsigned int newSize = oldSize + payloadSize + UDAUX_AREA_EXTENSION_FOOTER_SIZE;
+	unsigned char* const pNewData = reinterpret_cast<unsigned char*>(p_malloc(newSize));
+	if (pNewData == nullptr) {
+		FPrint("[!][EEex.dll] Could not append X-UDA1.0 area extension: allocation failed\n");
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaMarshal", 0, [](lua_State*) {});
+		return;
+	}
+
+	std::memcpy(pNewData, *context.ppData, oldSize);
+	if (!callLuaUDAuxAreaMemoryHandler("EEex_UDAux_Private_WriteAreaMarshalExtensionPayload", pNewData + oldSize, payloadSize)) {
+		p_free(pNewData);
+		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaMarshal", 0, [](lua_State*) {});
+		return;
+	}
+	std::memcpy(pNewData + oldSize + payloadSize, UDAUX_AREA_EXTENSION_SIGNATURE, sizeof(UDAUX_AREA_EXTENSION_SIGNATURE));
+	std::memcpy(pNewData + oldSize + payloadSize + sizeof(UDAUX_AREA_EXTENSION_SIGNATURE), &payloadSize, sizeof(payloadSize));
+
+	p_free(*context.ppData);
+	*context.ppData = pNewData;
+	*context.pSize = newSize;
+
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaMarshal", 0, [](lua_State*) {});
+}
+
+void EEex::UDAux_Hook_OnBeforeAreaUnmarshal(CGameArea* pArea, unsigned char* pData, unsigned int size) {
+
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaUnmarshal", 0, [](lua_State*) {});
+	udaAuxAreaUnmarshalContext = { pArea, pData, size, false };
+
+	unsigned char* pPayload = nullptr;
+	unsigned int payloadSize = 0;
+	if (!findUDAuxAreaExtension(pData, size, &pPayload, &payloadSize)) {
+		return;
+	}
+
+	udaAuxAreaUnmarshalContext.active = true;
+	if (!callLuaUDAuxAreaMemoryHandler("EEex_UDAux_Private_BeginAreaUnmarshal", pPayload, payloadSize)) {
+		udaAuxAreaUnmarshalContext.active = false;
+	}
+}
+
+void EEex::UDAux_Hook_OnAfterAreaContainerConstruct(CGameContainer* pContainer) {
+
+	if (!udaAuxAreaUnmarshalContext.active) {
+		return;
+	}
+
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_OnAreaContainerConstruct", 1, [&](lua_State* L) {
+		tolua_pushusertype(L, pContainer, "CGameContainer");
+	});
+}
+
+void EEex::UDAux_Hook_OnAfterAreaUnmarshal(int result) {
+
+	if (!udaAuxAreaUnmarshalContext.active) {
+		udaAuxAreaUnmarshalContext = {};
+		return;
+	}
+
+	udaAuxAreaUnmarshalContext = {};
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_EndAreaUnmarshal", 1, [&](lua_State* L) {
+		lua_pushinteger(L, result);
 	});
 }
 
