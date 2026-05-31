@@ -757,8 +757,8 @@ static unsigned int getCResEngineSize(CRes* pRes) {
 
 static void pushUDAuxStoreItemPointerTable(lua_State* L, CStore* pStore) {
 
-	// CStore is not exposed as a Lua userdata type. Snapshot ordinal -> pointer in C++ and let
-	// Lua wrap individual CStoreFileItem pointers, which are valid until the inventory is cleared.
+	// Snapshot ordinal -> pointer in C++ and let Lua wrap individual CStoreFileItem pointers,
+	// which are valid until the inventory is cleared.
 	lua_newtable(L);
 	if (pStore == nullptr) {
 		return;
@@ -900,14 +900,15 @@ void EEex::UDAux_Hook_OnBeforeStoreInventoryClear(CStore* pStore) {
 		return;
 	}
 
-	// SetResRef and destruction both drain m_lInventory. Delete aux before the CStoreFileItem
-	// allocations disappear, and cancel any pending import for this store before old data wins.
+	// SetResRef and destruction both drain m_lInventory. Delete store/item aux before
+	// CStoreFileItem allocations disappear, and cancel stale pending imports for this store.
 	if (udaAuxStoreUnmarshalContext.pStore == pStore) {
 		udaAuxStoreUnmarshalContext = {};
 		callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreUnmarshal", 0, [](lua_State*) {});
 	}
 
-	callLuaUDAuxNoReturn("EEex_UDAux_Private_OnStoreInventoryClear", 1, [&](lua_State* L) {
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_OnStoreInventoryClear", 2, [&](lua_State* L) {
+		tolua_pushusertype(L, pStore, "CStore");
 		pushUDAuxStoreItemPointerTable(L, pStore);
 	});
 }
@@ -922,7 +923,8 @@ unsigned char* EEex::UDAux_Hook_OnStoreMarshalData(CStore* pStore, unsigned char
 		return pData;
 	}
 
-	const unsigned int payloadSize = callLuaUDAuxSizeReturn("EEex_UDAux_Private_CalculateStoreMarshalExtensionSize", 1, [&](lua_State* L) {
+	const unsigned int payloadSize = callLuaUDAuxSizeReturn("EEex_UDAux_Private_CalculateStoreMarshalExtensionSize", 2, [&](lua_State* L) {
+		tolua_pushusertype(L, pStore, "CStore");
 		pushUDAuxStoreItemPointerTable(L, pStore);
 	});
 	if (payloadSize == 0) {
@@ -994,7 +996,8 @@ void EEex::UDAux_Hook_OnAfterStoreLoad(CStore* pStore) {
 	}
 
 	udaAuxStoreUnmarshalContext = {};
-	callLuaUDAuxNoReturn("EEex_UDAux_Private_OnStoreLoaded", 1, [&](lua_State* L) {
+	callLuaUDAuxNoReturn("EEex_UDAux_Private_OnStoreLoaded", 2, [&](lua_State* L) {
+		tolua_pushusertype(L, pStore, "CStore");
 		pushUDAuxStoreItemPointerTable(L, pStore);
 	});
 	callLuaUDAuxNoReturn("EEex_UDAux_Private_EndStoreUnmarshal", 0, [](lua_State*) {});
