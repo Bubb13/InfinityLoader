@@ -118,6 +118,7 @@ namespace EEex {
 	void Opcode_Hook_OnCopy(CGameEffect* pSrcEffect, CGameEffect* pDstEffect);
 	void Opcode_Hook_OnDestruct(CGameEffect* pEffect);
 	void Opcode_Hook_AfterListsResolved(CGameSprite* pSprite);
+	void Opcode_Hook_FlushDeferredAfterListsResolved(CGameSprite* pSprite);
 
 	////////////
 	// Sprite //

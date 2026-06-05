@@ -39,6 +39,24 @@ static int tolua_get_EEex_reference_Opcode_LuaHook_AfterListsResolved_Enabled(lu
 	return 1;
 }
 
+static int tolua_get_EEex_Opcode_LuaHook_DeferredAfterListsResolved_Enabled(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled);
+	return 1;
+}
+
+static int tolua_set_EEex_Opcode_LuaHook_DeferredAfterListsResolved_Enabled(lua_State* L)
+{
+	EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled = tolua_setter_toboolean(L, "Opcode_LuaHook_DeferredAfterListsResolved_Enabled");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_Opcode_LuaHook_DeferredAfterListsResolved_Enabled(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled, "Primitive<bool>");
+	return 1;
+}
+
 static int tolua_get_EEex_Projectile_LuaHook_GlobalMutators_Enabled(lua_State* L)
 {
 	tolua_pushboolean(L, (bool)EEex::Projectile_LuaHook_GlobalMutators_Enabled);
@@ -917,6 +935,8 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_AIBase_LuaHook_OnEventTriggerSet_Enabled", tolua_get_EEex_reference_AIBase_LuaHook_OnEventTriggerSet_Enabled, NULL);
 		tolua_variable(L, "Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled, tolua_set_EEex_Opcode_LuaHook_AfterListsResolved_Enabled);
 		tolua_variable(L, "reference_Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_reference_Opcode_LuaHook_AfterListsResolved_Enabled, NULL);
+		tolua_variable(L, "Opcode_LuaHook_DeferredAfterListsResolved_Enabled", tolua_get_EEex_Opcode_LuaHook_DeferredAfterListsResolved_Enabled, tolua_set_EEex_Opcode_LuaHook_DeferredAfterListsResolved_Enabled);
+		tolua_variable(L, "reference_Opcode_LuaHook_DeferredAfterListsResolved_Enabled", tolua_get_EEex_reference_Opcode_LuaHook_DeferredAfterListsResolved_Enabled, NULL);
 		tolua_variable(L, "Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_Projectile_LuaHook_GlobalMutators_Enabled, tolua_set_EEex_Projectile_LuaHook_GlobalMutators_Enabled);
 		tolua_variable(L, "reference_Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_reference_Projectile_LuaHook_GlobalMutators_Enabled, NULL);
 		tolua_variable(L, "StutterDetector_Enabled", tolua_get_EEex_StutterDetector_Enabled, tolua_set_EEex_StutterDetector_Enabled);
@@ -961,6 +981,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "UpdateLastScrollTime", &tolua_function_EEex_UpdateLastScrollTime);
 		tolua_constantstring(L, "usertype_AIBase_LuaHook_OnEventTriggerSet_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Opcode_LuaHook_AfterListsResolved_Enabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_Opcode_LuaHook_DeferredAfterListsResolved_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Projectile_LuaHook_GlobalMutators_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_StutterDetector_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_UncapFPS_BusyWaitThreshold", "Primitive<int>");
