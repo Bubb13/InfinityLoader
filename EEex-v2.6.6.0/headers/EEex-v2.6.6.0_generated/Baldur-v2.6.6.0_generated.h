@@ -4902,6 +4902,7 @@ namespace EEex
 	void ForceScrollbarRenderForItemName(lua_State* L);
 	const char* FormatPointerAsEngine(uintptr_t ptr);
 	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	void GetWeaponStyle(lua_State* L, CGameSprite* pSprite);
 	int GetHighestRefreshRate();
 	void GetINIString(lua_State* L, const char* iniPath, const char* section, const char* key, const char* def);
 	long long GetMicroseconds();
@@ -18445,6 +18446,9 @@ struct CGameSprite : CGameAIBase
 	typedef CDerivedStats* (__thiscall *type_GetActiveStats)(CGameSprite* pThis);
 	static type_GetActiveStats p_GetActiveStats;
 
+	typedef int (__thiscall *type_GetActiveWeaponStyleAndLevel)(CGameSprite* pThis, int* pProficiencyLevel);
+	static type_GetActiveWeaponStyleAndLevel p_GetActiveWeaponStyleAndLevel;
+
 	typedef short (__thiscall *type_GetCasterLevel)(CGameSprite* pThis, CSpell* pSpell, int includeWildMage);
 	static type_GetCasterLevel p_GetCasterLevel;
 
@@ -18490,6 +18494,9 @@ struct CGameSprite : CGameAIBase
 	typedef short (__thiscall *type_SpellPoint)(CGameSprite* pThis);
 	static type_SpellPoint p_SpellPoint;
 
+	typedef __int16 (__thiscall *type_Swing)(CGameSprite* pThis, CGameSprite* target);
+	static type_Swing p_Swing;
+
 	typedef void (__thiscall *type_UpdateTarget)(CGameSprite* pThis, CGameObject* target);
 	static type_UpdateTarget p_UpdateTarget;
 
@@ -18529,6 +18536,11 @@ struct CGameSprite : CGameAIBase
 	CDerivedStats* GetActiveStats()
 	{
 		return p_GetActiveStats(this);
+	}
+
+	int GetActiveWeaponStyleAndLevel(int* pProficiencyLevel)
+	{
+		return p_GetActiveWeaponStyleAndLevel(this, pProficiencyLevel);
 	}
 
 	short GetCasterLevel(CSpell* pSpell, int includeWildMage)
@@ -18604,6 +18616,11 @@ struct CGameSprite : CGameAIBase
 	short SpellPoint()
 	{
 		return p_SpellPoint(this);
+	}
+
+	__int16 Swing(CGameSprite* target)
+	{
+		return p_Swing(this, target);
 	}
 
 	void UpdateTarget(CGameObject* target)

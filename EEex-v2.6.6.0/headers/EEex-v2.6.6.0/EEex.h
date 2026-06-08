@@ -84,6 +84,8 @@ namespace EEex {
 	// Opcode //
 	////////////
 
+	// op73
+	int Opcode_Hook_DamageMod_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
 	// op248
@@ -127,7 +129,12 @@ namespace EEex {
 	void Sprite_Hook_OnDestruct(CGameSprite* pSprite);
 	void Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite);
 	void Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite);
+	int Sprite_Hook_AdjustDisplayedDamage(CGameSprite* pSprite, CItem* pItem, int damage, int hand);
+	int Sprite_Hook_AdjustDamageRollHandBonus(CGameSprite* pSprite, int handBonus);
 	byte Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttacks);
+	byte Sprite_Hook_OnSwingGetAttackFrameType(CGameSprite* pSprite, byte numAttacks);
+	void Sprite_Hook_ApplyOp342OffhandFrame(CGameSprite* pSprite);
+	int Sprite_Hook_GetOp342OffhandTHAC0(CGameSprite* pSprite, int thac0);
 
 	////////////
 	// Action //
