@@ -1622,8 +1622,8 @@ int EEex::GetExtendedStatValue(CGameSprite* pSprite, int exStatId) {
 	return 0;
 }
 
-static constexpr int kFirstWeaponProficiencyStat = 89;
-static constexpr int kWeaponProficiencyStatCount = 40;
+static constexpr int kFirstWeaponStyleStat = 111;
+static constexpr int kWeaponStyleStatCount = 4;
 static constexpr int kTwoWeaponStyleStat = 114;
 static constexpr int kLeftHandWeaponSlot = 9;
 static constexpr int kShieldItemType = 12;
@@ -1634,13 +1634,14 @@ static int getOriginalWeaponStyleRank(CGameSprite* pSprite, int style) {
 		return 0;
 	}
 
-	const int proficiencyIndex = style - kFirstWeaponProficiencyStat;
-	if (proficiencyIndex < 0 || proficiencyIndex >= kWeaponProficiencyStatCount) {
+	if (style < kFirstWeaponStyleStat || style >= kFirstWeaponStyleStat + kWeaponStyleStatCount) {
 		return 0;
 	}
 
-	const int rank = pSprite->m_weaponProficiencyList[proficiencyIndex];
-	return rank >= 0 ? rank & 0x7 : 0;
+	// Active/inactive proficiency ranks share a packed derived-stat value. The
+	// engine's inactive accessor extracts the original rank with the same
+	// mapping used for weapon styles, avoiding brittle direct-list indexing.
+	return pSprite->GetInactiveProficiency(style);
 }
 
 void EEex::GetWeaponStyle(lua_State* L, CGameSprite* pSprite) {

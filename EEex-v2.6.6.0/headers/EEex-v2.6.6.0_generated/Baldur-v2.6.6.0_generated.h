@@ -18449,6 +18449,9 @@ struct CGameSprite : CGameAIBase
 	typedef int (__thiscall *type_GetActiveWeaponStyleAndLevel)(CGameSprite* pThis, int* pProficiencyLevel);
 	static type_GetActiveWeaponStyleAndLevel p_GetActiveWeaponStyleAndLevel;
 
+	typedef int (__thiscall *type_GetInactiveProficiency)(CGameSprite* pThis, int nProficiency);
+	static type_GetInactiveProficiency p_GetInactiveProficiency;
+
 	typedef short (__thiscall *type_GetCasterLevel)(CGameSprite* pThis, CSpell* pSpell, int includeWildMage);
 	static type_GetCasterLevel p_GetCasterLevel;
 
@@ -18541,6 +18544,11 @@ struct CGameSprite : CGameAIBase
 	int GetActiveWeaponStyleAndLevel(int* pProficiencyLevel)
 	{
 		return p_GetActiveWeaponStyleAndLevel(this, pProficiencyLevel);
+	}
+
+	int GetInactiveProficiency(int nProficiency)
+	{
+		return p_GetInactiveProficiency(this, nProficiency);
 	}
 
 	short GetCasterLevel(CSpell* pSpell, int includeWildMage)

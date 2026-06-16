@@ -314,6 +314,7 @@ CGameSprite::type_Damage CGameSprite::p_Damage;
 CGameSprite::type_FeedBack CGameSprite::p_FeedBack;
 CGameSprite::type_GetActiveStats CGameSprite::p_GetActiveStats;
 CGameSprite::type_GetActiveWeaponStyleAndLevel CGameSprite::p_GetActiveWeaponStyleAndLevel;
+CGameSprite::type_GetInactiveProficiency CGameSprite::p_GetInactiveProficiency;
 CGameSprite::type_GetCasterLevel CGameSprite::p_GetCasterLevel;
 CGameSprite::type_GetInternalButtonList CGameSprite::p_GetInternalButtonList;
 CGameSprite::type_GetKitMask CGameSprite::p_GetKitMask;
@@ -654,6 +655,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CGameSprite::FeedBack"), CGameSprite::p_FeedBack);
 	attemptFillPointer(TEXT("CGameSprite::GetActiveStats"), CGameSprite::p_GetActiveStats);
 	attemptFillPointer(TEXT("CGameSprite::GetActiveWeaponStyleAndLevel"), CGameSprite::p_GetActiveWeaponStyleAndLevel);
+	attemptFillPointer(TEXT("CGameSprite::GetInactiveProficiency"), CGameSprite::p_GetInactiveProficiency);
 	attemptFillPointer(TEXT("CGameSprite::GetCasterLevel"), CGameSprite::p_GetCasterLevel);
 	attemptFillPointer(TEXT("CGameSprite::GetInternalButtonList"), CGameSprite::p_GetInternalButtonList);
 	attemptFillPointer(TEXT("CGameSprite::GetKitMask"), CGameSprite::p_GetKitMask);
