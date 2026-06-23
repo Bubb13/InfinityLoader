@@ -1,5 +1,6 @@
 
 #include <chrono>
+#include <format>
 #include <optional>
 #include <sstream>
 #include <unordered_set>
@@ -125,11 +126,29 @@ std::unordered_map<void*, ExScriptData> exScriptDataMap{};
 // Opcode //
 ////////////
 
+struct ExConstrictInfo {
+	int sourceId = -1;
+	int victimId = -1;
+	uint nextEscapeCheck = 0;
+	bool registered = false;
+	bool prematureRelease = false;
+	bool driven = false;
+	// Driven child effects are transient, so op418 keeps a copied runtime effect
+	// outside the engine lists when it needs per-round state.
+	bool ownedRuntimeEffect = false;
+};
+
 struct ExEffectInfo {
 	bool bypassOp120;
+	ExConstrictInfo constrict{};
 };
 
 std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
+// Constrict allows one active captive per source/constrictor.
+std::unordered_map<int, CGameEffect*> exConstrictEffectBySourceId{};
+// A driven parent can keep re-emitting op418 after a premature release. Suppress
+// identical driven children until that parent would naturally expire.
+std::unordered_map<std::string, uint> exSuppressedDrivenConstrictUntilByKey{};
 
 ////////////////
 // Projectile //
@@ -259,6 +278,591 @@ template<typename NumType>
 NumType clampedPercent(NumType num, NumType percent) {
 	static_assert(canTypeHoldProduct<__int64, NumType>());
 	return clampToType<NumType>(static_cast<__int64>(num) * percent / 100);
+}
+
+//-------------------------------//
+//          Constrict Util       //
+//-------------------------------//
+
+constexpr int EEEX_OPCODE_CONSTRICT = 418;
+constexpr int EEEX_OPCODE_DAMAGE = 12;
+constexpr int EEEX_OPCODE_HOLD_CREATURE = 175;
+constexpr int EEEX_OPCODE_APPLY_SPELL = 326;
+constexpr uint EEEX_ROUND_TICKS = 90;
+constexpr uint EEEX_DURATION_ABSOLUTE = 4096;
+constexpr short EEEX_TRIGGER_IN_WEAPON_RANGE = 0x4063;
+
+// Existing sprite filtering in this file uses 0xFC0 as the engine dead-state mask.
+constexpr uint EEEX_STATE_DEATH_MASK = 0xFC0;
+
+// Existing sprite filtering in this file uses 0x8010202D as the engine incapacitated-state mask.
+constexpr uint EEEX_STATE_INCAPACITATED_MASK = 0x8010202D;
+
+static std::string getResRefString(CResRef& resRef) {
+	char resStr[9]{};
+	resRef.toNullTerminatedStr(resStr);
+	return resStr;
+}
+
+static CGameSprite* getSpriteById(const int id) {
+
+	if (id == -1) {
+		return nullptr;
+	}
+
+	CGameObject* pObject = nullptr;
+	if (CGameObjectArray::GetShare(id, &pObject) != 0 || pObject->virtual_GetObjectType() != CGameObjectType::SPRITE) {
+		return nullptr;
+	}
+
+	return reinterpret_cast<CGameSprite*>(pObject);
+}
+
+static uint getGameTime() {
+	return (*p_g_pBaldurChitin)->m_pObjectGame->m_worldTime.m_gameTime;
+}
+
+static int rollDie(const int sides) {
+	return sides <= 1 ? 1 : (p_rand() % sides) + 1;
+}
+
+static int rollD100() {
+	return rollDie(100);
+}
+
+static int rollDice(const int count, const int sides) {
+
+	if (count <= 0 || sides <= 0) {
+		return 0;
+	}
+
+	int total = 0;
+	for (int i = 0; i < count; ++i) {
+		total = clampedSum(total, rollDie(sides));
+	}
+	return total;
+}
+
+static bool isConstrictHostileAction(const CAIAction& action);
+
+static CGameEffect* decodeTemporaryEffectFrom(const CGameEffect* const pEffect, const int effectId) {
+
+	CGameEffectBase effectBase = *static_cast<const CGameEffectBase*>(pEffect);
+	effectBase.m_effectId = effectId;
+
+	CGameEffect* const pTemporaryEffect = CGameEffect::DecodeEffectFromBase(&effectBase);
+	if (pTemporaryEffect == nullptr) {
+		return nullptr;
+	}
+
+	pTemporaryEffect->m_sourceId = pEffect->m_sourceId;
+	pTemporaryEffect->m_sourceTarget = pEffect->m_sourceTarget;
+	return pTemporaryEffect;
+}
+
+static void destroyTemporaryEffect(CGameEffect* const pEffect) {
+	if (pEffect != nullptr) {
+		pEffect->virtual_Destruct(1);
+	}
+}
+
+static void applyConstrictHold(CGameEffect* const pEffect, CGameSprite* const pSprite) {
+
+	CGameEffect* const pHoldEffect = decodeTemporaryEffectFrom(pEffect, EEEX_OPCODE_HOLD_CREATURE);
+	if (pHoldEffect == nullptr) {
+		return;
+	}
+
+	// Use real op175 logic so the engine owns the exact helpless-state changes.
+	pHoldEffect->m_dWFlags = 0x2; // EA.IDS
+	pHoldEffect->virtual_ApplyEffect(pSprite);
+	destroyTemporaryEffect(pHoldEffect);
+}
+
+static int get2daInt(C2DArray& table, const char* const column, const int rowValue) {
+
+	char row[16];
+	sprintf_s(row, "%d", rowValue);
+
+	const CString* const pValue = table.GetAt(column, row);
+	return pValue != nullptr && pValue->m_pchData != nullptr ? atoi(pValue->m_pchData) : 0;
+}
+
+static int getConstrictEscapeChance(CGameSprite* const pSprite) {
+
+	CDerivedStats* const pStats = pSprite->GetActiveStats();
+	CRuleTables& ruleTables = (*p_g_pBaldurChitin)->m_pObjectGame->m_ruleTables;
+
+	int chance = get2daInt(ruleTables.m_tStrengthMod, "BEND_BARS_LIFT_GATES", pStats->m_nSTR);
+	if (pStats->m_nSTR == 18) {
+		chance = clampedSum(chance, get2daInt(ruleTables.m_tStrengthModExtra, "BEND_BARS_LIFT_GATES", pStats->m_nSTRExtra));
+	}
+
+	return clamp(chance, 0, 100);
+}
+
+static void applyConstrictCrushingDamage(CGameEffect* const pEffect, CGameSprite* const pSprite) {
+
+	const int damage = clampedSum(rollDice(pEffect->m_effectAmount2, pEffect->m_effectAmount3), pEffect->m_effectAmount);
+	if (damage <= 0) {
+		return;
+	}
+
+	CGameEffect* const pDamageEffect = decodeTemporaryEffectFrom(pEffect, EEEX_OPCODE_DAMAGE);
+	if (pDamageEffect == nullptr) {
+		return;
+	}
+
+	pDamageEffect->m_effectAmount = damage;
+	pDamageEffect->m_numDice = 0;
+	pDamageEffect->m_diceSize = 0;
+	pDamageEffect->m_dWFlags = 0; // Vanilla op12 param2 value for crushing damage.
+	pDamageEffect->virtual_ApplyEffect(pSprite);
+	destroyTemporaryEffect(pDamageEffect);
+}
+
+static bool isEffectInList(CGameEffectList& effectList, CGameEffect* const pEffect) {
+
+	for (auto* pNode = effectList.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+		if (pNode->data == pEffect) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool isEffectInSpriteEffectLists(CGameEffect* const pEffect, CGameSprite* const pSprite) {
+	return isEffectInList(pSprite->m_timedEffectList, pEffect) || isEffectInList(pSprite->m_equipedEffectList, pEffect);
+}
+
+static bool resRefEquals(CResRef& lhs, CResRef& rhs) {
+	return memcmp(lhs.m_resRef, rhs.m_resRef, sizeof(lhs.m_resRef)) == 0;
+}
+
+static bool isSameConstrictRuntimeConfig(CGameEffect* const pRuntimeEffect, CGameEffect* const pDrivenEffect) {
+	return pRuntimeEffect->m_effectAmount == pDrivenEffect->m_effectAmount
+		&& pRuntimeEffect->m_dWFlags == pDrivenEffect->m_dWFlags
+		&& pRuntimeEffect->m_durationType == pDrivenEffect->m_durationType
+		&& pRuntimeEffect->m_duration == pDrivenEffect->m_duration
+		&& pRuntimeEffect->m_numDice == pDrivenEffect->m_numDice
+		&& pRuntimeEffect->m_diceSize == pDrivenEffect->m_diceSize
+		&& pRuntimeEffect->m_special == pDrivenEffect->m_special
+		&& pRuntimeEffect->m_effectAmount2 == pDrivenEffect->m_effectAmount2
+		&& pRuntimeEffect->m_effectAmount3 == pDrivenEffect->m_effectAmount3
+		&& pRuntimeEffect->m_effectAmount4 == pDrivenEffect->m_effectAmount4
+		&& pRuntimeEffect->m_effectAmount5 == pDrivenEffect->m_effectAmount5
+		&& resRefEquals(pRuntimeEffect->m_res, pDrivenEffect->m_res)
+		&& resRefEquals(pRuntimeEffect->m_res2, pDrivenEffect->m_res2)
+		&& resRefEquals(pRuntimeEffect->m_res3, pDrivenEffect->m_res3);
+}
+
+// Suppression keys intentionally include the absolute duration; a fresh recast from
+// the same source gets a new end time and is allowed to create a new runtime.
+static std::string getDrivenConstrictSuppressionKey(CGameEffect* const pEffect, const int victimId) {
+	return std::format(
+		"{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
+		pEffect->m_sourceId,
+		victimId,
+		pEffect->m_sourceTarget,
+		pEffect->m_effectAmount,
+		pEffect->m_dWFlags,
+		pEffect->m_durationType,
+		pEffect->m_duration,
+		pEffect->m_numDice,
+		pEffect->m_diceSize,
+		pEffect->m_special,
+		pEffect->m_effectAmount2,
+		pEffect->m_effectAmount3,
+		pEffect->m_effectAmount4,
+		pEffect->m_effectAmount5,
+		pEffect->m_minLevel,
+		pEffect->m_maxLevel,
+		getResRefString(pEffect->m_res),
+		getResRefString(pEffect->m_res2),
+		getResRefString(pEffect->m_res3));
+}
+
+static uint getDrivenConstrictSuppressionUntil(CGameEffect* const pEffect) {
+	const uint gameTime = getGameTime();
+	if (pEffect->m_durationType == EEEX_DURATION_ABSOLUTE && pEffect->m_duration > gameTime) {
+		return pEffect->m_duration;
+	}
+
+	// Non-absolute driven runtimes have no reliable detached expiry timestamp.
+	// Treat their premature release as final for this exact driven configuration.
+	return 0xFFFFFFFFu;
+}
+
+static bool isDrivenConstrictSuppressed(CGameEffect* const pEffect, CGameSprite* const pSprite) {
+
+	const std::string key = getDrivenConstrictSuppressionKey(pEffect, pSprite->m_id);
+	const auto suppressedIt = exSuppressedDrivenConstrictUntilByKey.find(key);
+	if (suppressedIt == exSuppressedDrivenConstrictUntilByKey.end()) {
+		return false;
+	}
+
+	const uint gameTime = getGameTime();
+	if (suppressedIt->second != 0xFFFFFFFFu && gameTime >= suppressedIt->second) {
+		exSuppressedDrivenConstrictUntilByKey.erase(suppressedIt);
+		return false;
+	}
+
+	return true;
+}
+
+static void suppressDrivenConstrict(CGameEffect* const pEffect, CGameSprite* const pSprite) {
+
+	if (pSprite == nullptr) {
+		return;
+	}
+
+	const std::string key = getDrivenConstrictSuppressionKey(pEffect, pSprite->m_id);
+	const uint suppressUntil = getDrivenConstrictSuppressionUntil(pEffect);
+	exSuppressedDrivenConstrictUntilByKey[key] = suppressUntil;
+}
+
+static CGameEffect* copyConstrictRuntimeEffect(CGameEffect* const pEffect) {
+
+	CGameEffect* pRuntimeEffect = pEffect->virtual_Copy();
+	if (pRuntimeEffect == nullptr) {
+		pRuntimeEffect = decodeTemporaryEffectFrom(pEffect, EEEX_OPCODE_CONSTRICT);
+	}
+
+	if (pRuntimeEffect != nullptr) {
+		pRuntimeEffect->m_sourceId = pEffect->m_sourceId;
+		pRuntimeEffect->m_sourceTarget = pEffect->m_sourceTarget;
+		pRuntimeEffect->m_firstCall = 0;
+		pRuntimeEffect->m_done = 0;
+	}
+
+	return pRuntimeEffect;
+}
+
+static void unregisterConstrictEffect(CGameEffect* const pEffect) {
+
+	auto infoIt = exEffectInfoMap.find(pEffect);
+	if (infoIt == exEffectInfoMap.end()) {
+		return;
+	}
+
+	ExConstrictInfo& constrictInfo = infoIt->second.constrict;
+	if (!constrictInfo.registered) {
+		return;
+	}
+
+	if (const auto activeIt = exConstrictEffectBySourceId.find(constrictInfo.sourceId);
+		activeIt != exConstrictEffectBySourceId.end() && activeIt->second == pEffect)
+	{
+		exConstrictEffectBySourceId.erase(activeIt);
+	}
+
+	constrictInfo.registered = false;
+}
+
+static void markConstrictEffectDone(CGameEffect* const pEffect, const bool premature) {
+
+	ExConstrictInfo& constrictInfo = exEffectInfoMap[pEffect].constrict;
+	constrictInfo.prematureRelease = constrictInfo.prematureRelease || premature;
+	unregisterConstrictEffect(pEffect);
+	pEffect->m_done = 1;
+}
+
+static void releaseOwnedConstrictEffect(CGameEffect* const pEffect, CGameSprite* const pSprite, const bool premature) {
+
+	const auto infoIt = exEffectInfoMap.find(pEffect);
+	if (premature && infoIt != exEffectInfoMap.end() && infoIt->second.constrict.driven) {
+		suppressDrivenConstrict(pEffect, pSprite);
+	}
+	exEffectInfoMap[pEffect].constrict.prematureRelease = premature;
+	pEffect->m_done = 1;
+	pEffect->virtual_OnRemove(pSprite);
+	pEffect->virtual_Destruct(1);
+}
+
+static void castConstrictOnRemoveSpell(CGameEffect* const pEffect, CGameSprite* const pSprite) {
+
+	if (pEffect->m_res.m_resRef[0] == '\0') {
+		return;
+	}
+
+	CGameEffect* const pApplySpellEffect = decodeTemporaryEffectFrom(pEffect, EEEX_OPCODE_APPLY_SPELL);
+	if (pApplySpellEffect == nullptr) {
+		return;
+	}
+
+	// Mirror vanilla-style cast-on-removal behavior through a decoded engine effect,
+	// while clearing op418-specific fields that would be meaningless for op326.
+	CGameSprite* const pSource = getSpriteById(pEffect->m_sourceId);
+	if (pSource != nullptr) {
+		pApplySpellEffect->m_source = pSource->m_pos;
+	}
+
+	pApplySpellEffect->m_target = pSprite->m_pos;
+	pApplySpellEffect->m_sourceTarget = pSprite->m_id;
+	pApplySpellEffect->m_effectAmount = 0;
+	pApplySpellEffect->m_dWFlags = 0;
+	pApplySpellEffect->m_durationType = 0;
+	pApplySpellEffect->m_duration = 0;
+	pApplySpellEffect->m_numDice = 0;
+	pApplySpellEffect->m_diceSize = 0;
+	pApplySpellEffect->m_savingThrow = 0;
+	pApplySpellEffect->m_saveMod = 0;
+	pApplySpellEffect->m_special = 0;
+	pApplySpellEffect->m_minLevel = 0;
+	pApplySpellEffect->m_maxLevel = 0;
+	pApplySpellEffect->m_flags = 0;
+	pApplySpellEffect->m_effectAmount2 = 0;
+	pApplySpellEffect->m_effectAmount3 = 0;
+	pApplySpellEffect->m_effectAmount4 = 0;
+	pApplySpellEffect->m_effectAmount5 = 0;
+	pApplySpellEffect->m_res2 = "";
+	pApplySpellEffect->m_res3 = "";
+	pApplySpellEffect->m_firstCall = 1;
+	pApplySpellEffect->m_secondaryType = 0;
+
+	pApplySpellEffect->virtual_ApplyEffect(pSprite);
+	destroyTemporaryEffect(pApplySpellEffect);
+}
+
+static bool removeConstrictEffectFromList(CGameEffectList& effectList, CGameEffect* const pEffect, CGameSprite* const pSprite, const bool premature) {
+
+	for (auto* pNode = effectList.m_pNodeHead; pNode != nullptr;) {
+
+		auto* const pNext = pNode->pNext;
+
+		if (pNode->data == pEffect) {
+			exEffectInfoMap[pEffect].constrict.prematureRelease = premature;
+			effectList.RemoveAt(pNode);
+			pEffect->virtual_OnRemove(pSprite);
+			pEffect->virtual_Destruct(1);
+			return true;
+		}
+
+		pNode = pNext;
+	}
+
+	return false;
+}
+
+static void releaseConstrictEffectNow(CGameEffect* const pEffect, const bool premature) {
+
+	auto infoIt = exEffectInfoMap.find(pEffect);
+	if (infoIt == exEffectInfoMap.end()) {
+		if (premature) {
+			pEffect->m_done = 1;
+		}
+		return;
+	}
+
+	CGameSprite* const pVictim = getSpriteById(infoIt->second.constrict.victimId);
+	if (pVictim == nullptr) {
+		markConstrictEffectDone(pEffect, premature);
+		return;
+	}
+
+	if (removeConstrictEffectFromList(pVictim->m_timedEffectList, pEffect, pVictim, premature)) {
+		return;
+	}
+
+	if (removeConstrictEffectFromList(pVictim->m_equipedEffectList, pEffect, pVictim, premature)) {
+		return;
+	}
+
+	if (infoIt->second.constrict.ownedRuntimeEffect) {
+		releaseOwnedConstrictEffect(pEffect, pVictim, premature);
+		return;
+	}
+
+	markConstrictEffectDone(pEffect, premature);
+}
+
+static void releaseActiveConstrictForSource(const int sourceId, CGameEffect* const pExceptEffect, const bool premature) {
+
+	const auto activeIt = exConstrictEffectBySourceId.find(sourceId);
+	if (activeIt == exConstrictEffectBySourceId.end() || activeIt->second == pExceptEffect) {
+		return;
+	}
+
+	CGameEffect* const pExistingEffect = activeIt->second;
+	releaseConstrictEffectNow(pExistingEffect, premature);
+}
+
+static void releaseConstrictEffectsForVictim(const int victimId, const bool premature) {
+
+	std::vector<CGameEffect*> effectsToRelease;
+
+	for (const auto& [sourceId, pEffect] : exConstrictEffectBySourceId) {
+		auto infoIt = exEffectInfoMap.find(pEffect);
+		if (infoIt != exEffectInfoMap.end() && infoIt->second.constrict.victimId == victimId) {
+			effectsToRelease.emplace_back(pEffect);
+		}
+	}
+
+	for (CGameEffect* const pEffect : effectsToRelease) {
+		releaseConstrictEffectNow(pEffect, premature);
+	}
+}
+
+static bool shouldPrematurelyReleaseConstrict(CGameEffect* const pEffect, CGameSprite* const pVictim) {
+
+	const auto infoIt = exEffectInfoMap.find(pEffect);
+	if (infoIt == exEffectInfoMap.end()) {
+		return true;
+	}
+
+	const ExConstrictInfo& constrictInfo = infoIt->second.constrict;
+	CGameSprite* const pSource = getSpriteById(constrictInfo.sourceId);
+	if (pSource == nullptr) {
+		return true;
+	}
+
+	if (!pSource->m_active || !pSource->m_activeAI || !pSource->m_activeImprisonment) {
+		return true;
+	}
+
+	CDerivedStats* const pStats = pSource->GetActiveStats();
+	if ((pStats->m_generalState & EEEX_STATE_DEATH_MASK) != 0 || (pSource->m_baseStats.m_generalState & EEEX_STATE_DEATH_MASK) != 0) {
+		return true;
+	}
+
+	if ((pStats->m_generalState & EEEX_STATE_INCAPACITATED_MASK) != 0 || (pSource->m_baseStats.m_generalState & EEEX_STATE_INCAPACITATED_MASK) != 0) {
+		return true;
+	}
+
+	if (isConstrictHostileAction(pSource->m_curAction)) {
+		return true;
+	}
+
+	EngineVal<CAITrigger> trigger{ EEEX_TRIGGER_IN_WEAPON_RANGE, 0 };
+	trigger->m_triggerCause.Set(pVictim->virtual_GetAIType());
+	const int inWeaponRange = pSource->virtual_EvaluateStatusTrigger(&*trigger);
+	return inWeaponRange == 0;
+}
+
+static void processConstrictRuntime(CGameEffect* const pEffect, CGameSprite* const pVictim) {
+
+	const auto infoIt = exEffectInfoMap.find(pEffect);
+	if (infoIt == exEffectInfoMap.end() || !infoIt->second.constrict.registered) {
+		return;
+	}
+
+	ExConstrictInfo& constrictInfo = infoIt->second.constrict;
+	const uint gameTime = getGameTime();
+
+	if (constrictInfo.ownedRuntimeEffect && pEffect->m_durationType == EEEX_DURATION_ABSOLUTE && pEffect->m_duration != 0 && gameTime >= pEffect->m_duration) {
+		releaseConstrictEffectNow(pEffect, false);
+		return;
+	}
+
+	if (shouldPrematurelyReleaseConstrict(pEffect, pVictim)) {
+		releaseConstrictEffectNow(pEffect, true);
+		return;
+	}
+
+	if (constrictInfo.ownedRuntimeEffect) {
+		// Owned driven copies are not in an engine effect list, so their poll path
+		// must reapply the op175 hold that normal listed op418s get via ApplyEffect().
+		applyConstrictHold(pEffect, pVictim);
+	}
+
+	if (gameTime < constrictInfo.nextEscapeCheck) {
+		return;
+	}
+
+	constrictInfo.nextEscapeCheck = gameTime + EEEX_ROUND_TICKS;
+
+	const int escapeChance = getConstrictEscapeChance(pVictim);
+	const int escapeRoll = rollD100();
+
+	if (escapeRoll <= escapeChance) {
+		releaseConstrictEffectNow(pEffect, true);
+	}
+	else {
+		applyConstrictCrushingDamage(pEffect, pVictim);
+	}
+}
+
+static void processConstrictEffectsForVictim(CGameSprite* const pVictim) {
+
+	std::vector<CGameEffect*> effectsToProcess;
+
+	for (const auto& [sourceId, pEffect] : exConstrictEffectBySourceId) {
+		const auto infoIt = exEffectInfoMap.find(pEffect);
+		if
+		(
+			infoIt != exEffectInfoMap.end()
+			&& infoIt->second.constrict.registered
+			&& infoIt->second.constrict.victimId == pVictim->m_id
+		)
+		{
+			effectsToProcess.emplace_back(pEffect);
+		}
+	}
+
+	for (CGameEffect* const pEffect : effectsToProcess) {
+		processConstrictRuntime(pEffect, pVictim);
+	}
+}
+
+static bool isConstrictHostileAction(const CAIAction& action) {
+
+	switch (action.m_actionID) {
+		case 3:   // Attack()
+		case 5:   // BackStab()
+		case 31:  // Spell()
+		case 34:  // UseItem() / UseItemAbility() / UseItemSlot() / UseItemSlotAbility()
+		case 95:  // SpellPoint()
+		case 98:  // AttackNoSound()
+		case 105: // AttackOneRound()
+		case 113: // ForceSpell()
+		case 114: // ForceSpellPoint()
+		case 134: // AttackReevaluate()
+		case 181: // ReallyForceSpell()
+		case 191: // SpellNoDec()
+		case 192: // SpellPointNoDec()
+		case 318: // ForceSpellRange()
+		case 319: // ForceSpellPointRange()
+		case 337: // ReallyForceSpellPoint()
+		case 476: // EEex_SpellObjectOffset()
+		case 477: // EEex_SpellObjectOffsetNoDec()
+		case 478: // EEex_ForceSpellObjectOffset()
+		case 479: // EEex_ReallyForceSpellObjectOffset()
+			return true;
+		default:
+			return false;
+	}
+}
+
+static CGameSprite* resolveConstrictRedirectTarget(CGameSprite* const pConstrictor, CGameSprite* const pOriginalTarget) {
+
+	if (pConstrictor == nullptr || pOriginalTarget == nullptr) {
+		return pOriginalTarget;
+	}
+
+	const auto activeIt = exConstrictEffectBySourceId.find(pConstrictor->m_id);
+	if (activeIt == exConstrictEffectBySourceId.end()) {
+		return pOriginalTarget;
+	}
+
+	CGameEffect* const pConstrictEffect = activeIt->second;
+	const auto infoIt = exEffectInfoMap.find(pConstrictEffect);
+	if (infoIt == exEffectInfoMap.end()) {
+		return pOriginalTarget;
+	}
+
+	CGameSprite* const pVictim = getSpriteById(infoIt->second.constrict.victimId);
+	if (pVictim == nullptr || pVictim == pOriginalTarget) {
+		return pOriginalTarget;
+	}
+
+	const int redirectChance = static_cast<int>(clamp<uint>(pConstrictEffect->m_dWFlags, 0u, 100u));
+	if (redirectChance <= 0) {
+		return pOriginalTarget;
+	}
+
+	const int redirectRoll = rollD100();
+	return redirectRoll <= redirectChance ? pVictim : pOriginalTarget;
 }
 
 //-------------------------------------------//
@@ -3707,9 +4311,9 @@ void EEex::Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSpr
 	STUTTER_LOG_END
 }
 
-//-----------------//
-// START New op409 //
-//-----------------//
+//-----------//
+// New op409 //
+//-----------//
 
 int EEex::Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
@@ -3736,8 +4340,121 @@ void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGame
 	STUTTER_LOG_END
 }
 
+//-----------------//
+// START New op418 //
+//-----------------//
+
+int EEex::Opcode_Hook_Constrict_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_Constrict_ApplyEffect")
+
+	pEffect->m_dWFlags = clamp<uint>(pEffect->m_dWFlags, 0u, 100u);
+	CGameEffect* pRuntimeEffect = pEffect;
+	const bool drivenApply = !isEffectInSpriteEffectLists(pEffect, pSprite);
+	const uint gameTime = getGameTime();
+
+	if (drivenApply) {
+		if (isDrivenConstrictSuppressed(pEffect, pSprite)) {
+			pEffect->m_firstCall = 0;
+			return 1;
+		}
+
+		// A driven parent can call ApplyEffect repeatedly with fresh child objects.
+		// Refresh the existing copied runtime instead of resetting its round timer.
+		const auto activeIt = exConstrictEffectBySourceId.find(pEffect->m_sourceId);
+		if (activeIt != exConstrictEffectBySourceId.end()) {
+			CGameEffect* const pActiveEffect = activeIt->second;
+			const auto activeInfoIt = exEffectInfoMap.find(pActiveEffect);
+			if
+			(
+				activeInfoIt != exEffectInfoMap.end()
+				&& activeInfoIt->second.constrict.driven
+				&& activeInfoIt->second.constrict.victimId == pSprite->m_id
+				&& isSameConstrictRuntimeConfig(pActiveEffect, pEffect)
+			)
+			{
+				pRuntimeEffect = pActiveEffect;
+			}
+		}
+	}
+
+	if (pRuntimeEffect == pEffect && (pEffect->m_firstCall != 0 || drivenApply)) {
+
+		pEffect->m_firstCall = 0;
+
+		if (getSpriteById(pEffect->m_sourceId) == nullptr) {
+			markConstrictEffectDone(pEffect, true);
+			return 1;
+		}
+
+		if (drivenApply) {
+			// Keep a private op418 copy alive after the transient driven child is destroyed.
+			pRuntimeEffect = copyConstrictRuntimeEffect(pEffect);
+			if (pRuntimeEffect == nullptr) {
+				return 1;
+			}
+		}
+		releaseActiveConstrictForSource(pEffect->m_sourceId, pRuntimeEffect, true);
+
+		ExConstrictInfo& constrictInfo = exEffectInfoMap[pRuntimeEffect].constrict;
+		constrictInfo.sourceId = pEffect->m_sourceId;
+		constrictInfo.victimId = pSprite->m_id;
+		constrictInfo.nextEscapeCheck = gameTime + EEEX_ROUND_TICKS;
+		constrictInfo.registered = true;
+		constrictInfo.prematureRelease = false;
+		constrictInfo.driven = drivenApply;
+		constrictInfo.ownedRuntimeEffect = drivenApply;
+		exConstrictEffectBySourceId[pEffect->m_sourceId] = pRuntimeEffect;
+	}
+
+	applyConstrictHold(pEffect, pSprite);
+
+	ExConstrictInfo& constrictInfo = exEffectInfoMap[pRuntimeEffect].constrict;
+	if (!constrictInfo.registered) {
+		return 1;
+	}
+
+	return 1;
+
+	STUTTER_LOG_END
+}
+
+void EEex::Opcode_Hook_Constrict_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Constrict_OnRemove")
+
+	const auto infoIt = exEffectInfoMap.find(pEffect);
+	const bool prematureRelease = infoIt != exEffectInfoMap.end() && infoIt->second.constrict.prematureRelease;
+
+	unregisterConstrictEffect(pEffect);
+
+	if (prematureRelease) {
+		castConstrictOnRemoveSpell(pEffect, pSprite);
+	}
+
+	STUTTER_LOG_END
+}
+
+void EEex::Opcode_Hook_RemoveHold_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_RemoveHold_ApplyEffect")
+
+	releaseConstrictEffectsForVictim(pSprite->m_id, true);
+
+	STUTTER_LOG_END
+}
+
+CGameSprite* EEex::Opcode_Hook_Constrict_ResolveRedirectTarget(CGameSprite* pConstrictor, CGameSprite* pOriginalTarget) {
+
+	STUTTER_LOG_START(CGameSprite*, "EEex::Opcode_Hook_Constrict_ResolveRedirectTarget")
+
+	return resolveConstrictRedirectTarget(pConstrictor, pOriginalTarget);
+
+	STUTTER_LOG_END
+}
+
 //---------------//
-// END New op409 //
+// END New op418 //
 //---------------//
 
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
@@ -3816,6 +4533,10 @@ void EEex::Opcode_Hook_OnCopy(CGameEffect* pSrcEffect, CGameEffect* pDstEffect) 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnCopy")
 
 	exEffectInfoMap[pDstEffect] = exEffectInfoMap[pSrcEffect];
+	exEffectInfoMap[pDstEffect].constrict.registered = false;
+	exEffectInfoMap[pDstEffect].constrict.prematureRelease = false;
+	exEffectInfoMap[pDstEffect].constrict.driven = false;
+	exEffectInfoMap[pDstEffect].constrict.ownedRuntimeEffect = false;
 
 	STUTTER_LOG_END
 }
@@ -3824,6 +4545,7 @@ void EEex::Opcode_Hook_OnDestruct(CGameEffect* pEffect) {
 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnDestruct")
 
+	unregisterConstrictEffect(pEffect);
 	exEffectInfoMap.erase(pEffect);
 
 	STUTTER_LOG_END
@@ -3856,6 +4578,8 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 			tolua_pushusertype(L, pSprite, "CGameSprite");                      // 2 [ ..., EEex_Sprite_LuaHook_SpellDisableStateChanged, pSpriteUD ]
 		});
 	}
+
+	processConstrictEffectsForVictim(pSprite);
 
 	if (!EEex::Opcode_LuaHook_AfterListsResolved_Enabled) {
 		return;
@@ -4013,6 +4737,7 @@ CGameEffectDamage* CGameSprite::Override_Damage(
 	CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing)
 {
 	Item_ability_st *const pAbility = curWeaponIn->GetAbility(curAttackNum);
+	target = EEex::Opcode_Hook_Constrict_ResolveRedirectTarget(target, target);
 	CGameEffectDamage *const pEffect = this->Damage(curWeaponIn, pLauncher, curAttackNum, criticalDamage, type, facing, myFacing, target, lastSwing);
 
 	CItem *const pLeftHandItem = this->m_equipment.m_items[9];
@@ -4116,6 +4841,10 @@ void CGameEffectList::Override_Unmarshal(byte* pData, uint nSize, CGameSprite* p
 void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Action_Hook_OnAfterSpriteStartedAction")
+
+	if (isConstrictHostileAction(pSprite->m_curAction)) {
+		releaseActiveConstrictForSource(pSprite->m_id, nullptr, true);
+	}
 
 	lua_State *const L = luaState();
 
