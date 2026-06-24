@@ -374,7 +374,8 @@ static void applyConstrictHold(CGameEffect* const pEffect, CGameSprite* const pS
 	}
 
 	// Use real op175 logic so the engine owns the exact helpless-state changes.
-	pHoldEffect->m_dWFlags = 0x2; // EA.IDS
+	pHoldEffect->m_dWFlags = 0x2u; // EA.IDS
+	pHoldEffect->m_effectAmount = 0x0; // ANYONE
 	pHoldEffect->virtual_ApplyEffect(pSprite);
 	destroyTemporaryEffect(pHoldEffect);
 }
@@ -619,6 +620,7 @@ static void castConstrictOnRemoveSpell(CGameEffect* const pEffect, CGameSprite* 
 	pApplySpellEffect->m_res2 = "";
 	pApplySpellEffect->m_res3 = "";
 	pApplySpellEffect->m_firstCall = 1;
+	pApplySpellEffect->m_school = 0;
 	pApplySpellEffect->m_secondaryType = 0;
 
 	pApplySpellEffect->virtual_ApplyEffect(pSprite);
@@ -727,6 +729,10 @@ static bool shouldPrematurelyReleaseConstrict(CGameEffect* const pEffect, CGameS
 	}
 
 	if ((pStats->m_generalState & EEEX_STATE_INCAPACITATED_MASK) != 0 || (pSource->m_baseStats.m_generalState & EEEX_STATE_INCAPACITATED_MASK) != 0) {
+		return true;
+	}
+
+	if (pStats->m_bEntangle != 0) {
 		return true;
 	}
 
