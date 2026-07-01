@@ -67,6 +67,11 @@ struct CScreenMap : CBaldurEngine
 	$nobinding $external_implementation void Override_OnLButtonDblClk(CPoint cPoint);
 };
 
+struct CScreenPriestSpell : CBaldurEngine
+{
+	$nobinding int CanCastPriestSpells(CGameSprite* pSprite);
+};
+
 struct CScreenWorld : CBaldurEngine
 {
 	$nobinding $external_implementation void Override_EndDialog(byte bForceExecution, byte fullEnd);

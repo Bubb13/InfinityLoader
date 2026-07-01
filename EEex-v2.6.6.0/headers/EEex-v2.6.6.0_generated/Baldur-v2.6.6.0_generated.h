@@ -157,6 +157,7 @@ struct CSaveGameSlot;
 struct CSavedGamePartyCreature;
 struct CSavedGameStoredLocation;
 struct CScreenMap;
+struct CScreenPriestSpell;
 struct CScreenStore;
 struct CScreenWorld;
 struct CSearchBitmap;
@@ -12825,6 +12826,14 @@ struct CScreenPriestSpell : CBaldurEngine
 	int m_bControlled;
 
 	CScreenPriestSpell() = delete;
+
+	typedef int (__thiscall *type_CanCastPriestSpells)(CScreenPriestSpell* pThis, CGameSprite* pSprite);
+	static type_CanCastPriestSpells p_CanCastPriestSpells;
+
+	int CanCastPriestSpells(CGameSprite* pSprite)
+	{
+		return p_CanCastPriestSpells(this, pSprite);
+	}
 };
 
 struct CScreenJournal : CBaldurEngine

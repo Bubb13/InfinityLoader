@@ -219,6 +219,7 @@ CScreenMap::vtbl* CScreenMap::VFTable;
 CInfCursor::type_SetCursor CInfCursor::p_SetCursor;
 CSpell::type_Construct CSpell::p_Construct;
 CScreenWorld::type_TogglePauseGame CScreenWorld::p_TogglePauseGame;
+CScreenPriestSpell::type_CanCastPriestSpells CScreenPriestSpell::p_CanCastPriestSpells;
 CRuleTables::type_MapCharacterSpecializationToSchool CRuleTables::p_MapCharacterSpecializationToSchool;
 CRuleTables::type_IsProtectedFromSpell CRuleTables::p_IsProtectedFromSpell;
 CNetwork::type_ThreadLoop CNetwork::p_ThreadLoop;
@@ -557,6 +558,7 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CInfCursor::SetCursor"), CInfCursor::p_SetCursor);
 	attemptFillPointer(TEXT("CSpell::Construct"), CSpell::p_Construct);
 	attemptFillPointer(TEXT("CScreenWorld::TogglePauseGame"), CScreenWorld::p_TogglePauseGame);
+	attemptFillPointer(TEXT("CScreenPriestSpell::CanCastPriestSpells"), CScreenPriestSpell::p_CanCastPriestSpells);
 	attemptFillPointer(TEXT("CRuleTables::MapCharacterSpecializationToSchool"), CRuleTables::p_MapCharacterSpecializationToSchool);
 	attemptFillPointer(TEXT("CRuleTables::IsProtectedFromSpell"), CRuleTables::p_IsProtectedFromSpell);
 	attemptFillPointer(TEXT("CNetwork::ThreadLoop"), CNetwork::p_ThreadLoop);

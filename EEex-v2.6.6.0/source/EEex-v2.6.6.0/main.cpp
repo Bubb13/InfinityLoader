@@ -88,6 +88,18 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::GameState_Hook_OnInitialized"), EEex::GameState_Hook_OnInitialized);
 	exportPattern(TEXT("EEex::GameState_Hook_OnAfterGlobalVariablesUnmarshalled"), EEex::GameState_Hook_OnAfterGlobalVariablesUnmarshalled);
 
+	//////////////////////
+	// Priest Spellbook //
+	//////////////////////
+
+	exportPattern(TEXT("EEex::PriestSpell_Hook_OnCanCastPriestSpells"), EEex::PriestSpell_Hook_OnCanCastPriestSpells);
+
+	////////////
+	// Object //
+	////////////
+
+	exportPattern(TEXT("EEex::Object_Hook_ShouldTreatClassAsWildcardMatch"), EEex::Object_Hook_ShouldTreatClassAsWildcardMatch);
+
 	///////////
 	// Stats //
 	///////////
