@@ -1,8 +1,14 @@
 
+#include <algorithm>
+#include <array>
+#include <bitset>
 #include <chrono>
+#include <cctype>
 #include <optional>
 #include <sstream>
+#include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include <mbstring.h>
 
@@ -120,6 +126,14 @@ struct ExScriptData {
 std::unordered_map<void*, ExScriptData> exScriptDataMap{};
 
 ////////////
+// Object //
+////////////
+
+// exClassWildcardMatches[actualClass][requestedClass] is true when X-CLASS.2DA
+// says the requested class wildcard should accept the actual concrete class.
+std::array<std::bitset<256>, 256> exClassWildcardMatches{};
+
+////////////
 // Opcode //
 ////////////
 
@@ -162,6 +176,15 @@ std::unordered_map<uint64_t, ExUUIDData> exUUIDDataMap{};
 ////////////////
 
 uint64_t nextUUID = 0;
+
+//////////////////////
+// Priest Spellbook //
+//////////////////////
+
+// Suppresses the native return hook while the CScreenPriestSpell Lua method is
+// deliberately calling the original engine implementation. This is what makes
+// the common Lua pattern `local old = ...; old(...)` resolve to vanilla behavior.
+thread_local bool exCanCastPriestSpellsBypassLuaOverride = false;
 
 /////////
 // Fix //
@@ -3157,12 +3180,110 @@ void CScreenMap::Override_OnLButtonDblClk(CPoint cPoint) {
 ////////////////
 
 void initStats();
+void initClassWildcards();
+
+static int CScreenPriestSpell_CanCastPriestSpells_Lua(lua_State *const L) {
+
+	CScreenPriestSpell *const self = static_cast<CScreenPriestSpell*>(tolua_tousertype_dynamic(L, 1, nullptr, "CScreenPriestSpell"));
+	if (!self) {
+		tolua_error(L, "invalid 'self' in calling function 'CanCastPriestSpells'", nullptr);
+	}
+
+	// This wrapper is the original method Lua sees before mods replace
+	// CScreenPriestSpell.CanCastPriestSpells. Calling it must not re-enter the
+	// Lua override hook, otherwise `old(...)` would recursively call the modded
+	// method instead of the engine implementation.
+	const bool oldBypass = exCanCastPriestSpellsBypassLuaOverride;
+	exCanCastPriestSpellsBypassLuaOverride = true;
+	const int returnVal = self->CanCastPriestSpells(static_cast<CGameSprite*>(tolua_tousertype_dynamic(L, 2, nullptr, "CGameSprite")));
+	exCanCastPriestSpellsBypassLuaOverride = oldBypass;
+
+	tolua_pushnumber(L, returnVal);
+	return 1;
+}
+
+static void registerPriestSpellEngineLuaBindings() {
+
+	lua_State *const L = luaState();
+
+	// The engine owns the unprefixed CScreenPriestSpell table used by e: UI
+	// calls. Register after that table exists, but before initialized listeners
+	// run so mods can capture and replace the method during initialization.
+	lua_getglobal(L, "CScreenPriestSpell");
+	if (lua_istable(L, -1)) {
+		lua_pushcfunction(L, &CScreenPriestSpell_CanCastPriestSpells_Lua);
+		lua_setfield(L, -2, "CanCastPriestSpells");
+	}
+	lua_pop(L, 1);
+}
+
+int EEex::PriestSpell_Hook_OnCanCastPriestSpells(CScreenPriestSpell *const pScreen, CGameSprite *const pSprite, const int spellListResult) {
+
+	// The hook is placed before the vanilla final general-state mask check.
+	// `spellListResult` is the result of the spell-list/class checks already
+	// performed by the engine; this reproduces the skipped mask check exactly.
+	int result = pSprite != nullptr && (pSprite->m_baseStats.m_generalState & 0x600) == 0
+		? spellListResult
+		: 0;
+
+	if (exCanCastPriestSpellsBypassLuaOverride || pScreen == nullptr) {
+		return result;
+	}
+
+	lua_State *const L = luaState();
+
+	lua_getglobal(L, "CScreenPriestSpell");
+	if (!lua_istable(L, -1)) {
+		lua_pop(L, 1);
+		return result;
+	}
+
+	lua_getfield(L, -1, "CanCastPriestSpells");
+	lua_remove(L, -2);
+
+	const bool bHasOverride =
+		lua_isfunction(L, -1)
+		&& (!lua_iscfunction(L, -1) || lua_tocfunction(L, -1) != &CScreenPriestSpell_CanCastPriestSpells_Lua);
+
+	lua_pop(L, 1);
+
+	if (!bHasOverride) {
+		return result;
+	}
+
+	// While executing the replacement Lua function, any captured call to the
+	// original C function should bypass this hook and return the vanilla result.
+	const bool oldBypass = exCanCastPriestSpellsBypassLuaOverride;
+	exCanCastPriestSpellsBypassLuaOverride = true;
+
+	if (luaCallProtected(L, 3, 1, [&](int) {
+		lua_getglobal(L, "CScreenPriestSpell");
+		lua_getfield(L, -1, "CanCastPriestSpells");
+		lua_remove(L, -2);
+		tolua_pushusertype(L, pScreen, "CScreenPriestSpell");
+		tolua_pushusertype(L, pSprite, "CGameSprite");
+		lua_pushinteger(L, result);
+	})) {
+		if (lua_isboolean(L, -1)) {
+			result = lua_toboolean(L, -1) ? 1 : 0;
+		}
+		else if (lua_isnumber(L, -1)) {
+			result = static_cast<int>(lua_tointeger(L, -1));
+		}
+		lua_pop(L, 1);
+	}
+
+	exCanCastPriestSpellsBypassLuaOverride = oldBypass;
+	return result;
+}
 
 void EEex::GameState_Hook_OnInitialized() {
 
 	STUTTER_LOG_START(void, "EEex::GameState_Hook_OnInitialized")
 
 	initStats();
+	initClassWildcards();
+	registerPriestSpellEngineLuaBindings();
 
 	lua_State *const L = luaState();
 	luaCallProtected(L, 0, 0, [&](int _) {
@@ -3170,6 +3291,28 @@ void EEex::GameState_Hook_OnInitialized() {
 	});
 
 	STUTTER_LOG_END
+}
+
+////////////
+// Object //
+////////////
+
+bool EEex::Object_Hook_ShouldTreatClassAsWildcardMatch(const CAIObjectType *const pActualType, const CAIObjectType *const pRequestedType) {
+
+	if (pActualType == nullptr || pRequestedType == nullptr) {
+		return false;
+	}
+
+	const byte actualClass = pActualType->m_Class;
+	const byte requestedClass = pRequestedType->m_Class;
+
+	if (requestedClass == 0 || actualClass == requestedClass) {
+		return false;
+	}
+
+	// This helper only answers the extension table. The hook falls back to the
+	// engine's native class block for exact matches and hardcoded vanilla groups.
+	return exClassWildcardMatches[actualClass].test(requestedClass);
 }
 
 void addNextUUIDLocal(CVariableHash* pVariables) {
@@ -5269,6 +5412,104 @@ void initStats() {
 		}
 
 		exStatInfoMap.try_emplace(id, min, max, def);
+	}
+}
+
+std::string getNormalizedIDSLabel(const char *const label) {
+
+	std::string normalizedLabel = label != nullptr ? label : "";
+	std::transform(normalizedLabel.begin(), normalizedLabel.end(), normalizedLabel.begin(), [](const unsigned char ch) {
+		return static_cast<char>(std::toupper(ch));
+	});
+
+	return normalizedLabel;
+}
+
+void initClassWildcards() {
+
+	for (auto& matches : exClassWildcardMatches) {
+		matches.reset();
+	}
+
+	EngineVal<CAIIdList> pClassIDS{};
+	pClassIDS->LoadList("CLASS", false);
+
+	std::unordered_map<std::string, int> classIdByLabel{};
+
+	for (const auto* node = pClassIDS->m_idList.m_pNodeHead; node != nullptr; node = node->pNext) {
+
+		CAIId *const pId = node->data;
+		const int id = pId->m_id;
+		const char *const name = pId->m_line.m_pchData;
+
+		if (id < 0 || id > 255) {
+			FPrint("[!][EEex.dll] CLASS.IDS - Ignoring %s(#%d), X-CLASS.2DA only supports byte-sized class ids\n", name, id);
+			continue;
+		}
+
+		classIdByLabel.try_emplace(getNormalizedIDSLabel(name), id);
+	}
+
+	// X-CLASS.2DA is label-driven on both axes. Resolve every visible row and
+	// column through CLASS.IDS so the table remains stable if ids are reordered
+	// or labels differ in case.
+	EngineVal<C2DArray> pXClass2DA{};
+	{
+		const CResRef resref{"X-CLASS"};
+		pXClass2DA->Load(&resref);
+	}
+
+	struct XClassColumn {
+		int classId;
+		std::string label;
+	};
+
+	// Resolve labels through CLASS.IDS instead of assuming any numeric ids.
+	std::vector<XClassColumn> columns{};
+	for (int x = 0; x < pXClass2DA->m_nSizeX; ++x) {
+
+		const char *const columnName = pXClass2DA->m_pNamesX->getReference(x)->m_pchData;
+		const std::string normalizedColumnName = getNormalizedIDSLabel(columnName);
+
+		if (normalizedColumnName.empty()) {
+			continue;
+		}
+
+		if (auto itr = classIdByLabel.find(normalizedColumnName); itr != classIdByLabel.end()) {
+			columns.push_back({itr->second, columnName});
+		}
+		else {
+			FPrint("[!][EEex.dll] X-CLASS.2DA - Ignoring invalid CLASS.IDS column label: \"%s\"\n", columnName);
+		}
+	}
+
+	for (int y = 0; y < pXClass2DA->m_nSizeY; ++y) {
+
+		const char *const rowName = pXClass2DA->m_pNamesY->getReference(y)->m_pchData;
+
+		const auto rowItr = classIdByLabel.find(getNormalizedIDSLabel(rowName));
+		if (rowItr == classIdByLabel.end()) {
+			FPrint("[!][EEex.dll] X-CLASS.2DA - Ignoring invalid CLASS.IDS row label: \"%s\"\n", rowName);
+			continue;
+		}
+
+		const int rowClassId = rowItr->second;
+
+		for (const XClassColumn& column : columns) {
+
+			const CString *const strVal = pXClass2DA->GetAt(column.label.c_str(), rowName);
+			const char *const value = strVal->m_pchData;
+
+			// Only an explicit literal "1" grants a wildcard match. Missing
+			// cells, defaults, "0", and malformed values are intentionally false.
+			if (strcmp(value, "1") == 0) {
+				exClassWildcardMatches[rowClassId].set(column.classId);
+			}
+			else if (strcmp(value, "0") != 0 && strcmp(value, "*") != 0) {
+				FPrint("[!][EEex.dll] X-CLASS.2DA - Invalid %s -> %s value: \"%s\"\n",
+					rowName, column.label.c_str(), value);
+			}
+		}
 	}
 }
 

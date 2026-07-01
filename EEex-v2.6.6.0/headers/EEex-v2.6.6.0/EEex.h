@@ -68,6 +68,18 @@ namespace EEex {
 	void GameState_Hook_OnInitialized();
 	void GameState_Hook_OnAfterGlobalVariablesUnmarshalled();
 
+	//////////////////////
+	// Priest Spellbook //
+	//////////////////////
+
+	int PriestSpell_Hook_OnCanCastPriestSpells(CScreenPriestSpell* pScreen, CGameSprite* pSprite, int spellListResult);
+
+	////////////
+	// Object //
+	////////////
+
+	bool Object_Hook_ShouldTreatClassAsWildcardMatch(const CAIObjectType* pActualType, const CAIObjectType* pRequestedType);
+
 	///////////
 	// Stats //
 	///////////
