@@ -19,6 +19,9 @@ extern type_lua_concat p_lua_concat;
 typedef void (*type_lua_createtable)(lua_State* L, int narr, int nrec);
 extern type_lua_createtable p_lua_createtable;
 
+typedef int (*type_lua_gc)(lua_State* L, int what, int data);
+extern type_lua_gc p_lua_gc;
+
 typedef void (*type_lua_getfield)(lua_State* L, int idx, const char* k);
 extern type_lua_getfield p_lua_getfield;
 

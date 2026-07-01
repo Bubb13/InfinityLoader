@@ -126,6 +126,8 @@ namespace EEex
 	int UncapFPS_BusyWaitThreshold;
 	bool UncapFPS_Enabled;
 	int UncapFPS_FPSLimit;
+	bool UncapFPS_FPSLimitEnabled;
+	int UncapFPS_LuaGCSteps;
 	bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
 
 	// Functions

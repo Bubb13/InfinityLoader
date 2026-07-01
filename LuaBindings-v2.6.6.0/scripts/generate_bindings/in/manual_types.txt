@@ -841,7 +841,7 @@ struct C2DArray : CResHelper<CResText,1012>
 	$constructor_fake Construct();
 	void Destruct();
 
-	int FindColumnLabel(primitive const char* sLabel)
+	int FindColumnLabel(primitive const char* sLabel) const
 	{
 		EngineVal<CString> sLabelUppercase { sLabel };
 		sLabelUppercase->MakeUpper();
@@ -861,7 +861,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return -1;
 	}
 
-	int FindRowLabel(primitive const char* sLabel)
+	int FindRowLabel(primitive const char* sLabel) const
 	{
 		EngineVal<CString> sLabelUppercase { sLabel };
 		sLabelUppercase->MakeUpper();
@@ -881,7 +881,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return -1;
 	}
 
-	$binding_name(GetAtPoint) const CString* GetAt(int x, int y)
+	$binding_name(GetAtPoint) const CString* GetAt(int x, int y) const
 	{
 		if (x >= 0 && x < this->m_nSizeX && y >= 0 && y < this->m_nSizeY)
 		{
@@ -890,7 +890,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return &this->m_default;
 	}
 
-	$binding_name(GetAtLabels) const CString* GetAt(primitive const char* nX, primitive const char* nY)
+	$binding_name(GetAtLabels) const CString* GetAt(primitive const char* nX, primitive const char* nY) const
 	{
 		const int nColumnIndex = this->FindColumnLabel(nX);
 		if (nColumnIndex == -1) return &this->m_default;
@@ -901,7 +901,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return this->GetAt(nColumnIndex, nRowIndex);
 	}
 
-	$binding_name(GetAtCStringLabels) $pattern_name(GetAt(const CString*,const CString*)) const CString* GetAt(const CString* nX, const CString* nY);
+	$binding_name(GetAtCStringLabels) $pattern_name(GetAt(const CString*,const CString*)) const CString* GetAt(const CString* nX, const CString* nY) const;
 	void Load(const CResRef* res);
 };
 
@@ -1620,7 +1620,11 @@ struct CBaldurEngine : CWarp
 
 struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 {
+	$constructor_fake Construct();
+	void Destruct();
 	int GetPixelColor(tagRGBQUAD* color, int x, int y);
+	$binding_name(GetPixelValueOrZero) $pattern_name(GetPixelValue(int,int)) byte GetPixelValue(int x, int y);
+	void SetResRef(const CResRef* cNewResRef, int bSetAutoRequest, int bWarningIfMissing);
 };
 
 struct CVidFont : CResHelper<CResFont,1034>
@@ -1647,6 +1651,7 @@ uiMenu* findMenu(primitive const char* name, int panel, int state);
 int rand();
 void restoreMenuStack();
 void saveMenuStack();
+SDL_VideoDisplay* SDL_GetDisplayForWindow(SDL_Window* window);
 int SDL_GetKeyFromName(primitive const char* name);
 primitive char* __cdecl SDL_GetKeyName(int key);
 uint SDL_GetWindowFlags(SDL_Window* window);
@@ -1674,6 +1679,7 @@ $nobinding void DrawEnable(DrawFeature f);
 $nobinding void DrawEnd();
 $nobinding void DrawEndScaled();
 $nobinding void drawLetters(int X, int Y, int W, const SDL_Rect* rClip, const letter_t* letters, int nletters, int horizontalAlignment, font_t* font, int pointSize, int cursorPosition, int cursor, int selectionStart, int selectionEnd, int nLines, bool inlineColor, int indent, float fOffsetX, float fOffsetY);
+$nobinding bool __cdecl drawMenu(uiMenu* m, const SDL_Rect* window);
 $nobinding void DrawOrtho11Begin();
 $nobinding void DrawOrtho11End();
 $nobinding void DrawPopState();
@@ -1682,6 +1688,7 @@ $pattern_name(DrawQuad(CRect*,CRect*)) void DrawQuad(const CRect* rDest, const C
 $nobinding void drawSlice(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool unused);
 $nobinding void drawSliceSide(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool wide);
 $nobinding void DrawTexCoord(int s, int t);
+$nobinding bool __cdecl drawTop(const SDL_Rect* window);
 $nobinding void __cdecl DrawTransformToScreen(SDL_Rect* w, SDL_Rect* s);
 $nobinding float __cdecl DrawTransformToScreenH(float h);
 $nobinding void DrawVertex(int x, int y);
@@ -1699,6 +1706,7 @@ $nobinding int __cdecl SDL_ShowSimpleMessageBox(uint flags, const char* title, c
 $nobinding void SearchThreadMain();
 $nobinding void uiDrawSlicedRect(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
 $nobinding int uiExecLuaInt(int id);
+$nobinding void __cdecl uiHandleTooltip();
 $nobinding bool uiPop(const char* name);
 $nobinding bool uiPush(const char* name);
 $nobinding void uiSetHidden(bool bHidden);
@@ -1714,6 +1722,8 @@ $nobinding float YScreenToZoomed(float y);
 
 char* afxPchNil;
 $9B9540D9920A90D57A3D80DDD1A70514 capture;
+bool fingerDown;
+uiMenu* g_backgroundMenu;
 RendererType g_drawBackend;
 keyword g_keywords[124];
 lua_State* g_lua;
@@ -1726,6 +1736,7 @@ uiMenu* menuStack[256];
 int nextStackMenuIdx;
 int numMenus;
 CTypedPtrArray<CPtrArray,CRes*> resources;
+$820A8B7015E7E0FD9144A7C186FBF075 tooltip;
 $A92C2F5FC159A4FE55DD6CCAABD58E72 transition;
 const ushort yy_action[1765];
 const ushort yy_default[329];

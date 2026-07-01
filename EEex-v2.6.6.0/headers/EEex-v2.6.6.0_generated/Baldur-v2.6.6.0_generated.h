@@ -196,10 +196,14 @@ struct Item_Header_st;
 struct Item_ability_st;
 struct Item_effect_st;
 union SDL_Event;
+struct SDL_MessageBoxButtonData;
+struct SDL_MessageBoxColorScheme;
 struct SDL_PixelFormat;
 struct SDL_Point;
+struct SDL_PrivateGLESData;
 struct SDL_Rect;
 struct SDL_Surface;
+struct SDL_VideoDevice;
 struct SDL_Window;
 struct STR_RES;
 struct Spell_Header_st;
@@ -257,6 +261,11 @@ struct SDL_Cursor
 	void* driverdata;
 
 	SDL_Cursor() = delete;
+};
+
+struct SDL_PrivateGLESData
+{
+	SDL_PrivateGLESData() = delete;
 };
 
 struct SDL_WindowUserData
@@ -1560,6 +1569,15 @@ struct SDL_version
 	SDL_version() = delete;
 };
 
+struct SDL_MessageBoxColor
+{
+	unsigned __int8 r;
+	unsigned __int8 g;
+	unsigned __int8 b;
+
+	SDL_MessageBoxColor() = delete;
+};
+
 struct SDL_Color
 {
 	unsigned __int8 r;
@@ -2014,6 +2032,31 @@ struct SDL_SysWMmsg
 	SDL_SysWMmsg() = delete;
 };
 
+struct SDL_SysWMinfo
+{
+	union info_t
+	{
+		struct win_t
+		{
+			HWND__* window;
+			HDC__* hdc;
+
+			win_t() = delete;
+		};
+
+		SDL_SysWMinfo::info_t::win_t win;
+		int dummy;
+
+		info_t() = delete;
+	};
+
+	SDL_version version;
+	SDL_SYSWM_TYPE subsystem;
+	SDL_SysWMinfo::info_t info;
+
+	SDL_SysWMinfo() = delete;
+};
+
 struct SDL_SysWMEvent
 {
 	unsigned int type;
@@ -2021,6 +2064,15 @@ struct SDL_SysWMEvent
 	SDL_SysWMmsg* msg;
 
 	SDL_SysWMEvent() = delete;
+};
+
+struct SDL_ShapeDriver
+{
+	SDL_WindowShaper* (__fastcall *CreateShaper)(SDL_Window*);
+	int (__fastcall *SetWindowShape)(SDL_WindowShaper*, SDL_Surface*, SDL_WindowShapeMode*);
+	int (__fastcall *ResizeWindowShape)(SDL_Window*);
+
+	SDL_ShapeDriver() = delete;
 };
 
 struct SDL_QuitEvent
@@ -2098,6 +2150,28 @@ struct SDL_MouseButtonEvent
 	int y;
 
 	SDL_MouseButtonEvent() = delete;
+};
+
+struct SDL_MessageBoxData
+{
+	unsigned int flags;
+	SDL_Window* window;
+	const char* title;
+	const char* message;
+	int numbuttons;
+	const SDL_MessageBoxButtonData* buttons;
+	const SDL_MessageBoxColorScheme* colorScheme;
+
+	SDL_MessageBoxData() = delete;
+};
+
+struct SDL_MessageBoxButtonData
+{
+	unsigned int flags;
+	int buttonid;
+	const char* text;
+
+	SDL_MessageBoxButtonData() = delete;
 };
 
 struct SDL_Keysym
@@ -2189,6 +2263,53 @@ struct SDL_JoyAxisEvent
 	SDL_JoyAxisEvent() = delete;
 };
 
+struct SDL_GLDriverData
+{
+	SDL_bool HAS_WGL_ARB_pixel_format;
+	SDL_bool HAS_WGL_EXT_swap_control_tear;
+	SDL_bool HAS_WGL_EXT_create_context_es2_profile;
+	SDL_bool HAS_WGL_ARB_context_flush_control;
+	void* (__fastcall *wglGetProcAddress)(const char*);
+	HGLRC__* (__fastcall *wglCreateContext)(HDC__*);
+	int (__fastcall *wglDeleteContext)(HGLRC__*);
+	int (__fastcall *wglMakeCurrent)(HDC__*, HGLRC__*);
+	int (__fastcall *wglShareLists)(HGLRC__*, HGLRC__*);
+	int (__fastcall *wglChoosePixelFormatARB)(HDC__*, const int*, const float*, unsigned int, int*, unsigned int*);
+	int (__fastcall *wglGetPixelFormatAttribivARB)(HDC__*, int, int, unsigned int, const int*, int*);
+	int (__fastcall *wglSwapIntervalEXT)(int);
+	int (__fastcall *wglGetSwapIntervalEXT)();
+
+	SDL_GLDriverData() = delete;
+};
+
+struct SDL_EGL_VideoData
+{
+	void* egl_dll_handle;
+	void* dll_handle;
+	void* egl_display;
+	void* egl_config;
+	int egl_swapinterval;
+	void* (__fastcall *eglGetDisplay)(HDC__*);
+	unsigned int (__fastcall *eglInitialize)(void*, int*, int*);
+	unsigned int (__fastcall *eglTerminate)(void*);
+	void* (__fastcall *eglGetProcAddress)(const char*);
+	unsigned int (__fastcall *eglChooseConfig)(void*, const int*, void**, int, int*);
+	void* (__fastcall *eglCreateContext)(void*, void*, void*, const int*);
+	unsigned int (__fastcall *eglDestroyContext)(void*, void*);
+	void* (__fastcall *eglCreateWindowSurface)(void*, void*, HWND__*, const int*);
+	unsigned int (__fastcall *eglDestroySurface)(void*, void*);
+	unsigned int (__fastcall *eglMakeCurrent)(void*, void*, void*, void*);
+	unsigned int (__fastcall *eglSwapBuffers)(void*, void*);
+	unsigned int (__fastcall *eglSwapInterval)(void*, int);
+	const char* (__fastcall *eglQueryString)(void*, int);
+	unsigned int (__fastcall *eglGetConfigAttrib)(void*, void*, int, int*);
+	unsigned int (__fastcall *eglWaitNative)(int);
+	unsigned int (__fastcall *eglWaitGL)();
+	unsigned int (__fastcall *eglBindAPI)(unsigned int);
+
+	SDL_EGL_VideoData() = delete;
+};
+
 struct SDL_DropEvent
 {
 	unsigned int type;
@@ -2221,6 +2342,21 @@ struct SDL_DisplayMode
 	void* driverdata;
 
 	SDL_DisplayMode() = delete;
+};
+
+struct SDL_VideoDisplay
+{
+	char* name;
+	int max_display_modes;
+	int num_display_modes;
+	SDL_DisplayMode* display_modes;
+	SDL_DisplayMode desktop_mode;
+	SDL_DisplayMode current_mode;
+	SDL_Window* fullscreen_window;
+	SDL_VideoDevice* device;
+	void* driverdata;
+
+	SDL_VideoDisplay() = delete;
 };
 
 struct SDL_ControllerDeviceEvent
@@ -3742,6 +3878,19 @@ struct slicedRect
 	}
 };
 
+struct _820A8B7015E7E0FD9144A7C186FBF075
+{
+	SDL_Point pt;
+	bool on;
+	const char* text;
+	SDL_Rect r;
+	int count;
+	const char* lastText;
+	bool playedSound;
+
+	_820A8B7015E7E0FD9144A7C186FBF075() = delete;
+};
+
 struct _9B9540D9920A90D57A3D80DDD1A70514
 {
 	bool (__fastcall *f)(uiMenu*, const SDL_Rect*, SDL_Event*);
@@ -4742,6 +4891,8 @@ namespace EEex
 	extern int UncapFPS_BusyWaitThreshold;
 	extern bool UncapFPS_Enabled;
 	extern int UncapFPS_FPSLimit;
+	extern bool UncapFPS_FPSLimitEnabled;
+	extern int UncapFPS_LuaGCSteps;
 	extern bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
 
 	uiItem* CreateTemplateFromCopy(lua_State* L, const char* menuName, const char* templateName, uiItem* pItem);
@@ -9166,6 +9317,120 @@ struct font_t
 	font_t() = delete;
 };
 
+struct SDL_VideoDevice
+{
+	struct gl_config_t
+	{
+		int red_size;
+		int green_size;
+		int blue_size;
+		int alpha_size;
+		int depth_size;
+		int buffer_size;
+		int stencil_size;
+		int double_buffer;
+		int accum_red_size;
+		int accum_green_size;
+		int accum_blue_size;
+		int accum_alpha_size;
+		int stereo;
+		int multisamplebuffers;
+		int multisamplesamples;
+		int accelerated;
+		int major_version;
+		int minor_version;
+		int flags;
+		int profile_mask;
+		int share_with_current_context;
+		int release_behavior;
+		int framebuffer_srgb_capable;
+		int retained_backing;
+		int driver_loaded;
+		Array<char,256> driver_path;
+		void* dll_handle;
+
+		gl_config_t() = delete;
+	};
+
+	const char* name;
+	int (__fastcall *VideoInit)(SDL_VideoDevice*);
+	void (__fastcall *VideoQuit)(SDL_VideoDevice*);
+	int (__fastcall *GetDisplayBounds)(SDL_VideoDevice*, SDL_VideoDisplay*, SDL_Rect*);
+	int (__fastcall *GetDisplayDPI)(SDL_VideoDevice*, SDL_VideoDisplay*, float*, float*, float*);
+	void (__fastcall *GetDisplayModes)(SDL_VideoDevice*, SDL_VideoDisplay*);
+	int (__fastcall *SetDisplayMode)(SDL_VideoDevice*, SDL_VideoDisplay*, SDL_DisplayMode*);
+	int (__fastcall *CreateWindowA)(SDL_VideoDevice*, SDL_Window*);
+	int (__fastcall *CreateWindowFrom)(SDL_VideoDevice*, SDL_Window*, const void*);
+	void (__fastcall *SetWindowTitle)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *SetWindowIcon)(SDL_VideoDevice*, SDL_Window*, SDL_Surface*);
+	void (__fastcall *SetWindowPosition)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *SetWindowSize)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *SetWindowMinimumSize)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *SetWindowMaximumSize)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *ShowWindow)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *HideWindow)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *RaiseWindow)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *MaximizeWindow)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *MinimizeWindow)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *RestoreWindow)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *SetWindowBordered)(SDL_VideoDevice*, SDL_Window*, SDL_bool);
+	void (__fastcall *SetWindowFullscreen)(SDL_VideoDevice*, SDL_Window*, SDL_VideoDisplay*, SDL_bool);
+	int (__fastcall *SetWindowGammaRamp)(SDL_VideoDevice*, SDL_Window*, const unsigned __int16*);
+	int (__fastcall *GetWindowGammaRamp)(SDL_VideoDevice*, SDL_Window*, wchar_t*);
+	void (__fastcall *SetWindowGrab)(SDL_VideoDevice*, SDL_Window*, SDL_bool);
+	void (__fastcall *DestroyWindow)(SDL_VideoDevice*, SDL_Window*);
+	int (__fastcall *CreateWindowFramebuffer)(SDL_VideoDevice*, SDL_Window*, unsigned int*, void**, int*);
+	int (__fastcall *UpdateWindowFramebuffer)(SDL_VideoDevice*, SDL_Window*, const SDL_Rect*, int);
+	void (__fastcall *DestroyWindowFramebuffer)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *OnWindowEnter)(SDL_VideoDevice*, SDL_Window*);
+	SDL_ShapeDriver shape_driver;
+	SDL_bool (__fastcall *GetWindowWMInfo)(SDL_VideoDevice*, SDL_Window*, SDL_SysWMinfo*);
+	int (__fastcall *GL_LoadLibrary)(SDL_VideoDevice*, const char*);
+	void* (__fastcall *GL_GetProcAddress)(SDL_VideoDevice*, const char*);
+	void (__fastcall *GL_UnloadLibrary)(SDL_VideoDevice*);
+	void* (__fastcall *GL_CreateContext)(SDL_VideoDevice*, SDL_Window*);
+	int (__fastcall *GL_MakeCurrent)(SDL_VideoDevice*, SDL_Window*, void*);
+	void (__fastcall *GL_GetDrawableSize)(SDL_VideoDevice*, SDL_Window*, int*, int*);
+	int (__fastcall *GL_SetSwapInterval)(SDL_VideoDevice*, int);
+	int (__fastcall *GL_GetSwapInterval)(SDL_VideoDevice*);
+	void (__fastcall *GL_SwapWindow)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *GL_DeleteContext)(SDL_VideoDevice*, void*);
+	void (__fastcall *PumpEvents)(SDL_VideoDevice*);
+	void (__fastcall *SuspendScreenSaver)(SDL_VideoDevice*);
+	void (__fastcall *StartTextInput)(SDL_VideoDevice*);
+	void (__fastcall *StopTextInput)(SDL_VideoDevice*);
+	void (__fastcall *SetTextInputRect)(SDL_VideoDevice*, SDL_Rect*);
+	SDL_bool (__fastcall *HasScreenKeyboardSupport)(SDL_VideoDevice*);
+	void (__fastcall *ShowScreenKeyboard)(SDL_VideoDevice*, SDL_Window*);
+	void (__fastcall *HideScreenKeyboard)(SDL_VideoDevice*, SDL_Window*);
+	SDL_bool (__fastcall *IsScreenKeyboardShown)(SDL_VideoDevice*, SDL_Window*);
+	int (__fastcall *SetClipboardText)(SDL_VideoDevice*, const char*);
+	char* (__fastcall *GetClipboardText)(SDL_VideoDevice*);
+	SDL_bool (__fastcall *HasClipboardText)(SDL_VideoDevice*);
+	int (__fastcall *ShowMessageBox)(SDL_VideoDevice*, const SDL_MessageBoxData*, int*);
+	int (__fastcall *SetWindowHitTest)(SDL_Window*, SDL_bool);
+	SDL_bool suspend_screensaver;
+	int num_displays;
+	SDL_VideoDisplay* displays;
+	SDL_Window* windows;
+	SDL_Window* grabbed_window;
+	unsigned __int8 window_magic;
+	unsigned int next_object_id;
+	char* clipboard_text;
+	SDL_VideoDevice::gl_config_t gl_config;
+	SDL_Window* current_glwin;
+	void* current_glctx;
+	unsigned int current_glwin_tls;
+	unsigned int current_glctx_tls;
+	void* driverdata;
+	SDL_GLDriverData* gl_data;
+	SDL_EGL_VideoData* egl_data;
+	SDL_PrivateGLESData* gles_data;
+	void (__fastcall *free)(SDL_VideoDevice*);
+
+	SDL_VideoDevice() = delete;
+};
+
 struct SDL_PixelFormat
 {
 	unsigned int format;
@@ -9189,6 +9454,13 @@ struct SDL_PixelFormat
 	SDL_PixelFormat* next;
 
 	SDL_PixelFormat() = delete;
+};
+
+struct SDL_MessageBoxColorScheme
+{
+	Array<SDL_MessageBoxColor,5> colors;
+
+	SDL_MessageBoxColorScheme() = delete;
 };
 
 template<size_t length>
@@ -9447,6 +9719,9 @@ extern type_restoreMenuStack p_restoreMenuStack;
 typedef void (*type_saveMenuStack)();
 extern type_saveMenuStack p_saveMenuStack;
 
+typedef SDL_VideoDisplay* (*type_SDL_GetDisplayForWindow)(SDL_Window* window);
+extern type_SDL_GetDisplayForWindow p_SDL_GetDisplayForWindow;
+
 typedef int (*type_SDL_GetKeyFromName)(const char* name);
 extern type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
 
@@ -9525,6 +9800,9 @@ extern type_DrawEndScaled p_DrawEndScaled;
 typedef void (*type_drawLetters)(int X, int Y, int W, const SDL_Rect* rClip, const letter_t* letters, int nletters, int horizontalAlignment, font_t* font, int pointSize, int cursorPosition, int cursor, int selectionStart, int selectionEnd, int nLines, bool inlineColor, int indent, float fOffsetX, float fOffsetY);
 extern type_drawLetters p_drawLetters;
 
+typedef bool (__cdecl *type_drawMenu)(uiMenu* m, const SDL_Rect* window);
+extern type_drawMenu p_drawMenu;
+
 typedef void (*type_DrawOrtho11Begin)();
 extern type_DrawOrtho11Begin p_DrawOrtho11Begin;
 
@@ -9548,6 +9826,9 @@ extern type_drawSliceSide p_drawSliceSide;
 
 typedef void (*type_DrawTexCoord)(int s, int t);
 extern type_DrawTexCoord p_DrawTexCoord;
+
+typedef bool (__cdecl *type_drawTop)(const SDL_Rect* window);
+extern type_drawTop p_drawTop;
 
 typedef void (__cdecl *type_DrawTransformToScreen)(SDL_Rect* w, SDL_Rect* s);
 extern type_DrawTransformToScreen p_DrawTransformToScreen;
@@ -9600,6 +9881,9 @@ extern type_uiDrawSlicedRect p_uiDrawSlicedRect;
 typedef int (*type_uiExecLuaInt)(int id);
 extern type_uiExecLuaInt p_uiExecLuaInt;
 
+typedef void (__cdecl *type_uiHandleTooltip)();
+extern type_uiHandleTooltip p_uiHandleTooltip;
+
 typedef bool (*type_uiPop)(const char* name);
 extern type_uiPop p_uiPop;
 
@@ -9626,6 +9910,8 @@ extern type_YScreenToZoomed p_YScreenToZoomed;
 
 extern char** p_afxPchNil;
 extern _9B9540D9920A90D57A3D80DDD1A70514* p_capture;
+extern bool* p_fingerDown;
+extern uiMenu** p_g_backgroundMenu;
 extern RendererType* p_g_drawBackend;
 extern Array<keyword,124>* p_g_keywords;
 extern lua_State** p_g_lua;
@@ -9638,6 +9924,7 @@ extern Array<uiMenu*,256>* p_menuStack;
 extern int* p_nextStackMenuIdx;
 extern int* p_numMenus;
 extern CTypedPtrArray<CPtrArray,CRes*>* p_resources;
+extern _820A8B7015E7E0FD9144A7C186FBF075* p_tooltip;
 extern _A92C2F5FC159A4FE55DD6CCAABD58E72* p_transition;
 extern ConstArray<ushort,1765>* p_yy_action;
 extern ConstArray<ushort,329>* p_yy_default;
@@ -10558,7 +10845,7 @@ struct C2DArray : CResHelper<CResText,1012>
 	typedef void (__thiscall *type_Destruct)(C2DArray* pThis);
 	static type_Destruct p_Destruct;
 
-	typedef const CString* (__thiscall *type_GetAtCStringLabels)(C2DArray* pThis, const CString* nX, const CString* nY);
+	typedef const CString* (__thiscall *type_GetAtCStringLabels)(const C2DArray* pThis, const CString* nX, const CString* nY);
 	static type_GetAtCStringLabels p_GetAtCStringLabels;
 
 	typedef void (__thiscall *type_Load)(C2DArray* pThis, const CResRef* res);
@@ -10574,7 +10861,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		p_Destruct(this);
 	}
 
-	int FindColumnLabel(const char* sLabel)
+	int FindColumnLabel(const char* sLabel) const
 	{
 		EngineVal<CString> sLabelUppercase { sLabel };
 		sLabelUppercase->MakeUpper();
@@ -10594,7 +10881,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return -1;
 	}
 
-	int FindRowLabel(const char* sLabel)
+	int FindRowLabel(const char* sLabel) const
 	{
 		EngineVal<CString> sLabelUppercase { sLabel };
 		sLabelUppercase->MakeUpper();
@@ -10614,7 +10901,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return -1;
 	}
 
-	const CString* GetAt(int x, int y)
+	const CString* GetAt(int x, int y) const
 	{
 		if (x >= 0 && x < this->m_nSizeX && y >= 0 && y < this->m_nSizeY)
 		{
@@ -10623,7 +10910,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return &this->m_default;
 	}
 
-	const CString* GetAt(const char* nX, const char* nY)
+	const CString* GetAt(const char* nX, const char* nY) const
 	{
 		const int nColumnIndex = this->FindColumnLabel(nX);
 		if (nColumnIndex == -1) return &this->m_default;
@@ -10634,7 +10921,7 @@ struct C2DArray : CResHelper<CResText,1012>
 		return this->GetAt(nColumnIndex, nRowIndex);
 	}
 
-	const CString* GetAt(const CString* nX, const CString* nY)
+	const CString* GetAt(const CString* nX, const CString* nY) const
 	{
 		return p_GetAtCStringLabels(this, nX, nY);
 	}
@@ -10877,12 +11164,44 @@ struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 
 	CVidBitmap() = delete;
 
+	typedef void (__thiscall *type_Construct)(CVidBitmap* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Destruct)(CVidBitmap* pThis);
+	static type_Destruct p_Destruct;
+
 	typedef int (__thiscall *type_GetPixelColor)(CVidBitmap* pThis, tagRGBQUAD* color, int x, int y);
 	static type_GetPixelColor p_GetPixelColor;
+
+	typedef byte (__thiscall *type_GetPixelValueOrZero)(CVidBitmap* pThis, int x, int y);
+	static type_GetPixelValueOrZero p_GetPixelValueOrZero;
+
+	typedef void (__thiscall *type_SetResRef)(CVidBitmap* pThis, const CResRef* cNewResRef, int bSetAutoRequest, int bWarningIfMissing);
+	static type_SetResRef p_SetResRef;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
 
 	int GetPixelColor(tagRGBQUAD* color, int x, int y)
 	{
 		return p_GetPixelColor(this, color, x, y);
+	}
+
+	byte GetPixelValue(int x, int y)
+	{
+		return p_GetPixelValueOrZero(this, x, y);
+	}
+
+	void SetResRef(const CResRef* cNewResRef, int bSetAutoRequest, int bWarningIfMissing)
+	{
+		p_SetResRef(this, cNewResRef, bSetAutoRequest, bWarningIfMissing);
 	}
 };
 
