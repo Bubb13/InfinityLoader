@@ -269,7 +269,8 @@ static DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
 		FPrint("[?][InfinityLoaderDLL.dll] findPatterns() - Using cached pattern addresses: %s\n", attemptUseCached ? "true" : "false");
 	}
 
-	DWORD returnVal = 0;
+	DWORD returnVal = ERROR_SUCCESS;
+
 	forEveryINISectionName(dbPath(), [&](const String section) {
 
 		if (section.rfind(TEXT("!"), 0) != std::string::npos) {
@@ -277,8 +278,8 @@ static DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
 		}
 
 		PatternValueHandle patternValue;
-		if (returnVal = findINICategoryPattern(sectionPtr, sectionSize, dbPath(), section.c_str(), patternValue)) {
-			return true;
+		if (const DWORD tempReturnVal = findINICategoryPattern(sectionPtr, sectionSize, dbPath(), section.c_str(), patternValue)) {
+			returnVal = tempReturnVal;
 		}
 
 		return false;
