@@ -1,0 +1,5 @@
+
+struct CGameSprite : CGameAIBase
+{
+	void MakeLocal();
+};

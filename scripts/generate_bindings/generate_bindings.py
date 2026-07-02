@@ -2438,7 +2438,8 @@ class Group:
 							if firstExtendName not in ("uint32_t") and value & 0x80000000 != 0: value = -1 - (0xFFFFFFFF - value)
 							self.enumTuples.append((enumLineMatch.group(1), value))
 						elif firstExtendName in ("__int64", "int64_t", "uint64_t"):
-							value = int(enumLineMatch.group(2), 0)
+							enumLineMatchNoSuffix: Match = re.match("^([_a-zA-Z0-9]+?)(?:LL)?$", enumLineMatch.group(2))
+							value = int(enumLineMatchNoSuffix.group(1), 0)
 							if firstExtendName not in ("uint64_t") and value & 0x8000000000000000 != 0: value = -1 - (0xFFFFFFFFFFFFFFFF - value)
 							self.enumTuples.append((enumLineMatch.group(1), value))
 						else:

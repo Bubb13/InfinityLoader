@@ -80,10 +80,10 @@
     <ClCompile Include="references\source\tolua_reference\tolua_map.c">
       <Filter>References\source\tolua_reference</Filter>
     </ClCompile>
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\lua_bindings-v2.6.6.0.cpp">
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\manual_reimplementations_export.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0</Filter>
     </ClCompile>
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\manual_reimplementations_export.cpp">
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\main.cpp">
       <Filter>Source Files\LuaBindings-v2.6.6.0</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\EEex-v2.7.3.0">
+      <UniqueIdentifier>{964e1b48-86e4-4b98-932d-339fff05857a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EEex-v2.7.3.0\Generated">
+      <UniqueIdentifier>{8612f39b-e4c9-4413-a1e9-bac4680e79b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\EEex-v2.7.3.0">
+      <UniqueIdentifier>{9be16359-4aa4-4e72-9764-fa5ead65c35c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\EEex-v2.7.3.0_generated">
+      <UniqueIdentifier>{2b175408-a190-4c92-847a-74c62509e011}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Module Definition">
+      <UniqueIdentifier>{ebbfcbd4-db88-4415-8133-a65922897a7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Build Tasks">
+      <UniqueIdentifier>{7401bc95-18bd-4d13-b4a5-17df07b7b7f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{f6929204-ca97-478a-84cb-cbaacb13c33d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\EEex-v2.7.3.0_generated">
+      <UniqueIdentifier>{fc9a1cc4-887e-4eaa-89e6-b309c34c02d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EEex-v2.7.3.0">
+      <UniqueIdentifier>{8628c8ae-f701-428e-9c3c-5ab1632fb4ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EEex-v2.7.3.0\Generated">
+      <UniqueIdentifier>{694b4cf8-c393-40c1-b654-9812d1014544}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\EEex-v2.7.3.0\main.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\util.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\common.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\EEex.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\engine_reimplementations.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\visibility_map.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\uncap_fps.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\time_util.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\coordinate_util.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\menu_util.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\lua_util.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\font_util.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\debug.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\profiler.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\engine_function_names.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\Generated\EEexLua_generated.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\Generated\EEexLua_generated_baseclass_offsets.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\Generated\EEexLua_generated.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\Generated\EEexLua_generated_baseclass_offsets.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EEex-v2.7.3.0\Generated\Baldur-v2.7.3.0_generated_internal_pointers.cpp">
+      <Filter>Source Files\EEex-v2.7.3.0\Generated</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\EEex-v2.7.3.0\util.hpp">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\EEexLua_generated.h">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\EEex.h">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\common\eeex_api.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\coordinate_util.hpp">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\time_util.hpp">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\uncap_fps.hpp">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\menu_util.hpp">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\lua_util.hpp">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\font_util.hpp">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\profiler.hpp">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0\engine_function_names.hpp">
+      <Filter>Header Files\EEex-v2.7.3.0</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0_generated\Baldur-v2.7.3.0_lua_generated.h">
+      <Filter>Header Files\EEex-v2.7.3.0_generated</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.7.3.0_generated\Baldur-v2.7.3.0_generated.h">
+      <Filter>Header Files\EEex-v2.7.3.0_generated</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="EEex-v2.7.3.0.def">
+      <Filter>Module Definition</Filter>
+    </None>
+    <None Include="COPY_TO_GAME.ps1">
+      <Filter>Build Tasks</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="source\EEex-v2.7.3.0\profiler_assembly.asm">
+      <Filter>Source Files\EEex-v2.7.3.0</Filter>
+    </MASM>
+  </ItemGroup>
+</Project>

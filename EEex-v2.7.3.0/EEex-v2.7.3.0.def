@@ -1,0 +1,4 @@
+LIBRARY EEex.dll
+EXPORTS
+	InitBindings @1
+	OpenBindings @2

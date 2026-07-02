@@ -1,0 +1,78 @@
+
+#pragma once
+
+#include <map>
+#include <queue>
+#include <vector>
+
+#include <d3dx9.h>
+#include <mbstring.h>
+
+#include "infinity_loader_common_api.h"
+#include "lua_bindings_core_api.h"
+#include "gl/glew.h"
+
+typedef char sbyte;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+
+template<typename T>
+struct hasDestruct {
+	template<typename U>
+	static constexpr auto check(U*) -> decltype(std::declval<U>().Destruct(), false) {
+		return true;
+	}
+	template<typename>
+	static constexpr bool check(...) {
+		return false;
+	}
+	static constexpr bool value = check<T>(nullptr);
+};
+
+template<typename A, bool bDestruct = true>
+struct EngineVal
+{
+
+private:
+
+	union {
+		A val;
+	};
+
+public:
+
+	operator A*() {
+		return &val;
+	}
+
+	operator A() {
+		return val;
+	}
+
+	A* operator->() {
+		return &val;
+	}
+
+	A& operator*() {
+		return val;
+	}
+
+	template<typename... Args>
+	EngineVal(Args&&... args) {
+		val.Construct(std::forward<Args>(args)...);
+	}
+
+	~EngineVal() {
+		if constexpr (bDestruct && hasDestruct<decltype(val)>::value) {
+			val.Destruct();
+		}
+	}
+};
+
+template<typename T, typename... Args>
+T* newEngineObj(Args&&... args) {
+	T* ptr = reinterpret_cast<T*>(p_malloc(sizeof(T)));
+	ptr->Construct(std::forward<Args>(args)...);
+	return ptr;
+}
+

@@ -1,0 +1,235 @@
+
+struct CAICondition
+{
+	$nobinding $external_implementation int Override_Hold(CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+	$nobinding $external_implementation int Override_TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
+};
+
+struct CChitin
+{
+	$nobinding $external_implementation void Override_SynchronousUpdate();
+	$nobinding $external_implementation void Override_Update();
+};
+
+struct CGameAIBase : CGameObject
+{
+	$nobinding $external_implementation void Override_ApplyTriggers();
+	$nobinding $external_implementation void Override_SetTrigger(const CAITrigger* trigger);
+};
+
+struct CGameArea
+{
+	$nobinding $external_implementation void Override_AddClairvoyanceObject(CGameSprite* pSprite, CPoint position, int duration);
+	$nobinding $external_implementation uint Override_GetTintColor(CPoint* cPoint, byte listType);
+	$nobinding $external_implementation void Override_RenderZoomed();
+};
+
+struct CGameEffectList : CTypedPtrList<CPtrList,CGameEffect*>
+{
+	$nobinding $external_implementation void Override_Unmarshal(byte* pData, uint nSize, CGameSprite* pSprite, byte version);
+};
+
+struct CGameEffectUsability : CGameEffect
+{
+	$nobinding $external_implementation int Override_CheckUsability(CGameSprite* pSprite);
+};
+
+struct CGameSprite : CGameAIBase
+{
+	$binding_name(getUUID) $external_implementation uint64_t GetUUID();
+
+	$nobinding $external_implementation void Override_CheckIfVisible();
+	$nobinding $external_implementation CGameEffectDamage* Override_Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
+	$nobinding $external_implementation short Override_SetVisualRange(short newVisualRange);
+};
+
+struct CGameText : CGameObject
+{
+	$nobinding $external_implementation void Override_Render(CGameArea* pArea, CVidMode* pVidMode);
+};
+
+struct CInfinity
+{
+	$nobinding $external_implementation void Override_AdjustViewPosition(byte nScrollState);
+	$nobinding $external_implementation void Override_FitViewPosition(int* pX, int* pY, CRect* pViewPort);
+	$nobinding $external_implementation void Override_SetScrollDest(CPoint* ptDest);
+	$nobinding $external_implementation void Override_Scroll(CPoint ptDest, short speed);
+};
+
+struct CMessageSetLastObject : CMessage
+{
+	$nobinding $external_implementation void Override_Run();
+};
+
+struct CScreenMap : CBaldurEngine
+{
+	$nobinding $external_implementation void Override_CenterViewPort(CPoint* ptPoint);
+	$nobinding $external_implementation void Override_OnLButtonDblClk(CPoint cPoint);
+};
+
+struct CScreenWorld : CBaldurEngine
+{
+	$nobinding $external_implementation void Override_EndDialog(byte bForceExecution, byte fullEnd);
+	$nobinding $external_implementation void Override_ResetZoom();
+	$nobinding $external_implementation void Override_StartScroll(CPoint dest, short speed);
+	$nobinding $external_implementation void Override_ZoomToMap(bool bOverwriteOriginal);
+};
+
+struct CVidPalette
+{
+	$nobinding $external_implementation void Override_RealizeResource3d(uint* pDestPalette, uint dwFlags, CVIDIMG_PALETTEAFFECT* pAffectArgs, uint nTransVal);
+};
+
+struct CVidTile : CVidImage
+{
+	$nobinding $external_implementation void Override_RenderTexture(int nTextureId, CRect* rDest, int x, int y, uint dwFlags);
+};
+
+struct CVisibilityMap
+{
+	$nobinding $external_implementation byte Override_AddCharacter(CPoint* pos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable);
+	$nobinding $external_implementation int Override_IsCharacterIdOnMap(int charId);
+	$nobinding $external_implementation void Override_RemoveCharacter(CPoint* ptOldPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bRemoveCharId);
+	$nobinding $external_implementation void Override_UpDate(CPoint* ptOldPos, CPoint* ptNewPos, int charId, byte* pVisibleTerrainTable, byte visualRange, int* pRemovalTable, byte bForceUpdate);
+};
+
+//////////
+// EEex //
+//////////
+
+namespace EEex
+{
+	///////////////
+	// Non-Bound //
+	///////////////
+
+	// Globals
+	nobinding bool bInTrackedResponse;
+	nobinding bool bNoUUID;
+	nobinding bool bStripUUID;
+	nobinding byte CGameSprite_Hit_Roll;
+
+	///////////
+	// Bound //
+	///////////
+
+	// Globals
+	bool AIBase_LuaHook_OnEventTriggerSet_Enabled;
+	bool Opcode_LuaHook_AfterListsResolved_Enabled;
+	bool Projectile_LuaHook_GlobalMutators_Enabled;
+	bool StutterDetector_Enabled;
+	int UncapFPS_BusyWaitThreshold;
+	bool UncapFPS_Enabled;
+	int UncapFPS_FPSLimit;
+	bool UncapFPS_FPSLimitEnabled;
+	int UncapFPS_LuaGCSteps;
+	bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
+
+	// Functions
+	$external_implementation $pass_lua_state uiItem* CreateTemplateFromCopy(primitive const char* menuName, primitive const char* templateName, uiItem* pItem);
+	$external_implementation $pass_lua_state $custom_return_1 DeepCopy();
+	$external_implementation $pass_lua_state void DrawSlicedRect();
+	$external_implementation $pass_lua_state void DrawSlicedRectNum();
+	$external_implementation $pass_lua_state void DestroyAllTemplates(primitive const char* menuName);
+	$external_implementation $pass_lua_state void ForceScrollbarRenderForItemName();
+	$external_implementation primitive const char* FormatPointerAsEngine(uintptr_t ptr);
+	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);
+	$external_implementation int GetHighestRefreshRate();
+	$external_implementation $custom_return_1 GetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* def);
+	$external_implementation long long GetMicroseconds();
+	$external_implementation $custom_return_3 GetProjectileStartingPos(CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
+	$external_implementation CGameSprite* GetSpriteFromUUID(uint64_t uuid);
+	$external_implementation void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
+	$external_implementation void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
+	$external_implementation $pass_lua_state uiItem* InjectTemplateInstance(primitive const char* menuName, primitive const char* templateName, int instanceId, int x, int y);
+	$external_implementation bool IsDefaultAttackCursor();
+	$external_implementation bool IsMarshallingCopy();
+	$external_implementation bool IsPlayerScript(CAIScript* pScript);
+	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+	$external_implementation $pass_lua_state void RegisterSlicedRect();
+	$external_implementation void SetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* value);
+	$external_implementation void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
+	$external_implementation void SetVSyncEnabled(bool bEnabled, bool bResetDevice);
+	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
+	$external_implementation void UpdateLastScrollTime();
+};
+
+enum EEex::ProjectileType : __int32
+{
+	Unknown                          = 0x1,
+	CProjectile                      = 0x2,     // 0x14059A0E0
+	CProjectileAmbiant               = 0x4,     // 0x14059B460
+	CProjectileArea                  = 0x8,     // 0x14059AD30
+	CProjectileBAM                   = 0x10,    // 0x14059A218
+	//CProjectileCallLightning       = (no dedicated VFTable)
+	//CProjectileCastingGlow         = (no dedicated VFTable)
+	CProjectileChain                 = 0x20,    // 0x14059B590
+	CProjectileColorSpray            = 0x40,    // 0x14059A710
+	CProjectileConeOfCold            = 0x80,    // 0x14059A980
+	CProjectileFall                  = 0x100,   // 0x14059ABF8
+	CProjectileFireHands             = 0x200,   // 0x14059A848
+	CProjectileInstant               = 0x400,   // 0x14059AFA0
+	//CProjectileInvisibleTravelling = (no dedicated VFTable)
+	//CProjectileLightningBolt       = (no dedicated VFTable)
+	//CProjectileLightningBoltGround = (no dedicated VFTable)
+	//CProjectileLightningBounce     = (no dedicated VFTable)
+	//CProjectileLightningStorm      = (no dedicated VFTable)
+	//CProjectileMagicMissileMulti   = (no dedicated VFTable)
+	CProjectileMulti                 = 0x800,   // 0x14059AE68
+	CProjectileMushroom              = 0x1000,  // 0x14059A5D0
+	CProjectileNewScorcher           = 0x2000,  // 0x14059A488
+	CProjectileScorcher              = 0x4000,  // 0x14059A350
+	CProjectileSegment               = 0x8000,  // 0x14059AAB8
+	CProjectileSkyStrike             = 0x10000, // 0x14059B200
+	CProjectileSkyStrikeBAM          = 0x20000, // 0x14059B6C8
+	CProjectileSpellHit              = 0x40000, // 0x14059B330
+	CProjectileTravelDoor            = 0x80000, // 0x14059B0D0
+};
+
+enum EEex_HookIntegrityWatchdogRegister : __int32
+{
+	RAX = 0x1,
+	RBX = 0x2,
+	RCX = 0x4,
+	RDX = 0x8,
+	RBP = 0x10,
+	RSP = 0x20,
+	RSI = 0x40,
+	RDI = 0x80,
+	R8  = 0x100,
+	R9  = 0x200,
+	R10 = 0x400,
+	R11 = 0x800,
+	R12 = 0x10000,
+	R13 = 0x20000,
+	R14 = 0x40000,
+	R15 = 0x80000,
+};
+
+enum EEex_MatchObjectFlags : __int32
+{
+	IGNORE_LOS           = 0x00000001,
+	MATCH_NON_SPRITES    = 0x00000002,
+	IGNORE_INVISIBLE     = 0x00000004,
+	MATCH_INVISIBLE      = 0x00000008,
+	MATCH_SLEEPING       = 0x00000010,
+	MATCH_DEAD           = 0x00000020,
+	MATCH_BACKLIST       = 0x00000040,
+	PRIORITIZE_BACKLIST  = 0x00000080,
+	MATCH_ONLY_BACKLIST  = 0x00000100,
+	FARTHEST             = 0x00000200,
+};
+
+enum EEex_ScriptingObject : __int32
+{
+	ATTACKER    = 0,
+	ORDERED_BY  = 1,
+	HITTER      = 2,
+	HELP        = 3,
+	TRIGGER     = 4,
+	SEEN        = 5,
+	TALKED_TO   = 6,
+	HEARD       = 7,
+	SUMMONED_BY = 8,
+	KILLED      = 9,
+};
