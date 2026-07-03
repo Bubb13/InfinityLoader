@@ -103,6 +103,9 @@ static void exportPatterns() {
 	// Opcode //
 	////////////
 
+	// op12 / damage feedback
+	exportPattern(TEXT("EEex::Damage_Hook_ApplyB3DamageType"), EEex::Damage_Hook_ApplyB3DamageType);
+	exportPattern(TEXT("EEex::Damage_Hook_GetB3DamageFeedback"), EEex::Damage_Hook_GetB3DamageFeedback);
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
 	// op248
@@ -115,6 +118,8 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals"), EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals);
 	// op319
 	exportPattern(TEXT("EEex::Opcode_Hook_Op319_IsInverted"), EEex::Opcode_Hook_Op319_IsInverted);
+	// op332
+	exportPattern(TEXT("EEex::Opcode_Hook_Op332_TryApplyB3SpecificDamageMod"), EEex::Opcode_Hook_Op332_TryApplyB3SpecificDamageMod);
 	// op342
 	exportPattern(TEXT("EEex::Opcode_Hook_Op342_OnUnhandledParam2"), EEex::Opcode_Hook_Op342_OnUnhandledParam2);
 	// New op400
@@ -131,6 +136,8 @@ static void exportPatterns() {
 	// New op409
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_ApplyEffect"), EEex::Opcode_Hook_EnableActionListener_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_OnRemove"), EEex::Opcode_Hook_EnableActionListener_OnRemove);
+	// New op413-416
+	exportPattern(TEXT("EEex::Opcode_Hook_B3DamageResistanceMod_ApplyEffect"), EEex::Opcode_Hook_B3DamageResistanceMod_ApplyEffect);
 
 	exportPattern(TEXT("EEex::Opcode_Hook_OnCopy"), EEex::Opcode_Hook_OnCopy);
 	exportPattern(TEXT("EEex::Opcode_Hook_OnDestruct"), EEex::Opcode_Hook_OnDestruct);

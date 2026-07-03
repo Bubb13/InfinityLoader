@@ -84,6 +84,9 @@ namespace EEex {
 	// Opcode //
 	////////////
 
+	// op12 / damage feedback
+	unsigned __int64 Damage_Hook_ApplyB3DamageType(CGameEffect* pEffect, CGameSprite* pTarget, CGameSprite* pSource, int damage);
+	unsigned __int64 Damage_Hook_GetB3DamageFeedback(CGameEffect* pEffect);
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
 	// op248
@@ -96,6 +99,8 @@ namespace EEex {
 	bool Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals(CGameSprite* pSprite);
 	// op319
 	bool Opcode_Hook_Op319_IsInverted(CGameEffect* pEffect);
+	// op332
+	int Opcode_Hook_Op332_TryApplyB3SpecificDamageMod(CGameEffect* pEffect, CGameSprite* pSprite);
 	// op342
 	void Opcode_Hook_Op342_OnUnhandledParam2(CGameEffect* pEffect, CGameSprite* pSprite);
 	// New op400
@@ -112,6 +117,8 @@ namespace EEex {
 	// New op409
 	int Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
+	// New op413-416
+	int Opcode_Hook_B3DamageResistanceMod_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 
 	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect);
 	int Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite);

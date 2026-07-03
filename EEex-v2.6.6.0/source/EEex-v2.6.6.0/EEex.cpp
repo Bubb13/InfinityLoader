@@ -2,7 +2,9 @@
 #include <chrono>
 #include <optional>
 #include <sstream>
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 #include <mbstring.h>
 
@@ -130,6 +132,126 @@ struct ExEffectInfo {
 };
 
 std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
+
+struct B3DamageTypeInfo {
+	const char* label;
+	// Public DAMAGES.IDS bit. The native hooks currently operate on DMGTYPE.IDS,
+	// but keeping both masks together makes the EEex / IDS / 2DA contract auditable.
+	unsigned int damageMask;
+	unsigned int damageTypeMask;
+	unsigned int resistanceOpcode;
+	unsigned int specificDamageParam2;
+	int resistanceStatId;
+	int specificDamageBonusStatId;
+	// Stored as the public ABGR value; combat-log code below strips the alpha byte
+	// because the engine feedback path expects a 24-bit color in EDI.
+	unsigned int feedbackColor;
+	unsigned int feedbackStrRef;
+};
+
+constexpr unsigned int B3_DMGTYPE_MASKS = 0xF0000000;
+
+B3DamageTypeInfo b3DamageTypeInfos[] = {
+	{"B3_SONIC",          0x1000, 0x10000000, 413, 11, 203, 207, 0xff008aff, 0},
+	{"B3_POSITIVEENERGY", 0x2000, 0x20000000, 414, 12, 204, 208, 0xfff2f2f2, 0},
+	{"B3_NEGATIVEENERGY", 0x4000, 0x40000000, 415, 13, 205, 209, 0xff8a8a8a, 0},
+	{"B3_DIVINE",         0x8000, 0x80000000, 416, 14, 206, 210, 0xff009ad0, 0},
+};
+
+B3DamageTypeInfo* getB3DamageTypeInfoByDamageTypeMask(const unsigned int damageTypeMask) {
+
+	const unsigned int b3Mask = damageTypeMask & B3_DMGTYPE_MASKS;
+
+	// Vanilla op12 combines low-word physical damage bits freely. The new B3 bits
+	// occupy the high word and are intentionally single-choice for this hook; mixed
+	// B3 masks are left to vanilla handling instead of guessing a precedence order.
+	if (b3Mask == 0 || (b3Mask & (b3Mask - 1)) != 0 || b3Mask != damageTypeMask) {
+		return nullptr;
+	}
+
+	for (B3DamageTypeInfo& info : b3DamageTypeInfos) {
+		if (info.damageTypeMask == b3Mask) {
+			return &info;
+		}
+	}
+
+	return nullptr;
+}
+
+B3DamageTypeInfo* getB3DamageTypeInfoByResistanceOpcode(const unsigned int opcode) {
+
+	for (B3DamageTypeInfo& info : b3DamageTypeInfos) {
+		if (info.resistanceOpcode == opcode) {
+			return &info;
+		}
+	}
+
+	return nullptr;
+}
+
+B3DamageTypeInfo* getB3DamageTypeInfoBySpecificDamageParam2(const unsigned int param2) {
+
+	for (B3DamageTypeInfo& info : b3DamageTypeInfos) {
+		if (info.specificDamageParam2 == param2) {
+			return &info;
+		}
+	}
+
+	return nullptr;
+}
+
+int applyExtendedStatModification(CGameEffect* pEffect, CGameSprite* pSprite, const int exStatId, const char* const context) {
+
+	int param1 = pEffect->m_effectAmount;
+	int modType = pEffect->m_dWFlags;
+
+	// Shared op401-style arithmetic:
+	//   param1 -> amount
+	//   param2 -> 0=sum, 1=set, 2=percent
+	// Invalid param2 values are logged but do not halt effect-list processing.
+	ExStatInfo* exStatInfo;
+	if (auto exStatInfoPair = exStatInfoMap.find(exStatId); exStatInfoPair == exStatInfoMap.end()) {
+		FPrint("[!][EEex.dll] %s - Invalid extended stat id value: %d\n", context, exStatId);
+		return 1;
+	}
+	else {
+		exStatInfo = &exStatInfoPair->second;
+	}
+
+	auto& exStatValues = exStatDataMap[&pSprite->m_derivedStats].exStatValues;
+	int newVal;
+
+	switch (modType) {
+		case 0:
+			newVal = clampedSum(exStatValues[exStatId], param1);
+			break;
+		case 1:
+			newVal = param1;
+			break;
+		case 2:
+			newVal = clampedPercent(exStatValues[exStatId], param1);
+			break;
+		default:
+			FPrint("[!][EEex.dll] %s - Invalid param2 (modification type) value: %d\n", context, modType);
+			return 1;
+	}
+
+	exStatValues[exStatId] = clamp(newVal, exStatInfo->min, exStatInfo->max);
+	return 1;
+}
+
+int applyDamagePercentDelta(const int damage, const int percent, const bool subtract) {
+
+	// Specific-damage bonuses and resistances both use percent deltas. Resistance
+	// subtracts the delta; specific damage adds it. Keep the intermediate wide so
+	// large modded values clamp instead of overflowing.
+	const __int64 delta = static_cast<__int64>(damage) * percent / 100;
+	const __int64 adjusted = subtract
+		? static_cast<__int64>(damage) - delta
+		: static_cast<__int64>(damage) + delta;
+
+	return clampToType<int>(adjusted);
+}
 
 ////////////////
 // Projectile //
@@ -3156,12 +3278,14 @@ void __cdecl EEex::Override_uiDoFile(char* fileName) {
 ////////////////
 
 void initStats();
+void initB3DamageTypes();
 
 void EEex::GameState_Hook_OnInitialized() {
 
 	STUTTER_LOG_START(void, "EEex::GameState_Hook_OnInitialized")
 
 	initStats();
+	initB3DamageTypes();
 
 	lua_State *const L = luaState();
 	luaCallProtected(L, 0, 0, [&](int _) {
@@ -3377,6 +3501,46 @@ int EEex::Stats_Hook_OnGettingUnknown(CDerivedStats* pStats, int nStatId) {
 // Opcode //
 ////////////
 
+//-------//
+// op12  //
+//-------//
+
+unsigned __int64 EEex::Damage_Hook_ApplyB3DamageType(CGameEffect* pEffect, CGameSprite* pTarget, CGameSprite* pSource, int damage) {
+
+	const B3DamageTypeInfo* const pInfo = getB3DamageTypeInfoByDamageTypeMask(pEffect->m_dWFlags & 0xFFFF0000);
+
+	// A zero return tells the Lua trampoline to continue through vanilla resistance.
+	// A nonzero return sets the high dword as a handled marker and the low dword as
+	// the replacement signed damage value.
+	if (pInfo == nullptr) {
+		return 0;
+	}
+
+	// The hook site was chosen after vanilla has resolved the source pointer used for
+	// specific-damage bonuses, but before target resistance is applied.
+	if (pSource != nullptr) {
+		damage = applyDamagePercentDelta(damage, EEex::GetExtendedStatValue(pSource, pInfo->specificDamageBonusStatId), false);
+	}
+
+	if (pTarget != nullptr) {
+		damage = applyDamagePercentDelta(damage, EEex::GetExtendedStatValue(pTarget, pInfo->resistanceStatId), true);
+	}
+
+	return (1ull << 32) | static_cast<unsigned int>(damage);
+}
+
+unsigned __int64 EEex::Damage_Hook_GetB3DamageFeedback(CGameEffect* pEffect) {
+
+	const B3DamageTypeInfo* const pInfo = getB3DamageTypeInfoByDamageTypeMask(pEffect->m_dWFlags & 0xFFFF0000);
+
+	// Returning 0 leaves the strref/color loaded by vanilla intact.
+	if (pInfo == nullptr || pInfo->feedbackStrRef == 0) {
+		return 0;
+	}
+
+	return (static_cast<unsigned __int64>(pInfo->feedbackColor & 0xFFFFFF) << 32) | pInfo->feedbackStrRef;
+}
+
 //--------------------------------------------------------//
 // op101 - Allow saving throw BIT23 to bypass opcode #101 //
 //--------------------------------------------------------//
@@ -3531,6 +3695,37 @@ int CGameEffectUsability::Override_CheckUsability(CGameSprite* pSprite) {
 }
 
 //-------//
+// op332 //
+//-------//
+
+int EEex::Opcode_Hook_Op332_TryApplyB3SpecificDamageMod(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	const B3DamageTypeInfo* const pInfo = getB3DamageTypeInfoBySpecificDamageParam2(pEffect->m_dWFlags);
+
+	// Return 0 for vanilla param2 values so the Lua trampoline falls through into the
+	// original op332 table. Only 11-14 are handled here.
+	if (pInfo == nullptr) {
+		return 0;
+	}
+
+	const int exStatId = pInfo->specificDamageBonusStatId;
+	ExStatInfo* exStatInfo;
+
+	if (auto exStatInfoPair = exStatInfoMap.find(exStatId); exStatInfoPair == exStatInfoMap.end()) {
+		FPrint("[!][EEex.dll] op332 (SpecificDamageMod) - Invalid B3 extended stat id value: %d\n", exStatId);
+		return 1;
+	}
+	else {
+		exStatInfo = &exStatInfoPair->second;
+	}
+
+	auto& exStatValues = exStatDataMap[&pSprite->m_derivedStats].exStatValues;
+	const int newVal = clampedSum(exStatValues[exStatId], pEffect->m_effectAmount);
+	exStatValues[exStatId] = clamp(newVal, exStatInfo->min, exStatInfo->max);
+	return 1;
+}
+
+//-------//
 // op342 //
 //-------//
 
@@ -3618,39 +3813,7 @@ int EEex::Opcode_Hook_SetExtendedStat_ApplyEffect(CGameEffect* pEffect, CGameSpr
 
 	STUTTER_LOG_START(int, "EEex::Opcode_Hook_SetExtendedStat_ApplyEffect")
 
-	int param1 = pEffect->m_effectAmount;
-	int modType = pEffect->m_dWFlags;
-	int exStatId = pEffect->m_special;
-
-	ExStatInfo* exStatInfo;
-	if (auto exStatInfoPair = exStatInfoMap.find(exStatId); exStatInfoPair == exStatInfoMap.end()) {
-		FPrint("[!][EEex.dll] op401 (SetExtendedStat) - Invalid special (extended stat id) value: %d\n", exStatId);
-		return 1;
-	}
-	else {
-		exStatInfo = &exStatInfoPair->second;
-	}
-
-	auto& exStatValues = exStatDataMap[&pSprite->m_derivedStats].exStatValues;
-	int newVal;
-
-	switch (modType) {
-		case 0:
-			newVal = clampedSum(exStatValues[exStatId], param1);
-			break;
-		case 1:
-			newVal = param1;
-			break;
-		case 2:
-			newVal = clampedPercent(exStatValues[exStatId], param1);
-			break;
-		default:
-			FPrint("[!][EEex.dll] op401 (SetExtendedStat) - Invalid param2 (modification type) value: %d\n", modType);
-			return 1;
-	}
-
-	exStatValues[exStatId] = clamp(newVal, exStatInfo->min, exStatInfo->max);
-	return 1;
+	return applyExtendedStatModification(pEffect, pSprite, pEffect->m_special, "op401 (SetExtendedStat)");
 
 	STUTTER_LOG_END
 }
@@ -3707,9 +3870,9 @@ void EEex::Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSpr
 	STUTTER_LOG_END
 }
 
-//-----------------//
-// START New op409 //
-//-----------------//
+//-----------//
+// New op409 //
+//-----------//
 
 int EEex::Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
@@ -3736,8 +3899,31 @@ void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGame
 	STUTTER_LOG_END
 }
 
+//-----------//
+// New op413 //
+// New op414 //
+// New op415 //
+// New op416 //
+//-----------//
+
+int EEex::Opcode_Hook_B3DamageResistanceMod_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_B3DamageResistanceMod_ApplyEffect")
+
+	const B3DamageTypeInfo* const pInfo = getB3DamageTypeInfoByResistanceOpcode(pEffect->m_effectId);
+
+	if (pInfo == nullptr) {
+		FPrint("[!][EEex.dll] op413-416 (B3DamageResistanceMod) - Invalid effect id value: %u\n", pEffect->m_effectId);
+		return 1;
+	}
+
+	return applyExtendedStatModification(pEffect, pSprite, pInfo->resistanceStatId, "op413-416 (B3DamageResistanceMod)");
+
+	STUTTER_LOG_END
+}
+
 //---------------//
-// END New op409 //
+// END New op416 //
 //---------------//
 
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
@@ -5302,6 +5488,36 @@ int getExtendedStatField(C2DArray* pXStats2DA, const char* name, int id, const c
 
 	pVal = val;
 	return true;
+}
+
+void initB3DamageTypes() {
+
+	EngineVal<C2DArray> pDamageTypes2DA{};
+	{
+		const CResRef resref{"DMGTYPES"};
+		pDamageTypes2DA->Load(&resref);
+	}
+
+	for (B3DamageTypeInfo& info : b3DamageTypeInfos) {
+
+		const CString *const strVal = pDamageTypes2DA->GetAt("NAME", info.label);
+
+		if (strVal == nullptr) {
+			FPrint("[!][EEex.dll] DMGTYPES.2DA - Missing %s NAME value\n", info.label);
+			continue;
+		}
+
+		// DMGTYPES.2DA owns the localized feedback strref generated by WeiDU.
+		// Resolve it after the game state initializes so reinstalling language data
+		// does not require rebuilding EEex.dll.
+		int val;
+		if (!parseInt(strVal->m_pchData, val)) {
+			FPrint("[!][EEex.dll] DMGTYPES.2DA - Invalid %s NAME value: \"%s\"\n", info.label, strVal->m_pchData);
+			continue;
+		}
+
+		info.feedbackStrRef = static_cast<unsigned int>(val);
+	}
 }
 
 void initStats() {
