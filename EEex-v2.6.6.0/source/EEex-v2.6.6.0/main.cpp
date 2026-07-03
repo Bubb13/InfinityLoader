@@ -131,6 +131,11 @@ static void exportPatterns() {
 	// New op409
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_ApplyEffect"), EEex::Opcode_Hook_EnableActionListener_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_OnRemove"), EEex::Opcode_Hook_EnableActionListener_OnRemove);
+	// New op418
+	exportPattern(TEXT("EEex::Opcode_Hook_Constrict_ApplyEffect"), EEex::Opcode_Hook_Constrict_ApplyEffect);
+	exportPattern(TEXT("EEex::Opcode_Hook_Constrict_OnRemove"), EEex::Opcode_Hook_Constrict_OnRemove);
+	exportPattern(TEXT("EEex::Opcode_Hook_RemoveHold_ApplyEffect"), EEex::Opcode_Hook_RemoveHold_ApplyEffect);
+	exportPattern(TEXT("EEex::Opcode_Hook_Constrict_ResolveRedirectTarget"), EEex::Opcode_Hook_Constrict_ResolveRedirectTarget);
 
 	exportPattern(TEXT("EEex::Opcode_Hook_OnCopy"), EEex::Opcode_Hook_OnCopy);
 	exportPattern(TEXT("EEex::Opcode_Hook_OnDestruct"), EEex::Opcode_Hook_OnDestruct);
