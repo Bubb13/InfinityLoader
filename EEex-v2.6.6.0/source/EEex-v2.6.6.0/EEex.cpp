@@ -4042,14 +4042,12 @@ static short findAttackOnceEquipmentSlot(CGameSprite* const pSprite, CItem* cons
 static bool isAttackOnceConsumableRangedStack(Item_ability_st* const pAbility) {
 
 	constexpr ushort ITEM_ABILITY_TYPE_RANGED = 2;
-	constexpr ushort ITEM_ABILITY_USAGE_BIT3_SKIP_CONSUMPTION = 0x8; // the so-called "Item recharges" flag (see f.i. Quiver of Plenty +1)
 
-	// AttackOnce only spends finite ranged stacks. usageFlags bit 3 is an
-	// explicit opt-out for abilities that should display as ranged but not
-	// consume their selected stack entry through this action.
+	// AttackOnce only spends finite ranged stacks
 	return pAbility != nullptr &&
 		pAbility->type == ITEM_ABILITY_TYPE_RANGED &&
-		(pAbility->usageFlags & ITEM_ABILITY_USAGE_BIT3_SKIP_CONSUMPTION) == 0;
+		pAbility->maxUsageCount > 0u &&
+		(pAbility->usageFlags == 1u || pAbility->usageFlags == 2u); // skip the so-called "Item recharges" flags (see f.i. Quiver of Plenty +1)
 }
 
 static void notifyAttackOnceQuickLists(CGameSprite* const pSprite, CItem* const pItem, const short slotNum, const short abilityNum, Item_ability_st* const pAbility) {
