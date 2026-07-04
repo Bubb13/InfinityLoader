@@ -4907,6 +4907,8 @@ namespace EEex
 	long long GetMicroseconds();
 	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	CGameSprite* GetSpriteFromUUID(uint64_t uuid);
+	void StartAttackOnce(CGameSprite* pSprite, CGameObject* pTarget, int baseAttackRollMod, int overrideBaseDamageRoll, int consumeAmmo);
+	void ClearAttackOnce(CGameSprite* pSprite);
 	void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
 	void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
 	uiItem* InjectTemplateInstance(lua_State* L, const char* menuName, const char* templateName, int instanceId, int x, int y);

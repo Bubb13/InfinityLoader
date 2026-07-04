@@ -128,6 +128,10 @@ namespace EEex {
 	void Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite);
 	void Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite);
 	byte Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttacks);
+	short Sprite_Hook_AttackOnceGetBaseAttackRoll(CGameSprite* pSprite, CGameSprite* pTarget, short attackRoll);
+	void Sprite_Hook_AttackOnceConsumeAmmoForRoll(CGameSprite* pSprite, CGameSprite* pTarget, CItem* pWeapon, int abilityNum);
+	int Sprite_Hook_AttackOnceGetDamageRoll(CGameSprite* pSprite, CGameSprite* pTarget, short damageRoll, int useDamageModifiers);
+	bool Sprite_Hook_AttackOnceShouldEndAction(CGameSprite* pSprite);
 
 	////////////
 	// Action //

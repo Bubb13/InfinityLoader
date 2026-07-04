@@ -141,11 +141,32 @@ std::unordered_map<uintptr_t, std::pair<const char*, EEex::ProjectileType>> proj
 // Sprite //
 ////////////
 
+// Transient action-480 state. EEex_AttackOnce delegates targeting, movement,
+// animation, projectiles, and interruption to vanilla Attack(), so this state
+// only bridges that vanilla action until the first real Hit() roll is observed.
+struct ExAttackOnceState {
+	bool active = false;
+	// Set by the first matching Hit() roll, regardless of hit or miss.
+	bool consumed = false;
+	// Prevents recursive / duplicate SetCurrAction() calls from same-swing hooks.
+	bool endRequested = false;
+	// m_specificID3 gate: spend one finite ranged stack use on the first roll.
+	bool consumeAmmo = false;
+	bool ammoConsumed = false;
+	// -1 means "latch the first sprite vanilla Attack() actually rolls against."
+	int targetId = -1;
+	// Applied directly to the raw d20 roll, then clamped to the engine d20 range.
+	int baseAttackRollMod = 0;
+	// Overrides only the base weapon roll; mitigation and later damage handling remain vanilla.
+	int overrideBaseDamageRoll = 0;
+};
+
 struct ExSpriteData {
 
 	EngineVal<CVidBitmap> combatRoundsOverride[5]{};
 	Array<int, 3> oldDisabledSpellTypes;
 	int oldDisableSpells = 0;
+	ExAttackOnceState attackOnce;
 	uint64_t uuid = 0;
 
 	ExSpriteData() {
@@ -3873,6 +3894,310 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 // Sprite //
 ////////////
 
+static ExAttackOnceState* getAttackOnceState(CGameSprite* pSprite) {
+
+	if (pSprite == nullptr) {
+		return nullptr;
+	}
+
+	if (auto itr = exSpriteDataMap.find(pSprite); itr != exSpriteDataMap.end()) {
+		return &itr->second.attackOnce;
+	}
+
+	return nullptr;
+}
+
+static ExAttackOnceState* getMatchingAttackOnceState(CGameSprite* pSprite, CGameSprite* pTarget) {
+
+	if (pTarget == nullptr) {
+		return nullptr;
+	}
+
+	ExAttackOnceState* const pState = getAttackOnceState(pSprite);
+	if (pState != nullptr && pState->active && pState->targetId == -1) {
+		// Script target resolution can be indirect when the action is armed.
+		// Latch the first concrete Hit() target so invalid/out-of-range targets
+		// continue to behave exactly like vanilla Attack() until a roll happens.
+		pState->targetId = pTarget->m_id;
+		return pState;
+	}
+
+	if (pState != nullptr && pState->active && pState->targetId == pTarget->m_id) {
+		return pState;
+	}
+
+	return nullptr;
+}
+
+static bool attackOnceTargetMatches(const ExAttackOnceState& state, CGameSprite* pTarget) {
+
+	return state.targetId == -1 || (pTarget != nullptr && state.targetId == pTarget->m_id);
+}
+
+static ExAttackOnceState* getDamageAttackOnceState(CGameSprite* pSprite, CGameSprite* pTarget) {
+
+	ExAttackOnceState* const pState = getAttackOnceState(pSprite);
+	if (pState != nullptr && pState->active && pState->consumed && attackOnceTargetMatches(*pState, pTarget)) {
+		return pState;
+	}
+
+	return nullptr;
+}
+
+struct ExAttackOnceDamageContext {
+	bool active = false;
+	CGameSprite* attacker = nullptr;
+	CGameSprite* target = nullptr;
+	int overrideBaseDamageRoll = 0;
+};
+
+static thread_local ExAttackOnceDamageContext exAttackOnceDamageContext{};
+
+// Damage() is reached through Override_Damage(), after the Hit() hook may have
+// already ended the Attack action. This scoped context identifies the nested
+// weapon-damage construction without depending on the current script action.
+struct ScopedAttackOnceDamageContext {
+	ExAttackOnceDamageContext previousContext;
+
+	ScopedAttackOnceDamageContext(CGameSprite* pAttacker, CGameSprite* pTarget, ExAttackOnceState* pState)
+		: previousContext(exAttackOnceDamageContext)
+	{
+		if (pState != nullptr) {
+			exAttackOnceDamageContext.active = true;
+			exAttackOnceDamageContext.attacker = pAttacker;
+			exAttackOnceDamageContext.target = pTarget;
+			exAttackOnceDamageContext.overrideBaseDamageRoll = pState->overrideBaseDamageRoll;
+		}
+		else {
+			exAttackOnceDamageContext = {};
+		}
+	}
+
+	~ScopedAttackOnceDamageContext() {
+		exAttackOnceDamageContext = previousContext;
+	}
+
+	bool active() const {
+		return exAttackOnceDamageContext.active;
+	}
+
+	int overrideBaseDamageRoll() const {
+		return exAttackOnceDamageContext.overrideBaseDamageRoll;
+	}
+};
+
+static void requestAttackOnceActionEnd(CGameSprite* pSprite, ExAttackOnceState& state) {
+
+	if (state.endRequested) {
+		return;
+	}
+
+	// End the current Attack action after the first real roll. The consumed
+	// AttackOnce state intentionally remains until the next non-NoAction so any
+	// same-swing Hit() callsites are still skipped by the pre-call hook.
+	ExAttackOnceState preservedState = state;
+	preservedState.endRequested = true;
+
+	CPoint dummyPoint { -1, -1 };
+	EngineVal<CAIAction> noAction { 0, &dummyPoint, 0, -1 };
+	pSprite->virtual_SetCurrAction(&*noAction);
+	pSprite->m_curAction.m_actionID = 0;
+
+	// SetCurrAction has generic Lua cleanup hooks. Preserve AttackOnce until the
+	// next real action starts so remaining Swing() damage / Hit() callsites still
+	// observe the consumed state.
+	state = preservedState;
+}
+
+static ushort* getAttackOnceAbilityUseCount(CItem* const pItem, const int abilityNum) {
+
+	if (pItem == nullptr) {
+		return nullptr;
+	}
+
+	switch (abilityNum) {
+		case 0: return &pItem->m_useCount1;
+		case 1: return &pItem->m_useCount2;
+		case 2: return &pItem->m_useCount3;
+		default: return nullptr;
+	}
+}
+
+static short findAttackOnceEquipmentSlot(CGameSprite* const pSprite, CItem* const pItem) {
+
+	if (pSprite == nullptr || pItem == nullptr) {
+		return -1;
+	}
+
+	constexpr int EQUIPMENT_SLOT_COUNT = 39;
+	for (short slotNum = 0; slotNum < EQUIPMENT_SLOT_COUNT; ++slotNum) {
+		if (pSprite->m_equipment.m_items[slotNum] == pItem) {
+			return slotNum;
+		}
+	}
+
+	return -1;
+}
+
+static bool isAttackOnceConsumableRangedStack(Item_ability_st* const pAbility) {
+
+	constexpr ushort ITEM_ABILITY_TYPE_RANGED = 2;
+	constexpr ushort ITEM_ABILITY_USAGE_BIT3_SKIP_CONSUMPTION = 0x8; // the so-called "Item recharges" flag (see f.i. Quiver of Plenty +1)
+
+	// AttackOnce only spends finite ranged stacks. usageFlags bit 3 is an
+	// explicit opt-out for abilities that should display as ranged but not
+	// consume their selected stack entry through this action.
+	return pAbility != nullptr &&
+		pAbility->type == ITEM_ABILITY_TYPE_RANGED &&
+		(pAbility->usageFlags & ITEM_ABILITY_USAGE_BIT3_SKIP_CONSUMPTION) == 0;
+}
+
+static void notifyAttackOnceQuickLists(CGameSprite* const pSprite, CItem* const pItem, const short slotNum, const short abilityNum, Item_ability_st* const pAbility) {
+
+	if (pSprite == nullptr || pItem == nullptr || pAbility == nullptr) {
+		return;
+	}
+
+	EngineVal<CAbilityId> abilityId{};
+	// CGameSprite::CheckQuickLists() treats type 2 as an equipment item. It
+	// matches quick weapons/items by equipment slot and ability index, which is
+	// the same identity we just decremented on the CItem.
+	constexpr short CABILITYID_ITEM_TYPE_ITEM = 2;
+	abilityId->m_itemType = CABILITYID_ITEM_TYPE_ITEM;
+	abilityId->m_itemNum = slotNum;
+	abilityId->m_abilityNum = abilityNum;
+	abilityId->m_res.copy(&pItem->cResRef);
+	abilityId->m_targetType = pAbility->actionType;
+	abilityId->m_targetCount = pAbility->actionCount;
+	// CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero
+	pSprite->CheckQuickLists(&*abilityId, -1, 0, 0);
+}
+
+static void consumeAttackOnceAmmoIfNeeded(CGameSprite* const pSprite, ExAttackOnceState& state, CItem* const pWeapon, const int abilityNum) {
+
+	if (pSprite == nullptr || pWeapon == nullptr || !state.consumeAmmo || state.ammoConsumed) {
+		return;
+	}
+
+	if (abilityNum < 0 || abilityNum > 2 || abilityNum >= pWeapon->m_nAbilities) {
+		return;
+	}
+
+	Item_ability_st* const pAbility = pWeapon->GetAbility(abilityNum);
+	ushort* const pUseCount = getAttackOnceAbilityUseCount(pWeapon, abilityNum);
+	if (pAbility == nullptr || pUseCount == nullptr || *pUseCount == 0) {
+		return;
+	}
+
+	// Swing() passes the resolved weapon stack into Hit(): launcher attacks use
+	// the ammo item here, while no-launcher ranged stacks cover thrown weapons.
+	if (!isAttackOnceConsumableRangedStack(pAbility)) {
+		return;
+	}
+
+	--(*pUseCount);
+	// Mark only after a real decrement so a failed / empty / opt-out ability can
+	// still be retried by a later matching roll path without underflowing counts.
+	state.ammoConsumed = true;
+	notifyAttackOnceQuickLists(pSprite, pWeapon, findAttackOnceEquipmentSlot(pSprite, pWeapon), static_cast<short>(abilityNum), pAbility);
+}
+
+void EEex::StartAttackOnce(CGameSprite* pSprite, CGameObject* pTarget, int baseAttackRollMod, int overrideBaseDamageRoll, int consumeAmmo) {
+
+	if (pSprite == nullptr) {
+		return;
+	}
+
+	ExAttackOnceState& state = exSpriteDataMap[pSprite].attackOnce;
+	state = ExAttackOnceState{};
+	state.active = true;
+	state.targetId = -1;
+	state.baseAttackRollMod = baseAttackRollMod;
+	state.overrideBaseDamageRoll = max(0, overrideBaseDamageRoll);
+	state.consumeAmmo = consumeAmmo != 0;
+
+	if (pTarget != nullptr && pTarget->m_objectType == CGameObjectType::SPRITE) {
+		// Direct sprite targets can be stored immediately. Object selectors keep
+		// targetId = -1 and are latched at the first real Hit() call.
+		state.targetId = pTarget->m_id;
+	}
+}
+
+void EEex::ClearAttackOnce(CGameSprite* pSprite) {
+
+	if (ExAttackOnceState* const pState = getAttackOnceState(pSprite)) {
+		*pState = ExAttackOnceState{};
+	}
+}
+
+short EEex::Sprite_Hook_AttackOnceGetBaseAttackRoll(CGameSprite* pSprite, CGameSprite* pTarget, short attackRoll) {
+
+	ExAttackOnceState* const pState = getMatchingAttackOnceState(pSprite, pTarget);
+	if (pState == nullptr) {
+		return attackRoll;
+	}
+
+	const short modifiedAttackRoll = static_cast<short>(min(20, max(1, static_cast<int>(attackRoll) + pState->baseAttackRollMod)));
+	pState->consumed = true;
+	requestAttackOnceActionEnd(pSprite, *pState);
+	return modifiedAttackRoll;
+}
+
+void EEex::Sprite_Hook_AttackOnceConsumeAmmoForRoll(CGameSprite* pSprite, CGameSprite* pTarget, CItem* pWeapon, int abilityNum) {
+
+	ExAttackOnceState* const pState = getMatchingAttackOnceState(pSprite, pTarget);
+	if (pState == nullptr || pState->consumed) {
+		return;
+	}
+
+	// This hook runs immediately before the engine calls Hit(), when Swing() has
+	// already resolved launcher ammo vs. thrown/self-consuming weapons into
+	// pWeapon / abilityNum but before the later roll hook marks the action consumed.
+	consumeAttackOnceAmmoIfNeeded(pSprite, *pState, pWeapon, abilityNum);
+}
+
+static int packAttackOnceDamageRollResult(short damageRoll, int useDamageModifiers) {
+
+	// The Lua hook receives both values through eax: low word = roll to put back
+	// in si, high word = whether r12's modifier/detail branch should stay live.
+	return (useDamageModifiers != 0 ? 1 << 16 : 0) | static_cast<unsigned short>(damageRoll);
+}
+
+int EEex::Sprite_Hook_AttackOnceGetDamageRoll(CGameSprite* pSprite, CGameSprite* pTarget, short damageRoll, int useDamageModifiers) {
+
+	int overrideBaseDamageRoll = 0;
+	bool hasOverride = false;
+
+	if (
+		exAttackOnceDamageContext.active &&
+		exAttackOnceDamageContext.attacker == pSprite &&
+		(exAttackOnceDamageContext.target == nullptr || exAttackOnceDamageContext.target == pTarget)
+	) {
+		overrideBaseDamageRoll = exAttackOnceDamageContext.overrideBaseDamageRoll;
+		hasOverride = true;
+	}
+	else if (ExAttackOnceState* const pState = getDamageAttackOnceState(pSprite, pTarget)) {
+		overrideBaseDamageRoll = pState->overrideBaseDamageRoll;
+		hasOverride = true;
+	}
+
+	if (!hasOverride) {
+		return packAttackOnceDamageRollResult(damageRoll, useDamageModifiers);
+	}
+
+	// Keep the engine's modifier/detail branch enabled even for zero so the
+	// combat log only changes the displayed base weapon roll. The final
+	// zero-damage override is enforced after Damage() returns.
+	const short overrideRoll = clampToType<short>(overrideBaseDamageRoll);
+	return packAttackOnceDamageRollResult(overrideRoll, 1);
+}
+
+bool EEex::Sprite_Hook_AttackOnceShouldEndAction(CGameSprite* pSprite) {
+
+	ExAttackOnceState* const pState = getAttackOnceState(pSprite);
+	return pState != nullptr && pState->active && pState->consumed;
+}
+
 void EEex::Sprite_Hook_OnConstruct(CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnConstruct")
@@ -4013,7 +4338,26 @@ CGameEffectDamage* CGameSprite::Override_Damage(
 	CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing)
 {
 	Item_ability_st *const pAbility = curWeaponIn->GetAbility(curAttackNum);
-	CGameEffectDamage *const pEffect = this->Damage(curWeaponIn, pLauncher, curAttackNum, criticalDamage, type, facing, myFacing, target, lastSwing);
+	ExAttackOnceState* const pAttackOnceState = getDamageAttackOnceState(this, target);
+	CGameEffectDamage* pEffect = nullptr;
+
+	{
+		// Swing() is patched to call this wrapper, which then calls the real
+		// Damage(). Keep the AttackOnce damage override in a scoped context so
+		// the inner Damage() hook can always identify this exact weapon-damage
+		// construction, even after the action has already been ended.
+		ScopedAttackOnceDamageContext attackOnceDamageContext { this, target, pAttackOnceState };
+		pEffect = this->Damage(curWeaponIn, pLauncher, curAttackNum, criticalDamage, type, facing, myFacing, target, lastSwing);
+
+		if (pEffect != nullptr && attackOnceDamageContext.active() && attackOnceDamageContext.overrideBaseDamageRoll() == 0) {
+			// A zero override means "no weapon damage from this swing", so clear
+			// any downstream STR/proficiency/effect bonuses that Damage() added.
+			pEffect->m_effectAmount = 0;
+			pEffect->m_numDice = 0;
+			pEffect->m_diceSize = 0;
+		}
+
+	}
 
 	CItem *const pLeftHandItem = this->m_equipment.m_items[9];
 	const bool isLeftHand = lastSwing && pLeftHandItem != nullptr && pLeftHandItem->pRes->pHeader->itemType != 12;
