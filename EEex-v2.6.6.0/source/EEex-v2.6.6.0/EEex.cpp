@@ -157,7 +157,8 @@ struct ExAttackOnceState {
 	int targetId = -1;
 	// Applied directly to the raw d20 roll, then clamped to the engine d20 range.
 	int baseAttackRollMod = 0;
-	// Overrides only the base weapon roll; mitigation and later damage handling remain vanilla.
+	// <0 keeps vanilla weapon roll / feedback; 0 forces zero weapon damage;
+	// >0 replaces only the base weapon roll before normal mitigation.
 	int overrideBaseDamageRoll = 0;
 };
 
@@ -4111,7 +4112,7 @@ void EEex::StartAttackOnce(CGameSprite* pSprite, CGameObject* pTarget, int baseA
 	state.active = true;
 	state.targetId = -1;
 	state.baseAttackRollMod = baseAttackRollMod;
-	state.overrideBaseDamageRoll = max(0, overrideBaseDamageRoll);
+	state.overrideBaseDamageRoll = overrideBaseDamageRoll;
 	state.consumeAmmo = consumeAmmo != 0;
 
 	if (pTarget != nullptr && pTarget->m_objectType == CGameObjectType::SPRITE) {
@@ -4183,9 +4184,14 @@ int EEex::Sprite_Hook_AttackOnceGetDamageRoll(CGameSprite* pSprite, CGameSprite*
 		return packAttackOnceDamageRollResult(damageRoll, useDamageModifiers);
 	}
 
-	// Keep the engine's modifier/detail branch enabled even for zero so the
-	// combat log only changes the displayed base weapon roll. The final
-	// zero-damage override is enforced after Damage() returns.
+	if (overrideBaseDamageRoll < 0) {
+		return packAttackOnceDamageRollResult(damageRoll, useDamageModifiers);
+	}
+
+	// For non-negative overrides, replace the displayed / actual base roll. Keep
+	// the engine's modifier/detail branch enabled even for zero so feedback still
+	// shows vanilla non-roll contributions; final zero damage is enforced after
+	// Damage() returns.
 	const short overrideRoll = clampToType<short>(overrideBaseDamageRoll);
 	return packAttackOnceDamageRollResult(overrideRoll, 1);
 }
