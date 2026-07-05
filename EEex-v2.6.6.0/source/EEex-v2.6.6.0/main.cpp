@@ -147,6 +147,10 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Sprite_Hook_OnAfterEffectListUnmarshalled"), EEex::Sprite_Hook_OnAfterEffectListUnmarshalled);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeEffectListMarshalled"), EEex::Sprite_Hook_OnBeforeEffectListMarshalled);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnGetAttackFrameType"), EEex::Sprite_Hook_OnGetAttackFrameType);
+	exportPattern(TEXT("EEex::Sprite_Hook_AttackOnceGetBaseAttackRoll"), EEex::Sprite_Hook_AttackOnceGetBaseAttackRoll);
+	exportPattern(TEXT("EEex::Sprite_Hook_AttackOnceConsumeAmmoForRoll"), EEex::Sprite_Hook_AttackOnceConsumeAmmoForRoll);
+	exportPattern(TEXT("EEex::Sprite_Hook_AttackOnceGetDamageRoll"), EEex::Sprite_Hook_AttackOnceGetDamageRoll);
+	exportPattern(TEXT("EEex::Sprite_Hook_AttackOnceShouldEndAction"), EEex::Sprite_Hook_AttackOnceShouldEndAction);
 
 	////////////
 	// Action //

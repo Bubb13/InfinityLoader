@@ -267,6 +267,18 @@ static int tolua_function_EEex_GetSpriteFromUUID(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_StartAttackOnce(lua_State* L)
+{
+	EEex::StartAttackOnce((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"), (CGameObject*)tolua_tousertype_dynamic(L, 2, 0, "CGameObject"), tolua_function_tointeger<int>(L, 3, "StartAttackOnce"), tolua_function_tointeger<int>(L, 4, "StartAttackOnce"), tolua_function_tointeger<int>(L, 5, "StartAttackOnce"));
+	return 0;
+}
+
+static int tolua_function_EEex_ClearAttackOnce(lua_State* L)
+{
+	EEex::ClearAttackOnce((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"));
+	return 0;
+}
+
 static int tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters(lua_State* L)
 {
 	EEex::HookIntegrityWatchdogIgnoreRegisters(tolua_function_tointeger<uintptr_t>(L, 1, "HookIntegrityWatchdogIgnoreRegisters"), tolua_function_tointeger<size_t>(L, 2, "HookIntegrityWatchdogIgnoreRegisters"), (EEex_HookIntegrityWatchdogRegister)tolua_function_tointeger<__int32>(L, 3, "HookIntegrityWatchdogIgnoreRegisters"));
@@ -946,6 +958,8 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "GetMicroseconds", &tolua_function_EEex_GetMicroseconds);
 		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
 		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
+		tolua_function(L, "StartAttackOnce", &tolua_function_EEex_StartAttackOnce);
+		tolua_function(L, "ClearAttackOnce", &tolua_function_EEex_ClearAttackOnce);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreStackRange", &tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange);
 		tolua_function(L, "InjectTemplateInstance", &tolua_function_EEex_InjectTemplateInstance);
