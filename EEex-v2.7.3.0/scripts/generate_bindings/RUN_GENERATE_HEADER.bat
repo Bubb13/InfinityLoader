@@ -15,7 +15,7 @@ python %script_path%^
  -fixupFile=./in/fixup.py^
  -ignoreHeaderFile=./in/ignore_header_types.txt^
  -inFiles=NO_BINDINGS;NO_HARDCODED_BINDINGS:./in/manual_types.txt,NO_BINDINGS;NO_HARDCODED_BINDINGS:./in/manual_reimplementations_import.txt,NO_BINDINGS;NO_HARDCODED_BINDINGS:./in/Baldur-v2.7.3.0.h,./in/bindings.txt^
- -outFile=./out/Baldur-v2.7.3.0_generated.h^
+ -outFile=./out/Baldur_generated.h^
  -packingFile=./in/packing.txt^
  -preludeFile=./in/prelude.txt^
  -printFuncWideString=FPrintT^
@@ -23,22 +23,22 @@ python %script_path%^
  -wantedFiles=./in/wanted_types.txt^
  > log.txt 2>&1
 
-copy /Y .\out\Baldur-v2.7.3.0_generated.h ..\..\headers\EEex-v2.7.3.0_generated\
-copy /Y .\out\Baldur-v2.7.3.0_generated_internal_pointers.cpp ..\..\source\EEex-v2.7.3.0\Generated
-copy /Y .\out\EEexLua_generated.cpp ..\..\source\EEex-v2.7.3.0\Generated
-copy /Y .\out\EEexLua_generated_baseclass_offsets.cpp ..\..\source\EEex-v2.7.3.0\Generated
+copy /Y .\out\Baldur_generated.h ..\..\headers\EEex-v2.7.3.0_generated
+copy /Y .\out\Baldur_generated_internal_pointers.cpp ..\..\source\EEex-v2.7.3.0\generated
+copy /Y .\out\EEexLua_generated.cpp ..\..\source\EEex-v2.7.3.0\generated
+copy /Y .\out\EEexLua_generated_baseclass_offsets.cpp ..\..\source\EEex-v2.7.3.0\generated
 
 python %script_path%^
  -mode=GenerateHeader^
  -ignoreHeaderFile=./in_lua/ignore_header_types.txt^
  -inFiles=./in_lua/manual_types.txt,./in/Baldur-v2.7.3.0.h^
  -noCustomTypes^
- -outFile=./out/Baldur-v2.7.3.0_lua_generated.h^
+ -outFile=./out/Baldur_lua_generated.h^
  -packingFile=./in/packing.txt^
  -preludeFile=./in_lua/prelude.txt^
  -wantedFiles=./in_lua/wanted_types.txt^
  > log_lua.txt 2>&1
 
-copy /Y .\out\Baldur-v2.7.3.0_lua_generated.h ..\..\headers\EEex-v2.7.3.0_generated\
+copy /Y .\out\Baldur_lua_generated.h ..\..\headers\EEex-v2.7.3.0_generated
 
 popd

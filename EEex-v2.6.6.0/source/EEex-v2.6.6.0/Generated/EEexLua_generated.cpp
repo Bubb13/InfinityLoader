@@ -1,6 +1,6 @@
 
-#include "Baldur-v2.6.6.0_generated.h"
-#include "Baldur-v2.6.6.0_lua_generated.h"
+#include "Baldur_generated.h"
+#include "Baldur_lua_generated.h"
 #include "lua_bindings_core_api.h"
 
 static int tolua_get_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled(lua_State* L)

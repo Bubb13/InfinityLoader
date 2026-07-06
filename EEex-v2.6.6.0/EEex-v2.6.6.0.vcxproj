@@ -11,47 +11,51 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\EEex-v2.6.6.0\common.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\coordinate_util.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\debug.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\EEex.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\engine_function_names.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\engine_reimplementations.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\font_util.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\lua_util.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\main.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\menu_util.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\profiler.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\time_util.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\uncap_fps.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\util.cpp" />
-    <ClCompile Include="source\EEex-v2.6.6.0\visibility_map.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\common.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\coordinate_util.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\debug.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\EEex.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_function_names.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_reimplementations.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\font_util.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\lua_util.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\main.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\menu_util.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\profiler.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\time_util.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\uncap_fps.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\util.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\visibility_map.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\generated\Baldur_generated_internal_pointers.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\generated\EEexLua_generated.cpp" />
+    <ClCompile Include="source\EEex-v2.6.6.0\generated\EEexLua_generated_baseclass_offsets.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\common\eeex_api.h" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\coordinate_util.hpp" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\EEex.h" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\EEexLua_generated.h" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\engine_function_names.hpp" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\font_util.hpp" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\lua_util.hpp" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\menu_util.hpp" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\profiler.hpp" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\time_util.hpp" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\uncap_fps.hpp" />
-    <ClInclude Include="headers\EEex-v2.6.6.0\util.hpp" />
-    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur-v2.6.6.0_generated.h" />
-    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur-v2.6.6.0_lua_generated.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\common\eeex_api.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\coordinate_util.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEex.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEexLua_generated.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\engine_function_names.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\font_util.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\lua_util.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\menu_util.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\profiler.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\time_util.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\uncap_fps.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\util.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex_external\gl\eglew.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex_external\gl\glew.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex_external\gl\glxew.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex_external\gl\wglew.h" />
+    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur_generated.h" />
+    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur_lua_generated.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />
     <None Include="EEex-v2.6.6.0.def" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="source\EEex-v2.6.6.0\profiler_assembly.asm" />
+    <MASM Include="..\EEex-Core-Shared-Files\source\profiler_assembly.asm" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -108,7 +112,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)headers/EEex-v2.6.6.0;$(ProjectDir)headers/EEex-v2.6.6.0_external;$(ProjectDir)headers/EEex-v2.6.6.0_generated;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/EEex-v2.6.6.0_generated;$(SolutionDir)EEex-Core-Shared-Files/headers/common;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex_external;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -135,7 +139,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)headers/EEex-v2.6.6.0;$(ProjectDir)headers/EEex-v2.6.6.0_external;$(ProjectDir)headers/EEex-v2.6.6.0_generated;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/EEex-v2.6.6.0_generated;$(SolutionDir)EEex-Core-Shared-Files/headers/common;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex_external;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
