@@ -3145,6 +3145,11 @@ void __cdecl EEex::Override_uiDoFile(char* fileName) {
 			lua_getglobal(L, "EEex_Menu_LuaHook_AfterTranslationLoaded"); // 1 [ ..., EEex_Menu_LuaHook_AfterTranslationLoaded ]
 		});
 	}
+	else if (_stricmp(fileName, "util") == 0) {
+		luaCallProtected(L, 0, 0, [&](int _) {
+			lua_getglobal(L, "EEex_Menu_LuaHook_AfterUtilLoaded");        // 1 [ ..., EEex_Menu_LuaHook_AfterUtilLoaded ]
+		});
+	}
 }
 
 /////////////////////////////

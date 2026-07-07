@@ -239,7 +239,32 @@ static long long getFileLastModifiedTime(String filePath) {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(fileTime.time_since_epoch()).count();
 }
 
+static DWORD findPatternsInDB(const String& sDbPath, void* sectionPtr, DWORD sectionSize) {
+
+	DWORD returnVal = ERROR_SUCCESS;
+
+	forEveryINISectionName(sDbPath, [&](const String section) {
+
+		if (section.rfind(TEXT("!"), 0) != std::string::npos) {
+			return false;
+		}
+
+		PatternValueHandle patternValue;
+		if (const DWORD tempReturnVal = findINICategoryPattern(sectionPtr, sectionSize, sDbPath, section.c_str(), patternValue)) {
+			returnVal = tempReturnVal;
+		}
+
+		return false;
+	});
+
+	return returnVal;
+}
+
 static DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
+
+	/////////////
+	// Init DB //
+	/////////////
 
 	bool alreadyCached;
 	long long cachedExeTime;
@@ -269,20 +294,22 @@ static DWORD findPatterns(void* sectionPtr, DWORD sectionSize) {
 		FPrint("[?][InfinityLoaderDLL.dll] findPatterns() - Using cached pattern addresses: %s\n", attemptUseCached ? "true" : "false");
 	}
 
-	DWORD returnVal = ERROR_SUCCESS;
+	///////////////////////////////
+	// Find patterns in dbPath() //
+	///////////////////////////////
 
-	forEveryINISectionName(dbPath(), [&](const String section) {
+	DWORD returnVal = findPatternsInDB(dbPath(), sectionPtr, sectionSize);
 
-		if (section.rfind(TEXT("!"), 0) != std::string::npos) {
-			return false;
-		}
+	///////////////////////////////////////////
+	// Find patterns in extra database files //
+	///////////////////////////////////////////
 
-		PatternValueHandle patternValue;
-		if (const DWORD tempReturnVal = findINICategoryPattern(sectionPtr, sectionSize, dbPath(), section.c_str(), patternValue)) {
+	const String sDbGlob = String{ workingFolder() }.append(getScriptFolder()).append(TEXT("\\extra_pattern_dbs\\*.db"));
+
+	iterateMatchingFilesInFolder(sDbGlob, [&](const String& sDbPath) {
+		if (const DWORD tempReturnVal = findPatternsInDB(sDbPath, sectionPtr, sectionSize)) {
 			returnVal = tempReturnVal;
 		}
-
-		return false;
 	});
 
 	return returnVal;
@@ -2000,6 +2027,7 @@ static DWORD patchExe() {
 	#define attemptElseRetErr(call) TryElseRetErr( call, printInitFailed() )
 
 	attemptElseRetErr( loadExeNameForPatterns() )
+	attemptElseRetErr( initScriptFolder() )
 
 	void* sectionPtr;
 	DWORD sectionSize;

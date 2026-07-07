@@ -8,4 +8,6 @@
 //-----------------------------//
 
 const String& getScriptFolder();
+DWORD initScriptFolder();
+void iterateMatchingFilesInFolder(const String& sPath, std::function<void(const String& path)> itr);
 DWORD prepareExtenderScripts(const String* sEngineName);

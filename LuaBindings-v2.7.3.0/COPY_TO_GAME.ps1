@@ -6,10 +6,10 @@ param (
 
 try {
 	if ($Env:DEPLOY -eq "1") {
-		"LuaBindings.dll" | ForEach-Object {Copy-Item "$OutDir\$_" "$Env:DEPLOY_DIRECTORY\EEex\loader\$_"}
-		"LuaBindings.pdb" | ForEach-Object {Copy-Item "$OutDir\$_" "$Env:DEPLOY_DIRECTORY\pdb\$_"}
+		"LuaBindings.dll" | ForEach-Object {Copy-Item "$OutDir\$_" "$Env:DEPLOY_DIRECTORY\EEex\loader\v2.7.3.0\dll\$_"}
+		"LuaBindings.pdb" | ForEach-Object {Copy-Item "$OutDir\$_" "$Env:DEPLOY_DIRECTORY\pdb\v2.7.3.0\$_"}
 	}
-	if (($GamePath -ne ".") -and (Test-Path $GamePath)) {
+	if (($Env:GAME_VERSION -eq "v2.7.3.0") -and ($GamePath -ne ".") -and (Test-Path $GamePath)) {
 		"LuaBindings.dll", "LuaBindings.pdb" | ForEach-Object {Copy-Item "$OutDir/$_" $GamePath}
 	}
 }

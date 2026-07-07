@@ -43,7 +43,7 @@ static DWORD getWriteableDirectory(String& out)
 #define pathString() wstring()
 #endif
 
-static void iterateMatchingFilesInFolder(const String& sPath, std::function<void(const String& path)> itr)
+void iterateMatchingFilesInFolder(const String& sPath, std::function<void(const String& path)> itr)
 {
 	// Note: This is a fake glob. The file name before the extension is ignored.
 	const std::filesystem::path path { sPath };
@@ -291,17 +291,22 @@ const String& getScriptFolder()
 	return sScriptFolder;
 }
 
-DWORD prepareExtenderScripts(const String* sEngineName)
+DWORD initScriptFolder()
 {
 	bool hasScriptFolder;
 	TryRetErr( GetINIStr(iniPath(), TEXT("General"), TEXT("ScriptFolder"), sScriptFolder, hasScriptFolder) );
 
 	if (!hasScriptFolder)
 	{
-		Print("[!][InfinityLoaderDLL.dll] prepareExtenderScripts() - [General].ScriptFolder must be defined\n");
+		Print("[!][InfinityLoaderDLL.dll] initScriptFolder() - [General].ScriptFolder must be defined\n");
 		return -1;
 	}
 
+	return ERROR_SUCCESS;
+}
+
+DWORD prepareExtenderScripts(const String* sEngineName)
+{
 	const String scriptFolderPath = String{ workingFolder() }.append(sScriptFolder).append(TEXT("\\"));
 	const String scriptFolderOverridePath = String{ scriptFolderPath }.append(TEXT("override\\"));
 
