@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Baldur-v2.7.3.0_generated.h"
+#include "Baldur_generated.h"
 
 __forceinline int square(int x) {
 	return x * x;

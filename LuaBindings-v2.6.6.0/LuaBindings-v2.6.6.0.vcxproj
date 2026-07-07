@@ -15,6 +15,7 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{cb4abbed-dc69-4bb4-b62e-e92085d3c529}</ProjectGuid>
     <RootNamespace>LuaBindingsv2660</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -47,15 +48,18 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>LuaBindings</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
+    <TargetName>LuaBindings</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)headers/LuaBindings-v2.6.6.0;$(ProjectDir)headers/LuaBindings-v2.6.6.0_external;$(ProjectDir)headers/LuaBindings-v2.6.6.0_generated;$(ProjectDir)references/header/include;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/LuaBindings-v2.6.6.0_generated;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindings-Core-Shared-Files/headers/LuaBindings;$(SolutionDir)LuaBindings-Core-Shared-Files/headers/LuaBindings_external;$(SolutionDir)LuaBindings-Core-Shared-Files/references/header/include;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -81,7 +85,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)headers/LuaBindings-v2.6.6.0;$(ProjectDir)headers/LuaBindings-v2.6.6.0_external;$(ProjectDir)headers/LuaBindings-v2.6.6.0_generated;$(ProjectDir)references/header/include;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/LuaBindings-v2.6.6.0_generated;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindings-Core-Shared-Files/headers/LuaBindings;$(SolutionDir)LuaBindings-Core-Shared-Files/headers/LuaBindings_external;$(SolutionDir)LuaBindings-Core-Shared-Files/references/header/include;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -106,47 +110,51 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="references\source\engine_reimplementations.cpp" />
-    <ClCompile Include="references\source\tolua_reference\tolua_event.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\references\source\engine_reimplementations.cpp" />
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\references\source\tolua_reference\tolua_event.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="references\source\tolua_reference\tolua_is.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="references\source\tolua_reference\tolua_map.c">
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\references\source\tolua_reference\tolua_is.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="references\source\tolua_reference\tolua_push.c">
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\references\source\tolua_reference\tolua_map.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="references\source\tolua_reference\tolua_to.c">
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\references\source\tolua_reference\tolua_push.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\common.cpp" />
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\Baldur-v2.6.6.0_generated_internal_pointers.cpp" />
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated.cpp" />
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\Generated\EEexLua_generated_baseclass_offsets.cpp" />
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\main.cpp" />
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\manual_reimplementations_export.cpp" />
-    <ClCompile Include="source\LuaBindings-v2.6.6.0\util.cpp" />
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\references\source\tolua_reference\tolua_to.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\source\common.cpp" />
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\source\main.cpp" />
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\source\manual_reimplementations_export.cpp" />
+    <ClCompile Include="..\LuaBindings-Core-Shared-Files\source\util.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\generated\Baldur_generated_internal_pointers.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\generated\EEexLua_generated.cpp" />
+    <ClCompile Include="source\LuaBindings-v2.6.6.0\generated\EEexLua_generated_baseclass_offsets.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\EEexLua_generated.h" />
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0\util.hpp" />
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0_generated\Baldur-v2.6.6.0_generated.h" />
-    <ClInclude Include="headers\LuaBindings-v2.6.6.0_generated\Baldur-v2.6.6.0_lua_generated.h" />
-    <ClInclude Include="references\header\include\tolua_reference\lauxlib.h" />
-    <ClInclude Include="references\header\include\tolua_reference\lua.h" />
-    <ClInclude Include="references\header\include\tolua_reference\lua.hpp" />
-    <ClInclude Include="references\header\include\tolua_reference\luaconf.h" />
-    <ClInclude Include="references\header\include\tolua_reference\lualib.h" />
-    <ClInclude Include="references\header\include\tolua_reference\tolua.h" />
-    <ClInclude Include="references\header\include\tolua_reference\tolua_event.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\headers\LuaBindings\EEexLua_generated.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\headers\LuaBindings\util.hpp" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\headers\LuaBindings_external\gl\eglew.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\headers\LuaBindings_external\gl\glew.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\headers\LuaBindings_external\gl\glxew.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\headers\LuaBindings_external\gl\wglew.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\references\header\include\tolua_reference\lauxlib.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\references\header\include\tolua_reference\lua.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\references\header\include\tolua_reference\lua.hpp" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\references\header\include\tolua_reference\luaconf.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\references\header\include\tolua_reference\lualib.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\references\header\include\tolua_reference\tolua.h" />
+    <ClInclude Include="..\LuaBindings-Core-Shared-Files\references\header\include\tolua_reference\tolua_event.h" />
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0_generated\Baldur_generated.h" />
+    <ClInclude Include="headers\LuaBindings-v2.6.6.0_generated\Baldur_lua_generated.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPY_TO_GAME.ps1" />

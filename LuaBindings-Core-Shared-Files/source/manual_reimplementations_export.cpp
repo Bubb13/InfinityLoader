@@ -1,5 +1,5 @@
 
-#include "Baldur-v2.7.3.0_generated.h"
+#include "Baldur_generated.h"
 
 void CGameSprite::MakeLocal() {
 

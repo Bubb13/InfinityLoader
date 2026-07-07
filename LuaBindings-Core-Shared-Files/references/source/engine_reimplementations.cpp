@@ -2,7 +2,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "Baldur-v2.7.3.0_generated.h"
+#include "Baldur_generated.h"
 #include "util.hpp"
 
 byte GetSpritePersonalSpace(CGameSprite* pSprite)

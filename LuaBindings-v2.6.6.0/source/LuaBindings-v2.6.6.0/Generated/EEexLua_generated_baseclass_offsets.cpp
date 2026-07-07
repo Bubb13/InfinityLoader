@@ -1,5 +1,5 @@
 
-#include "Baldur-v2.6.6.0_generated.h"
+#include "Baldur_generated.h"
 
 template<typename Derived, typename Base>
 constexpr uintptr_t offsetofbase() {

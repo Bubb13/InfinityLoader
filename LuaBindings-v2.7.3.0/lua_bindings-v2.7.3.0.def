@@ -1,4 +1,4 @@
-LIBRARY LuaBindings-v2.7.3.0.dll
+LIBRARY LuaBindings.dll
 EXPORTS
 	InitBindings @1
 	OpenBindings @2

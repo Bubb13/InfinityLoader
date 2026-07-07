@@ -1,5 +1,5 @@
 
-#include "Baldur-v2.7.3.0_generated.h"
+#include "Baldur_generated.h"
 
 CVariableHash::type_FindKey CVariableHash::p_FindKey;
 CVariableHash::type_AddKey CVariableHash::p_AddKey;
@@ -119,7 +119,7 @@ type_wordwrap p_wordwrap;
 type_XScreenToZoomed p_XScreenToZoomed;
 type_YScreenToZoomed p_YScreenToZoomed;
 char** p_afxPchNil;
-_35F126B06FBEF93EF81BE920E2D7EDF1* p_capture;
+_9B9540D9920A90D57A3D80DDD1A70514* p_capture;
 bool* p_fingerDown;
 uiMenu** p_g_backgroundMenu;
 RendererType* p_g_drawBackend;
@@ -134,17 +134,17 @@ Array<uiMenu*,256>* p_menuStack;
 int* p_nextStackMenuIdx;
 int* p_numMenus;
 CTypedPtrArray<CPtrArray,CRes*>* p_resources;
-_0E5B34B6ACBB54D058261B16827425C7* p_tooltip;
-_E0F28929DE512A6510251329DBCD9F43* p_transition;
+_820A8B7015E7E0FD9144A7C186FBF075* p_tooltip;
+_A92C2F5FC159A4FE55DD6CCAABD58E72* p_transition;
 ConstArray<ushort,1765>* p_yy_action;
 ConstArray<ushort,329>* p_yy_default;
 ConstArray<byte,1765>* p_yy_lookahead;
 ConstArray<short,122>* p_yy_reduce_ofst;
 ConstArray<short,174>* p_yy_shift_ofst;
 ConstArray<_D98D369160A0DDA2B95F5D0F301081BB,157>* p_yyRuleInfo;
-_73171CE4E72A650487C4601426896B7A* p_d3d;
+_734DBB4D47315AEC2910FBD1685ECB48* p_d3d;
 Array<letter_t,262144>* p_g_letters;
-_2E5EFE1E426AFE93300464D67A75FAD3* p_gl;
+_C0ECD3277D3C6A36B299CABE6156CF21* p_gl;
 GLint (__cdecl **p_glGetUniformLocation)(GLuint program, const GLchar* name);
 void (__cdecl **p_glUniform1i)(GLint location, GLint v0);
 Array<char,16>* p_lang;
@@ -327,11 +327,11 @@ static void attemptFillPointer(const String& patternName, OutType& pointerOut) {
 			break;
 		}
 		case PatternValueType::INVALID: {
-			FPrintT(TEXT("[!][LuaBindings-v2.7.3.0.dll] attemptFillPointer() - Binding pattern [%s] missing; using this binding will crash the game\n"), patternName.c_str());
+			FPrintT(TEXT("[!][LuaBindings.dll] attemptFillPointer() - Binding pattern [%s] missing; using this binding will crash the game\n"), patternName.c_str());
 			break;
 		}
 		default: {
-			FPrintT(TEXT("[!][LuaBindings-v2.7.3.0.dll] attemptFillPointer() - Binding pattern [%s].Type not SINGLE; using this binding will crash the game\n"), patternName.c_str());
+			FPrintT(TEXT("[!][LuaBindings.dll] attemptFillPointer() - Binding pattern [%s].Type not SINGLE; using this binding will crash the game\n"), patternName.c_str());
 			break;
 		}
 	}
