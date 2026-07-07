@@ -79,6 +79,7 @@ namespace EEex {
 	void Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats);
 	void Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats);
 	int Stats_Hook_OnGettingUnknown(CDerivedStats* pStats, int nStatId);
+	int Stats_Hook_OnGettingUnknownSpellState(CDerivedStats* pStats, uint nSpellStateId);
 
 	////////////
 	// Opcode //
@@ -96,6 +97,8 @@ namespace EEex {
 	bool Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals(CGameSprite* pSprite);
 	// op319
 	bool Opcode_Hook_Op319_IsInverted(CGameEffect* pEffect);
+	// op328
+	void Opcode_Hook_SetSpellState_BeforeApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	// op342
 	void Opcode_Hook_Op342_OnUnhandledParam2(CGameEffect* pEffect, CGameSprite* pSprite);
 	// New op400
@@ -112,6 +115,8 @@ namespace EEex {
 	// New op409
 	int Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
+	// New op417
+	int Opcode_Hook_Daze_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 
 	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect);
 	int Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite);
@@ -134,6 +139,7 @@ namespace EEex {
 	////////////
 
 	void Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite);
+	int Action_Hook_ShouldDazeBlockAction(CGameAIBase* pAIBase);
 
 	//////////
 	// Menu //

@@ -2,6 +2,7 @@
 #include <chrono>
 #include <optional>
 #include <sstream>
+#include <string>
 #include <unordered_set>
 
 #include <mbstring.h>
@@ -47,6 +48,13 @@ constexpr uintptr_t HOOK_INTEGRITY_WATCHDOG_STACK_SNAPSHOT_SIZE = 256;
 
 // Needs to be updated if Beamdog ever adds a new stat
 #define FIRST_EXTENDED_STAT_ID 203
+
+constexpr uint DAZED_SPELL_STATE_ID = 1234;
+constexpr uint DAZED_EXT_STATE_FLAG = 0x10000000;
+constexpr uint NO_EXTENDED_SPELL_STATE_ID = 0xFFFFFFFF;
+constexpr uint NO_EXTENDED_STATE_FLAG = 0;
+constexpr short ACTION_NO_ACTION = 0;
+constexpr short ACTION_DONE = -1;
 
 ////////////////
 // Projectile //
@@ -94,6 +102,8 @@ struct EnabledActionListenerData {
 
 struct ExStatData {
 	std::unordered_map<int, int> exStatValues{};
+	std::unordered_map<uint16_t, int> extendedSpellStateCounts{};
+	std::unordered_map<uint32_t, int> extendedStateCounts{};
 	// op280
 	int forcedWildSurgeNumber = 0;
 	bool suppressWildSurgeVisuals = false;
@@ -166,6 +176,12 @@ std::unordered_map<uint64_t, ExUUIDData> exUUIDDataMap{};
 
 uint64_t nextUUID = 0;
 
+////////////
+// Action //
+////////////
+
+std::unordered_set<int> dazedAllowedActionIds{};
+
 /////////
 // Fix //
 /////////
@@ -217,6 +233,192 @@ void removeCachedEffect(CDerivedStats& stats, std::vector<T> ExStatData::*const 
 void removeCachedEffect(CDerivedStats& stats, std::vector<CGameEffect*> ExStatData::*const vectorPtr, const CGameEffect *const pEffect) {
 	const auto compare = [&](const CGameEffect *const &data) -> bool { return data == pEffect; };
 	removeCachedEffect<CGameEffect*>(stats, vectorPtr, compare);
+}
+
+bool isExtendedSpellStateId(uint spellStateId) {
+	return spellStateId > 0xFF && spellStateId <= 0xFFFF;
+}
+
+uint getMappedSpellStateIdForExtendedState(uint extStateFlag) {
+
+	switch (extStateFlag) {
+		case DAZED_EXT_STATE_FLAG:
+			return DAZED_SPELL_STATE_ID;
+		default:
+			return NO_EXTENDED_SPELL_STATE_ID;
+	}
+}
+
+uint getMappedExtendedStateFlagForSpellState(uint spellStateId) {
+
+	switch (spellStateId) {
+		case DAZED_SPELL_STATE_ID:
+			return DAZED_EXT_STATE_FLAG;
+		default:
+			return NO_EXTENDED_STATE_FLAG;
+	}
+}
+
+bool isExtendedStateFlag(uint extStateFlag) {
+	return getMappedSpellStateIdForExtendedState(extStateFlag) != NO_EXTENDED_SPELL_STATE_ID;
+}
+
+void addExtendedSpellState(CDerivedStats* pStats, uint spellStateId) {
+
+	if (pStats == nullptr || !isExtendedSpellStateId(spellStateId)) {
+		return;
+	}
+
+	// Vanilla CDerivedStats stores only 256 spell-state bits. EEex keeps the
+	// additional unsigned-word range in reference-counted side storage that is
+	// rebuilt during the normal derived-stat reload pass.
+	int& count = exStatDataMap[pStats].extendedSpellStateCounts[static_cast<uint16_t>(spellStateId)];
+	if (count < INT_MAX) {
+		++count;
+	}
+}
+
+void addExtendedState(CDerivedStats* pStats, uint extStateFlag) {
+
+	if (pStats == nullptr || !isExtendedStateFlag(extStateFlag)) {
+		return;
+	}
+
+	int& count = exStatDataMap[pStats].extendedStateCounts[static_cast<uint32_t>(extStateFlag)];
+	if (count < INT_MAX) {
+		++count;
+	}
+
+	// Hard-coded B3_STATE_DAZED <-> B3_DAZED mapping. Opcode 417 owns the
+	// behavioral ext-state side and also exposes SPLSTATE 1234 for scripts.
+	const uint spellStateId = getMappedSpellStateIdForExtendedState(extStateFlag);
+	if (isExtendedSpellStateId(spellStateId)) {
+		addExtendedSpellState(pStats, spellStateId);
+	}
+}
+
+bool getExtendedState(CDerivedStats* pStats, uint extStateFlag) {
+
+	if (pStats == nullptr || !isExtendedStateFlag(extStateFlag)) {
+		return false;
+	}
+
+	const auto exStatDataPair = exStatDataMap.find(pStats);
+	if (exStatDataPair == exStatDataMap.end()) {
+		return false;
+	}
+
+	const auto extStatePair = exStatDataPair->second.extendedStateCounts.find(static_cast<uint32_t>(extStateFlag));
+	return extStatePair != exStatDataPair->second.extendedStateCounts.end() && extStatePair->second > 0;
+}
+
+bool getExtendedSpellState(CDerivedStats* pStats, uint spellStateId) {
+
+	if (pStats == nullptr) {
+		return false;
+	}
+
+	if (spellStateId <= 0xFF) {
+		return pStats->GetSpellState(spellStateId) != 0;
+	}
+
+	if (spellStateId > 0xFFFF) {
+		return false;
+	}
+
+	const uint extStateFlag = getMappedExtendedStateFlagForSpellState(spellStateId);
+	if (extStateFlag != NO_EXTENDED_STATE_FLAG && getExtendedState(pStats, extStateFlag)) {
+		return true;
+	}
+
+	const auto exStatDataPair = exStatDataMap.find(pStats);
+	if (exStatDataPair == exStatDataMap.end()) {
+		return false;
+	}
+
+	const auto spellStatePair = exStatDataPair->second.extendedSpellStateCounts.find(static_cast<uint16_t>(spellStateId));
+	return spellStatePair != exStatDataPair->second.extendedSpellStateCounts.end() && spellStatePair->second > 0;
+}
+
+bool strEqualsIgnoreCase(const char* str1, const char* str2) {
+	return str1 != nullptr && str2 != nullptr && _stricmp(str1, str2) == 0;
+}
+
+bool startsWithIgnoreCase(const std::string& str, const char* prefix) {
+
+	const size_t prefixLen = strlen(prefix);
+	if (str.length() < prefixLen) {
+		return false;
+	}
+
+	return _strnicmp(str.c_str(), prefix, prefixLen) == 0;
+}
+
+std::string getAIIdSymbol(CAIId* pId) {
+
+	const char* start = pId->m_start.m_pchData;
+	if (start != nullptr && start[0] != '\0') {
+		return start;
+	}
+
+	const char* line = pId->m_line.m_pchData;
+	if (line == nullptr) {
+		return {};
+	}
+
+	std::string symbol { line };
+	const size_t symbolEnd = symbol.find_first_of("(\t ");
+	if (symbolEnd != std::string::npos) {
+		symbol.resize(symbolEnd);
+	}
+	return symbol;
+}
+
+bool isDazedAllowedActionSymbol(const std::string& symbol) {
+
+	static const char* passiveActionSymbols[] = {
+		"Continue",
+		"NoAction",
+		"SmallWait",
+		"Wait",
+		"WaitAnimation",
+		"WaitAnimationEND",
+		"WaitRandom",
+	};
+
+	for (const char* passiveActionSymbol : passiveActionSymbols) {
+		if (strEqualsIgnoreCase(symbol.c_str(), passiveActionSymbol)) {
+			return true;
+		}
+	}
+
+	return startsWithIgnoreCase(symbol, "MoveTo")
+		|| startsWithIgnoreCase(symbol, "RunAway")
+		|| startsWithIgnoreCase(symbol, "EscapeArea")
+		|| startsWithIgnoreCase(symbol, "LeaveArea")
+		|| startsWithIgnoreCase(symbol, "UseItem");
+}
+
+void initDazedActionIds() {
+
+	dazedAllowedActionIds.clear();
+
+	EngineVal<CAIIdList> pActionIDS{};
+	pActionIDS->LoadList("ACTION", false);
+
+	for (const auto* node = pActionIDS->m_idList.m_pNodeHead; node != nullptr; node = node->pNext) {
+
+		CAIId *const pId = node->data;
+		const std::string symbol = getAIIdSymbol(pId);
+
+		if (isDazedAllowedActionSymbol(symbol)) {
+			dazedAllowedActionIds.emplace(pId->m_id);
+		}
+	}
+}
+
+bool isDazedAllowedActionId(short actionId) {
+	return actionId == ACTION_NO_ACTION || dazedAllowedActionIds.find(actionId) != dazedAllowedActionIds.end();
 }
 
 //-----------------------------//
@@ -3156,12 +3358,14 @@ void __cdecl EEex::Override_uiDoFile(char* fileName) {
 ////////////////
 
 void initStats();
+void initDazedActionIds();
 
 void EEex::GameState_Hook_OnInitialized() {
 
 	STUTTER_LOG_START(void, "EEex::GameState_Hook_OnInitialized")
 
 	initStats();
+	initDazedActionIds();
 
 	lua_State *const L = luaState();
 	luaCallProtected(L, 0, 0, [&](int _) {
@@ -3246,6 +3450,10 @@ void EEex::Stats_Hook_OnReload(CGameSprite* pSprite) {
 		exStatValues[id] = info.def;
 	}
 
+	// op328 / op417
+	exStatData.extendedSpellStateCounts.clear();
+	exStatData.extendedStateCounts.clear();
+
 	// op403
 	exStatData.screenEffects.clear();
 
@@ -3276,6 +3484,10 @@ void EEex::Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats) {
 	for (auto& [id, info] : exStatInfoMap) {
 		exStatValues[id] = otherExStatValues[id];
 	}
+
+	// op328 / op417
+	exStatData.extendedSpellStateCounts = otherExStatData.extendedSpellStateCounts;
+	exStatData.extendedStateCounts = otherExStatData.extendedStateCounts;
 
 	// op403
 	auto& screenEffects = exStatData.screenEffects;
@@ -3333,6 +3545,17 @@ void EEex::Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStat
 		val = clamp(clampedSum(val, otherExStatValues[id]), info.min, info.max);
 	}
 
+	// op328 / op417
+	for (const auto& [spellStateId, count] : otherExStatData.extendedSpellStateCounts) {
+		int& val = exStatData.extendedSpellStateCounts[spellStateId];
+		val = clampedSum(val, count);
+	}
+
+	for (const auto& [extStateFlag, count] : otherExStatData.extendedStateCounts) {
+		int& val = exStatData.extendedStateCounts[extStateFlag];
+		val = clampedSum(val, count);
+	}
+
 	// op403
 	auto& screenEffects = exStatData.screenEffects;
 	auto& otherScreenEffects = otherExStatData.screenEffects;
@@ -3369,6 +3592,15 @@ int EEex::Stats_Hook_OnGettingUnknown(CDerivedStats* pStats, int nStatId) {
 	}
 
 	return 0;
+
+	STUTTER_LOG_END
+}
+
+int EEex::Stats_Hook_OnGettingUnknownSpellState(CDerivedStats* pStats, uint nSpellStateId) {
+
+	STUTTER_LOG_START(int, "EEex::Stats_Hook_OnGettingUnknownSpellState")
+
+	return getExtendedSpellState(pStats, nSpellStateId) ? 1 : 0;
 
 	STUTTER_LOG_END
 }
@@ -3528,6 +3760,23 @@ int CGameEffectUsability::Override_CheckUsability(CGameSprite* pSprite) {
 	}
 
 	return match ^ EEex::Opcode_Hook_Op319_IsInverted(this);
+}
+
+//-------//
+// op328 //
+//-------//
+
+void EEex::Opcode_Hook_SetSpellState_BeforeApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_SetSpellState_BeforeApplyEffect")
+
+	if (pEffect != nullptr && pSprite != nullptr && pEffect->m_special != 0) {
+		// op328 only exposes the requested SPLSTATE. It intentionally does not
+		// apply B3_STATE_DAZED's behavioral action restrictions.
+		addExtendedSpellState(&pSprite->m_derivedStats, pEffect->m_dWFlags);
+	}
+
+	STUTTER_LOG_END
 }
 
 //-------//
@@ -3707,9 +3956,9 @@ void EEex::Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSpr
 	STUTTER_LOG_END
 }
 
-//-----------------//
-// START New op409 //
-//-----------------//
+//-----------//
+// New op409 //
+//-----------//
 
 int EEex::Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
@@ -3736,8 +3985,26 @@ void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGame
 	STUTTER_LOG_END
 }
 
+//-----------------//
+// START New op417 //
+//-----------------//
+
+int EEex::Opcode_Hook_Daze_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_Daze_ApplyEffect")
+
+	// op417 is intentionally fixed to B3_STATE_DAZED and maps it to B3_DAZED
+	// (SPLSTATE 1234) for script visibility.
+	if (pSprite != nullptr) {
+		addExtendedState(&pSprite->m_derivedStats, DAZED_EXT_STATE_FLAG);
+	}
+	return 1;
+
+	STUTTER_LOG_END
+}
+
 //---------------//
-// END New op409 //
+// END New op417 //
 //---------------//
 
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
@@ -4158,6 +4425,33 @@ void EEex::Action_Hook_OnAfterSpriteStartedAction(CGameSprite* pSprite) {
 		tolua_pushusertype(L, pSprite, "CGameSprite");                               // 2 [ ..., EEex_Action_Hook_OnAfterSpriteStartedAction, pSpriteUD ]
 	});
 																					 // 0 [ ... ]
+	STUTTER_LOG_END
+}
+
+int EEex::Action_Hook_ShouldDazeBlockAction(CGameAIBase* pAIBase) {
+
+	STUTTER_LOG_START(int, "EEex::Action_Hook_ShouldDazeBlockAction")
+
+	if (pAIBase == nullptr || pAIBase->m_objectType != CGameObjectType::SPRITE) {
+		return 0;
+	}
+
+	CGameSprite *const pSprite = reinterpret_cast<CGameSprite*>(pAIBase);
+	if (!getExtendedState(pSprite->GetActiveStats(), DAZED_EXT_STATE_FLAG)) {
+		return 0;
+	}
+
+	if (isDazedAllowedActionId(pAIBase->m_curAction.m_actionID)) {
+		return 0;
+	}
+
+	// Keep the engine on its normal ExecuteAction cleanup path by converting
+	// only the current disallowed action to NoAction; queued actions are left
+	// alone for the normal AI scheduler to revisit.
+	pAIBase->m_curAction.m_actionID = ACTION_NO_ACTION;
+	pAIBase->m_nLastActionReturn = ACTION_DONE;
+	return 1;
+
 	STUTTER_LOG_END
 }
 

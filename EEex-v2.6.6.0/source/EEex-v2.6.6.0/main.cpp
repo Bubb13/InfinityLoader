@@ -98,6 +98,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Stats_Hook_OnEqu"), EEex::Stats_Hook_OnEqu);
 	exportPattern(TEXT("EEex::Stats_Hook_OnPlusEqu"), EEex::Stats_Hook_OnPlusEqu);
 	exportPattern(TEXT("EEex::Stats_Hook_OnGettingUnknown"), EEex::Stats_Hook_OnGettingUnknown);
+	exportPattern(TEXT("EEex::Stats_Hook_OnGettingUnknownSpellState"), EEex::Stats_Hook_OnGettingUnknownSpellState);
 
 	////////////
 	// Opcode //
@@ -115,6 +116,8 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals"), EEex::Opcode_Hook_Op280_ShouldSuppressWildSurgeVisuals);
 	// op319
 	exportPattern(TEXT("EEex::Opcode_Hook_Op319_IsInverted"), EEex::Opcode_Hook_Op319_IsInverted);
+	// op328
+	exportPattern(TEXT("EEex::Opcode_Hook_SetSpellState_BeforeApplyEffect"), EEex::Opcode_Hook_SetSpellState_BeforeApplyEffect);
 	// op342
 	exportPattern(TEXT("EEex::Opcode_Hook_Op342_OnUnhandledParam2"), EEex::Opcode_Hook_Op342_OnUnhandledParam2);
 	// New op400
@@ -131,6 +134,8 @@ static void exportPatterns() {
 	// New op409
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_ApplyEffect"), EEex::Opcode_Hook_EnableActionListener_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_OnRemove"), EEex::Opcode_Hook_EnableActionListener_OnRemove);
+	// New op417
+	exportPattern(TEXT("EEex::Opcode_Hook_Daze_ApplyEffect"), EEex::Opcode_Hook_Daze_ApplyEffect);
 
 	exportPattern(TEXT("EEex::Opcode_Hook_OnCopy"), EEex::Opcode_Hook_OnCopy);
 	exportPattern(TEXT("EEex::Opcode_Hook_OnDestruct"), EEex::Opcode_Hook_OnDestruct);
@@ -153,6 +158,7 @@ static void exportPatterns() {
 	////////////
 
 	exportPattern(TEXT("EEex::Action_Hook_OnAfterSpriteStartedAction"), EEex::Action_Hook_OnAfterSpriteStartedAction);
+	exportPattern(TEXT("EEex::Action_Hook_ShouldDazeBlockAction"), EEex::Action_Hook_ShouldDazeBlockAction);
 
 	//////////
 	// Menu //
