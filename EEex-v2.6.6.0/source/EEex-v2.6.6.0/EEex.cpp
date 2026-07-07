@@ -145,6 +145,7 @@ struct ExSpriteData {
 
 	EngineVal<CVidBitmap> combatRoundsOverride[5]{};
 	Array<int, 3> oldDisabledSpellTypes;
+	bool deferredAfterListsResolvedPending = false;
 	int oldDisableSpells = 0;
 	uint64_t uuid = 0;
 
@@ -3837,6 +3838,13 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 	CDerivedStats& stats = *pSprite->GetActiveStats();
 	lua_State *const L = luaState();
 
+	if (EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled) {
+		// The engine can resolve the same sprite's effect lists many times in a
+		// tick. Defer opt-in Lua listeners to the sprite's real AI pass, where
+		// this bit is consumed and collapsed to one Lua call.
+		exData.deferredAfterListsResolvedPending = true;
+	}
+
 	if
 	(
 		stats.m_disableSpells != exData.oldDisableSpells
@@ -3864,6 +3872,37 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 	luaCallProtected(L, 1, 0, [&](int _) {
 		lua_getglobal(L, "EEex_Opcode_LuaHook_AfterListsResolved"); // 1 [ ..., EEex_Opcode_LuaHook_AfterListsResolved ]
 		tolua_pushusertype(L, pSprite, "CGameSprite");              // 2 [ ..., EEex_Opcode_LuaHook_AfterListsResolved, pSpriteUD ]
+	});
+
+	STUTTER_LOG_END
+}
+
+void EEex::Opcode_Hook_FlushDeferredAfterListsResolved(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_FlushDeferredAfterListsResolved")
+
+	if (!EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled) {
+		return;
+	}
+
+	auto itr = exSpriteDataMap.find(pSprite);
+	if (itr == exSpriteDataMap.end()) {
+		return;
+	}
+
+	ExSpriteData& exData = itr->second;
+	if (!exData.deferredAfterListsResolvedPending) {
+		return;
+	}
+
+	// Clear before entering Lua. If the callback causes another list
+	// resolution, the new pending bit survives for the next ProcessAI() pass.
+	exData.deferredAfterListsResolvedPending = false;
+
+	lua_State *const L = luaState();
+	luaCallProtected(L, 1, 0, [&](int _) {
+		lua_getglobal(L, "EEex_Opcode_LuaHook_DeferredAfterListsResolved"); // 1 [ ..., EEex_Opcode_LuaHook_DeferredAfterListsResolved ]
+		tolua_pushusertype(L, pSprite, "CGameSprite");                      // 2 [ ..., EEex_Opcode_LuaHook_DeferredAfterListsResolved, pSpriteUD ]
 	});
 
 	STUTTER_LOG_END
@@ -5361,6 +5400,7 @@ void EEex::InitEEex() {
 	initUncapFPS();
 
 	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = false;
+	EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled = false;
 	EEex::Projectile_LuaHook_GlobalMutators_Enabled = false;
 	initProjectileMutator();
 	EEex::StutterDetector_Enabled = false;

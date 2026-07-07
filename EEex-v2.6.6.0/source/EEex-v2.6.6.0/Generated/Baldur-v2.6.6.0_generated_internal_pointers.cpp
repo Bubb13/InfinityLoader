@@ -10,6 +10,7 @@ bool EEex::bStripUUID;
 byte EEex::CGameSprite_Hit_Roll;
 bool EEex::AIBase_LuaHook_OnEventTriggerSet_Enabled;
 bool EEex::Opcode_LuaHook_AfterListsResolved_Enabled;
+bool EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled;
 bool EEex::Projectile_LuaHook_GlobalMutators_Enabled;
 bool EEex::StutterDetector_Enabled;
 int EEex::UncapFPS_BusyWaitThreshold;
