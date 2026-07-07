@@ -1,8 +1,11 @@
 
+#include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <optional>
 #include <sstream>
 #include <unordered_set>
+#include <vector>
 
 #include <mbstring.h>
 
@@ -127,6 +130,8 @@ std::unordered_map<void*, ExScriptData> exScriptDataMap{};
 
 struct ExEffectInfo {
 	bool bypassOp120;
+	CGameSprite* op342OffhandSprite = nullptr;
+	int op342OffhandSlot = -1;
 };
 
 std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
@@ -141,11 +146,41 @@ std::unordered_map<uintptr_t, std::pair<const char*, EEex::ProjectileType>> proj
 // Sprite //
 ////////////
 
+// The forced roll follows the tagged offhand frame by the same delay the engine
+// uses between a Swing attack-frame marker and the later Hit() roll.
+static constexpr int OP342_OFFHAND_ROLL_FRAME_OFFSET = 6;
+static constexpr int OP342_OFFHAND_LAST_ATTACK_FRAME = 99;
+
+// Opcode #342 param2 == 5 already lets effects replace RNDBASE combat-round
+// bitmaps. With special bit0 set, EEex treats repeated offhand markers in that
+// bitmap as extra offhand attacks and stores the THAC0 delta to apply to each
+// such generated roll.
+struct Op342OffhandSlotData {
+	bool enabled = false;
+	int thac0Delta = 0;
+	int offhandFrameCount = 0;
+	int lastAttackFrame = -1;
+	int lastCountedAttackFrame = -1;
+	CGameEffect* pEffect = nullptr;
+};
+
 struct ExSpriteData {
 
 	EngineVal<CVidBitmap> combatRoundsOverride[5]{};
+	Op342OffhandSlotData op342OffhandSlots[5]{};
 	Array<int, 3> oldDisabledSpellTypes;
 	int oldDisableSpells = 0;
+	bool op342OffhandFramePending = false;
+	bool op342OffhandRollPending = false;
+	bool op342OffhandTHAC0Pending = false;
+	bool op342OffhandAttackStatsRaised = false;
+	int op342OffhandPendingAttackFrame = -1;
+	int op342OffhandPendingRollFrame = -1;
+	int op342OffhandPendingTHAC0Delta = 0;
+	short op342OffhandOldDerivedAPR = 0;
+	short op342OffhandOldTempAPR = 0;
+	short op342OffhandOldBonusAPR = 0;
+	unsigned char op342OffhandOldBaseAPR = 0;
 	uint64_t uuid = 0;
 
 	ExSpriteData() {
@@ -159,6 +194,15 @@ struct ExUUIDData {
 
 std::unordered_map<void*, ExSpriteData> exSpriteDataMap{};
 std::unordered_map<uint64_t, ExUUIDData> exUUIDDataMap{};
+
+static void clearOp342OffhandSlot(Op342OffhandSlotData& slotData) {
+	slotData.enabled = false;
+	slotData.thac0Delta = 0;
+	slotData.offhandFrameCount = 0;
+	slotData.lastAttackFrame = -1;
+	slotData.lastCountedAttackFrame = -1;
+	slotData.pEffect = nullptr;
+}
 
 ////////////////
 // Game State //
@@ -1576,6 +1620,46 @@ int EEex::GetExtendedStatValue(CGameSprite* pSprite, int exStatId) {
 
 	FPrint("[!][EEex.dll] EEex.GetExtendedStatValue() - Attempted to get invalid extended stat id: %d\n", exStatId);
 	return 0;
+}
+
+static constexpr int kFirstWeaponStyleStat = 111;
+static constexpr int kWeaponStyleStatCount = 4;
+static constexpr int kTwoWeaponStyleStat = 114;
+static constexpr int kLeftHandWeaponSlot = 9;
+static constexpr int kShieldItemType = 12;
+
+static int getOriginalWeaponStyleRank(CGameSprite* pSprite, int style) {
+
+	if (pSprite == nullptr) {
+		return 0;
+	}
+
+	if (style < kFirstWeaponStyleStat || style >= kFirstWeaponStyleStat + kWeaponStyleStatCount) {
+		return 0;
+	}
+
+	// Active/inactive proficiency ranks share a packed derived-stat value. The
+	// engine's inactive accessor extracts the original rank with the same
+	// mapping used for weapon styles, avoiding brittle direct-list indexing.
+	return pSprite->GetInactiveProficiency(style);
+}
+
+void EEex::GetWeaponStyle(lua_State* L, CGameSprite* pSprite) {
+
+	if (pSprite == nullptr) {
+		lua_pushinteger(L, -1);
+		lua_pushinteger(L, 0);
+		lua_pushinteger(L, 0);
+		return;
+	}
+
+	int activeRank = 0;
+	const int style = pSprite->GetActiveWeaponStyleAndLevel(&activeRank);
+	const int originalRank = getOriginalWeaponStyleRank(pSprite, style);
+
+	lua_pushinteger(L, style);
+	lua_pushinteger(L, activeRank);
+	lua_pushinteger(L, originalRank);
 }
 
 int EEex::GetHighestRefreshRate()
@@ -3377,6 +3461,66 @@ int EEex::Stats_Hook_OnGettingUnknown(CDerivedStats* pStats, int nStatId) {
 // Opcode //
 ////////////
 
+//-----------------------------------------------------------------------------//
+// op73 - Allow opcode #73 to target main-hand or off-hand damage bonus fields //
+//-----------------------------------------------------------------------------//
+
+static int op73DamageModPercent(const int value, const int percent) {
+	const uint32_t wrappedProduct =
+		static_cast<uint32_t>(value) * static_cast<uint32_t>(percent);
+	const int32_t signedProduct = static_cast<int32_t>(wrappedProduct);
+	return signedProduct / 100;
+}
+
+int EEex::Opcode_Hook_DamageMod_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_DamageMod_ApplyEffect")
+
+	// special bit0 => right/main only, special bit1 => left/offhand only.
+	// Neither bit, or both bits together, deliberately falls through to the
+	// engine's original opcode #73 handling.
+	const unsigned int specialMask = pEffect->m_special & 0x3;
+	if (specialMask == 0 || specialMask == 0x3) {
+		return 0;
+	}
+
+	if (pSprite == nullptr) {
+		return 1;
+	}
+
+	int& derivedBonus = specialMask == 0x1
+		? pSprite->m_derivedStats.m_DamageBonusRight
+		: pSprite->m_derivedStats.m_DamageBonusLeft;
+	int& tempBonus = specialMask == 0x1
+		? pSprite->m_tempStats.m_DamageBonusRight
+		: pSprite->m_tempStats.m_DamageBonusLeft;
+	int& bonusBonus = specialMask == 0x1
+		? pSprite->m_bonusStats.m_DamageBonusRight
+		: pSprite->m_bonusStats.m_DamageBonusLeft;
+
+	// Write the same derived/temp/bonus stat fields that the engine later reads
+	// for hand-specific damage. These writes happen during effect-list
+	// resolution, so the next stats rebuild naturally recomputes them.
+	switch (pEffect->m_dWFlags) {
+		case 0:
+			bonusBonus += pEffect->m_effectAmount;
+			break;
+		case 1:
+			derivedBonus = pEffect->m_effectAmount;
+			break;
+		case 2:
+			derivedBonus = op73DamageModPercent(tempBonus, pEffect->m_effectAmount);
+			break;
+		default:
+			return 1;
+	}
+
+	pEffect->m_firstCall = 0;
+	return 1;
+
+	STUTTER_LOG_END
+}
+
 //--------------------------------------------------------//
 // op101 - Allow saving throw BIT23 to bypass opcode #101 //
 //--------------------------------------------------------//
@@ -3549,6 +3693,21 @@ void EEex::Opcode_Hook_Op342_OnUnhandledParam2(CGameEffect* pEffect, CGameSprite
 		ExSpriteData& exData = exSpriteDataMap[pSprite];
 		exData.combatRoundsOverride[nCombatRoundSlot]->SetResRef(&pEffect->m_res, true, true);
 		pSprite->m_animation.m_overrides |= (0x4 << (nCombatRoundSlot + 1));
+
+		// Preserve existing opcode #342 RNDBASE override semantics. The extra
+		// metadata is active only when special bit0 is set; unflagged overrides
+		// clear any prior offhand tagging for the same combat-round slot.
+		Op342OffhandSlotData& offhandSlotData = exData.op342OffhandSlots[nCombatRoundSlot];
+		clearOp342OffhandSlot(offhandSlotData);
+		offhandSlotData.pEffect = pEffect;
+		if ((pEffect->m_special & 1) != 0) {
+			offhandSlotData.enabled = true;
+			offhandSlotData.thac0Delta = pEffect->m_effectAmount2;
+		}
+
+		ExEffectInfo& effectInfo = exEffectInfoMap[pEffect];
+		effectInfo.op342OffhandSprite = pSprite;
+		effectInfo.op342OffhandSlot = nCombatRoundSlot;
 	}
 }
 
@@ -3816,6 +3975,8 @@ void EEex::Opcode_Hook_OnCopy(CGameEffect* pSrcEffect, CGameEffect* pDstEffect) 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnCopy")
 
 	exEffectInfoMap[pDstEffect] = exEffectInfoMap[pSrcEffect];
+	exEffectInfoMap[pDstEffect].op342OffhandSprite = nullptr;
+	exEffectInfoMap[pDstEffect].op342OffhandSlot = -1;
 
 	STUTTER_LOG_END
 }
@@ -3823,6 +3984,24 @@ void EEex::Opcode_Hook_OnCopy(CGameEffect* pSrcEffect, CGameEffect* pDstEffect) 
 void EEex::Opcode_Hook_OnDestruct(CGameEffect* pEffect) {
 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnDestruct")
+
+	if (auto effectInfoItr = exEffectInfoMap.find(pEffect); effectInfoItr != exEffectInfoMap.end()) {
+		ExEffectInfo& effectInfo = effectInfoItr->second;
+		if (effectInfo.op342OffhandSprite != nullptr && effectInfo.op342OffhandSlot >= 0 && effectInfo.op342OffhandSlot < 5) {
+			if (auto spriteDataItr = exSpriteDataMap.find(effectInfo.op342OffhandSprite); spriteDataItr != exSpriteDataMap.end()) {
+				ExSpriteData& exData = spriteDataItr->second;
+				Op342OffhandSlotData& slotData = exData.op342OffhandSlots[effectInfo.op342OffhandSlot];
+				if (slotData.pEffect == pEffect) {
+					clearOp342OffhandSlot(slotData);
+					exData.op342OffhandFramePending = false;
+					exData.op342OffhandRollPending = false;
+					exData.op342OffhandTHAC0Pending = false;
+					exData.op342OffhandPendingAttackFrame = -1;
+					exData.op342OffhandPendingRollFrame = -1;
+				}
+			}
+		}
+	}
 
 	exEffectInfoMap.erase(pEffect);
 
@@ -3872,6 +4051,45 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 ////////////
 // Sprite //
 ////////////
+
+int EEex::Sprite_Hook_AdjustDisplayedDamage(CGameSprite* pSprite, CItem* pItem, int damage, int hand) {
+
+	STUTTER_LOG_START(int, "EEex::Sprite_Hook_AdjustDisplayedDamage")
+
+	if (pSprite == nullptr || pItem == nullptr) {
+		return damage;
+	}
+
+	const int handBonus = hand == 0
+		? pSprite->m_derivedStats.m_DamageBonusRight
+		: pSprite->m_derivedStats.m_DamageBonusLeft;
+
+	// GetMinDamage()/GetMaxDamage() report rows for the hand-specific damage
+	// bonuses but their total range omits those fields. Adjust only the display
+	// total; the actual combat damage path reads the same stats independently.
+	return damage + handBonus;
+
+	STUTTER_LOG_END
+}
+
+int EEex::Sprite_Hook_AdjustDamageRollHandBonus(CGameSprite* pSprite, int handBonus) {
+
+	STUTTER_LOG_START(int, "EEex::Sprite_Hook_AdjustDamageRollHandBonus")
+
+	if (pSprite == nullptr) {
+		return handBonus;
+	}
+
+	// This is called immediately before the combat-log CString::Format(). The
+	// vanilla call site can pass a right-hand aggregate while formatting a
+	// left-hand breakdown, so replace only the integer argument with the damage
+	// bonus matching the currently selected hand.
+	return pSprite->m_leftAttack == 0
+		? pSprite->m_derivedStats.m_DamageBonusRight
+		: pSprite->m_derivedStats.m_DamageBonusLeft;
+
+	STUTTER_LOG_END
+}
 
 void EEex::Sprite_Hook_OnConstruct(CGameSprite* pSprite) {
 
@@ -3990,7 +4208,7 @@ static byte getAttackFrameTypeReimplementation(CVidBitmap* aBitmaps, byte numAtt
 	return 0;
 }
 
-byte EEex::Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttacks) {
+static byte getAttackFrameType(CGameSprite* pSprite, byte numAttacks) {
 
 	const CGameAnimation *const pAnimation = &pSprite->m_animation;
 	const byte nSpeedFactor = static_cast<byte>(pSprite->m_speedFactor);
@@ -4008,15 +4226,241 @@ byte EEex::Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttack
 	return pAnimation->m_animation->virtual_GetAttackFrameType(numAttacks, nSpeedFactor, nAttackFrame);
 }
 
+static bool hasValidOffhandWeapon(CGameSprite* pSprite) {
+
+	if (pSprite == nullptr) {
+		return false;
+	}
+
+	CItem *const pLeftHandItem = pSprite->m_equipment.m_items[kLeftHandWeaponSlot];
+	if (pLeftHandItem == nullptr || pLeftHandItem->pRes == nullptr || pLeftHandItem->pRes->pHeader == nullptr) {
+		return false;
+	}
+
+	return pLeftHandItem->pRes->pHeader->itemType != kShieldItemType;
+}
+
+static bool isDualWieldingWithOffhandWeapon(CGameSprite* pSprite) {
+
+	if (!hasValidOffhandWeapon(pSprite)) {
+		return false;
+	}
+
+	int activeRank = 0;
+	return pSprite->GetActiveWeaponStyleAndLevel(&activeRank) == kTwoWeaponStyleStat;
+}
+
+static void restoreOp342OffhandAttackStats(CGameSprite* pSprite, ExSpriteData& exData) {
+
+	if (pSprite == nullptr || !exData.op342OffhandAttackStatsRaised) {
+		return;
+	}
+
+	pSprite->m_derivedStats.m_nNumberOfAttacks = exData.op342OffhandOldDerivedAPR;
+	pSprite->m_tempStats.m_nNumberOfAttacks = exData.op342OffhandOldTempAPR;
+	pSprite->m_bonusStats.m_nNumberOfAttacks = exData.op342OffhandOldBonusAPR;
+	pSprite->m_baseStats.m_numberOfAttacksBase = exData.op342OffhandOldBaseAPR;
+
+	exData.op342OffhandAttackStatsRaised = false;
+}
+
+static void raiseOp342OffhandAttackStats(CGameSprite* pSprite, ExSpriteData& exData, short nAttacks) {
+
+	if (pSprite == nullptr || nAttacks <= 0) {
+		return;
+	}
+
+	if (!exData.op342OffhandAttackStatsRaised) {
+		exData.op342OffhandOldDerivedAPR = pSprite->m_derivedStats.m_nNumberOfAttacks;
+		exData.op342OffhandOldTempAPR = pSprite->m_tempStats.m_nNumberOfAttacks;
+		exData.op342OffhandOldBonusAPR = pSprite->m_bonusStats.m_nNumberOfAttacks;
+		exData.op342OffhandOldBaseAPR = pSprite->m_baseStats.m_numberOfAttacksBase;
+	}
+
+	if (pSprite->m_derivedStats.m_nNumberOfAttacks < nAttacks) {
+		pSprite->m_derivedStats.m_nNumberOfAttacks = nAttacks;
+	}
+	if (pSprite->m_tempStats.m_nNumberOfAttacks < nAttacks) {
+		pSprite->m_tempStats.m_nNumberOfAttacks = nAttacks;
+	}
+	if (pSprite->m_bonusStats.m_nNumberOfAttacks < nAttacks) {
+		pSprite->m_bonusStats.m_nNumberOfAttacks = nAttacks;
+	}
+	if (pSprite->m_baseStats.m_numberOfAttacksBase < static_cast<unsigned char>(nAttacks)) {
+		pSprite->m_baseStats.m_numberOfAttacksBase = static_cast<unsigned char>(nAttacks);
+	}
+
+	exData.op342OffhandAttackStatsRaised = true;
+}
+
+byte EEex::Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttacks) {
+	return pSprite != nullptr ? getAttackFrameType(pSprite, numAttacks) : 0;
+}
+
+static byte updateOp342OffhandTag(CGameSprite* pSprite, byte numAttacks, byte frameType) {
+
+	if (pSprite == nullptr || numAttacks == 0 || numAttacks > 5) {
+		return frameType;
+	}
+
+	ExSpriteData& exData = exSpriteDataMap[pSprite];
+	Op342OffhandSlotData& slotData = exData.op342OffhandSlots[numAttacks - 1];
+	if (!slotData.enabled) {
+		return frameType;
+	}
+
+	const int attackFrame = pSprite->m_attackFrame;
+	if (attackFrame < slotData.lastAttackFrame) {
+		slotData.offhandFrameCount = 0;
+		slotData.lastCountedAttackFrame = -1;
+		exData.op342OffhandFramePending = false;
+		exData.op342OffhandRollPending = false;
+		exData.op342OffhandTHAC0Pending = false;
+		exData.op342OffhandPendingAttackFrame = -1;
+		exData.op342OffhandPendingRollFrame = -1;
+	}
+	slotData.lastAttackFrame = attackFrame;
+
+	if (exData.op342OffhandRollPending) {
+		if (!exData.op342OffhandTHAC0Pending || !isDualWieldingWithOffhandWeapon(pSprite)) {
+			exData.op342OffhandFramePending = false;
+			exData.op342OffhandRollPending = false;
+			exData.op342OffhandTHAC0Pending = false;
+			exData.op342OffhandPendingAttackFrame = -1;
+			exData.op342OffhandPendingRollFrame = -1;
+		} else if (attackFrame == exData.op342OffhandPendingRollFrame) {
+			// The repeated offhand frame already marked the attack as pending.
+			// On the corresponding delayed roll frame, force the engine through
+			// its normal Hit() path as an offhand attack.
+			pSprite->m_canDamage = 1;
+			pSprite->m_leftAttack = 1;
+			exData.op342OffhandRollPending = false;
+			return 9;
+		} else if (attackFrame > exData.op342OffhandPendingRollFrame) {
+			exData.op342OffhandFramePending = false;
+			exData.op342OffhandRollPending = false;
+			exData.op342OffhandTHAC0Pending = false;
+			exData.op342OffhandPendingAttackFrame = -1;
+			exData.op342OffhandPendingRollFrame = -1;
+		}
+	}
+
+	if (frameType != 11 || !isDualWieldingWithOffhandWeapon(pSprite)) {
+		return frameType;
+	}
+
+	if (slotData.lastCountedAttackFrame == attackFrame) {
+		return frameType;
+	}
+	slotData.lastCountedAttackFrame = attackFrame;
+
+	++slotData.offhandFrameCount;
+	if (slotData.offhandFrameCount >= 2) {
+		// RNDBASE frame type 11 is the offhand marker. The engine's first 11 in
+		// a round is the natural offhand attack; later 11s are treated as added
+		// offhand attacks. The effective frame type mirrors the engine's APR
+		// gate, while the temporary APR raise lets that gate admit this extra
+		// attack without permanently changing the creature's stats.
+		const int proposedFrameType = 10 + slotData.offhandFrameCount;
+		const int effectiveFrameTypeInt = proposedFrameType < 14 ? proposedFrameType : 14;
+		const int proposedAPR = effectiveFrameTypeInt - 4;
+		const short raisedAPR = static_cast<short>(proposedAPR < 10 ? proposedAPR : 10);
+		const int rollFrame = attackFrame + OP342_OFFHAND_ROLL_FRAME_OFFSET;
+		exData.op342OffhandFramePending = true;
+		exData.op342OffhandPendingAttackFrame = attackFrame;
+		exData.op342OffhandPendingTHAC0Delta = slotData.thac0Delta;
+		raiseOp342OffhandAttackStats(pSprite, exData, raisedAPR);
+		if (rollFrame <= OP342_OFFHAND_LAST_ATTACK_FRAME) {
+			exData.op342OffhandRollPending = true;
+			exData.op342OffhandTHAC0Pending = true;
+			exData.op342OffhandPendingRollFrame = rollFrame;
+		} else {
+			exData.op342OffhandRollPending = false;
+			exData.op342OffhandTHAC0Pending = false;
+			exData.op342OffhandPendingRollFrame = -1;
+		}
+		return static_cast<byte>(effectiveFrameTypeInt);
+	}
+
+	return frameType;
+}
+
+byte EEex::Sprite_Hook_OnSwingGetAttackFrameType(CGameSprite* pSprite, byte numAttacks) {
+	if (pSprite != nullptr) {
+		restoreOp342OffhandAttackStats(pSprite, exSpriteDataMap[pSprite]);
+	}
+	const byte frameType = pSprite != nullptr ? getAttackFrameType(pSprite, numAttacks) : 0;
+	return updateOp342OffhandTag(pSprite, numAttacks, frameType);
+}
+
+void EEex::Sprite_Hook_ApplyOp342OffhandFrame(CGameSprite* pSprite) {
+
+	if (pSprite == nullptr) {
+		return;
+	}
+
+	ExSpriteData& exData = exSpriteDataMap[pSprite];
+	restoreOp342OffhandAttackStats(pSprite, exData);
+	if (!exData.op342OffhandFramePending) {
+		return;
+	}
+
+	if (exData.op342OffhandPendingAttackFrame != pSprite->m_attackFrame || !isDualWieldingWithOffhandWeapon(pSprite)) {
+		exData.op342OffhandFramePending = false;
+		exData.op342OffhandRollPending = false;
+		exData.op342OffhandTHAC0Pending = false;
+		exData.op342OffhandPendingAttackFrame = -1;
+		exData.op342OffhandPendingRollFrame = -1;
+		return;
+	}
+
+	// Promote the tagged RNDBASE offhand marker into a real damage-capable
+	// offhand frame. THAC0 is applied later at Hit(), where the final accumulator
+	// exists.
+	pSprite->m_canDamage = 1;
+	pSprite->m_leftAttack = 1;
+	exData.op342OffhandFramePending = false;
+}
+
+int EEex::Sprite_Hook_GetOp342OffhandTHAC0(CGameSprite* pSprite, int thac0) {
+
+	if (pSprite == nullptr) {
+		return thac0;
+	}
+
+	ExSpriteData& exData = exSpriteDataMap[pSprite];
+	if (!exData.op342OffhandTHAC0Pending) {
+		return thac0;
+	}
+
+	// Consume exactly one pending opcode #342 THAC0 tag. Natural main-hand and
+	// natural offhand attacks never set this flag, so their THAC0 remains vanilla.
+	exData.op342OffhandTHAC0Pending = false;
+	exData.op342OffhandRollPending = false;
+	exData.op342OffhandPendingAttackFrame = -1;
+	exData.op342OffhandPendingRollFrame = -1;
+	return thac0 + exData.op342OffhandPendingTHAC0Delta;
+}
+
 CGameEffectDamage* CGameSprite::Override_Damage(
 	CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage,
 	CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing)
 {
 	Item_ability_st *const pAbility = curWeaponIn->GetAbility(curAttackNum);
-	CGameEffectDamage *const pEffect = this->Damage(curWeaponIn, pLauncher, curAttackNum, criticalDamage, type, facing, myFacing, target, lastSwing);
+	CItem *const pLeftHandItem = this->m_equipment.m_items[kLeftHandWeaponSlot];
+	const bool isLeftHand = lastSwing
+		&& pLeftHandItem != nullptr
+		&& pLeftHandItem->pRes != nullptr
+		&& pLeftHandItem->pRes->pHeader != nullptr
+		&& pLeftHandItem->pRes->pHeader->itemType != kShieldItemType;
 
-	CItem *const pLeftHandItem = this->m_equipment.m_items[9];
-	const bool isLeftHand = lastSwing && pLeftHandItem != nullptr && pLeftHandItem->pRes->pHeader->itemType != 12;
+	// Damage() consults m_leftAttack while building the combat-log damage
+	// breakdown. Swing can leave that field stale at this call site, so set it
+	// only for the duration of Damage() and immediately restore it.
+	const auto oldLeftAttack = this->m_leftAttack;
+	this->m_leftAttack = isLeftHand ? 1 : 0;
+	CGameEffectDamage *const pEffect = this->Damage(curWeaponIn, pLauncher, curAttackNum, criticalDamage, type, facing, myFacing, target, lastSwing);
+	this->m_leftAttack = oldLeftAttack;
 
 	lua_State *const L = luaState();
 	luaCallProtected(L, 1, 0, [&](int) {

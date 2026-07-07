@@ -103,6 +103,8 @@ static void exportPatterns() {
 	// Opcode //
 	////////////
 
+	// op73
+	exportPattern(TEXT("EEex::Opcode_Hook_DamageMod_ApplyEffect"), EEex::Opcode_Hook_DamageMod_ApplyEffect);
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
 	// op248
@@ -146,7 +148,12 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Sprite_Hook_OnDestruct"), EEex::Sprite_Hook_OnDestruct);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnAfterEffectListUnmarshalled"), EEex::Sprite_Hook_OnAfterEffectListUnmarshalled);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeEffectListMarshalled"), EEex::Sprite_Hook_OnBeforeEffectListMarshalled);
+	exportPattern(TEXT("EEex::Sprite_Hook_AdjustDisplayedDamage"), EEex::Sprite_Hook_AdjustDisplayedDamage);
+	exportPattern(TEXT("EEex::Sprite_Hook_AdjustDamageRollHandBonus"), EEex::Sprite_Hook_AdjustDamageRollHandBonus);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnGetAttackFrameType"), EEex::Sprite_Hook_OnGetAttackFrameType);
+	exportPattern(TEXT("EEex::Sprite_Hook_OnSwingGetAttackFrameType"), EEex::Sprite_Hook_OnSwingGetAttackFrameType);
+	exportPattern(TEXT("EEex::Sprite_Hook_ApplyOp342OffhandFrame"), EEex::Sprite_Hook_ApplyOp342OffhandFrame);
+	exportPattern(TEXT("EEex::Sprite_Hook_GetOp342OffhandTHAC0"), EEex::Sprite_Hook_GetOp342OffhandTHAC0);
 
 	////////////
 	// Action //

@@ -234,6 +234,12 @@ static int tolua_function_EEex_GetExtendedStatValue(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_GetWeaponStyle(lua_State* L)
+{
+	EEex::GetWeaponStyle(L, (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"));
+	return 3;
+}
+
 static int tolua_function_EEex_GetHighestRefreshRate(lua_State* L)
 {
 	int returnVal = EEex::GetHighestRefreshRate();
@@ -941,6 +947,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "ForceScrollbarRenderForItemName", &tolua_function_EEex_ForceScrollbarRenderForItemName);
 		tolua_function(L, "FormatPointerAsEngine", &tolua_function_EEex_FormatPointerAsEngine);
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
+		tolua_function(L, "GetWeaponStyle", &tolua_function_EEex_GetWeaponStyle);
 		tolua_function(L, "GetHighestRefreshRate", &tolua_function_EEex_GetHighestRefreshRate);
 		tolua_function(L, "GetINIString", &tolua_function_EEex_GetINIString);
 		tolua_function(L, "GetMicroseconds", &tolua_function_EEex_GetMicroseconds);
