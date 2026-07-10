@@ -3421,6 +3421,117 @@ void EEex::Opcode_Hook_OnOp249AddTail(CGameEffect* pOp249, CGameEffect* pEffect)
 }
 
 //-------//
+// op261 //
+//-------//
+
+static CCreatureFileMemorizedSpell* EEex_Op261_SelectRandomEligibleSpell(
+	CTypedPtrList<CPtrList, CCreatureFileMemorizedSpell*>* pMemorizedList)
+{
+	int nEligible = 0;
+
+	// The Lua hook passes the exact mage / priest memorized-spell list that
+	// vanilla is scanning for the current level. Reusing that list keeps the
+	// helper independent of spell level indexing details and engine offsets.
+	for (auto* pNode = pMemorizedList->m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+		CCreatureFileMemorizedSpell* pSpell = pNode->data;
+
+		// Match vanilla's candidate test: opcode 261 scans until it finds the
+		// first memorized-spell entry whose m_flags bit0 is clear. Bit1 mode
+		// randomizes only among entries that pass that same test.
+		if (pSpell != nullptr && (pSpell->m_flags & 0x1) == 0) {
+			nEligible++;
+		}
+	}
+
+	if (nEligible <= 0) {
+		return nullptr;
+	}
+
+	// Use the engine RNG so this follows the same random source as gameplay
+	// code. The 15-bit mask mirrors nearby engine-style p_rand() usage.
+	const int nRoll = p_rand != nullptr ? (p_rand() & 0x7FFF) : 0;
+	int nSelected = (nRoll * nEligible) >> 15;
+
+	// Walk the list a second time to return the chosen eligible entry. This is
+	// deliberately simple; the lists are small spell-level lists, and avoiding
+	// temporary containers keeps the hook allocation-free.
+	for (auto* pNode = pMemorizedList->m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+		CCreatureFileMemorizedSpell* pSpell = pNode->data;
+
+		if (pSpell == nullptr || (pSpell->m_flags & 0x1) != 0) {
+			continue;
+		}
+
+		if (nSelected-- == 0) {
+			return pSpell;
+		}
+	}
+
+	return nullptr;
+}
+
+CCreatureFileMemorizedSpell* EEex::Opcode_Hook_Op261_SelectRandomSpell(
+	CGameEffect* pEffect,
+	CGameSprite* pSprite,
+	CCreatureFileMemorizedSpell* pVanillaSpell,
+	CTypedPtrList<CPtrList, CCreatureFileMemorizedSpell*>* pMemorizedList)
+{
+	STUTTER_LOG_START(CCreatureFileMemorizedSpell*, "EEex::Opcode_Hook_Op261_SelectRandomSpell")
+
+	if (pEffect == nullptr || pSprite == nullptr || pVanillaSpell == nullptr || pMemorizedList == nullptr) {
+		return pVanillaSpell;
+	}
+
+	if ((pEffect->m_special & 0x2) == 0) {
+		return pVanillaSpell;
+	}
+
+	const CAIObjectType* pAIType = pSprite->virtual_GetAIType();
+
+	if (pAIType != nullptr) {
+		// The same helper is used for both mage and priest hook sites. The hook
+		// passes the current concrete CTypedPtrList, so identify which family it
+		// belongs to by checking whether the pointer falls inside the sprite's
+		// mage or priest memorized-spell-list arrays.
+		const uintptr_t listAddress = reinterpret_cast<uintptr_t>(pMemorizedList);
+		const uintptr_t mageListsStart = reinterpret_cast<uintptr_t>(pSprite->m_memorizedSpellsMage.data);
+		const uintptr_t mageListsEnd = reinterpret_cast<uintptr_t>(pSprite->m_memorizedSpellsMage.data + 9);
+		const uintptr_t priestListsStart = reinterpret_cast<uintptr_t>(pSprite->m_memorizedSpellsPriest.data);
+		const uintptr_t priestListsEnd = reinterpret_cast<uintptr_t>(pSprite->m_memorizedSpellsPriest.data + 7);
+
+		const bool bMagePath = listAddress >= mageListsStart && listAddress < mageListsEnd;
+		const bool bPriestPath = listAddress >= priestListsStart && listAddress < priestListsEnd;
+
+		// Vanilla handles sorcerer (mage class 19) and shaman (priest class 21)
+		// by calling a different empty-resref rememorization path immediately
+		// after the scan. That path ignores the concrete spell pointer in RBX,
+		// so bit1 must not replace it for those class-specific branches.
+		if ((bMagePath && pAIType->m_Class == 19) || (bPriestPath && pAIType->m_Class == 21)) {
+			return pVanillaSpell;
+		}
+	}
+
+	// For normal mage / priest rememorization, replace vanilla's first eligible
+	// spell pointer with a random eligible pointer from the same level list.
+	// If the list unexpectedly has no eligible entries, preserve vanilla.
+	CCreatureFileMemorizedSpell* pRandomSpell = EEex_Op261_SelectRandomEligibleSpell(pMemorizedList);
+	return pRandomSpell != nullptr ? pRandomSpell : pVanillaSpell;
+
+	STUTTER_LOG_END
+}
+
+bool EEex::Opcode_Hook_Op261_ShouldStopAfterCurrentLevel(CGameEffect* pEffect) {
+
+	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_Op261_ShouldStopAfterCurrentLevel")
+
+	// The Lua hook uses this to force the vanilla "try lower spell level" loop
+	// to fall through after the current level has been processed.
+	return pEffect != nullptr && (pEffect->m_special & 0x1) != 0;
+
+	STUTTER_LOG_END
+}
+
+//-------//
 // op280 //
 //-------//
 
