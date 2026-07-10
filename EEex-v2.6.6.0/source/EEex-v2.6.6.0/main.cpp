@@ -149,6 +149,21 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Sprite_Hook_OnGetAttackFrameType"), EEex::Sprite_Hook_OnGetAttackFrameType);
 
 	////////////
+	// UDAux //
+	////////////
+
+	exportPattern(TEXT("EEex::UDAux_Hook_OnBeforeAreaMarshal"), EEex::UDAux_Hook_OnBeforeAreaMarshal);
+	exportPattern(TEXT("EEex::UDAux_Hook_OnAreaContainerMarshal"), EEex::UDAux_Hook_OnAreaContainerMarshal);
+	exportPattern(TEXT("EEex::UDAux_Hook_OnAfterAreaMarshal"), EEex::UDAux_Hook_OnAfterAreaMarshal);
+	exportPattern(TEXT("EEex::UDAux_Hook_OnBeforeAreaUnmarshal"), EEex::UDAux_Hook_OnBeforeAreaUnmarshal);
+	exportPattern(TEXT("EEex::UDAux_Hook_OnAfterAreaContainerConstruct"), EEex::UDAux_Hook_OnAfterAreaContainerConstruct);
+	exportPattern(TEXT("EEex::UDAux_Hook_OnAfterAreaUnmarshal"), EEex::UDAux_Hook_OnAfterAreaUnmarshal);
+	exportPattern(TEXT("EEex::UDAux_Hook_OnBeforeStoreInventoryClear"), EEex::UDAux_Hook_OnBeforeStoreInventoryClear);
+	exportPattern(TEXT("EEex::UDAux_Hook_OnStoreMarshalData"), EEex::UDAux_Hook_OnStoreMarshalData);
+	exportPattern(TEXT("EEex::UDAux_Hook_OnBeforeStoreLoad"), EEex::UDAux_Hook_OnBeforeStoreLoad);
+	exportPattern(TEXT("EEex::UDAux_Hook_OnAfterStoreLoad"), EEex::UDAux_Hook_OnAfterStoreLoad);
+
+	////////////
 	// Action //
 	////////////
 

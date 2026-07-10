@@ -130,6 +130,21 @@ namespace EEex {
 	byte Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttacks);
 
 	////////////
+	// UDAux //
+	////////////
+
+	void UDAux_Hook_OnBeforeAreaMarshal(CGameArea* pArea, unsigned char** ppData, unsigned int* pSize);
+	void UDAux_Hook_OnAreaContainerMarshal(CGameContainer* pContainer);
+	void UDAux_Hook_OnAfterAreaMarshal();
+	void UDAux_Hook_OnBeforeAreaUnmarshal(CGameArea* pArea, unsigned char* pData, unsigned int size);
+	void UDAux_Hook_OnAfterAreaContainerConstruct(CGameContainer* pContainer);
+	void UDAux_Hook_OnAfterAreaUnmarshal(int result);
+	void UDAux_Hook_OnBeforeStoreInventoryClear(CStore* pStore);
+	unsigned char* UDAux_Hook_OnStoreMarshalData(CStore* pStore, unsigned char* pData, unsigned int size, unsigned int* pOutSize);
+	void UDAux_Hook_OnBeforeStoreLoad(CStore* pStore, unsigned char* pData, CResStore* pResStore);
+	void UDAux_Hook_OnAfterStoreLoad(CStore* pStore);
+
+	////////////
 	// Action //
 	////////////
 
