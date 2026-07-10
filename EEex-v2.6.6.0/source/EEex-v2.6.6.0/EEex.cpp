@@ -103,6 +103,8 @@ struct ExStatData {
 	std::vector<CGameEffect*> projectileMutatorEffects;
 	// op409
 	std::vector<EnabledActionListenerData> enableActionListenerEffects;
+	// op412
+	std::vector<CGameEffect*> screenEffectsListEffects;
 };
 
 std::unordered_map<void*, ExStatData> exStatDataMap{};
@@ -130,6 +132,36 @@ struct ExEffectInfo {
 };
 
 std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
+
+struct ScreenEffectsListQueuedEffect {
+	// CGameSprite::AddEffect() owns this pointer. While queued, op412 owns it instead.
+	CGameEffect* pEffect;
+	unsigned char effectList;
+	int noSave;
+	int immediateResolve;
+};
+
+// Queues are keyed by target sprite and flushed before that sprite resolves its effect lists.
+std::unordered_map<CGameSprite*, std::vector<ScreenEffectsListQueuedEffect>> screenEffectsListQueues{};
+// Bad Lua behavior can repeat every batch; log each warning once to avoid hitching on output.
+std::unordered_set<std::string> screenEffectsListLoggedWarnings{};
+thread_local bool screenEffectsListBypassAddEffectHook = false;
+
+struct ScreenEffectsListBypassGuard {
+	bool oldValue;
+
+	ScreenEffectsListBypassGuard()
+		: oldValue(screenEffectsListBypassAddEffectHook)
+	{
+		// Replayed survivors must enter the real AddEffect path without being queued again.
+		screenEffectsListBypassAddEffectHook = true;
+	}
+
+	~ScreenEffectsListBypassGuard()
+	{
+		screenEffectsListBypassAddEffectHook = oldValue;
+	}
+};
 
 ////////////////
 // Projectile //
@@ -3255,6 +3287,9 @@ void EEex::Stats_Hook_OnReload(CGameSprite* pSprite) {
 	// op409
 	exStatData.enableActionListenerEffects.clear();
 
+	// op412
+	exStatData.screenEffectsListEffects.clear();
+
 	STUTTER_LOG_END
 }
 
@@ -3306,6 +3341,15 @@ void EEex::Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats) {
 		data.pEffect = otherEnableActionListener.pEffect;
 	}
 
+	// op412
+	auto& screenEffectsListEffects = exStatData.screenEffectsListEffects;
+	auto& otherScreenEffectsListEffects = otherExStatData.screenEffectsListEffects;
+	screenEffectsListEffects.clear();
+
+	for (auto pOtherEffect : otherScreenEffectsListEffects) {
+		screenEffectsListEffects.emplace_back(pOtherEffect);
+	}
+
 	STUTTER_LOG_END
 }
 
@@ -3354,6 +3398,13 @@ void EEex::Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStat
 		auto& data = enableActionListenerEffects.emplace_back();
 		strcpy_s(data.funcName, sizeof(data.funcName), otherEnableActionListener.funcName);
 		data.pEffect = otherEnableActionListener.pEffect;
+	}
+
+	// op412
+	auto& screenEffectsListEffects = exStatData.screenEffectsListEffects;
+	auto& otherScreenEffectsListEffects = otherExStatData.screenEffectsListEffects;
+	for (auto pOtherEffect : otherScreenEffectsListEffects) {
+		screenEffectsListEffects.emplace_back(pOtherEffect);
 	}
 
 	STUTTER_LOG_END
@@ -3740,6 +3791,250 @@ void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGame
 // END New op409 //
 //---------------//
 
+//-----------//
+// New op412 //
+//-----------//
+
+void destroyScreenEffectsListQueuedEffect(CGameEffect* pEffect) {
+	if (pEffect != nullptr) {
+		// Queued effects have not entered the engine list, so OnRemove must not run.
+		pEffect->virtual_Destruct(1);
+	}
+}
+
+void clearScreenEffectsListQueue(CGameSprite* pSprite) {
+
+	if (auto itr = screenEffectsListQueues.find(pSprite); itr != screenEffectsListQueues.end()) {
+		for (auto& queuedEffect : itr->second) {
+			destroyScreenEffectsListQueuedEffect(queuedEffect.pEffect);
+		}
+		screenEffectsListQueues.erase(itr);
+	}
+}
+
+void logScreenEffectsListWarningOnce(const char* filterFunc, const char* warning) {
+
+	const std::string key = std::string(filterFunc) + '\n' + warning;
+	if (screenEffectsListLoggedWarnings.emplace(key).second) {
+		FPrint("[!][EEex.dll] op412 (ScreenEffectsList) - filterFunc \"%s\" %s; future occurrences suppressed\n", filterFunc, warning);
+	}
+}
+
+void pushScreenEffectsListEffectTable(lua_State* L, const std::vector<CGameEffect*>& effects) {
+
+	lua_newtable(L); // 1 [ ..., effects ]
+
+	int index = 1;
+	for (CGameEffect* pEffect : effects) {
+		tolua_pushusertype(L, pEffect, "CGameEffect"); // 2 [ ..., effects, pEffectUD ]
+		lua_rawseti(L, -2, index++);                   // 1 [ ..., effects ]
+	}
+}
+
+void filterScreenEffectsListSurvivorsForEffect(
+	lua_State* L,
+	CGameEffect* pScreenEffectsListEffect,
+	CGameSprite* pSprite,
+	std::vector<CGameEffect*>& survivors)
+{
+	char filterFunc[9];
+	pScreenEffectsListEffect->m_res.toNullTerminatedStr(filterFunc);
+
+	lua_getglobal(L, filterFunc);                                        // 1 [ ..., _G[filterFunc] ]
+
+	if (!lua_isfunction(L, -1)) {
+		logScreenEffectsListWarningOnce(filterFunc, "has invalid type");
+		lua_pop(L, 1);                                                    // 0 [ ... ]
+		return;
+	}
+
+	if (!luaCallProtected(L, 3, 1, [&](int base) {
+																		   // 1 [ ..., _G[filterFunc], ... ]
+		lua_pushvalue(L, base);                                           // 2 [ ..., _G[filterFunc], ..., _G[filterFunc] ]
+		tolua_pushusertype(L, pScreenEffectsListEffect, "CGameEffect");   // 3 [ ..., _G[filterFunc], ..., _G[filterFunc], pScreenEffectsListEffectUD ]
+		pushScreenEffectsListEffectTable(L, survivors);                   // 4 [ ..., _G[filterFunc], ..., _G[filterFunc], pScreenEffectsListEffectUD, effects ]
+		tolua_pushusertype(L, pSprite, "CGameSprite");                    // 5 [ ..., _G[filterFunc], ..., _G[filterFunc], pScreenEffectsListEffectUD, effects, pSpriteUD ]
+	}))
+	{                                                                      // 1 [ ..., _G[filterFunc] ]
+		lua_pop(L, 1);                                                     // 0 [ ... ]
+		return;
+	}
+																		   // 2 [ ..., _G[filterFunc], retVal ]
+	if (!lua_istable(L, -1)) {
+		logScreenEffectsListWarningOnce(filterFunc, "returned invalid type");
+		lua_pop(L, 2);                                                     // 0 [ ... ]
+		return;
+	}
+
+	// Returned table order is ignored: use pointer identity as a survivor set,
+	// then rebuild the list in the original engine AddEffect order.
+	std::unordered_set<CGameEffect*> returnedEffects;
+	returnedEffects.reserve(survivors.size());
+
+	const int retValIndex = lua_absindex(L, -1);
+	lua_pushnil(L);                                                        // 3 [ ..., _G[filterFunc], retVal, nil ]
+	while (lua_next(L, retValIndex)) {
+																		   // 4 [ ..., _G[filterFunc], retVal, k, v ]
+		if (lua_isuserdata(L, -1)) {
+			CGameEffect* const pReturnedEffect = static_cast<CGameEffect*>(tolua_tousertype_dynamic(L, -1, nullptr, "CGameEffect"));
+			if (pReturnedEffect != nullptr) {
+				returnedEffects.emplace(pReturnedEffect);
+			}
+		}
+		lua_pop(L, 1);                                                     // 3 [ ..., _G[filterFunc], retVal, k ]
+	}
+																		   // 2 [ ..., _G[filterFunc], retVal ]
+	std::vector<CGameEffect*> filteredSurvivors;
+	filteredSurvivors.reserve(survivors.size());
+
+	for (CGameEffect* pSurvivor : survivors) {
+		if (returnedEffects.find(pSurvivor) != returnedEffects.end()) {
+			filteredSurvivors.emplace_back(pSurvivor);
+		}
+	}
+
+	survivors = std::move(filteredSurvivors);
+	lua_pop(L, 2);                                                         // 0 [ ... ]
+}
+
+void filterScreenEffectsListSurvivors(CGameSprite* pSprite, std::vector<CGameEffect*>& survivors) {
+
+	auto exStatDataItr = exStatDataMap.find(pSprite->GetActiveStats());
+	if (exStatDataItr == exStatDataMap.end()) {
+		return;
+	}
+
+	// Copy the active filter list before Lua runs; filter functions may mutate stats.
+	auto screenEffectsListEffects = exStatDataItr->second.screenEffectsListEffects;
+	if (screenEffectsListEffects.empty()) {
+		return;
+	}
+
+	lua_State *const L = luaState();
+	for (CGameEffect* pScreenEffectsListEffect : screenEffectsListEffects) {
+		filterScreenEffectsListSurvivorsForEffect(L, pScreenEffectsListEffect, pSprite, survivors);
+	}
+}
+
+int EEex::Opcode_Hook_ScreenEffectsList_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_ScreenEffectsList_ApplyEffect")
+
+	exStatDataMap[&pSprite->m_derivedStats].screenEffectsListEffects.emplace_back(pEffect);
+	return 1;
+
+	STUTTER_LOG_END
+}
+
+void EEex::Opcode_Hook_ScreenEffectsList_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_ScreenEffectsList_OnRemove")
+
+	// The op412 effect is about to be destroyed - remove its cached values
+	removeCachedEffect(pSprite->m_derivedStats, &ExStatData::screenEffectsListEffects, pEffect);
+	removeCachedEffect(pSprite->m_tempStats,    &ExStatData::screenEffectsListEffects, pEffect);
+	removeCachedEffect(pSprite->m_bonusStats,   &ExStatData::screenEffectsListEffects, pEffect);
+
+	STUTTER_LOG_END
+}
+
+int EEex::Opcode_Hook_ScreenEffectsList_OnBeforeAddEffect(
+	CGameSprite* pSprite,
+	CGameEffect* pEffect,
+	unsigned char effectList,
+	int noSave,
+	int immediateResolve)
+{
+	if (screenEffectsListBypassAddEffectHook || pSprite == nullptr || pEffect == nullptr) {
+		return 0;
+	}
+
+	auto exStatDataItr = exStatDataMap.find(pSprite->GetActiveStats());
+	if (exStatDataItr == exStatDataMap.end() || exStatDataItr->second.screenEffectsListEffects.empty()) {
+		return 0;
+	}
+
+	// Take ownership before the engine sees this effect; returning handled skips the original call.
+	screenEffectsListQueues[pSprite].push_back({pEffect, effectList, noSave, immediateResolve});
+
+	if (immediateResolve != 0) {
+		// Calls that normally resolve immediately must flush now so timing does not drift by a tick.
+		EEex::Opcode_Hook_ScreenEffectsList_Flush(pSprite);
+	}
+
+	return 1;
+}
+
+void EEex::Opcode_Hook_ScreenEffectsList_Flush(CGameSprite* pSprite) {
+
+	if (pSprite == nullptr) {
+		return;
+	}
+
+	auto itr = screenEffectsListQueues.find(pSprite);
+	if (itr == screenEffectsListQueues.end()) {
+		return;
+	}
+
+	// Detach the batch before running Lua; replayed survivors can trigger nested AddEffect calls.
+	std::vector<ScreenEffectsListQueuedEffect> queuedEffects = std::move(itr->second);
+	screenEffectsListQueues.erase(itr);
+
+	if (queuedEffects.empty()) {
+		return;
+	}
+
+	std::vector<CGameEffect*> survivors;
+	survivors.reserve(queuedEffects.size());
+
+	bool batchHasImmediateResolve = false;
+	for (const auto& queuedEffect : queuedEffects) {
+		survivors.emplace_back(queuedEffect.pEffect);
+		if (queuedEffect.immediateResolve != 0) {
+			batchHasImmediateResolve = true;
+		}
+	}
+
+	filterScreenEffectsListSurvivors(pSprite, survivors);
+
+	std::unordered_set<CGameEffect*> survivorSet;
+	survivorSet.reserve(survivors.size());
+	for (CGameEffect* pSurvivor : survivors) {
+		survivorSet.emplace(pSurvivor);
+	}
+
+	// If the batch contains an immediate-resolution call, replay survivors first and resolve once.
+	size_t lastSurvivorIndex = queuedEffects.size();
+	for (size_t i = 0; i < queuedEffects.size(); ++i) {
+		if (survivorSet.find(queuedEffects[i].pEffect) != survivorSet.end()) {
+			lastSurvivorIndex = i;
+		}
+	}
+
+	for (size_t i = 0; i < queuedEffects.size(); ++i) {
+		auto& queuedEffect = queuedEffects[i];
+		const bool survived = survivorSet.find(queuedEffect.pEffect) != survivorSet.end();
+
+		if (survived) {
+			const int immediateResolve = (batchHasImmediateResolve && i == lastSurvivorIndex) ? 1 : 0;
+			CGameEffect* const pEffect = queuedEffect.pEffect;
+			// virtual_AddEffect() owns surviving effects after this point.
+			queuedEffect.pEffect = nullptr;
+
+			ScreenEffectsListBypassGuard bypassGuard;
+			pSprite->virtual_AddEffect(pEffect, queuedEffect.effectList, queuedEffect.noSave, immediateResolve);
+		}
+		else {
+			destroyScreenEffectsListQueuedEffect(queuedEffect.pEffect);
+			queuedEffect.pEffect = nullptr;
+		}
+	}
+}
+
+//---------------//
+// END New op412 //
+//---------------//
+
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
 
 	STUTTER_LOG_START(int, "EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget")
@@ -3885,6 +4180,8 @@ void EEex::Sprite_Hook_OnConstruct(CGameSprite* pSprite) {
 void EEex::Sprite_Hook_OnDestruct(CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnDestruct")
+
+	clearScreenEffectsListQueue(pSprite);
 
 	if (auto itr = exSpriteDataMap.find(pSprite); itr != exSpriteDataMap.end()) {
 		ExSpriteData& exData = itr->second;

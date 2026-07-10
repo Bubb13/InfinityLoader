@@ -112,6 +112,11 @@ namespace EEex {
 	// New op409
 	int Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
+	// New op412
+	int Opcode_Hook_ScreenEffectsList_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
+	void Opcode_Hook_ScreenEffectsList_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
+	int Opcode_Hook_ScreenEffectsList_OnBeforeAddEffect(CGameSprite* pSprite, CGameEffect* pEffect, unsigned char effectList, int noSave, int immediateResolve);
+	void Opcode_Hook_ScreenEffectsList_Flush(CGameSprite* pSprite);
 
 	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect);
 	int Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite);
