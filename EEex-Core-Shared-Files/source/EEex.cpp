@@ -2152,7 +2152,11 @@ void CChitin::Override_SynchronousUpdate() {
 		}
 		while (exNeedRenderRepass);
 
-		if (!this->m_bManualFrameControl) {
+		// Patch: Uncap fps code controls back buffer flips when it is active; in that case only flip here if the projector engine is running
+		// |
+		// | if (!this->m_bManualFrameControl && !EEex::UncapFPS_Enabled) {
+		// |
+		if (!this->m_bManualFrameControl && (!EEex::UncapFPS_Enabled || pActiveEngine == (*p_g_pBaldurChitin)->m_pEngineProjector)) {
 			this->cVideo.pCurrentMode->Flip(1);
 		}
 	}

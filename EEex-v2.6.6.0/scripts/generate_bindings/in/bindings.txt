@@ -9,6 +9,7 @@ struct CChitin
 {
 	$nobinding $external_implementation void Override_SynchronousUpdate();
 	$nobinding $external_implementation void Override_Update();
+	$nobinding $external_implementation int Override_WinMain();
 };
 
 struct CGameAIBase : CGameObject
@@ -122,6 +123,7 @@ namespace EEex
 	bool UncapFPS_Enabled;
 	int UncapFPS_FPSLimit;
 	bool UncapFPS_FPSLimitEnabled;
+	bool UncapFPS_FullscreenVRR;
 	int UncapFPS_LuaGCSteps;
 	bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
 
@@ -146,6 +148,8 @@ namespace EEex
 	$external_implementation bool IsMarshallingCopy();
 	$external_implementation bool IsPlayerScript(CAIScript* pScript);
 	$external_implementation $pass_lua_state long MatchObject(CGameObject* pStartObject, primitive const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
+	$external_implementation void OnTargetExecutableInitialized();
+	$external_implementation void OpenDebugWindow();
 	$external_implementation $pass_lua_state void RegisterSlicedRect();
 	$external_implementation void SetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* value);
 	$external_implementation void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);

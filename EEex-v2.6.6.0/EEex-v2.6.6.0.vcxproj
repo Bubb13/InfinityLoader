@@ -14,10 +14,13 @@
     <ClCompile Include="..\EEex-Core-Shared-Files\source\common.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\coordinate_util.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\debug.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\debug_window.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\EEex.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_function_names.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_reimplementations.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\font_util.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\im_rolling_line_graph.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\im_tracer.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\lua_util.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\main.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\menu_util.cpp" />
@@ -26,6 +29,16 @@
     <ClCompile Include="..\EEex-Core-Shared-Files\source\uncap_fps.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\util.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\visibility_map.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\imgui.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\imgui_impl_dx9.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\implot.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\implot_demo.cpp" />
+    <ClCompile Include="..\lib_source\ImGui\implot_items.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\generated\Baldur_generated_internal_pointers.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\generated\EEexLua_generated.cpp" />
     <ClCompile Include="source\EEex-v2.6.6.0\generated\EEexLua_generated_baseclass_offsets.cpp" />
@@ -33,10 +46,13 @@
   <ItemGroup>
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\common\eeex_api.h" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\coordinate_util.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\debug_window.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEex.h" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEexLua_generated.h" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\engine_function_names.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\font_util.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_rolling_line_graph.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_tracer.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\lua_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\menu_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\profiler.hpp" />
@@ -47,6 +63,16 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex_external\gl\glew.h" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex_external\gl\glxew.h" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex_external\gl\wglew.h" />
+    <ClInclude Include="..\lib_headers\imgui\imconfig.h" />
+    <ClInclude Include="..\lib_headers\imgui\imgui.h" />
+    <ClInclude Include="..\lib_headers\imgui\imgui_impl_dx9.h" />
+    <ClInclude Include="..\lib_headers\imgui\imgui_impl_win32.h" />
+    <ClInclude Include="..\lib_headers\imgui\imgui_internal.h" />
+    <ClInclude Include="..\lib_headers\imgui\implot.h" />
+    <ClInclude Include="..\lib_headers\imgui\implot_internal.h" />
+    <ClInclude Include="..\lib_headers\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\lib_headers\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\lib_headers\imgui\imstb_truetype.h" />
     <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur_generated.h" />
     <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur_lua_generated.h" />
   </ItemGroup>
@@ -112,7 +138,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)headers/EEex-v2.6.6.0_generated;$(SolutionDir)EEex-Core-Shared-Files/headers/common;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex_external;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/EEex-v2.6.6.0_generated;$(SolutionDir)EEex-Core-Shared-Files/headers/common;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex_external;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)lib_headers/imgui;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -121,7 +147,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>ntdll.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderUtil.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;dwmapi.lib;ntdll.lib;opengl32.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderUtil.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>EEex-v2.6.6.0.def</ModuleDefinitionFile>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
@@ -139,7 +165,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)headers/EEex-v2.6.6.0_generated;$(SolutionDir)EEex-Core-Shared-Files/headers/common;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex_external;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers/EEex-v2.6.6.0_generated;$(SolutionDir)EEex-Core-Shared-Files/headers/common;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex;$(SolutionDir)EEex-Core-Shared-Files/headers/EEex_external;$(SolutionDir)InfinityLoaderCommon/headers/common;$(SolutionDir)InfinityLoaderCommon/source/common;$(SolutionDir)lib_headers/imgui;$(SolutionDir)LuaBindingsCore/headers/common;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -148,7 +174,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>ntdll.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderUtil.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;dwmapi.lib;ntdll.lib;opengl32.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderCommon.lib;$(SolutionDir)$(Platform)\$(Configuration)\InfinityLoaderUtil.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaBindingsCore.lib;$(SolutionDir)$(Platform)\$(Configuration)\LuaProvider52\LuaProvider.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>EEex-v2.6.6.0.def</ModuleDefinitionFile>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>

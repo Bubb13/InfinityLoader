@@ -55,6 +55,18 @@
     <Filter Include="Source Files\EEex-Core-Shared-Files">
       <UniqueIdentifier>{c61ac171-c4b4-44ac-923d-5d558e5cd82f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Lib">
+      <UniqueIdentifier>{e960ef68-9c61-4b21-b6c5-165d8df816de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lib">
+      <UniqueIdentifier>{0e671a96-88a8-4025-884b-f92d16fe1b96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Lib\ImGui">
+      <UniqueIdentifier>{82cdb62b-5c05-4fb0-96d1-906c29045519}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lib\ImGui">
+      <UniqueIdentifier>{f899f5bb-376a-426a-a889-caa5b98d42ec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\EEex-v2.7.3.0\Generated\EEexLua_generated.cpp">
@@ -117,6 +129,45 @@
     <ClCompile Include="source\EEex-v2.7.3.0\generated\EEexLua_generated.cpp">
       <Filter>Source Files\EEex-v2.7.3.0\Generated</Filter>
     </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\debug_window.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui_widgets.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui_demo.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui_draw.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui_impl_dx9.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui_impl_win32.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui_tables.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\implot.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\implot_demo.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\implot_items.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\im_tracer.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\im_rolling_line_graph.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\common\eeex_api.h">
@@ -172,6 +223,45 @@
     </ClInclude>
     <ClInclude Include="headers\EEex-v2.7.3.0_generated\Baldur_generated.h">
       <Filter>Header Files\EEex-v2.7.3.0\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imstb_rectpack.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imstb_textedit.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imstb_truetype.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imconfig.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imgui.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imgui_internal.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\debug_window.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imgui_impl_dx9.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imgui_impl_win32.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\implot_internal.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\implot.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_tracer.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_rolling_line_graph.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,4 @@
 
-#include <Windows.h>
-
 #include "time_util.hpp"
 
 //---------------------------//

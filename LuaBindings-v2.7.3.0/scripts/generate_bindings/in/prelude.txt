@@ -28,6 +28,11 @@ struct hasDestruct {
 	static constexpr bool value = check<T>(nullptr);
 };
 
+enum class NO_CONSTRUCT
+{
+	FLAG
+};
+
 template<typename A, bool bDestruct = true>
 struct EngineVal
 {
@@ -55,6 +60,8 @@ public:
 	A& operator*() {
 		return val;
 	}
+
+	EngineVal(NO_CONSTRUCT) {}
 
 	template<typename... Args>
 	EngineVal(Args&&... args) {

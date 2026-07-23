@@ -1,7 +1,9 @@
 
+#include <algorithm>
 #include <deque>
 
 #include "coordinate_util.hpp"
+#include "debug_window.hpp"
 #include "EEex.h"
 #include "lua_util.hpp"
 #include "menu_util.hpp"
@@ -56,6 +58,10 @@ struct ExpScrollResult
 	ExpScrollEndReason endReason;
 	int nStepCount;
 };
+
+////////////////////
+// RollingAverage //
+////////////////////
 
 template<typename T>
 class RollingAverage
@@ -122,28 +128,122 @@ void RollingAverage<T>::recalculate(TimeType currentTime)
 	currentAverage = sum / static_cast<T>(queue.size());
 }
 
+//////////////////////////////
+// ExponentialMovingAverage //
+//////////////////////////////
+
+template<typename T>
+class ExponentialMovingAverage
+{
+	double alpha = 0.15;
+	double currentAverage = 0.0;
+	bool initialized = false;
+
+public:
+
+	// alpha:
+	//   0.0 = no response
+	//   1.0 = instant response
+	//
+	// Recommended:
+	//   0.10 - very smooth
+	//   0.15 - good default
+	//   0.20 - more reactive
+	ExponentialMovingAverage(double alpha = 0.15);
+
+	T update(T sample);
+	T get() const;
+	bool isInitialized() const;
+	void Reset();
+	void Reset(T value);
+	void setAlpha(double alpha);
+	double getAlpha() const;
+};
+
+template<typename T>
+ExponentialMovingAverage<T>::ExponentialMovingAverage(double alpha)
+	: alpha(std::clamp(alpha, 0.0, 1.0))
+{}
+
+template<typename T>
+T ExponentialMovingAverage<T>::update(T sample)
+{
+	if (!initialized)
+	{
+		currentAverage = static_cast<double>(sample);
+		initialized = true;
+	}
+	else
+	{
+		currentAverage += alpha * (static_cast<double>(sample) - currentAverage);
+	}
+
+	return static_cast<T>(currentAverage);
+}
+
+template<typename T>
+T ExponentialMovingAverage<T>::get() const
+{
+	return static_cast<T>(currentAverage);
+}
+
+template<typename T>
+bool ExponentialMovingAverage<T>::isInitialized() const
+{
+	return initialized;
+}
+
+template<typename T>
+void ExponentialMovingAverage<T>::Reset()
+{
+	initialized = false;
+	currentAverage = 0.0;
+}
+
+template<typename T>
+void ExponentialMovingAverage<T>::Reset(T value)
+{
+	initialized = true;
+	value = static_cast<double>(value);
+}
+
+template<typename T>
+void ExponentialMovingAverage<T>::setAlpha(double alpha)
+{
+	alpha = std::clamp(alpha, 0.0, 1.0);
+}
+
+template<typename T>
+double ExponentialMovingAverage<T>::getAlpha() const
+{
+	return alpha;
+}
+
 //---------------------------//
 //          Globals          //
 //---------------------------//
 
+ExponentialMovingAverage<TimeType> averageFlipTime{};
 RollingAverage<int> averageSyncUpdateDelta { 1000000 };
-ExMenuStateOverrides beforeWorldScreenDeactivatedMenuStates{};
 bool bAutoScrollFirstTick = false;
+ExMenuStateOverrides beforeWorldScreenDeactivatedMenuStates{};
 bool bFullTick = false;
+bool bNeedsFlip = false;
 bool bVSyncEnabled = true;
 TimeType nLastAutoZoomTime = 0;
+TimeType nLastFlipEndTime = 0;
+TimeType nLastFullTickStartTime = 0;
 TimeType nLastScrollTime = 0;
 TimeType nLastSyncUpdateTime = 0;
-TimeType nLastTPSPrintTime = 0;
-TimeType nNextFullSyncUpdateTick = 0;
-TimeType nNextLightSyncUpdateTick = -1;
 TimeType nRemainingAutoZoomTime = 0;
 TimeType nRemainingScrollTime = 0;
 int nScreenShakeSavedX = 0;
 int nScreenShakeSavedY = 0;
+TimeType nTargetNextFlipCallStartTime = 0;
+TimeType nTargetNextFullTickStartTime = 0;
 TimeType nTooltipEnableTime = 0;
-TimeType nTransitionStartTime = 0;
 TimeType nTransitionEndTime = 0;
+TimeType nTransitionStartTime = 0;
 CPoint ptMapPosExact;
 
 //-----------------------------//
@@ -172,6 +272,21 @@ static SDL_Keymod operator|(const SDL_Keymod& a, const SDL_Keymod b)
 static SDL_Keymod operator&(const SDL_Keymod& a, const SDL_Keymod b)
 {
 	return static_cast<SDL_Keymod>(static_cast<__int32>(a) & static_cast<__int32>(b));
+}
+
+static SDL_WindowFlags operator|(const SDL_WindowFlags& a, const SDL_WindowFlags b)
+{
+	return static_cast<SDL_WindowFlags>(static_cast<__int32>(a) | static_cast<__int32>(b));
+}
+
+static SDL_WindowFlags operator&(const SDL_WindowFlags& a, const SDL_WindowFlags b)
+{
+	return static_cast<SDL_WindowFlags>(static_cast<__int32>(a) & static_cast<__int32>(b));
+}
+
+static bool operator==(const SDL_WindowFlags& a, const __int32 b)
+{
+	return static_cast<__int32>(a) == b;
 }
 
 ///////////////////////
@@ -756,6 +871,24 @@ static int expScrollScaleSpeedToTime(int src, int dst, int minStep, int threshol
 	}
 }
 
+/////////////////
+// SDL Utility //
+/////////////////
+
+static int getWindowRefreshRate()
+{
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+	SDL_Window *const pWindow = pChitin->cVideo.pCurrentMode->m_pWindow;
+	SDL_VideoDisplay *const pVideoDisplay = p_SDL_GetDisplayForWindow(pWindow);
+	return pVideoDisplay->current_mode.refresh_rate;
+}
+
+static bool isFullscreen()
+{
+	SDL_Window *const pWindow = (*p_g_pBaldurChitin)->cVideo.pCurrentMode->m_pWindow;
+	return (p_SDL_GetWindowFlags(pWindow) & (SDL_WindowFlags::SDL_WINDOW_FULLSCREEN | SDL_WindowFlags::SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
+}
+
 ///////////////////
 // Lua Functions //
 ///////////////////
@@ -790,6 +923,14 @@ void EEex::SetVSyncEnabled(bool bEnable, bool bResetDevice)
 void EEex::UpdateLastScrollTime()
 {
 	nLastScrollTime = getTime();
+}
+
+void EEex::OpenDebugWindow()
+{
+	if (!IsDebugWindowOpen())
+	{
+		CreateDebugWindow();
+	}
 }
 
 ///////////
@@ -1066,25 +1207,170 @@ static void trackSyncUpdateDelta(TimeType nStartTime)
 	nLastSyncUpdateTime = nStartTime;
 	averageSyncUpdateDelta.push(nStartTime, nSyncUpdateDelta);
 	averageSyncUpdateDelta.recalculate(nStartTime);
-
-	//if (nStartTime - nLastTPSPrintTime >= 1000000)
-	//{
-	//	FPrint("tps: %d\n", 1000000 / averageSyncUpdateDelta.get());
-	//	nLastTPSPrintTime = nStartTime;
-	//}
 }
 
-static int getWindowRefreshRate()
+static void scheduleFullTick(const TimeType nEndTime, const TimeType nLateBy)
 {
-	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
-	SDL_Window *const pWindow = pChitin->cVideo.pCurrentMode->m_pWindow;
-	SDL_VideoDisplay *const pVideoDisplay = p_SDL_GetDisplayForWindow(pWindow);
-	return pVideoDisplay->current_mode.refresh_rate;
+	const TimeType nIdealFrameInterval = 1000000 / *CChitin::p_TIMER_UPDATES_PER_SECOND;
+	nTargetNextFullTickStartTime += nIdealFrameInterval + (nLateBy / 10);
+}
+
+static void doSyncUpdate(CChitin *const pChitin, lua_State *const L)
+{
+	pChitin->virtual_SynchronousUpdate();
+	lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
+
+	bNeedsFlip = true;
+}
+
+static void flip(CChitin *const pChitin)
+{
+	if (!bNeedsFlip)
+	{
+		return;
+	}
+
+	bNeedsFlip = false;
+
+	const TimeType nFlipStartTime = getTime();
+	pChitin->cVideo.pCurrentMode->Flip(true);
+	const TimeType nFlipEndTime = getTime();
+
+	const TimeType nTimeBetweenFlipEnds = nFlipEndTime - nLastFlipEndTime;
+	nLastFlipEndTime = nFlipEndTime;
+
+	if (IsDebugWindowOpen())
+	{
+		rollingTimeBetweenFlipEnds.Plot("Time Between Flip Ends", nFlipEndTime, nTimeBetweenFlipEnds);
+	}
+
+	const TimeType nFlipTimeTaken = nFlipEndTime - nFlipStartTime;
+	averageFlipTime.update(nFlipTimeTaken);
+
+	if (IsDebugWindowOpen())
+	{
+		rollingFlipTime.Plot("Flip Time", nFlipEndTime, nFlipTimeTaken);
+	}
+
+	if (bVSyncEnabled)
+	{
+		const int nWindowRefreshRate = getWindowRefreshRate();
+		const bool bIsFullscreen = isFullscreen();
+		const int nVSyncMaxHz = EEex::UncapFPS_FullscreenVRR && bIsFullscreen ? nWindowRefreshRate - 3 : nWindowRefreshRate;
+
+		const TimeType nTargetFlipHz = EEex::UncapFPS_FPSLimitEnabled ? (std::min)(EEex::UncapFPS_FPSLimit, nVSyncMaxHz) : nVSyncMaxHz;
+		const TimeType nTargetNextFlipCallEndTime = nFlipEndTime + (1000000 / nTargetFlipHz);
+
+		nTargetNextFlipCallStartTime = nTargetNextFlipCallEndTime - averageFlipTime.get();
+	}
+	else if (EEex::UncapFPS_FPSLimitEnabled)
+	{
+		const TimeType nTargetNextFlipCallEndTime = nFlipEndTime + (1000000 / EEex::UncapFPS_FPSLimit);
+		nTargetNextFlipCallStartTime = nTargetNextFlipCallEndTime - averageFlipTime.get();
+	}
+	else
+	{
+		nTargetNextFlipCallStartTime = nFlipEndTime;
+	}
+}
+
+static int CChitin_InitInstance(CChitin* pThis)
+{
+	EngineVal<CString> sVersion = CChitin::GetVersionString();
+	p_SDL_Log("%s %s\n", CChitin::p_m_sGameName->m_pchData, sVersion->m_pchData);
+
+	for (auto pNode = pThis->lEngines.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext)
+	{
+		CWarp *const pWarp = pNode->data;
+
+		if (pWarp != nullptr)
+		{
+			pWarp->virtual_EngineInitialized();
+		}
+	}
+
+	if (pThis->pStartingEngine == nullptr)
+	{
+		pThis->virtual_ShutDown(-1, nullptr, nullptr);
+	}
+	else
+	{
+		pThis->virtual_SelectEngine(pThis->pStartingEngine);
+	}
+
+	CVidMode *const pVidMode = pThis->cVideo.pCurrentMode;
+	pThis->OnResizeWindow(pVidMode->nWidth, pVidMode->nHeight);
+
+	pThis->bServicingEnabled = 1;
+
+	*CChitin::p_TIMER_UPDATES_PER_SECOND = p_BGGetPrivateProfileInt("Program Options", "Maximum Frame Rate", 30);
+
+	if (*CChitin::p_TIMER_UPDATES_PER_SECOND > 90)
+	{
+		*CChitin::p_TIMER_UPDATES_PER_SECOND = 30;
+	}
+
+	const int nLogFrameTimes = p_BGGetPrivateProfileInt("Graphics", "Log Frame Times", 0);
+
+	if (nLogFrameTimes > 0)
+	{
+		const time_t time = _time64(nullptr);
+		const tm *const pLocalTime = _localtime64(&time);
+
+		const char *const sFilePath = p_va("home:/framelog_%02d_%2d_%d_%02d-%02d-%02d.csv", pLocalTime->tm_mon, pLocalTime->tm_mday,
+			1900 + pLocalTime->tm_year, pLocalTime->tm_hour, pLocalTime->tm_min, pLocalTime->tm_sec);
+
+		const char *const sRealFilePath = p_dimmResolveFileName(sFilePath);
+		pThis->m_fFrameTimeLog = fopen(sRealFilePath, "wb");
+
+		const char *const sFirstLogLine = p_va("timestamp,render,game,path,avg\n");
+		fwrite(sFirstLogLine, strlen(sFirstLogLine), 1, pThis->m_fFrameTimeLog);
+	}
+
+	if (nLogFrameTimes == 2)
+	{
+		pThis->m_bLogFrames = 1;
+	}
+
+	return 1;
+}
+
+int CChitin::Override_WinMain()
+{
+	this->m_sCommandLine = "";
+	this->ParseCommandLine();
+
+	if (!this->virtual_InitializeServices())
+	{
+		this->virtual_ShutDown(-1, nullptr, nullptr);
+	}
+
+	this->virtual_LoadOptions();
+	CChitin_InitInstance(this);
+
+	while (true)
+	{
+		// Patch: Moved into CChitin::Update() so the uncap code can control when it executes
+		// |
+		// | this->ProcessEvents();
+		// |
+		this->Update();
+	}
 }
 
 void CChitin::Override_Update()
 {
-	const TimeType nStartTime = getTime();
+	const bool bIsProjector = this->pActiveEngine == (*p_g_pBaldurChitin)->m_pEngineProjector;
+	bool bFlipped = false;
+
+	if (EEex::UncapFPS_Enabled && !bIsProjector && getTime() >= nTargetNextFlipCallStartTime)
+	{
+		flip(this);
+		bFlipped = true;
+	}
+
+	const TimeType nTickStartTime = getTime();
+	this->ProcessEvents();
 
 	//////////////////////////////////////////////////////////////////////
 	// Dump Lua values that were not properly cleaned up from the stack //
@@ -1123,12 +1409,19 @@ void CChitin::Override_Update()
 		}
 	}
 
-	const bool bUsingFPSLimit = EEex::UncapFPS_FPSLimitEnabled && (!bVSyncEnabled || EEex::UncapFPS_FPSLimit < getWindowRefreshRate());
-
 	// Patch: Run "full ticks" at 30tps like normal, and (if uncapped) run in-between "light" ticks that only render the game
 	// |
-	if (!EEex::UncapFPS_Enabled || nStartTime >= nNextFullSyncUpdateTick)
+	if (!EEex::UncapFPS_Enabled || bIsProjector || nTickStartTime >= nTargetNextFullTickStartTime)
 	{
+		const TimeType nStartTime = getTime();
+
+		if (IsDebugWindowOpen())
+		{
+			rollingTimeBetweenFullUpdates.Plot("Time Between Full Updates", nStartTime, nStartTime - nLastFullTickStartTime);
+		}
+
+		nLastFullTickStartTime = nStartTime;
+
 		trackSyncUpdateDelta(nStartTime);
 		bFullTick = true;
 
@@ -1152,11 +1445,11 @@ void CChitin::Override_Update()
 		// Logic tick //
 		////////////////
 
-		const uint nAsyncStart = p_SDL_GetTicks();
+		const uint nAsyncStartTicks = p_SDL_GetTicks();
 
 		this->virtual_AsynchronousUpdate(0, 0, 0, 0, 0);
 
-		this->m_nGameTimer = p_SDL_GetTicks() - nAsyncStart;
+		this->m_nGameTimer = p_SDL_GetTicks() - nAsyncStartTicks;
 
 		/////////////////
 		// Render tick //
@@ -1166,12 +1459,13 @@ void CChitin::Override_Update()
 
 		this->m_displayStale = 1;
 
-		if (this->m_displayStale == 1)
+		if (this->m_displayStale == 1 && bIsProjector)
 		{
 			this->m_displayStale = 0;
 			this->m_bInSyncUpdate = 1;
-			this->virtual_SynchronousUpdate();
-			lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
+
+			doSyncUpdate(this, L);
+
 			this->m_bInSyncUpdate = 0;
 			this->m_AIStale = 1;
 		}
@@ -1223,30 +1517,9 @@ void CChitin::Override_Update()
 		else
 		{
 			const TimeType nEndTime = getTime();
-			const TimeType nTimeTaken = nEndTime - nStartTime;
+			const TimeType nLateBy = nStartTime - nTargetNextFullTickStartTime;
 
-			const TimeType nTarget = 1000000 / EEex::UncapFPS_FPSLimit;
-			if (nTimeTaken > nTarget)
-			{
-				//FPrint("Light frame took too long: %lld > %lld\n", nTimeTaken, nTarget);
-			}
-
-			const TimeType nTargetFullMicroseconds = (1000000 / *CChitin::p_TIMER_UPDATES_PER_SECOND) - nTimeTaken;
-			nNextFullSyncUpdateTick = nEndTime + nTargetFullMicroseconds;
-
-			// Check reschedule light ticks if they are disabled
-			if (nNextLightSyncUpdateTick == -1)
-			{
-				if (!bUsingFPSLimit)
-				{
-					nNextLightSyncUpdateTick = 0;
-				}
-				else
-				{
-					const int nEffectiveCap = EEex::UncapFPS_FPSLimit - *CChitin::p_TIMER_UPDATES_PER_SECOND;
-					nNextLightSyncUpdateTick = nEffectiveCap > 0 ? nEndTime + (1000000 / nEffectiveCap) - nTimeTaken : -1;
-				}
-			}
+			scheduleFullTick(nEndTime, nLateBy);
 		}
 
 		/////////////////////
@@ -1272,9 +1545,10 @@ void CChitin::Override_Update()
 			p_fwrite(buffer, size, 1, this->m_fFrameTimeLog);
 		}
 	}
-	else if (nNextLightSyncUpdateTick != -1 && nStartTime >= nNextLightSyncUpdateTick)
-	//else
+	else if (bFlipped)
 	{
+		const TimeType nStartTime = getTime();
+
 		trackSyncUpdateDelta(nStartTime);
 		bFullTick = false;
 
@@ -1284,40 +1558,19 @@ void CChitin::Override_Update()
 		{
 			this->m_displayStale = 0;
 			this->m_bInSyncUpdate = 1;
-			this->virtual_SynchronousUpdate();
-			lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
+
+			doSyncUpdate(this, L);
+
 			this->m_bInSyncUpdate = 0;
 			this->m_AIStale = 1;
-		}
-
-		const TimeType nEndTime = getTime();
-		const TimeType nTimeTaken = nEndTime - nStartTime;
-
-		const TimeType nTarget = 1000000 / EEex::UncapFPS_FPSLimit;
-		if (nTimeTaken > nTarget)
-		{
-			//FPrint("Light frame took too long: %lld > %lld\n", nTimeTaken, nTarget);
-		}
-
-		if (!bUsingFPSLimit)
-		{
-			nNextLightSyncUpdateTick = 0;
-		}
-		else
-		{
-			const int nEffectiveCap = EEex::UncapFPS_FPSLimit - *CChitin::p_TIMER_UPDATES_PER_SECOND;
-			nNextLightSyncUpdateTick = nEffectiveCap > 0 ? nEndTime + (1000000 / nEffectiveCap) - nTimeTaken : -1;
 		}
 	}
 
 	// Patch: If uncapped, sleep for a small amount so the main update loop doesn't hog the CPU
 	// |
-	if (EEex::UncapFPS_Enabled && EEex::UncapFPS_BusyWaitThreshold != 0 && bUsingFPSLimit)
+	if (EEex::UncapFPS_Enabled && EEex::UncapFPS_BusyWaitThreshold != 0)
 	{
-		const TimeType nNextTick = nNextLightSyncUpdateTick != -1 && nNextLightSyncUpdateTick < nNextFullSyncUpdateTick
-			? nNextLightSyncUpdateTick
-			: nNextFullSyncUpdateTick;
-
+		const TimeType nNextTick = (std::min)(nTargetNextFullTickStartTime, nTargetNextFlipCallStartTime);
 		const TimeType nDelayMilliseconds = (nNextTick - getTime()) / 1000;
 
 		if (nDelayMilliseconds >= EEex::UncapFPS_BusyWaitThreshold)
@@ -1384,6 +1637,7 @@ void CInfinity::Override_AdjustViewPosition(byte nScrollState)
 	// |
 	if (pActiveEngine != pChitin->m_pEngineMap)
 	{
+		const CPoint nOldPosExact = this->m_ptCurrentPosExact;
 		CScreenWorld *const pScreenWorld = pChitin->m_pEngineWorld;
 
 		// Patch: Don't adjust view position if autozooming
@@ -1391,6 +1645,15 @@ void CInfinity::Override_AdjustViewPosition(byte nScrollState)
 		if (pActiveEngine != pScreenWorld || !pScreenWorld->m_bAutoZooming)
 		{
 			adjustViewPosition(this, nScrollState, nullptr);
+		}
+
+		if (IsDebugWindowOpen())
+		{
+			const TimeType nScrollDeltaTime = getTime();
+			const CPoint nPosExactDelta { this->m_ptCurrentPosExact.x - nOldPosExact.x, this->m_ptCurrentPosExact.y - nOldPosExact.y };
+
+			rollingScrollDeltaX.Plot("Scroll", nScrollDeltaTime, std::abs(nPosExactDelta.x));
+			rollingScrollDeltaY.Plot("Scroll", nScrollDeltaTime, std::abs(nPosExactDelta.y));
 		}
 	}
 	else
@@ -2818,9 +3081,18 @@ void CScreenWorld::Override_ZoomToMap(bool bOverwriteOriginal)
 void initUncapFPS()
 {
 	const TimeType initTime = getInitTime();
-	nLastSyncUpdateTime = initTime;
+	nLastFlipEndTime = initTime;
+	nLastFullTickStartTime = initTime;
 	nLastScrollTime = initTime;
+	nLastSyncUpdateTime = initTime;
+	nTargetNextFullTickStartTime = initTime;
 
 	lua_gc(sharedState().LuaState(), LUA_GCSTOP, 0);
 	EEex::UncapFPS_LuaGCSteps = 50;
+}
+
+void EEex::OnTargetExecutableInitialized()
+{
+	//EngineVal<CString> sVersion = CChitin::GetVersionString();
+	//FPrint("Engine Version: \"%s\"\n", sVersion->m_pchData);
 }

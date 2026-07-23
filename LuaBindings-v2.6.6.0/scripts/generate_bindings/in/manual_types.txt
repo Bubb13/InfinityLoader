@@ -1110,6 +1110,11 @@ struct CString
 		m_pchData = *p_afxPchNil;
 	}
 
+	$nobinding $allow_references $constructor_fake Construct(const CString& other)
+	{
+		p_Construct_Overload_CString(this, &other);
+	}
+
 	void MakeUpper();
 	$binding_name(AssignmentOperator_Overload_String) $pattern_name(operator=(char*)) void operator=(primitive const char* lpsz) const;
 	$binding_name(AssignmentOperator_Overload_CString) $pattern_name(operator=(CString*)) void operator=(const CString* other) const;
@@ -1278,6 +1283,18 @@ struct CChitin
 	static CChitin::EngineMode ENGINE_MODE;
 	static CString m_sGameName;
 	static uint TIMER_UPDATES_PER_SECOND;
+
+	$nobinding $pattern_name(GetVersionString) static CString* __cdecl GetVersionString_Internal(CString* pResult);
+	$nobinding static CString GetVersionString()
+	{
+		EngineVal<CString> sVersion { NO_CONSTRUCT::FLAG };
+		CChitin::GetVersionString_Internal(&*sVersion);
+		return *sVersion;
+	}
+
+	$nobinding void ParseCommandLine();
+	$nobinding int ProcessEvents();
+	$nobinding void Update();
 
 	void OnResizeWindow(int w, int h);
 };
@@ -1646,6 +1663,7 @@ void** bsearch(void* key, void* base, size_t num, size_t width, void* func);
 int CompareCResByTypeThenName(const CRes* a, const CRes* b);
 void __cdecl dimmDump(CRes* pRes);
 CRes* __cdecl dimmGetResObject(const CResRef* cResRef, int nType, bool createIfNotExists);
+primitive const char* __cdecl dimmResolveFileName(primitive const char* fileName);
 void __cdecl dimmServiceFromMemory(CRes* pRes, void* pData, int nSize, bool useTempOverride, bool makeCopy);
 uiMenu* findMenu(primitive const char* name, int panel, int state);
 int rand();
@@ -1654,7 +1672,7 @@ void saveMenuStack();
 SDL_VideoDisplay* SDL_GetDisplayForWindow(SDL_Window* window);
 int SDL_GetKeyFromName(primitive const char* name);
 primitive char* __cdecl SDL_GetKeyName(int key);
-uint SDL_GetWindowFlags(SDL_Window* window);
+SDL_WindowFlags SDL_GetWindowFlags(SDL_Window* window);
 SDL_Window* SDL_GetWindowFromID(uint id);
 int SDL_GL_SetSwapInterval(int interval);
 void stopEditCapture();
@@ -1665,6 +1683,7 @@ void uiKillCapture();
 void uiLoadMenu(CResText* menuRes);
 
 $nobinding uint applycolor(uint c, uint t);
+$nobinding int __cdecl BGGetPrivateProfileInt(primitive const char* section, primitive const char* key, int default_value);
 $nobinding int Chitin_GetSectionCallback(lua_State* L);
 $nobinding uint DrawAlpha(uint alpha);
 $nobinding void DrawBegin(DrawMode mode);

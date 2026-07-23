@@ -49,34 +49,58 @@
     <Filter Include="Header Files\EEex-Core-Shared-Files\EEex">
       <UniqueIdentifier>{d166ffcd-657e-4ad9-b18f-b738bc2019a0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Lib">
+      <UniqueIdentifier>{81af286a-416e-427f-be1d-feb966fd3a57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lib">
+      <UniqueIdentifier>{72fc4d19-33eb-468d-9d15-516f0d432971}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lib\ImGui">
+      <UniqueIdentifier>{1cb5d2b2-a53e-4efe-a238-f7f2b2aaa4b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Lib\ImGui">
+      <UniqueIdentifier>{3fabd0cb-47d8-4e6e-a67a-4bfd7329857b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\EEex-Core-Shared-Files\source\visibility_map.cpp">
-      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    <ClCompile Include="source\EEex-v2.6.6.0\generated\EEexLua_generated_baseclass_offsets.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0\Generated</Filter>
     </ClCompile>
-    <ClCompile Include="..\EEex-Core-Shared-Files\source\common.cpp">
-      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    <ClCompile Include="source\EEex-v2.6.6.0\generated\Baldur_generated_internal_pointers.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0\Generated</Filter>
     </ClCompile>
-    <ClCompile Include="..\EEex-Core-Shared-Files\source\coordinate_util.cpp">
-      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    <ClCompile Include="source\EEex-v2.6.6.0\generated\EEexLua_generated.cpp">
+      <Filter>Source Files\EEex-v2.6.6.0\Generated</Filter>
     </ClCompile>
-    <ClCompile Include="..\EEex-Core-Shared-Files\source\debug.cpp">
-      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    <ClCompile Include="..\lib_source\ImGui\implot_demo.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="..\EEex-Core-Shared-Files\source\EEex.cpp">
-      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    <ClCompile Include="..\lib_source\ImGui\implot_items.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_function_names.cpp">
-      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    <ClCompile Include="..\lib_source\ImGui\imgui.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_reimplementations.cpp">
-      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    <ClCompile Include="..\lib_source\ImGui\imgui_demo.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="..\EEex-Core-Shared-Files\source\font_util.cpp">
-      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    <ClCompile Include="..\lib_source\ImGui\imgui_draw.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="..\EEex-Core-Shared-Files\source\lua_util.cpp">
-      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    <ClCompile Include="..\lib_source\ImGui\imgui_impl_dx9.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui_impl_win32.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui_tables.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\imgui_widgets.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib_source\ImGui\implot.cpp">
+      <Filter>Source Files\Lib\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="..\EEex-Core-Shared-Files\source\main.cpp">
       <Filter>Source Files\EEex-Core-Shared-Files</Filter>
@@ -96,14 +120,41 @@
     <ClCompile Include="..\EEex-Core-Shared-Files\source\util.cpp">
       <Filter>Source Files\EEex-Core-Shared-Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\EEex-v2.6.6.0\generated\EEexLua_generated_baseclass_offsets.cpp">
-      <Filter>Source Files\EEex-v2.6.6.0\Generated</Filter>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\visibility_map.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\EEex-v2.6.6.0\generated\Baldur_generated_internal_pointers.cpp">
-      <Filter>Source Files\EEex-v2.6.6.0\Generated</Filter>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\common.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\EEex-v2.6.6.0\generated\EEexLua_generated.cpp">
-      <Filter>Source Files\EEex-v2.6.6.0\Generated</Filter>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\coordinate_util.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\debug.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\debug_window.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\EEex.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_function_names.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_reimplementations.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\font_util.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\im_rolling_line_graph.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\im_tracer.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\lua_util.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -122,19 +173,46 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex_external\gl\glew.h">
       <Filter>Header Files\EEex-Core-Shared-Files\External\gl</Filter>
     </ClInclude>
-    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\coordinate_util.hpp">
+    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur_lua_generated.h">
+      <Filter>Header Files\EEex-v2.6.6.0\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur_generated.h">
+      <Filter>Header Files\EEex-v2.6.6.0\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\implot_internal.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imstb_rectpack.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imstb_textedit.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imstb_truetype.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imconfig.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imgui.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imgui_impl_dx9.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imgui_impl_win32.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\imgui_internal.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib_headers\imgui\implot.h">
+      <Filter>Header Files\Lib\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_rolling_line_graph.hpp">
       <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
-    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEex.h">
-      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEexLua_generated.h">
-      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\engine_function_names.hpp">
-      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\font_util.hpp">
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_tracer.hpp">
       <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\lua_util.hpp">
@@ -155,11 +233,23 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\util.hpp">
       <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
-    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur_lua_generated.h">
-      <Filter>Header Files\EEex-v2.6.6.0\Generated</Filter>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\coordinate_util.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
-    <ClInclude Include="headers\EEex-v2.6.6.0_generated\Baldur_generated.h">
-      <Filter>Header Files\EEex-v2.6.6.0\Generated</Filter>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\debug_window.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEex.h">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEexLua_generated.h">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\engine_function_names.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\font_util.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

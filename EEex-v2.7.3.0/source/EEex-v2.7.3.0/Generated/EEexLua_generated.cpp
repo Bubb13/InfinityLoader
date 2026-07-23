@@ -147,6 +147,24 @@ static int tolua_get_EEex_reference_UncapFPS_FPSLimitEnabled(lua_State* L)
 	return 1;
 }
 
+static int tolua_get_EEex_UncapFPS_FullscreenVRR(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::UncapFPS_FullscreenVRR);
+	return 1;
+}
+
+static int tolua_set_EEex_UncapFPS_FullscreenVRR(lua_State* L)
+{
+	EEex::UncapFPS_FullscreenVRR = tolua_setter_toboolean(L, "UncapFPS_FullscreenVRR");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_UncapFPS_FullscreenVRR(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::UncapFPS_FullscreenVRR, "Primitive<bool>");
+	return 1;
+}
+
 static int tolua_get_EEex_UncapFPS_LuaGCSteps(lua_State* L)
 {
 	lua_pushinteger(L, (lua_Integer)EEex::UncapFPS_LuaGCSteps);
@@ -312,6 +330,18 @@ static int tolua_function_EEex_MatchObject(lua_State* L)
 	long returnVal = EEex::MatchObject(L, (CGameObject*)tolua_tousertype_dynamic(L, 1, 0, "CGameObject"), tolua_function_tostring(L, 2, "MatchObject"), tolua_function_tointeger<int>(L, 3, "MatchObject"), tolua_function_tointeger<int>(L, 4, "MatchObject"), (EEex_MatchObjectFlags)tolua_function_tointeger<__int32>(L, 5, "MatchObject"));
 	lua_pushinteger(L, (lua_Integer)returnVal);
 	return 1;
+}
+
+static int tolua_function_EEex_OnTargetExecutableInitialized(lua_State* L)
+{
+	EEex::OnTargetExecutableInitialized();
+	return 0;
+}
+
+static int tolua_function_EEex_OpenDebugWindow(lua_State* L)
+{
+	EEex::OpenDebugWindow();
+	return 0;
 }
 
 static int tolua_function_EEex_RegisterSlicedRect(lua_State* L)
@@ -929,6 +959,8 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_UncapFPS_FPSLimit", tolua_get_EEex_reference_UncapFPS_FPSLimit, NULL);
 		tolua_variable(L, "UncapFPS_FPSLimitEnabled", tolua_get_EEex_UncapFPS_FPSLimitEnabled, tolua_set_EEex_UncapFPS_FPSLimitEnabled);
 		tolua_variable(L, "reference_UncapFPS_FPSLimitEnabled", tolua_get_EEex_reference_UncapFPS_FPSLimitEnabled, NULL);
+		tolua_variable(L, "UncapFPS_FullscreenVRR", tolua_get_EEex_UncapFPS_FullscreenVRR, tolua_set_EEex_UncapFPS_FullscreenVRR);
+		tolua_variable(L, "reference_UncapFPS_FullscreenVRR", tolua_get_EEex_reference_UncapFPS_FullscreenVRR, NULL);
 		tolua_variable(L, "UncapFPS_LuaGCSteps", tolua_get_EEex_UncapFPS_LuaGCSteps, tolua_set_EEex_UncapFPS_LuaGCSteps);
 		tolua_variable(L, "reference_UncapFPS_LuaGCSteps", tolua_get_EEex_reference_UncapFPS_LuaGCSteps, NULL);
 		tolua_variable(L, "UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier, tolua_set_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier);
@@ -953,6 +985,8 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "IsMarshallingCopy", &tolua_function_EEex_IsMarshallingCopy);
 		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
 		tolua_function(L, "MatchObject", &tolua_function_EEex_MatchObject);
+		tolua_function(L, "OnTargetExecutableInitialized", &tolua_function_EEex_OnTargetExecutableInitialized);
+		tolua_function(L, "OpenDebugWindow", &tolua_function_EEex_OpenDebugWindow);
 		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
 		tolua_function(L, "SetINIString", &tolua_function_EEex_SetINIString);
 		tolua_function(L, "SetUIItemExtraScrollbarPad", &tolua_function_EEex_SetUIItemExtraScrollbarPad);
@@ -967,6 +1001,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_constantstring(L, "usertype_UncapFPS_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_UncapFPS_FPSLimit", "Primitive<int>");
 		tolua_constantstring(L, "usertype_UncapFPS_FPSLimitEnabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_UncapFPS_FullscreenVRR", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_UncapFPS_LuaGCSteps", "Primitive<int>");
 		tolua_constantstring(L, "usertype_UncapFPS_RemoveMiddleMouseScrollMultiplier", "Primitive<bool>");
 	tolua_endmodule(L);

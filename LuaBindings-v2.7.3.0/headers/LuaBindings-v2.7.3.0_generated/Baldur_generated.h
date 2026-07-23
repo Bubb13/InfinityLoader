@@ -28,6 +28,11 @@ struct hasDestruct {
 	static constexpr bool value = check<T>(nullptr);
 };
 
+enum class NO_CONSTRUCT
+{
+	FLAG
+};
+
 template<typename A, bool bDestruct = true>
 struct EngineVal
 {
@@ -55,6 +60,8 @@ public:
 	A& operator*() {
 		return val;
 	}
+
+	EngineVal(NO_CONSTRUCT) {}
 
 	template<typename... Args>
 	EngineVal(Args&&... args) {
@@ -5162,6 +5169,11 @@ struct CString
 
 	void Construct();
 
+	void Construct(const CString& other)
+	{
+		p_Construct_Overload_CString(this, &other);
+	}
+
 	void MakeUpper()
 	{
 		p_MakeUpper(this);
@@ -9720,6 +9732,9 @@ extern type_dimmDump p_dimmDump;
 typedef CRes* (__cdecl *type_dimmGetResObject)(const CResRef* cResRef, int nType, bool createIfNotExists);
 extern type_dimmGetResObject p_dimmGetResObject;
 
+typedef const char* (__cdecl *type_dimmResolveFileName)(const char* fileName);
+extern type_dimmResolveFileName p_dimmResolveFileName;
+
 typedef void (__cdecl *type_dimmServiceFromMemory)(CRes* pRes, void* pData, int nSize, bool useTempOverride, bool makeCopy);
 extern type_dimmServiceFromMemory p_dimmServiceFromMemory;
 
@@ -9744,7 +9759,7 @@ extern type_SDL_GetKeyFromName p_SDL_GetKeyFromName;
 typedef char* (__cdecl *type_SDL_GetKeyName)(int key);
 extern type_SDL_GetKeyName p_SDL_GetKeyName;
 
-typedef uint (*type_SDL_GetWindowFlags)(SDL_Window* window);
+typedef SDL_WindowFlags (*type_SDL_GetWindowFlags)(SDL_Window* window);
 extern type_SDL_GetWindowFlags p_SDL_GetWindowFlags;
 
 typedef SDL_Window* (*type_SDL_GetWindowFromID)(uint id);
@@ -9773,6 +9788,9 @@ extern type_uiLoadMenu p_uiLoadMenu;
 
 typedef uint (*type_applycolor)(uint c, uint t);
 extern type_applycolor p_applycolor;
+
+typedef int (__cdecl *type_BGGetPrivateProfileInt)(const char* section, const char* key, int default_value);
+extern type_BGGetPrivateProfileInt p_BGGetPrivateProfileInt;
 
 typedef int (*type_Chitin_GetSectionCallback)(lua_State* L);
 extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
@@ -13700,8 +13718,47 @@ struct CChitin
 
 	CChitin() = delete;
 
+	typedef CString* (__cdecl *type_GetVersionString_Internal)(CString* pResult);
+	static type_GetVersionString_Internal p_GetVersionString_Internal;
+
+	typedef void (__thiscall *type_ParseCommandLine)(CChitin* pThis);
+	static type_ParseCommandLine p_ParseCommandLine;
+
+	typedef int (__thiscall *type_ProcessEvents)(CChitin* pThis);
+	static type_ProcessEvents p_ProcessEvents;
+
+	typedef void (__thiscall *type_Update)(CChitin* pThis);
+	static type_Update p_Update;
+
 	typedef void (__thiscall *type_OnResizeWindow)(CChitin* pThis, int w, int h);
 	static type_OnResizeWindow p_OnResizeWindow;
+
+	static CString* GetVersionString_Internal(CString* pResult)
+	{
+		return p_GetVersionString_Internal(pResult);
+	}
+
+	static CString GetVersionString()
+	{
+		EngineVal<CString> sVersion { NO_CONSTRUCT::FLAG };
+		CChitin::GetVersionString_Internal(&*sVersion);
+		return *sVersion;
+	}
+
+	void ParseCommandLine()
+	{
+		p_ParseCommandLine(this);
+	}
+
+	int ProcessEvents()
+	{
+		return p_ProcessEvents(this);
+	}
+
+	void Update()
+	{
+		p_Update(this);
+	}
 
 	void OnResizeWindow(int w, int h)
 	{
