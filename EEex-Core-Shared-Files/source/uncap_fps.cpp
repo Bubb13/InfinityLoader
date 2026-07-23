@@ -1459,7 +1459,7 @@ void CChitin::Override_Update()
 
 		this->m_displayStale = 1;
 
-		if (this->m_displayStale == 1 && bIsProjector)
+		if (this->m_displayStale == 1 && (!EEex::UncapFPS_Enabled || bIsProjector))
 		{
 			this->m_displayStale = 0;
 			this->m_bInSyncUpdate = 1;
