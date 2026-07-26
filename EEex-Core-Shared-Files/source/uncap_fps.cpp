@@ -1545,7 +1545,9 @@ void CChitin::Override_Update()
 			p_fwrite(buffer, size, 1, this->m_fFrameTimeLog);
 		}
 	}
-	else if (bFlipped)
+
+	// NOT ELSE IF: The engine needs to render after every flip, even if we are (maybe temporarily) running slower than the logic rate due to some heavy computation.
+	if (bFlipped)
 	{
 		const TimeType nStartTime = getTime();
 
