@@ -173,6 +173,7 @@ uint64_t nextUUID = 0;
 bool exNeedRenderRepass = false;
 
 struct ExUIItemData {
+	std::optional<bool> bCollapseScrollbarPadWhenHidden{};
 	bool bScrollbarVisible = false;
 	int nExtraScrollbarPad = 0;
 };
@@ -1948,6 +1949,10 @@ void EEex::SetINIString(
 
 void EEex::SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad) {
 	exUIItemData[pItem].nExtraScrollbarPad = nExtraPad;
+}
+
+void EEex::SetUIItemScrollbarPadCollapses(uiItem* pItem, bool bCollapseScrollbarPadWhenHidden) {
+	exUIItemData[pItem].bCollapseScrollbarPadWhenHidden = bCollapseScrollbarPadWhenHidden;
 }
 
 /////////////////////////////////
@@ -4188,11 +4193,12 @@ void EEex::Menu_Hook_CheckApplyTextScrollbarPad(uiItem* pItem, SDL_Rect* pItemAr
 		}
 	}
 
-	if (!bScrollbarVisible) {
+	ExUIItemData& exData = exUIItemData[pItem];
+
+	if (!bScrollbarVisible && exData.bCollapseScrollbarPadWhenHidden.value_or(EEex::Menu_UniversalScrollbarPadCollapsing)) {
 		return;
 	}
 
-	ExUIItemData& exData = exUIItemData[pItem];
 	pItemArea->w -= 16 + exData.nExtraScrollbarPad;
 }
 

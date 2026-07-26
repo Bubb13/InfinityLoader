@@ -116,6 +116,7 @@ namespace EEex
 
 	// Globals
 	bool AIBase_LuaHook_OnEventTriggerSet_Enabled;
+	bool Menu_UniversalScrollbarPadCollapsing;
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	bool Projectile_LuaHook_GlobalMutators_Enabled;
 	bool StutterDetector_Enabled;
@@ -153,6 +154,7 @@ namespace EEex
 	$external_implementation $pass_lua_state void RegisterSlicedRect();
 	$external_implementation void SetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* value);
 	$external_implementation void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
+	$external_implementation void SetUIItemScrollbarPadCollapses(uiItem* pItem, bool bCollapseScrollbarPadWhenHidden);
 	$external_implementation void SetVSyncEnabled(bool bEnabled, bool bResetDevice);
 	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	$external_implementation void UpdateLastScrollTime();

@@ -5036,6 +5036,7 @@ namespace EEex
 	extern bool bStripUUID;
 	extern byte CGameSprite_Hit_Roll;
 	extern bool AIBase_LuaHook_OnEventTriggerSet_Enabled;
+	extern bool Menu_UniversalScrollbarPadCollapsing;
 	extern bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	extern bool Projectile_LuaHook_GlobalMutators_Enabled;
 	extern bool StutterDetector_Enabled;
@@ -5072,6 +5073,7 @@ namespace EEex
 	void RegisterSlicedRect(lua_State* L);
 	void SetINIString(const char* iniPath, const char* section, const char* key, const char* value);
 	void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
+	void SetUIItemScrollbarPadCollapses(uiItem* pItem, bool bCollapseScrollbarPadWhenHidden);
 	void SetVSyncEnabled(bool bEnabled, bool bResetDevice);
 	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	void UpdateLastScrollTime();

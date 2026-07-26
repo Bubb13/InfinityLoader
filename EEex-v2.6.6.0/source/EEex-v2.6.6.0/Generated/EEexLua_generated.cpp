@@ -21,6 +21,24 @@ static int tolua_get_EEex_reference_AIBase_LuaHook_OnEventTriggerSet_Enabled(lua
 	return 1;
 }
 
+static int tolua_get_EEex_Menu_UniversalScrollbarPadCollapsing(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::Menu_UniversalScrollbarPadCollapsing);
+	return 1;
+}
+
+static int tolua_set_EEex_Menu_UniversalScrollbarPadCollapsing(lua_State* L)
+{
+	EEex::Menu_UniversalScrollbarPadCollapsing = tolua_setter_toboolean(L, "Menu_UniversalScrollbarPadCollapsing");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_Menu_UniversalScrollbarPadCollapsing(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::Menu_UniversalScrollbarPadCollapsing, "Primitive<bool>");
+	return 1;
+}
+
 static int tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled(lua_State* L)
 {
 	tolua_pushboolean(L, (bool)EEex::Opcode_LuaHook_AfterListsResolved_Enabled);
@@ -359,6 +377,12 @@ static int tolua_function_EEex_SetINIString(lua_State* L)
 static int tolua_function_EEex_SetUIItemExtraScrollbarPad(lua_State* L)
 {
 	EEex::SetUIItemExtraScrollbarPad((uiItem*)tolua_tousertype_dynamic(L, 1, 0, "uiItem"), tolua_function_tointeger<int>(L, 2, "SetUIItemExtraScrollbarPad"));
+	return 0;
+}
+
+static int tolua_function_EEex_SetUIItemScrollbarPadCollapses(lua_State* L)
+{
+	EEex::SetUIItemScrollbarPadCollapses((uiItem*)tolua_tousertype_dynamic(L, 1, 0, "uiItem"), tolua_function_toboolean(L, 2, "SetUIItemScrollbarPadCollapses"));
 	return 0;
 }
 
@@ -945,6 +969,8 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_beginmodule(L, "EEex");
 		tolua_variable(L, "AIBase_LuaHook_OnEventTriggerSet_Enabled", tolua_get_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled, tolua_set_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled);
 		tolua_variable(L, "reference_AIBase_LuaHook_OnEventTriggerSet_Enabled", tolua_get_EEex_reference_AIBase_LuaHook_OnEventTriggerSet_Enabled, NULL);
+		tolua_variable(L, "Menu_UniversalScrollbarPadCollapsing", tolua_get_EEex_Menu_UniversalScrollbarPadCollapsing, tolua_set_EEex_Menu_UniversalScrollbarPadCollapsing);
+		tolua_variable(L, "reference_Menu_UniversalScrollbarPadCollapsing", tolua_get_EEex_reference_Menu_UniversalScrollbarPadCollapsing, NULL);
 		tolua_variable(L, "Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled, tolua_set_EEex_Opcode_LuaHook_AfterListsResolved_Enabled);
 		tolua_variable(L, "reference_Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_reference_Opcode_LuaHook_AfterListsResolved_Enabled, NULL);
 		tolua_variable(L, "Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_Projectile_LuaHook_GlobalMutators_Enabled, tolua_set_EEex_Projectile_LuaHook_GlobalMutators_Enabled);
@@ -990,10 +1016,12 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
 		tolua_function(L, "SetINIString", &tolua_function_EEex_SetINIString);
 		tolua_function(L, "SetUIItemExtraScrollbarPad", &tolua_function_EEex_SetUIItemExtraScrollbarPad);
+		tolua_function(L, "SetUIItemScrollbarPadCollapses", &tolua_function_EEex_SetUIItemScrollbarPadCollapses);
 		tolua_function(L, "SetVSyncEnabled", &tolua_function_EEex_SetVSyncEnabled);
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 		tolua_function(L, "UpdateLastScrollTime", &tolua_function_EEex_UpdateLastScrollTime);
 		tolua_constantstring(L, "usertype_AIBase_LuaHook_OnEventTriggerSet_Enabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_Menu_UniversalScrollbarPadCollapsing", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Opcode_LuaHook_AfterListsResolved_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Projectile_LuaHook_GlobalMutators_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_StutterDetector_Enabled", "Primitive<bool>");
