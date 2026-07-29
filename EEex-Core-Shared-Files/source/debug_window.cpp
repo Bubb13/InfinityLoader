@@ -18,9 +18,11 @@ static constexpr ImVec4 clear_color { 0.45f, 0.55f, 0.60f, 1.00f };
 // Globals //
 /////////////
 
-//-----------//
-// DX9 State //
-//-----------//
+//-------------//
+// Graph State //
+//-------------//
+
+bool bTimeLocked = false;
 
 ImRollingLineGraph<TimeType> rollingScrollDeltaX { "Delta X", "Seconds ago", "Exact Map Units", 5000000, 1000000 };
 ImRollingLineGraph<TimeType> rollingScrollDeltaY { "Delta Y", "Seconds ago", "Exact Map Units", 5000000, 1000000 };
@@ -29,6 +31,14 @@ ImRollingLineGraph<TimeType> rollingFlipTime { "Flip Time", "Seconds ago", "Micr
 ImRollingLineGraph<TimeType> rollingTimeBetweenFlipEnds { "Time Between Flip Ends", "Seconds ago", "Microseconds", 5000000, 1000000 };
 
 ImRollingLineGraph<TimeType> rollingTimeBetweenFullUpdates { "Time Between Full Updates", "Seconds ago", "Microseconds", 5000000, 1000000 };
+
+ImRollingLineGraph<TimeType> rollingFullUpdateTime { "Full Update Time", "Seconds ago", "Microseconds", 5000000, 1000000 };
+ImRollingLineGraph<TimeType> rollingRenderTime { "Render Time", "Seconds ago", "Microseconds", 5000000, 1000000 };
+ImRollingLineGraph<TimeType> rollingLogicTime { "Logic Time", "Seconds ago", "Microseconds", 5000000, 1000000 };
+
+ImRollingLineGraph<TimeType> rollingLuaGCTime { "Lua GC Time", "Seconds ago", "Microseconds", 5000000, 1000000 };
+ImRollingLineGraph<TimeType> rollingFullUpdatePhase { "Full Update Phase", "Seconds ago", "Microseconds", 5000000, 1000000 };
+ImRollingLineGraph<TimeType> rollingFullUpdateLateBy { "Full Update Late By", "Seconds ago", "Microseconds", 5000000, 1000000 };
 
 //-----------//
 // DX9 State //
@@ -153,15 +163,67 @@ static LRESULT WINAPI debugWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
 static void drawGraphWindow()
 {
+	const TimeType nDrawTime = getTime();
+
+	ImGui::Begin("Debug");
+	if (!bTimeLocked)
+	{
+		if (ImGui::Button("Pause Graphs"))
+		{
+			bTimeLocked = true;
+
+			rollingFlipTime.Lock(nDrawTime);
+			rollingTimeBetweenFlipEnds.Lock(nDrawTime);
+			rollingTimeBetweenFullUpdates.Lock(nDrawTime);
+			rollingScrollDeltaX.Lock(nDrawTime);
+			rollingScrollDeltaY.Lock(nDrawTime);
+			rollingFullUpdatePhase.Lock(nDrawTime);
+			rollingFullUpdateLateBy.Lock(nDrawTime);
+			rollingFullUpdateTime.Lock(nDrawTime);
+			rollingLogicTime.Lock(nDrawTime);
+			rollingRenderTime.Lock(nDrawTime);
+			rollingLuaGCTime.Lock(nDrawTime);
+		}
+	}
+	else
+	{
+		if (ImGui::Button("Unpause Graphs"))
+		{
+			bTimeLocked = false;
+
+			rollingFlipTime.Unlock();
+			rollingTimeBetweenFlipEnds.Unlock();
+			rollingTimeBetweenFullUpdates.Unlock();
+			rollingScrollDeltaX.Unlock();
+			rollingScrollDeltaY.Unlock();
+			rollingFullUpdatePhase.Unlock();
+			rollingFullUpdateLateBy.Unlock();
+			rollingFullUpdateTime.Unlock();
+			rollingLogicTime.Unlock();
+			rollingRenderTime.Unlock();
+			rollingLuaGCTime.Unlock();
+		}
+	}
+	ImGui::End();
+
 	ImGui::Begin("Frame Timings");
-	rollingFlipTime.Draw(getTime());
-	rollingTimeBetweenFlipEnds.Draw(getTime());
-	rollingTimeBetweenFullUpdates.Draw(getTime());
+	rollingFlipTime.Draw(nDrawTime);
+	rollingTimeBetweenFlipEnds.Draw(nDrawTime);
+	rollingTimeBetweenFullUpdates.Draw(nDrawTime);
 	ImGui::End();
 
 	ImGui::Begin("Scroll Deltas");
-	rollingScrollDeltaX.Draw(getTime());
-	rollingScrollDeltaY.Draw(getTime());
+	rollingScrollDeltaX.Draw(nDrawTime);
+	rollingScrollDeltaY.Draw(nDrawTime);
+	ImGui::End();
+
+	ImGui::Begin("Update Durations");
+	rollingFullUpdatePhase.Draw(nDrawTime);
+	rollingFullUpdateLateBy.Draw(nDrawTime);
+	rollingFullUpdateTime.Draw(nDrawTime);
+	rollingLogicTime.Draw(nDrawTime);
+	rollingRenderTime.Draw(nDrawTime);
+	rollingLuaGCTime.Draw(nDrawTime);;
 	ImGui::End();
 }
 

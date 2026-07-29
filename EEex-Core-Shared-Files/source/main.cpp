@@ -52,6 +52,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("CInfinity::Override_AdjustViewPosition"), getMemberPtr(&CInfinity::Override_AdjustViewPosition));
 	exportPattern(TEXT("CInfinity::Override_FitViewPosition"), getMemberPtr(&CInfinity::Override_FitViewPosition));
 	exportPattern(TEXT("CInfinity::Override_Scroll"), getMemberPtr(&CInfinity::Override_Scroll));
+	exportPattern(TEXT("CInfinity::Override_SetScreenShake"), getMemberPtr(&CInfinity::Override_SetScreenShake));
 	exportPattern(TEXT("CInfinity::Override_SetScrollDest"), getMemberPtr(&CInfinity::Override_SetScrollDest));
 	exportPattern(TEXT("CMessageSetLastObject::Override_Run"), getMemberPtr(&CMessageSetLastObject::Override_Run));
 	exportPattern(TEXT("CScreenMap::Override_CenterViewPort"), getMemberPtr(&CScreenMap::Override_CenterViewPort));

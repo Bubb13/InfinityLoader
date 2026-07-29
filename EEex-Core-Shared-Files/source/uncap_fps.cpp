@@ -229,6 +229,7 @@ bool bAutoScrollFirstTick = false;
 ExMenuStateOverrides beforeWorldScreenDeactivatedMenuStates{};
 bool bFullTick = false;
 bool bNeedsFlip = false;
+bool bScreenShakeMagnitudeLocked = false;
 bool bVSyncEnabled = true;
 TimeType nLastAutoZoomTime = 0;
 TimeType nLastFlipEndTime = 0;
@@ -237,6 +238,8 @@ TimeType nLastScrollTime = 0;
 TimeType nLastSyncUpdateTime = 0;
 TimeType nRemainingAutoZoomTime = 0;
 TimeType nRemainingScrollTime = 0;
+TimeType nScreenShakeNextMagnitudeLockChange = 0;
+TimeType nScreenShakeNextUpdateTime = 0;
 int nScreenShakeSavedX = 0;
 int nScreenShakeSavedY = 0;
 TimeType nTargetNextFlipCallStartTime = 0;
@@ -1054,46 +1057,85 @@ void EEex::UncapFPS_Hook_OnBeforeWorldScreenDeactivated()
 	beforeWorldScreenDeactivatedMenuStates.bWorldQuicklootOpen = p_uiIsMenuOnStack(EngineVal<CString, false>{ "WORLD_QUICKLOOT" });
 }
 
+static TimeType getScreenShakeMagnitudeLockChangeInterval()
+{
+	return 1000000 * 8 / *CChitin::p_TIMER_UPDATES_PER_SECOND;
+}
+
+void CInfinity::Override_SetScreenShake(int bScreenShake, ushort duration, CPoint* screenShakeDelta)
+{
+	this->m_bScreenShake = bScreenShake;
+
+	this->m_screenShakeDelta.x = screenShakeDelta->x * 1024;
+	this->m_screenShakeDelta.y = screenShakeDelta->y * 1024;
+
+	this->m_screenShakeDecrease.x = std::abs(this->m_screenShakeDelta.x) / duration;
+	this->m_screenShakeDecrease.y = std::abs(this->m_screenShakeDelta.y) / duration;
+	
+	// Patch: Handle screen shakes using time (not ticks)
+	// |
+	const TimeType nTime = getTime();
+	bScreenShakeMagnitudeLocked = rand() % 2 == 0;
+	nScreenShakeNextMagnitudeLockChange = nTime + (rand() % getScreenShakeMagnitudeLockChangeInterval());
+	nScreenShakeNextUpdateTime = nTime;
+}
+
 void EEex::UncapFPS_Hook_HandleScreenShake(CInfinity* pInfinity)
 {
 	nScreenShakeSavedX = pInfinity->nNewX;
 	nScreenShakeSavedY = pInfinity->nNewY;
 	pInfinity->SetViewPosition(pInfinity->nNewX + pInfinity->m_screenShakeDelta.x / 1024, pInfinity->nNewY + pInfinity->m_screenShakeDelta.y / 1024, 1);
 
-	// Patch: Limit to 30 tps for uncapped fps
+	// Patch: Handle screen shakes using time (not ticks)
 	// |
-	if (!bFullTick)
+	const TimeType nTime = getTime();
+	// |
+	if (nTime >= nScreenShakeNextMagnitudeLockChange)
+	{
+		bScreenShakeMagnitudeLocked = !bScreenShakeMagnitudeLocked;
+		nScreenShakeNextMagnitudeLockChange += getScreenShakeMagnitudeLockChangeInterval();
+	}
+	// |
+	if (nTime < nScreenShakeNextUpdateTime)
 	{
 		return;
 	}
+	// |
+	nScreenShakeNextUpdateTime += 1000000 / *CChitin::p_TIMER_UPDATES_PER_SECOND;
 
-	const uint nGameTime = (*p_g_pBaldurChitin)->m_pObjectGame->m_worldTime.m_gameTime;
-
-	if (pInfinity->m_screenShakeDelta.x < 1 || (nGameTime & 7) > 3)
+	// Patch: Handle screen shakes using time (not ticks)
+	// |
+	// | if (pInfinity->m_screenShakeDelta.x < 1 || (nGameTime & 7) > 3) // nGameTime: Eight ticks on, Eight ticks off
+	// |
+	if (pInfinity->m_screenShakeDelta.x < 1 || bScreenShakeMagnitudeLocked) // nGameTime: Eight ticks on, Eight ticks off
 	{
 		pInfinity->m_screenShakeDelta.x = -pInfinity->m_screenShakeDelta.x;
 	}
 	else
 	{
 		const int nEffectiveShakeDeltaX = (std::min)(pInfinity->m_screenShakeDelta.x, pInfinity->m_screenShakeDecrease.x);
-		pInfinity->m_screenShakeDelta.x = nEffectiveShakeDeltaX - pInfinity->m_screenShakeDelta.x;
+		pInfinity->m_screenShakeDelta.x = nEffectiveShakeDeltaX - pInfinity->m_screenShakeDelta.x; // Flips delta sign
 
-		if ((p_rand() & 0x7FFF) * 2 < 0x8000)
+		if ((p_rand() & 0x7FFF) * 2 < 0x8000) // 50% chance to flip sign again
 		{
 			pInfinity->m_screenShakeDelta.x = -pInfinity->m_screenShakeDelta.x;
 		}
 	}
 
-	if (pInfinity->m_screenShakeDelta.y < 1 || (nGameTime & 7) > 3)
+	// Patch: Handle screen shakes using time (not ticks)
+	// |
+	// | if (pInfinity->m_screenShakeDelta.y < 1 || (nGameTime & 7) > 3) // nGameTime: Eight ticks on, Eight ticks off
+	// |
+	if (pInfinity->m_screenShakeDelta.y < 1 || bScreenShakeMagnitudeLocked) // nGameTime: Eight ticks on, Eight ticks off
 	{
 		pInfinity->m_screenShakeDelta.y = -pInfinity->m_screenShakeDelta.y;
 	}
 	else
 	{
 		const int nEffectiveShakeDeltaY = (std::min)(pInfinity->m_screenShakeDelta.y, pInfinity->m_screenShakeDecrease.y);
-		pInfinity->m_screenShakeDelta.y = nEffectiveShakeDeltaY - pInfinity->m_screenShakeDelta.y;
+		pInfinity->m_screenShakeDelta.y = nEffectiveShakeDeltaY - pInfinity->m_screenShakeDelta.y; // Flips delta sign
 
-		if ((p_rand() & 0x7FFF) * 2 < 0x8000)
+		if ((p_rand() & 0x7FFF) * 2 < 0x8000) // 50% chance to flip sign again
 		{
 			pInfinity->m_screenShakeDelta.y = -pInfinity->m_screenShakeDelta.y;
 		}
@@ -1217,10 +1259,41 @@ static void scheduleFullTick(const TimeType nEndTime, const TimeType nLateBy)
 
 static void doSyncUpdate(CChitin *const pChitin, lua_State *const L)
 {
+	const TimeType nRenderStartTime = getTime();
 	pChitin->virtual_SynchronousUpdate();
+	const TimeType nRenderEndTime = getTime();
+
+	if (IsDebugWindowOpen())
+	{
+		rollingRenderTime.Plot("Render Time", nRenderEndTime, nRenderEndTime - nRenderStartTime);
+	}
+
+	const TimeType nLuaGCStartTime = getTime();
 	lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
+	const TimeType nLuaGCEndTime = getTime();
+
+	if (IsDebugWindowOpen())
+	{
+		rollingLuaGCTime.Plot("Lua GC Time", nLuaGCEndTime, nLuaGCEndTime - nLuaGCStartTime);
+	}
 
 	bNeedsFlip = true;
+}
+
+static void checkDoSyncUpdate(CChitin *const pChitin, lua_State *const L)
+{
+	pChitin->m_displayStale = 1;
+
+	if (pChitin->m_displayStale == 1)
+	{
+		pChitin->m_displayStale = 0;
+		pChitin->m_bInSyncUpdate = 1;
+
+		doSyncUpdate(pChitin, L);
+
+		pChitin->m_bInSyncUpdate = 0;
+		pChitin->m_AIStale = 1;
+	}
 }
 
 static void flip(CChitin *const pChitin)
@@ -1418,6 +1491,8 @@ void CChitin::Override_Update()
 		if (IsDebugWindowOpen())
 		{
 			rollingTimeBetweenFullUpdates.Plot("Time Between Full Updates", nStartTime, nStartTime - nLastFullTickStartTime);
+			rollingFullUpdatePhase.Plot("Full Update Phase", nStartTime, nStartTime - nLastFlipEndTime);
+			rollingFullUpdateLateBy.Plot("Full Update Late By", nStartTime, nStartTime - nTargetNextFullTickStartTime);
 		}
 
 		nLastFullTickStartTime = nStartTime;
@@ -1447,9 +1522,16 @@ void CChitin::Override_Update()
 
 		const uint nAsyncStartTicks = p_SDL_GetTicks();
 
+		const TimeType nLogicStart = getTime();
 		this->virtual_AsynchronousUpdate(0, 0, 0, 0, 0);
+		const TimeType nLogicEnd = getTime();
 
 		this->m_nGameTimer = p_SDL_GetTicks() - nAsyncStartTicks;
+
+		if (IsDebugWindowOpen())
+		{
+			rollingLogicTime.Plot("Logic Time", nLogicEnd, nLogicEnd - nLogicStart);
+		}
 
 		/////////////////
 		// Render tick //
@@ -1457,17 +1539,9 @@ void CChitin::Override_Update()
 
 		const uint nSyncStart = p_SDL_GetTicks();
 
-		this->m_displayStale = 1;
-
-		if (this->m_displayStale == 1 && (!EEex::UncapFPS_Enabled || bIsProjector))
+		if (!EEex::UncapFPS_Enabled || bIsProjector)
 		{
-			this->m_displayStale = 0;
-			this->m_bInSyncUpdate = 1;
-
-			doSyncUpdate(this, L);
-
-			this->m_bInSyncUpdate = 0;
-			this->m_AIStale = 1;
+			checkDoSyncUpdate(this, L);
 		}
 
 		this->m_nRenderTimer = p_SDL_GetTicks() - nSyncStart;
@@ -1502,6 +1576,13 @@ void CChitin::Override_Update()
 		////////////////
 		// Delay loop //
 		////////////////
+
+		const TimeType nFullUpdateEndTime = getTime();
+
+		if (IsDebugWindowOpen())
+		{
+			rollingFullUpdateTime.Plot("Full Update Time", nFullUpdateEndTime, nFullUpdateEndTime - nStartTime);
+		}
 
 		// Patch: Don't sleep to target 30fps when uncapped
 		// |
@@ -1554,18 +1635,7 @@ void CChitin::Override_Update()
 		trackSyncUpdateDelta(nStartTime);
 		bFullTick = false;
 
-		this->m_displayStale = 1;
-
-		if (this->m_displayStale == 1)
-		{
-			this->m_displayStale = 0;
-			this->m_bInSyncUpdate = 1;
-
-			doSyncUpdate(this, L);
-
-			this->m_bInSyncUpdate = 0;
-			this->m_AIStale = 1;
-		}
+		checkDoSyncUpdate(this, L);
 	}
 
 	// Patch: If uncapped, sleep for a small amount so the main update loop doesn't hog the CPU

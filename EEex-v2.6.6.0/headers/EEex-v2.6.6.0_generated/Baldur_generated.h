@@ -14281,6 +14281,8 @@ struct CInfinity
 	typedef void (__thiscall *type_GetViewPosition)(CInfinity* pThis, int* pXOut, int* pYOut);
 	static type_GetViewPosition p_GetViewPosition;
 
+	void Override_SetScreenShake(int bScreenShake, ushort duration, CPoint* screenShakeDelta);
+
 	void FitViewPosition(int* x, int* y, const CRect* r)
 	{
 		p_FitViewPosition(this, x, y, r);

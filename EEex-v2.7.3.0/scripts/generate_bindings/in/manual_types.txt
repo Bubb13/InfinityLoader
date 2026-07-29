@@ -1077,6 +1077,8 @@ struct CInfinity
 {
 	static float MAXZOOM_OUT;
 
+	$external_implementation void Override_SetScreenShake(int bScreenShake, ushort duration, CPoint* screenShakeDelta);
+
 	void FitViewPosition(int* x, int* y, const CRect* r);
 	CPoint* ScreenToViewport(CPoint* pResult, CPoint* pScreen);
 	CPoint* ScreenToWorld(CPoint* pResult, CPoint* pScreen);

@@ -14,6 +14,13 @@ extern ImRollingLineGraph<TimeType> rollingTimeBetweenFullUpdates;
 extern ImRollingLineGraph<TimeType> rollingScrollDeltaX;
 extern ImRollingLineGraph<TimeType> rollingScrollDeltaY;
 
+extern ImRollingLineGraph<TimeType> rollingFullUpdateTime;
+extern ImRollingLineGraph<TimeType> rollingRenderTime;
+extern ImRollingLineGraph<TimeType> rollingLuaGCTime;
+extern ImRollingLineGraph<TimeType> rollingFullUpdatePhase;
+extern ImRollingLineGraph<TimeType> rollingFullUpdateLateBy;
+extern ImRollingLineGraph<TimeType> rollingLogicTime;
+
 ///////////////
 // Functions //
 ///////////////

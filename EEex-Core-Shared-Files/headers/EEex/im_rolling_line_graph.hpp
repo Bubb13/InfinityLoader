@@ -22,6 +22,10 @@ class ImRollingLineGraph
 		YType nYValue;
 	};
 
+	TimeType nLockedTime;
+	bool bTimeLocked;
+	YType nLockedMaxYValue;
+
 	std::string sTitle;
 	std::string sTitleXAxis;
 	std::string sTitleYAxis;
@@ -37,7 +41,8 @@ class ImRollingLineGraph
 	std::mutex m;
 	std::unordered_map<std::string, std::vector<DataPoint>> allDataPoints;
 
-	void PruneOld(TimeType newest);
+	void PruneOutOfBounds(TimeType newest);
+	YType GetMaxYValue();
 
 public:
 
@@ -48,6 +53,8 @@ public:
 	//----------------------------------------------------
 
 	void Plot(const std::string& sLineName, TimeType nTime, YType nYValue);
+	void Lock(TimeType nTime);
+	void Unlock();
 
 	//----------------------------------------------------
 	// Rendering
