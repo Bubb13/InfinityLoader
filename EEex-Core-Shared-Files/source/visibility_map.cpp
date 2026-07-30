@@ -85,6 +85,10 @@ void VisibilityMapCharacterEx::apply(CVisibilityMap* pVisMap, CPoint ptVisCenter
 
 void VisibilityMapCharacterEx::checkInitRange(byte nVisRange)
 {
+	// `CVisibilityMap_ClimbWall()` needs a minimum size for visual range, since it can extend a creature's sight near walls.
+	// Without a floor of `4` OOB writes can occur when writing to `m_pCanSee`, which crashes the game via heap corruption.
+	nVisRange = (std::max)(nVisRange, static_cast<byte>(4));
+
 	if (nVisRange <= m_nVisRange)
 	{
 		memset(m_pCanSee, 0, m_nArraySize);
@@ -104,7 +108,7 @@ void VisibilityMapCharacterEx::setAtOffset(CPoint ptVisOffset)
 	const int nIndexX = ptVisOffset.x + m_nVisRange;
 	const int nIndexY = ptVisOffset.y + m_nVisRange;
 
-	if (nIndexX >= m_nSideLen || nIndexY >= m_nSideLen)
+	if (nIndexX < 0 || nIndexX >= m_nSideLen || nIndexY < 0 || nIndexY >= m_nSideLen)
 	{
 		FPrint("[!][EEex.dll] VisibilityMapCharacterEx::setAtOffset() - Out of bounds write at (%d,%d)!\n", ptVisOffset.x, ptVisOffset.y);
 		return;
