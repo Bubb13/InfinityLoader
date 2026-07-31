@@ -9840,6 +9840,12 @@ extern type_DrawPushState p_DrawPushState;
 typedef void (*type_DrawQuad)(const CRect* rDest, const CRect* rClip);
 extern type_DrawQuad p_DrawQuad;
 
+typedef void (*type_DrawReadPixels_DX)(int x, int y, int width, int height, byte* pixels);
+extern type_DrawReadPixels_DX p_DrawReadPixels_DX;
+
+typedef void (*type_DrawReadPixels_GL)(int x, int y, int width, int height, byte* pixels);
+extern type_DrawReadPixels_GL p_DrawReadPixels_GL;
+
 typedef void (*type_drawSlice)(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool unused);
 extern type_drawSlice p_drawSlice;
 

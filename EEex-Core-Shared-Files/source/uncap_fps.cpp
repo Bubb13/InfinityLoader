@@ -1071,7 +1071,7 @@ void CInfinity::Override_SetScreenShake(int bScreenShake, ushort duration, CPoin
 
 	this->m_screenShakeDecrease.x = std::abs(this->m_screenShakeDelta.x) / duration;
 	this->m_screenShakeDecrease.y = std::abs(this->m_screenShakeDelta.y) / duration;
-	
+
 	// Patch: Handle screen shakes using time (not ticks)
 	// |
 	const TimeType nTime = getTime();
@@ -1242,6 +1242,27 @@ void EEex::UncapFPS_Hook_HandleTransitionMenuFade()
 ///////////////
 // Overrides //
 ///////////////
+
+void EEex::Override_DrawReadPixels(int x, int y, int width, int height, byte* pixels)
+{
+	// Patch: The following calls corrupt the engine's buffer. This normally doesn't matter because the engine always
+	// |      renders after processing input / running the logic routine, which restores the buffer to a normal state.
+	// |      EEex's FPS uncap code doesn't necessarily render after these events, allowing the corrupted buffer to be
+	// |      presented. Force `bNeedsFlip` to false here so that the fps uncap code doesn't flip this corrupted buffer,
+	// |      instead waiting for the next frame to render. Missing a frame doesn't matter here because this routine is
+	// |      only called when saving.
+	// |
+	bNeedsFlip = false;
+
+	if (*p_g_drawBackend == RendererType::RENDERER_DX9)
+	{
+		p_DrawReadPixels_DX(x, y, width, height, pixels);
+	}
+	else
+	{
+		p_DrawReadPixels_GL(x, y, width, height, pixels);
+	}
+}
 
 static void trackSyncUpdateDelta(TimeType nStartTime)
 {

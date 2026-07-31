@@ -106,6 +106,8 @@ type_DrawOrtho11End p_DrawOrtho11End;
 type_DrawPopState p_DrawPopState;
 type_DrawPushState p_DrawPushState;
 type_DrawQuad p_DrawQuad;
+type_DrawReadPixels_DX p_DrawReadPixels_DX;
+type_DrawReadPixels_GL p_DrawReadPixels_GL;
 type_drawSlice p_drawSlice;
 type_drawSliceSide p_drawSliceSide;
 type_DrawTexCoord p_DrawTexCoord;
@@ -450,6 +452,8 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("DrawPopState"), p_DrawPopState);
 	attemptFillPointer(TEXT("DrawPushState"), p_DrawPushState);
 	attemptFillPointer(TEXT("DrawQuad(CRect*,CRect*)"), p_DrawQuad);
+	attemptFillPointer(TEXT("DrawReadPixels_DX"), p_DrawReadPixels_DX);
+	attemptFillPointer(TEXT("DrawReadPixels_GL"), p_DrawReadPixels_GL);
 	attemptFillPointer(TEXT("drawSlice"), p_drawSlice);
 	attemptFillPointer(TEXT("drawSliceSide"), p_drawSliceSide);
 	attemptFillPointer(TEXT("DrawTexCoord"), p_DrawTexCoord);
