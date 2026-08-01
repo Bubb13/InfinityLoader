@@ -228,7 +228,6 @@ RollingAverage<int> averageSyncUpdateDelta { 1000000 };
 bool bAutoScrollFirstTick = false;
 ExMenuStateOverrides beforeWorldScreenDeactivatedMenuStates{};
 bool bFullTick = false;
-bool bNeedsFlip = false;
 bool bScreenShakeMagnitudeLocked = false;
 bool bVSyncEnabled = true;
 TimeType nLastAutoZoomTime = 0;
@@ -236,6 +235,7 @@ TimeType nLastFlipEndTime = 0;
 TimeType nLastFullTickStartTime = 0;
 TimeType nLastScrollTime = 0;
 TimeType nLastSyncUpdateTime = 0;
+int nNumRendersNeededBeforeFlip = 1;
 TimeType nRemainingAutoZoomTime = 0;
 TimeType nRemainingScrollTime = 0;
 TimeType nScreenShakeNextMagnitudeLockChange = 0;
@@ -1248,18 +1248,18 @@ void EEex::Override_DrawReadPixels(int x, int y, int width, int height, byte* pi
 	// Patch: The following calls corrupt the engine's buffer. This normally doesn't matter because the engine always
 	// |      renders after processing input / running the logic routine, which restores the buffer to a normal state.
 	// |      EEex's FPS uncap code doesn't necessarily render after these events, allowing the corrupted buffer to be
-	// |      presented. Force `bNeedsFlip` to false here so that the fps uncap code doesn't flip this corrupted buffer,
-	// |      instead waiting for the next frame to render. Missing a frame doesn't matter here because this routine is
-	// |      only called when saving.
+	// |      presented. Set `nNumRendersNeededBeforeFlip` here so that the fps uncap code doesn't flip this corrupted
+	// |      buffer, instead waiting for the next frame to render. Missing a frame doesn't matter here because this
+	// |      routine is only called when saving.
 	// |
-	bNeedsFlip = false;
-
 	if (*p_g_drawBackend == RendererType::RENDERER_DX9)
 	{
+		nNumRendersNeededBeforeFlip = 2;
 		p_DrawReadPixels_DX(x, y, width, height, pixels);
 	}
 	else
 	{
+		nNumRendersNeededBeforeFlip = 1;
 		p_DrawReadPixels_GL(x, y, width, height, pixels);
 	}
 }
@@ -1280,25 +1280,28 @@ static void scheduleFullTick(const TimeType nEndTime, const TimeType nLateBy)
 
 static void doSyncUpdate(CChitin *const pChitin, lua_State *const L)
 {
-	const TimeType nRenderStartTime = getTime();
-	pChitin->virtual_SynchronousUpdate();
-	const TimeType nRenderEndTime = getTime();
+	nNumRendersNeededBeforeFlip = (std::max)(1, nNumRendersNeededBeforeFlip);
 
-	if (IsDebugWindowOpen())
+	for (; nNumRendersNeededBeforeFlip > 0; --nNumRendersNeededBeforeFlip)
 	{
-		rollingRenderTime.Plot("Render Time", nRenderEndTime, nRenderEndTime - nRenderStartTime);
+		const TimeType nRenderStartTime = getTime();
+		pChitin->virtual_SynchronousUpdate();
+		const TimeType nRenderEndTime = getTime();
+
+		if (IsDebugWindowOpen())
+		{
+			rollingRenderTime.Plot("Render Time", nRenderEndTime, nRenderEndTime - nRenderStartTime);
+		}
+
+		const TimeType nLuaGCStartTime = getTime();
+		lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
+		const TimeType nLuaGCEndTime = getTime();
+
+		if (IsDebugWindowOpen())
+		{
+			rollingLuaGCTime.Plot("Lua GC Time", nLuaGCEndTime, nLuaGCEndTime - nLuaGCStartTime);
+		}
 	}
-
-	const TimeType nLuaGCStartTime = getTime();
-	lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
-	const TimeType nLuaGCEndTime = getTime();
-
-	if (IsDebugWindowOpen())
-	{
-		rollingLuaGCTime.Plot("Lua GC Time", nLuaGCEndTime, nLuaGCEndTime - nLuaGCStartTime);
-	}
-
-	bNeedsFlip = true;
 }
 
 static void checkDoSyncUpdate(CChitin *const pChitin, lua_State *const L)
@@ -1319,12 +1322,12 @@ static void checkDoSyncUpdate(CChitin *const pChitin, lua_State *const L)
 
 static void flip(CChitin *const pChitin)
 {
-	if (!bNeedsFlip)
+	if (nNumRendersNeededBeforeFlip > 0)
 	{
 		return;
 	}
 
-	bNeedsFlip = false;
+	nNumRendersNeededBeforeFlip = 1;
 
 	const TimeType nFlipStartTime = getTime();
 	pChitin->cVideo.pCurrentMode->Flip(true);
