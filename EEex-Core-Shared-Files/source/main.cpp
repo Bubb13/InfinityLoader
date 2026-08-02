@@ -140,6 +140,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget"), EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget);
 	exportPattern(TEXT("EEex::Opcode_Hook_OnCheckAdd"), EEex::Opcode_Hook_OnCheckAdd);
 	exportPattern(TEXT("EEex::Opcode_Hook_AfterListsResolved"), EEex::Opcode_Hook_AfterListsResolved);
+	exportPattern(TEXT("EEex::Opcode_Hook_FlushDeferredAfterListsResolved"), EEex::Opcode_Hook_FlushDeferredAfterListsResolved);
 
 	////////////
 	// Sprite //

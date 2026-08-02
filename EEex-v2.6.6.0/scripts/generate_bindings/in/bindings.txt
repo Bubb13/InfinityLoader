@@ -118,6 +118,7 @@ namespace EEex
 	bool AIBase_LuaHook_OnEventTriggerSet_Enabled;
 	bool Menu_UniversalScrollbarPadCollapsing;
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
+	bool Opcode_LuaHook_DeferredAfterListsResolved_Enabled;
 	bool Projectile_LuaHook_GlobalMutators_Enabled;
 	bool StutterDetector_Enabled;
 	int UncapFPS_BusyWaitThreshold;
