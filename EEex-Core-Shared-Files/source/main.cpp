@@ -39,6 +39,8 @@ static void exportPatterns() {
 	exportPattern(TEXT("CChitin::Override_SynchronousUpdate"), getMemberPtr(&CChitin::Override_SynchronousUpdate));
 	exportPattern(TEXT("CChitin::Override_Update"), getMemberPtr(&CChitin::Override_Update));
 	exportPattern(TEXT("CChitin::Override_WinMain"), getMemberPtr(&CChitin::Override_WinMain));
+	exportPattern(TEXT("CDerivedStats::Override_GetSpellState"), getMemberPtr(&CDerivedStats::Override_GetSpellState));
+	exportPattern(TEXT("CDerivedStats::Override_SetSpellState"), getMemberPtr(&CDerivedStats::Override_SetSpellState));
 	exportPattern(TEXT("CGameAIBase::Override_ApplyTriggers"), getMemberPtr(&CGameAIBase::Override_ApplyTriggers));
 	exportPattern(TEXT("CGameAIBase::Override_SetTrigger"), getMemberPtr(&CGameAIBase::Override_SetTrigger));
 	exportPattern(TEXT("CGameArea::Override_AddClairvoyanceObject(CGameSprite*,CPoint,int)"), getMemberPtr(&CGameArea::Override_AddClairvoyanceObject));

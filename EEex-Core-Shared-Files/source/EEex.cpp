@@ -93,6 +93,7 @@ struct EnabledActionListenerData {
 };
 
 struct ExStatData {
+	std::unordered_set<uint> exSpellStates{};
 	std::unordered_map<int, int> exStatValues{};
 	// op280
 	int forcedWildSurgeNumber = 0;
@@ -3255,6 +3256,9 @@ void EEex::Stats_Hook_OnReload(CGameSprite* pSprite) {
 	exStatData.forcedWildSurgeNumber = 0;
 	exStatData.suppressWildSurgeVisuals = false;
 
+	// Extended spell states, set via op328 + op335
+	exStatData.exSpellStates.clear();
+
 	// op401
 	auto& exStatValues = exStatData.exStatValues;
 	for (auto& [id, info] : exStatInfoMap) {
@@ -3283,6 +3287,16 @@ void EEex::Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats) {
 	// op280
 	exStatData.forcedWildSurgeNumber = otherExStatData.forcedWildSurgeNumber;
 	exStatData.suppressWildSurgeVisuals = otherExStatData.suppressWildSurgeVisuals;
+
+	// Extended spell states, set via op328 + op335
+	auto& exSpellStates = exStatData.exSpellStates;
+	auto& otherExSpellStates = otherExStatData.exSpellStates;
+
+	exSpellStates.clear();
+
+	for (const uint exSpellState : otherExSpellStates) {
+		exSpellStates.emplace(exSpellState);
+	}
 
 	// op401
 	auto& exStatValues = exStatData.exStatValues;
@@ -3340,6 +3354,14 @@ void EEex::Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStat
 		exStatData.suppressWildSurgeVisuals = true;
 	}
 
+	// Extended spell states, set via op328 + op335
+	auto& exSpellStates = exStatData.exSpellStates;
+	auto& otherExSpellStates = otherExStatData.exSpellStates;
+
+	for (const uint exSpellState : otherExSpellStates) {
+		exSpellStates.emplace(exSpellState);
+	}
+
 	// op401
 	auto& exStatValues = exStatData.exStatValues;
 	auto& otherExStatValues = otherExStatData.exStatValues;
@@ -3386,6 +3408,97 @@ int EEex::Stats_Hook_OnGettingUnknown(CDerivedStats* pStats, int nStatId) {
 	return 0;
 
 	STUTTER_LOG_END
+}
+
+//uint CDerivedStats::Override_GetExtState()
+//{
+//	uint nAssembledExtState = 0;
+//
+//	for (int nExtStateBitI = 31; nExtStateBitI >= 0; --nExtStateBitI, nAssembledExtState <<= 1)
+//	{
+//		const uint nExtStateBitIndex = (*p_extstate_bits)[nExtStateBitI];
+//
+//		if (nExtStateBitIndex >= 256)
+//		{
+//			continue;
+//		}
+//
+//		const uint nPackedByteIndex = nExtStateBitIndex / 32;
+//		const uint nPackedBitMask = 1 << (nExtStateBitIndex % 32);
+//		
+//		if ((this->m_spellStates[nPackedByteIndex] & nPackedBitMask) != 0)
+//		{
+//			nAssembledExtState |= 1;
+//		}
+//	}
+//
+//	return nAssembledExtState;
+//}
+
+static bool getExtendedSpellState(CDerivedStats *const pStats, uint bit)
+{
+	std::unordered_set<uint>& exSpellStates = exStatDataMap[pStats].exSpellStates;
+	return exSpellStates.contains(bit);
+}
+
+int CDerivedStats::Override_GetSpellState(uint bit)
+{
+	if (bit >= 256)
+	{
+		return getExtendedSpellState(this, bit);
+	}
+
+	const uint nPackedByteIndex = bit / 32;
+	const uint nPackedBitMask = 1 << (bit % 32);
+
+	return (this->m_spellStates[nPackedByteIndex] & nPackedBitMask) != 0;
+}
+
+//void CDerivedStats::Override_SetExtState(uint bit)
+//{
+//	const uint nBitIndex = (*p_extstate_bits)[bit + 18];
+//
+//	if (nBitIndex >= 256)
+//	{
+//		return;
+//	}
+//
+//	const uint nPackedByteIndex = nBitIndex / 32;
+//	const uint nPackedBitMask = 1 << (nBitIndex % 32);
+//
+//	this->m_spellStates[nPackedByteIndex] |= nPackedBitMask;
+//}
+
+static int setExtendedSpellState(CDerivedStats *const pStats, uint bit)
+{
+	std::unordered_set<uint>& exSpellStates = exStatDataMap[pStats].exSpellStates;
+
+	if (exSpellStates.contains(bit))
+	{
+		return 0;
+	}
+
+	exSpellStates.emplace(bit);
+	return 1;
+}
+
+int CDerivedStats::Override_SetSpellState(uint bit)
+{
+	if (bit >= 256)
+	{
+		return setExtendedSpellState(this, bit);
+	}
+
+	const uint nPackedByteIndex = bit / 32;
+	const uint nPackedBitMask = 1 << (bit % 32);
+
+	if ((this->m_spellStates[nPackedByteIndex] & nPackedBitMask) != 0)
+	{
+		return 0;
+	}
+
+	this->m_spellStates[nPackedByteIndex] |= nPackedBitMask;
+	return 1;
 }
 
 ////////////

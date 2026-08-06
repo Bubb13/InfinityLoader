@@ -15792,6 +15792,9 @@ struct CDerivedStats : CDerivedStatsTemplate
 	{
 		return p_GetAverageLevel(this, nClass);
 	}
+
+	int Override_GetSpellState(uint bit);
+	int Override_SetSpellState(uint bit);
 };
 
 struct CCreatureFileMemorizedSpell

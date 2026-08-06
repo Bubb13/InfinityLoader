@@ -12,6 +12,12 @@ struct CChitin
 	$nobinding $external_implementation int Override_WinMain();
 };
 
+struct CDerivedStats : CDerivedStatsTemplate
+{
+	$nobinding $external_implementation int Override_GetSpellState(uint bit);
+	$nobinding $external_implementation int Override_SetSpellState(uint bit);
+};
+
 struct CGameAIBase : CGameObject
 {
 	$nobinding $external_implementation void Override_ApplyTriggers();
