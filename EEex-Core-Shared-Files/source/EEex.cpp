@@ -2159,13 +2159,12 @@ void CChitin::Override_SynchronousUpdate() {
 		}
 		while (exNeedRenderRepass);
 
-		// Patch: Uncap fps code controls back buffer flips when it is active; in that case only flip here if the projector engine is running
+		// Patch: Uncap fps code controls back buffer flips; a frame might need to be rendered more than once before being flipped
 		// |
-		// | if (!this->m_bManualFrameControl && !bUncapFPSEnabled) {
+		// | if (!this->m_bManualFrameControl) {
+		// |     this->cVideo.pCurrentMode->Flip(1);
+		// | }
 		// |
-		if (!this->m_bManualFrameControl && (!bUncapFPSEnabled || pActiveEngine == (*p_g_pBaldurChitin)->m_pEngineProjector)) {
-			this->cVideo.pCurrentMode->Flip(1);
-		}
 	}
 }
 

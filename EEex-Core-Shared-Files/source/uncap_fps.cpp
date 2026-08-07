@@ -1486,16 +1486,14 @@ int CChitin::Override_WinMain()
 
 void CChitin::Override_Update()
 {
-	const bool bIsProjector = this->pActiveEngine == (*p_g_pBaldurChitin)->m_pEngineProjector;
 	bool bFlipped = false;
 
-	if (bUncapFPSEnabled && !bIsProjector && getTime() >= nTargetNextFlipCallStartTime)
+	if (bUncapFPSEnabled && getTime() >= nTargetNextFlipCallStartTime && !this->m_bManualFrameControl)
 	{
 		flip(this);
 		bFlipped = true;
 	}
 
-	const TimeType nTickStartTime = getTime();
 	this->ProcessEvents();
 
 	//////////////////////////////////////////////////////////////////////
@@ -1535,12 +1533,12 @@ void CChitin::Override_Update()
 		}
 	}
 
+	const TimeType nStartTime = getTime();
+
 	// Patch: Run "full ticks" at 30tps like normal, and (if uncapped) run in-between "light" ticks that only render the game
 	// |
-	if (!bUncapFPSEnabled || bIsProjector || nTickStartTime >= nTargetNextFullTickStartTime)
+	if (!bUncapFPSEnabled || nStartTime >= nTargetNextFullTickStartTime || this->m_bManualFrameControl)
 	{
-		const TimeType nStartTime = getTime();
-
 		if (IsDebugWindowOpen())
 		{
 			rollingTimeBetweenFullUpdates.Plot("Time Between Full Updates", nStartTime, nStartTime - nLastFullTickStartTime);
@@ -1592,9 +1590,14 @@ void CChitin::Override_Update()
 
 		const uint nSyncStart = p_SDL_GetTicks();
 
-		if (!bUncapFPSEnabled || bIsProjector)
+		if (!bUncapFPSEnabled || this->m_bManualFrameControl)
 		{
 			checkDoSyncUpdate(this, L);
+
+			if (!this->m_bManualFrameControl)
+			{
+				flip(this);
+			}
 		}
 
 		this->m_nRenderTimer = p_SDL_GetTicks() - nSyncStart;
@@ -1693,7 +1696,7 @@ void CChitin::Override_Update()
 
 	// Patch: If uncapped, sleep for a small amount so the main update loop doesn't hog the CPU
 	// |
-	if (bUncapFPSEnabled && EEex::UncapFPS_BusyWaitThreshold != 0)
+	if (bUncapFPSEnabled && EEex::UncapFPS_BusyWaitThreshold != 0 && !this->m_bManualFrameControl)
 	{
 		const TimeType nNextTick = (std::min)(nTargetNextFullTickStartTime, nTargetNextFlipCallStartTime);
 		const TimeType nDelayMilliseconds = (nNextTick - getTime()) / 1000;
