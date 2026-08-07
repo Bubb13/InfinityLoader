@@ -1486,9 +1486,10 @@ int CChitin::Override_WinMain()
 
 void CChitin::Override_Update()
 {
+	const bool bManualFrameControl = this->m_bManualFrameControl;
 	bool bFlipped = false;
 
-	if (bUncapFPSEnabled && getTime() >= nTargetNextFlipCallStartTime && !this->m_bManualFrameControl)
+	if (bUncapFPSEnabled && getTime() >= nTargetNextFlipCallStartTime && !bManualFrameControl)
 	{
 		flip(this);
 		bFlipped = true;
@@ -1537,7 +1538,7 @@ void CChitin::Override_Update()
 
 	// Patch: Run "full ticks" at 30tps like normal, and (if uncapped) run in-between "light" ticks that only render the game
 	// |
-	if (!bUncapFPSEnabled || nStartTime >= nTargetNextFullTickStartTime || this->m_bManualFrameControl)
+	if (!bUncapFPSEnabled || nStartTime >= nTargetNextFullTickStartTime || bManualFrameControl)
 	{
 		if (IsDebugWindowOpen())
 		{
@@ -1590,11 +1591,14 @@ void CChitin::Override_Update()
 
 		const uint nSyncStart = p_SDL_GetTicks();
 
-		if (!bUncapFPSEnabled || this->m_bManualFrameControl)
+		// The saved `bManualFrameControl` value MUST be used here due to the above `this->virtual_AsynchronousUpdate()` call,
+		// which might have unset `bManualFrameControl`. The back buffer holds an invalid frame in this situation; by using the
+		// saved `bManualFrameControl` value we always render, preventing that invalid frame from being flipped.
+		if (!bUncapFPSEnabled || bManualFrameControl)
 		{
 			checkDoSyncUpdate(this, L);
 
-			if (!this->m_bManualFrameControl)
+			if (!bManualFrameControl)
 			{
 				flip(this);
 			}
