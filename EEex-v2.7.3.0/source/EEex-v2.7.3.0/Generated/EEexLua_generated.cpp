@@ -129,24 +129,6 @@ static int tolua_get_EEex_reference_UncapFPS_BusyWaitThreshold(lua_State* L)
 	return 1;
 }
 
-static int tolua_get_EEex_UncapFPS_Enabled(lua_State* L)
-{
-	tolua_pushboolean(L, (bool)EEex::UncapFPS_Enabled);
-	return 1;
-}
-
-static int tolua_set_EEex_UncapFPS_Enabled(lua_State* L)
-{
-	EEex::UncapFPS_Enabled = tolua_setter_toboolean(L, "UncapFPS_Enabled");
-	return 0;
-}
-
-static int tolua_get_EEex_reference_UncapFPS_Enabled(lua_State* L)
-{
-	tolua_pushusertype(L, (void*)&EEex::UncapFPS_Enabled, "Primitive<bool>");
-	return 1;
-}
-
 static int tolua_get_EEex_UncapFPS_FPSLimit(lua_State* L)
 {
 	lua_pushinteger(L, (lua_Integer)EEex::UncapFPS_FPSLimit);
@@ -401,6 +383,12 @@ static int tolua_function_EEex_SetUIItemExtraScrollbarPad(lua_State* L)
 static int tolua_function_EEex_SetUIItemScrollbarPadCollapses(lua_State* L)
 {
 	EEex::SetUIItemScrollbarPadCollapses((uiItem*)tolua_tousertype_dynamic(L, 1, 0, "uiItem"), tolua_function_toboolean(L, 2, "SetUIItemScrollbarPadCollapses"));
+	return 0;
+}
+
+static int tolua_function_EEex_SetUncapFPSEnabled(lua_State* L)
+{
+	EEex::SetUncapFPSEnabled(tolua_function_toboolean(L, 1, "SetUncapFPSEnabled"));
 	return 0;
 }
 
@@ -999,8 +987,6 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_StutterDetector_Enabled", tolua_get_EEex_reference_StutterDetector_Enabled, NULL);
 		tolua_variable(L, "UncapFPS_BusyWaitThreshold", tolua_get_EEex_UncapFPS_BusyWaitThreshold, tolua_set_EEex_UncapFPS_BusyWaitThreshold);
 		tolua_variable(L, "reference_UncapFPS_BusyWaitThreshold", tolua_get_EEex_reference_UncapFPS_BusyWaitThreshold, NULL);
-		tolua_variable(L, "UncapFPS_Enabled", tolua_get_EEex_UncapFPS_Enabled, tolua_set_EEex_UncapFPS_Enabled);
-		tolua_variable(L, "reference_UncapFPS_Enabled", tolua_get_EEex_reference_UncapFPS_Enabled, NULL);
 		tolua_variable(L, "UncapFPS_FPSLimit", tolua_get_EEex_UncapFPS_FPSLimit, tolua_set_EEex_UncapFPS_FPSLimit);
 		tolua_variable(L, "reference_UncapFPS_FPSLimit", tolua_get_EEex_reference_UncapFPS_FPSLimit, NULL);
 		tolua_variable(L, "UncapFPS_FPSLimitEnabled", tolua_get_EEex_UncapFPS_FPSLimitEnabled, tolua_set_EEex_UncapFPS_FPSLimitEnabled);
@@ -1037,6 +1023,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "SetINIString", &tolua_function_EEex_SetINIString);
 		tolua_function(L, "SetUIItemExtraScrollbarPad", &tolua_function_EEex_SetUIItemExtraScrollbarPad);
 		tolua_function(L, "SetUIItemScrollbarPadCollapses", &tolua_function_EEex_SetUIItemScrollbarPadCollapses);
+		tolua_function(L, "SetUncapFPSEnabled", &tolua_function_EEex_SetUncapFPSEnabled);
 		tolua_function(L, "SetVSyncEnabled", &tolua_function_EEex_SetVSyncEnabled);
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 		tolua_function(L, "UpdateLastScrollTime", &tolua_function_EEex_UpdateLastScrollTime);
@@ -1047,7 +1034,6 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_constantstring(L, "usertype_Projectile_LuaHook_GlobalMutators_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_StutterDetector_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_UncapFPS_BusyWaitThreshold", "Primitive<int>");
-		tolua_constantstring(L, "usertype_UncapFPS_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_UncapFPS_FPSLimit", "Primitive<int>");
 		tolua_constantstring(L, "usertype_UncapFPS_FPSLimitEnabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_UncapFPS_FullscreenVRR", "Primitive<bool>");

@@ -2161,9 +2161,9 @@ void CChitin::Override_SynchronousUpdate() {
 
 		// Patch: Uncap fps code controls back buffer flips when it is active; in that case only flip here if the projector engine is running
 		// |
-		// | if (!this->m_bManualFrameControl && !EEex::UncapFPS_Enabled) {
+		// | if (!this->m_bManualFrameControl && !bUncapFPSEnabled) {
 		// |
-		if (!this->m_bManualFrameControl && (!EEex::UncapFPS_Enabled || pActiveEngine == (*p_g_pBaldurChitin)->m_pEngineProjector)) {
+		if (!this->m_bManualFrameControl && (!bUncapFPSEnabled || pActiveEngine == (*p_g_pBaldurChitin)->m_pEngineProjector)) {
 			this->cVideo.pCurrentMode->Flip(1);
 		}
 	}
@@ -3425,7 +3425,7 @@ int EEex::Stats_Hook_OnGettingUnknown(CDerivedStats* pStats, int nStatId) {
 //
 //		const uint nPackedByteIndex = nExtStateBitIndex / 32;
 //		const uint nPackedBitMask = 1 << (nExtStateBitIndex % 32);
-//		
+//
 //		if ((this->m_spellStates[nPackedByteIndex] & nPackedBitMask) != 0)
 //		{
 //			nAssembledExtState |= 1;

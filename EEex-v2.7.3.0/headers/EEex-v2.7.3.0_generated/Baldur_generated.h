@@ -5042,7 +5042,6 @@ namespace EEex
 	extern bool Projectile_LuaHook_GlobalMutators_Enabled;
 	extern bool StutterDetector_Enabled;
 	extern int UncapFPS_BusyWaitThreshold;
-	extern bool UncapFPS_Enabled;
 	extern int UncapFPS_FPSLimit;
 	extern bool UncapFPS_FPSLimitEnabled;
 	extern bool UncapFPS_FullscreenVRR;
@@ -5075,6 +5074,7 @@ namespace EEex
 	void SetINIString(const char* iniPath, const char* section, const char* key, const char* value);
 	void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
 	void SetUIItemScrollbarPadCollapses(uiItem* pItem, bool bCollapseScrollbarPadWhenHidden);
+	void SetUncapFPSEnabled(bool bEnabled);
 	void SetVSyncEnabled(bool bEnabled, bool bResetDevice);
 	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	void UpdateLastScrollTime();

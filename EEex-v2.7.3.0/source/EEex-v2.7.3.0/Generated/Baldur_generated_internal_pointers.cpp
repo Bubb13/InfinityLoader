@@ -15,7 +15,6 @@ bool EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled;
 bool EEex::Projectile_LuaHook_GlobalMutators_Enabled;
 bool EEex::StutterDetector_Enabled;
 int EEex::UncapFPS_BusyWaitThreshold;
-bool EEex::UncapFPS_Enabled;
 int EEex::UncapFPS_FPSLimit;
 bool EEex::UncapFPS_FPSLimitEnabled;
 bool EEex::UncapFPS_FullscreenVRR;

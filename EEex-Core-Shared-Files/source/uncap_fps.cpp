@@ -229,6 +229,7 @@ bool bAutoScrollFirstTick = false;
 ExMenuStateOverrides beforeWorldScreenDeactivatedMenuStates{};
 bool bFullTick = false;
 bool bScreenShakeMagnitudeLocked = false;
+bool bUncapFPSEnabled = false;
 bool bVSyncEnabled = true;
 TimeType nLastAutoZoomTime = 0;
 TimeType nLastFlipEndTime = 0;
@@ -901,6 +902,31 @@ TimeType EEex::GetMicroseconds()
 	return getTime() - getInitTime();
 }
 
+void EEex::SetUncapFPSEnabled(bool bEnabled)
+{
+	if (bUncapFPSEnabled == bEnabled)
+	{
+		return;
+	}
+
+	lua_State *const L = sharedState().LuaState();
+
+	// Perform full Lua GC so the new Lua GC strategy is starting with a clean base.
+	lua_gc(L, LUA_GCCOLLECT, 0); // Might be completing a partially done GC pass.
+	lua_gc(L, LUA_GCCOLLECT, 0); // Runs a full pass, reclaiming all available memory.
+
+	if (bEnabled)
+	{
+		lua_gc(L, LUA_GCSTOP, 0);
+	}
+	else
+	{
+		lua_gc(L, LUA_GCRESTART, 0);
+	}
+
+	bUncapFPSEnabled = bEnabled;
+}
+
 void EEex::SetVSyncEnabled(bool bEnable, bool bResetDevice)
 {
 	if (*p_g_drawBackend == RendererType::RENDERER_DX9)
@@ -1293,13 +1319,16 @@ static void doSyncUpdate(CChitin *const pChitin, lua_State *const L)
 			rollingRenderTime.Plot("Render Time", nRenderEndTime, nRenderEndTime - nRenderStartTime);
 		}
 
-		const TimeType nLuaGCStartTime = getTime();
-		lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
-		const TimeType nLuaGCEndTime = getTime();
-
-		if (IsDebugWindowOpen())
+		if (bUncapFPSEnabled)
 		{
-			rollingLuaGCTime.Plot("Lua GC Time", nLuaGCEndTime, nLuaGCEndTime - nLuaGCStartTime);
+			const TimeType nLuaGCStartTime = getTime();
+			lua_gc(L, LUA_GCSTEP, EEex::UncapFPS_LuaGCSteps);
+			const TimeType nLuaGCEndTime = getTime();
+
+			if (IsDebugWindowOpen())
+			{
+				rollingLuaGCTime.Plot("Lua GC Time", nLuaGCEndTime, nLuaGCEndTime - nLuaGCStartTime);
+			}
 		}
 	}
 }
@@ -1460,7 +1489,7 @@ void CChitin::Override_Update()
 	const bool bIsProjector = this->pActiveEngine == (*p_g_pBaldurChitin)->m_pEngineProjector;
 	bool bFlipped = false;
 
-	if (EEex::UncapFPS_Enabled && !bIsProjector && getTime() >= nTargetNextFlipCallStartTime)
+	if (bUncapFPSEnabled && !bIsProjector && getTime() >= nTargetNextFlipCallStartTime)
 	{
 		flip(this);
 		bFlipped = true;
@@ -1508,7 +1537,7 @@ void CChitin::Override_Update()
 
 	// Patch: Run "full ticks" at 30tps like normal, and (if uncapped) run in-between "light" ticks that only render the game
 	// |
-	if (!EEex::UncapFPS_Enabled || bIsProjector || nTickStartTime >= nTargetNextFullTickStartTime)
+	if (!bUncapFPSEnabled || bIsProjector || nTickStartTime >= nTargetNextFullTickStartTime)
 	{
 		const TimeType nStartTime = getTime();
 
@@ -1563,7 +1592,7 @@ void CChitin::Override_Update()
 
 		const uint nSyncStart = p_SDL_GetTicks();
 
-		if (!EEex::UncapFPS_Enabled || bIsProjector)
+		if (!bUncapFPSEnabled || bIsProjector)
 		{
 			checkDoSyncUpdate(this, L);
 		}
@@ -1610,7 +1639,7 @@ void CChitin::Override_Update()
 
 		// Patch: Don't sleep to target 30fps when uncapped
 		// |
-		if (!EEex::UncapFPS_Enabled)
+		if (!bUncapFPSEnabled)
 		{
 			const int nTargetMilliseconds = 1000 / *CChitin::p_TIMER_UPDATES_PER_SECOND;
 
@@ -1664,7 +1693,7 @@ void CChitin::Override_Update()
 
 	// Patch: If uncapped, sleep for a small amount so the main update loop doesn't hog the CPU
 	// |
-	if (EEex::UncapFPS_Enabled && EEex::UncapFPS_BusyWaitThreshold != 0)
+	if (bUncapFPSEnabled && EEex::UncapFPS_BusyWaitThreshold != 0)
 	{
 		const TimeType nNextTick = (std::min)(nTargetNextFullTickStartTime, nTargetNextFlipCallStartTime);
 		const TimeType nDelayMilliseconds = (nNextTick - getTime()) / 1000;
@@ -3183,7 +3212,6 @@ void initUncapFPS()
 	nLastSyncUpdateTime = initTime;
 	nTargetNextFullTickStartTime = initTime;
 
-	lua_gc(sharedState().LuaState(), LUA_GCSTOP, 0);
 	EEex::UncapFPS_LuaGCSteps = 50;
 }
 
