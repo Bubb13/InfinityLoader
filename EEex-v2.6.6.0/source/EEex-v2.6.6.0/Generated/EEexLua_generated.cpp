@@ -21,6 +21,24 @@ static int tolua_get_EEex_reference_AIBase_LuaHook_OnEventTriggerSet_Enabled(lua
 	return 1;
 }
 
+static int tolua_get_EEex_Menu_LuaHook_BeforeListRenderingItem_Enabled(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::Menu_LuaHook_BeforeListRenderingItem_Enabled);
+	return 1;
+}
+
+static int tolua_set_EEex_Menu_LuaHook_BeforeListRenderingItem_Enabled(lua_State* L)
+{
+	EEex::Menu_LuaHook_BeforeListRenderingItem_Enabled = tolua_setter_toboolean(L, "Menu_LuaHook_BeforeListRenderingItem_Enabled");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_Menu_LuaHook_BeforeListRenderingItem_Enabled(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::Menu_LuaHook_BeforeListRenderingItem_Enabled, "Primitive<bool>");
+	return 1;
+}
+
 static int tolua_get_EEex_Menu_UniversalScrollbarPadCollapsing(lua_State* L)
 {
 	tolua_pushboolean(L, (bool)EEex::Menu_UniversalScrollbarPadCollapsing);
@@ -987,6 +1005,8 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_beginmodule(L, "EEex");
 		tolua_variable(L, "AIBase_LuaHook_OnEventTriggerSet_Enabled", tolua_get_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled, tolua_set_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled);
 		tolua_variable(L, "reference_AIBase_LuaHook_OnEventTriggerSet_Enabled", tolua_get_EEex_reference_AIBase_LuaHook_OnEventTriggerSet_Enabled, NULL);
+		tolua_variable(L, "Menu_LuaHook_BeforeListRenderingItem_Enabled", tolua_get_EEex_Menu_LuaHook_BeforeListRenderingItem_Enabled, tolua_set_EEex_Menu_LuaHook_BeforeListRenderingItem_Enabled);
+		tolua_variable(L, "reference_Menu_LuaHook_BeforeListRenderingItem_Enabled", tolua_get_EEex_reference_Menu_LuaHook_BeforeListRenderingItem_Enabled, NULL);
 		tolua_variable(L, "Menu_UniversalScrollbarPadCollapsing", tolua_get_EEex_Menu_UniversalScrollbarPadCollapsing, tolua_set_EEex_Menu_UniversalScrollbarPadCollapsing);
 		tolua_variable(L, "reference_Menu_UniversalScrollbarPadCollapsing", tolua_get_EEex_reference_Menu_UniversalScrollbarPadCollapsing, NULL);
 		tolua_variable(L, "Opcode_LuaHook_AfterListsResolved_Enabled", tolua_get_EEex_Opcode_LuaHook_AfterListsResolved_Enabled, tolua_set_EEex_Opcode_LuaHook_AfterListsResolved_Enabled);
@@ -1042,6 +1062,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "UpdateLastScrollTime", &tolua_function_EEex_UpdateLastScrollTime);
 		tolua_function(L, "WriteProfilerHooks", &tolua_function_EEex_WriteProfilerHooks);
 		tolua_constantstring(L, "usertype_AIBase_LuaHook_OnEventTriggerSet_Enabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_Menu_LuaHook_BeforeListRenderingItem_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Menu_UniversalScrollbarPadCollapsing", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Opcode_LuaHook_AfterListsResolved_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Opcode_LuaHook_DeferredAfterListsResolved_Enabled", "Primitive<bool>");

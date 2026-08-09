@@ -166,6 +166,7 @@ static void exportPatterns() {
 
 	exportPattern(TEXT("EEex::Menu_Hook_CheckApplyTextScrollbarPad"), EEex::Menu_Hook_CheckApplyTextScrollbarPad);
 	exportPattern(TEXT("EEex::Menu_Hook_FreeUITemplate"), EEex::Menu_Hook_FreeUITemplate);
+	exportPattern(TEXT("EEex::Menu_Hook_OnBeforeListRenderingItem"), EEex::Menu_Hook_OnBeforeListRenderingItem);
 	exportPattern(TEXT("EEex::Menu_Hook_OnBeforeMenuStackSave"), EEex::Menu_Hook_OnBeforeMenuStackSave);
 
 	////////////////

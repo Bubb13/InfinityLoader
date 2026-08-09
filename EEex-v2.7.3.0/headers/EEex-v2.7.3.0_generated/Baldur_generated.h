@@ -5036,6 +5036,7 @@ namespace EEex
 	extern bool bStripUUID;
 	extern byte CGameSprite_Hit_Roll;
 	extern bool AIBase_LuaHook_OnEventTriggerSet_Enabled;
+	extern bool Menu_LuaHook_BeforeListRenderingItem_Enabled;
 	extern bool Menu_UniversalScrollbarPadCollapsing;
 	extern bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	extern bool Opcode_LuaHook_DeferredAfterListsResolved_Enabled;

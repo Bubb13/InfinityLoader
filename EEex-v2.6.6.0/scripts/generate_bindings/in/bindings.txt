@@ -122,6 +122,7 @@ namespace EEex
 
 	// Globals
 	bool AIBase_LuaHook_OnEventTriggerSet_Enabled;
+	bool Menu_LuaHook_BeforeListRenderingItem_Enabled;
 	bool Menu_UniversalScrollbarPadCollapsing;
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	bool Opcode_LuaHook_DeferredAfterListsResolved_Enabled;

@@ -143,6 +143,7 @@ namespace EEex {
 
 	void Menu_Hook_CheckApplyTextScrollbarPad(uiItem* pItem, SDL_Rect* pItemArea);
 	void Menu_Hook_FreeUITemplate(uiItem* pItem);
+	void Menu_Hook_OnBeforeListRenderingItem(uiItem* item, SDL_Rect* window, SDL_Rect* rClipBase, int alpha, uiMenu* menu, uiItem* list);
 	void Menu_Hook_OnBeforeMenuStackSave();
 
 	////////////////

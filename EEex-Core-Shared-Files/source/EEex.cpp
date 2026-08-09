@@ -4354,6 +4354,25 @@ void EEex::Menu_Hook_CheckApplyTextScrollbarPad(uiItem* pItem, SDL_Rect* pItemAr
 	pItemArea->w -= 16 + exData.nExtraScrollbarPad;
 }
 
+void EEex::Menu_Hook_OnBeforeListRenderingItem(uiItem* item, SDL_Rect* window, SDL_Rect* rClipBase, int alpha, uiMenu* menu, uiItem* list) {
+
+	if (!EEex::Menu_LuaHook_BeforeListRenderingItem_Enabled) {
+		return;
+	}
+
+	lua_State *const L = sharedState().LuaState();
+
+	luaCallProtected(L, 6, 0, [&](int _) {
+		lua_getglobal(L, "EEex_Menu_LuaHook_BeforeListRenderingItem"); // 1 [ ..., EEex_Menu_LuaHook_BeforeListRenderingItem ]
+		tolua_pushusertype(L, list, "uiItem");                         // 2 [ ..., EEex_Menu_LuaHook_BeforeListRenderingItem, list ]
+		tolua_pushusertype(L, item, "uiItem");                         // 3 [ ..., EEex_Menu_LuaHook_BeforeListRenderingItem, list, item ]
+		tolua_pushusertype(L, window, "SDL_Rect");                     // 4 [ ..., EEex_Menu_LuaHook_BeforeListRenderingItem, list, item, window ]
+		tolua_pushusertype(L, rClipBase, "SDL_Rect");                  // 5 [ ..., EEex_Menu_LuaHook_BeforeListRenderingItem, list, item, window, rClipBase ]
+		lua_pushinteger(L, alpha);                                     // 6 [ ..., EEex_Menu_LuaHook_BeforeListRenderingItem, list, item, window, rClipBase, alpha ]
+		tolua_pushusertype(L, menu, "uiMenu");                         // 7 [ ..., EEex_Menu_LuaHook_BeforeListRenderingItem, list, item, window, rClipBase, alpha, menu ]
+	});
+}
+
 void EEex::Menu_Hook_OnBeforeMenuStackSave() {
 
 	lua_State *const L = luaState();
@@ -5530,6 +5549,7 @@ void EEex::InitEEex() {
 	initTimeUtil();
 	initUncapFPS();
 
+	EEex::Menu_LuaHook_BeforeListRenderingItem_Enabled = false;
 	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = false;
 	EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled = false;
 	EEex::Projectile_LuaHook_GlobalMutators_Enabled = false;
