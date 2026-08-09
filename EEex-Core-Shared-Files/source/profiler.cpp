@@ -599,8 +599,8 @@ void EEex::WriteProfilerHooks()
 		{
 			lua_pop(L, 3);                                                                         // 3 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile ]
 			continue;
-		}                                                                                          
-		                                                                                           // 6 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile, functionEntryPoint, attemptRestorePart, expectedBytes ]
+		}
+																								   // 6 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile, functionEntryPoint, attemptRestorePart, expectedBytes ]
 		//////////////////////////////////////
 		// Call `EEex_HookAttemptProfile()` //
 		//////////////////////////////////////
@@ -610,7 +610,7 @@ void EEex::WriteProfilerHooks()
 			FPrint("[protected] %s\n", lua_tostring(L, -1));
 			lua_pop(L, 1);                                                                         // 2 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile ]
 		}
-		                                                                                           // 2 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile ]
+																								   // 2 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile ]
 		lua_pushvalue(L, -1);                                                                      // 3 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile ]
 	}
 
