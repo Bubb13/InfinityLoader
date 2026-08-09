@@ -158,6 +158,7 @@ namespace EEex
 	$external_implementation void OnTargetExecutableInitialized();
 	$external_implementation void OpenDebugWindow();
 	$external_implementation $pass_lua_state void RegisterSlicedRect();
+	$external_implementation void RegisterTrace(primitive const char* name, uintptr_t functionAddress, int64_t logTimeThreshold);
 	$external_implementation void SetINIString(primitive const char* iniPath, primitive const char* section, primitive const char* key, primitive const char* value);
 	$external_implementation void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
 	$external_implementation void SetUIItemScrollbarPadCollapses(uiItem* pItem, bool bCollapseScrollbarPadWhenHidden);
@@ -165,6 +166,7 @@ namespace EEex
 	$external_implementation void SetVSyncEnabled(bool bEnabled, bool bResetDevice);
 	$external_implementation bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	$external_implementation void UpdateLastScrollTime();
+	$external_implementation void WriteProfilerHooks();
 };
 
 enum EEex::ProjectileType : __int32

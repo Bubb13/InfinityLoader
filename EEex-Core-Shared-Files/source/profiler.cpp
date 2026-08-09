@@ -1,7 +1,9 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <fstream>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
@@ -12,6 +14,7 @@
 #include "engine_function_names.hpp"
 #include "infinity_loader_common_api.h"
 #include "profiler.hpp"
+#include "script_folder.hpp"
 #include "time_util.hpp"
 
 //---------------------------//
@@ -120,46 +123,9 @@ std::mutex startTracingLock;
 //          Functions          //
 //-----------------------------//
 
-void Profiler_StartTrace(const TimeType startTime, const TraceType toStartType)
-{
-	if (toStartType == TraceType::NORMAL)
-	{
-		traceStartThreadID = GetCurrentThreadId();
-		startTraceTime = startTime;
-
-		const std::unique_lock lk1 { funcTimesRefsLock };
-
-		size_t curI = 0;
-		for (auto itr = funcTimesRefs.begin(); itr != funcTimesRefs.end(); )
-		{
-			auto& threadLocalContainer = *itr;
-			if (threadLocalContainer->deadAllocatedCopy)
-			{
-				delete threadLocalContainer;
-				itr = funcTimesRefs.erase(itr);
-			}
-			else
-			{
-				threadLocalContainer->value.clear();
-				threadLocalContainer->position = curI++;
-				++itr;
-			}
-		}
-	}
-
-	traceType = toStartType;
-}
-
-void Profiler_RegisterTrace(const char *const traceName, const uintptr_t address, const TimeType logTimeThreshold)
-{
-	std::unique_lock lk1 { traceEntriesLock };
-	traceEntries.try_emplace(address, TraceType::NORMAL, traceName, address, logTimeThreshold);
-}
-
-static bool sortTimerEntryByTime(const TimerEntry& a, const TimerEntry& b)
-{
-	return a.milliseconds > b.milliseconds;
-}
+/////////////
+// Utility //
+/////////////
 
 static std::string formatString(const char *const format, ...)
 {
@@ -199,6 +165,83 @@ static std::string formatString(const char *const format, ...)
 
 	va_end(args);
 	return result;
+}
+
+template<typename NumberType>
+static std::optional<NumberType> parseNumber(std::string_view sv)
+{
+	int base = 10;
+
+	if (sv.starts_with("0x"))
+	{
+		sv.remove_prefix(2);
+		base = 16;
+	}
+
+	NumberType value;
+	const auto [ptr, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), value, base);
+
+	if (ec != std::errc{} || ptr != sv.data() + sv.size())
+	{
+		return std::nullopt;
+	}
+
+	return value;
+}
+
+static bool sortTimerEntryByTime(const TimerEntry& a, const TimerEntry& b)
+{
+	return a.milliseconds > b.milliseconds;
+}
+
+static std::string_view subview(const std::string& str, size_t start, size_t endExclusive)
+{
+	return std::string_view{ str }.substr(start, endExclusive - start);
+}
+
+static std::string_view subview(const std::string& str, size_t start)
+{
+	return subview(str, start, str.size());
+}
+
+//////////////
+// Profiler //
+//////////////
+
+void Profiler_StartTrace(const TimeType startTime, const TraceType toStartType)
+{
+	if (toStartType == TraceType::NORMAL)
+	{
+		traceStartThreadID = GetCurrentThreadId();
+		startTraceTime = startTime;
+
+		const std::unique_lock lk1 { funcTimesRefsLock };
+
+		size_t curI = 0;
+		for (auto itr = funcTimesRefs.begin(); itr != funcTimesRefs.end(); )
+		{
+			auto& threadLocalContainer = *itr;
+			if (threadLocalContainer->deadAllocatedCopy)
+			{
+				delete threadLocalContainer;
+				itr = funcTimesRefs.erase(itr);
+			}
+			else
+			{
+				threadLocalContainer->value.clear();
+				threadLocalContainer->position = curI++;
+				++itr;
+			}
+		}
+	}
+
+	traceType = toStartType;
+}
+
+void Profiler_RegisterTrace(const char *const traceName, const uintptr_t address, const TimeType logTimeThreshold)
+{
+	std::unique_lock lk1 { traceEntriesLock };
+	traceEntries.try_emplace(address, TraceType::NORMAL, traceName, address, logTimeThreshold);
 }
 
 static void endTracingNormal(const TimeType endTime)
@@ -243,7 +286,7 @@ static void endTracingNormal(const TimeType endTime)
 					placed.column3 = formatString("%.02f ms", static_cast<double>(microseconds) / 1000);
 					placed.column4 = formatString("%.02f ms", static_cast<double>(microseconds) / 1000 / x.second.callCount);
 					placed.column5 = formatString("0x%" PRIXPTR, x.first);
-					placed.column6 = formatString("%s", GetFunctionName(x.first).c_str());
+					placed.column6 = formatString("%s", getFunctionName(x.first).c_str());
 
 					if (const size_t len = placed.column1.length(); len > longestColumn1)
 					{
@@ -357,7 +400,7 @@ static void endFunctionTrace(const TimeType endTime, const ReturnPtr& realReturn
 		}
 		case TraceType::SPAM:
 		{
-			const std::string funcName = GetFunctionName(realReturnPtr.function);
+			const std::string funcName = getFunctionName(realReturnPtr.function);
 			FPrint("[%p] END %s\n", GetCurrentThreadId(), funcName.c_str());
 			break;
 		}
@@ -437,9 +480,139 @@ void __stdcall Profiler_Trace(const uintptr_t funcAddress, const SavedRegisters 
 		}
 		case TraceType::SPAM:
 		{
-			const std::string funcName = GetFunctionName(funcAddress);
+			const std::string funcName = getFunctionName(funcAddress);
 			FPrint("[%p] START %s\n", GetCurrentThreadId(), funcName.c_str());
 			break;
 		}
 	}
+}
+
+//---------------------------------//
+//          Lua Functions          //
+//---------------------------------//
+
+void EEex::RegisterTrace(const char* name, uintptr_t functionAddress, int64_t logTimeThreshold)
+{
+	Profiler_RegisterTrace(name, functionAddress, logTimeThreshold);
+}
+
+void EEex::WriteProfilerHooks()
+{
+	////////////////////////
+	// Open `profiler.db` //
+	////////////////////////
+
+	const String& sScriptFolder = getScriptFolder();
+	const String sProfilerDbPath = String{ workingFolder() }.append(sScriptFolder).append(TEXT("\\profiler\\profiler.db"));
+
+	std::ifstream inputFile { sProfilerDbPath };
+
+	if (!inputFile)
+	{
+		FPrint("[!][EEex.dll] WriteProfilerHooks() - Error opening profiler.db\n");
+		return;
+	}
+
+	//////////////////////
+	// Set up Lua stack //
+	//////////////////////
+
+	lua_State *const L = sharedState().LuaState();
+
+	lua_pushstring(L, "InfinityLoader_ErrorMessageHandler");                                       // 1 [ ..., "InfinityLoader_ErrorMessageHandler" ]
+	lua_rawget(L, LUA_REGISTRYINDEX);                                                              // 1 [ ..., InfinityLoader_ErrorMessageHandler ]
+	lua_getglobal(L, "EEex_HookAttemptProfile");                                                   // 2 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile ]
+	lua_pushvalue(L, -1);                                                                          // 3 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile ]
+
+	/////////////////////////
+	// Parse `profiler.db` //
+	/////////////////////////
+
+	for (std::string line; std::getline(inputFile, line); )
+	{
+		const size_t firstSeparatorI = line.find('|');
+		if (firstSeparatorI == std::string::npos) continue;
+
+		const size_t secondSeparatorI = line.find('|', firstSeparatorI + 1);
+		if (secondSeparatorI == std::string::npos) continue;
+
+		///////////////////////////////
+		// Push `functionEntryPoint` //
+		///////////////////////////////
+
+		const std::optional<uintptr_t> functionEntryPointOpt = parseNumber<uintptr_t>(subview(line, 0, firstSeparatorI));
+		if (!functionEntryPointOpt.has_value()) continue;
+		lua_pushinteger(L, functionEntryPointOpt.value());                                         // 4 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile, functionEntryPoint ]
+
+		///////////////////////////////
+		// Push `attemptRestorePart` //
+		///////////////////////////////
+
+		const std::string_view restorePart = subview(line, firstSeparatorI + 1, secondSeparatorI);
+		lua_pushlstring(L, restorePart.data(), restorePart.size());                                // 5 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile, functionEntryPoint, attemptRestorePart ]
+
+		////////////////////////////////
+		// Push `expectedBytes` table //
+		////////////////////////////////
+
+		lua_newtable(L);                                                                           // 6 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile, functionEntryPoint, attemptRestorePart, expectedBytes ]
+		lua_Integer tableI = 1;
+		bool error = false;
+
+		const auto handleExpectedByteString = [&](std::string_view view)
+		{
+			if (view.empty())
+			{
+				return;
+			}
+
+			const std::optional<uint8_t> nByte = parseNumber<uint8_t>(view);
+
+			if (!nByte.has_value())
+			{
+				error = true;
+				return;
+			}
+
+			lua_pushinteger(L, tableI++);                                                          // 7 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile, functionEntryPoint, attemptRestorePart, expectedBytes, tableI ]
+			lua_pushinteger(L, nByte.value());                                                     // 8 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile, functionEntryPoint, attemptRestorePart, expectedBytes, tableI, nByte ]
+			lua_rawset(L, -3);                                                                     // 6 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile, functionEntryPoint, attemptRestorePart, expectedBytes ]
+		};
+
+		for (size_t expectedPartNextCommaSearchI = secondSeparatorI + 1; ;)
+		{
+			const size_t expectedPartCurCommaI = line.find(',', expectedPartNextCommaSearchI);
+
+			if (expectedPartCurCommaI == std::string::npos)
+			{
+				std::string_view view = subview(line, expectedPartNextCommaSearchI);
+				handleExpectedByteString(view);
+				break;
+			}
+
+			std::string_view view = subview(line, expectedPartNextCommaSearchI, expectedPartCurCommaI);
+			handleExpectedByteString(view); if (error) break;
+			expectedPartNextCommaSearchI = expectedPartCurCommaI + 1;
+		}
+
+		if (error)
+		{
+			lua_pop(L, 3);                                                                         // 3 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile ]
+			continue;
+		}                                                                                          
+		                                                                                           // 6 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile, functionEntryPoint, attemptRestorePart, expectedBytes ]
+		//////////////////////////////////////
+		// Call `EEex_HookAttemptProfile()` //
+		//////////////////////////////////////
+
+		if (lua_pcallk(L, 3, 0, -6, 0, nullptr) != LUA_OK)
+		{                                                                                          // 3 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, errorMessage ]
+			FPrint("[protected] %s\n", lua_tostring(L, -1));
+			lua_pop(L, 1);                                                                         // 2 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile ]
+		}
+		                                                                                           // 2 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile ]
+		lua_pushvalue(L, -1);                                                                      // 3 [ ..., InfinityLoader_ErrorMessageHandler, EEex_HookAttemptProfile, EEex_HookAttemptProfile ]
+	}
+
+	lua_pop(L, 3);                                                                                 // 0 [ ... ]
 }

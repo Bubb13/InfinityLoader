@@ -238,7 +238,7 @@ static void exportPatterns() {
 	//          Profiler          //
 	////////////////////////////////
 
-	//exportPattern(TEXT("Profiler_Trace"), Profiler_Trace);
+	exportPattern(TEXT("Profiler_Trace"), Profiler_Trace);
 }
 
 void __stdcall InitBindings(SharedState argSharedState) {

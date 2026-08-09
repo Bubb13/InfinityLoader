@@ -4926,6 +4926,7 @@ namespace EEex
 	void OnTargetExecutableInitialized();
 	void OpenDebugWindow();
 	void RegisterSlicedRect(lua_State* L);
+	void RegisterTrace(const char* name, uintptr_t functionAddress, int64_t logTimeThreshold);
 	void SetINIString(const char* iniPath, const char* section, const char* key, const char* value);
 	void SetUIItemExtraScrollbarPad(uiItem* pItem, int nExtraPad);
 	void SetUIItemScrollbarPadCollapses(uiItem* pItem, bool bCollapseScrollbarPadWhenHidden);
@@ -4933,6 +4934,7 @@ namespace EEex
 	void SetVSyncEnabled(bool bEnabled, bool bResetDevice);
 	bool ShouldEffectBypassOp120(CGameEffect* pEffect);
 	void UpdateLastScrollTime();
+	void WriteProfilerHooks();
 };
 
 struct ConstCharString

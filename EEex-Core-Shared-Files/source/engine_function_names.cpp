@@ -4,12 +4,13 @@
 
 #include "engine_function_names.hpp"
 #include "infinity_loader_common_api.h"
+#include "script_folder.hpp"
 
 ///////////////
 // Constants //
 ///////////////
 
-std::string EMPTY_STRING { "" };
+const std::string EMPTY_STRING { "" };
 
 /////////////
 // Globals //
@@ -21,7 +22,7 @@ std::vector<std::pair<uintptr_t, std::string>> addressToName{};
 // Functions //
 ///////////////
 
-const std::string& GetContainingFunctionName(uintptr_t address)
+const std::string& getContainingFunctionName(uintptr_t address)
 {
 	const size_t size = addressToName.size();
 	const size_t lastValidIndex = size - 1;
@@ -52,7 +53,7 @@ const std::string& GetContainingFunctionName(uintptr_t address)
 	return EMPTY_STRING;
 }
 
-const std::string& GetFunctionName(uintptr_t address)
+const std::string& getFunctionName(uintptr_t address)
 {
 	size_t l = 0;
 	size_t r = addressToName.size();
@@ -79,9 +80,12 @@ const std::string& GetFunctionName(uintptr_t address)
 	return EMPTY_STRING;
 }
 
-void LoadFunctionNames()
+void initFunctionNames()
 {
-	std::ifstream inputFile { "function_names.db" };
+	const String& sScriptFolder = getScriptFolder();
+	const String sFunctionNamesPath = String{ workingFolder() }.append(sScriptFolder).append(TEXT("\\profiler\\function_names.db"));
+
+	std::ifstream inputFile { sFunctionNamesPath };
 
 	if (!inputFile)
 	{

@@ -368,6 +368,12 @@ static int tolua_function_EEex_RegisterSlicedRect(lua_State* L)
 	return 0;
 }
 
+static int tolua_function_EEex_RegisterTrace(lua_State* L)
+{
+	EEex::RegisterTrace(tolua_function_tostring(L, 1, "RegisterTrace"), tolua_function_tointeger<uintptr_t>(L, 2, "RegisterTrace"), tolua_function_tointeger<int64_t>(L, 3, "RegisterTrace"));
+	return 0;
+}
+
 static int tolua_function_EEex_SetINIString(lua_State* L)
 {
 	EEex::SetINIString(tolua_function_tostring(L, 1, "SetINIString"), tolua_function_tostring(L, 2, "SetINIString"), tolua_function_tostring(L, 3, "SetINIString"), tolua_function_tostring(L, 4, "SetINIString"));
@@ -408,6 +414,12 @@ static int tolua_function_EEex_ShouldEffectBypassOp120(lua_State* L)
 static int tolua_function_EEex_UpdateLastScrollTime(lua_State* L)
 {
 	EEex::UpdateLastScrollTime();
+	return 0;
+}
+
+static int tolua_function_EEex_WriteProfilerHooks(lua_State* L)
+{
+	EEex::WriteProfilerHooks();
 	return 0;
 }
 
@@ -1020,6 +1032,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "OnTargetExecutableInitialized", &tolua_function_EEex_OnTargetExecutableInitialized);
 		tolua_function(L, "OpenDebugWindow", &tolua_function_EEex_OpenDebugWindow);
 		tolua_function(L, "RegisterSlicedRect", &tolua_function_EEex_RegisterSlicedRect);
+		tolua_function(L, "RegisterTrace", &tolua_function_EEex_RegisterTrace);
 		tolua_function(L, "SetINIString", &tolua_function_EEex_SetINIString);
 		tolua_function(L, "SetUIItemExtraScrollbarPad", &tolua_function_EEex_SetUIItemExtraScrollbarPad);
 		tolua_function(L, "SetUIItemScrollbarPadCollapses", &tolua_function_EEex_SetUIItemScrollbarPadCollapses);
@@ -1027,6 +1040,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "SetVSyncEnabled", &tolua_function_EEex_SetVSyncEnabled);
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 		tolua_function(L, "UpdateLastScrollTime", &tolua_function_EEex_UpdateLastScrollTime);
+		tolua_function(L, "WriteProfilerHooks", &tolua_function_EEex_WriteProfilerHooks);
 		tolua_constantstring(L, "usertype_AIBase_LuaHook_OnEventTriggerSet_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Menu_UniversalScrollbarPadCollapsing", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Opcode_LuaHook_AfterListsResolved_Enabled", "Primitive<bool>");

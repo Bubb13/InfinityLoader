@@ -168,6 +168,9 @@
     <ClCompile Include="..\EEex-Core-Shared-Files\source\im_rolling_line_graph.cpp">
       <Filter>Source Files\EEex-Core-Shared-Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\script_folder.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\common\eeex_api.h">
@@ -261,6 +264,9 @@
       <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_rolling_line_graph.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\script_folder.hpp">
       <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
   </ItemGroup>

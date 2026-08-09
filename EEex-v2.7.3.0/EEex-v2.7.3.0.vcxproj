@@ -23,6 +23,7 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\lua_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\menu_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\profiler.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\script_folder.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\time_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\uncap_fps.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\util.hpp" />
@@ -62,6 +63,7 @@
     <ClCompile Include="..\EEex-Core-Shared-Files\source\main.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\menu_util.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\profiler.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\script_folder.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\time_util.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\uncap_fps.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\util.cpp" />

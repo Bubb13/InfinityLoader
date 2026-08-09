@@ -12,9 +12,3 @@ __forceinline bool isAIBase(const CGameObjectType type) {
 }
 
 uintptr_t getStackBase();
-
-///////////////
-// Debugging //
-///////////////
-
-void dumpLuaStack(lua_State *const L);

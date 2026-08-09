@@ -13,6 +13,7 @@
 #include "lua_util.hpp"
 #include "menu_util.hpp"
 #include "profiler.hpp"
+#include "script_folder.hpp"
 #include "time_util.hpp"
 #include "uncap_fps.hpp"
 #include "util.hpp"
@@ -5523,16 +5524,14 @@ DWORD getLuaProc(const char* name, out_type& out) {
 
 void EEex::InitEEex() {
 
+	initScriptFolder();
+	initFunctionNames();
+	initProjectileMutator();
 	initTimeUtil();
 	initUncapFPS();
 
 	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = false;
 	EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled = false;
 	EEex::Projectile_LuaHook_GlobalMutators_Enabled = false;
-	initProjectileMutator();
 	EEex::StutterDetector_Enabled = false;
-
-	//LoadFunctionNames();
-	//Profiler_RegisterTrace("Render", 0x140136300, 15);
-	//Profiler_RegisterTrace("AI", 0x140131BF0, 5);
 }
