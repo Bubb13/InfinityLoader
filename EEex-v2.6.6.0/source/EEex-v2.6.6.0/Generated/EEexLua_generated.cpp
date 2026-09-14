@@ -321,6 +321,12 @@ static int tolua_function_EEex_GetSpriteFromUUID(lua_State* L)
 	return 1;
 }
 
+static int tolua_function_EEex_GetTextWidthHeight(lua_State* L)
+{
+	EEex::GetTextWidthHeight(L, tolua_function_tostring(L, 1, "GetTextWidthHeight"), tolua_function_tostring(L, 2, "GetTextWidthHeight"), tolua_function_tointeger<int>(L, 3, "GetTextWidthHeight"), tolua_function_toboolean(L, 4, "GetTextWidthHeight"));
+	return 2;
+}
+
 static int tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters(lua_State* L)
 {
 	EEex::HookIntegrityWatchdogIgnoreRegisters(tolua_function_tointeger<uintptr_t>(L, 1, "HookIntegrityWatchdogIgnoreRegisters"), tolua_function_tointeger<size_t>(L, 2, "HookIntegrityWatchdogIgnoreRegisters"), (EEex_HookIntegrityWatchdogRegister)tolua_function_tointeger<__int32>(L, 3, "HookIntegrityWatchdogIgnoreRegisters"));
@@ -1042,6 +1048,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "GetMicroseconds", &tolua_function_EEex_GetMicroseconds);
 		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
 		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
+		tolua_function(L, "GetTextWidthHeight", &tolua_function_EEex_GetTextWidthHeight);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreStackRange", &tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange);
 		tolua_function(L, "InjectTemplateInstance", &tolua_function_EEex_InjectTemplateInstance);

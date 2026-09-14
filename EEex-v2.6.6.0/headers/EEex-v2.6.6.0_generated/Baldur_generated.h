@@ -217,6 +217,7 @@ struct Spell_ability_st;
 struct SteamUGCDetails_t;
 struct UI_PanelHeader_st;
 struct WED_LayerHeader_st;
+struct font_t;
 struct st_tiledef;
 struct uiItem;
 struct uiMenu;
@@ -4925,6 +4926,7 @@ namespace EEex
 	long long GetMicroseconds();
 	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	CGameSprite* GetSpriteFromUUID(uint64_t uuid);
+	void GetTextWidthHeight(lua_State* L, const char* sText, const char* sFont, int nPointSize, bool bUseFontZoom);
 	void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
 	void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
 	uiItem* InjectTemplateInstance(lua_State* L, const char* menuName, const char* templateName, int instanceId, int x, int y);
@@ -5537,10 +5539,10 @@ struct CResFont : CRes
 
 	CResFont() = delete;
 
-	typedef void* (__thiscall *type_GetFont)(CResFont* pThis);
+	typedef font_t* (__thiscall *type_GetFont)(CResFont* pThis);
 	static type_GetFont p_GetFont;
 
-	void* GetFont()
+	font_t* GetFont()
 	{
 		return p_GetFont(this);
 	}
@@ -9877,11 +9879,20 @@ extern type_DrawTexCoord p_DrawTexCoord;
 typedef bool (__cdecl *type_drawTop)(const SDL_Rect* window);
 extern type_drawTop p_drawTop;
 
+typedef float (__cdecl *type_DrawTransformFromScreenH)(float h);
+extern type_DrawTransformFromScreenH p_DrawTransformFromScreenH;
+
+typedef float (__cdecl *type_DrawTransformFromScreenW)(float w);
+extern type_DrawTransformFromScreenW p_DrawTransformFromScreenW;
+
 typedef void (__cdecl *type_DrawTransformToScreen)(SDL_Rect* w, SDL_Rect* s);
 extern type_DrawTransformToScreen p_DrawTransformToScreen;
 
 typedef float (__cdecl *type_DrawTransformToScreenH)(float h);
 extern type_DrawTransformToScreenH p_DrawTransformToScreenH;
+
+typedef float (__cdecl *type_DrawTransformToScreenW)(float w);
+extern type_DrawTransformToScreenW p_DrawTransformToScreenW;
 
 typedef void (*type_DrawVertex)(int x, int y);
 extern type_DrawVertex p_DrawVertex;
@@ -9946,7 +9957,7 @@ extern type_uiVariantAsInt p_uiVariantAsInt;
 typedef char* (__cdecl *type_va)(const char* format, ...);
 extern type_va p_va;
 
-typedef int (__cdecl *type_wordwrap)(letter_t* letters, int maxletters, int* numletters, char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);
+typedef int (__cdecl *type_wordwrap)(letter_t* letters, int maxletters, int* numletters, const char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);
 extern type_wordwrap p_wordwrap;
 
 typedef float (*type_XScreenToZoomed)(float x);

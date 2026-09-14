@@ -52,7 +52,7 @@ namespace EEex {
 	void __cdecl Override_chWriteInifile();
 	void __cdecl Override_crashHandler(EXCEPTION_POINTERS* pExceptionPointers);
 	void Override_DrawReadPixels(int x, int y, int width, int height, byte* pixels);
-	//int __cdecl Override_fontWrap(char* text, SDL_Rect* r, SDL_Rect* rClip, int* horizontalAlignment, int* verticalAlignment, font_t* font, int* pointSize, letter_t* letters, int* nlines, int* nletters, int* pointIndex, bool* scale, adjustmentData_t* adjustData, int indent, bool bUseFontSizeFloor);
+	int __cdecl Override_fontWrap(char* text, SDL_Rect* r, SDL_Rect* rClip, int* horizontalAlignment, int* verticalAlignment, font_t* font, int* pointSize, letter_t* letters, int* nlines, int* nletters, int* pointIndex, bool* scale, adjustmentData_t* adjustData, int indent, bool bUseFontSizeFloor);
 	int __cdecl Override_Infinity_TransitionMenu(lua_State* L);
 	int __cdecl Override_Infinity_WriteINILine(lua_State* L);
 	void __cdecl Override_uiDoFile(char* fileName);

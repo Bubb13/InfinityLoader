@@ -5,6 +5,10 @@
 //          Functions          //
 //-----------------------------//
 
+///////////
+// Ortho //
+///////////
+
 int fontWrapOrtho(
 	char* text,
 	SDL_Rect* r,
@@ -339,4 +343,105 @@ int renderTextWrapOrtho(
 	p_DrawColor(nSavedColor);
 
 	return nDrawnHeight;
+}
+
+///////////
+// Reimp //
+///////////
+
+int fontWrap(
+	char* text,
+	SDL_Rect* r,
+	SDL_Rect* rClip,
+	int* horizontalAlignment,
+	int* verticalAlignment,
+	font_t* font,
+	int* pointSize,
+	letter_t* letters,
+	int* nlines,
+	int* nletters,
+	int* pointIndex,
+	bool* scale,
+	adjustmentData_t* adjustData,
+	int indent,
+	bool bUseFontSizeFloor)
+{
+	const int maxLines = (*verticalAlignment >> 16) & 0xFFF;
+	*verticalAlignment &= 0xFFFF;
+
+	if (r->h == 0xFFFFFF)
+	{
+		*verticalAlignment = 0;
+	}
+
+	p_DrawTransformToScreen(r, r);
+	p_DrawTransformToScreen(rClip, rClip);
+
+	int nAlignAdjX = 0;
+
+	if ((*horizontalAlignment & 4) != 0) {
+		nAlignAdjX = rClip->w - rClip->x;
+	}
+
+	if ((*horizontalAlignment & 8) != 0) {
+		nAlignAdjX = r->w;
+	}
+
+	int nAlignAdjY = 0;
+
+	if ((*verticalAlignment & 4) != 0) {
+		nAlignAdjY = rClip->h - rClip->y;
+	}
+
+	if ((*verticalAlignment & 8) != 0) {
+		nAlignAdjY = r->h;
+	}
+
+	*horizontalAlignment = *horizontalAlignment & 0xFFFFFFF3;
+	*verticalAlignment = *verticalAlignment & 0xFFFFFFF3;
+
+	int nFinalPoint = static_cast<int>(p_DrawTransformToScreenH(static_cast<float>(*pointSize)));
+
+	if (bUseFontSizeFloor)
+	{
+		nFinalPoint = (std::max)(10, nFinalPoint);
+	}
+
+	nFinalPoint = (std::min)(nFinalPoint, 79);
+	nFinalPoint = static_cast<int>(floor(nFinalPoint));
+
+	line_metric *const pNewLineMetrics = font->newLineMetrics;
+	int lastLineHeight;
+
+	for (; nFinalPoint > 1 && (nAlignAdjX != 0 || nAlignAdjY != 0); --nFinalPoint)
+	{
+		line_metric *const pNewLineMetric = &pNewLineMetrics[nFinalPoint];
+		const float fLineHeight = pNewLineMetric->ascent - pNewLineMetric->descent + pNewLineMetric->line_spacing - 0.001f;
+
+		if (nAlignAdjY < 1 || fLineHeight <= nAlignAdjY)
+		{
+			*nlines = p_wordwrap(letters, 0x40000, nletters, text, r->w, font, nFinalPoint, *pointIndex, maxLines, &lastLineHeight, adjustData, indent);
+
+			if
+			(
+				(nAlignAdjY < 1 || *nlines * fLineHeight <= nAlignAdjY)
+				&&
+				(nAlignAdjX < 1 || letters->w <= nAlignAdjX)
+			)
+			{
+				break;
+			}
+		}
+	}
+
+	if (*nletters == 0)
+	{
+		*nlines = p_wordwrap(letters, 0x40000, nletters, text, r->w, font, nFinalPoint, *pointIndex, maxLines, &lastLineHeight, adjustData, indent);
+	}
+
+	*pointSize = nFinalPoint;
+
+	line_metric *const pNewLineMetric = &pNewLineMetrics[nFinalPoint];
+	const int nLineHeight = static_cast<int>(ceil(pNewLineMetric->ascent - pNewLineMetric->descent + pNewLineMetric->line_spacing));
+	return nLineHeight * *nlines;
 }

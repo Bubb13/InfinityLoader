@@ -75,7 +75,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
 	exportPattern(TEXT("EEex::Override_crashHandler"), EEex::Override_crashHandler);
 	exportPattern(TEXT("EEex::Override_DrawReadPixels"), EEex::Override_DrawReadPixels);
-	//exportPattern(TEXT("EEex::Override_fontWrap"), EEex::Override_fontWrap);
+	exportPattern(TEXT("EEex::Override_fontWrap"), EEex::Override_fontWrap);
 	exportPattern(TEXT("EEex::Override_Infinity_TransitionMenu"), EEex::Override_Infinity_TransitionMenu);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);
 	exportPattern(TEXT("EEex::Override_uiDoFile"), EEex::Override_uiDoFile);

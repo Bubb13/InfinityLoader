@@ -1043,7 +1043,7 @@ struct CRes
 
 struct CResFont : CRes
 {
-	$nobinding void* GetFont();
+	$nobinding font_t* GetFont();
 };
 
 struct CInfButtonArray
@@ -1711,8 +1711,11 @@ $nobinding void drawSlice(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect*
 $nobinding void drawSliceSide(const SDL_Rect* dr, const SDL_Rect* r, const SDL_Rect* rClip, float scaleX, float scaleY, bool wide);
 $nobinding void DrawTexCoord(int s, int t);
 $nobinding bool __cdecl drawTop(const SDL_Rect* window);
+$nobinding float __cdecl DrawTransformFromScreenH(float h);
+$nobinding float __cdecl DrawTransformFromScreenW(float w);
 $nobinding void __cdecl DrawTransformToScreen(SDL_Rect* w, SDL_Rect* s);
 $nobinding float __cdecl DrawTransformToScreenH(float h);
+$nobinding float __cdecl DrawTransformToScreenW(float w);
 $nobinding void DrawVertex(int x, int y);
 $nobinding bool __cdecl eventMenu(uiMenu* pMenu, SDL_Event* pEvent, SDL_Rect* pWindow);
 $nobinding void fadeSounds();
@@ -1734,7 +1737,7 @@ $nobinding bool uiPush(const char* name);
 $nobinding void uiSetHidden(bool bHidden);
 $nobinding int uiVariantAsInt(uiVariant* var);
 $nobinding char* __cdecl va(const char* format, ...);
-$nobinding int __cdecl wordwrap(letter_t* letters, int maxletters, int* numletters, char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);
+$nobinding int __cdecl wordwrap(letter_t* letters, int maxletters, int* numletters, const char* text, int width, font_t* font, int pointSize, int pointIndex, int maxLines, int* lastLineHeight, adjustmentData_t* adjustData, int indent);
 $nobinding float XScreenToZoomed(float x);
 $nobinding float YScreenToZoomed(float y);
 

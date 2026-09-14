@@ -7,6 +7,10 @@
 //          Functions          //
 //-----------------------------//
 
+///////////
+// Ortho //
+///////////
+
 int fontWrapOrtho(
 	char* text,
 	SDL_Rect* r,
@@ -58,4 +62,26 @@ int renderTextWrapOrtho(
 	int valign,
 	bool shadow,
 	bool backgroundRect
+);
+
+///////////
+// Reimp //
+///////////
+
+int fontWrap(
+	char* text,
+	SDL_Rect* r,
+	SDL_Rect* rClip,
+	int* horizontalAlignment,
+	int* verticalAlignment,
+	font_t* font,
+	int* pointSize,
+	letter_t* letters,
+	int* nlines,
+	int* nletters,
+	int* pointIndex,
+	bool* scale,
+	adjustmentData_t* adjustData,
+	int indent,
+	bool bUseFontSizeFloor
 );
