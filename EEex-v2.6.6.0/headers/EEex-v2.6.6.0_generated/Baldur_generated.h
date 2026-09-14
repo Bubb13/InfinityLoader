@@ -1755,6 +1755,8 @@ struct frameTableEntry_st
 		_C3D261E28D53B12983426B9B0D118A61() = delete;
 	};
 
+	typedef _C3D261E28D53B12983426B9B0D118A61 frameTableEntryVersion_t;
+
 	unsigned __int16 nWidth;
 	unsigned __int16 nHeight;
 	__int16 nCenterX;
@@ -3383,6 +3385,8 @@ struct _A92C2F5FC159A4FE55DD6CCAABD58E72
 	_A92C2F5FC159A4FE55DD6CCAABD58E72() = delete;
 };
 
+typedef _A92C2F5FC159A4FE55DD6CCAABD58E72 transition_t;
+
 union _9CC80BF4F2F1300360474CD60BF15E00
 {
 	_6B279AA1C7A281E7C97E085DB9F2DFBB __s0;
@@ -3897,6 +3901,8 @@ struct _820A8B7015E7E0FD9144A7C186FBF075
 	_820A8B7015E7E0FD9144A7C186FBF075() = delete;
 };
 
+typedef _820A8B7015E7E0FD9144A7C186FBF075 tooltip_t;
+
 struct _9B9540D9920A90D57A3D80DDD1A70514
 {
 	bool (__fastcall *f)(uiMenu*, const SDL_Rect*, SDL_Event*);
@@ -3907,6 +3913,8 @@ struct _9B9540D9920A90D57A3D80DDD1A70514
 
 	_9B9540D9920A90D57A3D80DDD1A70514() = delete;
 };
+
+typedef _9B9540D9920A90D57A3D80DDD1A70514 capture_t;
 
 template<class POINTED_TO_TYPE>
 struct Pointer
@@ -9256,6 +9264,8 @@ struct _C0ECD3277D3C6A36B299CABE6156CF21
 	_C0ECD3277D3C6A36B299CABE6156CF21() = delete;
 };
 
+typedef _C0ECD3277D3C6A36B299CABE6156CF21 gl_t;
+
 struct _E3958E369F0C9F787F3E14F852D69D7E
 {
 	bool enabled;
@@ -9303,6 +9313,8 @@ struct _734DBB4D47315AEC2910FBD1685ECB48
 
 	_734DBB4D47315AEC2910FBD1685ECB48() = delete;
 };
+
+typedef _734DBB4D47315AEC2910FBD1685ECB48 d3d_t;
 
 struct glyphHashTable_t
 {
@@ -14294,8 +14306,6 @@ struct CInfinity
 	typedef void (__thiscall *type_GetViewPosition)(CInfinity* pThis, int* pXOut, int* pYOut);
 	static type_GetViewPosition p_GetViewPosition;
 
-	void Override_SetScreenShake(int bScreenShake, ushort duration, CPoint* screenShakeDelta);
-
 	void FitViewPosition(int* x, int* y, const CRect* r)
 	{
 		p_FitViewPosition(this, x, y, r);
@@ -14335,6 +14345,7 @@ struct CInfinity
 	void Override_FitViewPosition(int* pX, int* pY, CRect* pViewPort);
 	void Override_SetScrollDest(CPoint* ptDest);
 	void Override_Scroll(CPoint ptDest, short speed);
+	void Override_SetScreenShake(int bScreenShake, ushort duration, CPoint* screenShakeDelta);
 };
 
 struct CInfTileSet

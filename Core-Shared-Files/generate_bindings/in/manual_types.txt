@@ -1077,8 +1077,6 @@ struct CInfinity
 {
 	static float MAXZOOM_OUT;
 
-	$external_implementation void Override_SetScreenShake(int bScreenShake, ushort duration, CPoint* screenShakeDelta);
-
 	void FitViewPosition(int* x, int* y, const CRect* r);
 	CPoint* ScreenToViewport(CPoint* pResult, CPoint* pScreen);
 	CPoint* ScreenToWorld(CPoint* pResult, CPoint* pScreen);
@@ -1745,7 +1743,7 @@ $nobinding float YScreenToZoomed(float y);
 //////////////////////////////
 
 char* afxPchNil;
-$9B9540D9920A90D57A3D80DDD1A70514 capture;
+capture_t capture;
 bool fingerDown;
 uiMenu* g_backgroundMenu;
 RendererType g_drawBackend;
@@ -1760,8 +1758,8 @@ uiMenu* menuStack[256];
 int nextStackMenuIdx;
 int numMenus;
 CTypedPtrArray<CPtrArray,CRes*> resources;
-$820A8B7015E7E0FD9144A7C186FBF075 tooltip;
-$A92C2F5FC159A4FE55DD6CCAABD58E72 transition;
+tooltip_t tooltip;
+transition_t transition;
 const ushort yy_action[1765];
 const ushort yy_default[329];
 const byte yy_lookahead[1765];
@@ -1769,11 +1767,57 @@ const short yy_reduce_ofst[122];
 const short yy_shift_ofst[174];
 const $D98D369160A0DDA2B95F5D0F301081BB yyRuleInfo[157];
 
-nobinding $734DBB4D47315AEC2910FBD1685ECB48 d3d;
+nobinding d3d_t d3d;
 nobinding letter_t g_letters[262144];
-nobinding $C0ECD3277D3C6A36B299CABE6156CF21 gl;
+nobinding gl_t gl;
 nobinding GLint (__cdecl *glGetUniformLocation)(GLuint program, const GLchar* name);
 nobinding void (__cdecl *glUniform1i)(GLint location, GLint v0);
 nobinding char lang[16];
 nobinding int optionsHaveChanged;
 nobinding slicedRect slicedRects[6];
+
+///////////
+// Debug //
+///////////
+
+struct BindingsTest
+{
+	int TEST_LOCAL_NUMBER;
+	int* TEST_LOCAL_NUMBER_PTR;
+	int** TEST_LOCAL_NUMBER_PTRPTR;
+	VertListType TEST_LOCAL_ENUM;
+	VertListType* TEST_LOCAL_ENUM_PTR;
+	VertListType** TEST_LOCAL_ENUM_PTRPTR;
+	CString TEST_LOCAL_STRUCT;
+	CString* TEST_LOCAL_STRUCT_PTR;
+	CString** TEST_LOCAL_STRUCT_PTRPTR;
+	void* TEST_LOCAL_VOID_PTR;
+	void** TEST_LOCAL_VOID_PTRPTR;
+	void*** TEST_LOCAL_VOID_PTRPTRPTR;
+
+	static int TEST_STATIC_NUMBER;
+	static int* TEST_STATIC_NUMBER_PTR;
+	static int** TEST_STATIC_NUMBER_PTRPTR;
+	static VertListType TEST_STATIC_ENUM;
+	static VertListType* TEST_STATIC_ENUM_PTR;
+	static VertListType** TEST_STATIC_ENUM_PTRPTR;
+	static CString TEST_STATIC_STRUCT;
+	static CString* TEST_STATIC_STRUCT_PTR;
+	static CString** TEST_STATIC_STRUCT_PTRPTR;
+	static void* TEST_STATIC_VOID_PTR;
+	static void** TEST_STATIC_VOID_PTRPTR;
+	static void*** TEST_STATIC_VOID_PTRPTRPTR;
+
+	void TEST_FUNC_NUMBER(int _0);
+	void TEST_FUNC_NUMBER_PTR(int* _0);
+	void TEST_FUNC_NUMBER_PTRPTR(int** _0);
+	void TEST_FUNC_ENUM(VertListType _0);
+	void TEST_FUNC_ENUM_PTR(VertListType* _0);
+	void TEST_FUNC_ENUM_PTRPTR(VertListType** _0);
+	void TEST_FUNC_STRUCT(CString _0);
+	void TEST_FUNC_STRUCT_PTR(CString* _0);
+	void TEST_FUNC_STRUCT_PTRPTR(CString** _0);
+	void TEST_FUNC_VOID_PTR(void* _0);
+	void TEST_FUNC_VOID_PTRPTR(void** _0);
+	void TEST_FUNC_VOID_PTRPTRPTR(void*** _0);
+};

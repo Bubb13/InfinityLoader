@@ -3,24 +3,27 @@ pushd "%~dp0"
 if not exist "./out" mkdir "./out"
 
 set script_path="../../../scripts/generate_bindings/generate_bindings_main.py"
+set core_in="../../../Core-Shared-Files/generate_bindings/in"
+set lua_in="../../../Core-Shared-Files/generate_bindings/in_lua"
 
 python %script_path%^
  -mode=GenerateHeader^
  -allowDebug^
- -abstractTypesFile=./in/abstract_types.txt^
- -alreadyDefinedUsertypesFile=./in/already_defined_usertypes.txt^
+ -abstractTypesFile=%core_in%/abstract_types.txt^
+ -aliasFiles=%core_in%/alias_v2.7.txt^
+ -alreadyDefinedUsertypesFile=%core_in%/already_defined_usertypes.txt^
  -bindingsOutFile=./out/EEexLua_generated.cpp^
- -bindingsPreludeFile=./in/bindings_prelude.txt^
+ -bindingsPreludeFile=%core_in%/bindings_prelude.txt^
  -dllName=EEex.dll^
- -fixupFile=./in/fixup.py^
- -ignoreHeaderFile=./in/ignore_header_types.txt^
- -inFiles=NO_BINDINGS;NO_HARDCODED_BINDINGS:./in/manual_types.txt,NO_BINDINGS;NO_HARDCODED_BINDINGS:./in/manual_reimplementations_import.txt,NO_BINDINGS;NO_HARDCODED_BINDINGS:./in/Baldur-v2.7.3.0.h,./in/bindings.txt^
+ -fixupFile=%core_in%/fixup.py^
+ -ignoreHeaderFile=%core_in%/ignore_header_types.txt^
+ -inFiles=NO_BINDINGS;NO_HARDCODED_BINDINGS:%core_in%/manual_types.txt,NO_BINDINGS;NO_HARDCODED_BINDINGS:%core_in%/manual_reimplementations_import.txt,NO_BINDINGS;NO_HARDCODED_BINDINGS:%core_in%/Baldur-v2.7.3.0.h,%core_in%/bindings.txt^
  -outFile=./out/Baldur_generated.h^
- -packingFile=./in/packing.txt^
- -preludeFile=./in/prelude.txt^
+ -packingFile=%core_in%/packing.txt^
+ -preludeFile=%core_in%/prelude_eeex.txt^
  -printFuncWideString=FPrintT^
- -suffixFile=./in/suffix.txt^
- -wantedFiles=./in/wanted_types.txt^
+ -suffixFile=%core_in%/suffix_eeex.txt^
+ -wantedFiles=%core_in%/wanted_types.txt,%core_in%/wanted_types_eeex.txt^
  > log.txt 2>&1
 
 copy /Y .\out\Baldur_generated.h ..\..\headers\EEex-v2.7.3.0_generated
@@ -30,13 +33,13 @@ copy /Y .\out\EEexLua_generated_baseclass_offsets.cpp ..\..\source\EEex-v2.7.3.0
 
 python %script_path%^
  -mode=GenerateHeader^
- -ignoreHeaderFile=./in_lua/ignore_header_types.txt^
- -inFiles=./in_lua/manual_types.txt,./in/Baldur-v2.7.3.0.h^
+ -ignoreHeaderFile=%lua_in%/ignore_header_types.txt^
+ -inFiles=%lua_in%/manual_types.txt,%core_in%/Baldur-v2.7.3.0.h^
  -noCustomTypes^
  -outFile=./out/Baldur_lua_generated.h^
- -packingFile=./in/packing.txt^
- -preludeFile=./in_lua/prelude.txt^
- -wantedFiles=./in_lua/wanted_types.txt^
+ -packingFile=%core_in%/packing.txt^
+ -preludeFile=%lua_in%/prelude.txt^
+ -wantedFiles=%lua_in%/wanted_types.txt^
  > log_lua.txt 2>&1
 
 copy /Y .\out\Baldur_lua_generated.h ..\..\headers\EEex-v2.7.3.0_generated

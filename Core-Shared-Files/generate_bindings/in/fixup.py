@@ -3,9 +3,9 @@ from generate_bindings import relocateGroup
 
 def fixup(mainState):
 
-	relocateGroup(mainState, "$C3D261E28D53B12983426B9B0D118A61", "frameTableEntry_st::$C3D261E28D53B12983426B9B0D118A61")
+	relocateGroup(mainState, "frameTableEntryVersion_t", f"frameTableEntry_st::{mainState.resolveAlias("frameTableEntryVersion_t")}")
 
-	mainState.getGroup("$734DBB4D47315AEC2910FBD1685ECB48").retypeField(mainState, "textures", "Array<texture_t_DX,512>")
+	mainState.getGroup("d3d_t").retypeField(mainState, "textures", "Array<texture_t_DX,512>")
 	mainState.getGroup("C2DArray").retypeField(mainState, "m_pArray", "VariableArray<CString>*")
 	mainState.getGroup("C2DArray").retypeField(mainState, "m_pNamesX", "VariableArray<CString>*")
 	mainState.getGroup("C2DArray").retypeField(mainState, "m_pNamesY", "VariableArray<CString>*")

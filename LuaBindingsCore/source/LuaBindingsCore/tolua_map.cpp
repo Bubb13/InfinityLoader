@@ -475,6 +475,13 @@ EXPORT void tolua_constant(lua_State* L, const char* name, double value)
 	lua_rawset(L, -3);
 }
 
+EXPORT void tolua_alias(lua_State* L, const char* alias)
+{
+	lua_pushstring(L, alias); // 3 [ parentModule, module, alias ]
+	lua_pushvalue(L, -2);     // 4 [ parentModule, module, alias, module ]
+	lua_rawset(L, -4);        // 2 [ parentModule, module ]
+}
+
 EXPORT void tolua_constantstring(lua_State* L, const char* name, const char* value)
 {
 	lua_pushstring(L, name);

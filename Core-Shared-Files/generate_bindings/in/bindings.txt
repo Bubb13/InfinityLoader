@@ -61,6 +61,7 @@ struct CInfinity
 	$nobinding $external_implementation void Override_FitViewPosition(int* pX, int* pY, CRect* pViewPort);
 	$nobinding $external_implementation void Override_SetScrollDest(CPoint* ptDest);
 	$nobinding $external_implementation void Override_Scroll(CPoint ptDest, short speed);
+	$nobinding $external_implementation void Override_SetScreenShake(int bScreenShake, ushort duration, CPoint* screenShakeDelta);
 };
 
 struct CMessageSetLastObject : CMessage

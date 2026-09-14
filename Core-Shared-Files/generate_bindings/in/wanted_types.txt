@@ -1,5 +1,5 @@
-$35F126B06FBEF93EF81BE920E2D7EDF1
 adjustmentData_t
+capture_t
 CBaldurChitin
 CGameAIArea
 CGameAIBase

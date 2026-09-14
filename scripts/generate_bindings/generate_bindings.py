@@ -79,9 +79,11 @@ class UniqueListNodeIterator(Generic[T]):
 
 class UniqueList(Generic[T]):
 
+	@staticmethod
 	def defaultHash(object: T) -> int:
 		return id(object)
 
+	@staticmethod
 	def defaultEq(a: T, b: T) -> bool:
 		return a is b
 
@@ -528,7 +530,7 @@ def removeRegexCount(string: str, keyword: str):
 def getPointerLevel(str: str, removeAmount=0):
 	pointerLevel = 0
 	removedStrParts = []
-	splits = splitKeepBrackets(normalizeTypeString(str), ["*", "&"], includeToSplit=True)
+	splits = splitKeepBrackets(normalizeTypeString(str), [], toSplitInclude=["*", "&"])
 	for split in splits:
 		if split == "*" or split == "&":
 			pointerLevel += 1
@@ -599,6 +601,9 @@ class LineGroupFlags:
 class MainState:
 
 	def __init__(self):
+		self.pendingAliasDict: dict[str,list[str]] = {}
+		self.aliasToGroupDict: dict[str,Group] = {}
+		self.aliasDict: dict[str,str] = {}
 		self.groupsDict: dict[str,Group] = {}
 		self.groups: list[Group] = []
 		self.globalGroup: Group = None
@@ -613,7 +618,29 @@ class MainState:
 		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 
 
+	def _registerAliasGroup(self, group: Group, alias: str) -> Group | None:
+		self.aliasToGroupDict[alias] = group
+		group.registerAlias(alias)
+
+
+	def addAlias(self, aliasName: str, realName: str):
+
+		if self.tryGetGroup(aliasName) is not None:
+			raise Exception(f"Alias being registered under {aliasName}, which is already registered to a group")
+
+		self.aliasDict[aliasName] = realName
+
+		if (group := self.tryGetGroup(realName)) is not None:
+			self._registerAliasGroup(group, aliasName)
+		else:
+			pendingAliases: list[str] = self.pendingAliasDict.setdefault(realName, [])
+			pendingAliases.append(aliasName)
+
+
 	def addGroup(self, group: Group):
+
+		if self.aliasDict.get(group.name) is not None:
+			raise Exception(f"Group being registered as {group.name}, which is already registered as an alias")
 
 		if existingGroup := self.groupsDict.get(group.name):
 
@@ -630,6 +657,9 @@ class MainState:
 				group.isDirectlyWanted = group.isDirectlyWanted or existingGroup.isDirectlyWanted
 				group.isSoftWanted = group.isSoftWanted or existingGroup.isSoftWanted
 
+				for alias in existingGroup.aliases:
+					self._registerAliasGroup(group, alias)
+
 				for inRef in existingGroup.inwardTypeRefs:
 					inRef.group = group
 					group.addInwardTypeRef(inRef)
@@ -640,19 +670,36 @@ class MainState:
 			group.listIndex = len(self.groups)
 			self.groups.append(group)
 
+			if (pendingAliases := self.pendingAliasDict.get(group.name)) is not None:
+				del self.pendingAliasDict[group.name]
+				for pendingAlias in pendingAliases:
+					self._registerAliasGroup(group, pendingAlias)
+
 		self.groupsDict[group.name] = group
 
 
-	def getGroup(self, name: str):
-		return self.groupsDict[name]
+	def getGroup(self, name: str) -> Group:
+		group: Group | None = self.tryGetGroup(name)
+		if group is None: raise KeyError()
+		return group
 
 
 	def removeGroup(self, name: str):
 		del self.groupsDict[name]
 
 
-	def tryGetGroup(self, name: str):
-		return self.groupsDict.get(name)
+	def resolveAlias(self, name: str) -> str:
+		realName: str = self.aliasDict.get(name)
+		return realName if realName is not None else name
+
+
+	def tryGetGroup(self, name: str) -> Group | None:
+		aliasGroup: Group | None = self.aliasToGroupDict.get(name)
+		return aliasGroup if aliasGroup is not None else self.groupsDict.get(name)
+
+
+	def tryResolveAlias(self, name: str) -> str | None:
+		return self.aliasDict.get(name)
 
 
 	def updateGroupNameMapping(self, group: Group, newName: str):
@@ -1229,7 +1276,7 @@ class TypeReference:
 		return self.getHeaderName() == other.getHeaderName()
 
 
-	def getDereferenceStr(self: TypeReference, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, i: int):
+	def getDereferenceStr(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, i: int):
 
 		dereferenceStr = ""
 		if self.getUserTypePointerLevel() == 0:
@@ -1255,7 +1302,7 @@ class TypeReference:
 		return f"{dereferenceStr}({appliedParamName})tolua_tousertype_dynamic(L, {i}, 0, \"{appliedParamUsertype}\")"
 
 
-	def debugDump(self: TypeReference, indent: str=""):
+	def debugDump(self, indent: str=""):
 		parts = []
 		parts.append(f"{indent}class: {type(self).__name__}\n")
 		parts.append(f"{indent}sourceString: {self.sourceString}\n")
@@ -1494,7 +1541,7 @@ class PointerReference(TypeReference):
 			iKnowWhatIAmDoing=iKnowWhatIAmDoing, typeManipulator=typeManipulator)
 
 
-	def getDereferenceStr(self: PointerReference, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, i: int):
+	def getDereferenceStr(self, mainState: MainState, sourceGroup: Group, templateMappingTracker: TemplateMappingTracker, i: int):
 		# if self.originalRef.isPrimitive():
 		# 	extraDereference = 1 if self.originalRef.isPrimitive() else 0
 		# 	appliedParamName = self.getAppliedHeaderName(mainState, sourceGroup, templateMappingTracker, pointerLevelAdjust=extraDereference)
@@ -1504,7 +1551,7 @@ class PointerReference(TypeReference):
 			return super().getDereferenceStr(mainState, sourceGroup, templateMappingTracker, i)
 
 
-	def debugDump(self: PointerReference, indent: str=""):
+	def debugDump(self, indent: str=""):
 		parts = []
 		parts.append(f"{indent}class: {type(self).__name__}\n")
 		parts.append(f"{indent}originalRef:\n")
@@ -2126,12 +2173,14 @@ class TemplateUse:
 
 class UniqueTemplateUsesByHeaderName(UniqueList[TemplateUse]):
 
+	@staticmethod
 	def pHash(templateUse: TemplateUse):
 		toReturn = 0
 		for ref in templateUse.tup:
 			toReturn += 3 * hash(ref.getHeaderName())
 		return toReturn
 
+	@staticmethod
 	def pEq(a: TemplateUse, b: TemplateUse):
 		if len(a.tup) != len(b.tup):
 			return False
@@ -2163,6 +2212,8 @@ class Group:
 
 		self.singleName: str = None # String filled with the name of the group. If group is a sub-group, contains only the last group name. Example:
 									# self.name = "CPtrList::CNode" => self.singleName = "CNode"
+
+		self.aliases: list[str] = []
 
 		self.defined: bool = False                            # True if the group was defined in a header file
 		self.lineCollections: list[GroupLineCollection] = []  # List of all lines in the group's definition.
@@ -2208,6 +2259,10 @@ class Group:
 		self.lineGroupFlags: LineGroupFlags = LineGroupFlags()
 		self.allowDefaultConstruction: bool = False
 		self.abstract: bool = False
+
+
+	def registerAlias(self, alias: str):
+		self.aliases.append(alias)
 
 
 	def definedFields(self):
@@ -2609,7 +2664,7 @@ class Group:
 				self.lightDependsOn.add(refGroup)
 
 
-	def broadcastName(self: Group, mainState: MainState):
+	def broadcastName(self, mainState: MainState):
 		for subGroup in self.subGroups:
 			subGroup.updateName(mainState)
 
@@ -2625,7 +2680,7 @@ class Group:
 		self.updateName(mainState)
 
 
-	def updateNesting(self: Group, mainState: MainState):
+	def updateNesting(self, mainState: MainState):
 
 		# Not using updateSingleName() as I'm in the middle of building the hierarchy.
 
@@ -2694,7 +2749,7 @@ class Group:
 				inRef.superRef = lastRef
 
 
-	def relocate(self: Group, mainState: MainState, newStructPath):
+	def relocate(self, mainState: MainState, newStructPath):
 		mainState.updateGroupNameMapping(self, newStructPath)
 		self.updateNesting(mainState)
 		self.broadcastName(mainState)
@@ -3177,6 +3232,17 @@ class Group:
 			if self.pack:
 				parts.append("#pragma pack(pop)\n")
 
+		if len(self.aliases) > 0:
+			parts.append("\n")
+
+		for alias in self.aliases:
+			parts.append(indent)
+			parts.append("typedef ")
+			parts.append(self.singleName)
+			parts.append(" ")
+			parts.append(alias)
+			parts.append(";\n")
+
 		return "".join(parts)
 
 
@@ -3610,6 +3676,12 @@ def defineTypeRefPart(mainState: MainState, superRef: TypeReference, sourceGroup
 		if structMatch := re.match("^struct\\s+(.*)", name):
 			struct = True
 			name = structMatch.group(1)
+
+		fullName: str = f"{superRef.getName()}::{name}" if superRef is not None else name
+		resolvedAlias: str | None = mainState.tryResolveAlias(fullName)
+
+		if resolvedAlias is not None:
+			name = resolvedAlias
 
 		# Create a Group for the type if it hasn't been found already
 		# (varargs type and completely numeric types obviously aren't real, so exclude them)
@@ -4646,6 +4718,12 @@ def writeBindings(mainState: MainState, outputFileName: str, groups: UniqueList[
 		out.write("}, NULL);\n")
 		out.write(f"\ttolua_beginmodule(L, \"{openData.appliedNameUsertype}\");\n")
 
+		# Write aliases
+		for alias in openData.group.aliases:
+			superGroup: Group | None = openData.group.superGroup
+			superGroupStr: str = f"{superGroup.name}::" if superGroup is not None else ""
+			out.write(f"\t\ttolua_alias(L, \"{superGroupStr}{alias}\");\n")
+
 		# Write field mappings
 		for fieldOpenData in openData.fieldBindings:
 
@@ -5210,7 +5288,7 @@ def processInputHeader(mainState: MainState, filePath: str=None, blob: str=None)
 			# Attempt to start Group and fill .template, .groupType, .name, and .singleName
 			if declMatch != None:
 
-				nameStr: str = declMatch.group(2)
+				nameStr: str = mainState.resolveAlias(declMatch.group(2))
 
 				existingGroup = mainState.tryGetGroup(nameStr)
 				if existingGroup and existingGroup.defined:
@@ -5296,6 +5374,7 @@ def runModule(mainState: MainState, modulePath: str, functionName: str):
 def loadMaximumMainState(
 	mainState: MainState = None,
 	abstractTypesFile: str = None,
+	aliasFiles: str = None,
 	alreadyDefinedUsertypesFile: str = None,
 	fixupFileName: str = None,
 	processGhidraVFTables: bool = False,
@@ -5307,6 +5386,13 @@ def loadMaximumMainState(
 ) -> MainState:
 
 	mainState = mainState or MainState()
+
+	if aliasFiles is not None:
+		for aliasFileName in aliasFiles.split(","):
+			with open(aliasFileName) as fileIn:
+				for line in fileIn:
+					split: list[str] = line.split("=")
+					mainState.addAlias(split[0].strip(), split[1].strip())
 
 	mainState.globalGroup = Group()
 	mainState.globalGroup.defined = True
@@ -5425,6 +5511,7 @@ def doGenerateHeader():
 	mainState = MainState()
 
 	abstractTypesFile: str = None
+	aliasFiles: str = None
 	alreadyDefinedUsertypesFile: str = None
 	bindingsFileName: str = None
 	bindingsPreludeFile: str = None
@@ -5442,6 +5529,7 @@ def doGenerateHeader():
 
 	for k in islice(sys.argv, 1, None):
 		if   (v := re.search("-abstractTypesFile=(.+)",           k)) != None: abstractTypesFile               = v.group(1)
+		elif (v := re.search("-aliasFiles=(.+)",                  k)) != None: aliasFiles                      = v.group(1)
 		elif (v := re.search("-alreadyDefinedUsertypesFile=(.+)", k)) != None: alreadyDefinedUsertypesFile     = v.group(1)
 		elif (v := re.search("-bindingsOutFile=(.+)",             k)) != None: bindingsFileName                = v.group(1)
 		elif (v := re.search("-bindingsPreludeFile=(.+)",         k)) != None: bindingsPreludeFile             = v.group(1)
@@ -5466,6 +5554,7 @@ def doGenerateHeader():
 	loadMaximumMainState(
 		mainState = mainState,
 		abstractTypesFile = abstractTypesFile,
+		aliasFiles = aliasFiles,
 		alreadyDefinedUsertypesFile = alreadyDefinedUsertypesFile,
 		fixupFileName = fixupFileName,
 		processGhidraVFTables = processGhidraVFTables,

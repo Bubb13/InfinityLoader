@@ -1,0 +1,3 @@
+EEex
+EEex::ProjectileType
+EEex_ScriptingObject
