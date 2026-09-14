@@ -111,6 +111,24 @@ static int tolua_get_EEex_reference_Projectile_LuaHook_GlobalMutators_Enabled(lu
 	return 1;
 }
 
+static int tolua_get_EEex_Sprite_LuaHook_CheckBlockWeaponHit_Enabled(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::Sprite_LuaHook_CheckBlockWeaponHit_Enabled);
+	return 1;
+}
+
+static int tolua_set_EEex_Sprite_LuaHook_CheckBlockWeaponHit_Enabled(lua_State* L)
+{
+	EEex::Sprite_LuaHook_CheckBlockWeaponHit_Enabled = tolua_setter_toboolean(L, "Sprite_LuaHook_CheckBlockWeaponHit_Enabled");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_Sprite_LuaHook_CheckBlockWeaponHit_Enabled(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::Sprite_LuaHook_CheckBlockWeaponHit_Enabled, "Primitive<bool>");
+	return 1;
+}
+
 static int tolua_get_EEex_StutterDetector_Enabled(lua_State* L)
 {
 	tolua_pushboolean(L, (bool)EEex::StutterDetector_Enabled);
@@ -1021,6 +1039,8 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_Opcode_LuaHook_DeferredAfterListsResolved_Enabled", tolua_get_EEex_reference_Opcode_LuaHook_DeferredAfterListsResolved_Enabled, NULL);
 		tolua_variable(L, "Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_Projectile_LuaHook_GlobalMutators_Enabled, tolua_set_EEex_Projectile_LuaHook_GlobalMutators_Enabled);
 		tolua_variable(L, "reference_Projectile_LuaHook_GlobalMutators_Enabled", tolua_get_EEex_reference_Projectile_LuaHook_GlobalMutators_Enabled, NULL);
+		tolua_variable(L, "Sprite_LuaHook_CheckBlockWeaponHit_Enabled", tolua_get_EEex_Sprite_LuaHook_CheckBlockWeaponHit_Enabled, tolua_set_EEex_Sprite_LuaHook_CheckBlockWeaponHit_Enabled);
+		tolua_variable(L, "reference_Sprite_LuaHook_CheckBlockWeaponHit_Enabled", tolua_get_EEex_reference_Sprite_LuaHook_CheckBlockWeaponHit_Enabled, NULL);
 		tolua_variable(L, "StutterDetector_Enabled", tolua_get_EEex_StutterDetector_Enabled, tolua_set_EEex_StutterDetector_Enabled);
 		tolua_variable(L, "reference_StutterDetector_Enabled", tolua_get_EEex_reference_StutterDetector_Enabled, NULL);
 		tolua_variable(L, "UncapFPS_BusyWaitThreshold", tolua_get_EEex_UncapFPS_BusyWaitThreshold, tolua_set_EEex_UncapFPS_BusyWaitThreshold);
@@ -1074,6 +1094,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_constantstring(L, "usertype_Opcode_LuaHook_AfterListsResolved_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Opcode_LuaHook_DeferredAfterListsResolved_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Projectile_LuaHook_GlobalMutators_Enabled", "Primitive<bool>");
+		tolua_constantstring(L, "usertype_Sprite_LuaHook_CheckBlockWeaponHit_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_StutterDetector_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_UncapFPS_BusyWaitThreshold", "Primitive<int>");
 		tolua_constantstring(L, "usertype_UncapFPS_FPSLimit", "Primitive<int>");

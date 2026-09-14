@@ -128,6 +128,7 @@ namespace EEex
 	bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	bool Opcode_LuaHook_DeferredAfterListsResolved_Enabled;
 	bool Projectile_LuaHook_GlobalMutators_Enabled;
+	bool Sprite_LuaHook_CheckBlockWeaponHit_Enabled;
 	bool StutterDetector_Enabled;
 	int UncapFPS_BusyWaitThreshold;
 	int UncapFPS_FPSLimit;

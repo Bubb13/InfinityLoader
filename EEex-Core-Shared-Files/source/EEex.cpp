@@ -4231,6 +4231,38 @@ void EEex::Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite) {
 	STUTTER_LOG_END
 }
 
+static bool checkBlockWeaponHit(CGameSprite* pAttackingSprite, CGameSprite* pTargetSprite, CItem* pWeapon, Item_ability_st* pWeaponAbility) {
+
+	bool bBlock = false;
+
+	if (EEex::Sprite_LuaHook_CheckBlockWeaponHit_Enabled) {
+
+		lua_State *const L = luaState();
+		const bool bCallSuccess = luaCallProtected(L, 4, 1, [&](int) {
+			lua_getglobal(L, "EEex_Sprite_LuaHook_CheckBlockWeaponHit");
+			tolua_pushusertype(L, pAttackingSprite, "CGameSprite"     );
+			tolua_pushusertype(L, pTargetSprite,    "CGameSprite"     );
+			tolua_pushusertype(L, pWeapon,          "CItem"           );
+			tolua_pushusertype(L, pWeaponAbility,   "Item_ability_st" );
+		});
+
+		if (!bCallSuccess) {
+			return false;
+		}
+
+		bBlock = lua_toboolean(L, -1);
+		lua_pop(L, 1);
+	}
+
+	return bBlock;
+}
+
+bool EEex::Sprite_Hook_OnCheckBlockWeaponHit(
+	CGameSprite* pAttackingSprite, CGameSprite* pTargetSprite, CItem* pWeapon, Item_ability_st* pWeaponAbility)
+{
+	return checkBlockWeaponHit(pAttackingSprite, pTargetSprite, pWeapon, pWeaponAbility);
+}
+
 static byte getAttackFrameTypeReimplementation(CVidBitmap* aBitmaps, byte numAttacks, byte speedFactor, byte combatFrame) {
 
 	if (numAttacks <= 5 && speedFactor <= 10) {
@@ -5642,5 +5674,6 @@ void EEex::InitEEex() {
 	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = false;
 	EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled = false;
 	EEex::Projectile_LuaHook_GlobalMutators_Enabled = false;
+	EEex::Sprite_LuaHook_CheckBlockWeaponHit_Enabled = false;
 	EEex::StutterDetector_Enabled = false;
 }

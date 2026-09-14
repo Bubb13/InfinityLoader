@@ -129,6 +129,7 @@ namespace EEex {
 	void Sprite_Hook_OnDestruct(CGameSprite* pSprite);
 	void Sprite_Hook_OnAfterEffectListUnmarshalled(CGameSprite* pSprite);
 	void Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite);
+	bool Sprite_Hook_OnCheckBlockWeaponHit(CGameSprite* pAttackingSprite, CGameSprite* pTargetSprite, CItem* pWeapon, Item_ability_st* pWeaponAbility);
 	byte Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttacks);
 
 	////////////

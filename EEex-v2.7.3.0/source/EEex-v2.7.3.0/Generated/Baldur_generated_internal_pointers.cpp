@@ -14,6 +14,7 @@ bool EEex::Menu_UniversalScrollbarPadCollapsing;
 bool EEex::Opcode_LuaHook_AfterListsResolved_Enabled;
 bool EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled;
 bool EEex::Projectile_LuaHook_GlobalMutators_Enabled;
+bool EEex::Sprite_LuaHook_CheckBlockWeaponHit_Enabled;
 bool EEex::StutterDetector_Enabled;
 int EEex::UncapFPS_BusyWaitThreshold;
 int EEex::UncapFPS_FPSLimit;

@@ -5050,6 +5050,7 @@ namespace EEex
 	extern bool Opcode_LuaHook_AfterListsResolved_Enabled;
 	extern bool Opcode_LuaHook_DeferredAfterListsResolved_Enabled;
 	extern bool Projectile_LuaHook_GlobalMutators_Enabled;
+	extern bool Sprite_LuaHook_CheckBlockWeaponHit_Enabled;
 	extern bool StutterDetector_Enabled;
 	extern int UncapFPS_BusyWaitThreshold;
 	extern int UncapFPS_FPSLimit;
