@@ -809,6 +809,8 @@ struct CResRef
 	}
 
 	$nobinding void CopyToString(CString* str);
+
+	$nobinding $binding_name(EqualsString) $pattern_name(operator==(const char*)) bool operator==(const char* pName) const;
 };
 
 struct $D98D369160A0DDA2B95F5D0F301081BB
@@ -998,6 +1000,8 @@ struct CGameAIBase : CGameObject
 
 struct CGameSprite : CGameAIBase
 {
+	static Item_ability_st DEFAULT_ATTACK;
+
 	$binding_name(Construct_Overload_FromData) $pattern_name(Construct(byte*,int,ushort,uint,ushort,ushort,uint,CPoint,ushort,int)) $constructor_fake Construct(byte* pCreature, int creatureSize, ushort type, uint expirationTime, ushort huntingRange, ushort followRange, uint timeOfDayVisible, CPoint startPos, ushort facing, int copyScript);
 
 	CGameSprite* Copy(int bMarkItemsAsNonDroppable, int copyNonDroppable, int copyEffects, int copyScripts);
@@ -1005,6 +1009,7 @@ struct CGameSprite : CGameAIBase
 
 	void CheckQuickLists(CAbilityId* ab, short changeAmount, int remove, int removeSpellIfZero);
 	CGameEffectDamage* Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
+	int DisableOffhand(short itemType);
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
 	CDerivedStats* GetActiveStats();
 	short GetCasterLevel(CSpell* pSpell, int includeWildMage);
@@ -1021,6 +1026,7 @@ struct CGameSprite : CGameAIBase
 	void PlaySound(byte soundID, int showText, int showCircle, int overrideOption);
 	void ReadyOffInternalList(CButtonData* button, bool firstCall);
 	void ReadySpell(CButtonData* button, bool firstCall);
+	int ShouldAvertCriticalHit();
 	short SpellPoint();
 	void UpdateTarget(CGameObject* target);
 };
@@ -1096,7 +1102,58 @@ struct CItem : CResHelper<CResItem,1005>
 {
 	$binding_name(Construct_Overload_Manual) $pattern_name(Construct(CResRef,ushort,ushort,ushort,ushort,uint)) $constructor_fake Construct(CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
 
+	int Demand();
 	Item_ability_st* GetAbility(int abilityNum);
+
+	uint GetFlagsFile()
+	{
+		if (this->cResRef == "" || this->pRes == nullptr)
+		{
+			return 0;
+		}
+
+		this->pRes->Demand();
+		return this->pRes->pHeader->itemFlags;
+	}
+
+	ushort GetItemType()
+	{
+		if (this->cResRef == "" || this->pRes == nullptr)
+		{
+			return 0;
+		}
+
+		this->pRes->Demand();
+		return this->pRes->pHeader->itemType;
+	}
+
+	$nobinding void LoadWeaponIdentification(CWeaponIdentification* weaponId)
+	{
+		if (this->pRes == nullptr)
+		{
+			return;
+		}
+
+		this->pRes->Demand();
+		weaponId->m_itemType = this->pRes->pHeader->itemType;
+		weaponId->m_itemFlags = this->pRes->pHeader->itemFlags;
+		weaponId->m_itemFlagMask = 0;
+		weaponId->m_attributes = this->pRes->pHeader->attributes;
+	}
+};
+
+$allow_default_construction(true) struct CWeaponIdentification
+{
+};
+
+struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
+{
+	$nobinding void OverrideWeaponType(const CAIObjectType* type, int slot, int itemType, CWeaponIdentification* weapon);
+};
+
+struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
+{
+	$nobinding int OnList(CWeaponIdentification* type);
 };
 
 struct CString
@@ -1120,6 +1177,8 @@ struct CString
 	$binding_name(AssignmentOperator_Overload_CString) $pattern_name(operator=(CString*)) void operator=(const CString* other) const;
 
 	$nobinding void __cdecl Format(const char* pszFormat, ...);
+	$nobinding $binding_name(AdditionAssignmentOperator_Overload_CString) $pattern_name(operator+=(CString*)) CString& operator+=(const CString* other);
+	$nobinding $binding_name(AdditionAssignmentOperator_Overload_String) $pattern_name(operator+=(char*)) CString& operator+=(primitive const char* other);
 };
 
 struct CSearchBitmap
@@ -1329,10 +1388,11 @@ struct CDerivedStats : CDerivedStatsTemplate
 	$constructor_fake Construct();
 	void Destruct();
 	long GetAtOffset(short offset);
+	byte GetAverageLevel(byte nClass);
+	int GetCriticalValue(int leftHand, int itemType, int attackType, int hitOrMiss);
+	byte GetPriestLevelCast(byte nClass);
 	int GetSpellState(uint bit);
 	byte GetWizardLevelCast(byte nClass);
-	byte GetPriestLevelCast(byte nClass);
-	byte GetAverageLevel(byte nClass);
 };
 
 struct CAIScript
@@ -1653,6 +1713,16 @@ struct CVidFont : CResHelper<CResFont,1034>
 
 $allow_default_construction(true) struct adjustmentData_t
 {
+};
+
+struct CUtil
+{
+	static int UtilRandInt(int nRange, int nWeight);
+};
+
+struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
+{
+	int GetBonus(const CAIObjectType* type);
 };
 
 //////////////////////////////

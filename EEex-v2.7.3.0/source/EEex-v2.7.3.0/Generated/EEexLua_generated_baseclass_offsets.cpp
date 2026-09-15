@@ -161,6 +161,12 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CAOEEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CSelectiveWeaponType*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveWeaponType*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CWeaponIdentification*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CWeaponIdentification*>, CObject>()},
+		}},
 		{"CTypedPtrList<CPtrList,long>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,long>, CObject>()},
 		}},
@@ -197,6 +203,9 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CContingency*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CContingency*>, CObject>()},
 		}},
+		{"CTypedPtrList<CPtrList,CSelectiveBonus*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveBonus*>, CObject>()},
+		}},
 		{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>, CObject>()},
 		}},
@@ -230,12 +239,6 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CGameEffect*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CGameEffect*>, CObject>()},
 		}},
-		{"CTypedPtrList<CPtrList,CWeaponIdentification*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CWeaponIdentification*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CSelectiveBonus*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveBonus*>, CObject>()},
-		}},
 		{"CTypedPtrList<CPtrList,CImmunitiesItemEquip*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CImmunitiesItemEquip*>, CObject>()},
 		}},
@@ -256,9 +259,6 @@ void registerBaseclasses() {
 		}},
 		{"CTypedPtrList<CPtrList,CColorEffect*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CColorEffect*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CSelectiveWeaponType*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveWeaponType*>, CObject>()},
 		}},
 		{"CTypedPtrList<CPtrList,CCriticalEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CCriticalEntry*>, CObject>()},
@@ -359,6 +359,9 @@ void registerBaseclasses() {
 		{"CImmunitiesAIType", {
 			{"CTypedPtrList<CPtrList,CAIObjectType*>", offsetofbase<CImmunitiesAIType, CTypedPtrList<CPtrList,CAIObjectType*>>()},
 		}},
+		{"CImmunitiesWeapon", {
+			{"CTypedPtrList<CPtrList,CWeaponIdentification*>", offsetofbase<CImmunitiesWeapon, CTypedPtrList<CPtrList,CWeaponIdentification*>>()},
+		}},
 		{"CPersistantEffectListRegenerated", {
 			{"CTypedPtrList<CPtrList,CPersistantEffect*>", offsetofbase<CPersistantEffectListRegenerated, CTypedPtrList<CPtrList,CPersistantEffect*>>()},
 		}},
@@ -397,9 +400,6 @@ void registerBaseclasses() {
 		}},
 		{"CImmunitiesSpellList", {
 			{"CTypedPtrList<CPtrList,CImmunitySpell*>", offsetofbase<CImmunitiesSpellList, CTypedPtrList<CPtrList,CImmunitySpell*>>()},
-		}},
-		{"CImmunitiesWeapon", {
-			{"CTypedPtrList<CPtrList,CWeaponIdentification*>", offsetofbase<CImmunitiesWeapon, CTypedPtrList<CPtrList,CWeaponIdentification*>>()},
 		}},
 		{"CMemINI", {
 			{"CTypedPtrList<CPtrList,void*>", offsetofbase<CMemINI, CTypedPtrList<CPtrList,void*>>()},

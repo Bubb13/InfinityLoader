@@ -223,6 +223,7 @@ CResWebm
 CResWED
 CResWorldMap
 CSparkleCluster
+CUtil
 CVEFVidCell
 CVisualEffect
 font_t

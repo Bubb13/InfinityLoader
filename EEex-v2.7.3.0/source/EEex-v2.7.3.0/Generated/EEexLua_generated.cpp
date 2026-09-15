@@ -255,6 +255,13 @@ static int tolua_get_EEex_reference_UncapFPS_RemoveMiddleMouseScrollMultiplier(l
 	return 1;
 }
 
+static int tolua_function_EEex_CanAttackWithLeftHand(lua_State* L)
+{
+	bool returnVal = EEex::CanAttackWithLeftHand((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"));
+	tolua_pushboolean(L, (bool)returnVal);
+	return 1;
+}
+
 static int tolua_function_EEex_CreateTemplateFromCopy(lua_State* L)
 {
 	uiItem* returnVal = EEex::CreateTemplateFromCopy(L, tolua_function_tostring(L, 1, "CreateTemplateFromCopy"), tolua_function_tostring(L, 2, "CreateTemplateFromCopy"), (uiItem*)tolua_tousertype_dynamic(L, 3, 0, "uiItem"));
@@ -345,6 +352,12 @@ static int tolua_function_EEex_GetTextWidthHeight(lua_State* L)
 	return 2;
 }
 
+static int tolua_function_EEex_GetWeaponHitChance(lua_State* L)
+{
+	EEex::GetWeaponHitChance(L, (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"), (CGameSprite*)tolua_tousertype_dynamic(L, 2, 0, "CGameSprite"), (CItem*)tolua_tousertype_dynamic(L, 3, 0, "CItem"), tolua_function_tointeger<int>(L, 4, "GetWeaponHitChance"), tolua_function_tointeger<int>(L, 5, "GetWeaponHitChance"));
+	return 2;
+}
+
 static int tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters(lua_State* L)
 {
 	EEex::HookIntegrityWatchdogIgnoreRegisters(tolua_function_tointeger<uintptr_t>(L, 1, "HookIntegrityWatchdogIgnoreRegisters"), tolua_function_tointeger<size_t>(L, 2, "HookIntegrityWatchdogIgnoreRegisters"), (EEex_HookIntegrityWatchdogRegister)tolua_function_tointeger<__int32>(L, 3, "HookIntegrityWatchdogIgnoreRegisters"));
@@ -367,6 +380,13 @@ static int tolua_function_EEex_InjectTemplateInstance(lua_State* L)
 static int tolua_function_EEex_IsDefaultAttackCursor(lua_State* L)
 {
 	bool returnVal = EEex::IsDefaultAttackCursor();
+	tolua_pushboolean(L, (bool)returnVal);
+	return 1;
+}
+
+static int tolua_function_EEex_IsImmuneToWeapon(lua_State* L)
+{
+	bool returnVal = EEex::IsImmuneToWeapon((CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"), (CGameSprite*)tolua_tousertype_dynamic(L, 2, 0, "CGameSprite"), tolua_function_tointeger<byte>(L, 3, "IsImmuneToWeapon"), (CItem*)tolua_tousertype_dynamic(L, 4, 0, "CItem"), tolua_function_tointeger<int>(L, 5, "IsImmuneToWeapon"));
 	tolua_pushboolean(L, (bool)returnVal);
 	return 1;
 }
@@ -559,6 +579,8 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CTypedPtrList<CPtrList,SAreaFileWrapper*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CSavedGameStoredLocation*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CAOEEntry*>");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,CSelectiveWeaponType*>");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,CWeaponIdentification*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,long>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CAreaFileCharacterEntryPoint*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,__POSITION*>");
@@ -571,6 +593,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CDeathSound*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CItem*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CContingency*>");
+	tolua_usertype(L, "CTypedPtrList<CPtrList,CSelectiveBonus*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CMusicPosition*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CGameJournalEntry*>");
@@ -582,8 +605,6 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CAIResponse*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CSpawn*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CGameEffect*>");
-	tolua_usertype(L, "CTypedPtrList<CPtrList,CWeaponIdentification*>");
-	tolua_usertype(L, "CTypedPtrList<CPtrList,CSelectiveBonus*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CImmunitiesItemEquip*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CImmunitiesItemTypeEquip*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CImmunitySpell*>");
@@ -591,7 +612,6 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CPersistantEffect*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CColorRange*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CColorEffect*>");
-	tolua_usertype(L, "CTypedPtrList<CPtrList,CSelectiveWeaponType*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CCriticalEntry*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,EEex_CGameOptions*>");
 	tolua_usertype(L, "CTypedPtrList<CPtrList,CString*>");
@@ -625,6 +645,7 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CImmunitiesSchoolAndSecondary");
 	tolua_usertype(L, "CGameButtonList");
 	tolua_usertype(L, "CImmunitiesAIType");
+	tolua_usertype(L, "CImmunitiesWeapon");
 	tolua_usertype(L, "CPersistantEffectListRegenerated");
 	tolua_usertype(L, "EEex_CWarp");
 	tolua_usertype(L, "CApplyEffectList");
@@ -638,7 +659,6 @@ static void tolua_reg_types(lua_State* L)
 	tolua_usertype(L, "CImmunitiesItemTypeEquipList");
 	tolua_usertype(L, "CImmunitiesSchoolAndSecondaryDecrementing");
 	tolua_usertype(L, "CImmunitiesSpellList");
-	tolua_usertype(L, "CImmunitiesWeapon");
 	tolua_usertype(L, "CMemINI");
 	tolua_usertype(L, "CMemINISection");
 	tolua_usertype(L, "CMoveList");
@@ -1055,6 +1075,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_variable(L, "reference_UncapFPS_LuaGCSteps", tolua_get_EEex_reference_UncapFPS_LuaGCSteps, NULL);
 		tolua_variable(L, "UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier, tolua_set_EEex_UncapFPS_RemoveMiddleMouseScrollMultiplier);
 		tolua_variable(L, "reference_UncapFPS_RemoveMiddleMouseScrollMultiplier", tolua_get_EEex_reference_UncapFPS_RemoveMiddleMouseScrollMultiplier, NULL);
+		tolua_function(L, "CanAttackWithLeftHand", &tolua_function_EEex_CanAttackWithLeftHand);
 		tolua_function(L, "CreateTemplateFromCopy", &tolua_function_EEex_CreateTemplateFromCopy);
 		tolua_function(L, "DeepCopy", &tolua_function_EEex_DeepCopy);
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
@@ -1069,10 +1090,12 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "GetProjectileStartingPos", &tolua_function_EEex_GetProjectileStartingPos);
 		tolua_function(L, "GetSpriteFromUUID", &tolua_function_EEex_GetSpriteFromUUID);
 		tolua_function(L, "GetTextWidthHeight", &tolua_function_EEex_GetTextWidthHeight);
+		tolua_function(L, "GetWeaponHitChance", &tolua_function_EEex_GetWeaponHitChance);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreRegisters", &tolua_function_EEex_HookIntegrityWatchdogIgnoreRegisters);
 		tolua_function(L, "HookIntegrityWatchdogIgnoreStackRange", &tolua_function_EEex_HookIntegrityWatchdogIgnoreStackRange);
 		tolua_function(L, "InjectTemplateInstance", &tolua_function_EEex_InjectTemplateInstance);
 		tolua_function(L, "IsDefaultAttackCursor", &tolua_function_EEex_IsDefaultAttackCursor);
+		tolua_function(L, "IsImmuneToWeapon", &tolua_function_EEex_IsImmuneToWeapon);
 		tolua_function(L, "IsMarshallingCopy", &tolua_function_EEex_IsMarshallingCopy);
 		tolua_function(L, "IsPlayerScript", &tolua_function_EEex_IsPlayerScript);
 		tolua_function(L, "MatchObject", &tolua_function_EEex_MatchObject);
@@ -1294,6 +1317,12 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CAOEEntry*>", "CTypedPtrList<CPtrList,CAOEEntry*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CAOEEntry*>");
 	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,CSelectiveWeaponType*>", "CTypedPtrList<CPtrList,CSelectiveWeaponType*>", {"CObject"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CSelectiveWeaponType*>");
+	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,CWeaponIdentification*>", "CTypedPtrList<CPtrList,CWeaponIdentification*>", {"CObject"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CWeaponIdentification*>");
+	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,long>", "CTypedPtrList<CPtrList,long>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,long>");
 	tolua_endmodule(L);
@@ -1330,6 +1359,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CContingency*>", "CTypedPtrList<CPtrList,CContingency*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CContingency*>");
 	tolua_endmodule(L);
+	tolua_cclass(L, "CTypedPtrList<CPtrList,CSelectiveBonus*>", "CTypedPtrList<CPtrList,CSelectiveBonus*>", {"CObject"}, NULL);
+	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CSelectiveBonus*>");
+	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", "CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>");
 	tolua_endmodule(L);
@@ -1363,12 +1395,6 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CGameEffect*>", "CTypedPtrList<CPtrList,CGameEffect*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CGameEffect*>");
 	tolua_endmodule(L);
-	tolua_cclass(L, "CTypedPtrList<CPtrList,CWeaponIdentification*>", "CTypedPtrList<CPtrList,CWeaponIdentification*>", {"CObject"}, NULL);
-	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CWeaponIdentification*>");
-	tolua_endmodule(L);
-	tolua_cclass(L, "CTypedPtrList<CPtrList,CSelectiveBonus*>", "CTypedPtrList<CPtrList,CSelectiveBonus*>", {"CObject"}, NULL);
-	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CSelectiveBonus*>");
-	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CImmunitiesItemEquip*>", "CTypedPtrList<CPtrList,CImmunitiesItemEquip*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CImmunitiesItemEquip*>");
 	tolua_endmodule(L);
@@ -1389,9 +1415,6 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CColorEffect*>", "CTypedPtrList<CPtrList,CColorEffect*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CColorEffect*>");
-	tolua_endmodule(L);
-	tolua_cclass(L, "CTypedPtrList<CPtrList,CSelectiveWeaponType*>", "CTypedPtrList<CPtrList,CSelectiveWeaponType*>", {"CObject"}, NULL);
-	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CSelectiveWeaponType*>");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CTypedPtrList<CPtrList,CCriticalEntry*>", "CTypedPtrList<CPtrList,CCriticalEntry*>", {"CObject"}, NULL);
 	tolua_beginmodule(L, "CTypedPtrList<CPtrList,CCriticalEntry*>");
@@ -1492,6 +1515,9 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_cclass(L, "CImmunitiesAIType", "CImmunitiesAIType", {"CTypedPtrList<CPtrList,CAIObjectType*>"}, NULL);
 	tolua_beginmodule(L, "CImmunitiesAIType");
 	tolua_endmodule(L);
+	tolua_cclass(L, "CImmunitiesWeapon", "CImmunitiesWeapon", {"CTypedPtrList<CPtrList,CWeaponIdentification*>"}, NULL);
+	tolua_beginmodule(L, "CImmunitiesWeapon");
+	tolua_endmodule(L);
 	tolua_cclass(L, "CPersistantEffectListRegenerated", "CPersistantEffectListRegenerated", {"CTypedPtrList<CPtrList,CPersistantEffect*>"}, NULL);
 	tolua_beginmodule(L, "CPersistantEffectListRegenerated");
 	tolua_endmodule(L);
@@ -1530,9 +1556,6 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "CImmunitiesSpellList", "CImmunitiesSpellList", {"CTypedPtrList<CPtrList,CImmunitySpell*>"}, NULL);
 	tolua_beginmodule(L, "CImmunitiesSpellList");
-	tolua_endmodule(L);
-	tolua_cclass(L, "CImmunitiesWeapon", "CImmunitiesWeapon", {"CTypedPtrList<CPtrList,CWeaponIdentification*>"}, NULL);
-	tolua_beginmodule(L, "CImmunitiesWeapon");
 	tolua_endmodule(L);
 	tolua_cclass(L, "CMemINI", "CMemINI", {"CTypedPtrList<CPtrList,void*>"}, NULL);
 	tolua_beginmodule(L, "CMemINI");

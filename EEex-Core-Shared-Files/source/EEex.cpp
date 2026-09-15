@@ -203,6 +203,12 @@ std::vector<std::function<void(bool)>> triggerEvaluatedCallbacks{};
 
 std::unordered_set<std::string> exTemplateNames{};
 
+//----------------------------------------//
+//          Forward Declarations          //
+//----------------------------------------//
+
+static bool checkBlockWeaponHit(CGameSprite* pAttackingSprite, CGameSprite* pTargetSprite, CItem* pWeapon, Item_ability_st* pWeaponAbility);
+
 //--------------------------------//
 //          Globals Util          //
 //--------------------------------//
@@ -1232,6 +1238,609 @@ void EEex::DrawSlicedRect(lua_State* L) {
 /////////////////
 // END Drawing //
 /////////////////
+
+static void adjustFakeAttackRoll(
+	// In
+	CGameSprite* pThis, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand,
+	// Out
+	short* nAttackRollModOut, short *nTHAC0VsACDiffOut, CString* sFeedbackString)
+{
+	CBaldurChitin* const pChitin = *p_g_pBaldurChitin;
+	CInfGame* const pGame = pChitin->m_pObjectGame;
+
+	EngineVal<CString> sFormatString{};
+
+	union { int intVal; short shortVal; } nCurModifiedAttackRoll;
+	nCurModifiedAttackRoll.intVal = *nAttackRollModOut;
+
+	////////////////////////
+	// Get weapon ability //
+	////////////////////////
+
+	curWeaponIn->Demand();
+	const Item_ability_st* const pWeaponAbility = curWeaponIn->GetAbility(curAttackNum);
+	const Item_ability_st* const pEffectiveWeaponAbility = pWeaponAbility != nullptr
+		? pWeaponAbility
+		: CGameSprite::p_DEFAULT_ATTACK;
+
+	/////////////////////
+	// Damage type mod //
+	/////////////////////
+
+	int nDamageTypeMod = 0;
+
+	switch (pEffectiveWeaponAbility->damageType)
+	{
+		case 1:
+		{
+			nDamageTypeMod = target->GetActiveStats()->m_nACPiercingMod;
+			break;
+		}
+		case 2:
+		case 5:
+		{
+			nDamageTypeMod = target->GetActiveStats()->m_nACCrushingMod;
+			break;
+		}
+		case 3:
+		{
+			nDamageTypeMod = target->GetActiveStats()->m_nACSlashingMod;
+			break;
+		}
+		case 4:
+		{
+			nDamageTypeMod = target->GetActiveStats()->m_nACMissileMod;
+			break;
+		}
+		case 6:
+		case 7:
+		case 8:
+		{
+			short* pFirstMod = nullptr;
+			short* pSecondMod = nullptr;
+
+			switch (pEffectiveWeaponAbility->damageType)
+			{
+				case 6:
+				{
+					pFirstMod = &target->GetActiveStats()->m_nACCrushingMod;
+					pSecondMod = &target->GetActiveStats()->m_nACPiercingMod;
+					break;
+				}
+				case 7:
+				{
+					pFirstMod = &target->GetActiveStats()->m_nACSlashingMod;
+					pSecondMod = &target->GetActiveStats()->m_nACPiercingMod;
+					break;
+				}
+				case 8:
+				{
+					pFirstMod = &target->GetActiveStats()->m_nACSlashingMod;
+					pSecondMod = &target->GetActiveStats()->m_nACCrushingMod;
+					break;
+				}
+			}
+
+			nDamageTypeMod = (std::max)(*pFirstMod, *pSecondMod);
+		}
+	}
+
+	nCurModifiedAttackRoll.intVal += nDamageTypeMod;
+	sFormatString->Format(" +SpecialAC:%d", nDamageTypeMod);
+	*sFeedbackString += sFormatString;
+
+	///////////////
+	// Hit bonus //
+	///////////////
+
+	nCurModifiedAttackRoll.shortVal += pThis->GetActiveStats()->m_nHitBonus;
+
+	sFormatString->Format(" +HitMod:%d", pThis->GetActiveStats()->m_nHitBonus);
+	*sFeedbackString += sFormatString;
+
+	///////////////////////////
+	// Attack of Opportunity //
+	///////////////////////////
+
+	const byte nAbilityType = static_cast<byte>(pEffectiveWeaponAbility->type);
+	const bool bAllowAttackOfOpportunity = nAbilityType != 2 && nAbilityType != 4 && (pThis->m_equipment.m_selectedWeapon != 10 || pThis->virtual_GetAIType()->m_Class == 20);
+
+	if (bAllowAttackOfOpportunity && target->m_equipment.m_selectedWeapon == 10 && target->virtual_GetAIType()->m_Class != 20)
+	{
+		nCurModifiedAttackRoll.intVal += 4;
+		*sFormatString = " +Attack of Opportunity:4";
+	}
+	else
+	{
+		CItem *const pTargetWeapon = target->m_equipment.m_items[target->m_equipment.m_selectedWeapon];
+
+		if (pTargetWeapon == nullptr)
+		{
+			if (!bAllowAttackOfOpportunity)
+			{
+				*sFormatString = " +Attack of Opportunity:0";
+			}
+			else
+			{
+				nCurModifiedAttackRoll.intVal += 4;
+				*sFormatString = " +Attack of Opportunity:4";
+			}
+		}
+		else
+		{
+			pTargetWeapon->Demand();
+			Item_ability_st *const pTargetWeaponAbility = pTargetWeapon->GetAbility(target->m_equipment.m_selectedWeaponAbility);
+
+			if (bAllowAttackOfOpportunity && (pTargetWeaponAbility == nullptr || static_cast<byte>(pTargetWeaponAbility->type) == 2 || static_cast<byte>(pTargetWeaponAbility->type) == 4))
+			{
+				nCurModifiedAttackRoll.intVal += 4;
+				*sFormatString = " +Attack of Opportunity:4";
+			}
+			else
+			{
+				*sFormatString = " +Attack of Opportunity:0";
+			}
+		}
+	}
+
+	*sFeedbackString += sFormatString;
+
+	/////////////
+	// Berserk //
+	/////////////
+
+	if ((pThis->GetActiveStats()->m_generalState & 2) == 0)
+	{
+		*sFormatString = " +Berserk:0";
+	}
+	else
+	{
+		nCurModifiedAttackRoll.intVal += 2;
+		*sFormatString = " +Berserk:2";
+	}
+
+	*sFeedbackString += sFormatString;
+
+	///////////////////
+	// Hand modifier //
+	///////////////////
+
+	nDamageTypeMod = pThis->m_bAllowEffectListCall;
+
+	if (leftHand == 0)
+	{
+		nCurModifiedAttackRoll.shortVal += pThis->GetActiveStats()->m_THAC0BonusRight;
+
+		sFormatString->Format(" +Right:%d (%d)", static_cast<short>(pThis->GetActiveStats()->m_THAC0BonusRight), pThis->m_hitBonusesRight);
+		*sFeedbackString += sFormatString;
+	}
+	else
+	{
+		nCurModifiedAttackRoll.shortVal += pThis->GetActiveStats()->m_THAC0BonusLeft;
+
+		sFormatString->Format(" +Left:%d (%d)", static_cast<short>(pThis->GetActiveStats()->m_THAC0BonusLeft), pThis->m_hitBonusesLeft);
+		*sFeedbackString += sFormatString;
+	}
+
+	/////////////////////////////////
+	// Attacking from invisibility //
+	/////////////////////////////////
+
+	int nInvisibilityBonus = 0;
+
+	if (static_cast<byte>(pEffectiveWeaponAbility->type) != 2)
+	{
+		if ((pThis->GetActiveStats()->m_generalState & 0x10) != 0)
+		{
+			nCurModifiedAttackRoll.shortVal += 4;
+			nInvisibilityBonus = 4;
+
+			//////////////////////////////////////////////////////////////////////////////////
+			// Negate target's dexterity bonus to AC if invisible + capable of backstabbing //
+			//////////////////////////////////////////////////////////////////////////////////
+
+			if (pThis->GetActiveStats()->m_nBackstabDamageMultiplier > 1)
+			{
+				const CString *const sTargetDexterityACBonus = pGame->m_ruleTables.m_tDexterityMod.GetAt(2, target->GetActiveStats()->m_nDEX);
+
+				int nTargetDexterityACBonus;
+				sscanf(sTargetDexterityACBonus->m_pchData, "%d", &nTargetDexterityACBonus);
+
+				*nTHAC0VsACDiffOut += nTargetDexterityACBonus; // TODO: No feedback
+			}
+		}
+	}
+
+	sFormatString->Format(" +Invisible:%d", nInvisibilityBonus);
+	*sFeedbackString += sFormatString;
+
+	////////////////////////////////
+	// Attacking invisible target //
+	////////////////////////////////
+
+	if (!pThis->virtual_GetCanSeeInvisible() && ((target->GetActiveStats()->m_generalState & 0x10) != 0 || (target->GetActiveStats()->m_generalState & 0x400000) != 0))
+	{
+		nCurModifiedAttackRoll.shortVal -= 4;
+		*sFormatString = " +Invisible Target:-4";
+	}
+	else
+	{
+		*sFormatString = " +Invisible Target:0";
+	}
+
+	*sFeedbackString += sFormatString;
+
+	///////////
+	// Range //
+	///////////
+
+	if (static_cast<byte>(pEffectiveWeaponAbility->type) == 2)
+	{
+		const int nSearchXDiff = pThis->m_pos.x / 16 - target->m_pos.x / 16;
+		const int nSearchYDiff = pThis->m_pos.y / 12 - target->m_pos.y / 12;
+
+		const byte nPersonalSpace = (pThis->m_animation.m_overrides & 4) == 0
+			? pThis->m_animation.m_animation->virtual_GetPersonalSpace()
+			: pThis->m_animation.m_personalSpace;
+
+		const byte nTargetPersonalSpace = (target->m_animation.m_overrides & 4) == 0
+			? target->m_animation.m_animation->virtual_GetPersonalSpace()
+			: target->m_animation.m_personalSpace;
+
+		const byte nPersonalSpaceSum = ((nTargetPersonalSpace - 1) / 2) + ((nPersonalSpace - 1) / 2) - 1;
+		const int nDistanceSquared = (nSearchYDiff * nSearchYDiff + nSearchXDiff * nSearchXDiff) - nPersonalSpaceSum;
+
+		if (nDistanceSquared < 4 * 4)
+		{
+			nCurModifiedAttackRoll.shortVal -= 8;
+			*sFormatString = " +Range:-8";
+		}
+		else if (nDistanceSquared <= 64 * 64)
+		{
+			if (nDistanceSquared <= 32 * 32)
+			{
+				*sFormatString = " +Range:0";
+			}
+			else
+			{
+				nCurModifiedAttackRoll.shortVal -= 2;
+				*sFormatString = " +Range:-2";
+			}
+		}
+		else
+		{
+			nCurModifiedAttackRoll.shortVal -= 5;
+			*sFormatString = " +Range:-5";
+		}
+	}
+	else
+	{
+		*sFormatString = " +Range:0";
+	}
+
+	*sFeedbackString += sFormatString;
+
+	////////////////
+	// Hated race //
+	////////////////
+
+	if
+	(
+		target->m_typeAI.m_Race == pThis->GetActiveStats()->m_nHatedRace
+		&&
+		(
+			pThis->m_typeAI.m_Class == 12 // RANGER
+			||
+			pThis->m_typeAI.m_Class == 18 // CLERIC_RANGER
+		)
+	)
+	{
+		nCurModifiedAttackRoll.intVal += 4;
+		*sFormatString = " +Hated Race:4";
+	}
+	else
+	{
+		*sFormatString = " +Hated Race:0";
+	}
+
+	*sFeedbackString += sFormatString;
+
+	//////////////////
+	// To hit bonus //
+	//////////////////
+
+	const short nToHitBonus = static_cast<short>(pThis->GetActiveStats()->m_cToHitBonusList.GetBonus(target->virtual_GetAIType()));
+	nCurModifiedAttackRoll.intVal += nToHitBonus;
+
+	sFormatString->Format(" +Special Target:%d", nToHitBonus);
+	*sFeedbackString += sFormatString;
+
+	//////////////////////
+	// Protection bonus //
+	//////////////////////
+
+	const short nProtectionBonus = static_cast<short>(target->GetActiveStats()->m_cProtectionList.GetBonus(pThis->virtual_GetAIType()));
+	nCurModifiedAttackRoll.intVal -= nProtectionBonus;
+
+	sFormatString->Format(" +Protections:%d", -nProtectionBonus);
+	*sFeedbackString += sFormatString;
+
+	////////////
+	// Return //
+	////////////
+
+	*nAttackRollModOut = nCurModifiedAttackRoll.shortVal;
+}
+
+static byte fakeAttackRoll(
+	// In
+	CGameSprite* pThis, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand,
+	// Out
+	int* criticalDamage, CString* sFeedbackString)
+{
+	CBaldurChitin* const pChitin = *p_g_pBaldurChitin;
+	CInfGame* const pGame = pChitin->m_pObjectGame;
+
+	EngineVal<CString> sFormatString{};
+
+	////////////
+	// Weapon //
+	////////////
+
+	curWeaponIn->Demand();
+	const Item_ability_st *const pWeaponAbility = curWeaponIn->GetAbility(curAttackNum);
+	const Item_ability_st *const pEffectiveWeaponAbility = pWeaponAbility != nullptr
+		? pWeaponAbility
+		: CGameSprite::p_DEFAULT_ATTACK;
+
+	///////////////
+	// Auto hit? //
+	///////////////
+
+	bool bAutoHit = false;
+
+	if (pEffectiveWeaponAbility->thac0Bonus == 0x7FFF)
+	{
+		bAutoHit = true;
+		*sFeedbackString += "+Auto-Hit:Weapon ";
+	}
+
+	if ((target->GetActiveStats()->m_generalState & 0x20) != 0)
+	{
+		bAutoHit = true;
+		*sFeedbackString += "+Auto-Hit:Target Helpless ";
+	}
+
+	if (pGame->m_nTimeStop != 0 && pGame->m_nTimeStopCaster != target->m_id && !target->GetActiveStats()->m_bImmuneToTimeStop)
+	{
+		bAutoHit = true;
+		*sFeedbackString += "+Auto-Hit:Time Stop ";
+	}
+
+	//////////
+	// Roll //
+	//////////
+
+	const short nD20Roll = static_cast<short>(CUtil::UtilRandInt(20, 0) + 1);
+
+	sFormatString->Format("Roll:%d", nD20Roll);
+	*sFeedbackString += sFormatString;
+
+	//////////
+	// Luck //
+	//////////
+
+	short nAdjustedRoll = std::clamp(static_cast<short>(nD20Roll + pThis->GetActiveStats()->m_nLuck), static_cast<short>(1), static_cast<short>(20));
+
+	sFormatString->Format(" +Luck:%d", nAdjustedRoll - nD20Roll);
+	*sFeedbackString += sFormatString;
+
+	/////////////////
+	// Adjust roll //
+	/////////////////
+
+	short nTHAC0VsACDiff = pThis->GetActiveStats()->m_nTHAC0 - target->GetActiveStats()->m_nArmorClass;
+	adjustFakeAttackRoll(pThis, target, curWeaponIn, curAttackNum, leftHand, &nAdjustedRoll, &nTHAC0VsACDiff, sFeedbackString);
+
+	////////////////////////////////
+	// Check critical hit or miss //
+	////////////////////////////////
+
+	bool bHit = bAutoHit || nAdjustedRoll >= nTHAC0VsACDiff;
+
+	if (!bAutoHit)
+	{
+		const ushort nItemType = curWeaponIn->pRes->pHeader->itemType;
+		const int nCriticalHitValue = pThis->GetActiveStats()->GetCriticalValue(leftHand, nItemType, static_cast<byte>(pEffectiveWeaponAbility->type), 0);
+
+		if (nD20Roll >= 20 - nCriticalHitValue)
+		{
+			//////////////
+			// Crit hit //
+			//////////////
+
+			bHit = true;
+
+			if (target->ShouldAvertCriticalHit())
+			{
+				*criticalDamage = 0;
+			}
+			else
+			{
+				*criticalDamage = 1;
+			}
+		}
+		else
+		{
+			const int nCriticalMissValue = pThis->GetActiveStats()->GetCriticalValue(leftHand, nItemType, static_cast<byte>(pEffectiveWeaponAbility->type), 1);
+
+			if (nD20Roll <= 1 + nCriticalMissValue)
+			{
+				///////////////
+				// Crit miss //
+				///////////////
+
+				bHit = false;
+			}
+		}
+	}
+
+	return bHit;
+}
+
+static int getAttackChance(
+	// In
+	CGameSprite* pThis, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand,
+	// Out
+	CString* sFeedbackString)
+{
+	CBaldurChitin* const pChitin = *p_g_pBaldurChitin;
+	CInfGame* const pGame = pChitin->m_pObjectGame;
+
+	EngineVal<CString> sFormatString{};
+
+	////////////
+	// Weapon //
+	////////////
+
+	curWeaponIn->Demand();
+	const Item_ability_st *const pWeaponAbility = curWeaponIn->GetAbility(curAttackNum);
+	const Item_ability_st *const pEffectiveWeaponAbility = pWeaponAbility != nullptr
+		? pWeaponAbility
+		: CGameSprite::p_DEFAULT_ATTACK;
+
+	///////////////
+	// Auto hit? //
+	///////////////
+
+	bool bAutoHit = false;
+
+	if (pEffectiveWeaponAbility->thac0Bonus == 0x7FFF)
+	{
+		bAutoHit = true;
+		*sFeedbackString += "+Auto-Hit:Weapon Ability ";
+	}
+
+	if ((target->GetActiveStats()->m_generalState & 0x20) != 0)
+	{
+		bAutoHit = true;
+		*sFeedbackString += "+Auto-Hit:Target Helpless ";
+	}
+
+	if (pGame->m_nTimeStop != 0 && pGame->m_nTimeStopCaster != target->m_id && !target->GetActiveStats()->m_bImmuneToTimeStop)
+	{
+		bAutoHit = true;
+		*sFeedbackString += "+Auto-Hit:Time Stop ";
+	}
+
+	//////////
+	// Luck //
+	//////////
+
+	short nAdjustedRoll = std::clamp(static_cast<short>(pThis->GetActiveStats()->m_nLuck), static_cast<short>(1), static_cast<short>(20));
+
+	sFormatString->Format("+Luck:%d", nAdjustedRoll);
+	*sFeedbackString += sFormatString;
+
+	/////////////////
+	// Adjust roll //
+	/////////////////
+
+	short nTHAC0VsACDiff = pThis->GetActiveStats()->m_nTHAC0 - target->GetActiveStats()->m_nArmorClass;
+	adjustFakeAttackRoll(pThis, target, curWeaponIn, curAttackNum, leftHand, &nAdjustedRoll, &nTHAC0VsACDiff, sFeedbackString);
+
+	////////////////////////////////
+	// Check critical hit or miss //
+	////////////////////////////////
+
+	const int nNeededRoll = bAutoHit ? 1 : nTHAC0VsACDiff - nAdjustedRoll;
+
+	int nHitProbability = nNeededRoll <= 1
+		? 100
+		: (nNeededRoll > 20 ? 0 : (21 - nNeededRoll) * 5);
+
+	if (!bAutoHit)
+	{
+		const ushort nItemType = curWeaponIn->pRes->pHeader->itemType;
+
+		//////////////
+		// Crit hit //
+		//////////////
+
+		const int nCriticalHitValue = pThis->GetActiveStats()->GetCriticalValue(leftHand, nItemType, static_cast<byte>(pEffectiveWeaponAbility->type), 0) + 1;
+
+		const int nCritHitChance = (std::min)(5 * nCriticalHitValue, 100);
+		nHitProbability = (std::max)(nCritHitChance, nHitProbability);
+
+		///////////////
+		// Crit miss //
+		///////////////
+
+		const int nCriticalMissValue = pThis->GetActiveStats()->GetCriticalValue(leftHand, nItemType, static_cast<byte>(pEffectiveWeaponAbility->type), 1) + 1;
+
+		const int nCritMissChance = (std::min)(5 * nCriticalMissValue, 100 - nCritHitChance);
+		nHitProbability = (std::min)(nHitProbability, 100 - nCritMissChance);
+	}
+
+	return nHitProbability;
+}
+
+bool EEex::CanAttackWithLeftHand(CGameSprite* pSprite)
+{
+	CItem *const pLeftHandItem = pSprite->m_equipment.m_items[9];
+
+	if (pLeftHandItem == nullptr)
+	{
+		return false;
+	}
+
+	const ushort nLeftHandItemType = pLeftHandItem->GetItemType();
+
+	if (nLeftHandItemType == 12 /* Shield */ || pSprite->DisableOffhand(nLeftHandItemType))
+	{
+		return false;
+	}
+
+	CItem *const pMagicWeapon = pSprite->m_equipment.m_items[34];
+
+	if (pSprite->m_equipment.m_selectedWeapon == 34 && (pMagicWeapon->GetFlagsFile() & 0x2000) != 0) // Forbid off-hand weapon (13)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void EEex::GetWeaponHitChance(lua_State* L, CGameSprite* source, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand)
+{
+	int criticalDamage = 0;
+	EngineVal<CString> sFeedbackString {};
+
+	const int fHitProb = getAttackChance(source, target, curWeaponIn, curAttackNum, leftHand, &*sFeedbackString);
+
+	lua_pushinteger(L, fHitProb);
+	lua_pushstring(L, sFeedbackString->m_pchData);
+}
+
+bool EEex::IsImmuneToWeapon(CGameSprite* pSprite, CGameSprite* pTarget, byte nWeaponSlot, CItem* pWeapon, int nWeaponAbility)
+{
+	CWeaponIdentification weaponIdentification;
+	pWeapon->LoadWeaponIdentification(&weaponIdentification);
+
+	pSprite->m_derivedStats.m_cSelectiveWeaponTypeList.OverrideWeaponType(
+		&pTarget->m_liveTypeAI,
+		nWeaponSlot,
+		pWeapon->GetItemType(),
+		&weaponIdentification
+	);
+
+	if (pTarget->GetActiveStats()->m_cImmunitiesWeapon.OnList(&weaponIdentification))
+	{
+		return true;
+	}
+
+	return checkBlockWeaponHit(pSprite, pTarget, pWeapon, pWeapon->GetAbility(nWeaponAbility));
+}
 
 void EEex::GetTextWidthHeight(lua_State* L, const char* sText, const char* sFont, int nPointSize, bool bUseFontZoom)
 {

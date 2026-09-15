@@ -344,6 +344,18 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CAOEEntry*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CAOEEntry*>::vtbl, CObject::vtbl>()},
 		}},
+		{"CTypedPtrList<CPtrList,CSelectiveWeaponType*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveWeaponType*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CSelectiveWeaponType*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSelectiveWeaponType*>::vtbl, CObject::vtbl>()},
+		}},
+		{"CTypedPtrList<CPtrList,CWeaponIdentification*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CWeaponIdentification*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,long>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,long>, CObject>()},
 		}},
@@ -416,6 +428,12 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CContingency*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CContingency*>::vtbl, CObject::vtbl>()},
 		}},
+		{"CTypedPtrList<CPtrList,CSelectiveBonus*>", {
+			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveBonus*>, CObject>()},
+		}},
+		{"CTypedPtrList<CPtrList,CSelectiveBonus*>::vtbl", {
+			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSelectiveBonus*>::vtbl, CObject::vtbl>()},
+		}},
 		{"CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,cnetworkwindow_queueentry_st*>, CObject>()},
 		}},
@@ -482,18 +500,6 @@ void registerBaseclasses() {
 		{"CTypedPtrList<CPtrList,CGameEffect*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CGameEffect*>::vtbl, CObject::vtbl>()},
 		}},
-		{"CTypedPtrList<CPtrList,CWeaponIdentification*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CWeaponIdentification*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl", {
-			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl, CObject::vtbl>()},
-		}},
-		{"CTypedPtrList<CPtrList,CSelectiveBonus*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveBonus*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CSelectiveBonus*>::vtbl", {
-			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSelectiveBonus*>::vtbl, CObject::vtbl>()},
-		}},
 		{"CTypedPtrList<CPtrList,CImmunitiesItemEquip*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CImmunitiesItemEquip*>, CObject>()},
 		}},
@@ -535,12 +541,6 @@ void registerBaseclasses() {
 		}},
 		{"CTypedPtrList<CPtrList,CColorEffect*>::vtbl", {
 			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CColorEffect*>::vtbl, CObject::vtbl>()},
-		}},
-		{"CTypedPtrList<CPtrList,CSelectiveWeaponType*>", {
-			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CSelectiveWeaponType*>, CObject>()},
-		}},
-		{"CTypedPtrList<CPtrList,CSelectiveWeaponType*>::vtbl", {
-			{"CObject::vtbl", offsetofbase<CTypedPtrList<CPtrList,CSelectiveWeaponType*>::vtbl, CObject::vtbl>()},
 		}},
 		{"CTypedPtrList<CPtrList,CCriticalEntry*>", {
 			{"CObject", offsetofbase<CTypedPtrList<CPtrList,CCriticalEntry*>, CObject>()},
@@ -746,6 +746,12 @@ void registerBaseclasses() {
 		{"CImmunitiesAIType::vtbl", {
 			{"CTypedPtrList<CPtrList,CAIObjectType*>::vtbl", offsetofbase<CImmunitiesAIType::vtbl, CTypedPtrList<CPtrList,CAIObjectType*>::vtbl>()},
 		}},
+		{"CImmunitiesWeapon", {
+			{"CTypedPtrList<CPtrList,CWeaponIdentification*>", offsetofbase<CImmunitiesWeapon, CTypedPtrList<CPtrList,CWeaponIdentification*>>()},
+		}},
+		{"CImmunitiesWeapon::vtbl", {
+			{"CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl", offsetofbase<CImmunitiesWeapon::vtbl, CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl>()},
+		}},
 		{"CPersistantEffectListRegenerated", {
 			{"CTypedPtrList<CPtrList,CPersistantEffect*>", offsetofbase<CPersistantEffectListRegenerated, CTypedPtrList<CPtrList,CPersistantEffect*>>()},
 		}},
@@ -823,12 +829,6 @@ void registerBaseclasses() {
 		}},
 		{"CImmunitiesSpellList::vtbl", {
 			{"CTypedPtrList<CPtrList,CImmunitySpell*>::vtbl", offsetofbase<CImmunitiesSpellList::vtbl, CTypedPtrList<CPtrList,CImmunitySpell*>::vtbl>()},
-		}},
-		{"CImmunitiesWeapon", {
-			{"CTypedPtrList<CPtrList,CWeaponIdentification*>", offsetofbase<CImmunitiesWeapon, CTypedPtrList<CPtrList,CWeaponIdentification*>>()},
-		}},
-		{"CImmunitiesWeapon::vtbl", {
-			{"CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl", offsetofbase<CImmunitiesWeapon::vtbl, CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl>()},
 		}},
 		{"CMemINI", {
 			{"CTypedPtrList<CPtrList,void*>", offsetofbase<CMemINI, CTypedPtrList<CPtrList,void*>>()},

@@ -130,6 +130,7 @@ struct CGameText;
 struct CGameTrigger;
 struct CImmunitiesAIType;
 struct CImmunitiesItemEquip;
+struct CImmunitiesWeapon;
 struct CImmunitySpell;
 struct CInfButtonArray;
 struct CInfCursor;
@@ -169,7 +170,9 @@ struct CScreenWorld;
 struct CSearchBitmap;
 struct CSearchRequest;
 struct CSelectiveBonus;
+struct CSelectiveBonusList;
 struct CSelectiveWeaponType;
+struct CSelectiveWeaponTypeList;
 struct CSequenceSound;
 struct CSound;
 struct CSoundImp;
@@ -2898,8 +2901,6 @@ struct CWeaponIdentification
 	unsigned int m_itemFlags;
 	unsigned int m_itemFlagMask;
 	unsigned int m_attributes;
-
-	CWeaponIdentification() = delete;
 };
 
 struct CVariableHash
@@ -2947,6 +2948,19 @@ struct CVIDPALETTE_COLOR
 	int rgbRed;
 	int rgbGreen;
 	int rgbBlue;
+};
+
+struct CUtil
+{
+	CUtil() = delete;
+
+	typedef int (*type_UtilRandInt)(int nRange, int nWeight);
+	static type_UtilRandInt p_UtilRandInt;
+
+	static int UtilRandInt(int nRange, int nWeight)
+	{
+		return p_UtilRandInt(nRange, nWeight);
+	}
 };
 
 struct CTlkFileOverride
@@ -5059,6 +5073,7 @@ namespace EEex
 	extern int UncapFPS_LuaGCSteps;
 	extern bool UncapFPS_RemoveMiddleMouseScrollMultiplier;
 
+	bool CanAttackWithLeftHand(CGameSprite* pSprite);
 	uiItem* CreateTemplateFromCopy(lua_State* L, const char* menuName, const char* templateName, uiItem* pItem);
 	void DeepCopy(lua_State* L);
 	void DrawSlicedRect(lua_State* L);
@@ -5073,10 +5088,12 @@ namespace EEex
 	void GetProjectileStartingPos(lua_State* L, CProjectile* pProjectile, CGameArea* pArea, CGameAIBase* pSourceObject, CGameObject* pTargetObject, int nTargetPosX, int nTargetPosY, int nHeight);
 	CGameSprite* GetSpriteFromUUID(uint64_t uuid);
 	void GetTextWidthHeight(lua_State* L, const char* sText, const char* sFont, int nPointSize, bool bUseFontZoom);
+	void GetWeaponHitChance(lua_State* L, CGameSprite* source, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand);
 	void HookIntegrityWatchdogIgnoreRegisters(uintptr_t address, size_t instance, EEex_HookIntegrityWatchdogRegister registers);
 	void HookIntegrityWatchdogIgnoreStackRange(uintptr_t address, size_t instance, int lowerBound, int upperBound);
 	uiItem* InjectTemplateInstance(lua_State* L, const char* menuName, const char* templateName, int instanceId, int x, int y);
 	bool IsDefaultAttackCursor();
+	bool IsImmuneToWeapon(CGameSprite* pSprite, CGameSprite* pTarget, byte nWeaponSlot, CItem* pWeapon, int nWeaponAbility);
 	bool IsMarshallingCopy();
 	bool IsPlayerScript(CAIScript* pScript);
 	long MatchObject(lua_State* L, CGameObject* pStartObject, const char* matchChunk, int nNearest, int range, EEex_MatchObjectFlags flags);
@@ -5296,6 +5313,12 @@ struct CString
 	typedef void (__cdecl *type_Format)(CString* pThis, const char* pszFormat, ...);
 	static type_Format p_Format;
 
+	typedef CString& (__thiscall *type_AdditionAssignmentOperator_Overload_CString)(CString* pThis, const CString* other);
+	static type_AdditionAssignmentOperator_Overload_CString p_AdditionAssignmentOperator_Overload_CString;
+
+	typedef CString& (__thiscall *type_AdditionAssignmentOperator_Overload_String)(CString* pThis, const char* other);
+	static type_AdditionAssignmentOperator_Overload_String p_AdditionAssignmentOperator_Overload_String;
+
 	void Construct(const char* lpsz)
 	{
 		p_Construct_Overload_String(this, lpsz);
@@ -5337,6 +5360,16 @@ struct CString
 	void Format(const char* pszFormat, VarArgs... varArgs)
 	{
 		p_Format(this, pszFormat, varArgs...);
+	}
+
+	CString& operator+=(const CString* other)
+	{
+		return p_AdditionAssignmentOperator_Overload_CString(this, other);
+	}
+
+	CString& operator+=(const char* other)
+	{
+		return p_AdditionAssignmentOperator_Overload_String(this, other);
 	}
 };
 
@@ -6455,6 +6488,24 @@ struct CImmunitiesAIType : CTypedPtrList<CPtrList,CAIObjectType*>
 	}
 };
 
+struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
+{
+	struct vtbl : CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl
+	{
+		vtbl() = delete;
+	};
+
+	CImmunitiesWeapon() = delete;
+
+	typedef int (__thiscall *type_OnList)(CImmunitiesWeapon* pThis, CWeaponIdentification* type);
+	static type_OnList p_OnList;
+
+	int OnList(CWeaponIdentification* type)
+	{
+		return p_OnList(this, type);
+	}
+};
+
 struct CPersistantEffectListRegenerated : CTypedPtrList<CPtrList,CPersistantEffect*>
 {
 	struct vtbl : CTypedPtrList<CPtrList,CPersistantEffect*>::vtbl
@@ -6895,16 +6946,6 @@ struct CImmunitiesSpellList : CTypedPtrList<CPtrList,CImmunitySpell*>
 	CImmunitiesSpellList() = delete;
 };
 
-struct CImmunitiesWeapon : CTypedPtrList<CPtrList,CWeaponIdentification*>
-{
-	struct vtbl : CTypedPtrList<CPtrList,CWeaponIdentification*>::vtbl
-	{
-		vtbl() = delete;
-	};
-
-	CImmunitiesWeapon() = delete;
-};
-
 struct CMemINI : CTypedPtrList<CPtrList,void*>
 {
 	struct vtbl : CTypedPtrList<CPtrList,void*>::vtbl
@@ -7021,6 +7062,14 @@ struct CSelectiveWeaponTypeList : CTypedPtrList<CPtrList,CSelectiveWeaponType*>
 	};
 
 	CSelectiveWeaponTypeList() = delete;
+
+	typedef void (__thiscall *type_OverrideWeaponType)(CSelectiveWeaponTypeList* pThis, const CAIObjectType* type, int slot, int itemType, CWeaponIdentification* weapon);
+	static type_OverrideWeaponType p_OverrideWeaponType;
+
+	void OverrideWeaponType(const CAIObjectType* type, int slot, int itemType, CWeaponIdentification* weapon)
+	{
+		p_OverrideWeaponType(this, type, slot, itemType, weapon);
+	}
 };
 
 struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
@@ -7031,6 +7080,14 @@ struct CSelectiveBonusList : CTypedPtrList<CPtrList,CSelectiveBonus*>
 	};
 
 	CSelectiveBonusList() = delete;
+
+	typedef int (__thiscall *type_GetBonus)(CSelectiveBonusList* pThis, const CAIObjectType* type);
+	static type_GetBonus p_GetBonus;
+
+	int GetBonus(const CAIObjectType* type)
+	{
+		return p_GetBonus(this, type);
+	}
 };
 
 struct CPtrArray : CObject
@@ -10477,6 +10534,9 @@ struct CResRef
 	typedef void (__thiscall *type_CopyToString)(CResRef* pThis, CString* str);
 	static type_CopyToString p_CopyToString;
 
+	typedef bool (__thiscall *type_EqualsString)(const CResRef* pThis, const char* pName);
+	static type_EqualsString p_EqualsString;
+
 	void get(lua_State* L)
 	{
 		char* localCopy = (char*)alloca(sizeof(m_resRef) + 1);
@@ -10541,6 +10601,11 @@ struct CResRef
 	void CopyToString(CString* str)
 	{
 		p_CopyToString(this, str);
+	}
+
+	bool operator==(const char* pName) const
+	{
+		return p_EqualsString(this, pName);
 	}
 };
 
@@ -14278,6 +14343,9 @@ struct CItem : CResHelper<CResItem,1005>
 	typedef void (__thiscall *type_Construct_Overload_Manual)(CItem* pThis, CResRef id, ushort useCount1, ushort useCount2, ushort useCount3, ushort wear, uint flags);
 	static type_Construct_Overload_Manual p_Construct_Overload_Manual;
 
+	typedef int (__thiscall *type_Demand)(CItem* pThis);
+	static type_Demand p_Demand;
+
 	typedef Item_ability_st* (__thiscall *type_GetAbility)(CItem* pThis, int abilityNum);
 	static type_GetAbility p_GetAbility;
 
@@ -14286,9 +14354,50 @@ struct CItem : CResHelper<CResItem,1005>
 		p_Construct_Overload_Manual(this, id, useCount1, useCount2, useCount3, wear, flags);
 	}
 
+	int Demand()
+	{
+		return p_Demand(this);
+	}
+
 	Item_ability_st* GetAbility(int abilityNum)
 	{
 		return p_GetAbility(this, abilityNum);
+	}
+
+	uint GetFlagsFile()
+	{
+		if (this->cResRef == "" || this->pRes == nullptr)
+		{
+			return 0;
+		}
+
+		this->pRes->Demand();
+		return this->pRes->pHeader->itemFlags;
+	}
+
+	ushort GetItemType()
+	{
+		if (this->cResRef == "" || this->pRes == nullptr)
+		{
+			return 0;
+		}
+
+		this->pRes->Demand();
+		return this->pRes->pHeader->itemType;
+	}
+
+	void LoadWeaponIdentification(CWeaponIdentification* weaponId)
+	{
+		if (this->pRes == nullptr)
+		{
+			return;
+		}
+
+		this->pRes->Demand();
+		weaponId->m_itemType = this->pRes->pHeader->itemType;
+		weaponId->m_itemFlags = this->pRes->pHeader->itemFlags;
+		weaponId->m_itemFlagMask = 0;
+		weaponId->m_attributes = this->pRes->pHeader->attributes;
 	}
 
 	virtual void virtual_Destruct()
@@ -15775,17 +15884,20 @@ struct CDerivedStats : CDerivedStatsTemplate
 	typedef long (__thiscall *type_GetAtOffset)(CDerivedStats* pThis, short offset);
 	static type_GetAtOffset p_GetAtOffset;
 
+	typedef byte (__thiscall *type_GetAverageLevel)(CDerivedStats* pThis, byte nClass);
+	static type_GetAverageLevel p_GetAverageLevel;
+
+	typedef int (__thiscall *type_GetCriticalValue)(CDerivedStats* pThis, int leftHand, int itemType, int attackType, int hitOrMiss);
+	static type_GetCriticalValue p_GetCriticalValue;
+
+	typedef byte (__thiscall *type_GetPriestLevelCast)(CDerivedStats* pThis, byte nClass);
+	static type_GetPriestLevelCast p_GetPriestLevelCast;
+
 	typedef int (__thiscall *type_GetSpellState)(CDerivedStats* pThis, uint bit);
 	static type_GetSpellState p_GetSpellState;
 
 	typedef byte (__thiscall *type_GetWizardLevelCast)(CDerivedStats* pThis, byte nClass);
 	static type_GetWizardLevelCast p_GetWizardLevelCast;
-
-	typedef byte (__thiscall *type_GetPriestLevelCast)(CDerivedStats* pThis, byte nClass);
-	static type_GetPriestLevelCast p_GetPriestLevelCast;
-
-	typedef byte (__thiscall *type_GetAverageLevel)(CDerivedStats* pThis, byte nClass);
-	static type_GetAverageLevel p_GetAverageLevel;
 
 	void Construct()
 	{
@@ -15802,6 +15914,21 @@ struct CDerivedStats : CDerivedStatsTemplate
 		return p_GetAtOffset(this, offset);
 	}
 
+	byte GetAverageLevel(byte nClass)
+	{
+		return p_GetAverageLevel(this, nClass);
+	}
+
+	int GetCriticalValue(int leftHand, int itemType, int attackType, int hitOrMiss)
+	{
+		return p_GetCriticalValue(this, leftHand, itemType, attackType, hitOrMiss);
+	}
+
+	byte GetPriestLevelCast(byte nClass)
+	{
+		return p_GetPriestLevelCast(this, nClass);
+	}
+
 	int GetSpellState(uint bit)
 	{
 		return p_GetSpellState(this, bit);
@@ -15810,16 +15937,6 @@ struct CDerivedStats : CDerivedStatsTemplate
 	byte GetWizardLevelCast(byte nClass)
 	{
 		return p_GetWizardLevelCast(this, nClass);
-	}
-
-	byte GetPriestLevelCast(byte nClass)
-	{
-		return p_GetPriestLevelCast(this, nClass);
-	}
-
-	byte GetAverageLevel(byte nClass)
-	{
-		return p_GetAverageLevel(this, nClass);
 	}
 
 	int Override_GetSpellState(uint bit);
@@ -18334,6 +18451,7 @@ struct CGameSprite : CGameAIBase
 		vtbl() = delete;
 	};
 
+	static Item_ability_st* p_DEFAULT_ATTACK;
 	CResRef m_resref;
 	unsigned __int16 m_type;
 	unsigned int m_expirationTime;
@@ -18690,6 +18808,9 @@ struct CGameSprite : CGameAIBase
 	typedef CGameEffectDamage* (__thiscall *type_Damage)(CGameSprite* pThis, CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing);
 	static type_Damage p_Damage;
 
+	typedef int (__thiscall *type_DisableOffhand)(CGameSprite* pThis, short itemType);
+	static type_DisableOffhand p_DisableOffhand;
+
 	typedef void (__thiscall *type_FeedBack)(CGameSprite* pThis, uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn);
 	static type_FeedBack p_FeedBack;
 
@@ -18738,6 +18859,9 @@ struct CGameSprite : CGameAIBase
 	typedef void (__thiscall *type_ReadySpell)(CGameSprite* pThis, CButtonData* button, bool firstCall);
 	static type_ReadySpell p_ReadySpell;
 
+	typedef int (__thiscall *type_ShouldAvertCriticalHit)(CGameSprite* pThis);
+	static type_ShouldAvertCriticalHit p_ShouldAvertCriticalHit;
+
 	typedef short (__thiscall *type_SpellPoint)(CGameSprite* pThis);
 	static type_SpellPoint p_SpellPoint;
 
@@ -18770,6 +18894,11 @@ struct CGameSprite : CGameAIBase
 	CGameEffectDamage* Damage(CItem* curWeaponIn, CItem* pLauncher, int curAttackNum, int criticalDamage, CAIObjectType* type, short facing, short myFacing, CGameSprite* target, int lastSwing)
 	{
 		return p_Damage(this, curWeaponIn, pLauncher, curAttackNum, criticalDamage, type, facing, myFacing, target, lastSwing);
+	}
+
+	int DisableOffhand(short itemType)
+	{
+		return p_DisableOffhand(this, itemType);
 	}
 
 	void FeedBack(uint feedBackId, int int1, int int2, int int3, int ref1, int int4, CString* stringIn)
@@ -18850,6 +18979,11 @@ struct CGameSprite : CGameAIBase
 	void ReadySpell(CButtonData* button, bool firstCall)
 	{
 		p_ReadySpell(this, button, firstCall);
+	}
+
+	int ShouldAvertCriticalHit()
+	{
+		return p_ShouldAvertCriticalHit(this);
 	}
 
 	short SpellPoint()
