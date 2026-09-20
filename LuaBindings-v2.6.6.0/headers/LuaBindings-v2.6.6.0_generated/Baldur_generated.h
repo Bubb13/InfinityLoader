@@ -9659,6 +9659,18 @@ extern type_dimmResolveFileName p_dimmResolveFileName;
 typedef void (__cdecl *type_dimmServiceFromMemory)(CRes* pRes, void* pData, int nSize, bool useTempOverride, bool makeCopy);
 extern type_dimmServiceFromMemory p_dimmServiceFromMemory;
 
+typedef float (__cdecl *type_DrawTransformFromScreenH)(float h);
+extern type_DrawTransformFromScreenH p_DrawTransformFromScreenH;
+
+typedef float (__cdecl *type_DrawTransformFromScreenW)(float w);
+extern type_DrawTransformFromScreenW p_DrawTransformFromScreenW;
+
+typedef float (__cdecl *type_DrawTransformToScreenH)(float h);
+extern type_DrawTransformToScreenH p_DrawTransformToScreenH;
+
+typedef float (__cdecl *type_DrawTransformToScreenW)(float w);
+extern type_DrawTransformToScreenW p_DrawTransformToScreenW;
+
 typedef uiMenu* (*type_findMenu)(const char* name, int panel, int state);
 extern type_findMenu p_findMenu;
 
@@ -9794,20 +9806,8 @@ extern type_DrawTexCoord p_DrawTexCoord;
 typedef bool (__cdecl *type_drawTop)(const SDL_Rect* window);
 extern type_drawTop p_drawTop;
 
-typedef float (__cdecl *type_DrawTransformFromScreenH)(float h);
-extern type_DrawTransformFromScreenH p_DrawTransformFromScreenH;
-
-typedef float (__cdecl *type_DrawTransformFromScreenW)(float w);
-extern type_DrawTransformFromScreenW p_DrawTransformFromScreenW;
-
 typedef void (__cdecl *type_DrawTransformToScreen)(SDL_Rect* w, SDL_Rect* s);
 extern type_DrawTransformToScreen p_DrawTransformToScreen;
-
-typedef float (__cdecl *type_DrawTransformToScreenH)(float h);
-extern type_DrawTransformToScreenH p_DrawTransformToScreenH;
-
-typedef float (__cdecl *type_DrawTransformToScreenW)(float w);
-extern type_DrawTransformToScreenW p_DrawTransformToScreenW;
 
 typedef void (*type_DrawVertex)(int x, int y);
 extern type_DrawVertex p_DrawVertex;
