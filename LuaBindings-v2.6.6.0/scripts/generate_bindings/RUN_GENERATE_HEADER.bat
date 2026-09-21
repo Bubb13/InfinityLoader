@@ -17,7 +17,7 @@ python %PYTHON_OPTIONS% %script_path%^
  -dllName=LuaBindings.dll^
  -fixupFile=%core_in%/fixup.py^
  -ignoreHeaderFile=%core_in%/ignore_header_types.txt^
- -inFiles=%core_in%/manual_types.txt,%core_in%/manual_reimplementations_export.txt,%core_in%/Baldur-v2.6.6.0.h^
+ -inFiles=%core_in%/manual_types.txt,%core_in%/manual_reimplementations_export.txt,%core_in%/engine_lua_wrappers.txt,%core_in%/Baldur-v2.6.6.0.h^
  -outFile=./out/Baldur_generated.h^
  -packingFile=%core_in%/packing.txt^
  -preludeFile=%core_in%/prelude_luabindings.txt^

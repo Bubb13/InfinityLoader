@@ -1293,6 +1293,12 @@ struct CAICondition
 	int TriggerHolds(CAITrigger* pTrigger, CTypedPtrList<CPtrList,CAITrigger*>* triggerList, CGameAIBase* caller);
 };
 
+struct CVidCell : CVidImage, CResHelper<CResCell,1000>
+{
+	$nobinding int GetCurrentCenterPoint(CPoint* ptReference);
+	$nobinding int GetCurrentFrameSize(CSize* frameSize);
+};
+
 struct CVidMode
 {
 	nobinding static byte NUM_FADE_FRAMES;
@@ -1543,6 +1549,10 @@ struct CRuleTables
 {
 	byte MapCharacterSpecializationToSchool(ushort nSpecialistMage);
 	int IsProtectedFromSpell(int nRow, CGameSprite* stats, CGameSprite* mine, int value);
+};
+
+$allow_default_construction(true) struct CSize : tagSIZE
+{
 };
 
 struct CSound : CObject, CResHelper<CResWave,4>

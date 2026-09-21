@@ -3624,7 +3624,6 @@ struct stbtt_fontinfo
 
 struct CSize : tagSIZE
 {
-	CSize() = delete;
 };
 
 struct texture_t
@@ -11646,6 +11645,22 @@ struct CVidCell : CVidImage, CResHelper<CResCell,1000>
 	unsigned __int8 m_bShadowOn;
 
 	CVidCell() = delete;
+
+	typedef int (__thiscall *type_GetCurrentCenterPoint)(CVidCell* pThis, CPoint* ptReference);
+	static type_GetCurrentCenterPoint p_GetCurrentCenterPoint;
+
+	typedef int (__thiscall *type_GetCurrentFrameSize)(CVidCell* pThis, CSize* frameSize);
+	static type_GetCurrentFrameSize p_GetCurrentFrameSize;
+
+	int GetCurrentCenterPoint(CPoint* ptReference)
+	{
+		return p_GetCurrentCenterPoint(this, ptReference);
+	}
+
+	int GetCurrentFrameSize(CSize* frameSize)
+	{
+		return p_GetCurrentFrameSize(this, frameSize);
+	}
 
 	virtual int virtual_FrameAdvance()
 	{

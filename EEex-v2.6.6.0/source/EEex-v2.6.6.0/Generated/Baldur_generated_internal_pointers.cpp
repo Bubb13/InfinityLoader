@@ -231,6 +231,8 @@ CVidMode::type_Flip CVidMode::p_Flip;
 byte* CVidMode::p_NUM_FADE_FRAMES;
 ushort* CVidMode::p_SCREENWIDTH;
 ushort* CVidMode::p_SCREENHEIGHT;
+CVidCell::type_GetCurrentCenterPoint CVidCell::p_GetCurrentCenterPoint;
+CVidCell::type_GetCurrentFrameSize CVidCell::p_GetCurrentFrameSize;
 CVidFont::type_GetStringHeight CVidFont::p_GetStringHeight;
 CVidFont::type_GetStringLength CVidFont::p_GetStringLength;
 CVidFont::type_RenderTextWrap CVidFont::p_RenderTextWrap;
@@ -593,6 +595,8 @@ void InitBindingsInternal() {
 	attemptFillPointer(TEXT("CVidMode::NUM_FADE_FRAMES"), CVidMode::p_NUM_FADE_FRAMES);
 	attemptFillPointer(TEXT("CVidMode::SCREENWIDTH"), CVidMode::p_SCREENWIDTH);
 	attemptFillPointer(TEXT("CVidMode::SCREENHEIGHT"), CVidMode::p_SCREENHEIGHT);
+	attemptFillPointer(TEXT("CVidCell::GetCurrentCenterPoint"), CVidCell::p_GetCurrentCenterPoint);
+	attemptFillPointer(TEXT("CVidCell::GetCurrentFrameSize"), CVidCell::p_GetCurrentFrameSize);
 	attemptFillPointer(TEXT("CVidFont::GetStringHeight"), CVidFont::p_GetStringHeight);
 	attemptFillPointer(TEXT("CVidFont::GetStringLength"), CVidFont::p_GetStringLength);
 	attemptFillPointer(TEXT("CVidFont::RenderTextWrap"), CVidFont::p_RenderTextWrap);

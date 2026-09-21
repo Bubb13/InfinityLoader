@@ -1,0 +1,21 @@
+
+struct CVidCell : CVidImage, CResHelper<CResCell,1000>
+{
+	$binding_name(GetCurrentCenterPoint) $pass_lua_state $custom_return_2 Lua_GetCurrentCenterPoint()
+	{
+		CPoint ptReference;
+		this->GetCurrentCenterPoint(&ptReference);
+
+		lua_pushinteger(L, ptReference.x);
+		lua_pushinteger(L, ptReference.y);
+	}
+
+	$binding_name(GetCurrentFrameSize) $pass_lua_state $custom_return_2 Lua_GetCurrentFrameSize()
+	{
+		CSize frameSize;
+		this->GetCurrentFrameSize(&frameSize);
+
+		lua_pushinteger(L, frameSize.cx);
+		lua_pushinteger(L, frameSize.cy);
+	}
+};
