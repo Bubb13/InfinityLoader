@@ -9730,6 +9730,9 @@ extern type_BGGetPrivateProfileInt p_BGGetPrivateProfileInt;
 typedef int (*type_Chitin_GetSectionCallback)(lua_State* L);
 extern type_Chitin_GetSectionCallback p_Chitin_GetSectionCallback;
 
+typedef int (__cdecl *type_DecodeUTF8Char)(char** str);
+extern type_DecodeUTF8Char p_DecodeUTF8Char;
+
 typedef uint (*type_DrawAlpha)(uint alpha);
 extern type_DrawAlpha p_DrawAlpha;
 
@@ -9817,6 +9820,21 @@ extern type_eventMenu p_eventMenu;
 typedef void (*type_fadeSounds)();
 extern type_fadeSounds p_fadeSounds;
 
+typedef void (__cdecl *type_fontAddTempGlyph)(font_t* font, int glyph, int pointSize, glyphmap_t* glyphMapping);
+extern type_fontAddTempGlyph p_fontAddTempGlyph;
+
+typedef int (__cdecl *type_fontGetGlyphIndex)(font_t* font, int glyph);
+extern type_fontGetGlyphIndex p_fontGetGlyphIndex;
+
+typedef glyphmap_t* (__cdecl *type_fontGetGlyphMap)(font_t* font, int pointSize);
+extern type_fontGetGlyphMap p_fontGetGlyphMap;
+
+typedef int (__cdecl *type_fontGetKernAdvance)(font_t* font, int glyphIndex1, int glyphIndex2);
+extern type_fontGetKernAdvance p_fontGetKernAdvance;
+
+typedef bool (__cdecl *type_fontIsCommandLetter)(char c);
+extern type_fontIsCommandLetter p_fontIsCommandLetter;
+
 typedef size_t (*type_fwrite)(const void* buffer, size_t size, size_t count, FILE* stream);
 extern type_fwrite p_fwrite;
 
@@ -9846,6 +9864,9 @@ extern type_SDL_ShowSimpleMessageBox p_SDL_ShowSimpleMessageBox;
 
 typedef void (*type_SearchThreadMain)();
 extern type_SearchThreadMain p_SearchThreadMain;
+
+typedef int (__cdecl *type_stbtt_FindGlyphIndex)(stbtt_fontinfo* info, int unicode_codepoint);
+extern type_stbtt_FindGlyphIndex p_stbtt_FindGlyphIndex;
 
 typedef void (*type_uiDrawSlicedRect)(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
 extern type_uiDrawSlicedRect p_uiDrawSlicedRect;
@@ -11454,6 +11475,12 @@ struct CVidFont : CResHelper<CResFont,1034>
 
 	CVidFont() = delete;
 
+	typedef void (__thiscall *type_Construct)(CVidFont* pThis);
+	static type_Construct p_Construct;
+
+	typedef void (__thiscall *type_Destruct)(CVidFont* pThis);
+	static type_Destruct p_Destruct;
+
 	typedef int (__thiscall *type_GetStringHeight)(CVidFont* pThis, const CString* text, int w);
 	static type_GetStringHeight p_GetStringHeight;
 
@@ -11462,6 +11489,19 @@ struct CVidFont : CResHelper<CResFont,1034>
 
 	typedef int (__thiscall *type_RenderTextWrap)(CVidFont* pThis, const char* text, int x, int y, int w, int h, CRect* rClip, int halign, int valign, bool shadow, bool backgroundRect);
 	static type_RenderTextWrap p_RenderTextWrap;
+
+	typedef void (__thiscall *type_SetResRef)(CVidFont* pThis, const CResRef* cNewResRef, int bSetAutoRequest);
+	static type_SetResRef p_SetResRef;
+
+	void Construct()
+	{
+		p_Construct(this);
+	}
+
+	void Destruct()
+	{
+		p_Destruct(this);
+	}
 
 	int GetStringHeight(const CString* text, int w)
 	{
@@ -11476,6 +11516,11 @@ struct CVidFont : CResHelper<CResFont,1034>
 	int RenderTextWrap(const char* text, int x, int y, int w, int h, CRect* rClip, int halign, int valign, bool shadow, bool backgroundRect)
 	{
 		return p_RenderTextWrap(this, text, x, y, w, h, rClip, halign, valign, shadow, backgroundRect);
+	}
+
+	void SetResRef(const CResRef* cNewResRef, int bSetAutoRequest)
+	{
+		p_SetResRef(this, cNewResRef, bSetAutoRequest);
 	}
 };
 

@@ -75,12 +75,14 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Override_chWriteInifile"), EEex::Override_chWriteInifile);
 	exportPattern(TEXT("EEex::Override_crashHandler"), EEex::Override_crashHandler);
 	exportPattern(TEXT("EEex::Override_DrawReadPixels"), EEex::Override_DrawReadPixels);
+	exportPattern(TEXT("EEex::Override_fontGetGlyphIndex"), EEex::Override_fontGetGlyphIndex);
 	exportPattern(TEXT("EEex::Override_fontWrap"), EEex::Override_fontWrap);
 	exportPattern(TEXT("EEex::Override_Infinity_TransitionMenu"), EEex::Override_Infinity_TransitionMenu);
 	exportPattern(TEXT("EEex::Override_Infinity_WriteINILine"), EEex::Override_Infinity_WriteINILine);
 	exportPattern(TEXT("EEex::Override_uiDoFile"), EEex::Override_uiDoFile);
 	exportPattern(TEXT("EEex::Override_uiDrawMenuStack"), EEex::Override_uiDrawMenuStack);
 	exportPattern(TEXT("EEex::Override_uiEventMenuStack"), EEex::Override_uiEventMenuStack);
+	exportPattern(TEXT("EEex::Override_wordwrap"), EEex::Override_wordwrap);
 
 	/////////////////////////////
 	//          Hooks          //

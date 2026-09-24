@@ -1844,8 +1844,12 @@ bool EEex::IsImmuneToWeapon(CGameSprite* pSprite, CGameSprite* pTarget, byte nWe
 
 void EEex::GetTextWidthHeight(lua_State* L, const char* sText, const char* sFont, int nPointSize, bool bUseFontZoom)
 {
+	EngineVal<CVidFont> vidFont{};
+
 	const CResRef fontResref { sFont };
-	CResFont *const pResFont = reinterpret_cast<CResFont*>(p_dimmGetResObject(&fontResref, 0x40A, false));
+	vidFont->SetResRef(&fontResref, true); // This redirects certain fonts based on the current language
+
+	CResFont *const pResFont = vidFont->pRes;
 
 	if (pResFont == nullptr)
 	{

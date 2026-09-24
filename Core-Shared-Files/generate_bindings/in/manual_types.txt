@@ -1716,9 +1716,12 @@ struct CVidBitmap : CVidImage, CResHelper<CResBitmap,1>
 
 struct CVidFont : CResHelper<CResFont,1034>
 {
+	$nobinding $constructor_fake Construct();
+	$nobinding void Destruct();
 	$nobinding int GetStringHeight(const CString* text, int w);
 	$nobinding int GetStringLength(const CString* str, int w);
 	$nobinding int RenderTextWrap(primitive const char* text, int x, int y, int w, int h, CRect* rClip, int halign, int valign, bool shadow, bool backgroundRect);
+	$nobinding void SetResRef(const CResRef* cNewResRef, int bSetAutoRequest);
 };
 
 $allow_default_construction(true) struct adjustmentData_t
@@ -1770,6 +1773,7 @@ void uiLoadMenu(CResText* menuRes);
 $nobinding uint applycolor(uint c, uint t);
 $nobinding int __cdecl BGGetPrivateProfileInt(primitive const char* section, primitive const char* key, int default_value);
 $nobinding int Chitin_GetSectionCallback(lua_State* L);
+$nobinding int __cdecl DecodeUTF8Char(char** str);
 $nobinding uint DrawAlpha(uint alpha);
 $nobinding void DrawBegin(DrawMode mode);
 $nobinding void DrawBeginScaled(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
@@ -1799,6 +1803,11 @@ $nobinding void __cdecl DrawTransformToScreen(SDL_Rect* w, SDL_Rect* s);
 $nobinding void DrawVertex(int x, int y);
 $nobinding bool __cdecl eventMenu(uiMenu* pMenu, SDL_Event* pEvent, SDL_Rect* pWindow);
 $nobinding void fadeSounds();
+$nobinding void __cdecl fontAddTempGlyph(font_t* font, int glyph, int pointSize, glyphmap_t* glyphMapping);
+$nobinding int __cdecl fontGetGlyphIndex(font_t* font, int glyph);
+$nobinding glyphmap_t* __cdecl fontGetGlyphMap(font_t* font, int pointSize);
+$nobinding int __cdecl fontGetKernAdvance(font_t* font, int glyphIndex1, int glyphIndex2);
+$nobinding bool __cdecl fontIsCommandLetter(char c);
 $nobinding size_t fwrite(const void* buffer, size_t size, size_t count, FILE* stream);
 $nobinding int l_log_print(lua_State* L);
 $nobinding _iobuf* __cdecl OpenIniFile(const char* path, const char* mode);
@@ -1809,6 +1818,7 @@ $nobinding uint SDL_GetTicks();
 $nobinding void __cdecl SDL_Log(const char* fmt, ...);
 $nobinding int __cdecl SDL_ShowSimpleMessageBox(uint flags, const char* title, const char* message, SDL_Window* window);
 $nobinding void SearchThreadMain();
+$nobinding int __cdecl stbtt_FindGlyphIndex(stbtt_fontinfo* info, int unicode_codepoint);
 $nobinding void uiDrawSlicedRect(int rectNum, const SDL_Rect* bounds, int alpha, const SDL_Rect* rClip);
 $nobinding int uiExecLuaInt(int id);
 $nobinding void __cdecl uiHandleTooltip();
