@@ -9,6 +9,9 @@
 
 #include "Baldur_generated.h"
 #include "EEex.h"
+#ifdef EEEX_OP120
+#include "op120.hpp"
+#endif
 #include "engine_function_names.hpp"
 #include "infinity_loader_util_api.h"
 #include "lua_util.hpp"
@@ -129,10 +132,33 @@ std::unordered_map<void*, ExScriptData> exScriptDataMap{};
 ////////////
 
 struct ExEffectInfo {
-	bool bypassOp120;
+	bool bypassOp120 = false;
+#ifdef EEEX_OP120
+	std::shared_ptr<Op120Attack> op120Attack;
+#endif
 };
 
 std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
+
+#ifdef EEEX_OP120
+std::shared_ptr<Op120Attack> EEex::Op120_GetEffectAttack(CGameEffect* effect) {
+	// The overwhelmingly common untagged path must not allocate metadata.
+	if (auto found = exEffectInfoMap.find(effect); found != exEffectInfoMap.end()) {
+		return found->second.op120Attack;
+	}
+	return nullptr;
+}
+
+void EEex::Op120_SetEffectAttack(CGameEffect* effect, std::shared_ptr<Op120Attack> attack) {
+	if (attack) {
+		exEffectInfoMap[effect].op120Attack = std::move(attack);
+	}
+	else if (auto found = exEffectInfoMap.find(effect); found != exEffectInfoMap.end()) {
+		// Do not erase the independent opcode 248/249 bypass flag.
+		found->second.op120Attack.reset();
+	}
+}
+#endif
 
 ////////////////
 // Projectile //
@@ -5771,6 +5797,13 @@ void EEex::Projectile_Hook_OnAfterDecode(CProjectile* pProjectile, CGameAIBase* 
 void EEex::Projectile_Hook_OnBeforeAddEffect(CProjectile* pProjectile, CGameAIBase* pDecoder, CGameEffect* pEffect, uintptr_t pRetPtr) {
 
 	STUTTER_LOG_START(void, "EEex::Projectile_Hook_OnBeforeAddEffect")
+
+#ifdef EEEX_OP120
+	// Must precede the mutator early-out: opcode 120 also applies when no
+	// opcode 408 mutators are installed, and copies made by a mutator must
+	// inherit the pending recipient check.
+	Op120_OnProjectileAddEffect(pProjectile, pEffect);
+#endif
 
 	GUARD_GET_PROJECTILE_MUTATOR_EFFECTS(NORET)
 
