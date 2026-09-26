@@ -118,6 +118,24 @@ struct ExStatInfo {
 
 std::unordered_map<int, ExStatInfo> exStatInfoMap{};
 
+constexpr int CONCEALMENT_STAT_ID = 211;
+constexpr int CONCEALMENT_MAX_TRANSLUCENCY = 191;
+constexpr const char* CONCEALMENT_STAT_NAME = "B3_CONCEALMENT";
+constexpr const char* CONCEALMENT_ENGINEST_ROW = "STRREF_TARGET_CONCEALED";
+
+constexpr short scaleConcealmentToTranslucency(int concealment) {
+	return static_cast<short>((concealment * CONCEALMENT_MAX_TRANSLUCENCY + 50) / 100);
+}
+
+static_assert(scaleConcealmentToTranslucency(0) == 0);
+static_assert(scaleConcealmentToTranslucency(50) == 96);
+static_assert(scaleConcealmentToTranslucency(100) == CONCEALMENT_MAX_TRANSLUCENCY);
+
+int concealmentStatId = -1;
+int concealmentFeedbackStrRef = -1;
+bool concealmentMissingMetadataLogged = false;
+bool concealmentMissingRuntimeStatLogged = false;
+
 struct ExScriptData {
 	bool bPlayerScript;
 };
@@ -148,6 +166,9 @@ struct ExSpriteData {
 
 	EngineVal<CVidBitmap> combatRoundsOverride[5]{};
 	Array<int, 3> oldDisabledSpellTypes;
+	CGameAnimationType* concealmentRenderAnimation = nullptr;
+	int concealmentRenderDepth = 0;
+	bool concealmentRenderUseSpriteShader = false;
 	bool deferredAfterListsResolvedPending = false;
 	int oldDisableSpells = 0;
 	uint64_t uuid = 0;
@@ -4440,21 +4461,13 @@ void EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove(CGameEffect* pEffect, CGame
 	STUTTER_LOG_END
 }
 
-//-----------//
-// New op401 //
-//-----------//
-
-int EEex::Opcode_Hook_SetExtendedStat_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
-
-	STUTTER_LOG_START(int, "EEex::Opcode_Hook_SetExtendedStat_ApplyEffect")
-
+int applyExtendedStatModifier(CGameEffect* pEffect, CGameSprite* pSprite, int exStatId, const char* opcodeName) {
 	int param1 = pEffect->m_effectAmount;
 	int modType = pEffect->m_dWFlags;
-	int exStatId = pEffect->m_special;
 
 	ExStatInfo* exStatInfo;
 	if (auto exStatInfoPair = exStatInfoMap.find(exStatId); exStatInfoPair == exStatInfoMap.end()) {
-		FPrint("[!][EEex.dll] op401 (SetExtendedStat) - Invalid special (extended stat id) value: %d\n", exStatId);
+		FPrint("[!][EEex.dll] %s - Invalid extended stat id: %d\n", opcodeName, exStatId);
 		return 1;
 	}
 	else {
@@ -4475,12 +4488,23 @@ int EEex::Opcode_Hook_SetExtendedStat_ApplyEffect(CGameEffect* pEffect, CGameSpr
 			newVal = clampedPercent(exStatValues[exStatId], param1);
 			break;
 		default:
-			FPrint("[!][EEex.dll] op401 (SetExtendedStat) - Invalid param2 (modification type) value: %d\n", modType);
+			FPrint("[!][EEex.dll] %s - Invalid param2 (modification type) value: %d\n", opcodeName, modType);
 			return 1;
 	}
 
 	exStatValues[exStatId] = clamp(newVal, exStatInfo->min, exStatInfo->max);
 	return 1;
+}
+
+//-----------//
+// New op401 //
+//-----------//
+
+int EEex::Opcode_Hook_SetExtendedStat_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_SetExtendedStat_ApplyEffect")
+
+	return applyExtendedStatModifier(pEffect, pSprite, pEffect->m_special, "op401 (SetExtendedStat)");
 
 	STUTTER_LOG_END
 }
@@ -4537,9 +4561,9 @@ void EEex::Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSpr
 	STUTTER_LOG_END
 }
 
-//-----------------//
-// START New op409 //
-//-----------------//
+//-----------//
+// New op409 //
+//-----------//
 
 int EEex::Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
 
@@ -4566,8 +4590,154 @@ void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGame
 	STUTTER_LOG_END
 }
 
+//-----------------//
+// START New op419 //
+//-----------------//
+
+int EEex::Opcode_Hook_Concealment_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_Concealment_ApplyEffect")
+
+	if (concealmentStatId == -1) {
+		return 1;
+	}
+	return applyExtendedStatModifier(pEffect, pSprite, concealmentStatId, "op419 (Concealment)");
+
+	STUTTER_LOG_END
+}
+
+static void applyConcealmentTranslucency(CDerivedStats& stats) {
+
+	if (concealmentStatId == -1) {
+		return;
+	}
+
+	auto& exStatValues = exStatDataMap[&stats].exStatValues;
+	const auto concealmentPair = exStatValues.find(concealmentStatId);
+	if (concealmentPair == exStatValues.end()) {
+		return;
+	}
+
+	// Reload initializes this field from the CRE base value on every derived-stat
+	// pass. Applying concealment last keeps stronger native translucency intact.
+	const short concealmentTranslucency = scaleConcealmentToTranslucency(
+		clamp(concealmentPair->second, 0, 100)
+	);
+	if (concealmentTranslucency > stats.m_nTranslucent) {
+		stats.m_nTranslucent = concealmentTranslucency;
+	}
+}
+
+static bool shouldUseLegacyConcealmentRenderer(CGameSprite* pSprite) {
+
+	if (concealmentStatId == -1) {
+		return false;
+	}
+
+	CDerivedStats* const pStats = pSprite->GetActiveStats();
+	const auto statsPair = exStatDataMap.find(pStats);
+	if (statsPair == exStatDataMap.end()) {
+		return false;
+	}
+
+	const auto& exStatValues = statsPair->second.exStatValues;
+	const auto concealmentPair = exStatValues.find(concealmentStatId);
+	if (concealmentPair == exStatValues.end()) {
+		return false;
+	}
+
+	return clamp(concealmentPair->second, 0, 100) > 0;
+}
+
+void EEex::Sprite_Hook_BeginConcealmentRender(CGameSprite* pSprite) {
+
+	auto exDataPair = exSpriteDataMap.find(pSprite);
+	if (exDataPair == exSpriteDataMap.end()) {
+		return;
+	}
+
+	ExSpriteData& exData = exDataPair->second;
+	if (exData.concealmentRenderDepth > 0) {
+		++exData.concealmentRenderDepth;
+		return;
+	}
+
+	if (!shouldUseLegacyConcealmentRenderer(pSprite)) {
+		return;
+	}
+
+	CGameAnimationType* const pAnimation = pSprite->m_animation.m_animation;
+	if (pAnimation == nullptr || !pAnimation->m_bUseSpriteShader) {
+		return;
+	}
+
+	// The sprite shader ignores low-range translucency when outlines are enabled.
+	// Select the legacy alpha path only for this sprite's render interval.
+	exData.concealmentRenderAnimation = pAnimation;
+	exData.concealmentRenderUseSpriteShader = pAnimation->m_bUseSpriteShader;
+	exData.concealmentRenderDepth = 1;
+	pAnimation->m_bUseSpriteShader = false;
+}
+
+void EEex::Sprite_Hook_EndConcealmentRender(CGameSprite* pSprite) {
+
+	auto exDataPair = exSpriteDataMap.find(pSprite);
+	if (exDataPair == exSpriteDataMap.end()) {
+		return;
+	}
+
+	ExSpriteData& exData = exDataPair->second;
+	if (exData.concealmentRenderDepth <= 0 || --exData.concealmentRenderDepth > 0) {
+		return;
+	}
+
+	if (exData.concealmentRenderAnimation != nullptr) {
+		exData.concealmentRenderAnimation->m_bUseSpriteShader = exData.concealmentRenderUseSpriteShader;
+	}
+	exData.concealmentRenderAnimation = nullptr;
+	exData.concealmentRenderUseSpriteShader = false;
+}
+
+bool EEex::Sprite_Hook_ResolveConcealment(CGameSprite* pAttacker, CGameSprite* pTarget) {
+
+	STUTTER_LOG_START(bool, "EEex::Sprite_Hook_ResolveConcealment")
+
+	(void)pAttacker;
+	if (concealmentStatId == -1) {
+		if (!concealmentMissingMetadataLogged) {
+			FPrint("[!][EEex.dll] op419 (Concealment) - B3_CONCEALMENT metadata is missing; allowing hit\n");
+			concealmentMissingMetadataLogged = true;
+		}
+		return true;
+	}
+
+	auto& exStatValues = exStatDataMap[pTarget->GetActiveStats()].exStatValues;
+	const auto concealmentPair = exStatValues.find(concealmentStatId);
+	if (concealmentPair == exStatValues.end()) {
+		if (!concealmentMissingRuntimeStatLogged) {
+			FPrint("[!][EEex.dll] op419 (Concealment) - Target is missing the B3_CONCEALMENT derived stat; allowing hit\n");
+			concealmentMissingRuntimeStatLogged = true;
+		}
+		return true;
+	}
+
+	const int concealment = clamp(concealmentPair->second, 0, 100);
+	const int roll = p_rand() % 100 + 1;
+	if (roll > concealment) {
+		return true;
+	}
+
+	CInfGame& game = *(*p_g_pBaldurChitin)->m_pObjectGame;
+	if ((game.m_options.m_nEffectTextLevel & 1) != 0 && concealmentFeedbackStrRef != -1) {
+		displaySpriteMessage(pTarget, std::format("{}{}", fetchStrRef(concealmentFeedbackStrRef)->m_pchData, concealment).c_str());
+	}
+	return false;
+
+	STUTTER_LOG_END
+}
+
 //---------------//
-// END New op409 //
+// END New op419 //
 //---------------//
 
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
@@ -4666,6 +4836,8 @@ void EEex::Opcode_Hook_AfterListsResolved(CGameSprite* pSprite) {
 	ExSpriteData& exData = exSpriteDataMap[pSprite];
 	CDerivedStats& stats = *pSprite->GetActiveStats();
 	lua_State *const L = luaState();
+
+	applyConcealmentTranslucency(stats);
 
 	if (EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled) {
 		// The engine can resolve the same sprite's effect lists many times in a
@@ -6225,6 +6397,10 @@ int getExtendedStatField(C2DArray* pXStats2DA, const char* name, int id, const c
 }
 
 void initStats() {
+	concealmentStatId = -1;
+	concealmentFeedbackStrRef = -1;
+	concealmentMissingMetadataLogged = false;
+	concealmentMissingRuntimeStatLogged = false;
 
 	EngineVal<CAIIdList> pStatsIDS{};
 	pStatsIDS->LoadList("STATS", false);
@@ -6262,6 +6438,38 @@ void initStats() {
 		}
 
 		exStatInfoMap.try_emplace(id, min, max, def);
+
+		if (strcmp(name, CONCEALMENT_STAT_NAME) == 0) {
+			if (id == CONCEALMENT_STAT_ID) {
+				concealmentStatId = id;
+			}
+			else {
+				FPrint("[!][EEex.dll] %s must use stat id %d, found %d; concealment disabled\n",
+					CONCEALMENT_STAT_NAME, CONCEALMENT_STAT_ID, id);
+			}
+		}
+	}
+
+	if (concealmentStatId != -1) {
+		EngineVal<C2DArray> pEngineStrings2DA{};
+		{
+			const CResRef resref{"ENGINEST"};
+			pEngineStrings2DA->Load(&resref);
+		}
+
+		const int rowIndex = pEngineStrings2DA->FindRowLabel(CONCEALMENT_ENGINEST_ROW);
+		const int columnIndex = pEngineStrings2DA->FindColumnLabel("StrRef");
+		if (rowIndex == -1 || columnIndex == -1) {
+			FPrint("[!][EEex.dll] ENGINEST.2DA - Missing %s row or StrRef column; concealment feedback disabled\n",
+				CONCEALMENT_ENGINEST_ROW);
+		}
+		else if (!parseInt(pEngineStrings2DA->GetAt(columnIndex, rowIndex)->m_pchData, concealmentFeedbackStrRef)
+			|| concealmentFeedbackStrRef < 0)
+		{
+			FPrint("[!][EEex.dll] ENGINEST.2DA - Invalid StrRef for %s; concealment feedback disabled\n",
+				CONCEALMENT_ENGINEST_ROW);
+			concealmentFeedbackStrRef = -1;
+		}
 	}
 }
 
