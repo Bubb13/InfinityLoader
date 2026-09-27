@@ -1245,8 +1245,8 @@ static void adjustFakeAttackRoll(
 	// Out
 	short* nAttackRollModOut, short *nTHAC0VsACDiffOut, CString* sFeedbackString)
 {
-	CBaldurChitin* const pChitin = *p_g_pBaldurChitin;
-	CInfGame* const pGame = pChitin->m_pObjectGame;
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+	CInfGame *const pGame = pChitin->m_pObjectGame;
 
 	EngineVal<CString> sFormatString{};
 
@@ -1258,8 +1258,8 @@ static void adjustFakeAttackRoll(
 	////////////////////////
 
 	curWeaponIn->Demand();
-	const Item_ability_st* const pWeaponAbility = curWeaponIn->GetAbility(curAttackNum);
-	const Item_ability_st* const pEffectiveWeaponAbility = pWeaponAbility != nullptr
+	const Item_ability_st *const pWeaponAbility = curWeaponIn->GetAbility(curAttackNum);
+	const Item_ability_st *const pEffectiveWeaponAbility = pWeaponAbility != nullptr
 		? pWeaponAbility
 		: CGameSprite::p_DEFAULT_ATTACK;
 
@@ -1578,8 +1578,8 @@ static byte fakeAttackRoll(
 	// Out
 	int* criticalDamage, CString* sFeedbackString)
 {
-	CBaldurChitin* const pChitin = *p_g_pBaldurChitin;
-	CInfGame* const pGame = pChitin->m_pObjectGame;
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+	CInfGame *const pGame = pChitin->m_pObjectGame;
 
 	EngineVal<CString> sFormatString{};
 
@@ -1694,8 +1694,8 @@ static int getAttackChance(
 	// Out
 	CString* sFeedbackString)
 {
-	CBaldurChitin* const pChitin = *p_g_pBaldurChitin;
-	CInfGame* const pGame = pChitin->m_pObjectGame;
+	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
+	CInfGame *const pGame = pChitin->m_pObjectGame;
 
 	EngineVal<CString> sFormatString{};
 
@@ -2590,11 +2590,11 @@ uiItem* EEex::InjectTemplateInstance(lua_State* L, const char* menuName, const c
 }
 
 void EEex::GetINIString(
-	lua_State* const L,
-	const char* const iniPath,
-	const char* const section,
-	const char* const key,
-	const char* const def
+	lua_State *const L,
+	const char *const iniPath,
+	const char *const section,
+	const char *const key,
+	const char *const def
 )
 {
 	String result{};
@@ -2618,10 +2618,10 @@ void EEex::GetINIString(
 }
 
 void EEex::SetINIString(
-	const char* const iniPath,
-	const char* const section,
-	const char* const key,
-	const char* const value
+	const char *const iniPath,
+	const char *const section,
+	const char *const key,
+	const char *const value
 )
 {
 	const DWORD lastError = SetINIStr(
