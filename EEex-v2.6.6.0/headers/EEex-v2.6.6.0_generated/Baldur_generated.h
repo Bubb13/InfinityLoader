@@ -4933,6 +4933,7 @@ namespace EEex
 	void DrawSlicedRect(lua_State* L);
 	void DrawSlicedRectNum(lua_State* L);
 	void DestroyAllTemplates(lua_State* L, const char* menuName);
+	void FakeAttackRoll(lua_State* L, CGameSprite* source, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand);
 	void ForceScrollbarRenderForItemName(lua_State* L);
 	const char* FormatPointerAsEngine(uintptr_t ptr);
 	int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);

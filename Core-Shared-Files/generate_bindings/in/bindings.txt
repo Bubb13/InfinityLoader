@@ -144,6 +144,7 @@ namespace EEex
 	$external_implementation $pass_lua_state void DrawSlicedRect();
 	$external_implementation $pass_lua_state void DrawSlicedRectNum();
 	$external_implementation $pass_lua_state void DestroyAllTemplates(primitive const char* menuName);
+	$external_implementation $custom_return_3 FakeAttackRoll(CGameSprite* source, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand);
 	$external_implementation $pass_lua_state void ForceScrollbarRenderForItemName();
 	$external_implementation primitive const char* FormatPointerAsEngine(uintptr_t ptr);
 	$external_implementation int GetExtendedStatValue(CGameSprite* pSprite, int exStatID);

@@ -1572,11 +1572,11 @@ static void adjustFakeAttackRoll(
 	*nAttackRollModOut = nCurModifiedAttackRoll.shortVal;
 }
 
-static byte fakeAttackRoll(
+static bool fakeAttackRoll(
 	// In
 	CGameSprite* pThis, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand,
 	// Out
-	int* criticalDamage, CString* sFeedbackString)
+	int* criticalTypeOut, CString* sFeedbackString)
 {
 	CBaldurChitin *const pChitin = *p_g_pBaldurChitin;
 	CInfGame *const pGame = pChitin->m_pObjectGame;
@@ -1647,6 +1647,7 @@ static byte fakeAttackRoll(
 	////////////////////////////////
 
 	bool bHit = bAutoHit || nAdjustedRoll >= nTHAC0VsACDiff;
+	int nCriticalType = 0;
 
 	if (!bAutoHit)
 	{
@@ -1661,13 +1662,9 @@ static byte fakeAttackRoll(
 
 			bHit = true;
 
-			if (target->ShouldAvertCriticalHit())
+			if (!target->ShouldAvertCriticalHit())
 			{
-				*criticalDamage = 0;
-			}
-			else
-			{
-				*criticalDamage = 1;
+				nCriticalType = 1;
 			}
 		}
 		else
@@ -1681,10 +1678,12 @@ static byte fakeAttackRoll(
 				///////////////
 
 				bHit = false;
+				nCriticalType = -1;
 			}
 		}
 	}
 
+	*criticalTypeOut = nCriticalType;
 	return bHit;
 }
 
@@ -1733,31 +1732,43 @@ static int getAttackChance(
 		*sFeedbackString += "+Auto-Hit:Time Stop ";
 	}
 
-	//////////
-	// Luck //
-	//////////
-
-	short nAdjustedRoll = std::clamp(static_cast<short>(pThis->GetActiveStats()->m_nLuck), static_cast<short>(1), static_cast<short>(20));
-
-	sFormatString->Format("+Luck:%d", nAdjustedRoll);
-	*sFeedbackString += sFormatString;
-
 	/////////////////
 	// Adjust roll //
 	/////////////////
 
+	short nRollModifiers = 0;
 	short nTHAC0VsACDiff = pThis->GetActiveStats()->m_nTHAC0 - target->GetActiveStats()->m_nArmorClass;
-	adjustFakeAttackRoll(pThis, target, curWeaponIn, curAttackNum, leftHand, &nAdjustedRoll, &nTHAC0VsACDiff, sFeedbackString);
+
+	adjustFakeAttackRoll(pThis, target, curWeaponIn, curAttackNum, leftHand, &nRollModifiers, &nTHAC0VsACDiff, sFeedbackString);
+
+	//////////////////////////////////////////////////
+	// Calculate base probability without criticals //
+	//////////////////////////////////////////////////
+
+	const int nNeededRoll = bAutoHit ? 1 : nTHAC0VsACDiff - nRollModifiers;
+
+	int nHitProbability = 0;
+	int nDiceLuckContribution = 0;
+
+	if (nNeededRoll <= 1) // [inf, 1]
+	{
+		nHitProbability = 100;
+	}
+	else if (nNeededRoll <= 20) // [2, 20]
+	{
+		const int nDiceProbWithoutLuck = 21 - nNeededRoll; // [1, 19]
+		const int nDiceProbWithLuck = std::clamp(nDiceProbWithoutLuck + pThis->GetActiveStats()->m_nLuck, 0, 20);
+
+		nHitProbability = nDiceProbWithLuck * 5;
+		nDiceLuckContribution = nDiceProbWithLuck - nDiceProbWithoutLuck;
+	}
+
+	sFormatString->Format(" +Luck:%d", nDiceLuckContribution);
+	*sFeedbackString += sFormatString;
 
 	////////////////////////////////
 	// Check critical hit or miss //
 	////////////////////////////////
-
-	const int nNeededRoll = bAutoHit ? 1 : nTHAC0VsACDiff - nAdjustedRoll;
-
-	int nHitProbability = nNeededRoll <= 1
-		? 100
-		: (nNeededRoll > 20 ? 0 : (21 - nNeededRoll) * 5);
 
 	if (!bAutoHit)
 	{
@@ -1811,9 +1822,20 @@ bool EEex::CanAttackWithLeftHand(CGameSprite* pSprite)
 	return true;
 }
 
+void EEex::FakeAttackRoll(lua_State* L, CGameSprite* source, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand)
+{
+	int nCriticalType;
+	EngineVal<CString> sFeedbackString {};
+
+	const bool bHit = fakeAttackRoll(source, target, curWeaponIn, curAttackNum, leftHand, &nCriticalType, &*sFeedbackString);
+
+	lua_pushboolean(L, bHit);
+	lua_pushinteger(L, nCriticalType);
+	lua_pushstring(L, sFeedbackString->m_pchData);
+}
+
 void EEex::GetWeaponHitChance(lua_State* L, CGameSprite* source, CGameSprite* target, CItem* curWeaponIn, int curAttackNum, int leftHand)
 {
-	int criticalDamage = 0;
 	EngineVal<CString> sFeedbackString {};
 
 	const int fHitProb = getAttackChance(source, target, curWeaponIn, curAttackNum, leftHand, &*sFeedbackString);

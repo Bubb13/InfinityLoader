@@ -293,6 +293,12 @@ static int tolua_function_EEex_DestroyAllTemplates(lua_State* L)
 	return 0;
 }
 
+static int tolua_function_EEex_FakeAttackRoll(lua_State* L)
+{
+	EEex::FakeAttackRoll(L, (CGameSprite*)tolua_tousertype_dynamic(L, 1, 0, "CGameSprite"), (CGameSprite*)tolua_tousertype_dynamic(L, 2, 0, "CGameSprite"), (CItem*)tolua_tousertype_dynamic(L, 3, 0, "CItem"), tolua_function_tointeger<int>(L, 4, "FakeAttackRoll"), tolua_function_tointeger<int>(L, 5, "FakeAttackRoll"));
+	return 3;
+}
+
 static int tolua_function_EEex_ForceScrollbarRenderForItemName(lua_State* L)
 {
 	EEex::ForceScrollbarRenderForItemName(L);
@@ -1081,6 +1087,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "DrawSlicedRect", &tolua_function_EEex_DrawSlicedRect);
 		tolua_function(L, "DrawSlicedRectNum", &tolua_function_EEex_DrawSlicedRectNum);
 		tolua_function(L, "DestroyAllTemplates", &tolua_function_EEex_DestroyAllTemplates);
+		tolua_function(L, "FakeAttackRoll", &tolua_function_EEex_FakeAttackRoll);
 		tolua_function(L, "ForceScrollbarRenderForItemName", &tolua_function_EEex_ForceScrollbarRenderForItemName);
 		tolua_function(L, "FormatPointerAsEngine", &tolua_function_EEex_FormatPointerAsEngine);
 		tolua_function(L, "GetExtendedStatValue", &tolua_function_EEex_GetExtendedStatValue);
