@@ -173,6 +173,7 @@ namespace EEex {
 	void Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand);
 	void Fix_Hook_OnBeforeUIKillCapture();
 	bool Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible);
+	int Fix_Hook_ReadItemAnimSequence(const char* sCell, const char* sFormat, unsigned char* pSequence);
 	bool Fix_Hook_ShouldProcessEffectListSkipRolls();
 	bool Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell);
 	bool Fix_Hook_SpellImmunityShouldSkipItemIndexing(CGameObject* pGameObject);

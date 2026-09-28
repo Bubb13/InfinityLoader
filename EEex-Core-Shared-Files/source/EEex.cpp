@@ -1,6 +1,8 @@
 
 #include <algorithm>
+#include <cerrno>
 #include <chrono>
+#include <cstdlib>
 #include <optional>
 #include <sstream>
 #include <unordered_set>
@@ -6122,6 +6124,44 @@ bool EEex::Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible) {
 	}
 
 	return bVisible;
+}
+
+// Replaces the engine's `sscanf(sCell, "%c", &nSequence)` calls in CGameSprite::UseItem() and CGameSprite::UseItemPoint().
+// Both call sites read ITEMANIM.2DA["SEQUENCE"] for the used item, and then copy the resulting byte into
+// CMessageSetSequence::m_sequence (unsigned char). Because the engine used "%c", the cell's first character code was
+// stored instead of its numeric value, e.g. "8" became sequence 56 instead of 8 (SEQ_SHOOT).
+//
+// The signature intentionally matches the replaced call's register usage (rcx = sCell, rdx = sFormat, r8 = pSequence,
+// eax = return value), so the call can be retargeted in place without any assembly. The engine ignores the return value;
+// it is still kept identical to what sscanf() would have returned.
+int EEex::Fix_Hook_ReadItemAnimSequence(const char* sCell, const char* sFormat, unsigned char* pSequence) {
+
+	STUTTER_LOG_START(int, "EEex::Fix_Hook_ReadItemAnimSequence")
+
+	// Only kept to document the replaced call's ABI. The Lua installer verifies that the engine passes its "%c" literal.
+	(void)sFormat;
+
+	// Defensive only: the engine always passes a CString's m_pchData (never nullptr) and the address of a stack local
+	if (sCell == nullptr || pSequence == nullptr) {
+		return EOF;
+	}
+
+	// Numeric path: accept the cell only if the whole token is a base-10 integer that fits the engine's
+	// unsigned char sequence field. strtol() accepts the same leading whitespace / sign that "%d" would.
+	errno = 0;
+	char* pEnd = nullptr;
+	const long nValue = std::strtol(sCell, &pEnd, 10);
+
+	if (pEnd != sCell && *pEnd == '\0' && errno != ERANGE && nValue >= 0 && nValue <= 255) {
+		*pSequence = static_cast<unsigned char>(nValue);
+		return 1; // One field assigned, exactly like a successful sscanf()
+	}
+
+	// Legacy path: non-numeric (or out of range) cells keep the vanilla "%c" behavior bit-for-bit. This preserves content
+	// that worked around the bug by storing raw sequence bytes (e.g. 0x08 for SEQ_SHOOT) directly in ITEMANIM.2DA.
+	return sscanf(sCell, "%c", pSequence);
+
+	STUTTER_LOG_END
 }
 
 bool EEex::Fix_Hook_ShouldProcessEffectListSkipRolls() {
