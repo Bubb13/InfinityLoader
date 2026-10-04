@@ -97,6 +97,10 @@ struct EnabledActionListenerData {
 struct ExStatData {
 	std::unordered_set<uint> exSpellStates{};
 	std::unordered_map<int, int> exStatValues{};
+	// op65 - Set instead of STATE_BLUR when an op65 with (param1 & 1) != 0 is applied. It only tells
+	//        CGameSprite::ProcessEffectList() to keep the blur graphical displacement (m_bBlur) alive.
+	//        Its lifetime deliberately mirrors CDerivedStats::m_generalState (see the Stats_Hook_* functions).
+	bool visualOnlyBlur = false;
 	// op280
 	int forcedWildSurgeNumber = 0;
 	bool suppressWildSurgeVisuals = false;
@@ -3976,6 +3980,10 @@ void EEex::Stats_Hook_OnReload(CGameSprite* pSprite) {
 
 	ExStatData& exStatData = exStatDataMap[&pSprite->m_derivedStats];
 
+	// op65 - CDerivedStats::Reload() rebuilds m_generalState (dropping STATE_BLUR), so the
+	//        visual-only blur flag is dropped too. Every still-active op65 sets it again in this pass.
+	exStatData.visualOnlyBlur = false;
+
 	// op280
 	exStatData.forcedWildSurgeNumber = 0;
 	exStatData.suppressWildSurgeVisuals = false;
@@ -4007,6 +4015,9 @@ void EEex::Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats) {
 
 	ExStatData& exStatData = exStatDataMap[pStats];
 	ExStatData& otherExStatData = exStatDataMap[pOtherStats];
+
+	// op65 - CDerivedStats::operator=() copies m_generalState (including STATE_BLUR), so copy the flag too
+	exStatData.visualOnlyBlur = otherExStatData.visualOnlyBlur;
 
 	// op280
 	exStatData.forcedWildSurgeNumber = otherExStatData.forcedWildSurgeNumber;
@@ -4068,6 +4079,10 @@ void EEex::Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStat
 
 	ExStatData& exStatData = exStatDataMap[pStats];
 	ExStatData& otherExStatData = exStatDataMap[pOtherStats];
+
+	// op65 - Intentionally NOT merged: CDerivedStats::operator+=() never touches m_generalState, so a
+	//        STATE_BLUR in the bonus stats would not reach m_derivedStats either. (op65 only ever writes
+	//        m_derivedStats directly, so the bonus stats' flag is always false anyway.)
 
 	// op280
 	if (otherExStatData.forcedWildSurgeNumber != 0) {
@@ -4228,6 +4243,52 @@ int CDerivedStats::Override_SetSpellState(uint bit)
 ////////////
 // Opcode //
 ////////////
+
+//---------------------------------------------------------------------------------------//
+// op65 - (param1 & 1) != 0 -> Only apply the blur graphical displacement, no STATE_BLUR //
+//---------------------------------------------------------------------------------------//
+
+// Replaces CGameEffectBlur::ApplyEffect()'s `or m_derivedStats.m_generalState, STATE_BLUR`. Runs for every op65
+// application, including the temporary child effects that op177 / op182 / op183 / op283 decode from their .EFF
+// and apply directly (their m_effectAmount is copied from the .EFF by CGameEffect::CopyFromBase()).
+//
+// The engine's other op65 behavior - sending CMessageVisualEffect(BLUR, on), which sets CGameSprite::m_bBlur and
+// thereby the graphical displacement - is left untouched either way.
+//
+// Return:
+//     false => (param1 & 1) != 0: STATE_BLUR must not be set; the visual-only flag was recorded instead
+//     true  => Don't alter engine behavior (set STATE_BLUR)
+bool EEex::Opcode_Hook_Op65_ShouldSetStateBlur(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_Op65_ShouldSetStateBlur")
+
+	if ((pEffect->m_effectAmount & 1) == 0) {
+		return true;
+	}
+
+	// The engine writes STATE_BLUR directly into m_derivedStats (not m_bonusStats), so the flag lives on the
+	// same CDerivedStats instance; Stats_Hook_OnReload() / Stats_Hook_OnEqu() then give it STATE_BLUR's lifetime.
+	exStatDataMap[&pSprite->m_derivedStats].visualOnlyBlur = true;
+	return false;
+
+	STUTTER_LOG_END
+}
+
+// Called by CGameSprite::ProcessEffectList() right before it would send CMessageVisualEffect(BLUR, off) because
+// m_derivedStats lacks STATE_BLUR while the sprite still shows the blur displacement (m_bBlur != 0). That check
+// only runs right after the effect lists were re-applied, so the flag reflects exactly the op65s active now.
+//
+// Return:
+//     false => Don't alter engine behavior (remove the blur displacement)
+//     true  => An op65 with (param1 & 1) != 0 is active: keep the blur displacement
+bool EEex::Opcode_Hook_Op65_ShouldKeepBlurVisual(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_Op65_ShouldKeepBlurVisual")
+
+	return exStatDataMap[&pSprite->m_derivedStats].visualOnlyBlur;
+
+	STUTTER_LOG_END
+}
 
 //--------------------------------------------------------//
 // op101 - Allow saving throw BIT23 to bypass opcode #101 //

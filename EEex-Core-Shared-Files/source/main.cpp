@@ -110,6 +110,9 @@ static void exportPatterns() {
 	// Opcode //
 	////////////
 
+	// op65
+	exportPattern(TEXT("EEex::Opcode_Hook_Op65_ShouldSetStateBlur"), EEex::Opcode_Hook_Op65_ShouldSetStateBlur);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op65_ShouldKeepBlurVisual"), EEex::Opcode_Hook_Op65_ShouldKeepBlurVisual);
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
 	// op248
