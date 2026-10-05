@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstring>
 #include <optional>
 #include <sstream>
 #include <unordered_set>
@@ -6077,6 +6078,93 @@ void CGameText::Override_Render(CGameArea* pArea, CVidMode* pVidMode)
 	}
 }
 
+//-----------------------------------------------------------------------------------------------------------------//
+// op180 - Honor CGameEffectRestrictEquipItem's lists wherever op181 (CGameEffectRestrictEquipItemType) is honored //
+//-----------------------------------------------------------------------------------------------------------------//
+
+// The CImmunitiesItemEquipList entry that op180's ApplyEffect() allocates. The engine's OnList() compares
+// exactly these 8 bytes.
+static_assert(sizeof(CResRef) == 8);
+static_assert(offsetof(CImmunitiesItemEquip, m_res) == 0);
+static_assert(offsetof(CImmunitiesItemEquip, m_error) == 8);
+static_assert(offsetof(CImmunitiesItemEquip, m_pEffect) == 16);
+static_assert(sizeof(CImmunitiesItemEquip) == 24);
+
+// The engine's CInfGame::CheckItemUsable(CGameSprite*, CItem*, unsigned long&, int). EEex_Fix_Patch.lua decodes it from
+// the very `call` instructions it retargets to EEex::Fix_Hook_CheckItemUsable(), and writes it here before patching.
+int (*EEex::Fix_Original_CheckItemUsable)(CInfGame* pThis, CGameSprite* pSprite, CItem* item, uint& errorCode, int bAsync) = nullptr;
+
+// Read-only equivalent of the engine's CImmunitiesItemEquipList::OnList(const CResRef&, unsigned long&, CGameEffect*&).
+// The engine walks the list from m_pNodeHead and compares the 8-byte CResRef of every CImmunitiesItemEquip entry with
+// `resRef` (a raw 8-byte compare, no case folding), returning on the first hit.
+//
+// The engine version also outputs the entry's error strref and calls CGameEffect::Copy() on the entry's m_pEffect when
+// it is set. The caller then owns that copy. Neither output is wanted for a yes / no usability query: op180 entries
+// always store m_pEffect == nullptr, and vanilla CInfGame::GetItemTint() even leaks the copy it receives from the op181
+// list. So only the lookup itself is reproduced here.
+static bool isResRefOnItemRestrictionList(const CImmunitiesItemEquipList& list, const CResRef& resRef) {
+
+	for (auto pNode = list.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+
+		const CImmunitiesItemEquip* const pEntry = pNode->data;
+
+		if (pEntry != nullptr && std::memcmp(pEntry->m_res.m_resRef.data, resRef.m_resRef.data, sizeof(resRef.m_resRef.data)) == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+// Replaces the `call CInfGame::CheckItemUsable(CGameSprite*, CItem*, unsigned long&, int)` inside:
+//
+//     1) CInfGame::GetItemTint(CItem*)
+//          Builds the Lua `item.tint` field. A failed usability check returns "STORTINT" (the red "unusable" tint).
+//
+//     2) CInfGame::CheckItemUsable(short, CItem*, unsigned long&, int)
+//          Used by CScreenInventory::IsUseButtonActive(), CScreenCreateChar::CheckDropSlot(),
+//          and CGameSprite::GetRatingWithItem().
+//
+// Right after that call, both callers also test the op181 list (m_cImmunitiesItemTypeEquip, by item type) of
+// GetActiveStats(), and treat a hit exactly like a failed usability check. They never test the op180 list
+// (m_cImmunitiesItemEquip, by item resref), so op180 (param2 == 0) items looked usable everywhere except when actually
+// equipping them. CInfGame::CheckItemSlot() and CInfGame::SwapItemPersonal() do test both lists.
+//
+// op177 / op182 / op183 / op283 decode their .EFF into a temporary child and call its ApplyEffect() directly. That still
+// adds the entry to the target's m_derivedStats.m_cImmunitiesItemEquip, so reading the list here covers every way op180
+// can be applied.
+//
+// The signature is the replaced call's exact Win64 ABI (rcx = this, rdx = pSprite, r8 = item, r9 = &errorCode,
+// [rsp+0x20] = bAsync), so the call is retargeted in place without any assembly. Parameter names come from the PDBs.
+//
+// Return:
+//     0        => Not usable (the engine's own result, or the item's resref is on the op180 equip restriction list)
+//     non-zero => The engine's own "usable" result
+int EEex::Fix_Hook_CheckItemUsable(CInfGame* pThis, CGameSprite* pSprite, CItem* item, uint& errorCode, int bAsync) {
+
+	STUTTER_LOG_START(int, "EEex::Fix_Hook_CheckItemUsable")
+
+	const int nUsable = Fix_Original_CheckItemUsable(pThis, pSprite, item, errorCode, bAsync);
+
+	// Only refine a positive result. The engine's own failure (and the errorCode it reported) always stands. Both
+	// callers pass the same `item` the engine then hands to the op181 check, which they skip when it is nullptr.
+	if (nUsable == 0 || pSprite == nullptr || item == nullptr) {
+		return nUsable;
+	}
+
+	// Both callers select the op181 list with `m_bAllowEffectListCall ? m_derivedStats : m_tempStats`, which is exactly
+	// what CGameSprite::GetActiveStats() returns.
+	if (isResRefOnItemRestrictionList(pSprite->GetActiveStats()->m_cImmunitiesItemEquip, item->cResRef)) {
+		// Exactly like an op181 hit, `errorCode` keeps the value the engine's check just reported for a usable item:
+		// the op181 OnList() writes its strref to a caller-local variable, never to this out-parameter.
+		return 0;
+	}
+
+	return nUsable;
+
+	STUTTER_LOG_END
+}
+
 void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand) {
 
 	if (bOffHand) {
@@ -6126,6 +6214,35 @@ bool EEex::Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible) {
 
 bool EEex::Fix_Hook_ShouldProcessEffectListSkipRolls() {
 	return !(*p_g_pBaldurChitin)->m_pObjectGame->m_worldTime.m_active;
+}
+
+// Called by CGameSprite::UseItem() right after its `CImmunitiesItemTypeEquipList::OnList()` test of the op181 "use"
+// list (m_cImmunitiesItemTypeUse, filled by op181 with param2 != 0) returned "not on list". If that test hits, the engine
+// refuses the action: it displays strref 0x24A6, deletes the effect copy returned by OnList() (if any), and fails.
+//
+// op180 with param2 != 0 adds the item's resref to m_cImmunitiesItemUse instead, but no engine code ever reads that
+// list, so the restriction silently did nothing. Returning true makes UseItem() take the very same refusal path.
+// The effect-copy out-parameter was already set to nullptr by the op181 OnList() miss, so nothing extra is deleted.
+//
+// As with the op181 test, m_curItem is the item being used and the list belongs to GetActiveStats(). Entries can also
+// come from op180 children of op177 / op182 / op183 / op283, which fill the same list.
+//
+// Return:
+//     false => Don't alter engine behavior (the item may be used)
+//     true  => m_curItem's resref is on the op180 use restriction list: refuse to use it
+bool EEex::Fix_Hook_ShouldRestrictCurItemUse(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(bool, "EEex::Fix_Hook_ShouldRestrictCurItemUse")
+
+	// Defensive only: UseItem() has already dereferenced m_curItem when it reaches this check
+	const CItem* const pItem = pSprite->m_curItem;
+	if (pItem == nullptr) {
+		return false;
+	}
+
+	return isResRefOnItemRestrictionList(pSprite->GetActiveStats()->m_cImmunitiesItemUse, pItem->cResRef);
+
+	STUTTER_LOG_END
 }
 
 bool EEex::Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell) {

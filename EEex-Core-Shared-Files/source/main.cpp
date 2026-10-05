@@ -192,11 +192,14 @@ static void exportPatterns() {
 	// Fix //
 	/////////
 
+	exportPattern(TEXT("EEex::Fix_Original_CheckItemUsable"), &EEex::Fix_Original_CheckItemUsable);
+	exportPattern(TEXT("EEex::Fix_Hook_CheckItemUsable"), EEex::Fix_Hook_CheckItemUsable);
 	exportPattern(TEXT("EEex::Fix_Hook_HandleMiddleMouseDrag"), EEex::Fix_Hook_HandleMiddleMouseDrag);
 	exportPattern(TEXT("EEex::Fix_Hook_ImplementWSPECIALSpeedColumn"), EEex::Fix_Hook_ImplementWSPECIALSpeedColumn);
 	exportPattern(TEXT("EEex::Fix_Hook_OnBeforeUIKillCapture"), EEex::Fix_Hook_OnBeforeUIKillCapture);
 	exportPattern(TEXT("EEex::Fix_Hook_OnUIItemCheckRenderScrollbar"), EEex::Fix_Hook_OnUIItemCheckRenderScrollbar);
 	exportPattern(TEXT("EEex::Fix_Hook_ShouldProcessEffectListSkipRolls"), EEex::Fix_Hook_ShouldProcessEffectListSkipRolls);
+	exportPattern(TEXT("EEex::Fix_Hook_ShouldRestrictCurItemUse"), EEex::Fix_Hook_ShouldRestrictCurItemUse);
 	exportPattern(TEXT("EEex::Fix_Hook_ShouldTransformSpellImmunityStrref"), EEex::Fix_Hook_ShouldTransformSpellImmunityStrref);
 	exportPattern(TEXT("EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing"), EEex::Fix_Hook_SpellImmunityShouldSkipItemIndexing);
 
