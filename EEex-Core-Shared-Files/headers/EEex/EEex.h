@@ -169,11 +169,16 @@ namespace EEex {
 	// Fix //
 	/////////
 
+	// op180 - Engine's CInfGame::CheckItemUsable(CGameSprite*, CItem*, unsigned long&, int), filled in by EEex_Fix_Patch.lua
+	extern int (*Fix_Original_CheckItemUsable)(CInfGame* pThis, CGameSprite* pSprite, CItem* item, uint& errorCode, int bAsync);
+
+	int Fix_Hook_CheckItemUsable(CInfGame* pThis, CGameSprite* pSprite, CItem* item, uint& errorCode, int bAsync);
 	void Fix_Hook_HandleMiddleMouseDrag(SDL_Event* pEvent);
 	void Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand);
 	void Fix_Hook_OnBeforeUIKillCapture();
 	bool Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible);
 	bool Fix_Hook_ShouldProcessEffectListSkipRolls();
+	bool Fix_Hook_ShouldRestrictCurItemUse(CGameSprite* pSprite);
 	bool Fix_Hook_ShouldTransformSpellImmunityStrref(CGameEffect* pEffect, CImmunitySpell* pImmunitySpell);
 	bool Fix_Hook_SpellImmunityShouldSkipItemIndexing(CGameObject* pGameObject);
 
