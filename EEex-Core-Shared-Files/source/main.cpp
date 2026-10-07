@@ -110,6 +110,13 @@ static void exportPatterns() {
 	// Opcode //
 	////////////
 
+	// op25 / op78 / op98 / op272 - param2 BIT16: Haste/Slow-neutral timing
+	exportPattern(TEXT("EEex::Opcode_Hook_OnPersistantEffectAddTail"), EEex::Opcode_Hook_OnPersistantEffectAddTail);
+	exportPattern(TEXT("EEex::Opcode_Hook_ProcessEffectList_AIUpdatePersistantEffects"), EEex::Opcode_Hook_ProcessEffectList_AIUpdatePersistantEffects);
+	exportPattern(TEXT("EEex::Opcode_Hook_HandlePersistantEffects_AIUpdatePersistantEffects"), EEex::Opcode_Hook_HandlePersistantEffects_AIUpdatePersistantEffects);
+	// op232 - param2 BIT16: Haste/Slow-neutral timing
+	exportPattern(TEXT("EEex::Opcode_Hook_ContingencyCheck"), EEex::Opcode_Hook_ContingencyCheck);
+	exportPattern(TEXT("EEex::Opcode_Hook_ContingencyList_ShouldProcess"), EEex::Opcode_Hook_ContingencyList_ShouldProcess);
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
 	// op248
