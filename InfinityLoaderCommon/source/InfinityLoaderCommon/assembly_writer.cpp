@@ -149,6 +149,31 @@ EXPORT void AssemblyWriter::WriteArgImmediate32(size_t argI, __int32 num) {
 	WriteNumberToBuffer(num, 4);
 }
 
+EXPORT void AssemblyWriter::WriteArgImmediate64(size_t argI, __int64 num) {
+
+#if defined(_WIN64)
+	switch (argI) {
+		case 0: WriteBytesToBuffer(2, 0x48, 0xB9); break;
+		case 1: WriteBytesToBuffer(2, 0x48, 0xBA); break;
+		case 2: WriteBytesToBuffer(2, 0x49, 0xB8); break;
+		case 3: WriteBytesToBuffer(2, 0x49, 0xB9); break;
+		default: MessageBoxFormat(TEXT("InfinityLoaderCommon.dll"), MB_ICONERROR, TEXT("[!] AssemblyWriter::WriteArgImmediate64() - Internal error; unhandled argI: %d"), argI); return;
+	}
+#else
+	#error "AssemblyWriter::WriteArgImmediate64() is x64 only"
+#endif
+
+	WriteNumberToBuffer(num, 8);
+}
+
+EXPORT void AssemblyWriter::WriteArgImmediatePtr(size_t argI, uintptr_t num) {
+#if defined(_WIN64)
+	WriteArgImmediate64(argI, num);
+#else
+	WriteArgImmediate32(argI, num);
+#endif
+}
+
 EXPORT void AssemblyWriter::WriteBytesToBuffer(size_t numBytes, ...) {
 	AssemblyWriterData *const data = this->data();
 	va_list args;

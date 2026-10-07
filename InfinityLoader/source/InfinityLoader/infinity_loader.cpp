@@ -111,6 +111,10 @@ static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 		return lastError;
 	}
 
+	if (debug()) {
+		FPrint("[?][InfinityLoader.exe] patchMainThread() - dllStrMemory: %p\n", dllStrMemory);
+	}
+
 	////////////////
 	// Write code //
 	////////////////
@@ -135,7 +139,7 @@ static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	// Call LoadLibrary("InfinityLoaderDLL.dll") //
 	///////////////////////////////////////////////
 
-	writer.WriteArgImmediate32(0, static_cast<__int32>(dllStrMemory));
+	writer.WriteArgImmediatePtr(0, dllStrMemory);
 	writer.CallToAddressFar(reinterpret_cast<uintptr_t>(LoadLibrary));
 
 	///////////////////////////////
@@ -159,7 +163,11 @@ static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 		return lastError;
 	}
 
-	writer.WriteArgImmediate32(1, static_cast<__int32>(dllInitStrMem));
+	if (debug()) {
+		FPrint("[?][InfinityLoader.exe] patchMainThread() - dllInitStrMem: %p\n", dllInitStrMem);
+	}
+
+	writer.WriteArgImmediatePtr(1, dllInitStrMem);
 
 #if defined(_WIN64)
 	writer.WriteBytesToBuffer(3, 0x48, 0x89, 0xC1); // mov rcx,rax
@@ -209,7 +217,7 @@ static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 	}
 
 	if (debug()) {
-		FPrint("[!][InfinityLoader.exe] patchMainThread() - threadStart: %p\n", threadStart);
+		FPrint("[?][InfinityLoader.exe] patchMainThread() - threadStart: %p\n", threadStart);
 	}
 
 	return 0;

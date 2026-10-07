@@ -36,6 +36,8 @@ public:
 	EXPORT void SetLocation(uintptr_t newCurMemAddress);
 	EXPORT void UndoAlignAndShadowSpace();
 	EXPORT void WriteArgImmediate32(size_t argI, __int32 num);
+	EXPORT void WriteArgImmediate64(size_t argI, __int64 num);
+	EXPORT void WriteArgImmediatePtr(size_t argI, uintptr_t num);
 	EXPORT void WriteBytesToBuffer(size_t numBytes, ...);
 	EXPORT void WriteNumberToBuffer(uintptr_t pointer, size_t writeSize);
 	EXPORT void WriteRelativeToBuffer32(uintptr_t relAddress);

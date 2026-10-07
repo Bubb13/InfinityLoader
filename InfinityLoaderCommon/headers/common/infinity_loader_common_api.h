@@ -33,6 +33,8 @@ public:
 	IMPORT void SetLocation(uintptr_t newCurMemAddress);
 	IMPORT void UndoAlignAndShadowSpace();
 	IMPORT void WriteArgImmediate32(size_t argI, __int32 num);
+	IMPORT void WriteArgImmediate64(size_t argI, __int64 num);
+	IMPORT void WriteArgImmediatePtr(size_t argI, uintptr_t num);
 	IMPORT void WriteBytesToBuffer(size_t numBytes, ...);
 	IMPORT void WriteNumberToBuffer(uintptr_t pointer, size_t writeSize);
 	IMPORT void WriteRelativeToBuffer32(uintptr_t relAddress);
