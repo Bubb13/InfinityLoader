@@ -6077,6 +6077,23 @@ void CGameText::Override_Render(CGameArea* pArea, CVidMode* pVidMode)
 	}
 }
 
+int EEex::Fix_Hook_AddHPTableModifier(int nHitPoints, int nRolls, int nModifier) {
+
+	// At RollHitPoints()'s shared pre-division join, a zero-ROLLS row already
+	// contributes its effective MODIFIER. Both the rolled and maximum-HP paths
+	// omit that modifier for nonzero ROLLS, so add it once per row, not per die.
+	// The caller supplies the modifier AFTER the engine's force-modifier override.
+	if (nRolls == 0) {
+		return nHitPoints;
+	}
+
+	// Keep the engine's 32-bit addition semantics, including negative modifiers.
+	// Unsigned addition wraps without C++ signed-overflow undefined behavior;
+	// the C++20 conversion back to int preserves the resulting 32-bit value.
+	// Division, the minimum-one clamp, dice rolls, and RNG state remain native.
+	return static_cast<int>(static_cast<unsigned int>(nHitPoints) + static_cast<unsigned int>(nModifier));
+}
+
 void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand) {
 
 	if (bOffHand) {
