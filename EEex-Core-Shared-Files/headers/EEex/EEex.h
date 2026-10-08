@@ -171,6 +171,7 @@ namespace EEex {
 
 	void Fix_Hook_HandleMiddleMouseDrag(SDL_Event* pEvent);
 	void Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand);
+	byte Fix_Hook_Op236_GetAverageLevel(CDerivedStats* pStats, CGameSprite* pSprite);
 	void Fix_Hook_OnBeforeUIKillCapture();
 	bool Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible);
 	bool Fix_Hook_ShouldProcessEffectListSkipRolls();
