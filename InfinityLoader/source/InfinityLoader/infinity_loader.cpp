@@ -263,9 +263,6 @@ static DWORD patchMainThread(HANDLE hProcess, HANDLE hThread) {
 
 static DWORD startGame() {
 
-	STARTUPINFO startupInfo{};
-	startupInfo.cb = sizeof(STARTUPINFO);
-
 	PROCESS_INFORMATION processInfo{};
 	DWORD lastError = ERROR_SUCCESS;
 
@@ -279,11 +276,48 @@ static DWORD startGame() {
 		FPrint("[?][InfinityLoader.exe] startGame() - Parent hStdError: %d\n", hStdError);
 	}
 
+	/////////////////////////
+	// START Spawn process //
+	/////////////////////////
+
+	// This job object ensures the spawned process closes with InfinityLoader,
+	// preventing a "zombie" suspended process from persisting if we terminate
+	// before resuming the target.
+	const HANDLE hJob = CreateJobObject(nullptr, nullptr);
+
+	if (hJob == NULL) {
+		lastError = GetLastError();
+		FPrintT(TEXT("[!][InfinityLoader.exe] startGame() - CreateJobObject() failed (%d)\n"), lastError);
+		return lastError;
+	}
+
+	JOBOBJECT_EXTENDED_LIMIT_INFORMATION info{};
+	info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+
+	if (!SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &info, sizeof(info))) {
+		lastError = GetLastError();
+		FPrintT(TEXT("[!][InfinityLoader.exe] startGame() - SetInformationJobObject() failed (%d)\n"), lastError);
+		return lastError;
+	}
+
+	STARTUPINFO startupInfo{};
+	startupInfo.cb = sizeof(STARTUPINFO);
+
 	if (!CreateProcess(exePath.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
 		lastError = GetLastError();
 		FPrintT(TEXT("[!][InfinityLoader.exe] startGame() - CreateProcess() failed (%d) attempting to start \"%s\"\n"), lastError, exePath.c_str());
 		return lastError;
 	}
+
+	if (!AssignProcessToJobObject(hJob, processInfo.hProcess)) {
+		lastError = GetLastError();
+		FPrintT(TEXT("[!][InfinityLoader.exe] startGame() - AssignProcessToJobObject() failed (%d)\n"), lastError);
+		goto errorFinally;
+	}
+
+	///////////////////////
+	// END Spawn process //
+	///////////////////////
 
 	if (lastError = GetINIBoolDef(iniPath, TEXT("General"), TEXT("Pause"), false, pause())) {
 		goto errorFinally;
