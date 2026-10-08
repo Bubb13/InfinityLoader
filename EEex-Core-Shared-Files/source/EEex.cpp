@@ -1,8 +1,10 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <optional>
 #include <sstream>
+#include <type_traits>
 #include <unordered_set>
 
 #include <mbstring.h>
@@ -6075,6 +6077,70 @@ void CGameText::Override_Render(CGameArea* pArea, CVidMode* pVidMode)
 			true                                                 // backgroundRect
 		);
 	}
+}
+
+static_assert(sizeof(int) == 4 && sizeof(unsigned int) == 4);
+static_assert(std::is_trivial_v<EEex::PartyXPSplit> && std::is_standard_layout_v<EEex::PartyXPSplit>);
+static_assert(sizeof(EEex::PartyXPSplit) == 8);
+static_assert(offsetof(EEex::PartyXPSplit, nAmount) == 0 && offsetof(EEex::PartyXPSplit, nRemainder) == 4);
+
+int EEex::Fix_Hook_ClampXPLoss(unsigned int nXP, int nDelta) {
+
+	// Permanent additive op104 writes an unsigned XP field. Limit only losses,
+	// before the original ADD, so an insufficient balance cannot wrap to a large
+	// positive value. Positive additions keep the engine's original arithmetic.
+	if (nDelta < 0) {
+		// Unsigned subtraction is defined even for INT_MIN (magnitude 2^31).
+		// If XP is insufficient, nXP is strictly below 2^31; its cast and signed
+		// negation are therefore representable. No signed overflow is possible.
+		const unsigned int nLoss = 0U - static_cast<unsigned int>(nDelta);
+		if (nXP < nLoss) {
+			return -static_cast<int>(nXP);
+		}
+	}
+	return nDelta;
+}
+
+void EEex::Fix_Hook_FormatExperienceAmount(CString* pText, const char* pFormat, int nAmount) {
+
+	// Replace only the two XP-formatting calls, not CString::Format itself.
+	// Use the existing engine CString allocator/formatter and retain its format
+	// pointer for nonnegative amounts. %u also renders INT_MIN's magnitude
+	// correctly, unlike the engine's NEG followed by %d in party feedback.
+	if (nAmount < 0) {
+		pText->Format("%u", 0U - static_cast<unsigned int>(nAmount));
+	}
+	else {
+		pText->Format(pFormat, nAmount);
+	}
+}
+
+EEex::PartyXPSplit EEex::Fix_Hook_SplitPartyXP(int nTotal, int nRecipients) {
+
+	// AddPartyXP has already counted its eligible living recipients, substitutes
+	// one when none exist, and sign-extends that positive short into the divisor.
+	// The total has already received the native difficulty/XP bonus adjustment.
+	// Signed division truncates toward zero; its remainder retains the total's
+	// sign. INT_MIN / 1 is valid because the native divisor is strictly positive.
+	return { nTotal / nRecipients, nTotal % nRecipients };
+}
+
+EEex::PartyXPSplit EEex::Fix_Hook_NextPartyXPShare(int nQuotient, int nRemainder) {
+
+	// Visit recipients in the engine's existing order. Consume a remainder point
+	// with the same sign as the total, so requested shares sum to that total.
+	// Each queued permanent XP effect independently clamps an unaffordable loss;
+	// its unused loss is not reassigned to another recipient.
+	// +/-1 cannot overflow for a valid quotient/remainder: a nonzero remainder
+	// requires a divisor greater than one, keeping the quotient away from either
+	// signed endpoint. A divisor of one always has a zero remainder.
+	if (nRemainder > 0) {
+		return { nQuotient + 1, nRemainder - 1 };
+	}
+	if (nRemainder < 0) {
+		return { nQuotient - 1, nRemainder + 1 };
+	}
+	return { nQuotient, 0 };
 }
 
 void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand) {
