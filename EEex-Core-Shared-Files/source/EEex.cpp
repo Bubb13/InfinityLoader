@@ -6097,6 +6097,24 @@ void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProf
 	pSprite->m_derivedStats.m_nPhysicalSpeed -= nBonus;
 }
 
+byte EEex::Fix_Hook_Op236_GetAverageLevel(CDerivedStats* pStats, CGameSprite* pSprite) {
+
+	// CGameEffectCopySelf::ApplyEffect(), in Simulacrum mode, passes one of the
+	// classes returned by GetActiveInactiveClasses() to GetAverageLevel(). For a
+	// dual class that is a single-class ID, so GetAverageLevel() reads LEVEL1
+	// instead of averaging both stored levels. Use the sprite's combined class
+	// ID, exactly as returned by its virtual GetAIType(), to select the engine's
+	// existing two/three-class averaging paths. Single classes keep their path.
+	//
+	// Keep the caller's stats pointer: all three v2.7.3.0 x64 engines deliberately
+	// use m_tempStats here, not GetActiveStats() or the clone's stats. Reusing the
+	// engine helper also preserves its upward average rounding and byte return;
+	// the original caller still truncates 40% and constructs/adds op216 itself.
+	// No effect pointer or per-application state is retained: op177/182/183/283
+	// drive decoded EFF children through this same virtual ApplyEffect() method.
+	return pStats->GetAverageLevel(pSprite->virtual_GetAIType()->m_Class);
+}
+
 void EEex::Fix_Hook_OnBeforeUIKillCapture() {
 
 	if (p_capture->item == nullptr || p_capture->item->type != uiItemType::ITEM_EDIT) {
