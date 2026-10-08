@@ -169,6 +169,18 @@ namespace EEex {
 	// Fix //
 	/////////
 
+	// Both arithmetic hooks return this trivial eight-byte aggregate in RAX
+	// under the Win64 ABI: the amount is the low DWORD, remainder the high DWORD.
+	struct PartyXPSplit {
+		int nAmount;
+		int nRemainder;
+	};
+
+	int Fix_Hook_ClampXPLoss(unsigned int nXP, int nDelta);
+	void Fix_Hook_FormatExperienceAmount(CString* pText, const char* pFormat, int nAmount);
+	PartyXPSplit Fix_Hook_SplitPartyXP(int nTotal, int nRecipients);
+	PartyXPSplit Fix_Hook_NextPartyXPShare(int nQuotient, int nRemainder);
+
 	void Fix_Hook_HandleMiddleMouseDrag(SDL_Event* pEvent);
 	void Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand);
 	void Fix_Hook_OnBeforeUIKillCapture();

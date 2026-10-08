@@ -192,6 +192,11 @@ static void exportPatterns() {
 	// Fix //
 	/////////
 
+	exportPattern(TEXT("EEex::Fix_Hook_ClampXPLoss"), EEex::Fix_Hook_ClampXPLoss);
+	exportPattern(TEXT("EEex::Fix_Hook_FormatExperienceAmount"), EEex::Fix_Hook_FormatExperienceAmount);
+	exportPattern(TEXT("EEex::Fix_Hook_SplitPartyXP"), EEex::Fix_Hook_SplitPartyXP);
+	exportPattern(TEXT("EEex::Fix_Hook_NextPartyXPShare"), EEex::Fix_Hook_NextPartyXPShare);
+
 	exportPattern(TEXT("EEex::Fix_Hook_HandleMiddleMouseDrag"), EEex::Fix_Hook_HandleMiddleMouseDrag);
 	exportPattern(TEXT("EEex::Fix_Hook_ImplementWSPECIALSpeedColumn"), EEex::Fix_Hook_ImplementWSPECIALSpeedColumn);
 	exportPattern(TEXT("EEex::Fix_Hook_OnBeforeUIKillCapture"), EEex::Fix_Hook_OnBeforeUIKillCapture);
