@@ -11,6 +11,7 @@
 #include "EEex.h"
 #include "engine_function_names.hpp"
 #include "infinity_loader_util_api.h"
+#include "item_usability.hpp"
 #include "lua_util.hpp"
 #include "menu_util.hpp"
 #include "profiler.hpp"
@@ -6095,6 +6096,35 @@ void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProf
 	}
 
 	pSprite->m_derivedStats.m_nPhysicalSpeed -= nBonus;
+}
+
+bool EEex::Fix_Hook_ItemUsabilityBarbarianClassAllowed(uint notUsableBy) {
+	return EEexItemUsability::barbarianClassAllowed(notUsableBy);
+}
+
+bool EEex::Fix_Hook_ItemUsabilityAppendMageMulticlass(CString* pText,
+	uint notUsableBy, uint notUsableBy2, uint combinationBit) {
+
+	const auto selection = EEexItemUsability::selectMageMulticlass(
+		notUsableBy, notUsableBy2, combinationBit);
+	if (!selection.handled) {
+		// false tells the trampoline to run the original engine block.
+		return false;
+	}
+
+	// pText is the existing usable-candidate CString at [rbp-31h], whose
+	// lifetime still belongs to GetUsabilityText(). Do not construct/destruct
+	// it here or write its internal buffer directly. EngineVal balances the
+	// fetched temporary strings using the engine's own CString operations.
+	EEexItemUsability::appendMageMulticlass(selection,
+		[pText](const char* text) { *pText += text; },
+		[pText](std::uint32_t strref) {
+			auto text = fetchStrRef(strref);
+			*pText += &*text;
+		});
+	// Even an empty selection is handled: no school is eligible, so the
+	// caller must bypass the native block rather than append generic Mage.
+	return true;
 }
 
 void EEex::Fix_Hook_OnBeforeUIKillCapture() {

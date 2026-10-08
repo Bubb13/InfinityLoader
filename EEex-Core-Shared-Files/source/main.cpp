@@ -194,6 +194,8 @@ static void exportPatterns() {
 
 	exportPattern(TEXT("EEex::Fix_Hook_HandleMiddleMouseDrag"), EEex::Fix_Hook_HandleMiddleMouseDrag);
 	exportPattern(TEXT("EEex::Fix_Hook_ImplementWSPECIALSpeedColumn"), EEex::Fix_Hook_ImplementWSPECIALSpeedColumn);
+	exportPattern(TEXT("EEex::Fix_Hook_ItemUsabilityBarbarianClassAllowed"), EEex::Fix_Hook_ItemUsabilityBarbarianClassAllowed);
+	exportPattern(TEXT("EEex::Fix_Hook_ItemUsabilityAppendMageMulticlass"), EEex::Fix_Hook_ItemUsabilityAppendMageMulticlass);
 	exportPattern(TEXT("EEex::Fix_Hook_OnBeforeUIKillCapture"), EEex::Fix_Hook_OnBeforeUIKillCapture);
 	exportPattern(TEXT("EEex::Fix_Hook_OnUIItemCheckRenderScrollbar"), EEex::Fix_Hook_OnUIItemCheckRenderScrollbar);
 	exportPattern(TEXT("EEex::Fix_Hook_ShouldProcessEffectListSkipRolls"), EEex::Fix_Hook_ShouldProcessEffectListSkipRolls);

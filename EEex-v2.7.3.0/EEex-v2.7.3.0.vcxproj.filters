@@ -263,6 +263,9 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_tracer.hpp">
       <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\item_usability.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_rolling_line_graph.hpp">
       <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
