@@ -171,6 +171,8 @@ namespace EEex {
 
 	void Fix_Hook_HandleMiddleMouseDrag(SDL_Event* pEvent);
 	void Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand);
+	bool Fix_Hook_ItemUsabilityBarbarianClassAllowed(uint notUsableBy);
+	bool Fix_Hook_ItemUsabilityAppendMageMulticlass(CString* pText, uint notUsableBy, uint notUsableBy2, uint combinationBit);
 	void Fix_Hook_OnBeforeUIKillCapture();
 	bool Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible);
 	bool Fix_Hook_ShouldProcessEffectListSkipRolls();

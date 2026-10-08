@@ -20,6 +20,7 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\font_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_rolling_line_graph.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_tracer.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\item_usability.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\lua_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\menu_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\profiler.hpp" />
