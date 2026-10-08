@@ -300,10 +300,24 @@ static DWORD startGame() {
 		return lastError;
 	}
 
+	// Need access to null terminated + mutable String::data()
+	static_assert(_MSVC_LANG >= 201703L, "C++17 or later required");
+
+	String sCommandLineArgs{};
+	if (lastError = GetINIStrDef(iniPath, TEXT("General"), TEXT("CommandLineArgs"), TEXT(""), sCommandLineArgs)) {
+		return lastError;
+	}
+
+	sCommandLineArgs = String{ TEXT("\"") }.append(exeName).append(TEXT("\" ")).append(sCommandLineArgs);
+
+	if (debug()) {
+		FPrintT(TEXT("[?][InfinityLoader.exe] startGame() - sCommandLineArgs: \"%s\"\n"), sCommandLineArgs.c_str());
+	}
+
 	STARTUPINFO startupInfo{};
 	startupInfo.cb = sizeof(STARTUPINFO);
 
-	if (!CreateProcess(exePath.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
+	if (!CreateProcess(exePath.c_str(), sCommandLineArgs.data(), NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo)) {
 		lastError = GetLastError();
 		FPrintT(TEXT("[!][InfinityLoader.exe] startGame() - CreateProcess() failed (%d) attempting to start \"%s\"\n"), lastError, exePath.c_str());
 		return lastError;
@@ -559,6 +573,7 @@ static DWORD init() {
 	protonCompatibility() = tempProtonCompatibility;
 	TryRetErr( InitPaths(dbPath, exePath, exeName, iniPath, workingFolder, workingFolderA) )
 	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("Debug"), false, debug()) )
+	TryRetErr( GetINIBoolDef(iniPath, TEXT("General"), TEXT("TargetSpawnsConsole"), false, targetSpawnsConsole()) )
 	TryRetErr( checkAutoRedirectToFile() )
 	TryElseRetErr( UnbufferCrtStreams(), FPrint("[!][InfinityLoader.exe] init() - UnbufferCrtStreams() failed (%d)\n", error) )
 	TryElseRetErr( InitFPrint(), FPrint("[!][InfinityLoader.exe] init() - InitFPrint() failed (%d)\n", error) )

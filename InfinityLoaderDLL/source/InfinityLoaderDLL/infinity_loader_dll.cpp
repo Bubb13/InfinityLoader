@@ -1306,7 +1306,7 @@ bool attachedToConsole = false;
 
 static DWORD attachToConsole(bool force = false) {
 
-	if (!force && attachedToConsole) {
+	if (targetSpawnsConsole() || (!force && attachedToConsole)) {
 		return ERROR_SUCCESS;
 	}
 

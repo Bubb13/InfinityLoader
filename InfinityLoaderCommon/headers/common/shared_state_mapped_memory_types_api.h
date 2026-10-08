@@ -18,4 +18,5 @@ public:
 	IMPORT bool& Debug();
 	IMPORT bool& Pause();
 	IMPORT bool& ProtonCompatibility();
+	IMPORT bool& TargetSpawnsConsole();
 };

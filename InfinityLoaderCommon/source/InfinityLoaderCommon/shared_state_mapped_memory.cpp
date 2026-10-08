@@ -133,3 +133,7 @@ EXPORT bool& SharedStateMappedMemory::Pause() {
 EXPORT bool& SharedStateMappedMemory::ProtonCompatibility() {
 	return data()->options.protonCompatibility;
 }
+
+EXPORT bool& SharedStateMappedMemory::TargetSpawnsConsole() {
+	return data()->options.targetSpawnsConsole;
+}

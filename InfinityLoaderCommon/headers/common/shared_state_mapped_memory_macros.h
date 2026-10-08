@@ -24,3 +24,4 @@
 #define debug() mappedMemory().Debug()
 #define pause() mappedMemory().Pause()
 #define protonCompatibility() mappedMemory().ProtonCompatibility()
+#define targetSpawnsConsole() mappedMemory().TargetSpawnsConsole()

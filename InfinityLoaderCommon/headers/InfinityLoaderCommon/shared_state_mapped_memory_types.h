@@ -20,6 +20,7 @@ private:
 	bool debug;
 	bool pause;
 	bool protonCompatibility;
+	bool targetSpawnsConsole;
 };
 
 class SharedStateMappedMemoryData {
@@ -43,4 +44,5 @@ public:
 	EXPORT bool& Debug();
 	EXPORT bool& Pause();
 	EXPORT bool& ProtonCompatibility();
+	EXPORT bool& TargetSpawnsConsole();
 };
