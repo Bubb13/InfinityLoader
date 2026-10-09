@@ -156,6 +156,7 @@ namespace EEex {
 	void Projectile_Hook_OnBeforeAddEffect(CProjectile* pProjectile, CGameAIBase* pDecoder, CGameEffect* pEffect, uintptr_t pRetPtr);
 	ushort Projectile_Hook_OnBeforeDecode(ushort nProjectileType, CGameAIBase* pDecoder, uintptr_t pRetPtr);
 	void Projectile_Hook_OnAfterDecode(CProjectile* pProjectile, CGameAIBase* pDecoder, uintptr_t pRetPtr);
+	int Projectile_Hook_ShouldIncludeDeadSprites(const CProjectileArea* pProjectile);
 
 	////////////
 	// Script //

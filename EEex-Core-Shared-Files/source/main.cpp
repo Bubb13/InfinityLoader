@@ -179,6 +179,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Projectile_Hook_OnBeforeAddEffect"), EEex::Projectile_Hook_OnBeforeAddEffect);
 	exportPattern(TEXT("EEex::Projectile_Hook_OnBeforeDecode"), EEex::Projectile_Hook_OnBeforeDecode);
 	exportPattern(TEXT("EEex::Projectile_Hook_OnAfterDecode"), EEex::Projectile_Hook_OnAfterDecode);
+	exportPattern(TEXT("EEex::Projectile_Hook_ShouldIncludeDeadSprites"), EEex::Projectile_Hook_ShouldIncludeDeadSprites);
 
 	////////////
 	// Script //

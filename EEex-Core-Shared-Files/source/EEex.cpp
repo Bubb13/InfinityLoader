@@ -5685,6 +5685,21 @@ std::optional<std::vector<CGameEffect*>*> getProjectileMutatorEffects(CGameAIBas
 
 #define NORET
 
+int EEex::Projectile_Hook_ShouldIncludeDeadSprites(const CProjectileArea* pProjectile) {
+
+	// The v2.7.3.0 constructors in BGEE, BG2EE, and IWDEE copy area flag bit 1
+	// into m_checkForNonSprites and copy all 32 fireball flag bits unchanged.
+	// Reserve fireball bit 16 for admitting dead sprites, conditional on that
+	// existing non-sprite option. Returning an int matches the native collector's
+	// includeDead argument; the adapter changes only that argument before the
+	// original GetAllInRangeBack call, preserving native eligibility/LOS/range.
+	// Keep this an integer leaf: the before-call adapter saves integer state,
+	// and the permanent binary audit verifies that no SIMD state or calls appear.
+	constexpr unsigned int INCLUDE_DEAD_SPRITES = 1u << 16;
+	return pProjectile != nullptr && pProjectile->m_checkForNonSprites != 0
+		&& (pProjectile->m_fireBallFlags & INCLUDE_DEAD_SPRITES) != 0;
+}
+
 ushort EEex::Projectile_Hook_OnBeforeDecode(ushort nProjectileType, CGameAIBase* pDecoder, uintptr_t pRetPtr) {
 
 	STUTTER_LOG_START(ushort, "EEex::Projectile_Hook_OnBeforeDecode")
