@@ -193,6 +193,8 @@ static void exportPatterns() {
 	/////////
 
 	exportPattern(TEXT("EEex::Fix_Hook_HandleMiddleMouseDrag"), EEex::Fix_Hook_HandleMiddleMouseDrag);
+	exportPattern(TEXT("EEex::Fix_Hook_Op233_ApplyIncrement"), EEex::Fix_Hook_Op233_ApplyIncrement);
+	exportPattern(TEXT("EEex::Fix_Hook_Op233_ApplyDrivenEffect"), EEex::Fix_Hook_Op233_ApplyDrivenEffect);
 	exportPattern(TEXT("EEex::Fix_Hook_ImplementWSPECIALSpeedColumn"), EEex::Fix_Hook_ImplementWSPECIALSpeedColumn);
 	exportPattern(TEXT("EEex::Fix_Hook_OnBeforeUIKillCapture"), EEex::Fix_Hook_OnBeforeUIKillCapture);
 	exportPattern(TEXT("EEex::Fix_Hook_OnUIItemCheckRenderScrollbar"), EEex::Fix_Hook_OnUIItemCheckRenderScrollbar);

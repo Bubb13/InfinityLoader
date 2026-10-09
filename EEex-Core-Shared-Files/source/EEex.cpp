@@ -13,6 +13,7 @@
 #include "infinity_loader_util_api.h"
 #include "lua_util.hpp"
 #include "menu_util.hpp"
+#include "op233.hpp"
 #include "profiler.hpp"
 #include "script_folder.hpp"
 #include "time_util.hpp"
@@ -6075,6 +6076,17 @@ void CGameText::Override_Render(CGameArea* pArea, CVidMode* pVidMode)
 			true                                                 // backgroundRect
 		);
 	}
+}
+
+int EEex::Fix_Hook_Op233_ApplyIncrement(CGameEffect* pEffect, CGameSprite* pSprite) {
+	// The detour replaces the increment arm before either defective case runs;
+	// the leaf engine function has not created a frame, so this returns directly
+	// to its original caller using the normal Win64 two-argument ABI.
+	return Op233::applyIncrement(pEffect, pSprite);
+}
+
+int EEex::Fix_Hook_Op233_ApplyDrivenEffect(CGameEffect* pChild, CGameSprite* pSprite, CGameEffect* pDriver) {
+	return Op233::applyDrivenEffect(pChild, pSprite, pDriver);
 }
 
 void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand) {
