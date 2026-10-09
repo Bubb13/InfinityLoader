@@ -170,6 +170,8 @@ namespace EEex {
 	/////////
 
 	void Fix_Hook_HandleMiddleMouseDrag(SDL_Event* pEvent);
+	int Fix_Hook_Op233_ApplyIncrement(CGameEffect* pEffect, CGameSprite* pSprite);
+	int Fix_Hook_Op233_ApplyDrivenEffect(CGameEffect* pChild, CGameSprite* pSprite, CGameEffect* pDriver);
 	void Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand);
 	void Fix_Hook_OnBeforeUIKillCapture();
 	bool Fix_Hook_OnUIItemCheckRenderScrollbar(uiItem* pItem, bool bVisible);
