@@ -110,6 +110,22 @@ static void exportPatterns() {
 	// Opcode //
 	////////////
 
+	// op74 - Engine fact slots: EEex_Opcode_Patch.lua writes them (EEex_Write32 / EEex_WritePtr) before installing the hooks
+	exportPattern(TEXT("EEex::Opcode_Op74_StateBlindMask"), &EEex::Opcode_Op74_StateBlindMask);
+	exportPattern(TEXT("EEex::Opcode_Op74_PermanentDurationType"), &EEex::Opcode_Op74_PermanentDurationType);
+	exportPattern(TEXT("EEex::Opcode_Op74_VanillaArmorClassDelta"), &EEex::Opcode_Op74_VanillaArmorClassDelta);
+	exportPattern(TEXT("EEex::Opcode_Op74_VanillaTHAC0Delta"), &EEex::Opcode_Op74_VanillaTHAC0Delta);
+	exportPattern(TEXT("EEex::Opcode_Op74_VanillaPortraitIcon"), &EEex::Opcode_Op74_VanillaPortraitIcon);
+	exportPattern(TEXT("EEex::Opcode_Op74_VanillaVisualRange"), &EEex::Opcode_Op74_VanillaVisualRange);
+	exportPattern(TEXT("EEex::Opcode_Op74_AddPortraitIcon"), &EEex::Opcode_Op74_AddPortraitIcon);
+	exportPattern(TEXT("EEex::Opcode_Op74_RemovePortraitIcon"), &EEex::Opcode_Op74_RemovePortraitIcon);
+	exportPattern(TEXT("EEex::Opcode_Op74_GetCharacterStateDescription"), &EEex::Opcode_Op74_GetCharacterStateDescription);
+	// op74
+	exportPattern(TEXT("EEex::Opcode_Hook_Blindness_ApplyEffect"), EEex::Opcode_Hook_Blindness_ApplyEffect);
+	exportPattern(TEXT("EEex::Opcode_Hook_Blindness_OnRemove"), EEex::Opcode_Hook_Blindness_OnRemove);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op74_ApplyBlindnessConsequences"), EEex::Opcode_Hook_Op74_ApplyBlindnessConsequences);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op74_GetBlindVisualRange"), EEex::Opcode_Hook_Op74_GetBlindVisualRange);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op74_AppendStatBreakdown"), EEex::Opcode_Hook_Op74_AppendStatBreakdown);
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
 	// op248
