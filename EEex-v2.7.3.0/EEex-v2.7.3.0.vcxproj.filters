@@ -266,6 +266,9 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\im_rolling_line_graph.hpp">
       <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\selective_bonus.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\script_folder.hpp">
       <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
     </ClInclude>

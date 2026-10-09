@@ -24,6 +24,7 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\menu_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\profiler.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\script_folder.hpp" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\selective_bonus.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\time_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\uncap_fps.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\util.hpp" />
