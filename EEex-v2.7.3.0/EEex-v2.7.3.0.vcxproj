@@ -15,6 +15,7 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\coordinate_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\debug_window.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEex.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\op135.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEexLua_generated.h" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\engine_function_names.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\font_util.hpp" />
@@ -54,6 +55,7 @@
     <ClCompile Include="..\EEex-Core-Shared-Files\source\debug.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\debug_window.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\EEex.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\op135.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_function_names.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\engine_reimplementations.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\font_util.cpp" />
@@ -136,7 +138,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EEEX_OP135_V273;SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -163,7 +165,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EEEX_OP135_V273;SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>

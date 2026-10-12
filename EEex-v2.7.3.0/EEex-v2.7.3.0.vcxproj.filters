@@ -69,6 +69,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\op135.cpp">
+      <Filter>Source Files\EEex-Core-Shared-Files</Filter>
+    </ClCompile>
     <ClCompile Include="source\EEex-v2.7.3.0\Generated\EEexLua_generated.cpp">
       <Filter>Source Files\EEex-v2.7.3.0\Generated</Filter>
     </ClCompile>
@@ -173,6 +176,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\op135.hpp">
+      <Filter>Header Files\EEex-Core-Shared-Files\EEex</Filter>
+    </ClInclude>
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\common\eeex_api.h">
       <Filter>Header Files\EEex-Core-Shared-Files\Common</Filter>
     </ClInclude>
