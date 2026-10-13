@@ -89,6 +89,20 @@ namespace EEex {
 
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
+	// op135: internal callbacks, installed only by the verified v2.7.3.0 database.
+	extern uint8_t Opcode135_BindingsReady;
+	void Opcode135_Init();
+	void Opcode135_ItemDestroyed(CItem* item);
+	void Opcode135_BeginPass(CGameSprite* sprite);
+	void Opcode135_Observe(CGameEffect* effect, CGameSprite* sprite);
+	int Opcode135_ApplyDriven(CGameEffect* child, CGameSprite* sprite, CGameEffect* driver);
+	bool Opcode135_CommitPass(CGameSprite* sprite);
+	bool Opcode135_ShouldSkipEquip(CItem* item, CGameSprite* sprite, long slot);
+	bool Opcode135_ItemEffect(CGameEffect* effect, CGameSprite* sprite, CItem* item, unsigned slot, unsigned ordinal);
+	void Opcode135_Unequipped(CItem* item, CGameSprite* sprite, long slot, int animationOnly);
+	void Opcode135_EffectDestroyed(CGameEffect* effect);
+	void Opcode135_EffectCopied(CGameEffect* source, CGameEffect* destination);
+	void Opcode135_SpriteDestroyed(CGameSprite* sprite);
 	// op248
 	void Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect);
 	// op249

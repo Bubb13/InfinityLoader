@@ -112,6 +112,18 @@ static void exportPatterns() {
 
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
+	// op135
+	#ifdef EEEX_OP135_V273
+		exportPattern(TEXT("EEex::Opcode135_BindingsReady"), &EEex::Opcode135_BindingsReady);
+		exportPattern(TEXT("EEex::Opcode135_ItemDestroyed"), EEex::Opcode135_ItemDestroyed);
+		exportPattern(TEXT("EEex::Opcode135_BeginPass"), EEex::Opcode135_BeginPass);
+		exportPattern(TEXT("EEex::Opcode135_Observe"), EEex::Opcode135_Observe);
+		exportPattern(TEXT("EEex::Opcode135_ApplyDriven"), EEex::Opcode135_ApplyDriven);
+		exportPattern(TEXT("EEex::Opcode135_CommitPass"), EEex::Opcode135_CommitPass);
+		exportPattern(TEXT("EEex::Opcode135_ShouldSkipEquip"), EEex::Opcode135_ShouldSkipEquip);
+		exportPattern(TEXT("EEex::Opcode135_ItemEffect"), EEex::Opcode135_ItemEffect);
+		exportPattern(TEXT("EEex::Opcode135_Unequipped"), EEex::Opcode135_Unequipped);
+	#endif
 	// op248
 	exportPattern(TEXT("EEex::Opcode_Hook_OnOp248AddTail"), EEex::Opcode_Hook_OnOp248AddTail);
 	// op249

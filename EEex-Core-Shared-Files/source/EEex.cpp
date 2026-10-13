@@ -4669,12 +4669,20 @@ void EEex::Opcode_Hook_OnCopy(CGameEffect* pSrcEffect, CGameEffect* pDstEffect) 
 
 	exEffectInfoMap[pDstEffect] = exEffectInfoMap[pSrcEffect];
 
+	#ifdef EEEX_OP135_V273
+		Opcode135_EffectCopied(pSrcEffect, pDstEffect);
+	#endif
+
 	STUTTER_LOG_END
 }
 
 void EEex::Opcode_Hook_OnDestruct(CGameEffect* pEffect) {
 
 	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnDestruct")
+
+	#ifdef EEEX_OP135_V273
+		Opcode135_EffectDestroyed(pEffect);
+	#endif
 
 	exEffectInfoMap.erase(pEffect);
 
@@ -4775,6 +4783,10 @@ void EEex::Sprite_Hook_OnConstruct(CGameSprite* pSprite) {
 void EEex::Sprite_Hook_OnDestruct(CGameSprite* pSprite) {
 
 	STUTTER_LOG_START(void, "EEex::Sprite_Hook_OnDestruct")
+
+	#ifdef EEEX_OP135_V273
+		Opcode135_SpriteDestroyed(pSprite);
+	#endif
 
 	if (auto itr = exSpriteDataMap.find(pSprite); itr != exSpriteDataMap.end()) {
 		ExSpriteData& exData = itr->second;
@@ -6304,6 +6316,11 @@ DWORD getLuaProc(const char* name, out_type& out) {
 void EEex::InitEEex() {
 
 	initScriptFolder();
+
+	#ifdef EEEX_OP135_V273
+		Opcode135_Init();
+	#endif
+
 	initFunctionNames();
 	initProjectileMutator();
 	initTimeUtil();
