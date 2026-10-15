@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <optional>
 #include <sstream>
@@ -49,6 +50,19 @@ constexpr uintptr_t HOOK_INTEGRITY_WATCHDOG_STACK_SNAPSHOT_SIZE = 256;
 
 // Needs to be updated if Beamdog ever adds a new stat
 #define FIRST_EXTENDED_STAT_ID 203
+
+// op346 / New op420 - Number of schools (MSCHOOL.2DA rows) the engine itself can store a save bonus for. This is the
+// length of CDerivedStatsTemplate::m_nSchoolSaveBonus, which CGameEffectSaveVsSchoolMod::ApplyEffect() and
+// CGameEffect::CheckSave() both bound-check against (`cmp <school>, 0xC` in v2.7.3.0).
+constexpr uint VANILLA_SCHOOL_SAVE_BONUS_COUNT = static_cast<uint>(
+	sizeof(CDerivedStatsTemplate::m_nSchoolSaveBonus.data) / sizeof(CDerivedStatsTemplate::m_nSchoolSaveBonus.data[0]));
+
+static_assert(VANILLA_SCHOOL_SAVE_BONUS_COUNT == 12, "CDerivedStatsTemplate::m_nSchoolSaveBonus changed size, re-audit op346");
+
+// op346 / New op420 - Save bonuses are supported for every school / secondary type id an unsigned byte can hold. The
+// .SPL header stores both as an unsigned char (Spell_Header_st::school / Spell_Header_st::secondaryType), while
+// CGameEffect::m_school / CGameEffect::m_secondaryType (and .EFF files) widen them to 32 bits.
+constexpr uint SAVE_BONUS_TYPE_COUNT = 256;
 
 ////////////////
 // Projectile //
@@ -106,6 +120,12 @@ struct ExStatData {
 	std::vector<CGameEffect*> projectileMutatorEffects;
 	// op409
 	std::vector<EnabledActionListenerData> enableActionListenerEffects;
+	// op346 - Save bonus vs. the schools the engine cannot store itself (ids VANILLA_SCHOOL_SAVE_BONUS_COUNT and up).
+	//         Indexed by school id; entries below VANILLA_SCHOOL_SAVE_BONUS_COUNT stay 0, the engine's own
+	//         CDerivedStatsTemplate::m_nSchoolSaveBonus keeps holding those.
+	std::array<short, SAVE_BONUS_TYPE_COUNT> exSchoolSaveBonus{};
+	// op420 - Save bonus vs. secondary type, indexed by secondary type id (the engine has no equivalent storage)
+	std::array<short, SAVE_BONUS_TYPE_COUNT> secondaryTypeSaveBonus{};
 };
 
 std::unordered_map<void*, ExStatData> exStatDataMap{};
@@ -208,6 +228,14 @@ std::unordered_set<std::string> exTemplateNames{};
 //----------------------------------------//
 
 static bool checkBlockWeaponHit(CGameSprite* pAttackingSprite, CGameSprite* pTargetSprite, CItem* pWeapon, Item_ability_st* pWeaponAbility);
+
+// op346 / New op420 - The EEex-side save bonuses that apply against an effect
+struct ExtendedSaveBonus {
+	short nSchoolBonus = 0;        // op346, only for m_school VANILLA_SCHOOL_SAVE_BONUS_COUNT .. 255
+	short nSecondaryTypeBonus = 0; // op420, for m_secondaryType 0 .. 255
+};
+
+static ExtendedSaveBonus getExtendedSaveBonus(const CGameEffect* pEffect, CDerivedStats* pStats);
 
 //--------------------------------//
 //          Globals Util          //
@@ -3562,12 +3590,28 @@ int EEex::Override_CGameEffect_CheckSave(CGameEffect *const pEffect, CGameSprite
 		outputBonus("Specialist vs. School", 2);
 	}
 
-	// op346
-	if (school < 12) {
+	// op346 - Schools the engine stores itself
+	if (school < VANILLA_SCHOOL_SAVE_BONUS_COUNT) {
 		const short nSchoolSaveBonus = targetStats.m_nSchoolSaveBonus[school];
 		nBestSavesRollTotal += nSchoolSaveBonus;
 		if (nSchoolSaveBonus != 0) {
 			outputBonus("Creature vs. School", nSchoolSaveBonus);
+		}
+	}
+
+	// op346 (schools VANILLA_SCHOOL_SAVE_BONUS_COUNT .. 255) / op420 - Same values the engine hook
+	// EEex::Opcode_Hook_CheckSave_GetExtendedSaveBonus() adds to the vanilla saving throw
+	{
+		const ExtendedSaveBonus extendedSaveBonus = getExtendedSaveBonus(pEffect, &targetStats);
+
+		if (const short nSchoolSaveBonus = extendedSaveBonus.nSchoolBonus; nSchoolSaveBonus != 0) {
+			nBestSavesRollTotal += nSchoolSaveBonus;
+			outputBonus("Creature vs. School", nSchoolSaveBonus);
+		}
+
+		if (const short nSecondaryTypeSaveBonus = extendedSaveBonus.nSecondaryTypeBonus; nSecondaryTypeSaveBonus != 0) {
+			nBestSavesRollTotal += nSecondaryTypeSaveBonus;
+			outputBonus("Creature vs. Secondary Type", nSecondaryTypeSaveBonus);
 		}
 	}
 
@@ -3955,6 +3999,14 @@ void EEex::GameState_Hook_OnAfterGlobalVariablesUnmarshalled() {
 // Stats //
 ///////////
 
+// op346 / New op420 - Sum two save bonuses exactly like the engine sums CDerivedStatsTemplate::m_nSchoolSaveBonus
+// entries (`add word ptr [...], ax` in CGameEffectSaveVsSchoolMod::ApplyEffect() and CDerivedStats::operator+=()):
+// a 16-bit two's complement wrap-around, never a saturation. The unsigned operands keep the sum free of signed
+// overflow, and the conversion back to short is modular (C++20).
+static short addSaveBonusWrapped(const short a, const short b) {
+	return static_cast<short>(static_cast<unsigned short>(a) + static_cast<unsigned short>(b));
+}
+
 void EEex::Stats_Hook_OnConstruct(CDerivedStats* pStats) {
 	STUTTER_LOG_START(void, "EEex::Stats_Hook_OnConstruct")
 	STUTTER_LOG_END
@@ -3997,6 +4049,31 @@ void EEex::Stats_Hook_OnReload(CGameSprite* pSprite) {
 
 	// op409
 	exStatData.enableActionListenerEffects.clear();
+
+	// op346 / op420 - CDerivedStats::Reload() zeroes the engine's m_nSchoolSaveBonus, mirror that
+	exStatData.exSchoolSaveBonus.fill(0);
+	exStatData.secondaryTypeSaveBonus.fill(0);
+
+	STUTTER_LOG_END
+}
+
+// Called on entry to CDerivedStats::BonusInit(), which zeroes (among others) the engine's m_nSchoolSaveBonus. Its
+// callers are CDerivedStats::CDerivedStats(), CGameSprite::Unmarshal(), and CGameSprite::ProcessEffectList(); the
+// latter resets m_bonusStats this way right before the effect lists are applied, which is where op346 / op420
+// (param2 == 0) accumulate their bonuses, so this must mirror the zeroing for the EEex-side save bonuses.
+//
+// Only an existing entry is reset: a CDerivedStats instance without one already reads every EEex save bonus as 0, and
+// this must not allocate an entry for every CDerivedStats the engine constructs.
+void EEex::Stats_Hook_OnBonusInit(CDerivedStats* pStats) {
+
+	STUTTER_LOG_START(void, "EEex::Stats_Hook_OnBonusInit")
+
+	if (auto exStatDataPair = exStatDataMap.find(pStats); exStatDataPair != exStatDataMap.end()) {
+		ExStatData& exStatData = exStatDataPair->second;
+		// op346 / op420
+		exStatData.exSchoolSaveBonus.fill(0);
+		exStatData.secondaryTypeSaveBonus.fill(0);
+	}
 
 	STUTTER_LOG_END
 }
@@ -4059,6 +4136,10 @@ void EEex::Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats) {
 		data.pEffect = otherEnableActionListener.pEffect;
 	}
 
+	// op346 / op420 - CDerivedStats::operator=() copies the engine's m_nSchoolSaveBonus, mirror that
+	exStatData.exSchoolSaveBonus = otherExStatData.exSchoolSaveBonus;
+	exStatData.secondaryTypeSaveBonus = otherExStatData.secondaryTypeSaveBonus;
+
 	STUTTER_LOG_END
 }
 
@@ -4115,6 +4196,13 @@ void EEex::Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStat
 		auto& data = enableActionListenerEffects.emplace_back();
 		strcpy_s(data.funcName, sizeof(data.funcName), otherEnableActionListener.funcName);
 		data.pEffect = otherEnableActionListener.pEffect;
+	}
+
+	// op346 / op420 - CDerivedStats::operator+=() adds every m_nSchoolSaveBonus entry of the bonus stats with a 16-bit
+	// `add word ptr`, mirror that (this is how param2 == 0 bonuses reach m_derivedStats)
+	for (uint i = 0; i < SAVE_BONUS_TYPE_COUNT; ++i) {
+		exStatData.exSchoolSaveBonus[i] = addSaveBonusWrapped(exStatData.exSchoolSaveBonus[i], otherExStatData.exSchoolSaveBonus[i]);
+		exStatData.secondaryTypeSaveBonus[i] = addSaveBonusWrapped(exStatData.secondaryTypeSaveBonus[i], otherExStatData.secondaryTypeSaveBonus[i]);
 	}
 
 	STUTTER_LOG_END
@@ -4404,6 +4492,137 @@ void EEex::Opcode_Hook_Op342_OnUnhandledParam2(CGameEffect* pEffect, CGameSprite
 	}
 }
 
+//---------------------------------------------------------------------------------------------------------------//
+// op346 / New op420 - Save bonus vs. school (all 256 ids) / vs. secondary type                                  //
+//---------------------------------------------------------------------------------------------------------------//
+//                                                                                                               //
+// Vanilla CGameEffectSaveVsSchoolMod::ApplyEffect() (op346), identical in BG:EE / BG2:EE / IWD:EE v2.7.3.0:     //
+//                                                                                                               //
+//     school = m_special                                                                                        //
+//     if (school >= 12) return 0              ; (the m_nSchoolSaveBonus length) -> HandleList() then stops      //
+//                                             ; resolving the remaining effects of that list for this pass      //
+//     param2 == 0 -> m_bonusStats.m_nSchoolSaveBonus[school]   += (short)param1 ; return 1                      //
+//     param2 == 1 -> m_derivedStats.m_nSchoolSaveBonus[school]  = (short)param1 ; return 1                      //
+//     otherwise   -> return 1                                                                                   //
+//                                                                                                               //
+// The only reader of m_nSchoolSaveBonus is CGameEffect::CheckSave() (CGameEffectDamage / CGameEffectPushPull    //
+// delegate to it), which adds m_nSchoolSaveBonus[m_school] of GetActiveStats() to the save roll when            //
+// m_school < 12. CDerivedStats::Reload() / BonusInit() zero the array, operator=() copies it, and operator+=()  //
+// adds the bonus stats into m_derivedStats. EEex mirrors exactly that model for the ids the engine cannot store //
+// (see ExStatData::exSchoolSaveBonus / ExStatData::secondaryTypeSaveBonus and the Stats_Hook_* functions).      //
+//                                                                                                               //
+// op177 / op182 / op183 / op283 decode their .EFF with CGameEffect::DecodeEffectFromBase() (-> DecodeEffect(),  //
+// which also decodes the new op420), call the child's ApplyEffect() directly with the target sprite, and then   //
+// delete the child. That is why only VALUES are stored here, never a pointer to the applying effect.            //
+//                                                                                                               //
+//---------------------------------------------------------------------------------------------------------------//
+
+// Shared ApplyEffect() body: applies param1 / param2 exactly like vanilla op346 to the save bonus slot returned by
+// `getSlot(stats)`, where `stats` is m_bonusStats (param2 == 0, summed) or m_derivedStats (param2 == 1, set).
+//
+// Return: always 1 (continue effect list processing), like every in-range vanilla op346 case.
+template<typename GetSlotFunc>
+static int applySaveBonusMod(CGameEffect *const pEffect, CGameSprite *const pSprite, GetSlotFunc getSlot) {
+
+	// The engine only ever uses the low 16 bits of param1 (`movzx eax, word ptr [effect+m_effectAmount]`)
+	const short nAmount = static_cast<short>(pEffect->m_effectAmount);
+
+	switch (pEffect->m_dWFlags) {
+		case 0: { // Cumulative: accumulated in the bonus stats, which CDerivedStats::operator+=() adds to m_derivedStats
+			short& nBonus = getSlot(pSprite->m_bonusStats);
+			nBonus = addSaveBonusWrapped(nBonus, nAmount);
+			break;
+		}
+		case 1: { // Flat: overrides the value m_derivedStats was reloaded with
+			getSlot(pSprite->m_derivedStats) = nAmount;
+			break;
+		}
+		default: { // Vanilla ignores any other param2
+			break;
+		}
+	}
+
+	return 1;
+}
+
+// Replaces CGameEffectSaveVsSchoolMod::ApplyEffect() (op346) entirely: EEex_Opcode_Patch.lua writes a `jmp` to this
+// function over its first instruction, after validating the vanilla code reproduced below. This is the vtable slot's
+// exact Win64 ABI (rcx = this, rdx = pSprite, eax = result). The function has no direct callers, so .EFF children
+// of op177 / op182 / op183 / op283 (called through the vtable) reach this as well.
+//
+//     special < 12      -> Vanilla behavior, on the engine's own CDerivedStatsTemplate::m_nSchoolSaveBonus
+//     special 12 .. 255 -> Same param1 / param2 semantics, on ExStatData::exSchoolSaveBonus
+//     special > 255     -> Vanilla out-of-range behavior: no-op, return 0
+//
+// Return:
+//      0 => Halt effect list processing (vanilla out-of-range behavior)
+//     !0 => Continue effect list processing
+int EEex::Opcode_Hook_SaveVsSchoolMod_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_SaveVsSchoolMod_ApplyEffect")
+
+	const uint nSchool = pEffect->m_special;
+
+	if (nSchool < VANILLA_SCHOOL_SAVE_BONUS_COUNT) {
+		// Vanilla range: keep using the engine's storage, so anything else reading it (e.g. Lua) stays correct
+		return applySaveBonusMod(pEffect, pSprite, [&](CDerivedStats& stats) -> short& {
+			return stats.m_nSchoolSaveBonus.data[nSchool];
+		});
+	}
+
+	if (nSchool >= SAVE_BONUS_TYPE_COUNT) {
+		return 0; // Vanilla out-of-range behavior
+	}
+
+	return applySaveBonusMod(pEffect, pSprite, [&](CDerivedStats& stats) -> short& {
+		return exStatDataMap[&stats].exSchoolSaveBonus[nSchool];
+	});
+
+	STUTTER_LOG_END
+}
+
+// The EEex-side save bonuses of `pStats` that apply against `pEffect` (see ExtendedSaveBonus)
+static ExtendedSaveBonus getExtendedSaveBonus(const CGameEffect *const pEffect, CDerivedStats *const pStats) {
+
+	ExtendedSaveBonus result{};
+
+	// Read-only lookup: stats without an entry have no EEex-side save bonus, and saving throws must not allocate one
+	const auto exStatDataPair = exStatDataMap.find(pStats);
+	if (exStatDataPair == exStatDataMap.end()) {
+		return result;
+	}
+
+	const ExStatData& exStatData = exStatDataPair->second;
+
+	// Schools below VANILLA_SCHOOL_SAVE_BONUS_COUNT were already handled by the engine's own m_nSchoolSaveBonus lookup
+	if (const uint nSchool = pEffect->m_school; nSchool >= VANILLA_SCHOOL_SAVE_BONUS_COUNT && nSchool < SAVE_BONUS_TYPE_COUNT) {
+		result.nSchoolBonus = exStatData.exSchoolSaveBonus[nSchool];
+	}
+
+	if (const uint nSecondaryType = pEffect->m_secondaryType; nSecondaryType < SAVE_BONUS_TYPE_COUNT) {
+		result.nSecondaryTypeBonus = exStatData.secondaryTypeSaveBonus[nSecondaryType];
+	}
+
+	return result;
+}
+
+// Called by CGameEffect::CheckSave() right after its own `m_school < 12` m_nSchoolSaveBonus block (whether that block
+// ran or was skipped), where `edi` holds the running save total. EEex_Opcode_Patch.lua adds the returned value to it.
+//
+// The engine reads m_nSchoolSaveBonus from `m_bAllowEffectListCall ? m_derivedStats : m_tempStats`, which is exactly
+// GetActiveStats(). Like the engine's `movsx`, every int16 bonus is sign-extended before being added.
+//
+// Return: The extended op346 school bonus (m_school 12 .. 255) + the op420 secondary type bonus (m_secondaryType 0 .. 255)
+int EEex::Opcode_Hook_CheckSave_GetExtendedSaveBonus(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_CheckSave_GetExtendedSaveBonus")
+
+	const ExtendedSaveBonus bonus = getExtendedSaveBonus(pEffect, pSprite->GetActiveStats());
+	return static_cast<int>(bonus.nSchoolBonus) + static_cast<int>(bonus.nSecondaryTypeBonus);
+
+	STUTTER_LOG_END
+}
+
 //-----------//
 // New op400 //
 //-----------//
@@ -4591,6 +4810,36 @@ void EEex::Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGame
 //---------------//
 // END New op409 //
 //---------------//
+
+//-----------//
+// New op420 //
+//-----------//
+
+// ApplyEffect() of the new op420 (SaveVsSecondaryTypeMod): op346 for secondary types (MSECTYPE.2DA rows) instead of
+// schools. The engine has no storage for these, so every id uses ExStatData::secondaryTypeSaveBonus.
+//
+//     special 0 .. 255 -> param1 / param2 exactly like op346 (param2 == 0 sum, param2 == 1 set, otherwise nothing)
+//     special > 255    -> Vanilla op346 out-of-range behavior: no-op, return 0
+//
+// Return:
+//      0 => Halt effect list processing (vanilla op346 out-of-range behavior)
+//     !0 => Continue effect list processing
+int EEex::Opcode_Hook_SaveVsSecondaryTypeMod_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_SaveVsSecondaryTypeMod_ApplyEffect")
+
+	const uint nSecondaryType = pEffect->m_special;
+
+	if (nSecondaryType >= SAVE_BONUS_TYPE_COUNT) {
+		return 0; // Vanilla op346 out-of-range behavior
+	}
+
+	return applySaveBonusMod(pEffect, pSprite, [&](CDerivedStats& stats) -> short& {
+		return exStatDataMap[&stats].secondaryTypeSaveBonus[nSecondaryType];
+	});
+
+	STUTTER_LOG_END
+}
 
 int EEex::Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect) {
 

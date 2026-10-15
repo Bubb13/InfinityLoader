@@ -79,6 +79,7 @@ namespace EEex {
 	void Stats_Hook_OnConstruct(CDerivedStats* pStats);
 	void Stats_Hook_OnDestruct(CDerivedStats* pStats);
 	void Stats_Hook_OnReload(CGameSprite* pSprite);
+	void Stats_Hook_OnBonusInit(CDerivedStats* pStats);
 	void Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats);
 	void Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats);
 	int Stats_Hook_OnGettingUnknown(CDerivedStats* pStats, int nStatId);
@@ -101,6 +102,10 @@ namespace EEex {
 	bool Opcode_Hook_Op319_IsInverted(CGameEffect* pEffect);
 	// op342
 	void Opcode_Hook_Op342_OnUnhandledParam2(CGameEffect* pEffect, CGameSprite* pSprite);
+	// op346 / New op420
+	int Opcode_Hook_CheckSave_GetExtendedSaveBonus(CGameEffect* pEffect, CGameSprite* pSprite);
+	// op346
+	int Opcode_Hook_SaveVsSchoolMod_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	// New op400
 	int Opcode_Hook_SetTemporaryAIScript_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_SetTemporaryAIScript_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
@@ -115,6 +120,8 @@ namespace EEex {
 	// New op409
 	int Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
+	// New op420
+	int Opcode_Hook_SaveVsSecondaryTypeMod_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 
 	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect);
 	int Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite);

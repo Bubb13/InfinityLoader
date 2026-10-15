@@ -102,6 +102,7 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Stats_Hook_OnConstruct"), EEex::Stats_Hook_OnConstruct);
 	exportPattern(TEXT("EEex::Stats_Hook_OnDestruct"), EEex::Stats_Hook_OnDestruct);
 	exportPattern(TEXT("EEex::Stats_Hook_OnReload"), EEex::Stats_Hook_OnReload);
+	exportPattern(TEXT("EEex::Stats_Hook_OnBonusInit"), EEex::Stats_Hook_OnBonusInit);
 	exportPattern(TEXT("EEex::Stats_Hook_OnEqu"), EEex::Stats_Hook_OnEqu);
 	exportPattern(TEXT("EEex::Stats_Hook_OnPlusEqu"), EEex::Stats_Hook_OnPlusEqu);
 	exportPattern(TEXT("EEex::Stats_Hook_OnGettingUnknown"), EEex::Stats_Hook_OnGettingUnknown);
@@ -124,6 +125,10 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Opcode_Hook_Op319_IsInverted"), EEex::Opcode_Hook_Op319_IsInverted);
 	// op342
 	exportPattern(TEXT("EEex::Opcode_Hook_Op342_OnUnhandledParam2"), EEex::Opcode_Hook_Op342_OnUnhandledParam2);
+	// op346 / New op420
+	exportPattern(TEXT("EEex::Opcode_Hook_CheckSave_GetExtendedSaveBonus"), EEex::Opcode_Hook_CheckSave_GetExtendedSaveBonus);
+	// op346
+	exportPattern(TEXT("EEex::Opcode_Hook_SaveVsSchoolMod_ApplyEffect"), EEex::Opcode_Hook_SaveVsSchoolMod_ApplyEffect);
 	// New op400
 	exportPattern(TEXT("EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect"), EEex::Opcode_Hook_SetTemporaryAIScript_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove"), EEex::Opcode_Hook_SetTemporaryAIScript_OnRemove);
@@ -138,6 +143,8 @@ static void exportPatterns() {
 	// New op409
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_ApplyEffect"), EEex::Opcode_Hook_EnableActionListener_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_OnRemove"), EEex::Opcode_Hook_EnableActionListener_OnRemove);
+	// New op420
+	exportPattern(TEXT("EEex::Opcode_Hook_SaveVsSecondaryTypeMod_ApplyEffect"), EEex::Opcode_Hook_SaveVsSecondaryTypeMod_ApplyEffect);
 
 	exportPattern(TEXT("EEex::Opcode_Hook_OnCopy"), EEex::Opcode_Hook_OnCopy);
 	exportPattern(TEXT("EEex::Opcode_Hook_OnDestruct"), EEex::Opcode_Hook_OnDestruct);
