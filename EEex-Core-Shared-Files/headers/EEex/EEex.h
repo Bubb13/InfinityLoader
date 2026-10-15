@@ -87,6 +87,9 @@ namespace EEex {
 	// Opcode //
 	////////////
 
+	// op65
+	bool Opcode_Hook_Op65_ShouldSetStateBlur(CGameEffect* pEffect, CGameSprite* pSprite);
+	bool Opcode_Hook_Op65_ShouldKeepBlurVisual(CGameSprite* pSprite);
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
 	// op248
