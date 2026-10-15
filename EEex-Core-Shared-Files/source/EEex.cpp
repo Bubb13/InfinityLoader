@@ -1,8 +1,10 @@
 
 #include <algorithm>
 #include <chrono>
+#include <limits>
 #include <optional>
 #include <sstream>
+#include <string>
 #include <unordered_set>
 
 #include <mbstring.h>
@@ -94,9 +96,26 @@ struct EnabledActionListenerData {
 	CGameEffect* pEffect;
 };
 
+// op74 - The blindness of one effect list pass, kept next to the m_derivedStats it belongs to (see the op74 section)
+struct Op74BlindnessData {
+	// Softcoded fields of the first op74 applied during the current pass. 0 = use the vanilla value.
+	// Only VALUES are stored: the .EFF children of op177 / op182 / op183 / op283 are deleted right after applying.
+	bool bHasEffectValues = false;
+	int nArmorClassBonus = 0;  // CGameEffect::m_effectAmount3 (positive = better AC, like op0)
+	int nTHAC0Bonus = 0;       // CGameEffect::m_effectAmount2 (positive = better THAC0, like op54)
+	int nPortraitIcon = 0;     // CGameEffect::m_effectAmount4 (STATDESC.2DA row)
+	uint nVisualRange = 0;     // CGameEffect::m_special
+	// What EEex::Opcode_Hook_Op74_ApplyBlindnessConsequences() applied at the end of the pass (STATE_BLIND set)
+	bool bApplied = false;
+	short nAppliedArmorClassDelta = 0;  // Raw m_nArmorClass delta (+ = worse)
+	short nAppliedTHAC0Delta = 0;       // Raw m_nTHAC0 delta (+ = worse)
+};
+
 struct ExStatData {
 	std::unordered_set<uint> exSpellStates{};
 	std::unordered_map<int, int> exStatValues{};
+	// op74
+	Op74BlindnessData op74{};
 	// op280
 	int forcedWildSurgeNumber = 0;
 	bool suppressWildSurgeVisuals = false;
@@ -3976,6 +3995,10 @@ void EEex::Stats_Hook_OnReload(CGameSprite* pSprite) {
 
 	ExStatData& exStatData = exStatDataMap[&pSprite->m_derivedStats];
 
+	// op74 - CDerivedStats::Reload() rebuilds m_derivedStats from m_baseStats right before the effect lists are applied
+	//        again, so the op74 values of the previous pass (and what was applied with them) are dropped too
+	exStatData.op74 = {};
+
 	// op280
 	exStatData.forcedWildSurgeNumber = 0;
 	exStatData.suppressWildSurgeVisuals = false;
@@ -4007,6 +4030,10 @@ void EEex::Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats) {
 
 	ExStatData& exStatData = exStatDataMap[pStats];
 	ExStatData& otherExStatData = exStatDataMap[pOtherStats];
+
+	// op74 - CDerivedStats::operator=() copies m_generalState / m_nArmorClass / m_nTHAC0 (penalties included), so
+	//        copy the blindness data that produced them as well
+	exStatData.op74 = otherExStatData.op74;
 
 	// op280
 	exStatData.forcedWildSurgeNumber = otherExStatData.forcedWildSurgeNumber;
@@ -4068,6 +4095,9 @@ void EEex::Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStat
 
 	ExStatData& exStatData = exStatDataMap[pStats];
 	ExStatData& otherExStatData = exStatDataMap[pOtherStats];
+
+	// op74 - Intentionally NOT merged: op74 only ever writes m_derivedStats directly (never m_bonusStats), and its
+	//        penalties are applied after this operator ran (EEex::Opcode_Hook_Op74_ApplyBlindnessConsequences()).
 
 	// op280
 	if (otherExStatData.forcedWildSurgeNumber != 0) {
@@ -4228,6 +4258,253 @@ int CDerivedStats::Override_SetSpellState(uint bit)
 ////////////
 // Opcode //
 ////////////
+
+//-------------------------------------------------------------------------------------------------------------------//
+// op74 (Blindness) - Every consequence is tied to STATE_BLIND (so it is 100% curable), and every value is softcoded //
+//-------------------------------------------------------------------------------------------------------------------//
+//                                                                                                                   //
+// Vanilla CGameEffectBlindness, identical in BG:EE / BG2:EE / IWD:EE v2.7.3.0:                                      //
+//                                                                                                                   //
+//     ApplyEffect():                                                                                                //
+//         m_durationType == 1 (timings 1 / 4 / 7: ResolveEffect() turns 4 into 7 and 7 into 1 first):               //
+//             if (!(base.m_generalState & STATE_BLIND)) { base |= STATE_BLIND; base AC += 4; base THAC0 += 4;       //
+//                                                       AddPortraitIcon(8) }                                        //
+//             same on m_derivedStats; m_done = 1 -> HandleList() deletes the effect (after its OnRemove())          //
+//         otherwise:                                                                                                //
+//             if (!(derived.m_generalState & STATE_BLIND)) { derived |= STATE_BLIND; AC += 4; THAC0 += 4;           //
+//                                                          AddPortraitIcon(8) }                                     //
+//     OnRemove(): RemovePortraitIcon(8)                                                                             //
+//     CGameSprite::CheckStatsChange(): STATE_BLIND -> m_derivedStats.m_nVisualRange = 2                             //
+//     CGameSprite::GetStatBreakdown(): per op74 in the timed list, if STATE_BLIND: "\n<Blind>: +4" (AC and THAC0)   //
+//                                                                                                                   //
+// The bug: the permanent +4 is baked into m_baseStats, while op75 (CureBlindness) only clears STATE_BLIND (base +   //
+// derived) and removes the op74 effects - the AC / THAC0 penalty can never be cured.                                //
+//                                                                                                                   //
+// EEex model:                                                                                                       //
+//   * ApplyEffect() only sets STATE_BLIND (permanent: in m_baseStats too, so it still survives saves / removal of   //
+//     the effect) and records the softcoded fields of the first op74 applied during the pass. Permanent op74s are   //
+//     no longer deleted (m_done stays 0): they keep supplying their values, and op75 removes them like any other.   //
+//   * At the end of every effect list pass (right before CheckStatsChange()), if m_derivedStats has STATE_BLIND,    //
+//     the AC / THAC0 penalties and the portrait icon are applied: no STATE_BLIND, no consequence.                   //
+//   * CheckStatsChange()'s blind visual range and the record screen tooltip use the same resolved values.           //
+//                                                                                                                   //
+// Softcoded fields (0 = vanilla value, which EEex_Opcode_Patch.lua reads from the validated vanilla instructions):  //
+//     m_effectAmount2 (EFF V2 0x60) -> THAC0 bonus  (positive = better, like op54: THAC0 -= value)                  //
+//     m_effectAmount3 (EFF V2 0x64) -> AC bonus     (positive = better, like op0:  AC -= value)                     //
+//     m_effectAmount4 (EFF V2 0x68) -> Portrait icon (STATDESC.2DA row)                                             //
+//     m_special       (EFF V2 0x48) -> Visual range (clamped to what CGameSprite::m_nVisualRange can hold)          //
+// m_effectAmount / m_dWFlags keep their vanilla meaning (OnAddSpecific()'s IWD dice duration mode, untouched).      //
+//                                                                                                                   //
+// op177 / op182 / op183 / op283 decode their .EFF child and call its ApplyEffect() directly (through the vtable),   //
+// so the replaced ApplyEffect() sees them too; only values are recorded, never the (short-lived) child itself.      //
+//                                                                                                                   //
+//-------------------------------------------------------------------------------------------------------------------//
+
+namespace EEex {
+	// Written once by EEex_Opcode_Patch.lua before any op74 hook is installed; nothing reads them before that
+	uint Opcode_Op74_StateBlindMask = 0;          // 1 << imm8 of ApplyEffect()'s `bts eax, imm8`
+	uint Opcode_Op74_PermanentDurationType = 0;   // imm8 of ApplyEffect()'s `cmp dword ptr [rcx+m_durationType], imm8`
+	int Opcode_Op74_VanillaArmorClassDelta = 0;   // imm8 of ApplyEffect()'s `add word ptr [..+m_nArmorClass], imm8`
+	int Opcode_Op74_VanillaTHAC0Delta = 0;        // imm8 of ApplyEffect()'s `add word ptr [..+m_nTHAC0], imm8`
+	int Opcode_Op74_VanillaPortraitIcon = 0;      // imm32 of ApplyEffect()'s `mov edx, imm32` before AddPortraitIcon()
+	int Opcode_Op74_VanillaVisualRange = 0;       // imm32 of CheckStatsChange()'s `mov ecx, imm32`
+	void (*Opcode_Op74_AddPortraitIcon)(CGameSprite* pSprite, int nIcon) = nullptr;  // ApplyEffect()'s call target
+	void (*Opcode_Op74_RemovePortraitIcon)(CGameSprite* pSprite, int nIcon) = nullptr;  // OnRemove()'s jmp target
+	void (*Opcode_Op74_GetCharacterStateDescription)(const CRuleTables* pRuleTables, int nIcon, CString* pDescription) = nullptr;
+}
+
+// The values the current pass resolves to: the recorded op74 fields, or the vanilla value where a field is 0
+struct Op74ResolvedValues {
+	short nArmorClassDelta;  // Raw m_nArmorClass delta (+ = worse)
+	short nTHAC0Delta;       // Raw m_nTHAC0 delta (+ = worse)
+	int nPortraitIcon;
+	int nVisualRange;
+};
+
+// A bonus (positive = better) as the raw 16-bit stat delta the engine adds (positive = worse). Only the low 16 bits
+// matter for these int16 stats; unsigned arithmetic keeps the negation free of signed overflow (INT_MIN included),
+// and the conversion back to short is modular (C++20).
+static short op74BonusToRawDelta(const int nBonus) {
+	return static_cast<short>(static_cast<unsigned short>(0u - static_cast<uint>(nBonus)));
+}
+
+// `nValue += nDelta` exactly like the engine's `add word ptr`: a 16-bit two's complement wrap-around, no saturation
+static short op74AddWrapped(const short nValue, const short nDelta) {
+	return static_cast<short>(static_cast<unsigned short>(nValue) + static_cast<unsigned short>(nDelta));
+}
+
+static Op74ResolvedValues op74Resolve(const Op74BlindnessData& data) {
+
+	// Without a recorded op74 (STATE_BLIND from the .CRE, from a permanent .EFF child, or from a vanilla save), every
+	// field reads as 0, i.e. every value is the vanilla one
+	const bool bHas = data.bHasEffectValues;
+
+	// The visual range ends up in CGameSprite::m_nVisualRange (via SetVisualRange()), which CheckStatsChange()
+	// compares with m_derivedStats.m_nVisualRange on every pass: clamp to what it can hold, or it would never match
+	constexpr uint nMaxVisualRange = (std::numeric_limits<decltype(CGameSprite::m_nVisualRange)>::max)();
+
+	return Op74ResolvedValues {
+		.nArmorClassDelta = bHas && data.nArmorClassBonus != 0
+			? op74BonusToRawDelta(data.nArmorClassBonus) : static_cast<short>(EEex::Opcode_Op74_VanillaArmorClassDelta),
+		.nTHAC0Delta = bHas && data.nTHAC0Bonus != 0
+			? op74BonusToRawDelta(data.nTHAC0Bonus) : static_cast<short>(EEex::Opcode_Op74_VanillaTHAC0Delta),
+		.nPortraitIcon = bHas && data.nPortraitIcon != 0 ? data.nPortraitIcon : EEex::Opcode_Op74_VanillaPortraitIcon,
+		.nVisualRange = bHas && data.nVisualRange != 0
+			? static_cast<int>((std::min)(data.nVisualRange, nMaxVisualRange)) : EEex::Opcode_Op74_VanillaVisualRange,
+	};
+}
+
+// Replaces CGameEffectBlindness::ApplyEffect() entirely: EEex_Opcode_Patch.lua writes a `jmp` (through a near stub)
+// over its first instruction, after validating all 216 vanilla bytes. This is the vtable slot's exact Win64 ABI
+// (rcx = this, rdx = pSprite, eax = result); the function has no direct callers.
+//
+// Return: always 1 (continue effect list processing), like vanilla.
+int EEex::Opcode_Hook_Blindness_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_Blindness_ApplyEffect")
+
+	const uint nStateBlind = EEex::Opcode_Op74_StateBlindMask;
+
+	// Permanent timing: like vanilla, STATE_BLIND also goes into m_baseStats, so the blindness itself survives saves,
+	// and even the removal of this effect by other means; op75 clears it there too. The vanilla AC / THAC0 base stat
+	// writes are gone: penalties now only exist while STATE_BLIND is set (EEex::Opcode_Hook_Op74_ApplyBlindnessConsequences()).
+	if (pEffect->m_durationType == EEex::Opcode_Op74_PermanentDurationType) {
+		pSprite->m_baseStats.m_generalState |= nStateBlind;
+	}
+
+	// CDerivedStats::Reload() already ran for this pass, so the current pass needs the bit in m_derivedStats as well
+	pSprite->m_derivedStats.m_generalState |= nStateBlind;
+
+	// The first op74 of the pass supplies the values, like vanilla, where only the op74 that found STATE_BLIND clear
+	// applied its (hardcoded) penalties. EEex::Stats_Hook_OnReload() clears this at the start of every pass.
+	Op74BlindnessData& data = exStatDataMap[&pSprite->m_derivedStats].op74;
+	if (!data.bHasEffectValues) {
+		data.bHasEffectValues = true;
+		data.nArmorClassBonus = pEffect->m_effectAmount3;
+		data.nTHAC0Bonus = pEffect->m_effectAmount2;
+		data.nPortraitIcon = pEffect->m_effectAmount4;
+		data.nVisualRange = pEffect->m_special;
+	}
+
+	// m_done deliberately stays 0, even for the permanent timing: the effect stays in its list (and in saves) so its
+	// values keep applying on every pass, until op75 (RemoveAllOfType(74) on both lists) or anything else removes it
+	return 1;
+
+	STUTTER_LOG_END
+}
+
+// Replaces CGameEffectBlindness::OnRemove() entirely (`jmp` over its first instruction, after validating all 13
+// vanilla bytes; vtable-only, exact Win64 ABI). Vanilla removes the hardcoded icon 8; this removes the icon this
+// effect stands for. ProcessEffectList() rebuilds the portrait icons on every pass anyway, so this only matters
+// until the next pass (e.g. the effect is removed outside of one).
+void EEex::Opcode_Hook_Blindness_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Blindness_OnRemove")
+
+	const int nPortraitIcon = pEffect->m_effectAmount4 != 0 ? pEffect->m_effectAmount4 : EEex::Opcode_Op74_VanillaPortraitIcon;
+	EEex::Opcode_Op74_RemovePortraitIcon(pSprite, nPortraitIcon);
+
+	STUTTER_LOG_END
+}
+
+// Called by CGameSprite::ProcessEffectList() right before its only CheckStatsChange() call. At that point both effect
+// lists were resolved (including any repass), m_bonusStats was added to m_derivedStats, and
+// CheckCutSceneStateOverride() ran, so m_derivedStats.m_generalState is final for this pass. Nothing in between
+// touches AC / THAC0, and every path from the effect lists to the end of the pass goes through this call.
+//
+// This is where every STATE_BLIND consequence is applied (the engine applies its intoxication / fatigue modifiers at
+// this stage too): no STATE_BLIND -> no penalty and no icon, whatever set or cleared the bit.
+void EEex::Opcode_Hook_Op74_ApplyBlindnessConsequences(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Op74_ApplyBlindnessConsequences")
+
+	CDerivedStats& stats = pSprite->m_derivedStats;
+	Op74BlindnessData& data = exStatDataMap[&stats].op74;
+
+	data.bApplied = false;
+	data.nAppliedArmorClassDelta = 0;
+	data.nAppliedTHAC0Delta = 0;
+
+	if ((stats.m_generalState & EEex::Opcode_Op74_StateBlindMask) == 0) {
+		return;
+	}
+
+	const Op74ResolvedValues values = op74Resolve(data);
+
+	stats.m_nArmorClass = op74AddWrapped(stats.m_nArmorClass, values.nArmorClassDelta);
+	stats.m_nTHAC0 = op74AddWrapped(stats.m_nTHAC0, values.nTHAC0Delta);
+
+	// ProcessEffectList() emptied m_portraitIcons before applying the effect lists, so the icon is added on every pass
+	// for as long as STATE_BLIND is set (AddPortraitIcon() ignores an icon that is already listed)
+	EEex::Opcode_Op74_AddPortraitIcon(pSprite, values.nPortraitIcon);
+
+	// Remembered for the record screen tooltip (EEex::Opcode_Hook_Op74_AppendStatBreakdown())
+	data.bApplied = true;
+	data.nAppliedArmorClassDelta = values.nArmorClassDelta;
+	data.nAppliedTHAC0Delta = values.nTHAC0Delta;
+
+	STUTTER_LOG_END
+}
+
+// Replaces CGameSprite::CheckStatsChange()'s hardcoded `mov ecx, <vanilla blind visual range>`. That instruction only
+// runs when m_derivedStats.m_generalState has STATE_BLIND (the engine's own test right before it), right after
+// EEex::Opcode_Hook_Op74_ApplyBlindnessConsequences() of the same pass. The engine then stores the value into
+// m_derivedStats.m_nVisualRange and calls SetVisualRange() if it changed.
+//
+// Return: The visual range to use while blind
+int EEex::Opcode_Hook_Op74_GetBlindVisualRange(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_Op74_GetBlindVisualRange")
+
+	// Read-only lookup: without an entry, every value is the vanilla one
+	const auto exStatDataPair = exStatDataMap.find(&pSprite->m_derivedStats);
+	return op74Resolve(exStatDataPair != exStatDataMap.end() ? exStatDataPair->second.op74 : Op74BlindnessData{}).nVisualRange;
+
+	STUTTER_LOG_END
+}
+
+// Called by CGameSprite::GetStatBreakdown() (record screen tooltips) right after its timed effect list loop, whose
+// vanilla per-op74 "Blind: +4" lines are skipped (EEex_ForceJump() in EEex_Opcode_Patch.lua). Appends the AC / THAC0
+// lines exactly once, with the deltas actually applied this pass, to the same two texts vanilla appended them to
+// (the 1st and 3rd CString* arguments), in vanilla's format ("\n%s: +%d", here with the real sign).
+//
+// The label stays the vanilla STATDESC row (the "Blind" description): GetCharacterStateDescription() sscanf()s the
+// row's strref into an uninitialized local, so a softcoded icon row without a description would fetch a random string.
+void EEex::Opcode_Hook_Op74_AppendStatBreakdown(CGameSprite* pSprite, CString* pArmorClassText, CString* pTHAC0Text) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Op74_AppendStatBreakdown")
+
+	// Read-only lookup: the tooltip must not allocate an entry
+	const auto exStatDataPair = exStatDataMap.find(&pSprite->m_derivedStats);
+	if (exStatDataPair == exStatDataMap.end() || !exStatDataPair->second.op74.bApplied) {
+		return; // Not blind (vanilla checked m_derivedStats.m_generalState too)
+	}
+
+	const Op74BlindnessData& data = exStatDataPair->second.op74;
+
+	EngineVal<CString> sLabel{};
+	EEex::Opcode_Op74_GetCharacterStateDescription(&(*p_g_pBaldurChitin)->m_pObjectGame->m_ruleTables,
+		EEex::Opcode_Op74_VanillaPortraitIcon, &*sLabel);
+
+	const auto appendLine = [&](CString* pText, const short nDelta) {
+		if (nDelta == 0) {
+			return; // Nothing was applied to this stat (e.g. a bonus whose low 16 bits are 0)
+		}
+		std::string line { "\n" };
+		line += sLabel->m_pchData;
+		line += ": ";
+		if (nDelta > 0) {
+			line += '+';
+		}
+		line += std::to_string(nDelta);
+		*pText += line.c_str();
+	};
+
+	appendLine(pArmorClassText, data.nAppliedArmorClassDelta);
+	appendLine(pTHAC0Text, data.nAppliedTHAC0Delta);
+
+	STUTTER_LOG_END
+}
 
 //--------------------------------------------------------//
 // op101 - Allow saving throw BIT23 to bypass opcode #101 //

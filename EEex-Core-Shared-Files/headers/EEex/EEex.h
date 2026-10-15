@@ -87,6 +87,23 @@ namespace EEex {
 	// Opcode //
 	////////////
 
+	// op74 - Vanilla engine facts, written by EEex_Opcode_Patch.lua (derived from the validated vanilla code)
+	//        before any op74 hook is installed
+	extern uint Opcode_Op74_StateBlindMask;
+	extern uint Opcode_Op74_PermanentDurationType;
+	extern int Opcode_Op74_VanillaArmorClassDelta;
+	extern int Opcode_Op74_VanillaTHAC0Delta;
+	extern int Opcode_Op74_VanillaPortraitIcon;
+	extern int Opcode_Op74_VanillaVisualRange;
+	extern void (*Opcode_Op74_AddPortraitIcon)(CGameSprite* pSprite, int nIcon);
+	extern void (*Opcode_Op74_RemovePortraitIcon)(CGameSprite* pSprite, int nIcon);
+	extern void (*Opcode_Op74_GetCharacterStateDescription)(const CRuleTables* pRuleTables, int nIcon, CString* pDescription);
+	// op74
+	int Opcode_Hook_Blindness_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
+	void Opcode_Hook_Blindness_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
+	void Opcode_Hook_Op74_ApplyBlindnessConsequences(CGameSprite* pSprite);
+	int Opcode_Hook_Op74_GetBlindVisualRange(CGameSprite* pSprite);
+	void Opcode_Hook_Op74_AppendStatBreakdown(CGameSprite* pSprite, CString* pArmorClassText, CString* pTHAC0Text);
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
 	// op248
