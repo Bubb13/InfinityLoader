@@ -138,6 +138,8 @@ static void exportPatterns() {
 	// New op409
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_ApplyEffect"), EEex::Opcode_Hook_EnableActionListener_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_EnableActionListener_OnRemove"), EEex::Opcode_Hook_EnableActionListener_OnRemove);
+	// New op419
+	exportPattern(TEXT("EEex::Opcode_Hook_Concealment_ApplyEffect"), EEex::Opcode_Hook_Concealment_ApplyEffect);
 
 	exportPattern(TEXT("EEex::Opcode_Hook_OnCopy"), EEex::Opcode_Hook_OnCopy);
 	exportPattern(TEXT("EEex::Opcode_Hook_OnDestruct"), EEex::Opcode_Hook_OnDestruct);
@@ -156,6 +158,9 @@ static void exportPatterns() {
 	exportPattern(TEXT("EEex::Sprite_Hook_OnBeforeEffectListMarshalled"), EEex::Sprite_Hook_OnBeforeEffectListMarshalled);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnCheckBlockWeaponHit"), EEex::Sprite_Hook_OnCheckBlockWeaponHit);
 	exportPattern(TEXT("EEex::Sprite_Hook_OnGetAttackFrameType"), EEex::Sprite_Hook_OnGetAttackFrameType);
+	exportPattern(TEXT("EEex::Sprite_Hook_BeginConcealmentRender"), EEex::Sprite_Hook_BeginConcealmentRender);
+	exportPattern(TEXT("EEex::Sprite_Hook_EndConcealmentRender"), EEex::Sprite_Hook_EndConcealmentRender);
+	exportPattern(TEXT("EEex::Sprite_Hook_ResolveConcealment"), EEex::Sprite_Hook_ResolveConcealment);
 
 	////////////
 	// Action //

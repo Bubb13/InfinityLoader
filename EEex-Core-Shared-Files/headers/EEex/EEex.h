@@ -115,6 +115,8 @@ namespace EEex {
 	// New op409
 	int Opcode_Hook_EnableActionListener_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_EnableActionListener_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
+	// New op419
+	int Opcode_Hook_Concealment_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 
 	int Opcode_Hook_ApplySpell_ShouldFlipSplprotSourceAndTarget(CGameEffect* pEffect);
 	int Opcode_Hook_OnCheckAdd(CGameEffect* pEffect, CGameSprite* pSprite);
@@ -133,6 +135,9 @@ namespace EEex {
 	void Sprite_Hook_OnBeforeEffectListMarshalled(CGameSprite* pSprite);
 	bool Sprite_Hook_OnCheckBlockWeaponHit(CGameSprite* pAttackingSprite, CGameSprite* pTargetSprite, CItem* pWeapon, Item_ability_st* pWeaponAbility);
 	byte Sprite_Hook_OnGetAttackFrameType(CGameSprite* pSprite, byte numAttacks);
+	void Sprite_Hook_BeginConcealmentRender(CGameSprite* pSprite);
+	void Sprite_Hook_EndConcealmentRender(CGameSprite* pSprite);
+	bool Sprite_Hook_ResolveConcealment(CGameSprite* pAttacker, CGameSprite* pTarget);
 
 	////////////
 	// Action //
