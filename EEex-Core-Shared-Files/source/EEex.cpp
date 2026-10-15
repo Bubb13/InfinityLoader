@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <climits>
 #include <optional>
 #include <sstream>
 #include <unordered_set>
@@ -151,6 +152,13 @@ struct ExSpriteData {
 	bool deferredAfterListsResolvedPending = false;
 	int oldDisableSpells = 0;
 	uint64_t uuid = 0;
+	// op25 / op78 / op98 / op272 (param2 BIT16) - m_worldTime.m_gameTime of this sprite's last regenerated persistent
+	//                                             effect update; empty until the first one
+	std::optional<uint> lastPersistantEffectsUpdateTick{};
+	// op232 (param2 BIT16) - m_worldTime.m_gameTime of this sprite's last neutral contingency pass (empty until the
+	//                        first one), and the interval, in game ticks, between two passes
+	std::optional<uint> lastNeutralContingencyPassTick{};
+	uint neutralContingencyPassInterval = 0;
 
 	ExSpriteData() {
 		std::fill_n(oldDisabledSpellTypes.data, 3, 0);
@@ -4228,6 +4236,345 @@ int CDerivedStats::Override_SetSpellState(uint bit)
 ////////////
 // Opcode //
 ////////////
+
+//-------------------------------------------------------------------------------------------------------------------//
+// op25 / op78 / op98 / op232 / op272 - param2 BIT16: Haste/Slow-neutral timing                                      //
+//-------------------------------------------------------------------------------------------------------------------//
+//                                                                                                                   //
+// Why vanilla timing depends on Haste / Slow (every fact below is proven for BG:EE / BG2:EE / IWD:EE v2.7.3.0):     //
+//                                                                                                                   //
+//   * CGameSprite::ProcessEffectList() sets m_AISpeed to AI_SPEED_SLOWED (3), AI_SPEED_HASTED (0) or                //
+//     AI_SPEED_NORMAL (1). CGameSprite::DoAIUpdate() only lets a sprite run its AI update on the chitin ticks where //
+//     (m_AISpeed & tick) == (m_AISpeed & m_id), and CTimerWorld::UpdateTime() advances m_gameTime on even chitin    //
+//     ticks only. So a sprite gets 1 AI update per game tick at normal speed, 2 hasted, and 1 every 2 slowed.       //
+//                                                                                                                   //
+//   * op25 / op78 / op98 / op272 add a CPersistantEffect{Poison,Disease,Regeneration,ApplyEffect} to                //
+//     m_derivedStats.m_cRegeneratedPersistantEffectList. The list is rebuilt on every full effect list pass, and    //
+//     m_duration / the m_periodCounter phase are derived from game time when it is. But the "one second" step is    //
+//     not: CPersistantEffectListRegenerated::AIUpdate() runs once per ProcessEffectList() call, sets each effect's  //
+//     m_counter to the list's m_nCounter (+1 per call), and each AIUpdate() processes a second when                 //
+//     (m_counter + k) % 15 == 0 (k = 2 for poison, 1 for the others). That per-AI-update counter is the coupling.   //
+//                                                                                                                   //
+//   * op232 adds a CContingency to m_derivedStats.m_cContingencyList. Status conditions are only polled by          //
+//     CContingencyList::Process() once CGameSprite::m_nLastContingencyCheck runs out, which ContingencyCheck()      //
+//     counts down by 1 per CGameSprite::ProcessAI() from the reset value Process() writes (100): every 101 AI       //
+//     updates. CGameAIBase::ApplyTriggers() also reaches Process(), but only on script passes, gated by the same    //
+//     countdown.                                                                                                    //
+//                                                                                                                   //
+// With param2 BIT16 set, EEex replaces those AI-update clocks with game time, so the effects tick exactly like      //
+// vanilla does at normal speed whatever the sprite's Haste / Slow state:                                            //
+//                                                                                                                   //
+//   * Persistent effects advance one second each time m_gameTime crosses a multiple of 15 (at most one second per   //
+//     update: like vanilla, no catch-up after the sprite was not processed for a while), and their m_duration is    //
+//     decremented by the elapsed game ticks. Rest / area re-entry (CGameSprite::HandlePersistantEffects(), from     //
+//     CompressTime()) keeps the vanilla behavior, which already processes nDelta / 15 game seconds.                 //
+//                                                                                                                   //
+//   * Neutral contingencies are polled by a separate pass every (vanilla reset value + 1) game ticks.               //
+//                                                                                                                   //
+// Vanilla only reads the low word of param2 for op25 / op78 / op98 / op272 and its low byte / word for op232, so    //
+// BIT16 is ignored without EEex. op177 / op182 / op183 / op283 call their decoded .EFF child's ApplyEffect()        //
+// directly: the persistent effect hooks sit inside the child ApplyEffect() functions, and a CContingency keeps a    //
+// full copy of its effect (m_parentEffect), so .EFF children are covered without keeping a pointer to the child     //
+// effect (which is deleted right after).                                                                            //
+//                                                                                                                   //
+//-------------------------------------------------------------------------------------------------------------------//
+
+// param2 (CGameEffect::m_dWFlags) bit that selects the Haste/Slow-neutral timing
+constexpr uint NEUTRAL_TIMING_PARAM2_FLAG = 0x10000;
+
+// Game ticks per game second: the engine's `/ 15` (0x88888889 multiplier) and `imul ecx, edx, 0xf` in every
+// persistent effect AIUpdate() (validated at runtime by EEex_Opcode_Patch.lua)
+constexpr uint ENGINE_TICKS_PER_SECOND = 15;
+
+// Stored in CPersistantEffect::m_numDamage to mark a neutral persistent effect. These four classes never initialize
+// or read m_numDamage (only Copy() copies it, member-wise), so EEex owns the field for them. Every object created at
+// the hooked AddTail() sites gets either this value or 0.
+constexpr short NEUTRAL_PERSISTANT_EFFECT_MARKER = 0x4E54; // 'N' 'T'
+
+// The generated headers stop at CPersistantEffect; the four classes derive from CPersistantEffectDamage, whose layout
+// this mirrors (validated at runtime by EEex_Opcode_Patch.lua). Never instantiated, only used to reach m_duration
+// through a pointer to an engine object.
+struct CPersistantEffectDamageLayout : CPersistantEffect {
+	__int16 m_type;
+	__int16 m_maxDamage;
+	__int16 m_damage;
+	int m_duration; // Game ticks left (end - m_gameTime when the regenerated list was rebuilt)
+};
+
+static_assert(sizeof(CPersistantEffect) == 0x20, "CPersistantEffect changed size, re-audit the neutral timing");
+static_assert(offsetof(CPersistantEffect, m_numDamage) == 0x10, "CPersistantEffect::m_numDamage moved, re-audit the neutral timing");
+static_assert(offsetof(CPersistantEffect, m_counter) == 0x1C, "CPersistantEffect::m_counter moved, re-audit the neutral timing");
+static_assert(offsetof(CPersistantEffectDamageLayout, m_duration) == 0x28, "CPersistantEffectDamage::m_duration moved, re-audit the neutral timing");
+static_assert(sizeof(CPersistantEffectDamageLayout) == 0x30, "CPersistantEffectDamage changed size, re-audit the neutral timing");
+
+// vtables of the objects that went through EEex::Opcode_Hook_OnPersistantEffectAddTail(): exactly the four
+// neutral-capable classes. m_cRegeneratedPersistantEffectList also holds PushPull's CPersistantEffectMove, whose
+// m_numDamage is never initialized, so the marker alone is only trusted on objects of a learned class.
+static std::unordered_set<const void*> neutralCapablePersistantEffectVTables{};
+
+// The contingency list a neutral op232 pass is currently processing (see EEex::Opcode_Hook_ContingencyCheck())
+static thread_local const CContingencyList* neutralContingencyPassList = nullptr;
+
+static uint getGameTime() {
+	return (*p_g_pBaldurChitin)->m_pObjectGame->m_worldTime.m_gameTime;
+}
+
+static bool isNeutralTimingEffect(const CGameEffect *const pEffect) {
+	return (pEffect->m_dWFlags & NEUTRAL_TIMING_PARAM2_FLAG) != 0;
+}
+
+static bool isNeutralPersistantEffect(const CPersistantEffect *const pPersistantEffect) {
+	return pPersistantEffect->m_numDamage == NEUTRAL_PERSISTANT_EFFECT_MARKER
+		&& neutralCapablePersistantEffectVTables.contains(*reinterpret_cast<const void* const*>(pPersistantEffect));
+}
+
+// vtbl[0] is MSVC's scalar deleting destructor. The engine calls it with flag 1 (destruct + free); the generated
+// CPersistantEffect::vtbl::Destruct declaration omits that flag parameter.
+static void deletePersistantEffect(CPersistantEffect *const pPersistantEffect) {
+	using ScalarDeletingDestructor = void(__fastcall*)(CPersistantEffect*, unsigned int);
+	(*reinterpret_cast<ScalarDeletingDestructor* const*>(pPersistantEffect))[0](pPersistantEffect, 1);
+}
+
+// Called right before CGameEffect{Poison,Regeneration,Disease,RepeatingApplyEffect}::ApplyEffect() AddTail()s the
+// persistent effect it created to pSprite->m_derivedStats.m_cRegeneratedPersistantEffectList (the five call sites).
+// `pPersistantEffect` is nullptr when the engine's operator new failed.
+void EEex::Opcode_Hook_OnPersistantEffectAddTail(CGameEffect* pEffect, CPersistantEffect* pPersistantEffect) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_OnPersistantEffectAddTail")
+
+	if (pPersistantEffect == nullptr) {
+		return;
+	}
+
+	// Learn the class (see neutralCapablePersistantEffectVTables)
+	neutralCapablePersistantEffectVTables.insert(*reinterpret_cast<const void* const*>(pPersistantEffect));
+
+	if (isNeutralTimingEffect(pEffect)) {
+		pPersistantEffect->m_numDamage = NEUTRAL_PERSISTANT_EFFECT_MARKER;
+		// m_counter is overwritten before every vanilla AIUpdate(); for a neutral effect EEex keeps the m_gameTime up
+		// to which its m_duration has been accounted there. A new effect is accounted up to now: its m_duration was
+		// just computed from the current game time.
+		pPersistantEffect->m_counter = static_cast<int>(getGameTime());
+	}
+	else {
+		pPersistantEffect->m_numDamage = 0; // Vanilla leaves it uninitialized; make sure garbage never looks like the marker
+	}
+
+	STUTTER_LOG_END
+}
+
+// Reimplements CPersistantEffectListRegenerated::AIUpdate() (51 instructions, validated in full by
+// EEex_Opcode_Patch.lua), in the very same order:
+//
+//     for each node:
+//         if (!pEffect->m_deleted) {
+//             pEffect->m_counter = this->m_nCounter;
+//             pEffect->AIUpdate(pSprite, nDelta);
+//             if (!pEffect->m_deleted && !pEffect->m_done) continue;
+//         }
+//         this->RemoveAt(node); delete pEffect;
+//     ++this->m_nCounter;
+//
+// Non-neutral effects get exactly that. For neutral effects outside CompressTime(), the inputs of the vanilla AIUpdate()
+// are replaced so that its own code processes one second per game second (see the comment block above). Every
+// persistent effect AIUpdate() starts with (validated at runtime):
+//
+//     old = m_duration; m_counter += k (k in [1, 14]); m_duration -= nDelta
+//     seconds = nDelta / 15
+//     if (m_duration <= 0 || m_duration > old) { m_done = 1; seconds = old / 15 }
+//     if (seconds == 0 && m_counter % 15 != 0) return
+//     if (m_counter % 15 == 0) { ++seconds; m_counter = 0 }
+//     if (m_duration <= 0) seconds += m_duration / 15
+//     process min(seconds, cap) seconds
+//
+// With m_counter = 0 the `% 15` boundary never triggers (k is in [1, 14]), so:
+//   * a game second boundary was crossed: nDelta = 15 and m_duration += 15 - elapsed, so exactly one second is
+//     processed and the expiry logic sees exactly m_duration - elapsed (the vanilla normal-speed tail behavior: a tick
+//     on the expiring update when its boundary is reached, none after);
+//   * no boundary was crossed: nDelta = elapsed (< 15), so m_duration is accounted and no second is processed.
+static void updateRegeneratedPersistantEffects(CPersistantEffectListRegenerated *const pList, CGameSprite *const pSprite,
+	const int nDelta, const bool bCompressingTime)
+{
+	const uint nNow = getGameTime();
+
+	// Whether m_gameTime crossed a multiple of ENGINE_TICKS_PER_SECOND since this sprite's previous update (at most one
+	// second per update, like vanilla: no catch-up after the sprite was not processed for a while)
+	ExSpriteData& exData = exSpriteDataMap[pSprite];
+	bool bSecondBoundaryCrossed = false;
+	if (!bCompressingTime && exData.lastPersistantEffectsUpdateTick.has_value()) {
+		const uint nLast = *exData.lastPersistantEffectsUpdateTick;
+		bSecondBoundaryCrossed = nNow >= nLast && nNow / ENGINE_TICKS_PER_SECOND != nLast / ENGINE_TICKS_PER_SECOND;
+	}
+	// Also after CompressTime(): the time it compressed is processed by the vanilla delta there, not again here
+	exData.lastPersistantEffectsUpdateTick = nNow;
+
+	using CNode = CTypedPtrList<CPtrList, CPersistantEffect*>::CNode;
+
+	for (CNode* pNode = pList->m_pNodeHead; pNode != nullptr;) {
+
+		CNode *const pPosition = pNode;
+		pNode = pNode->pNext;
+		CPersistantEffect *const pEffect = pPosition->data;
+
+		if (pEffect->m_deleted == 0) {
+
+			const bool bNeutral = isNeutralPersistantEffect(pEffect);
+			// The m_gameTime this neutral effect's m_duration is accounted up to (read before the vanilla overwrite)
+			const uint nAccountedUntil = static_cast<uint>(pEffect->m_counter);
+
+			pEffect->m_counter = static_cast<int>(pList->m_nCounter);
+			int nEffectDelta = nDelta;
+
+			if (bNeutral && !bCompressingTime) {
+
+				const uint nElapsed = nNow >= nAccountedUntil ? nNow - nAccountedUntil : 0;
+				pEffect->m_counter = 0; // Never a vanilla `% 15` boundary (k is in [1, 14])
+
+				if (bSecondBoundaryCrossed) {
+					// One second: nDelta = 15, with m_duration pre-adjusted so that `m_duration -= nDelta` subtracts
+					// exactly the elapsed game ticks. Clamped so `m_duration - 15` cannot overflow; for an (almost)
+					// permanent effect near INT_MAX the decrement is then 15 instead of the elapsed ticks.
+					CPersistantEffectDamageLayout *const pDamage = reinterpret_cast<CPersistantEffectDamageLayout*>(pEffect);
+					const long long nAdjusted = static_cast<long long>(pDamage->m_duration) + ENGINE_TICKS_PER_SECOND - nElapsed;
+					pDamage->m_duration = static_cast<int>(std::clamp(nAdjusted,
+						static_cast<long long>(INT_MIN) + ENGINE_TICKS_PER_SECOND, static_cast<long long>(INT_MAX)));
+					nEffectDelta = ENGINE_TICKS_PER_SECOND;
+				}
+				else {
+					// No boundary since the sprite's previous update, so nElapsed < 15 (every effect in the list was
+					// accounted at that update or created since). The min() only guards that invariant: a delta of 15
+					// or more would process a second.
+					nEffectDelta = static_cast<int>((std::min)(nElapsed, ENGINE_TICKS_PER_SECOND - 1));
+				}
+			}
+
+			pEffect->virtual_AIUpdate(pSprite, nEffectDelta);
+
+			if (bNeutral) {
+
+				pEffect->m_counter = static_cast<int>(nNow); // Accounted up to now, also after a CompressTime() update
+
+				// Poison / disease / regeneration reset m_periodCounter when it reaches m_period ("every m_period
+				// seconds" modes); op272's AIUpdate() does not. At normal speed that never matters, because the list
+				// is rebuilt (m_periodCounter re-derived from game time) between two of its seconds. A slowed sprite
+				// gets two neutral seconds per rebuild, so mirror the reset to fire once per m_period seconds.
+				if (pEffect->m_period > 0 && pEffect->m_periodCounter >= pEffect->m_period) {
+					pEffect->m_periodCounter = 0;
+				}
+			}
+
+			if (pEffect->m_deleted == 0 && pEffect->m_done == 0) {
+				continue;
+			}
+		}
+
+		pList->RemoveAt(pPosition);
+		deletePersistantEffect(pEffect);
+	}
+
+	++pList->m_nCounter;
+}
+
+// Replaces ProcessEffectList()'s call to CPersistantEffectListRegenerated::AIUpdate() (vanilla nDelta: 1)
+void EEex::Opcode_Hook_ProcessEffectList_AIUpdatePersistantEffects(CPersistantEffectListRegenerated* pList, CGameSprite* pSprite, int nDelta) {
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_ProcessEffectList_AIUpdatePersistantEffects")
+	updateRegeneratedPersistantEffects(pList, pSprite, nDelta, false);
+	STUTTER_LOG_END
+}
+
+// Replaces HandlePersistantEffects()'s call to CPersistantEffectListRegenerated::AIUpdate() (CompressTime(): nDelta is
+// the compressed time, processed the vanilla way for every effect)
+void EEex::Opcode_Hook_HandlePersistantEffects_AIUpdatePersistantEffects(CPersistantEffectListRegenerated* pList, CGameSprite* pSprite, int nDelta) {
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_HandlePersistantEffects_AIUpdatePersistantEffects")
+	updateRegeneratedPersistantEffects(pList, pSprite, nDelta, true);
+	STUTTER_LOG_END
+}
+
+static bool hasNeutralContingency(const CContingencyList& list) {
+	for (auto pNode = list.m_pNodeHead; pNode != nullptr; pNode = pNode->pNext) {
+		if (isNeutralTimingEffect(&pNode->data->m_parentEffect)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// Replaces CGameSprite::ContingencyCheck() (called once per CGameSprite::ProcessAI(); 14 instructions, validated in full
+// by EEex_Opcode_Patch.lua):
+//
+//     if (m_worldTime.m_active && this->m_nLastContingencyCheck > 0) --this->m_nLastContingencyCheck;
+//     else m_derivedStats.m_cContingencyList.Process(this);
+//
+// That vanilla pass only evaluates vanilla contingencies (EEex::Opcode_Hook_ContingencyList_ShouldProcess()). Then, when
+// the neutral schedule is due, a second pass evaluates only the neutral ones. Process()'s gate is opened for it by
+// zeroing m_nLastContingencyCheck, and the vanilla countdown is restored afterwards. When the engine passes its gate it
+// writes its reset value (100) there: that tells the pass really ran (it bails in some game states, and is then retried
+// on the next update like vanilla's), and gives the neutral interval: reset value + 1 game ticks, which is vanilla's
+// cadence at normal speed (the reset value's decrements plus the processing update, at one AI update per game tick).
+void EEex::Opcode_Hook_ContingencyCheck(CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_ContingencyCheck")
+
+	CContingencyList& contingencyList = pSprite->m_derivedStats.m_cContingencyList;
+
+	// Vanilla CGameSprite::ContingencyCheck()
+	if ((*p_g_pBaldurChitin)->m_pObjectGame->m_worldTime.m_active != 0 && pSprite->m_nLastContingencyCheck > 0) {
+		--pSprite->m_nLastContingencyCheck;
+	}
+	else {
+		contingencyList.Process(pSprite);
+	}
+
+	// Neutral pass
+	if (!hasNeutralContingency(contingencyList)) {
+		return;
+	}
+
+	ExSpriteData& exData = exSpriteDataMap[pSprite];
+	const uint nNow = getGameTime();
+
+	if (exData.lastNeutralContingencyPassTick.has_value()) {
+		const uint nLast = *exData.lastNeutralContingencyPassTick;
+		if (nNow >= nLast && nNow - nLast < exData.neutralContingencyPassInterval) {
+			return; // Not due yet (a game time going backwards, e.g. after a reload, makes it due)
+		}
+	}
+
+	const int nVanillaCountdown = pSprite->m_nLastContingencyCheck;
+	const CContingencyList *const pPreviousPassList = neutralContingencyPassList;
+
+	pSprite->m_nLastContingencyCheck = 0;           // Open Process()'s gate for this pass only
+	neutralContingencyPassList = &contingencyList; // Only neutral contingencies are evaluated in it
+	contingencyList.Process(pSprite);
+	neutralContingencyPassList = pPreviousPassList;
+
+	const int nResetValue = pSprite->m_nLastContingencyCheck;
+	pSprite->m_nLastContingencyCheck = nVanillaCountdown;
+
+	if (nResetValue > 0) {
+		// The pass ran: schedule the next one
+		exData.lastNeutralContingencyPassTick = nNow;
+		exData.neutralContingencyPassInterval = static_cast<uint>(nResetValue) + 1;
+	}
+
+	STUTTER_LOG_END
+}
+
+// Called by CContingencyList::Process() for every contingency whose trigger is a status trigger, right before it is
+// evaluated. Vanilla passes evaluate vanilla contingencies, the neutral pass (EEex::Opcode_Hook_ContingencyCheck())
+// evaluates neutral ones. Event triggers (CContingencyList::ProcessTrigger()) are not affected.
+//
+// Return:
+//     false => Skip this contingency in this pass
+//     true  => Evaluate it (vanilla behavior)
+bool EEex::Opcode_Hook_ContingencyList_ShouldProcess(CContingencyList* pList, CContingency* pContingency) {
+
+	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_ContingencyList_ShouldProcess")
+
+	return isNeutralTimingEffect(&pContingency->m_parentEffect) == (pList == neutralContingencyPassList);
+
+	STUTTER_LOG_END
+}
 
 //--------------------------------------------------------//
 // op101 - Allow saving throw BIT23 to bypass opcode #101 //

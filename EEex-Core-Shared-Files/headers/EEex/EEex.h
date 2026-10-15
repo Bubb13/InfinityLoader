@@ -87,6 +87,13 @@ namespace EEex {
 	// Opcode //
 	////////////
 
+	// op25 / op78 / op98 / op272 - param2 BIT16: Haste/Slow-neutral timing
+	void Opcode_Hook_OnPersistantEffectAddTail(CGameEffect* pEffect, CPersistantEffect* pPersistantEffect);
+	void Opcode_Hook_ProcessEffectList_AIUpdatePersistantEffects(CPersistantEffectListRegenerated* pList, CGameSprite* pSprite, int nDelta);
+	void Opcode_Hook_HandlePersistantEffects_AIUpdatePersistantEffects(CPersistantEffectListRegenerated* pList, CGameSprite* pSprite, int nDelta);
+	// op232 - param2 BIT16: Haste/Slow-neutral timing
+	void Opcode_Hook_ContingencyCheck(CGameSprite* pSprite);
+	bool Opcode_Hook_ContingencyList_ShouldProcess(CContingencyList* pList, CContingency* pContingency);
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
 	// op248
