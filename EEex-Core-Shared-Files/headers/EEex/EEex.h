@@ -89,6 +89,12 @@ namespace EEex {
 
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
+	// op178 / op179 - These helpers are exported as assembly labels, not Lua APIs.
+	void Opcode_Hook_Op178179_CaptureDrivenContext(CGameEffect* pEffect, CGameEffect* pParent);
+	void Opcode_Hook_Op178179_OnAddTail(CGameEffect* pEffect, CGameSprite* pSprite);
+	int Opcode_Hook_Op178179_GetBonus(CSelectiveBonusList* pList, const CAIObjectType* pType, CGameSprite* pSprite, int isLeftHand);
+	void Opcode_Hook_Op178179_OnListCopy(CSelectiveBonusList* pDestination, CSelectiveBonusList* pSource);
+	void Opcode_Hook_Op178179_OnListClear(CSelectiveBonusList* pList);
 	// op248
 	void Opcode_Hook_OnOp248AddTail(CGameEffect* pOp248, CGameEffect* pEffect);
 	// op249

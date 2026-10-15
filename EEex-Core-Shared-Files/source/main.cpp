@@ -112,6 +112,12 @@ static void exportPatterns() {
 
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
+	// op178 / op179
+	exportPattern(TEXT("EEex::Opcode_Hook_Op178179_CaptureDrivenContext"), EEex::Opcode_Hook_Op178179_CaptureDrivenContext);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op178179_OnAddTail"), EEex::Opcode_Hook_Op178179_OnAddTail);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op178179_GetBonus"), EEex::Opcode_Hook_Op178179_GetBonus);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op178179_OnListCopy"), EEex::Opcode_Hook_Op178179_OnListCopy);
+	exportPattern(TEXT("EEex::Opcode_Hook_Op178179_OnListClear"), EEex::Opcode_Hook_Op178179_OnListClear);
 	// op248
 	exportPattern(TEXT("EEex::Opcode_Hook_OnOp248AddTail"), EEex::Opcode_Hook_OnOp248AddTail);
 	// op249

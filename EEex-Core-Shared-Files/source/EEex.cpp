@@ -15,6 +15,7 @@
 #include "menu_util.hpp"
 #include "profiler.hpp"
 #include "script_folder.hpp"
+#include "selective_bonus.hpp"
 #include "time_util.hpp"
 #include "uncap_fps.hpp"
 #include "util.hpp"
@@ -130,9 +131,14 @@ std::unordered_map<void*, ExScriptData> exScriptDataMap{};
 
 struct ExEffectInfo {
 	bool bypassOp120;
+	EEex::detail::SelectiveBonusMode op178179Mode;
 };
 
 std::unordered_map<void*, ExEffectInfo> exEffectInfoMap{};
+
+// Sparse slot restrictions are owned by native bonus lists, not their originating
+// effects. The list-copy / ClearAll hooks cover temporary and active derived stats.
+static EEex::detail::SelectiveBonusRestrictions selectiveBonusRestrictions;
 
 ////////////////
 // Projectile //
@@ -1549,7 +1555,10 @@ static void adjustFakeAttackRoll(
 	// To hit bonus //
 	//////////////////
 
-	const short nToHitBonus = static_cast<short>(pThis->GetActiveStats()->m_cToHitBonusList.GetBonus(target->virtual_GetAIType()));
+	// Use the same list/hand selector as real Hit(), including its first-match
+	// semantics. A preview must use its explicit hand, not m_leftAttack's AI state.
+	const short nToHitBonus = static_cast<short>(EEex::Opcode_Hook_Op178179_GetBonus(
+		&pThis->GetActiveStats()->m_cToHitBonusList, target->virtual_GetAIType(), pThis, leftHand));
 	nCurModifiedAttackRoll.intVal += nToHitBonus;
 
 	sFormatString->Format(" +Special Target:%d", nToHitBonus);
@@ -4238,6 +4247,107 @@ bool EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect) {
 	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity")
 
 	return (pEffect->m_savingThrow & 0x800000) != 0;
+
+	STUTTER_LOG_END
+}
+
+//---------------------------------------------------------------//
+// op178 / op179 - Explicit hand-scoped selective combat bonuses //
+//---------------------------------------------------------------//
+
+void EEex::Opcode_Hook_Op178179_CaptureDrivenContext(CGameEffect* pEffect, CGameEffect* pParent) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Op178179_CaptureDrivenContext")
+
+	// Capture before a driver restores its cache or applies/destroys the child.
+	// All four drivers omit the source slot; nested driver children must carry
+	// the context too. Other opcodes keep their native behavior without metadata.
+	if (pEffect != nullptr && pParent != nullptr && detail::IsHandSelectiveBonusContextOpcode(pEffect->m_effectId)) {
+		auto parent = exEffectInfoMap.find(pParent);
+		const int sourceSlot = parent != exEffectInfoMap.end()
+			? parent->second.op178179Mode.GetSourceSlot(pParent->m_slotNum)
+			: pParent->m_slotNum;
+		exEffectInfoMap[pEffect].op178179Mode.Capture(pEffect->m_effectId, pEffect->m_effectAmount3, sourceSlot);
+	}
+
+	STUTTER_LOG_END
+}
+
+void EEex::Opcode_Hook_Op178179_OnAddTail(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Op178179_OnAddTail")
+
+	if (!detail::IsHandSelectiveBonusOpcode(pEffect->m_effectId)) {
+		return;
+	}
+
+	// Both engine ApplyEffect implementations append to m_derivedStats even
+	// while another stats block is active. Do not use GetActiveStats() here.
+	CSelectiveBonusList *const pList = pEffect->m_effectId == 178
+		? &pSprite->m_derivedStats.m_cToHitBonusList
+		: &pSprite->m_derivedStats.m_cDamageBonusList;
+
+	auto info = exEffectInfoMap.find(pEffect);
+	const int mode = info != exEffectInfoMap.end()
+		? info->second.op178179Mode.Get(pEffect->m_effectAmount3)
+		: pEffect->m_effectAmount3;
+	const int sourceSlot = info != exEffectInfoMap.end()
+		? info->second.op178179Mode.GetSourceSlot(pEffect->m_slotNum)
+		: pEffect->m_slotNum;
+
+	// Snapshot the selected slot at effect resolution, exactly as op344/345
+	// mode 1 does. Mode 2 binds to SLOT_SHIELD. Mode 3 uses the native equipped
+	// source slot (inherited for driven EFFs), with -1 meaning unrestricted.
+	// Mode 0 and unknown modes preserve native behavior without restrictions.
+	if (pList->m_nCount > 0) {
+		selectiveBonusRestrictions.Record(pList, static_cast<std::size_t>(pList->m_nCount - 1),
+			detail::ResolveSelectiveBonusSlot(mode, pSprite->m_equipment.m_selectedWeapon, sourceSlot));
+	}
+
+	STUTTER_LOG_END
+}
+
+int EEex::Opcode_Hook_Op178179_GetBonus(CSelectiveBonusList* pList, const CAIObjectType* pType, CGameSprite* pSprite, int isLeftHand) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_Op178179_GetBonus")
+
+	const auto* slots = selectiveBonusRestrictions.Find(pList);
+	if (slots == nullptr) {
+		return pList->GetBonus(pType); // Exact native path for an unchanged list.
+	}
+
+	// Hit supplies its explicit hand argument; Damage supplies the native
+	// "last swing and a weapon in the shield slot" local, not m_leftAttack
+	// alone. This preserves the engine's shield / off-hand distinction.
+	const int attackSlot = detail::SelectiveBonusAttackSlot(pSprite->m_equipment.m_selectedWeapon, isLeftHand);
+	return detail::FirstHandSelectiveBonus(pList->m_pNodeHead, *slots, attackSlot,
+		[pType](const CAIObjectType& type) {
+			// Preserve GetBonus's direction and all three OfType flags.
+			return pType->OfType(&type, false, false, false) != 0;
+		});
+
+	STUTTER_LOG_END
+}
+
+void EEex::Opcode_Hook_Op178179_OnListCopy(CSelectiveBonusList* pDestination, CSelectiveBonusList* pSource) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Op178179_OnListCopy")
+
+	// The native copy preserves order but constructs new bonus objects. Copy
+	// only the indexes/slot values, after destination removal and before the
+	// native source traversal starts. ClearAll does not run on this path.
+	selectiveBonusRestrictions.Copy(pDestination, pSource);
+
+	STUTTER_LOG_END
+}
+
+void EEex::Opcode_Hook_Op178179_OnListClear(CSelectiveBonusList* pList) {
+
+	STUTTER_LOG_START(void, "EEex::Opcode_Hook_Op178179_OnListClear")
+
+	// ClearAll is used by construction, BonusInit, Reload and destruction.
+	// Erase even an empty list's metadata before its address can be reused.
+	selectiveBonusRestrictions.Clear(pList);
 
 	STUTTER_LOG_END
 }
