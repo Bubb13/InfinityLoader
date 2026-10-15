@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\common\eeex_api.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\op120.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\coordinate_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\debug_window.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEex.h" />
@@ -50,6 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\EEex-Core-Shared-Files\source\common.cpp" />
+    <ClCompile Include="..\EEex-Core-Shared-Files\source\op120.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\EEex-Core-Shared-Files\source\coordinate_util.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\debug.cpp" />
     <ClCompile Include="..\EEex-Core-Shared-Files\source\debug_window.cpp" />
@@ -163,7 +167,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EEEX_OP120;SHARED_MEMORY_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>

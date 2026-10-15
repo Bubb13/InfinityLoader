@@ -1,6 +1,9 @@
 
 #include "Baldur_generated.h"
 #include "EEex.h"
+#ifdef EEEX_OP120
+#include "op120.hpp"
+#endif
 #include "EEexLua_generated.h"
 #include "profiler.hpp"
 
@@ -22,6 +25,25 @@ static constexpr void* getMemberPtr(T func) {
 }
 
 static void exportPatterns() {
+
+#ifdef EEEX_OP120
+	// Lua validates the complete v2.7.3.0 group before wiring these pointer
+	// slots and installing the two entry shims.
+	exportPattern(TEXT("EEex::Op120_Hook_Swing"), EEex::Op120_Hook_Swing);
+	exportPattern(TEXT("EEex::Op120_Hook_AddEffect"), EEex::Op120_Hook_AddEffect);
+	exportPattern(TEXT("EEex::Op120_Hook_CaptureWeapon"), EEex::Op120_Hook_CaptureWeapon);
+	exportPattern(TEXT("EEex::Op120_Hook_RangedImmunity"), EEex::Op120_Hook_RangedImmunity);
+	exportPattern(TEXT("EEex::Op120_Hook_ApplyCriticals"), EEex::Op120_Hook_ApplyCriticals);
+	exportPattern(TEXT("EEex::Op120_ApplyCriticals"), &EEex::Op120_ApplyCriticals);
+	exportPattern(TEXT("EEex::Op120_Original_Swing"), &EEex::Op120_Original_Swing);
+	exportPattern(TEXT("EEex::Op120_Original_AddEffect"), &EEex::Op120_Original_AddEffect);
+	exportPattern(TEXT("EEex::Op120_OnList"), &EEex::Op120_OnList);
+	exportPattern(TEXT("EEex::Op120_OverrideWeaponType"), &EEex::Op120_OverrideWeaponType);
+	exportPattern(TEXT("EEex::Op120_CopySelective"), &EEex::Op120_CopySelective);
+	exportPattern(TEXT("EEex::Op120_MultiTargetFire"), EEex::Op120_MultiTargetFire);
+	exportPattern(TEXT("EEex::Op120_FireMulti"), &EEex::Op120_FireMulti);
+	exportPattern(TEXT("EEex::Op120_AIUpdateBAM"), &EEex::Op120_AIUpdateBAM);
+#endif
 
 	///////////////////////////////////////////////
 	//          Hook Integrity Watchdog          //
