@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <optional>
 #include <sstream>
 #include <unordered_set>
@@ -6079,6 +6080,28 @@ void CGameText::Override_Render(CGameArea* pArea, CVidMode* pVidMode)
 			true                                                 // backgroundRect
 		);
 	}
+}
+
+int EEex::Fix_Hook_GetWeaponSpeed(const Item_ability_st* pAttackAbility, const Item_ability_st* pLauncherAbility) noexcept {
+
+	// Swing() has already selected a non-null attack ability (using DEFAULT_ATTACK
+	// if necessary), and resolved / demanded the corresponding launcher and its
+	// ability 0. Reuse that exact selection: do not assume ammunition speed is zero,
+	// identify items by resref, search abilities again, or mutate shared ITM data.
+	//
+	// Vanilla ignores pLauncherAbility at its base-speed read. Choosing its speed
+	// here makes ammunition speed irrelevant whenever a launcher ability exists.
+	// A null launcher retains native melee, thrown and default-attack behavior.
+	// The original engine code still applies all speed bonuses, initiative rolls
+	// and clamps after this unsigned-byte result is returned.
+	//
+	// Keep this helper an integer-only leaf. The mid-function adapter preserves
+	// integer registers and flags.
+
+	static_assert(sizeof(Item_ability_st) == 0x38);
+	static_assert(offsetof(Item_ability_st, speedFactor) == 0x12);
+	const Item_ability_st* const pSpeedAbility = pLauncherAbility != nullptr ? pLauncherAbility : pAttackAbility;
+	return static_cast<int>(pSpeedAbility->speedFactor);
 }
 
 void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand) {

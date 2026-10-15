@@ -193,6 +193,8 @@ static void exportPatterns() {
 	// Fix //
 	/////////
 
+	// Native mid-function hook target; Lua resolves this label through the shared pattern map.
+	exportPattern(TEXT("EEex::Fix_Hook_GetWeaponSpeed"), EEex::Fix_Hook_GetWeaponSpeed);
 	exportPattern(TEXT("EEex::Fix_Hook_HandleMiddleMouseDrag"), EEex::Fix_Hook_HandleMiddleMouseDrag);
 	exportPattern(TEXT("EEex::Fix_Hook_ImplementWSPECIALSpeedColumn"), EEex::Fix_Hook_ImplementWSPECIALSpeedColumn);
 	exportPattern(TEXT("EEex::Fix_Hook_OnBeforeUIKillCapture"), EEex::Fix_Hook_OnBeforeUIKillCapture);

@@ -170,6 +170,8 @@ namespace EEex {
 	// Fix //
 	/////////
 
+	// Select the speed from the engine-resolved launcher ability, or the native attack fallback.
+	int Fix_Hook_GetWeaponSpeed(const Item_ability_st* pAttackAbility, const Item_ability_st* pLauncherAbility) noexcept;
 	void Fix_Hook_HandleMiddleMouseDrag(SDL_Event* pEvent);
 	void Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand);
 	void Fix_Hook_OnBeforeUIKillCapture();
