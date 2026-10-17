@@ -87,6 +87,9 @@ namespace EEex {
 	// Opcode //
 	////////////
 
+	// op6/10/19/49, and their op177/182/183/283 drivers
+	bool Opcode_Hook_ClassSpellAbility_Prepare(CGameEffect* pEffect, CGameSprite* pSprite, int (*pRandom)());
+	int Opcode_Hook_ClassSpellAbility_ApplyDrivenEffect(CGameEffect* pEffect, CGameSprite* pSprite, CGameEffect* pParent);
 	// op101
 	bool Opcode_Hook_Op101_ShouldEffectBypassImmunity(CGameEffect* pEffect);
 	// op248
@@ -170,6 +173,9 @@ namespace EEex {
 	// Fix //
 	/////////
 
+	using ClassSpellAbilityNativeRemove = int (*)(CGameEffectList*, CGameEffect*, CGameSprite*, int);
+	int Fix_Hook_UnequipClassSpellAbility_Remove(CGameEffectList* pList, CGameEffect* pQuery, CGameSprite* pSprite, int compareSource, int slot, ClassSpellAbilityNativeRemove pNativeRemove);
+	bool Fix_Hook_ClassSpellAbility_AmountMatches(CGameEffectList* pList, CGameEffect* pQuery, CGameEffect* pCandidate, int compareSource);
 	void Fix_Hook_HandleMiddleMouseDrag(SDL_Event* pEvent);
 	void Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand);
 	void Fix_Hook_OnBeforeUIKillCapture();

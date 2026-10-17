@@ -110,6 +110,10 @@ static void exportPatterns() {
 	// Opcode //
 	////////////
 
+	// CLSSPLAB ability modifiers and the EFF opcodes that drive them
+	exportPattern(TEXT("EEex::Opcode_Hook_ClassSpellAbility_Prepare"), EEex::Opcode_Hook_ClassSpellAbility_Prepare);
+	exportPattern(TEXT("EEex::Opcode_Hook_ClassSpellAbility_ApplyDrivenEffect"), EEex::Opcode_Hook_ClassSpellAbility_ApplyDrivenEffect);
+
 	// op101
 	exportPattern(TEXT("EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity"), EEex::Opcode_Hook_Op101_ShouldEffectBypassImmunity);
 	// op248
@@ -193,6 +197,8 @@ static void exportPatterns() {
 	// Fix //
 	/////////
 
+	exportPattern(TEXT("EEex::Fix_Hook_UnequipClassSpellAbility_Remove"), EEex::Fix_Hook_UnequipClassSpellAbility_Remove);
+	exportPattern(TEXT("EEex::Fix_Hook_ClassSpellAbility_AmountMatches"), EEex::Fix_Hook_ClassSpellAbility_AmountMatches);
 	exportPattern(TEXT("EEex::Fix_Hook_HandleMiddleMouseDrag"), EEex::Fix_Hook_HandleMiddleMouseDrag);
 	exportPattern(TEXT("EEex::Fix_Hook_ImplementWSPECIALSpeedColumn"), EEex::Fix_Hook_ImplementWSPECIALSpeedColumn);
 	exportPattern(TEXT("EEex::Fix_Hook_OnBeforeUIKillCapture"), EEex::Fix_Hook_OnBeforeUIKillCapture);
