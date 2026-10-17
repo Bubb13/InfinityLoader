@@ -45,6 +45,7 @@
     <ClCompile Include="source\EEex-v2.6.6.0\generated\EEexLua_generated_baseclass_offsets.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\class_spell_ability.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\common\eeex_api.h" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\coordinate_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\debug_window.hpp" />

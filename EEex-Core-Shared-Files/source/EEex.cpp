@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <optional>
 #include <sstream>
 #include <unordered_set>
@@ -9,6 +10,7 @@
 
 #include "Baldur_generated.h"
 #include "EEex.h"
+#include "class_spell_ability.hpp"
 #include "engine_function_names.hpp"
 #include "infinity_loader_util_api.h"
 #include "lua_util.hpp"
@@ -4229,6 +4231,45 @@ int CDerivedStats::Override_SetSpellState(uint bit)
 // Opcode //
 ////////////
 
+//------------------------------------------------------//
+// CLSSPLAB - Prepare the four additional ability modes //
+//------------------------------------------------------//
+
+bool EEex::Opcode_Hook_ClassSpellAbility_Prepare(CGameEffect* pEffect, CGameSprite* pSprite, int (*pRandom)()) {
+
+	STUTTER_LOG_START(bool, "EEex::Opcode_Hook_ClassSpellAbility_Prepare")
+
+	int baseScore;
+	switch (pEffect->m_effectId) {
+		case 6:  baseScore = pSprite->m_baseStats.m_CHRBase; break;
+		case 10: baseScore = pSprite->m_baseStats.m_CONBase; break;
+		case 19: baseScore = pSprite->m_baseStats.m_INTBase; break;
+		case 49: baseScore = pSprite->m_baseStats.m_WISBase; break;
+		default: return false;
+	}
+
+	return ClassSpellAbility::prepare(pEffect, pSprite, baseScore, [&](const char* column) {
+		// Use the same class row and loaded table/default as native op15/44.
+		// Only the new columns are found by name; existing DEX/STR stay untouched.
+		const C2DArray& table = (*p_g_pBaldurChitin)->m_pObjectGame->m_ruleTables.m_tSpellAbilities;
+		return std::atoi(table.GetAt(table.FindColumnLabel(column), pSprite->virtual_GetAIType()->m_Class)->m_pchData);
+	}, pRandom);
+
+	STUTTER_LOG_END
+}
+
+int EEex::Opcode_Hook_ClassSpellAbility_ApplyDrivenEffect(CGameEffect* pEffect, CGameSprite* pSprite, CGameEffect* pParent) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_ClassSpellAbility_ApplyDrivenEffect")
+
+	// The engine still owns, applies, and deletes the decoded EFF. The frame
+	// supplies its surviving parent only while that virtual application is active.
+	ClassSpellAbility::DrivenFrame<CGameEffect> frame { pParent, pEffect, pSprite };
+	return pEffect->virtual_ApplyEffect(pSprite);
+
+	STUTTER_LOG_END
+}
+
 //--------------------------------------------------------//
 // op101 - Allow saving throw BIT23 to bypass opcode #101 //
 //--------------------------------------------------------//
@@ -6079,6 +6120,25 @@ void CGameText::Override_Render(CGameArea* pArea, CVidMode* pVidMode)
 			true                                                 // backgroundRect
 		);
 	}
+}
+
+int EEex::Fix_Hook_UnequipClassSpellAbility_Remove(CGameEffectList* pList, CGameEffect* pQuery, CGameSprite* pSprite, int compareSource, int slot, ClassSpellAbilityNativeRemove pNativeRemove) {
+
+	STUTTER_LOG_START(int, "EEex::Fix_Hook_UnequipClassSpellAbility_Remove")
+
+	// Only CItem::Unequip supplies this context. Keep all other removal calls,
+	// lists and source-comparison policies on their original one-removal path.
+	auto nativeRemove = [&]() { return pNativeRemove(pList, pQuery, pSprite, compareSource); };
+	if (compareSource == 0 || pList != &pSprite->m_equipedEffectList) return nativeRemove();
+	return ClassSpellAbility::removeEquipped(pList, pQuery, pSprite, slot, nativeRemove);
+
+	STUTTER_LOG_END
+}
+
+bool EEex::Fix_Hook_ClassSpellAbility_AmountMatches(CGameEffectList* pList, CGameEffect* pQuery, CGameEffect* pCandidate, int compareSource) {
+	// This comparison is inside the native list traversal. Keep it allocation-
+	// free; its caller preserves every live register and consumes only equality.
+	return ClassSpellAbility::amountMatches(pList, pQuery, pCandidate, compareSource);
 }
 
 void EEex::Fix_Hook_ImplementWSPECIALSpeedColumn(CGameSprite* pSprite, int nProficiencyLevel, bool bOffHand) {
