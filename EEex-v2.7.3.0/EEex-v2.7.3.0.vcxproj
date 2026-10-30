@@ -15,6 +15,7 @@
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\coordinate_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\debug_window.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEex.h" />
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\op233.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\EEexLua_generated.h" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\engine_function_names.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\font_util.hpp" />
