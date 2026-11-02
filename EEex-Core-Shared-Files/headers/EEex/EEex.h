@@ -65,6 +65,12 @@ namespace EEex {
 	//          Hooks          //
 	//-------------------------//
 
+	///////////////
+	// Actionbar //
+	///////////////
+
+	void Actionbar_Hook_OnStateUpdated(int config, int state);
+
 	////////////////
 	// Game State //
 	////////////////
@@ -109,6 +115,10 @@ namespace EEex {
 	// New op403
 	int Opcode_Hook_ScreenEffects_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_ScreenEffects_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);
+	// New op404
+	int Opcode_Hook_OverrideButtonType_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
+	// New op405
+	int Opcode_Hook_OverrideButtonIndex_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	// New op408
 	int Opcode_Hook_ProjectileMutator_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite);
 	void Opcode_Hook_ProjectileMutator_OnRemove(CGameEffect* pEffect, CGameSprite* pSprite);

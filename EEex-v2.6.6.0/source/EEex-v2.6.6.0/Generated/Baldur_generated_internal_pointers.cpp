@@ -9,6 +9,7 @@ bool EEex::bInTrackedResponse;
 bool EEex::bNoUUID;
 bool EEex::bStripUUID;
 byte EEex::CGameSprite_Hit_Roll;
+bool EEex::Actionbar_SuppressingListeners;
 bool EEex::AIBase_LuaHook_OnEventTriggerSet_Enabled;
 bool EEex::Menu_LuaHook_BeforeListRenderingItem_Enabled;
 bool EEex::Menu_UniversalScrollbarPadCollapsing;

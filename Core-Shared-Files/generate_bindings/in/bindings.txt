@@ -122,6 +122,7 @@ namespace EEex
 	///////////
 
 	// Globals
+	bool Actionbar_SuppressingListeners;
 	bool AIBase_LuaHook_OnEventTriggerSet_Enabled;
 	bool Menu_LuaHook_BeforeListRenderingItem_Enabled;
 	bool Menu_UniversalScrollbarPadCollapsing;

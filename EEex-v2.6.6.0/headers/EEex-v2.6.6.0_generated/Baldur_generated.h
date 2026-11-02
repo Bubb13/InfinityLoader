@@ -4912,6 +4912,7 @@ namespace EEex
 	extern bool bNoUUID;
 	extern bool bStripUUID;
 	extern byte CGameSprite_Hit_Roll;
+	extern bool Actionbar_SuppressingListeners;
 	extern bool AIBase_LuaHook_OnEventTriggerSet_Enabled;
 	extern bool Menu_LuaHook_BeforeListRenderingItem_Enabled;
 	extern bool Menu_UniversalScrollbarPadCollapsing;

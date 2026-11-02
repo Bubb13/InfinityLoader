@@ -88,6 +88,12 @@ static void exportPatterns() {
 	//          Hooks          //
 	/////////////////////////////
 
+	///////////////
+	// Actionbar //
+	///////////////
+
+	exportPattern(TEXT("EEex::Actionbar_Hook_OnStateUpdated"), EEex::Actionbar_Hook_OnStateUpdated);
+
 	////////////////
 	// Game State //
 	////////////////
@@ -132,6 +138,10 @@ static void exportPatterns() {
 	// New op403
 	exportPattern(TEXT("EEex::Opcode_Hook_ScreenEffects_ApplyEffect"), EEex::Opcode_Hook_ScreenEffects_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_ScreenEffects_OnRemove"), EEex::Opcode_Hook_ScreenEffects_OnRemove);
+	// New op404
+	exportPattern(TEXT("EEex::Opcode_Hook_OverrideButtonType_ApplyEffect"), EEex::Opcode_Hook_OverrideButtonType_ApplyEffect);
+	// New op405
+	exportPattern(TEXT("EEex::Opcode_Hook_OverrideButtonIndex_ApplyEffect"), EEex::Opcode_Hook_OverrideButtonIndex_ApplyEffect);
 	// New op408
 	exportPattern(TEXT("EEex::Opcode_Hook_ProjectileMutator_ApplyEffect"), EEex::Opcode_Hook_ProjectileMutator_ApplyEffect);
 	exportPattern(TEXT("EEex::Opcode_Hook_ProjectileMutator_OnRemove"), EEex::Opcode_Hook_ProjectileMutator_OnRemove);

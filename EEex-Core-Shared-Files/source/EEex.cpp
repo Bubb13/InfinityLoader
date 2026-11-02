@@ -79,6 +79,12 @@ std::unordered_map<uintptr_t, HookIntegrityWatchdogIgnoreData> hookIntegrityWatc
 
 thread_local uintptr_t hookIntegrityWatchdogCachedStackBase = getStackBase();
 
+///////////////
+// Actionbar //
+///////////////
+
+bool actionbarIgnoreEngineStartup = true;
+
 //////////////////
 // Stutter Util //
 //////////////////
@@ -94,6 +100,17 @@ struct EnabledActionListenerData {
 	CGameEffect* pEffect;
 };
 
+struct ButtonTypeOverride {
+	int buttonType;
+	int overrideType;
+};
+
+struct ButtonIndexOverride {
+	int buttonIndex;
+	int overrideType;
+	int targetConfig;
+};
+
 struct ExStatData {
 	std::unordered_set<uint> exSpellStates{};
 	std::unordered_map<int, int> exStatValues{};
@@ -102,6 +119,10 @@ struct ExStatData {
 	bool suppressWildSurgeVisuals = false;
 	// op403
 	std::vector<CGameEffect*> screenEffects;
+	// op404
+	std::vector<ButtonTypeOverride> buttonTypeOverrides;
+	// op405
+	std::vector<ButtonIndexOverride> buttonIndexOverrides;
 	// op408
 	std::vector<CGameEffect*> projectileMutatorEffects;
 	// op409
@@ -3891,6 +3912,96 @@ void __cdecl EEex::Override_uiDoFile(char* fileName) {
 //          Hooks          //
 /////////////////////////////
 
+///////////////
+// Actionbar //
+///////////////
+
+static void handleOp404() {
+
+	CInfGame *const pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
+
+	const CTypedPtrList<CPtrList, long> *const selectedList = &pGame->m_group.m_memberList;
+	if (selectedList->m_nCount != 1) {
+		return;
+	}
+
+	CGameSprite* pSprite;
+	if (CGameObjectArray::GetShare(selectedList->m_pNodeHead->data, reinterpret_cast<CGameObject**>(&pSprite)) != 0) {
+		return;
+	}
+
+	auto& buttonTypeOverrides = exStatDataMap[pSprite->GetActiveStats()].buttonTypeOverrides;
+	int *const aButtonTypes = pGame->m_cButtonArray.m_buttonTypes;
+
+	for (auto& [buttonType, overrideType] : buttonTypeOverrides) {
+
+		for (int nButtonIndex = 0; nButtonIndex <= 11; ++nButtonIndex) {
+
+			if (aButtonTypes[nButtonIndex] == buttonType) {
+				aButtonTypes[nButtonIndex] = overrideType;
+			}
+		}
+	}
+}
+
+static void handleOp405(const int config) {
+
+	CInfGame *const pGame = (*p_g_pBaldurChitin)->m_pObjectGame;
+
+	const CTypedPtrList<CPtrList, long> *const selectedList = &pGame->m_group.m_memberList;
+	if (selectedList->m_nCount != 1) {
+		return;
+	}
+
+	CGameSprite* pSprite;
+	if (CGameObjectArray::GetShare(selectedList->m_pNodeHead->data, reinterpret_cast<CGameObject**>(&pSprite)) != 0) {
+		return;
+	}
+
+	auto& buttonIndexOverrides = exStatDataMap[pSprite->GetActiveStats()].buttonIndexOverrides;
+	int *const aButtonTypes = pGame->m_cButtonArray.m_buttonTypes;
+
+	for (auto& [buttonIndex, overrideType, targetConfig] : buttonIndexOverrides) {
+
+		if (targetConfig == -1) {
+			if (config < 0 || config > 19) {
+				continue;
+			}
+		}
+		else if (targetConfig != config) {
+			continue;
+		}
+
+		aButtonTypes[buttonIndex] = overrideType;
+	}
+}
+
+void EEex::Actionbar_Hook_OnStateUpdated(int config, int state) {
+
+	if (actionbarIgnoreEngineStartup) {
+		actionbarIgnoreEngineStartup = false;
+		return;
+	}
+
+	if (EEex::Actionbar_SuppressingListeners) {
+		return;
+	}
+
+	// op404
+	handleOp404();
+
+	// op405
+	handleOp405(config);
+
+	// Lua hook
+	lua_State *const L = luaState();
+	luaCallProtected(L, 2, 0, [&](int _) {
+		lua_getglobal(L, "EEex_Actionbar_LuaHook_StateUpdating");
+		lua_pushinteger(L, config);
+		lua_pushinteger(L, state);
+	});
+}
+
 ////////////////
 // Game State //
 ////////////////
@@ -3992,6 +4103,12 @@ void EEex::Stats_Hook_OnReload(CGameSprite* pSprite) {
 	// op403
 	exStatData.screenEffects.clear();
 
+	// op404
+	exStatData.buttonTypeOverrides.clear();
+
+	// op405
+	exStatData.buttonIndexOverrides.clear();
+
 	// op408
 	exStatData.projectileMutatorEffects.clear();
 
@@ -4037,6 +4154,24 @@ void EEex::Stats_Hook_OnEqu(CDerivedStats* pStats, CDerivedStats* pOtherStats) {
 
 	for (auto pOtherEffect : otherScreenEffects) {
 		screenEffects.emplace_back(pOtherEffect);
+	}
+
+	// op404
+	auto& buttonTypeOverrides = exStatData.buttonTypeOverrides;
+	auto& otherButtonTypeOverrides = otherExStatData.buttonTypeOverrides;
+	buttonTypeOverrides.clear();
+
+	for (auto& otherButtonTypeOverride : otherButtonTypeOverrides) {
+		buttonTypeOverrides.emplace_back(otherButtonTypeOverride);
+	}
+
+	// op405
+	auto& buttonIndexOverrides = exStatData.buttonIndexOverrides;
+	auto& otherButtonIndexOverrides = otherExStatData.buttonIndexOverrides;
+	buttonIndexOverrides.clear();
+
+	for (auto& otherButtonIndexOverride : otherButtonIndexOverrides) {
+		buttonIndexOverrides.emplace_back(otherButtonIndexOverride);
 	}
 
 	// op408
@@ -4099,6 +4234,20 @@ void EEex::Stats_Hook_OnPlusEqu(CDerivedStats* pStats, CDerivedStats* pOtherStat
 	auto& otherScreenEffects = otherExStatData.screenEffects;
 	for (auto pOtherEffect : otherScreenEffects) {
 		screenEffects.emplace_back(pOtherEffect);
+	}
+
+	// op404
+	auto& buttonTypeOverrides = exStatData.buttonTypeOverrides;
+	auto& otherButtonTypeOverrides = otherExStatData.buttonTypeOverrides;
+	for (auto& otherButtonTypeOverride : otherButtonTypeOverrides) {
+		buttonTypeOverrides.emplace_back(otherButtonTypeOverride);
+	}
+
+	// op405
+	auto& buttonIndexOverrides = exStatData.buttonIndexOverrides;
+	auto& otherButtonIndexOverrides = otherExStatData.buttonIndexOverrides;
+	for (auto& otherButtonIndexOverride : otherButtonIndexOverrides) {
+		buttonIndexOverrides.emplace_back(otherButtonIndexOverride);
 	}
 
 	// op408
@@ -4529,6 +4678,34 @@ void EEex::Opcode_Hook_ScreenEffects_OnRemove(CGameEffect* pEffect, CGameSprite*
 	removeCachedEffect(pSprite->m_derivedStats, &ExStatData::screenEffects, pEffect);
 	removeCachedEffect(pSprite->m_tempStats,    &ExStatData::screenEffects, pEffect);
 	removeCachedEffect(pSprite->m_bonusStats,   &ExStatData::screenEffects, pEffect);
+
+	STUTTER_LOG_END
+}
+
+//-----------//
+// New op404 //
+//-----------//
+
+int EEex::Opcode_Hook_OverrideButtonType_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_OverrideButtonType_ApplyEffect")
+
+	exStatDataMap[&pSprite->m_derivedStats].buttonTypeOverrides.emplace_back(pEffect->m_effectAmount, pEffect->m_dWFlags);
+	return 1;
+
+	STUTTER_LOG_END
+}
+
+//-----------//
+// New op405 //
+//-----------//
+
+int EEex::Opcode_Hook_OverrideButtonIndex_ApplyEffect(CGameEffect* pEffect, CGameSprite* pSprite) {
+
+	STUTTER_LOG_START(int, "EEex::Opcode_Hook_OverrideButtonIndex_ApplyEffect")
+
+	exStatDataMap[&pSprite->m_derivedStats].buttonIndexOverrides.emplace_back(pEffect->m_effectAmount, pEffect->m_dWFlags, pEffect->m_special);
+	return 1;
 
 	STUTTER_LOG_END
 }
@@ -6309,6 +6486,7 @@ void EEex::InitEEex() {
 	initTimeUtil();
 	initUncapFPS();
 
+	EEex::Actionbar_SuppressingListeners = false;
 	EEex::Menu_LuaHook_BeforeListRenderingItem_Enabled = false;
 	EEex::Opcode_LuaHook_AfterListsResolved_Enabled = false;
 	EEex::Opcode_LuaHook_DeferredAfterListsResolved_Enabled = false;

@@ -3,6 +3,24 @@
 #include "Baldur_lua_generated.h"
 #include "lua_bindings_core_api.h"
 
+static int tolua_get_EEex_Actionbar_SuppressingListeners(lua_State* L)
+{
+	tolua_pushboolean(L, (bool)EEex::Actionbar_SuppressingListeners);
+	return 1;
+}
+
+static int tolua_set_EEex_Actionbar_SuppressingListeners(lua_State* L)
+{
+	EEex::Actionbar_SuppressingListeners = tolua_setter_toboolean(L, "Actionbar_SuppressingListeners");
+	return 0;
+}
+
+static int tolua_get_EEex_reference_Actionbar_SuppressingListeners(lua_State* L)
+{
+	tolua_pushusertype(L, (void*)&EEex::Actionbar_SuppressingListeners, "Primitive<bool>");
+	return 1;
+}
+
 static int tolua_get_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled(lua_State* L)
 {
 	tolua_pushboolean(L, (bool)EEex::AIBase_LuaHook_OnEventTriggerSet_Enabled);
@@ -1053,6 +1071,8 @@ int OpenBindingsInternal(lua_State* L)
 	tolua_endmodule(L);
 	tolua_cclass(L, "EEex", "EEex", {}, NULL);
 	tolua_beginmodule(L, "EEex");
+		tolua_variable(L, "Actionbar_SuppressingListeners", tolua_get_EEex_Actionbar_SuppressingListeners, tolua_set_EEex_Actionbar_SuppressingListeners);
+		tolua_variable(L, "reference_Actionbar_SuppressingListeners", tolua_get_EEex_reference_Actionbar_SuppressingListeners, NULL);
 		tolua_variable(L, "AIBase_LuaHook_OnEventTriggerSet_Enabled", tolua_get_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled, tolua_set_EEex_AIBase_LuaHook_OnEventTriggerSet_Enabled);
 		tolua_variable(L, "reference_AIBase_LuaHook_OnEventTriggerSet_Enabled", tolua_get_EEex_reference_AIBase_LuaHook_OnEventTriggerSet_Enabled, NULL);
 		tolua_variable(L, "Menu_LuaHook_BeforeListRenderingItem_Enabled", tolua_get_EEex_Menu_LuaHook_BeforeListRenderingItem_Enabled, tolua_set_EEex_Menu_LuaHook_BeforeListRenderingItem_Enabled);
@@ -1118,6 +1138,7 @@ int OpenBindingsInternal(lua_State* L)
 		tolua_function(L, "ShouldEffectBypassOp120", &tolua_function_EEex_ShouldEffectBypassOp120);
 		tolua_function(L, "UpdateLastScrollTime", &tolua_function_EEex_UpdateLastScrollTime);
 		tolua_function(L, "WriteProfilerHooks", &tolua_function_EEex_WriteProfilerHooks);
+		tolua_constantstring(L, "usertype_Actionbar_SuppressingListeners", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_AIBase_LuaHook_OnEventTriggerSet_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Menu_LuaHook_BeforeListRenderingItem_Enabled", "Primitive<bool>");
 		tolua_constantstring(L, "usertype_Menu_UniversalScrollbarPadCollapsing", "Primitive<bool>");
