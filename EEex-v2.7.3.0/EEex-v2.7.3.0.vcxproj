@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\class_spell_ability.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\common\eeex_api.h" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\coordinate_util.hpp" />
     <ClInclude Include="..\EEex-Core-Shared-Files\headers\EEex\debug_window.hpp" />
